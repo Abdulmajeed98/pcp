@@ -265,29 +265,30 @@ The stack is partly decided. The owner wants the remaining choices researched an
 **Decided**
 
 - TypeScript throughout.
-- Next.js, rendered on the server, for the Shopper pages.
+- Three applications:
+  - the Shopper app, built with Next.js and rendered on the server;
+  - the dashboard, one client-rendered React single-page application holding both the Vendor portal and the Admin console;
+  - the API, built with NestJS. It is the only part that touches the database. Both frontends call it, and the Next.js app never reads the database itself.
+- Keycloak as the identity service. Vendors log in through it; the Admin console creates Vendors and resets passwords through the API, which calls Keycloak. It ships English and Arabic login screens; the Kurdish (Sorani) text is added in a custom theme.
 - PostgreSQL as the database, run in Docker during development, with Drizzle for database access and migrations.
+- One repository, managed with pnpm workspaces and Nx.
+- REST between the frontends and the API. Each request and response shape is defined once as a Zod schema in a shared package, used by the API for validation and by both frontends for types and form validation.
+- The Compatibility Rules live in a shared package of plain TypeScript, so that the API and the builder in the browser run the same code.
 - Tailwind CSS with shadcn/ui for the interface.
 - next-intl for the three languages in the Next.js app.
-- The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one small rented server running the application and the database, with Cloudflare in front and nightly database backups.
+- The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one rented server with 4 GB of memory running everything, with Cloudflare in front and nightly database backups.
 - Git, with a commit after each piece of work, and a private GitHub repository later as an off-machine backup.
 
-**The owner's preferences, to be confirmed**
+**Order of work**
 
-- The Vendor portal and the Admin console as a client-rendered React single-page application, since private screens need no search-engine visibility.
-- NestJS for the backend.
-- An identity service such as Keycloak for authentication and authorisation, instead of authentication code inside the application.
-- A monorepo holding the applications and shared code.
+The infrastructure is established first. Each app's libraries are chosen when work on that app begins, not before.
 
-**To be researched before deciding**
+**Still open**
 
-- Which identity service, and whether it supports ACC-3 to ACC-5: login by phone number, an Admin-set temporary password that must be replaced, no outgoing messages, and login screens in three languages and both directions.
-- Monorepo tooling.
-- How the Next.js app and the single-page application talk to the backend.
-- Where the Compatibility Rules live, so that the backend and the builder in the browser run the same code.
-- Translation tooling for the single-page application.
+- The architecture each app follows. The research is in [docs/research/app-architecture.md](../../docs/research/app-architecture.md).
+- What the infrastructure step includes.
 
-The commands for building, testing and running the project, its directory layout and its code conventions are added to this spec once the stack is decided.
+The commands for building, testing and running the project, its directory layout and its code conventions are added to this spec once the infrastructure exists.
 
 ## Testing strategy
 
@@ -352,5 +353,5 @@ The MVP is finished when all of these hold:
 
 ## Open questions
 
-1. **The remaining technology choices.** See [Technology](#technology).
+1. **The remaining technology choices.** See "Still open" under [Technology](#technology).
 2. **The platform's name.** To be chosen before the public launch. It should not be "PC Part Picker", which is an existing company's brand.
