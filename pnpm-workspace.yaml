@@ -1,0 +1,9 @@
+packages:
+  - 'apps/*'
+  - 'libs/*'
+
+# pnpm fails an install when a dependency has an install script that is not
+# listed here. Add a package only after checking what its script does.
+allowBuilds:
+  '@swc/core': true
+  nx: true

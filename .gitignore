@@ -1,2 +1,35 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+tmp
+out-tsc
+coverage
+
+# Nx
+.nx/cache
+.nx/workspace-data
+
+# Environment files, which may hold secrets
+.env
+.env.*
+!.env.example
+
+# Editors
+/.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.sublime-workspace
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log
+pnpm-debug.log
+
 # Machine-local Claude Code settings
 .claude/settings.local.json
