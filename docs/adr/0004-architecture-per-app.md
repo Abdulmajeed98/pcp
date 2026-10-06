@@ -24,6 +24,7 @@ The NestJS API is structured the way the backend services at the owner's workpla
 - Use cases live in the domain layer and carry NestJS's `@Injectable()`. This is a deliberate, pragmatic departure from textbook hexagonal architecture, taken from the workplace codebase.
 - This reverses an earlier choice to share Zod schemas between the API and the frontends. The frontends instead use a typed client generated from the API's OpenAPI document.
 - The workplace services sit behind a proxy that verifies login tokens, so their guard only reads the token. This API has no such proxy. Its guard must verify every token's signature, expiry and issuer against Keycloak; copying the workplace's read-only behaviour here would let anyone forge an Admin token.
+- The shared `compatibility` library does not use Effect, although the API does. A Compatibility Rule's outcomes (passes, Compatibility Problem, Compatibility Warning, unchecked) are not success and failure, so the library returns them as a plain value.
 - The patterns are reimplemented from scratch. No source file is copied from the workplace repository.
 - Steiger, Feature-Sliced Design's own linter, is not used because it is still in beta. The second ban above works only because of the relative-import convention, so that convention is part of the architecture.
 - The API is linted with ESLint, as at the workplace, and the frontends with Oxlint. Nx's boundary rule runs under Oxlint through a plugin that Nx marks as experimental.

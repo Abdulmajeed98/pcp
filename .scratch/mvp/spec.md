@@ -1,6 +1,6 @@
 # Spec: PC Part Picker MVP
 
-Status: approved by the owner on 6 October 2026. One technology question is still open (see Open questions).
+Status: approved by the owner on 6 October 2026.
 
 This spec records the outcome of a design interview held on 5 and 6 October 2026. It uses the vocabulary defined in [CONTEXT.md](../../CONTEXT.md); a capitalised term such as Offer or Build means exactly what that file says. Two decisions it relies on are recorded separately: [ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md) (catalog seeded from BuildCores OpenDB) and [ADR-0002](../../docs/adr/0002-platform-rate-set-by-hand.md) (Platform Rate set by hand).
 
@@ -274,7 +274,7 @@ The stack and each app's architecture are decided and recorded in [ADR-0003](../
 - One repository, managed with Nx and pnpm. Applications live in `apps/` and shared libraries in `libs/`, named `@pcp/…` inside the workspace. Each app is one Nx project, and Nx's boundary rule governs what apps and libraries may import from each other.
 - Five shared libraries:
   - `core`: the API's shared plumbing (errors, access control, database helpers, test helpers);
-  - `compatibility`: the Compatibility Rules, run by both the API and the builder in the browser;
+  - `compatibility`: the Compatibility Rules, run by both the API and the builder in the browser. It is plain TypeScript without Effect, and each rule returns one of its outcomes (CMP-3) as a plain value;
   - `api-client`: a typed client generated from the API's OpenAPI document;
   - `ui`: shared components and the Tailwind theme;
   - `i18n`: the text for all three languages.
@@ -297,10 +297,6 @@ The infrastructure is established first, with no product features:
 4. Proof that the parts connect: the Admin logs in to the dashboard through Keycloak, the dashboard calls the API, the API verifies the login and answers who the caller is, and the Shopper app shows a page fetched from the API.
 
 Automated checks on GitHub are added when the GitHub repository exists. Each app's libraries are chosen when work on that app begins, not before.
-
-**Still open**
-
-- Whether the `compatibility` library uses Effect, as the API does, or stays plain TypeScript.
 
 The commands for building, testing and running the project, its directory layout and its code conventions are added to this spec once the infrastructure exists.
 
@@ -367,5 +363,4 @@ The MVP is finished when all of these hold:
 
 ## Open questions
 
-1. **Whether the `compatibility` library uses Effect.** See "Still open" under [Technology](#technology).
-2. **The platform's name.** To be chosen before the public launch. It should not be "PC Part Picker", which is an existing company's brand.
+1. **The platform's name.** To be chosen before the public launch. It should not be "PC Part Picker", which is an existing company's brand.
