@@ -1,6 +1,6 @@
 # Spec: PC Part Picker MVP
 
-Status: draft, awaiting the owner's approval.
+Status: approved by the owner on 6 October 2026, except the Technology section, which is still under discussion.
 
 This spec records the outcome of a design interview held on 5 and 6 October 2026. It uses the vocabulary defined in [CONTEXT.md](../../CONTEXT.md); a capitalised term such as Offer or Build means exactly what that file says. Two decisions it relies on are recorded separately: [ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md) (catalog seeded from BuildCores OpenDB) and [ADR-0002](../../docs/adr/0002-platform-rate-set-by-hand.md) (Platform Rate set by hand).
 
@@ -155,8 +155,8 @@ Build order: `languages`, `catalog`, `accounts` → `offers` → `pricing` → `
 
 - **CMP-1** The platform checks the 21 Compatibility Rules listed under [Compatibility Rules](#compatibility-rules).
 - **CMP-2** A rule applies only when the Build contains the Parts it involves.
-- **CMP-3** Each applicable rule has one of three outcomes: it passes, it is a Compatibility Problem, or it is unchecked because a specification it needs is missing. An unchecked rule is never presented as passed.
-- **CMP-4** A Part is compatible with a Build when adding it would cause no Compatibility Problem. An unchecked rule does not make a Part incompatible.
+- **CMP-3** Each applicable rule has one outcome: it passes, it is a Compatibility Problem, it is a Compatibility Warning, or it is unchecked because a specification it needs is missing. An unchecked rule is never presented as passed. Only rules 11 and 20 can produce a Compatibility Warning.
+- **CMP-4** A Part is compatible with a Build when adding it would cause no Compatibility Problem. Neither a Compatibility Warning nor an unchecked rule makes a Part incompatible.
 - **CMP-5** Estimated power draw is the CPU's TDP plus the GPU's TDP plus 100 W for everything else. A Build without a GPU counts 0 W for it.
 
 ### `builder`
@@ -164,7 +164,7 @@ Build order: `languages`, `catalog`, `accounts` → `offers` → `pricing` → `
 - **BLD-1** A Build holds exactly one each of CPU, motherboard, case and PSU, at most one CPU cooler and at most one GPU, and any number of RAM kits and storage drives, each with a quantity.
 - **BLD-2** For each Category the Shopper picks from a list of Parts that have at least one in-stock visible Offer, lowest price first, with the same search and filters as the Category page.
 - **BLD-3** The picker hides Parts that are not compatible with the Build so far. A switch shows them all.
-- **BLD-4** The Build page lists every Compatibility Problem and every unchecked rule in words that name the Parts involved. It never prevents the Shopper from keeping an incompatible Build.
+- **BLD-4** The Build page lists every Compatibility Problem, every Compatibility Warning and every unchecked rule in words that name the Parts involved. It never prevents the Shopper from keeping an incompatible Build.
 - **BLD-5** The Build page says whether the Build is a Complete Build and, if not, which Categories are still needed. A Build can be saved and shared at any stage.
 - **BLD-6** The Build is saved in the Shopper's browser and is still there when they return. A browser holds one Build at a time.
 - **BLD-7** The first price view shows, for each Part, the cheapest in-stock Offer and the Vendor it comes from, and the total. This total may span several Vendors and is the headline figure.
@@ -228,7 +228,7 @@ Field names are those of OpenDB. "Coverage" is the share of OpenDB Parts in whic
 | 8 | The Build has a GPU and the motherboard has no 16-lane PCIe slot | `Motherboard.pcie_slots` | 100% |
 | 9 | The GPU is longer than the case allows | `GPU.length`, `PCCase.max_video_card_length` | 96% |
 | 10 | The GPU occupies more slots than the case has | `GPU.total_slot_width`, `PCCase.expansion_slots` | 99% |
-| 11 | The PSU lacks the power connectors the GPU needs | `GPU.power_connectors`, `PSU.connectors` | 100% |
+| 11 | The PSU cannot power the GPU (see below) | `GPU.power_connectors`, `PSU.connectors` | 100% |
 | 12 | The PSU's wattage is below 1.3 times the estimated power draw | `CPU.specifications.tdp`, `GPU.tdp`, `PSU.wattage` | 100% |
 | 13 | The Build has more SATA drives than the motherboard has SATA ports | `Storage.interface`, `Motherboard.storage_devices` | 100% |
 | 14 | The Build has more M.2 drives than the motherboard has M.2 slots | `Storage.form_factor`, `Motherboard.m2_slots` | 80% |
@@ -237,10 +237,15 @@ Field names are those of OpenDB. "Coverage" is the share of OpenDB Parts in whic
 | 17 | An air cooler is taller than the case allows | `CPUCooler.height`, `PCCase.max_cpu_cooler_height` | 36% |
 | 18 | The case does not accept the PSU's form factor | `PSU.form_factor`, `PCCase.supported_power_supply_form_factors` | 19% |
 | 19 | The PSU is longer than the case allows | `PSU.length`, `PCCase.max_psu_length` | 17% |
-| 20 | The PSU has fewer CPU power connectors than the motherboard has sockets for them | `Motherboard.power_connectors.cpu_power`, `PSU.connectors.eps_8_pin` | 16% |
+| 20 | The PSU has no CPU power connector (see below) | `Motherboard.power_connectors.cpu_power`, `PSU.connectors.eps_8_pin` | 16% |
 | 21 | The motherboard has rear-facing connectors and the case does not support them | `Motherboard.back_connect_connectors`, `PCCase.supports_rear_connecting_motherboard` | 18% |
 
 Rules 5, 6 and 13 to 16 count every kit and drive in the Build, multiplied by its quantity.
+
+Rules 11 and 20 are the only rules that can produce a Compatibility Warning, because a strict reading would report Builds that in fact work:
+
+- **Rule 11.** It is a Compatibility Problem when the PSU has fewer 6+2-pin connectors than the GPU has 6-pin and 8-pin sockets, or when the GPU has a 12V-2x6 or 12VHPWR socket and the PSU has neither that cable nor any 6+2-pin connector. It is a Compatibility Warning when the GPU has a 12V-2x6 or 12VHPWR socket and the PSU has no such cable but does have 6+2-pin connectors: the Build works only with the adapter that usually comes with the GPU.
+- **Rule 20.** It is a Compatibility Problem when the PSU has no EPS connector at all. It is a Compatibility Warning when the PSU has at least one EPS connector but fewer than the motherboard has CPU power sockets: the extra socket is often optional.
 
 With these rules every Category takes part in at least one rule, and every pair of Categories that physically connect is covered.
 
@@ -288,7 +293,7 @@ The commands for building, testing and running the project, its directory layout
 
 Tests are written before the code for logic where a mistake would mislead a Shopper:
 
-- Each Compatibility Rule, with one test each for passing, for a Compatibility Problem and for being unchecked.
+- Each Compatibility Rule, with one test for each outcome it can have: passing, a Compatibility Problem, being unchecked and, for rules 11 and 20, a Compatibility Warning.
 - Price conversion, rounding, the "≈" mark, and totals (PRC-3 to PRC-5).
 - Offer expiry at the 14-day boundary (OFF-6).
 - Whether a Build is a Complete Build (BLD-5).
@@ -341,12 +346,11 @@ The MVP is finished when all of these hold:
 8. Tapping "send on WhatsApp" opens a chat with the Vendor containing the Build's link, and that Vendor's Referral count rises by one, visible to the Admin and to that Vendor only.
 9. A Vendor downloads its sheet, changes some prices, adds one row with a known part number and one with an unknown one, and uploads it. The prices change, one Offer is created, and the unknown row is reported and can be turned into a Part Request.
 10. The Admin fulfils that Part Request and the Vendor's Offer goes live.
-11. Every Compatibility Rule has passing tests for its three outcomes.
+11. Every Compatibility Rule has passing tests for each outcome it can have.
 12. A link to a Part page or a shared Build, pasted into WhatsApp, shows a preview.
 13. Every Shopper page and Vendor portal screen is usable at 360 pixels wide in English and in Arabic.
 
 ## Open questions
 
 1. **The remaining technology choices.** See [Technology](#technology).
-2. **Whether a Build needs a softer notice than a Compatibility Problem.** Rules 11 and 20 can report a Problem where the Build would in fact work: many GPUs with a 12V-2x6 socket ship with an adapter for 8-pin cables, and a motherboard's second CPU power socket is often optional. Either the rules stay strict, or a second, softer outcome is added to the model.
-3. **The platform's name.** To be chosen before the public launch. It should not be "PC Part Picker", which is an existing company's brand.
+2. **The platform's name.** To be chosen before the public launch. It should not be "PC Part Picker", which is an existing company's brand.

@@ -77,5 +77,9 @@ A check that Parts in the same Build fit and work together; it is unchecked when
 _Avoid_: Validation, constraint
 
 **Compatibility Problem**:
-A Compatibility Rule that the Parts in a Build fail.
+A Compatibility Rule that the Parts in a Build fail, meaning they will not fit or work together.
 _Avoid_: Conflict, error, incompatibility
+
+**Compatibility Warning**:
+A Compatibility Rule finding that the Parts in a Build work only if a stated condition holds, such as using an adapter supplied with the Part.
+_Avoid_: Note, notice, caution
