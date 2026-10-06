@@ -281,7 +281,7 @@ The stack and each app's architecture are decided and recorded in [ADR-0003](../
 - REST between the frontends and the API. The API describes itself with OpenAPI, and the frontends call it only through `api-client`.
 - The API uses NestJS 11 and follows the conventions of the owner's workplace backend: two layers (`domain` and `infrastructure`), Command and Query classes for use cases, abstract Store classes as ports, and errors returned as Effect `Either` values instead of thrown. ADR-0004 lists the conventions in full.
 - Both frontends follow Feature-Sliced Design, with its import rules enforced by Oxlint.
-- ESLint lints the API and Oxlint lints the frontends. Oxfmt formats the whole repository; it is still before version 1.0, so its version is pinned exactly.
+- Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository; it is still before version 1.0, so its version is pinned exactly.
 - Tailwind CSS with shadcn/ui for the interface.
 - next-intl for the three languages in the Next.js app.
 - The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one rented server with 4 GB of memory running everything, with Cloudflare in front and nightly database backups.
