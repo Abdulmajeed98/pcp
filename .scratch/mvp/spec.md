@@ -1,10 +1,10 @@
 # Spec: PC Part Picker MVP
 
-Status: approved by the owner on 6 October 2026, except the Technology section, which is still under discussion.
+Status: approved by the owner on 6 October 2026. One technology question is still open (see Open questions).
 
 This spec records the outcome of a design interview held on 5 and 6 October 2026. It uses the vocabulary defined in [CONTEXT.md](../../CONTEXT.md); a capitalised term such as Offer or Build means exactly what that file says. Two decisions it relies on are recorded separately: [ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md) (catalog seeded from BuildCores OpenDB) and [ADR-0002](../../docs/adr/0002-platform-rate-set-by-hand.md) (Platform Rate set by hand).
 
-"PC Part Picker" is a working title. The technology stack is only partly decided; see [Technology](#technology).
+"PC Part Picker" is a working title.
 
 ## Objective
 
@@ -260,20 +260,28 @@ OpenDB has no field for these, so each would need a new specification typed in f
 
 ## Technology
 
-The stack is partly decided. The owner wants the remaining choices researched and discussed separately before implementation starts.
+The stack and each app's architecture are decided and recorded in [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md) and [ADR-0004](../../docs/adr/0004-architecture-per-app.md). The research behind them is in [docs/research/app-architecture.md](../../docs/research/app-architecture.md).
 
 **Decided**
 
-- TypeScript throughout.
+- TypeScript throughout, on Node 24.
 - Three applications:
   - the Shopper app, built with Next.js and rendered on the server;
   - the dashboard, one client-rendered React single-page application holding both the Vendor portal and the Admin console;
   - the API, built with NestJS. It is the only part that touches the database. Both frontends call it, and the Next.js app never reads the database itself.
 - Keycloak as the identity service. Vendors log in through it; the Admin console creates Vendors and resets passwords through the API, which calls Keycloak. It ships English and Arabic login screens; the Kurdish (Sorani) text is added in a custom theme.
 - PostgreSQL as the database, run in Docker during development, with Drizzle for database access and migrations.
-- One repository, managed with pnpm workspaces and Nx.
-- REST between the frontends and the API. Each request and response shape is defined once as a Zod schema in a shared package, used by the API for validation and by both frontends for types and form validation.
-- The Compatibility Rules live in a shared package of plain TypeScript, so that the API and the builder in the browser run the same code.
+- One repository, managed with Nx and pnpm. Applications live in `apps/` and shared libraries in `libs/`, named `@pcp/…` inside the workspace. Each app is one Nx project, and Nx's boundary rule governs what apps and libraries may import from each other.
+- Five shared libraries:
+  - `core`: the API's shared plumbing (errors, access control, database helpers, test helpers);
+  - `compatibility`: the Compatibility Rules, run by both the API and the builder in the browser;
+  - `api-client`: a typed client generated from the API's OpenAPI document;
+  - `ui`: shared components and the Tailwind theme;
+  - `i18n`: the text for all three languages.
+- REST between the frontends and the API. The API describes itself with OpenAPI, and the frontends call it only through `api-client`.
+- The API uses NestJS 11 and follows the conventions of the owner's workplace backend: two layers (`domain` and `infrastructure`), Command and Query classes for use cases, abstract Store classes as ports, and errors returned as Effect `Either` values instead of thrown. ADR-0004 lists the conventions in full.
+- Both frontends follow Feature-Sliced Design, with its import rules enforced by Oxlint.
+- ESLint lints the API and Oxlint lints the frontends. Oxfmt formats the whole repository; it is still before version 1.0, so its version is pinned exactly.
 - Tailwind CSS with shadcn/ui for the interface.
 - next-intl for the three languages in the Next.js app.
 - The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one rented server with 4 GB of memory running everything, with Cloudflare in front and nightly database backups.
@@ -281,12 +289,18 @@ The stack is partly decided. The owner wants the remaining choices researched an
 
 **Order of work**
 
-The infrastructure is established first. Each app's libraries are chosen when work on that app begins, not before.
+The infrastructure is established first, with no product features:
+
+1. The Nx and pnpm workspace, with the three apps and five shared libraries as empty shells.
+2. Docker Compose running PostgreSQL and Keycloak for development. Keycloak's data lives in a second database on the same PostgreSQL server. Its setup (the Admin and Vendor roles, the dashboard's login client, the three languages) is kept as a file in the repository and loaded at startup.
+3. The boundary and layer checks, wired in and failing on a violation.
+4. Proof that the parts connect: the Admin logs in to the dashboard through Keycloak, the dashboard calls the API, the API verifies the login and answers who the caller is, and the Shopper app shows a page fetched from the API.
+
+Automated checks on GitHub are added when the GitHub repository exists. Each app's libraries are chosen when work on that app begins, not before.
 
 **Still open**
 
-- The architecture each app follows. The research is in [docs/research/app-architecture.md](../../docs/research/app-architecture.md).
-- What the infrastructure step includes.
+- Whether the `compatibility` library uses Effect, as the API does, or stays plain TypeScript.
 
 The commands for building, testing and running the project, its directory layout and its code conventions are added to this spec once the infrastructure exists.
 
@@ -303,7 +317,7 @@ Tests are written before the code for logic where a mistake would mislead a Shop
 
 End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a Vendor adds, edits and confirms Offers; the Admin creates a Vendor and fulfils a Part Request.
 
-Test frameworks and file locations follow from the stack decision.
+The API's tests use Jest with SWC and live under `src/test/`, mirroring `src/app/`: `*.spec.ts` for unit tests with mocked Stores, and `*.integration-spec.ts` for tests against a real PostgreSQL started in a test container. The frontends' test tools are chosen when work on them begins.
 
 ## Boundaries
 
@@ -353,5 +367,5 @@ The MVP is finished when all of these hold:
 
 ## Open questions
 
-1. **The remaining technology choices.** See "Still open" under [Technology](#technology).
+1. **Whether the `compatibility` library uses Effect.** See "Still open" under [Technology](#technology).
 2. **The platform's name.** To be chosen before the public launch. It should not be "PC Part Picker", which is an existing company's brand.
