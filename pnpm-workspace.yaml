@@ -5,5 +5,8 @@ packages:
 # pnpm fails an install when a dependency has an install script that is not
 # listed here. Add a package only after checking what its script does.
 allowBuilds:
+  '@parcel/watcher': false
   '@swc/core': true
   nx: true
+  unrs-resolver: false
+  '@nestjs/core': false

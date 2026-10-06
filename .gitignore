@@ -6,6 +6,7 @@ dist
 tmp
 out-tsc
 coverage
+test-output
 
 # Nx
 .nx/cache
