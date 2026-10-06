@@ -1,0 +1,6 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "printWidth": 92,
+  "ignorePatterns": [".scratch/**", "docs/**", "CLAUDE.md", "CONTEXT.md", "PRODUCT.md"]
+}

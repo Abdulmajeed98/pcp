@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "preinstall": "node tools/require-pnpm.mjs"
+    "preinstall": "node tools/require-pnpm.mjs",
+    "check": "oxfmt --check && nx run-many --targets=lint,typecheck,test,build",
+    "format": "oxfmt"
   },
   "devDependencies": {
     "@nx/js": "23.2.1",
@@ -12,6 +14,7 @@
     "@swc/helpers": "~0.5.18",
     "@types/node": "^24.0.0",
     "nx": "23.2.1",
+    "oxfmt": "0.72.0",
     "tslib": "^2.3.0",
     "typescript": "~6.0.3"
   },
