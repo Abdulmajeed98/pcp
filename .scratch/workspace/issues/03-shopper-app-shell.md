@@ -8,22 +8,56 @@ The frontend conventions are in [ADR-0004](../../../docs/adr/0004-architecture-p
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] `@pcp/shopper` exists as an application, and `@pcp/api-client`, `@pcp/ui` and `@pcp/i18n` exist as libraries. Each one's Nx project name is the same as its package name.
-- [ ] The Shopper app uses a Next.js version that Nx's Next.js plugin supports, and renders on the server.
-- [ ] Next's own routing folder contains only routing. The Feature-Sliced Design App and Pages layers are named `_app` and `_pages`, and the route file re-exports the placeholder page from the Pages layer.
-- [ ] Only the App, Pages and Shared layers exist. Widgets, Features and Entities are not created.
-- [ ] Inside the app, the `@/` alias resolves to its source root.
-- [ ] The placeholder page is one unstyled line of English that names the app, is marked in the code as a placeholder, and does not present the working title "PC Part Picker" as a brand. Checked by hand: the app starts through its serve target and serves the page on port 3000.
-- [ ] Each new library exports one trivial named value through a single entry file, with a comment saying it is a placeholder. Each is consumed as TypeScript source and has no build target and no test target.
-- [ ] The Shopper app imports the placeholder from `compatibility`, `api-client`, `ui` and `i18n` by their `@pcp/…` names. Nx's project graph gains exactly those four dependencies, and no library depends on another library.
-- [ ] Tailwind CSS, shadcn/ui, next-intl, translated text and any test tool are not added.
-- [ ] Oxlint lints the app and the three new libraries from the shared root configuration, with the rule sets a React and Next.js project needs.
-- [ ] The app and the three new libraries are type-checked in strict mode, and the Shopper app builds.
-- [ ] `pnpm check` passes on a clean clone.
-- [ ] Shown once by hand and then reverted, each making `pnpm check` fail: a lint violation in the Shopper app, a type error in it, and an import of a `@pcp/…` name that does not exist.
-- [ ] The results of the by-hand checks are recorded under Comments.
-- [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+- [x] `@pcp/shopper` exists as an application, and `@pcp/api-client`, `@pcp/ui` and `@pcp/i18n` exist as libraries. Each one's Nx project name is the same as its package name.
+- [x] The Shopper app uses a Next.js version that Nx's Next.js plugin supports, and renders on the server.
+- [x] Next's own routing folder contains only routing. The Feature-Sliced Design App and Pages layers are named `_app` and `_pages`, and the route file re-exports the placeholder page from the Pages layer.
+- [x] Only the App, Pages and Shared layers exist. Widgets, Features and Entities are not created.
+- [x] Inside the app, the `@/` alias resolves to its source root.
+- [x] The placeholder page is one unstyled line of English that names the app, is marked in the code as a placeholder, and does not present the working title "PC Part Picker" as a brand. Checked by hand: the app starts through its serve target and serves the page on port 3000.
+- [x] Each new library exports one trivial named value through a single entry file, with a comment saying it is a placeholder. Each is consumed as TypeScript source and has no build target and no test target.
+- [x] The Shopper app imports the placeholder from `compatibility`, `api-client`, `ui` and `i18n` by their `@pcp/…` names. Nx's project graph gains exactly those four dependencies, and no library depends on another library.
+- [x] Tailwind CSS, shadcn/ui, next-intl, translated text and any test tool are not added.
+- [x] Oxlint lints the app and the three new libraries from the shared root configuration, with the rule sets a React and Next.js project needs.
+- [x] The app and the three new libraries are type-checked in strict mode, and the Shopper app builds.
+- [x] `pnpm check` passes on a clean clone.
+- [x] Shown once by hand and then reverted, each making `pnpm check` fail: a lint violation in the Shopper app, a type error in it, and an import of a `@pcp/…` name that does not exist.
+- [x] The results of the by-hand checks are recorded under Comments.
+- [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
+
+### 7 October 2026: completed
+
+**Versions.** Next.js 16.1.7 and React 19.3.0. Nx 23.2.1's generator installs Next.js `~16.1.6`; the newest release is 16.4.0 and was not adopted, because that is not the version Nx's plugin was built against.
+
+**Layout.** Next's own `app` folder sits at the app's root and holds two files, each a single re-export. The Feature-Sliced Design layers are under `src`: the root layout in `_app`, the placeholder page in `_pages`, and the list of library placeholders in `shared`. This is the layout in Feature-Sliced Design's own guide for the App Router.
+
+**A type-check target written by hand.** Nx deliberately infers no type-check target for a Next.js app. The hand-written one generates Next's route types and then runs the TypeScript compiler without emitting. It needs the libraries' type-checks to have run first, and the build waits for it, so the two never write to the `.next` folder at the same time. That is the same kind of clash that broke the API's type-check in ticket 02.
+
+**Telemetry.** Next.js sends anonymous usage data to its maker unless told not to. It is now switched off in every one of the Shopper app's targets. One build ran with it on before the switch was added.
+
+**Other things worth knowing.**
+
+- The app is started with `nx serve`, like the API. Nx's plugin calls this target `dev` by default and it was renamed, so that all three apps start the same way.
+- The port is passed explicitly. Left to its default, Next.js moves to the next free port when 3000 is taken, which would be the API's.
+- The build compiled the libraries from their TypeScript source with no extra setting. Next.js has a setting for transpiling local packages, and it may be needed once `ui` holds components.
+- The placeholder page is prerendered at build time, because it uses no data.
+- `next-env.d.ts` is generated by Next.js on every run and is ignored by Git.
+- The generator's sample page, sample route, styles, favicon and image typings were removed.
+- pnpm asked whether `sharp`, Next.js's image library, may run its install script. It was declined: the script is a fallback for platforms without a ready-made binary.
+- When a task fails and another is skipped because it depended on it, `pnpm check` exits with 130, not 1.
+
+**By-hand results.**
+
+| Check | Result |
+|---|---|
+| Fresh clone, `pnpm install --frozen-lockfile`, `pnpm check --skip-nx-cache` | Passes: the format check and 18 tasks across 7 projects. |
+| Every task from scratch, all output folders deleted first, cache skipped | Passes 5 times out of 5. |
+| The Shopper app through its serve target | Starts on port 3000. The page's HTML has the title "Shopper app" and the line "Shopper app placeholder. Libraries: @pcp/compatibility, @pcp/api-client, @pcp/ui, @pcp/i18n." |
+| Project graph | The Shopper app depends on `compatibility`, `api-client`, `ui` and `i18n`. No library depends on another. |
+| Fault: a `debugger` statement in the page | `pnpm check` exits 1. Failed task: the Shopper app's lint. |
+| Fault: a string assigned to a number | `pnpm check` exits 130. Failed task: the Shopper app's type-check. Its build was not run. |
+| Fault: an import from `@pcp/does-not-exist` | `pnpm check` exits 130. Failed task: the Shopper app's type-check. Its build was not run. |
+| After reverting each fault | `pnpm check` exits 0 and the working tree is clean. |
