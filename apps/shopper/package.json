@@ -1,0 +1,80 @@
+{
+  "name": "@pcp/shopper",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@pcp/api-client": "workspace:*",
+    "@pcp/compatibility": "workspace:*",
+    "@pcp/i18n": "workspace:*",
+    "@pcp/ui": "workspace:*",
+    "next": "~16.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "nx": {
+    "sourceRoot": "apps/shopper",
+    "targets": {
+      "typecheck": {
+        "command": "next typegen && tsc --noEmit -p tsconfig.json",
+        "options": {
+          "cwd": "{projectRoot}",
+          "env": {
+            "NEXT_TELEMETRY_DISABLED": "1"
+          }
+        },
+        "dependsOn": [
+          "^typecheck"
+        ],
+        "cache": true,
+        "inputs": [
+          "default",
+          "^default",
+          {
+            "externalDependencies": [
+              "next",
+              "typescript"
+            ]
+          }
+        ],
+        "outputs": [
+          "{projectRoot}/out-tsc"
+        ]
+      },
+      "build": {
+        "dependsOn": [
+          "^build",
+          "typecheck"
+        ],
+        "options": {
+          "env": {
+            "NEXT_TELEMETRY_DISABLED": "1"
+          }
+        }
+      },
+      "serve": {
+        "options": {
+          "port": 3000,
+          "env": {
+            "NEXT_TELEMETRY_DISABLED": "1"
+          }
+        }
+      },
+      "start": {
+        "options": {
+          "port": 3000,
+          "env": {
+            "NEXT_TELEMETRY_DISABLED": "1"
+          }
+        }
+      },
+      "serve-static": {
+        "options": {
+          "port": 3000,
+          "env": {
+            "NEXT_TELEMETRY_DISABLED": "1"
+          }
+        }
+      }
+    }
+  }
+}
