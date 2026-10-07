@@ -307,7 +307,7 @@ All commands are run from the repository root, with Node 24 and pnpm. An install
 | Command | What it does |
 |---|---|
 | `pnpm install` | Installs everything for all eight projects. |
-| `pnpm check` | Runs the format check, then lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
+| `pnpm check` | Runs the format check, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
 | `pnpm check --skip-nx-cache` | The same, with every task run again. Nx keeps its cache under the home directory, so a fresh clone on the same machine reuses old results unless the cache is skipped. |
 | `pnpm format` | Rewrites source and configuration files into the agreed format. |
 | `pnpm exec nx serve @pcp/shopper` | Starts the Shopper app on port 3000. |

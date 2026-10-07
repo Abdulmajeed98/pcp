@@ -83,7 +83,7 @@ No screen, no endpoint with a purpose, no database and no login exists at the en
 - The repository root becomes an Nx workspace managed with pnpm. Applications live in `apps/` and libraries in `libs/`, and the existing documents stay where they are.
 - Every project is a workspace package named `@pcp/<name>`, and its Nx project name is the same as its package name, as at the workplace.
 - Nx's generators create the projects, and Nx's plugins infer each project's targets from its tool configuration. Targets are written by hand only where no plugin provides them.
-- The code is ES modules throughout. One shared base TypeScript configuration has strict mode on and uses bundler-style module resolution, as at the workplace; every project extends it. The API's configuration adds the decorator options NestJS needs.
+- Source code is written as ES modules throughout. The API's bundle and a few tool configuration files are CommonJS, as at the workplace. One shared base TypeScript configuration has strict mode on and uses bundler-style module resolution, as at the workplace; every project extends it. The API's configuration adds the decorator options NestJS needs.
 - Nx's cache is local. Nx Cloud is not connected.
 
 ### The eight projects
@@ -131,12 +131,12 @@ No screen, no endpoint with a purpose, no database and no login exists at the en
 ### Formatting and linting
 
 - Oxfmt formats source and configuration files across the whole repository. The existing documents (the specs, the ADRs, the research, CONTEXT.md, PRODUCT.md and CLAUDE.md) are excluded, so this step does not rewrite them.
-- Oxlint is the only linter. It lints all eight projects from one shared root configuration, and a project adds only what its kind of code needs. ESLint is not configured and no package manifest lists it. Nx's own plugins depend on Nx's ESLint plugin, so ESLint is present in the installed dependencies without being used.
+- Oxlint is the only linter. It lints all eight projects from one shared root configuration, and a project adds only what its kind of code needs. ESLint is not configured, no package manifest lists it and nothing runs it. It is present in the installed dependencies, as an automatically installed peer of Nx's own packages, and the owner decided on 7 October 2026 to keep it there: Nx's boundary rule for Oxlint, which step 3 uses, does not load without it.
 - Only Oxlint's recommended rules are switched on, together with its rule sets for the frameworks a project uses. The Nx boundary rule, project tags, the API's layer check and the Feature-Sliced Design import bans belong to step 3.
 
 ### Commands
 
-- A root `check` script runs the format check and then lint, type-check, test and build across every project that has the target. It exits non-zero if any part fails.
+- A root `check` script runs the format check, lints the files that belong to no project (everything outside `apps/` and `libs/`), and then runs lint, type-check, test and build across every project that has the target. It exits non-zero if any part fails.
 - A root `format` script rewrites files into the agreed format.
 - Each app is started through its own Nx serve target.
 - Once the commands exist, they and the directory layout are added to the Technology section of the MVP spec, which says they are to be recorded there.
