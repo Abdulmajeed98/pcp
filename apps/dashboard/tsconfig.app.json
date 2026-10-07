@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc/app",
+    "tsBuildInfoFile": "out-tsc/app/tsconfig.app.tsbuildinfo",
+    "rootDir": "src",
+    "jsx": "react-jsx",
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "types": ["vite/client"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": ["out-tsc", "dist"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    {
+      "path": "../../libs/ui/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/i18n/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/api-client/tsconfig.lib.json"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@pcp/dashboard",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@pcp/api-client": "workspace:*",
+    "@pcp/i18n": "workspace:*",
+    "@pcp/ui": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
