@@ -11,6 +11,15 @@
     },
     {
       "path": "./apps/api"
+    },
+    {
+      "path": "./libs/api-client"
+    },
+    {
+      "path": "./libs/ui"
+    },
+    {
+      "path": "./libs/i18n"
     }
   ]
 }

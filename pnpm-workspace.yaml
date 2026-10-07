@@ -10,3 +10,4 @@ allowBuilds:
   nx: true
   unrs-resolver: false
   '@nestjs/core': false
+  sharp: false

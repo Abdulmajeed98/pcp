@@ -49,6 +49,17 @@
       "options": {
         "targetName": "test"
       }
+    },
+    {
+      "plugin": "@nx/next/plugin",
+      "options": {
+        "startTargetName": "start",
+        "buildTargetName": "build",
+        "devTargetName": "serve",
+        "serveStaticTargetName": "serve-static",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
     }
   ],
   "neverConnectToCloud": true,
@@ -56,6 +67,14 @@
   "targetDefaults": {
     "test": {
       "dependsOn": ["^build"]
+    }
+  },
+  "generators": {
+    "@nx/next": {
+      "application": {
+        "style": "css",
+        "linter": "oxlint"
+      }
     }
   }
 }
