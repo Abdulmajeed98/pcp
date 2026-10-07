@@ -298,7 +298,37 @@ The infrastructure is established first, with no product features:
 
 Automated checks on GitHub are added when the GitHub repository exists. Each app's libraries are chosen when work on that app begins, not before.
 
-The commands for building, testing and running the project, its directory layout and its code conventions are added to this spec once the infrastructure exists.
+Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/workspace](../workspace/spec.md). The commands and layout it produced are below. The commands for running PostgreSQL and Keycloak, the boundary and layer checks, and the code conventions are added here as steps 2 to 4 are finished.
+
+**Commands**
+
+All commands are run from the repository root, with Node 24 and pnpm. An install under another Node major version, or with npm or yarn, is refused.
+
+| Command | What it does |
+|---|---|
+| `pnpm install` | Installs everything for all eight projects. |
+| `pnpm check` | Runs the format check, then lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
+| `pnpm check --skip-nx-cache` | The same, with every task run again. Nx keeps its cache under the home directory, so a fresh clone on the same machine reuses old results unless the cache is skipped. |
+| `pnpm format` | Rewrites source and configuration files into the agreed format. |
+| `pnpm exec nx serve @pcp/shopper` | Starts the Shopper app on port 3000. |
+| `pnpm exec nx serve @pcp/api` | Starts the API on port 3001. |
+| `pnpm exec nx serve @pcp/dashboard` | Starts the dashboard on port 3002. |
+| `pnpm exec nx <target> <project>` | Runs one target for one project, for example `pnpm exec nx test @pcp/core`. |
+
+Every project has a `lint` and a `typecheck` target. Only the API and `core` have a `test` target, and only the three apps have a `build` target.
+
+**Directory layout**
+
+| Path | What lives there |
+|---|---|
+| `apps/api` | The API. Its domain and infrastructure layers are under `src/app`, and its tests are under `src/test`, mirroring `src/app`. |
+| `apps/shopper` | The Shopper app. Next's `app` folder only routes; the Feature-Sliced Design layers are under `src`, with the App and Pages layers named `_app` and `_pages`. |
+| `apps/dashboard` | The dashboard. Its Feature-Sliced Design layers are under `src`. |
+| `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n` | The five shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. |
+| `tools` | Scripts the workspace itself needs. |
+| The repository root | The workspace's own configuration: the package manifest and lockfile, the pnpm workspace file, and the Nx, TypeScript, Oxlint, Oxfmt and Jest settings that every project extends. |
+
+Inside the API the `~/` alias means `src/app`. Inside each frontend the `@/` alias means `src`.
 
 ## Testing strategy
 
