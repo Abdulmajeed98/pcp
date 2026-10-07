@@ -91,7 +91,6 @@
     },
     "@nx/react": {
       "application": {
-        "babel": true,
         "style": "css",
         "linter": "oxlint",
         "bundler": "vite"
