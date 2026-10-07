@@ -131,7 +131,7 @@ No screen, no endpoint with a purpose, no database and no login exists at the en
 ### Formatting and linting
 
 - Oxfmt formats source and configuration files across the whole repository. The existing documents (the specs, the ADRs, the research, CONTEXT.md, PRODUCT.md and CLAUDE.md) are excluded, so this step does not rewrite them.
-- Oxlint is the only linter. It lints all eight projects from one shared root configuration, and a project adds only what its kind of code needs. ESLint is not installed.
+- Oxlint is the only linter. It lints all eight projects from one shared root configuration, and a project adds only what its kind of code needs. ESLint is not configured and no package manifest lists it. Nx's own plugins depend on Nx's ESLint plugin, so ESLint is present in the installed dependencies without being used.
 - Only Oxlint's recommended rules are switched on, together with its rule sets for the frameworks a project uses. The Nx boundary rule, project tags, the API's layer check and the Feature-Sliced Design import bans belong to step 3.
 
 ### Commands

@@ -14,7 +14,7 @@
 - [ ] A second run of `pnpm check` with nothing changed completes from Nx's cache.
 - [ ] A single target can be run for a single project.
 - [ ] Checked by hand: all three apps run at the same time, the Shopper app on port 3000, the API on 3001 and the dashboard on 3002. The API answers a request to its placeholder endpoint and each frontend serves its placeholder page.
-- [ ] No ESLint package or configuration exists in the repository. No environment file or secret is needed for the install, the check or starting any app.
+- [ ] No ESLint configuration exists and no package manifest lists ESLint. (Reworded on 7 October 2026: see the Comments of ticket 02.) No environment file or secret is needed for the install, the check or starting any app.
 - [ ] Only the API and `core` have a test target, and only the three apps have a build target.
 - [ ] The Technology section of the MVP spec gains the commands that now exist (install, check, format, starting each app, running one target for one project) and the directory layout. Its sentence promising them is amended to say what is still to come from steps 2 to 4.
 - [ ] A fault found here is fixed in this ticket, and the fix is recorded under Comments.
