@@ -1,6 +1,6 @@
 # Spec: Proof that the parts connect
 
-Status: ready-for-human
+Status: resolved
 
 This is step 4, the last of the four infrastructure steps listed under "Order of work" in [the MVP spec](../mvp/spec.md). Steps 1 to 3, [the workspace](../workspace/spec.md), [the development services](../dev-services/spec.md) and [the boundary and layer checks](../boundary-checks/spec.md), are finished. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md) and [ADR-0004](../../docs/adr/0004-architecture-per-app.md). The owner confirmed its test seams on 9 October 2026.
 
@@ -433,5 +433,5 @@ Each line is seen to fail once, by a deliberate fault that is then reverted: the
   - `pnpm platform:check` itself says when the browser is missing, and its tests set the password in the page without typing it.
   - It has one line more than this spec lists: that the browser's storage holds no token.
   - CONTEXT.md gained **Login** and **Caller**.
-  - The owner's own login in their own browser is still to be done. Ticket 07 waits for it.
+  - The owner's own login in their own browser was made on 10 October 2026, a day after the rest. Ticket 07 records what they saw.
 - **Next steps.** This step closes the infrastructure. The capability map's build order begins with `languages`, `catalog` and `accounts`, and each gets its own spec in its own directory under `.scratch/`.

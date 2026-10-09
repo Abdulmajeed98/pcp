@@ -8,7 +8,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 
 **Blocked by:** 06
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] In a fresh clone in a new directory, with no `.env` and no Docker volumes left from earlier runs, one install followed by `pnpm check --skip-nx-cache` passes, with Docker stopped and before any browser is installed.
 - [x] In the same clone, `pnpm boundaries:check` passes on every line, and Git then reports a clean working tree.
@@ -19,7 +19,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 - [x] Checked by hand: with the API stopped, the Shopper page shows its plain line and the dashboard says the API cannot be reached.
 - [x] Checked by hand: `pnpm platform:check` with the services stopped says so and names the start command. With one app already running it uses that app and leaves it running.
 - [x] Checked by hand: a second `pnpm check` with nothing changed completes from the cache.
-- [ ] The owner is asked to log in once, in their own browser, as the development Admin. What they saw, or that it is still to be done, is recorded under Comments.
+- [x] The owner is asked to log in once, in their own browser, as the development Admin. What they saw, or that it is still to be done, is recorded under Comments.
 - [x] Nx's project graph lists exactly nine projects, each with its tags. The dependencies between them are the ones the MVP spec records, with `@pcp/e2e` depending on none.
 - [x] No password is committed, Git ignores `.env` and everything Playwright writes, and Git reports a clean working tree after every command above.
 - [x] The Technology section of the MVP spec gains the code conventions this step set for the API: the global guard and the two access decorators, the 401 and the 403, the caller and its resolver, the error body, the settings and how they are checked, the set-up function, how an endpoint's path is written, and how the API's HTTP surface is tested with signed tokens.
@@ -105,3 +105,15 @@ This ticket's status is `ready-for-human` and not `resolved`, as the spec review
 - **Reuse of an app started outside Nx** was tried for the API only.
 
 **After the changes.** `pnpm check --skip-nx-cache` passed for all nine projects with Docker made unreachable. `pnpm boundaries:check` passed on all 108 lines, `pnpm services:check` on all 33 and `pnpm platform:check` on all seven. The API has 47 tests and `core` has 37.
+
+### 10 October 2026: the owner's own login
+
+The owner logged in to the dashboard in their own browser, and the last box is ticked. This ticket is `resolved`, and with it the spec.
+
+**What was running.** The services had been up since the day before. The API and the dashboard were started with `pnpm exec nx serve @pcp/api` and `pnpm exec nx serve @pcp/dashboard`. Before the owner opened the browser, the status endpoint answered 200 and the caller endpoint, asked without a token, answered 401.
+
+**What the owner saw.** They opened `http://localhost:3002`, logged in as `development-admin`, and reported that the page shows `development-admin` with the role `admin`. They did not say whether they pressed "Ask the API again" or "Log out", or reloaded the page. `pnpm platform:check` covers those three.
+
+**The password.** The owner did not find it at first. It was copied from `.env` to their clipboard by a command that printed nothing of it, and they pasted it into the login screen. Afterwards they said that they could see `.env` and that no password stood under `DEVELOPMENT_ADMIN_PASSWORD`. Checked without printing the value: `.env` holds the setting on its tenth line, with a value of 32 characters on the same line, after the `=`. `.env.example` lists the same setting with no value, as it is meant to. Which of the two the owner was looking at is not known. The login worked with the value from `.env`, so the file and Keycloak agree.
+
+Both apps were stopped afterwards. The services were left running.
