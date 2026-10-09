@@ -1,0 +1,752 @@
+{
+  "overrides": [
+    {
+      "files": [
+        "src/app/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app/**",
+                  "@/pages/*/**",
+                  "@/widgets/*/**",
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./)+(pages|widgets|features|entities|shared)(/|$)",
+                "message": "A relative import may not cross into another layer. Use the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/pages/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/pages",
+                  "@/pages/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/widgets/*/**",
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){1}",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/pages/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/pages",
+                  "@/pages/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/widgets/*/**",
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){1}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/pages/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/pages",
+                  "@/pages/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/widgets/*/**",
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){2}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/pages/*/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/pages",
+                  "@/pages/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/widgets/*/**",
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){3}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/widgets/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){1}",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/widgets/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){1}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/widgets/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){2}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/widgets/*/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/features/*/**",
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){3}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/features/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){1}",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/features/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){1}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/features/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){2}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/features/*/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/entities/*/**",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){3}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/entities/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){1}",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/entities/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){1}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/entities/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){2}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/entities/*/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./){3}",
+                "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/shared/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**",
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^(\\.\\./)+(app|pages|widgets|features|entities)(/|$)",
+                "message": "A relative import may not cross into another layer. Use the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
