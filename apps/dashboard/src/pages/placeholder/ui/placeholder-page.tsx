@@ -37,7 +37,9 @@ export function PlaceholderPage() {
         </p>
       )}
       {answer?.kind === 'unreachable' && (
-        <p data-testid="unreachable">The API cannot be reached.</p>
+        <p data-testid="unreachable">
+          The call could not be made: the API or the login service cannot be reached.
+        </p>
       )}
       <button type="button" onClick={askAgain}>
         Ask the API again

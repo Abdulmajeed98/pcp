@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
 import {
+  findLogin,
   keycloakUrl,
   logInAsAdministrator,
   requestTokenWithPassword,
@@ -375,12 +376,7 @@ async function findDevelopmentAdmin() {
   const name = settings.DEVELOPMENT_ADMIN_NAME;
   if (!name) throw new Error(`.env does not name it. ${startHint}`);
 
-  // Keycloak matches any login whose name contains the one asked for, unless
-  // it is told that the name is exact.
-  const query = new URLSearchParams({ username: name, exact: 'true' });
-  const response = await readAsAdministrator(`/users?${query}`);
-  expectStatus(response, 200);
-  const [login] = await response.json();
+  const login = await findLogin(await logInAsAdministrator(settings), name);
   if (login === undefined) throw new Error(`the realm has no login named ${name}`);
   return login;
 }

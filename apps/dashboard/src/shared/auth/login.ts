@@ -29,13 +29,21 @@ export async function startLogin(): Promise<void> {
 }
 
 // A token that is still valid, for one call to the API. A token that is about
-// to run out is renewed first. When Keycloak will not renew it, the session
-// there is over, and the login starts again.
+// to run out is renewed first.
 export async function validToken(): Promise<string | undefined> {
   try {
     await keycloak.updateToken(leastValidity);
-  } catch {
-    await keycloak.login();
+  } catch (error) {
+    // When Keycloak refuses to renew, the session there is over. The adapter
+    // then drops its tokens and, because the dashboard requires a login,
+    // sends the browser to the login screen itself. The page is on its way
+    // out, so this call is left waiting and no request is made.
+    if (!keycloak.authenticated) return new Promise<never>(() => {});
+
+    // Any other failure means that Keycloak could not be asked. That is no
+    // reason to leave the page, nor to call the API with a token that may
+    // have run out, so the call fails and the page says so.
+    throw error;
   }
 
   return keycloak.token;

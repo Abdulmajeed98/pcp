@@ -14,8 +14,10 @@ export async function readCaller(): Promise<CallerAnswer> {
   const { data, error, response } = await apiClient.getCaller();
   if (data !== undefined) return { kind: 'caller', caller: data };
 
-  // When the request itself fails, the generated client answers without a
-  // response, although its types say that there always is one.
+  // When the request cannot be made, the generated client answers without a
+  // response, although its types say that there always is one. That is so
+  // when the API cannot be reached, and when no token could be had for the
+  // call because Keycloak could not be asked.
   const answered = response as Response | undefined;
   if (answered === undefined) return { kind: 'unreachable' };
 

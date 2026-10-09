@@ -11,6 +11,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
+import { chromium } from '@playwright/test';
+
 import { keycloakUrl } from './keycloak-administrator.mjs';
 
 const startHint = 'Start the services with "pnpm services:up".';
@@ -46,6 +48,15 @@ async function realmAnswers() {
 
 if (!(await realmAnswers())) {
   exitWith(`Keycloak cannot be reached, so the services are not running. ${startHint}`);
+}
+
+// `pnpm install` downloads no browser. Playwright says where Chromium would
+// be, whether or not it is there. The command named here also installs the
+// windowless build of it that the tests run in.
+if (!existsSync(chromium.executablePath())) {
+  exitWith(
+    'The browser that the tests drive is not installed. Install it once with "pnpm exec playwright install chromium".',
+  );
 }
 
 // Never answered from Nx's cache: a pass has to mean that the platform ran.

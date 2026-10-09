@@ -7,7 +7,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
-import { logInAsAdministrator } from './keycloak-administrator.mjs';
+import { findLogin, logInAsAdministrator } from './keycloak-administrator.mjs';
 
 const root = join(import.meta.dirname, '..');
 const envFile = join(root, '.env');
@@ -83,13 +83,7 @@ async function createDevelopmentAdminIfMissing() {
   const ask = await logInAsAdministrator(settings);
   const json = { 'content-type': 'application/json' };
 
-  // Keycloak matches any login whose name contains the one asked for, unless
-  // it is told that the name is exact.
-  const found = await ask(
-    `/users?${new URLSearchParams({ username: name, exact: 'true' })}`,
-  );
-  await expectStatus(found, 200, 'find the login');
-  if ((await found.json()).length > 0) return;
+  if ((await findLogin(ask, name)) !== undefined) return;
 
   const role = await ask('/roles/admin');
   await expectStatus(role, 200, 'read the admin role');

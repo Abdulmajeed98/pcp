@@ -38,3 +38,18 @@ export async function logInAsAdministrator(settings) {
       headers: { ...headers, authorization: `Bearer ${token}` },
     });
 }
+
+// Finds a login of the `pcp` realm by its name, and answers with nothing when
+// the realm has none of that name. Keycloak matches any login whose name
+// contains the one asked for, unless it is told that the name is exact.
+export async function findLogin(ask, name) {
+  const response = await ask(
+    `/users?${new URLSearchParams({ username: name, exact: 'true' })}`,
+  );
+  if (response.status !== 200) {
+    throw new Error(`Keycloak answered ${response.status} when asked for the login`);
+  }
+  const [login] = await response.json();
+
+  return login;
+}

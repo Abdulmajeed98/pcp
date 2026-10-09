@@ -19,6 +19,8 @@ startLogin().then(
     );
   },
   () => {
-    root.render(<p>The login could not be completed. Keycloak may be unreachable.</p>);
+    // Placeholder text, like the page's: the dashboard has no translated
+    // text yet.
+    root.render(<p>The login could not be completed.</p>);
   },
 );
