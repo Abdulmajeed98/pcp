@@ -146,4 +146,75 @@ if (postgresAnswers) {
   console.log(`      PostgreSQL cannot be reached. ${START_HINT}`);
 }
 
+const KEYCLOAK = 'http://localhost:8080';
+const REALM = `${KEYCLOAK}/realms/pcp`;
+
+// Keycloak's own realm, `master`, always exists, so its public description
+// answers whenever Keycloak is up, whatever state the platform's realm is in.
+async function askKeycloak() {
+  let response;
+  try {
+    response = await fetch(`${KEYCLOAK}/realms/master`);
+  } catch (error) {
+    throw new Error(error.cause?.code ?? error.message, { cause: error });
+  }
+  const description = response.ok ? await response.json() : {};
+  if (description.realm !== 'master') {
+    throw new Error('something other than Keycloak answered');
+  }
+}
+
+async function discoveryNamesTheRealm() {
+  const response = await fetch(`${REALM}/.well-known/openid-configuration`);
+  if (!response.ok) throw new Error(`Keycloak answered ${response.status}`);
+  const { issuer } = await response.json();
+  if (issuer !== REALM) throw new Error(`the issuer is ${issuer}`);
+}
+
+// Logs in as Keycloak's own administrator, for the few things that have no
+// behaviour a client could observe and must be read back from Keycloak's
+// administration interface.
+async function administratorToken() {
+  const response = await fetch(`${KEYCLOAK}/realms/master/protocol/openid-connect/token`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      grant_type: 'password',
+      client_id: 'admin-cli',
+      username: settings.KEYCLOAK_ADMIN_USERNAME,
+      password: settings.KEYCLOAK_ADMIN_PASSWORD,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Keycloak's own administrator could not log in (${response.status})`);
+  }
+  return (await response.json()).access_token;
+}
+
+async function readAsAdministrator(path) {
+  const token = await administratorToken();
+  return fetch(`${KEYCLOAK}/admin/realms/pcp${path}`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+}
+
+function roleExists(name) {
+  return async () => {
+    const response = await readAsAdministrator(`/roles/${name}`);
+    if (response.status === 404) throw new Error('the realm has no role of that name');
+    if (!response.ok) throw new Error(`Keycloak answered ${response.status}`);
+  };
+}
+
+const keycloakAnswers = await check('Keycloak answers on port 8080', askKeycloak);
+if (keycloakAnswers) {
+  await check(
+    "The pcp realm's discovery document names the realm as its issuer",
+    discoveryNamesTheRealm,
+  );
+  await check('The admin role exists', roleExists('admin'));
+  await check('The vendor role exists', roleExists('vendor'));
+} else {
+  console.log(`      Keycloak cannot be reached. ${START_HINT}`);
+}
+
 if (failures > 0) process.exitCode = 1;
