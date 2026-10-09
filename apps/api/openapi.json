@@ -1,0 +1,160 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/caller": {
+      "get": {
+        "operationId": "getCaller",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Who the caller is",
+        "tags": ["Caller"]
+      }
+    },
+    "/v1/status": {
+      "get": {
+        "operationId": "getStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "When this API process started",
+        "tags": ["Status"]
+      }
+    }
+  },
+  "info": {
+    "title": "Platform API",
+    "description": "",
+    "version": "1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "SubErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "What went wrong, as a fixed code.",
+            "example": "ACCESS_DENIED"
+          },
+          "title": {
+            "type": "string",
+            "description": "The key of a short text for the error.",
+            "example": "access_denied_title"
+          },
+          "detail": {
+            "type": "string",
+            "description": "The key of a longer text for the error.",
+            "example": "access_denied_details"
+          }
+        },
+        "required": ["code", "title", "detail"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubErrorResponse"
+            }
+          }
+        },
+        "required": ["errors"]
+      },
+      "CallerResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The login's identifier in the identity service.",
+            "example": "4d2c1f8e-9a53-4b61-8f0e-2d7c6a1b3e90"
+          },
+          "loginName": {
+            "type": "string",
+            "description": "The login's name.",
+            "example": "development-admin"
+          },
+          "roles": {
+            "type": "array",
+            "description": "The platform roles the login holds.",
+            "example": ["admin"],
+            "items": {
+              "type": "string",
+              "enum": ["admin", "vendor"]
+            }
+          }
+        },
+        "required": ["id", "loginName", "roles"]
+      },
+      "StatusResponse": {
+        "type": "object",
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "description": "The time this API process started.",
+            "format": "date-time",
+            "example": "2026-10-09T14:53:40.719Z"
+          }
+        },
+        "required": ["startedAt"]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

@@ -21,3 +21,6 @@ allowBuilds:
   '@nestjs/core': false
   sharp: false
   esbuild: false
+  # Comes with Swagger's own screen, which @nestjs/swagger depends on. Its
+  # script reports each install to scarf.sh, so it is not run.
+  '@scarf/scarf': false

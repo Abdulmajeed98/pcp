@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { Public } from '@pcp/core';
 
 import { StatusResponse } from './StatusResponse';
@@ -11,6 +12,10 @@ export class StatusController {
   // the time the API started.
   private readonly startedAt = new Date();
 
+  // An empty list of requirements is how the document says that an endpoint
+  // needs no login, where every other endpoint needs one.
+  @ApiOperation({ summary: 'When this API process started', security: [] })
+  @ApiOkResponse({ type: StatusResponse })
   @Public()
   @Get('v1/status')
   getStatus(): StatusResponse {
