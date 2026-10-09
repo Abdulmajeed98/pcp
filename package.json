@@ -7,8 +7,8 @@
     "check": "oxfmt --check && oxlint --ignore-pattern apps --ignore-pattern libs && nx run-many --targets=lint,typecheck,test,build",
     "format": "oxfmt",
     "services:up": "node tools/start-services.mjs",
-    "services:down": "docker compose down",
-    "services:reset": "docker compose down --volumes",
+    "services:down": "node tools/stop-services.mjs",
+    "services:reset": "node tools/stop-services.mjs --delete-data",
     "services:check": "node tools/check-services.mjs"
   },
   "dependencies": {
