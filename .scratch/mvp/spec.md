@@ -281,7 +281,7 @@ The stack and each app's architecture are decided and recorded in [ADR-0003](../
 - REST between the frontends and the API. The API describes itself with OpenAPI, and the frontends call it only through `api-client`.
 - The API uses NestJS 11 and follows the conventions of the owner's workplace backend: two layers (`domain` and `infrastructure`), Command and Query classes for use cases, abstract Store classes as ports, and errors returned as Effect `Either` values instead of thrown. ADR-0004 lists the conventions in full.
 - Both frontends follow Feature-Sliced Design, with its import rules enforced by Oxlint.
-- Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository; it is still before version 1.0, so its version is pinned exactly.
+- Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository; it is still before version 1.0, so its version is pinned exactly. Oxlint's version is pinned exactly as well, because the rule between projects runs on a part of Oxlint that may change in any release.
 - Tailwind CSS with shadcn/ui for the interface.
 - next-intl for the three languages in the Next.js app.
 - The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one rented server with 4 GB of memory running everything, with Cloudflare in front and nightly database backups.
@@ -298,7 +298,7 @@ The infrastructure is established first, with no product features:
 
 Automated checks on GitHub are added when the GitHub repository exists. Each app's libraries are chosen when work on that app begins, not before.
 
-Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/workspace](../workspace/spec.md). Step 2 was finished on 9 October 2026; its spec and tickets are in [.scratch/dev-services](../dev-services/spec.md). The commands, services and layout they produced are below. The boundary and layer checks and the code conventions are added here as steps 3 and 4 are finished.
+Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/workspace](../workspace/spec.md). Step 2 was finished on 9 October 2026; its spec and tickets are in [.scratch/dev-services](../dev-services/spec.md). Step 3 was finished on 9 October 2026; its spec and tickets are in [.scratch/boundary-checks](../boundary-checks/spec.md). The commands, services, layout and import rules they produced are below. Step 4 is still to come, and the code conventions are added here when it is finished.
 
 **Commands**
 
@@ -318,10 +318,14 @@ All commands are run from the repository root, with Node 24 and pnpm. An install
 | `pnpm services:down` | Stops both services and keeps their data. |
 | `pnpm services:reset` | Stops both services and deletes their data. The next start is a first start. |
 | `pnpm services:check` | Checks the running services from the outside and prints one line for each thing it checked. It exits non-zero if any line fails, and says so plainly when the services are not running. |
+| `pnpm boundaries:check` | Proves the import rules. For each case it plants a temporary file holding one import where a rule applies, lints through Nx with the cache skipped, and prints one line for the case. It exits non-zero if any line fails, and it removes what it planted. |
+| `pnpm boundaries:write` | Writes the frontends' import bans, as they are stated in `tools`, into the file each frontend's lint configuration extends. |
 
 Every project has a `lint` and a `typecheck` target. Only the API and `core` have a `test` target, and only the three apps have a `build` target.
 
 `pnpm check` does not start or need the services.
+
+`pnpm check` does not run `pnpm boundaries:check`. Run it after a change to the lint configuration, to a project's tags or to the name of a layer folder, after an upgrade of Oxlint or Nx, and when a project is added. Run it on its own: `pnpm check` and a development server would both see the planted files while it runs.
 
 **Development services**
 
@@ -346,10 +350,54 @@ Both services listen on the owner's machine only, and are for development only.
 | `apps/dashboard` | The dashboard. Its Feature-Sliced Design layers are under `src`. |
 | `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n` | The five shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. |
 | `services` | What the development services are set up from: PostgreSQL's set-up script, and Keycloak's realm file and theme. The Sorani text of the login screen is in the theme. |
-| `tools` | Scripts the workspace itself needs, among them the ones behind `pnpm services:up` and `pnpm services:check`. |
+| `tools` | Scripts the workspace itself needs, among them the ones behind `pnpm services:up` and `pnpm services:check`, the statement of the frontends' import bans, and the two scripts behind `pnpm boundaries:write` and `pnpm boundaries:check`. |
 | The repository root | The workspace's own configuration: the package manifest and lockfile, the pnpm workspace file, and the Nx, TypeScript, Oxlint, Oxfmt and Jest settings that every project extends. Also the Compose file for the development services and `.env.example`. |
 
 Inside the API the `~/` alias means `src/app`. Inside each frontend the `@/` alias means `src`.
+
+**Import rules**
+
+Lint refuses an import that breaks any rule below, so `pnpm check` does too, and `pnpm boundaries:check` proves that each rule still refuses a violation.
+
+_Between the eight projects._ Each project carries a scope tag and a type tag in its package manifest, and the constraints between the tags are in the root Oxlint configuration.
+
+| Project | Tags | May import |
+|---|---|---|
+| `@pcp/api` | `scope:api`, `type:app` | `@pcp/core`, `@pcp/compatibility` |
+| `@pcp/shopper` | `scope:web`, `type:app` | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n`, `@pcp/compatibility` |
+| `@pcp/dashboard` | `scope:web`, `type:app` | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n`, `@pcp/compatibility` |
+| `@pcp/core` | `scope:api`, `type:lib` | No other project |
+| `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n` | `scope:web`, `type:lib` | No other project |
+| `@pcp/compatibility` | `scope:shared`, `type:lib` | No other project, and no npm package |
+
+- A project is imported by its `@pcp/…` name and never by a relative path. A library is imported through its single entry file, and an import that reaches past it fails type-checking. The three apps export nothing, so an app cannot be imported by its name at all.
+- A project with no tags may import no other project. A new project is tagged before it imports anything.
+- A library may import no other library. The first dependency between two libraries is made by changing that constraint on purpose.
+- The ban on npm packages in `@pcp/compatibility` sees a package only once it is installed. An import of a package that is not installed fails type-checking instead.
+- This is Nx's boundary rule, run under Oxlint through a bridge that Nx marks as experimental. It reads the project graph that Nx caches on disk. With no cached graph it prints a warning, checks nothing and passes. `pnpm check` and `pnpm exec nx lint <project>` have the graph. Bare `oxlint` is not a boundary check, and neither is a run in which Nx has been told not to cache the graph (`NX_CACHE_PROJECT_GRAPH=false`).
+- The rule applies to files under a project's `src` folder and under the Shopper app's routing folder. A project's own tool configuration, at its root, is not covered.
+
+_Inside the API._ A file in the domain layer may not import the infrastructure layer, by the `~/` alias or by a relative path. The infrastructure layer may import the domain layer. The test tree is not covered, as at the workplace.
+
+_Inside each frontend._ The layers, from the top, with what a file in each may import through the `@/` alias:
+
+| Layer | Folder in the dashboard | Folder in the Shopper app | Has slices | May import |
+|---|---|---|---|---|
+| App | `app` | `_app` | No | Every layer below |
+| Pages | `pages` | `_pages` | Yes | Widgets, Features, Entities, Shared |
+| Widgets | `widgets` | `widgets` | Yes | Features, Entities, Shared |
+| Features | `features` | `features` | Yes | Entities, Shared |
+| Entities | `entities` | `entities` | Yes | Shared |
+| Shared | `shared` | `shared` | No | Other segments of Shared |
+
+- **No import from a layer above.**
+- **No import of another slice on the same layer.** Two slices are joined on a layer above. Inside a slice, imports are relative.
+- **Nothing past an index file.** A slice is imported as `@/<layer>/<slice>`, a segment of the Shared layer as `@/shared/<segment>`, and the App layer as a whole.
+- **A relative import stays at home.** It may not leave its own slice, and in the App and Shared layers it may not cross into another layer. A climb is followed from a slice's own folder, from a segment and from one folder inside a segment. A file at any other depth may not climb with a relative import at all.
+- **Next's routing folder only routes.** In the Shopper app, a file in Next's `app` folder imports a page from the Pages layer or the App layer, each through its index file, and nothing else from the project.
+- The bans cover all six layers, although the Widgets, Features and Entities folders are created only when the first slice needs them.
+- The bans are stated once, in `tools`, and `pnpm boundaries:write` writes them into `.oxlintrc.feature-sliced.json` in each frontend's folder. That file is never edited by hand: change the statement and write it again. `pnpm boundaries:check` fails when the two differ.
+- Type-only imports, re-exports and lazy `import()` count as imports under every rule here.
 
 ## Testing strategy
 
