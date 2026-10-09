@@ -271,17 +271,20 @@ The stack and each app's architecture are decided and recorded in [ADR-0003](../
   - the API, built with NestJS. It is the only part that touches the database. Both frontends call it, and the Next.js app never reads the database itself.
 - Keycloak as the identity service. Vendors log in through it; the Admin console creates Vendors and resets passwords through the API, which calls Keycloak. It ships English and Arabic login screens; the Kurdish (Sorani) text is added in a custom theme.
 - PostgreSQL as the database, run in Docker during development, with Drizzle for database access and migrations.
-- One repository, managed with Nx and pnpm. Applications live in `apps/` and shared libraries in `libs/`, named `@pcp/…` inside the workspace. Each app is one Nx project, and Nx's boundary rule governs what apps and libraries may import from each other.
+- One repository, managed with Nx and pnpm. Applications live in `apps/` and shared libraries in `libs/`, named `@pcp/…` inside the workspace. Each app is one Nx project, and Nx's boundary rule governs what apps and libraries may import from each other. A ninth project, `@pcp/e2e`, holds the end-to-end tests.
 - Five shared libraries:
   - `core`: the API's shared plumbing (errors, access control, database helpers, test helpers);
   - `compatibility`: the Compatibility Rules, run by both the API and the builder in the browser. It is plain TypeScript without Effect, and each rule returns one of its outcomes (CMP-3) as a plain value;
   - `api-client`: a typed client generated from the API's OpenAPI document;
   - `ui`: shared components and the Tailwind theme;
   - `i18n`: the text for all three languages.
-- REST between the frontends and the API. The API describes itself with OpenAPI, and the frontends call it only through `api-client`.
+- REST between the frontends and the API. The API describes itself with OpenAPI, through `@nestjs/swagger`, and the frontends call it only through `api-client`, which `@hey-api/openapi-ts` generates from that description. The generator is still before version 1.0, so its version is pinned exactly.
 - The API uses NestJS 11 and follows the conventions of the owner's workplace backend: two layers (`domain` and `infrastructure`), Command and Query classes for use cases, abstract Store classes as ports, and errors returned as Effect `Either` values instead of thrown. ADR-0004 lists the conventions in full.
 - Both frontends follow Feature-Sliced Design, with its import rules enforced by Oxlint.
-- Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository, except the two files of import bans that a script writes; it is still before version 1.0, so its version is pinned exactly. Oxlint's version is pinned exactly as well, because the rule between projects runs on a part of Oxlint that may change in any release.
+- The API verifies every login itself, with `jose`: a token's signature against the keys the realm publishes, its expiry, its issuer and its audience. It keeps the caller of each request with `nestjs-cls`, and reads its settings through `@nestjs/config`, checked with `class-validator`.
+- The dashboard logs in with `keycloak-js`, Keycloak's own adapter, and keeps tokens in memory only. The Shopper app has no login.
+- End-to-end tests are written with Playwright and run in Chromium.
+- Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository, except the two files of import bans that a script writes and the generated client; it is still before version 1.0, so its version is pinned exactly. Oxlint's version is pinned exactly as well, because the rule between projects runs on a part of Oxlint that may change in any release.
 - Tailwind CSS with shadcn/ui for the interface.
 - next-intl for the three languages in the Next.js app.
 - The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one rented server with 4 GB of memory running everything, with Cloudflare in front and nightly database backups.
@@ -298,34 +301,41 @@ The infrastructure is established first, with no product features:
 
 Automated checks on GitHub are added when the GitHub repository exists. Each app's libraries are chosen when work on that app begins, not before.
 
-Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/workspace](../workspace/spec.md). Step 2 was finished on 9 October 2026; its spec and tickets are in [.scratch/dev-services](../dev-services/spec.md). Step 3 was finished on 9 October 2026; its spec and tickets are in [.scratch/boundary-checks](../boundary-checks/spec.md). The commands, services, layout and import rules they produced are below. Step 4 is still to come, and the code conventions are added here when it is finished.
+Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/workspace](../workspace/spec.md). Step 2 was finished on 9 October 2026; its spec and tickets are in [.scratch/dev-services](../dev-services/spec.md). Step 3 was finished on 9 October 2026; its spec and tickets are in [.scratch/boundary-checks](../boundary-checks/spec.md). Step 4 was finished on 9 October 2026; its spec and tickets are in [.scratch/connection-proof](../connection-proof/spec.md). The infrastructure is complete. The commands, services, settings, layout, import rules and code conventions the four steps produced are below.
 
 **Commands**
 
-All commands are run from the repository root, with Node 24 and pnpm. An install under another Node major version, or with npm or yarn, is refused. The four `services` commands also need Docker to be running; no other command does.
+All commands are run from the repository root, with Node 24 and pnpm. An install under another Node major version, or with npm or yarn, is refused. The four `services` commands and `pnpm platform:check` need Docker to be running; no other command does.
 
 | Command | What it does |
 |---|---|
-| `pnpm install` | Installs everything for all eight projects. |
-| `pnpm check` | Runs the format check, compares the frontends' written import bans with their statement, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
+| `pnpm install` | Installs everything for all nine projects. It does not download the browser that `pnpm platform:check` drives. |
+| `pnpm check` | Runs the format check, compares the frontends' written import bans with their statement, generates the frontends' client again and compares it with the committed one, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
 | `pnpm check --skip-nx-cache` | The same, with every task run again. Nx keeps its cache under the home directory, so a fresh clone on the same machine reuses old results unless the cache is skipped. |
 | `pnpm format` | Rewrites source and configuration files into the agreed format. |
 | `pnpm exec nx serve @pcp/shopper` | Starts the Shopper app on port 3000. |
 | `pnpm exec nx serve @pcp/api` | Starts the API on port 3001. |
 | `pnpm exec nx serve @pcp/dashboard` | Starts the dashboard on port 3002. |
 | `pnpm exec nx <target> <project>` | Runs one target for one project, for example `pnpm exec nx test @pcp/core`. |
-| `pnpm services:up` | Starts PostgreSQL and Keycloak in Docker, in the background, and returns when both are healthy. The first start creates `.env` with random local passwords. An `.env` that exists is never changed. |
+| `pnpm services:up` | Starts PostgreSQL and Keycloak in Docker, in the background, and returns when both are healthy and the development Admin login exists. The first start creates `.env` with random local passwords. A value that is in `.env` is never changed, and a setting that is new is added to it. |
 | `pnpm services:down` | Stops both services and keeps their data. |
 | `pnpm services:reset` | Stops both services and deletes their data. The next start is a first start. |
 | `pnpm services:check` | Checks the running services from the outside and prints one line for each thing it checked. It exits non-zero if any line fails, and says so plainly when the services are not running. |
 | `pnpm boundaries:check` | Proves the import rules. For each case it plants a temporary file holding one import where a rule applies, lints through Nx with the cache skipped, and prints one line for the case. It exits non-zero if any line fails, and it removes what it planted. |
 | `pnpm boundaries:write` | Writes the frontends' import bans, as they are stated in `tools`, into the file each frontend's lint configuration extends. |
+| `pnpm api-client:write` | Writes the API's description of itself into `apps/api/openapi.json`, and then generates the frontends' client from it into `libs/api-client/src/generated`. |
+| `pnpm platform:check` | Proves that the parts connect, in a real browser. It makes sure that the development services are running, starts each of the three apps that is not running, runs the end-to-end tests in Chromium, prints one line for each, and stops the apps it started. It exits non-zero if any line fails, and it is never answered from Nx's cache. |
+| `pnpm exec playwright install chromium` | Downloads the browser that `pnpm platform:check` drives. It is run once on each machine. |
 
-Every project has a `lint` and a `typecheck` target. Only the API and `core` have a `test` target, and only the three apps have a `build` target.
+Every project has a `lint` and a `typecheck` target. Only the API and `core` have a `test` target, and only the three apps have a `build` target. `@pcp/e2e` has an `e2e` target, which `pnpm platform:check` runs and `pnpm check` does not.
 
-`pnpm check` does not start or need the services.
+`pnpm check` does not start or need the services, and it needs no browser.
 
 `pnpm check` does not run `pnpm boundaries:check`. Run it after a change to the lint configuration, to a project's tags or to the name of a layer folder, after an upgrade of Oxlint or Nx, and when a project is added. Run it on its own: `pnpm check` and a development server would both see the planted files while it runs.
+
+Run `pnpm api-client:write` after any change to an endpoint or to a Response class. `pnpm check` fails until it has been run: one of the API's tests compares the committed description with what the API describes, and a step of `pnpm check` generates the client again and compares it with the committed one. Neither file is edited by hand.
+
+`pnpm check` does not run `pnpm platform:check`. Run it after a change to the realm file, to the guard or an access rule, to the dashboard's login code, to either frontend's call to the API or to an app's settings, and after an upgrade of Keycloak, `keycloak-js`, `jose`, Next or Playwright. An app that is already running is used and left running. A failed run leaves a report and a trace under `apps/e2e/test-output`, which Git ignores. A trace holds what was typed into the login screen.
 
 **Development services**
 
@@ -334,24 +344,46 @@ Both services listen on the owner's machine only, and are for development only.
 | Service | Address | What it holds |
 |---|---|---|
 | PostgreSQL 18.6 | `localhost:5432` | The `pcp` database, which is the platform's and is owned by the user `pcp`, and the `keycloak` database, owned by the user `keycloak`. Neither user can connect to the other's database. |
-| Keycloak 26.8.0 | `http://localhost:8080` | The `pcp` realm, whose issuer is `http://localhost:8080/realms/pcp`. It has the roles `admin` and `vendor` and holds no logins. The platform's one client in it is `dashboard`; Keycloak adds six clients of its own to every realm. Its login screen is in Kurdish (Sorani), Arabic and English. |
+| Keycloak 26.8.0 | `http://localhost:8080` | The `pcp` realm, whose issuer is `http://localhost:8080/realms/pcp`. It has the roles `admin` and `vendor`. The realm file holds no logins, and `pnpm services:up` creates one, the development Admin. The platform's one client in it is `dashboard`, whose access tokens name `pcp-api` as an audience; Keycloak adds six clients of its own to every realm. Its login screen is in Kurdish (Sorani), Arabic and English. |
 
 - **Passwords.** No password is committed. They are in `.env`, which Git ignores; `.env.example` lists the settings without their values. Keycloak's own console is at `http://localhost:8080/admin` and is opened with Keycloak's own administrator account, whose name and password are in `.env`. That account is not the platform's Admin.
+- **The development Admin.** `pnpm services:up` creates one login in the realm when the realm has none of that name: `development-admin`, with the `admin` role. Its password is generated and kept in `.env`, as `DEVELOPMENT_ADMIN_PASSWORD`. It is the login to open the dashboard with during development, and the one `pnpm platform:check` logs in with. It exists in development only. Keycloak's default profile asks a login for a first name, a last name and an email address, and sends a login without them to a screen that asks for them, so this login is created with all three.
 - **The reset rule.** PostgreSQL runs its set-up script only when its data is empty, and Keycloak imports the realm only when the realm does not exist yet. A change to the database set-up script or to the realm file, which holds the realm's languages, therefore takes effect only after `pnpm services:reset` and a new start. The theme is different: in development mode Keycloak reads it afresh for every page, so a change to its text or to its language list shows on the next page load.
 - **The data and the passwords belong together.** The data is created with the passwords that are in `.env` at the first start. If `.env` is deleted while the data is kept, the next start writes new passwords that the data does not know; `pnpm services:reset` and a new start put that right. Stopping and resetting work without `.env`.
 - **Renaming the realm.** Keycloak refuses to start when the realm file's name and the realm's name differ, so the two are changed together.
+
+**The apps' settings**
+
+Each app reads its settings from its environment. Every one has the development value as its default, so all three apps start with no environment file, and none of them is a secret. None goes into `.env`, which belongs to the development services and which no app reads.
+
+| App | Setting | Default | What it is |
+|---|---|---|---|
+| The API | `PORT` | `3001` | The port it listens on. |
+| The API | `CORS_ALLOWED_ORIGINS` | `http://localhost:3002` | The origins it accepts browser calls from, separated by commas. |
+| The API | `KEYCLOAK_ISSUER` | `http://localhost:8080/realms/pcp` | The realm whose tokens it accepts. The API has to reach this address, to fetch the realm's keys. |
+| The API | `KEYCLOAK_AUDIENCE` | `pcp-api` | The audience a token has to name. |
+| The Shopper app | `API_URL` | `http://localhost:3001` | The API's address. It is read on the server when a page is requested, and is never sent to the browser. |
+| The dashboard | `VITE_KEYCLOAK_URL` | `http://localhost:8080` | Keycloak's address. |
+| The dashboard | `VITE_KEYCLOAK_REALM` | `pcp` | The realm. |
+| The dashboard | `VITE_KEYCLOAK_CLIENT_ID` | `dashboard` | Its login client. |
+| The dashboard | `VITE_API_URL` | `http://localhost:3001` | The API's address. |
+
+- The API checks its settings when it starts. A malformed one stops it with a message that names it.
+- The dashboard's settings are fixed when it is built, and every one of them ends up in the browser.
+- Values for a server are supplied when the platform is packaged, which is later work.
 
 **Directory layout**
 
 | Path | What lives there |
 |---|---|
-| `apps/api` | The API. Its domain and infrastructure layers are under `src/app`, and its tests are under `src/test`, mirroring `src/app`. |
+| `apps/api` | The API. Its domain and infrastructure layers are under `src/app`, and its tests are under `src/test`, mirroring `src/app`. Its description of itself, `openapi.json`, is beside them. |
 | `apps/shopper` | The Shopper app. Next's `app` folder only routes; the Feature-Sliced Design layers are under `src`, with the App and Pages layers named `_app` and `_pages`. |
 | `apps/dashboard` | The dashboard. Its Feature-Sliced Design layers are under `src`. |
-| `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n` | The five shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. |
+| `apps/e2e` | The end-to-end tests, which `pnpm platform:check` runs. |
+| `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n` | The five shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. `@pcp/core` has a second entry, `@pcp/core/test-utils`, which holds test helpers and which only test files import. The client under `libs/api-client/src/generated` is generated. |
 | `services` | What the development services are set up from: PostgreSQL's set-up script, and Keycloak's realm file and theme. The Sorani text of the login screen is in the theme. |
-| `tools` | Scripts the workspace itself needs, among them the ones behind `pnpm services:up` and `pnpm services:check`, the statement of the frontends' import bans, and the two scripts behind `pnpm boundaries:write` and `pnpm boundaries:check`. |
-| The repository root | The workspace's own configuration: the package manifest and lockfile, the pnpm workspace file, and the Nx, TypeScript, Oxlint, Oxfmt and Jest settings that every project extends. Also the Compose file for the development services and `.env.example`. |
+| `tools` | Scripts the workspace itself needs, among them the ones behind `pnpm services:up` and `pnpm services:check`, the statement of the frontends' import bans, the two scripts behind `pnpm boundaries:write` and `pnpm boundaries:check`, and the ones behind `pnpm api-client:write` and `pnpm platform:check`. |
+| The repository root | The workspace's own configuration: the package manifest and lockfile, the pnpm workspace file, and the Nx, TypeScript, Oxlint, Oxfmt and Jest settings that every project extends. Also the Compose file for the development services, `.env.example`, and the lint rules for test files, which the API and `core` extend. |
 
 Inside the API the `~/` alias means `src/app`. Inside each frontend the `@/` alias means `src`.
 
@@ -359,7 +391,7 @@ Inside the API the `~/` alias means `src/app`. Inside each frontend the `@/` ali
 
 Lint refuses an import that breaks any rule below, so `pnpm check` does too, and `pnpm boundaries:check` proves that each rule still refuses a violation.
 
-_Between the eight projects._ Each project carries a scope tag and a type tag in its package manifest, and the constraints between the tags are in the root Oxlint configuration.
+_Between the nine projects._ Each project carries a scope tag and a type tag in its package manifest, and the constraints between the tags are in the root Oxlint configuration.
 
 | Project | Tags | May import |
 |---|---|---|
@@ -369,15 +401,16 @@ _Between the eight projects._ Each project carries a scope tag and a type tag in
 | `@pcp/core` | `scope:api`, `type:lib` | No other project |
 | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n` | `scope:web`, `type:lib` | No other project |
 | `@pcp/compatibility` | `scope:shared`, `type:lib` | No other project, and no npm package |
+| `@pcp/e2e` | `scope:e2e`, `type:e2e` | No other project |
 
-- A project is imported by its `@pcp/…` name and never by a relative path. A library is imported through its single entry file, and an import that reaches past it fails type-checking. The three apps export nothing, so an app cannot be imported by its name at all.
+- A project is imported by its `@pcp/…` name and never by a relative path. A library is imported through its single entry file, and `@pcp/core` through its second entry as well. An import that reaches past an entry fails type-checking. The three apps export nothing, so an app cannot be imported by its name at all.
 - A project with no tags may import no other project. A new project is tagged before it imports anything.
 - A library may import no other library. The first dependency between two libraries is made by changing that constraint on purpose.
 - The ban on npm packages in `@pcp/compatibility` sees a package only once it is installed. An import of a package that is not installed fails type-checking instead.
 - This is Nx's boundary rule, run under Oxlint through a bridge that Nx marks as experimental. It reads the project graph that Nx caches on disk. With no cached graph it prints a warning, checks nothing and passes. `pnpm check` and `pnpm exec nx lint <project>` have the graph. Bare `oxlint` is not a boundary check, and neither is a run in which Nx has been told not to cache the graph (`NX_CACHE_PROJECT_GRAPH=false`).
 - The rule applies to every file of a project, the files at its root among them. The files that belong to no project are linted before Nx has cached a graph, with a second configuration at the repository root that extends the first and switches this one rule off.
 
-_Inside the API._ A file in the domain layer may not import the infrastructure layer, by the `~/` alias or by a relative path. The infrastructure layer may import the domain layer. The test tree is not covered, as at the workplace.
+_Inside the API._ A file in the domain layer may not import the infrastructure layer, by the `~/` alias or by a relative path. The infrastructure layer may import the domain layer. The test tree is not covered, as at the workplace. `@pcp/core` has the same two layers and the same ban.
 
 _Inside each frontend._ The layers, from the top, with what a file in each may import through the `@/` alias:
 
@@ -403,6 +436,45 @@ _Inside each frontend._ The layers, from the top, with what a file in each may i
 - Two things the bans cannot see. A file with no imports, put straight into a layer that has slices, can still be imported as if it were a slice. A file in `src` outside the six layers is under no ban itself, though nothing in a layer or in the routing folder can import it.
 - Type-only imports, re-exports and lazy `import()` count as imports under every rule here.
 
+**The API's conventions in code**
+
+Step 4 built these once, on two endpoints, for every module to copy. ADR-0004 gives the reasons.
+
+- _Layout._ A feature lives in `src/app/infrastructure/<feature>/`, with its controller in `endpoints/` beside its Request and Response classes, and a NestJS module that the root module imports. A use case and its entity live in `src/app/domain/<entity>/`. No use case exists yet: Command and Query classes, Stores and Effect's `Either` arrive with the first module that has a rule to apply.
+- _Paths._ A controller declares no path. Each method carries its full path, which begins with a version: `@Get('v1/caller')`.
+- _Access._ One global guard, in `@pcp/core`, stands in front of every endpoint. An endpoint carries `@PreAuthorize([Role.ADMIN, Role.VENDOR])`, which lets in a caller that holds any one of the roles listed, or `@Public()`. An endpoint with neither is refused for every caller.
+- _What the guard checks._ Every token's signature against the keys the realm publishes, its expiry, its issuer and its audience. The keys are fetched on first need and kept, so no request is a call to Keycloak and the API starts without it.
+- _Refusals._ No token, or a token that fails a check, is answered 401. A good token that lacks the role, or any call of an endpoint with no access rule, is answered 403. While the realm's keys cannot be had, a call with a token is answered 503.
+- _The caller._ A controller injects `CallerResolver` and calls `getCaller()`, which gives the login's identifier, its name and its platform roles. The guard fills it only after every check has passed. It is read in the infrastructure layer only, and a use case is handed plain values.
+- _Answers._ A Response class has readonly fields, each with `@ApiProperty`, a private constructor and a static `of` factory.
+- _Errors._ One global filter gives every error the same body: a list named `errors`, each entry with a `code`, a `title` and a `detail`. The last two are keys for the frontends to turn into text. What an exception said is never in the body.
+- _The description._ An endpoint carries `@ApiOperation` and `@ApiOkResponse`, with no compiler plugin. An operation is named after its controller method, and that name becomes the client's function name, so method names are unique across the controllers. A public endpoint adds `security: []` to its `@ApiOperation`, because the client sends a token only where the description asks for one.
+- _Settings._ A new setting is a field of the API's `EnvironmentVariables` class, with its default and its `class-validator` checks.
+- _Set-up._ `configureApplication` sets the application up, apart from starting it. The real start and every test call it.
+- _Tests of an endpoint._ They go through the API's HTTP surface. `createTestApp` builds the real root module, sets it up with `configureApplication` and listens on a free port, and the test sends requests with `fetch`. The helpers in `@pcp/core/test-utils` make the logins: `startKeycloakStandIn` publishes keys as Keycloak would, `createTestKey` and `signToken` make a token, and `expectErrorResponse` asserts a refusal. The guard is never overridden and nothing is mocked. A test sets a setting before it calls `createTestApp`, because the settings are read when the root module is loaded.
+- _Test files._ They are held to the workplace's eight lint rules for Jest, among them `it` and not `test`, a `describe` around every test, and an assertion in every test. A helper counts as an assertion only when the lint rules list it by name.
+
+**Calling the API from a frontend**
+
+- A frontend calls the API only through `@pcp/api-client`. `createApiClient` takes the API's address and, optionally, a function that supplies a token, and gives one function for each operation the API describes. A call answers with `data`, or with `error`, which is the API's error body.
+- When the request itself fails, a call answers with no `response`, although its types say there always is one. A frontend reads that as "the API cannot be reached".
+- _The Shopper app_ makes its client in the Shared layer's `api` segment, with no token. A page fetches in its own slice's `api` segment, on the server, after `await connection()`, so that it is rendered when it is requested and never when the app is built.
+- _The dashboard_ starts its login once, in the App layer's entry file, before React renders anything. The login is in the Shared layer's `auth` segment. The client, in the `api` segment, asks `auth` for a token that is still valid before each call.
+- A refusal from the API is shown. It is never answered by starting a login, so that an API that refuses every token cannot send the browser round Keycloak for ever.
+
+**End-to-end tests**
+
+- They are the `@pcp/e2e` project, written with Playwright's test runner. They see the platform through a browser and over HTTP, and import none of its code.
+- A test that needs the Admin calls `logInToTheDashboard`, which logs the development Admin in at Keycloak's login screen. Each test starts in a fresh browser.
+- Keycloak's login screen is told by its address and its form, and never by its text, which is in three languages.
+
+**Worth knowing about the toolchain**
+
+- _One copy of NestJS._ pnpm keeps a copy of a package for each set of peers it resolves. `core` and the API once got a copy of NestJS each, and NestJS cannot inject a class from one copy into the other: the API's tests failed with "Nest can't resolve dependencies". The root manifest therefore lists `supports-color`, which nothing imports, and `pnpm-workspace.yaml` says why. If that failure returns, check that `apps/api` and `libs/core` link to the same `@nestjs/core`.
+- _Packages published as ES modules only._ Jest loads CommonJS and leaves `node_modules` untransformed. The shared Jest preset names the packages that SWC has to transform for it. `jose` is the first.
+- _Install scripts._ pnpm stops an install when a dependency has an install script that `pnpm-workspace.yaml` does not list. A script is read before its package is listed, and one that reports to a third party is listed as not to be run.
+- _A serve that is killed from outside_ can leave Nx's own processes behind, and the next serve then waits for them. Their command lines contain `nx.js serve` and `run-executor.js`.
+
 ## Testing strategy
 
 Tests are written before the code for logic where a mistake would mislead a Shopper:
@@ -414,9 +486,9 @@ Tests are written before the code for logic where a mistake would mislead a Shop
 - Both price views, including ordering and missing Parts (BLD-7 to BLD-9).
 - Matching sheet rows to Parts (SHT-2 to SHT-5).
 
-End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a Vendor adds, edits and confirms Offers; the Admin creates a Vendor and fulfils a Part Request.
+End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a Vendor adds, edits and confirms Offers; the Admin creates a Vendor and fulfils a Part Request. They are written with Playwright, in `@pcp/e2e`, and `pnpm platform:check` runs them.
 
-The API's tests use Jest with SWC and live under `src/test/`, mirroring `src/app/`: `*.spec.ts` for unit tests with mocked Stores, and `*.integration-spec.ts` for tests against a real PostgreSQL started in a test container. The frontends' test tools are chosen when work on them begins.
+The API's tests use Jest with SWC and live under `src/test/`, mirroring `src/app/`: `*.spec.ts` for unit tests with mocked Stores and for tests of an endpoint through the API's HTTP surface, and `*.integration-spec.ts` for tests against a real PostgreSQL started in a test container. The frontends' unit-test tools are chosen when work on them begins.
 
 ## Boundaries
 
