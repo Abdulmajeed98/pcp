@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Vite
 vite.config.*.timestamp*
+
+# Planted for a moment by `pnpm boundaries:check`, which removes them again
+*.boundary-proof.ts
