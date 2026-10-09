@@ -2,6 +2,9 @@
   "realm": "pcp",
   "enabled": true,
   "displayName": "Platform",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "loginWithEmailAllowed": false,
   "roles": {
     "realm": [
       { "name": "admin", "description": "The Admin: the platform's operator." },
@@ -10,5 +13,23 @@
         "description": "A Vendor: a business that shows its Offers on the platform."
       }
     ]
-  }
+  },
+  "clients": [
+    {
+      "clientId": "dashboard",
+      "name": "Dashboard",
+      "description": "The login client of the dashboard, which holds the Vendor portal and the Admin console.",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3002/*"],
+      "webOrigins": ["http://localhost:3002"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3002/*"
+      }
+    }
+  ]
 }
