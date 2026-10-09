@@ -8,6 +8,12 @@ import { connect } from 'node:net';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
+import {
+  keycloakUrl,
+  logInAsAdministrator,
+  requestTokenWithPassword,
+} from './keycloak-administrator.mjs';
+
 const startHint = 'Start the services with "pnpm services:up".';
 
 const root = join(import.meta.dirname, '..');
@@ -172,7 +178,6 @@ if (postgresAnswers) {
   console.log(`      PostgreSQL cannot be reached. ${startHint}`);
 }
 
-const keycloakUrl = 'http://localhost:8080';
 const realmUrl = `${keycloakUrl}/realms/pcp`;
 const dashboardUrl = 'http://localhost:3002';
 
@@ -204,37 +209,12 @@ async function discoveryNamesTheRealm() {
   if (issuer !== realmUrl) throw new Error(`the issuer is ${issuer}`);
 }
 
-// The password flow: a client hands a name and a password straight to a
-// realm's token address and asks for a token.
-function requestTokenWithPassword(realm, client, username, password) {
-  return fetch(`${realm}/protocol/openid-connect/token`, {
-    method: 'POST',
-    body: new URLSearchParams({
-      grant_type: 'password',
-      client_id: client,
-      username,
-      password,
-    }),
-  });
-}
-
 // Reads from Keycloak's administration interface, as Keycloak's own
 // administrator. It is for the few things that have no behaviour a client
 // could observe, and so can only be read back.
 async function readAsAdministrator(path) {
-  const login = await requestTokenWithPassword(
-    `${keycloakUrl}/realms/master`,
-    'admin-cli',
-    settings.KEYCLOAK_ADMINISTRATOR_NAME,
-    settings.KEYCLOAK_ADMINISTRATOR_PASSWORD,
-  );
-  if (!login.ok) {
-    throw new Error(`Keycloak's own administrator could not log in (${login.status})`);
-  }
-  const { access_token: token } = await login.json();
-  return fetch(`${keycloakUrl}/admin/realms/pcp${path}`, {
-    headers: { authorization: `Bearer ${token}` },
-  });
+  const ask = await logInAsAdministrator(settings);
+  return ask(path);
 }
 
 function roleExists(name) {
@@ -389,6 +369,68 @@ async function defaultLanguageIsKurdish() {
   if (defaultLocale !== 'ckb') throw new Error(`the default language is ${defaultLocale}`);
 }
 
+// The development Admin is the one login the start command creates. Its name
+// is in `.env`, beside its password.
+async function findDevelopmentAdmin() {
+  const name = settings.DEVELOPMENT_ADMIN_NAME;
+  if (!name) throw new Error(`.env does not name it. ${startHint}`);
+
+  // Keycloak matches any login whose name contains the one asked for, unless
+  // it is told that the name is exact.
+  const query = new URLSearchParams({ username: name, exact: 'true' });
+  const response = await readAsAdministrator(`/users?${query}`);
+  expectStatus(response, 200);
+  const [login] = await response.json();
+  if (login === undefined) throw new Error(`the realm has no login named ${name}`);
+  return login;
+}
+
+async function developmentAdminExists() {
+  const login = await findDevelopmentAdmin();
+  if (!login.enabled) throw new Error('the login is switched off');
+}
+
+// The realm roles a login holds, the ones it holds through another role
+// among them.
+async function realmRolesOfDevelopmentAdmin() {
+  const { id } = await findDevelopmentAdmin();
+  const response = await readAsAdministrator(`/users/${id}/role-mappings/realm/composite`);
+  expectStatus(response, 200);
+  return (await response.json()).map((role) => role.name);
+}
+
+function developmentAdminHolds(role) {
+  return async () => {
+    const roles = await realmRolesOfDevelopmentAdmin();
+    if (!roles.includes(role)) throw new Error(`its realm roles are ${roles.join(', ')}`);
+  };
+}
+
+function developmentAdminLacks(role) {
+  return async () => {
+    const roles = await realmRolesOfDevelopmentAdmin();
+    if (roles.includes(role)) throw new Error('it holds the role');
+  };
+}
+
+// A token can be had only by logging in, so the mapper that names the API in
+// the dashboard's tokens is read back.
+async function dashboardMapperNamesTheApi() {
+  const response = await readAsAdministrator('/clients?clientId=dashboard');
+  expectStatus(response, 200);
+  const [client] = await response.json();
+  const mapper = (client?.protocolMappers ?? []).find(
+    (each) =>
+      each.protocolMapper === 'oidc-audience-mapper' &&
+      each.config?.['included.custom.audience'] === 'pcp-api',
+  );
+  if (mapper === undefined)
+    throw new Error('the client has no audience mapper for pcp-api');
+  if (mapper.config['access.token.claim'] !== 'true') {
+    throw new Error('the mapper does not add the audience to access tokens');
+  }
+}
+
 const keycloakAnswers = await check('Keycloak answers on port 8080', askKeycloak);
 if (keycloakAnswers) {
   await check(
@@ -448,6 +490,24 @@ if (keycloakAnswers) {
     );
   }
   await check("Kurdish is the realm's default language", defaultLanguageIsKurdish);
+  await check(
+    "The dashboard client's audience mapper names pcp-api",
+    dashboardMapperNamesTheApi,
+  );
+  const developmentAdminFound = await check(
+    'The development Admin login exists',
+    developmentAdminExists,
+  );
+  if (developmentAdminFound) {
+    await check(
+      'The development Admin holds the admin role',
+      developmentAdminHolds('admin'),
+    );
+    await check(
+      'The development Admin does not hold the vendor role',
+      developmentAdminLacks('vendor'),
+    );
+  }
 } else {
   console.log(`      Keycloak cannot be reached. ${startHint}`);
 }

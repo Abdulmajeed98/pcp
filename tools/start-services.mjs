@@ -1,18 +1,23 @@
 // Starts the development services in the background and returns when they are
-// healthy. On the first start it also creates the local environment file.
-// Run it with `pnpm services:up`.
+// healthy and the development Admin login exists. On the first start it also
+// creates the local environment file. Run it with `pnpm services:up`.
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
+
+import { logInAsAdministrator } from './keycloak-administrator.mjs';
 
 const root = join(import.meta.dirname, '..');
 const envFile = join(root, '.env');
 
 // A setting whose name ends in _PASSWORD gets a random value. Any other
 // setting needs a value here.
-const fixedValues = { KEYCLOAK_ADMINISTRATOR_NAME: 'keycloak-administrator' };
+const fixedValues = {
+  KEYCLOAK_ADMINISTRATOR_NAME: 'keycloak-administrator',
+  DEVELOPMENT_ADMIN_NAME: 'development-admin',
+};
 
 function valueFor(name) {
   if (name in fixedValues) return fixedValues[name];
@@ -21,24 +26,106 @@ function valueFor(name) {
 }
 
 // The names come from .env.example, so the settings are listed in one place.
-// A file that already exists is never changed: the services' data was created
-// with the passwords in it.
-function createEnvFileIfMissing() {
-  if (existsSync(envFile)) return;
-
+// A value that is in the file is never changed: the services' data was
+// created with the passwords in it. A setting the file lacks is added, which
+// is how a file written before the setting existed gains it.
+function writeMissingSettings() {
   const names = Object.keys(parseEnv(readFileSync(join(root, '.env.example'), 'utf8')));
+
+  if (!existsSync(envFile)) {
+    const lines = [
+      '# Created by `pnpm services:up`. The passwords are random and local to',
+      '# this machine. .env.example says what each setting is.',
+      ...names.map((name) => `${name}=${valueFor(name)}`),
+    ];
+    writeFileSync(envFile, `${lines.join('\n')}\n`, { mode: 0o600 });
+    console.log('Created .env with new local passwords.');
+    return;
+  }
+
+  const text = readFileSync(envFile, 'utf8');
+  const present = parseEnv(text);
+  const missing = names.filter((name) => !(name in present));
+  if (missing.length === 0) return;
+
   const lines = [
-    '# Created by `pnpm services:up`. The passwords are random and local to',
-    '# this machine. .env.example says what each setting is.',
-    ...names.map((name) => `${name}=${valueFor(name)}`),
+    '# Added by `pnpm services:up`, which adds a setting that is new.',
+    ...missing.map((name) => `${name}=${valueFor(name)}`),
   ];
-  writeFileSync(envFile, `${lines.join('\n')}\n`, { mode: 0o600 });
-  console.log('Created .env with new local passwords.');
+  appendFileSync(envFile, `${text.endsWith('\n') ? '' : '\n'}${lines.join('\n')}\n`);
+  console.log(`Added to .env: ${missing.join(', ')}.`);
 }
 
 function exitWith(message) {
   console.error(message);
   process.exit(1);
+}
+
+async function expectStatus(response, expected, doing) {
+  if (response.status === expected) return;
+  throw new Error(`Keycloak answered ${response.status} when asked to ${doing}`);
+}
+
+// The development Admin is the one login in the `pcp` realm. The realm file
+// holds no logins, so the login is created here, through Keycloak's
+// administration interface. A login that exists is left as it is, its
+// password included.
+async function createDevelopmentAdminIfMissing() {
+  const settings = parseEnv(readFileSync(envFile, 'utf8'));
+  const name = settings.DEVELOPMENT_ADMIN_NAME;
+  const password = settings.DEVELOPMENT_ADMIN_PASSWORD;
+  if (!name || !password) {
+    throw new Error(
+      '.env has no value for DEVELOPMENT_ADMIN_NAME or DEVELOPMENT_ADMIN_PASSWORD',
+    );
+  }
+
+  const ask = await logInAsAdministrator(settings);
+  const json = { 'content-type': 'application/json' };
+
+  // Keycloak matches any login whose name contains the one asked for, unless
+  // it is told that the name is exact.
+  const found = await ask(
+    `/users?${new URLSearchParams({ username: name, exact: 'true' })}`,
+  );
+  await expectStatus(found, 200, 'find the login');
+  if ((await found.json()).length > 0) return;
+
+  const role = await ask('/roles/admin');
+  await expectStatus(role, 200, 'read the admin role');
+
+  const created = await ask('/users', {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify({
+      username: name,
+      enabled: true,
+      // Keycloak's default profile asks a login for these three. It lets a
+      // login be created without them, and then sends it to a screen that
+      // asks for them before it may log in.
+      firstName: 'Development',
+      lastName: 'Admin',
+      email: `${name}@pcp.invalid`,
+      emailVerified: true,
+      credentials: [{ type: 'password', value: password, temporary: false }],
+    }),
+  });
+  await expectStatus(created, 201, 'create the login');
+  const id = created.headers.get('location').split('/').at(-1);
+
+  const given = await ask(`/users/${id}/role-mappings/realm`, {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify([await role.json()]),
+  });
+  if (!given.ok) {
+    // The next start would find a login without its role and leave it as it
+    // is. Removing it lets the next start begin again.
+    await ask(`/users/${id}`, { method: 'DELETE' });
+    await expectStatus(given, 204, 'give the login the admin role');
+  }
+
+  console.log(`Created the development Admin login, ${name}. Its password is in .env.`);
 }
 
 const docker = spawnSync('docker', ['info'], { stdio: 'ignore' });
@@ -49,10 +136,16 @@ if (docker.status !== 0) {
   exitWith('Docker is not running. Start Docker, then run "pnpm services:up" again.');
 }
 
-createEnvFileIfMissing();
+writeMissingSettings();
 
 const compose = spawnSync('docker', ['compose', 'up', '--detach', '--wait'], {
   cwd: root,
   stdio: 'inherit',
 });
-process.exitCode = compose.status ?? 1;
+if (compose.status !== 0) process.exit(compose.status ?? 1);
+
+try {
+  await createDevelopmentAdminIfMissing();
+} catch (error) {
+  exitWith(`The development Admin login could not be created: ${error.message}.`);
+}
