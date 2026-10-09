@@ -8,14 +8,14 @@ import { connect } from 'node:net';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
-const START_HINT = 'Start the services with "pnpm services:up".';
+const startHint = 'Start the services with "pnpm services:up".';
 
 const root = join(import.meta.dirname, '..');
 const envFile = join(root, '.env');
 
 if (!existsSync(envFile)) {
   console.log(
-    `There is no .env file, so the services have never been started. ${START_HINT}`,
+    `There is no .env file, so the services have never been started. ${startHint}`,
   );
   process.exit(1);
 }
@@ -78,33 +78,36 @@ function psql({ user, password, database }, statement) {
   return {
     connected: result.status === 0,
     output: result.stdout.trim(),
-    error: reason(result.stderr),
+    error: whatPostgresSaid(result.stderr),
   };
 }
 
-// What PostgreSQL said went wrong, without the address it was said from. Its
-// reason is on the line marked FATAL or ERROR, and a line of detail may follow.
-function reason(stderr) {
+// What PostgreSQL said went wrong, without the address it was said from. It
+// is on the line marked FATAL or ERROR, and a line of detail may follow.
+function whatPostgresSaid(stderr) {
   const lines = stderr.trim().split('\n');
   const line = lines.find((each) => /(FATAL|ERROR):/.test(each)) ?? lines.at(-1);
   return line.replace(/^.*(FATAL|ERROR):\s+/, '');
 }
 
-const superuser = { user: 'postgres', password: settings.POSTGRES_PASSWORD };
+const superuser = {
+  user: 'postgres',
+  password: settings.POSTGRES_PASSWORD,
+  database: 'postgres',
+};
+const platformUser = { user: 'pcp', password: settings.PCP_DB_PASSWORD };
+const keycloakUser = { user: 'keycloak', password: settings.KEYCLOAK_DB_PASSWORD };
 
 function databaseExists(name) {
   return () => {
     const found = psql(
-      { ...superuser, database: 'postgres' },
+      superuser,
       `SELECT count(*) FROM pg_database WHERE datname = '${name}'`,
     );
     if (!found.connected) throw new Error(found.error);
     if (found.output !== '1') throw new Error('PostgreSQL has no database of that name');
   };
 }
-
-const platformUser = { user: 'pcp', password: settings.PCP_DB_PASSWORD };
-const keycloakUser = { user: 'keycloak', password: settings.KEYCLOAK_DB_PASSWORD };
 
 function connects(user, database) {
   return () => {
@@ -126,6 +129,20 @@ function isRefused(user, database) {
   };
 }
 
+// Asks PostgreSQL which databases a user may connect to. The refusals above
+// try the other user's database. This also covers the databases PostgreSQL
+// creates for itself, which are open to every user unless that is taken away.
+function mayConnectOnlyTo({ user }, database) {
+  return () => {
+    const allowed = psql(
+      superuser,
+      `SELECT string_agg(datname, ', ' ORDER BY datname) FROM pg_database WHERE datallowconn AND has_database_privilege('${user}', datname, 'CONNECT')`,
+    );
+    if (!allowed.connected) throw new Error(allowed.error);
+    if (allowed.output !== database) throw new Error(`it may connect to ${allowed.output}`);
+  };
+}
+
 const postgresAnswers = await check('PostgreSQL answers on port 5432', askPostgres);
 if (postgresAnswers) {
   await check('The pcp database exists', databaseExists('pcp'));
@@ -143,19 +160,34 @@ if (postgresAnswers) {
     'The keycloak user is refused by the pcp database',
     isRefused(keycloakUser, 'pcp'),
   );
+  await check(
+    'The pcp user may connect to no database but its own',
+    mayConnectOnlyTo(platformUser, 'pcp'),
+  );
+  await check(
+    'The keycloak user may connect to no database but its own',
+    mayConnectOnlyTo(keycloakUser, 'keycloak'),
+  );
 } else {
-  console.log(`      PostgreSQL cannot be reached. ${START_HINT}`);
+  console.log(`      PostgreSQL cannot be reached. ${startHint}`);
 }
 
-const KEYCLOAK = 'http://localhost:8080';
-const REALM = `${KEYCLOAK}/realms/pcp`;
+const keycloakUrl = 'http://localhost:8080';
+const realmUrl = `${keycloakUrl}/realms/pcp`;
+const dashboardUrl = 'http://localhost:3002';
+
+function expectStatus(response, expected) {
+  if (response.status !== expected) {
+    throw new Error(`Keycloak answered ${response.status}`);
+  }
+}
 
 // Keycloak's own realm, `master`, always exists, so its public description
 // answers whenever Keycloak is up, whatever state the platform's realm is in.
 async function askKeycloak() {
   let response;
   try {
-    response = await fetch(`${KEYCLOAK}/realms/master`);
+    response = await fetch(`${keycloakUrl}/realms/master`);
   } catch (error) {
     throw new Error(error.cause?.code ?? error.message, { cause: error });
   }
@@ -166,34 +198,41 @@ async function askKeycloak() {
 }
 
 async function discoveryNamesTheRealm() {
-  const response = await fetch(`${REALM}/.well-known/openid-configuration`);
-  if (!response.ok) throw new Error(`Keycloak answered ${response.status}`);
+  const response = await fetch(`${realmUrl}/.well-known/openid-configuration`);
+  expectStatus(response, 200);
   const { issuer } = await response.json();
-  if (issuer !== REALM) throw new Error(`the issuer is ${issuer}`);
+  if (issuer !== realmUrl) throw new Error(`the issuer is ${issuer}`);
 }
 
-// Logs in as Keycloak's own administrator, for the few things that have no
-// behaviour a client could observe and must be read back from Keycloak's
-// administration interface.
-async function administratorToken() {
-  const response = await fetch(`${KEYCLOAK}/realms/master/protocol/openid-connect/token`, {
+// The password flow: a client hands a name and a password straight to a
+// realm's token address and asks for a token.
+function requestTokenWithPassword(realm, client, username, password) {
+  return fetch(`${realm}/protocol/openid-connect/token`, {
     method: 'POST',
     body: new URLSearchParams({
       grant_type: 'password',
-      client_id: 'admin-cli',
-      username: settings.KEYCLOAK_ADMIN_USERNAME,
-      password: settings.KEYCLOAK_ADMIN_PASSWORD,
+      client_id: client,
+      username,
+      password,
     }),
   });
-  if (!response.ok) {
-    throw new Error(`Keycloak's own administrator could not log in (${response.status})`);
-  }
-  return (await response.json()).access_token;
 }
 
+// Reads from Keycloak's administration interface, as Keycloak's own
+// administrator. It is for the few things that have no behaviour a client
+// could observe, and so can only be read back.
 async function readAsAdministrator(path) {
-  const token = await administratorToken();
-  return fetch(`${KEYCLOAK}/admin/realms/pcp${path}`, {
+  const login = await requestTokenWithPassword(
+    `${keycloakUrl}/realms/master`,
+    'admin-cli',
+    settings.KEYCLOAK_ADMINISTRATOR_NAME,
+    settings.KEYCLOAK_ADMINISTRATOR_PASSWORD,
+  );
+  if (!login.ok) {
+    throw new Error(`Keycloak's own administrator could not log in (${login.status})`);
+  }
+  const { access_token: token } = await login.json();
+  return fetch(`${keycloakUrl}/admin/realms/pcp${path}`, {
     headers: { authorization: `Bearer ${token}` },
   });
 }
@@ -202,28 +241,32 @@ function roleExists(name) {
   return async () => {
     const response = await readAsAdministrator(`/roles/${name}`);
     if (response.status === 404) throw new Error('the realm has no role of that name');
-    if (!response.ok) throw new Error(`Keycloak answered ${response.status}`);
+    expectStatus(response, 200);
   };
 }
 
-const DASHBOARD = 'http://localhost:3002';
-
-// The request the dashboard makes when it sends someone to Keycloak to log
-// in: the authorisation code flow with a PKCE challenge, returning to the
-// dashboard's own address. `change` alters one thing about it, to show that
-// Keycloak refuses the request once that thing is wrong.
-function loginRequest(change = () => {}) {
+// What the dashboard sends when it sends someone to Keycloak to log in: the
+// authorisation code flow with a PKCE challenge, returning to the dashboard's
+// own address. `change` alters one thing about it, to show that Keycloak
+// refuses the request once that thing is wrong.
+function loginQuery(change = () => {}) {
   const verifier = randomBytes(32).toString('base64url');
   const query = new URLSearchParams({
     client_id: 'dashboard',
-    redirect_uri: `${DASHBOARD}/`,
+    redirect_uri: `${dashboardUrl}/`,
     response_type: 'code',
     scope: 'openid',
     code_challenge: createHash('sha256').update(verifier).digest('base64url'),
     code_challenge_method: 'S256',
   });
   change(query);
-  return fetch(`${REALM}/protocol/openid-connect/auth?${query}`, { redirect: 'manual' });
+  return query;
+}
+
+function loginRequest(change) {
+  return fetch(`${realmUrl}/protocol/openid-connect/auth?${loginQuery(change)}`, {
+    redirect: 'manual',
+  });
 }
 
 function isLoginScreen(page) {
@@ -231,7 +274,7 @@ function isLoginScreen(page) {
 }
 
 // A client names a language with the `ui_locales` part of the login request.
-// With none, Keycloak chooses.
+// With `language` left out the request names none, and Keycloak chooses.
 async function openLoginScreen(language) {
   const response = await loginRequest((query) => {
     if (language !== undefined) query.set('ui_locales', language);
@@ -245,41 +288,33 @@ async function openLoginScreen(language) {
 
 // Keycloak refuses in two ways. A request it cannot trust at all gets an
 // error page. A request from a client it knows is sent back to that client's
-// address with the reason, and `reason` is the one expected then.
-function loginIsRefused(change, reason) {
+// address with an error code, and `expectedError` is the code expected then.
+function loginIsRefused(change, expectedError) {
   return async () => {
     const response = await loginRequest(change);
     if (isLoginScreen(await response.text())) {
       throw new Error('the request reached the login screen');
     }
-    if (reason === undefined) {
-      if (response.status !== 400) throw new Error(`Keycloak answered ${response.status}`);
+    if (expectedError === undefined) {
+      expectStatus(response, 400);
       return;
     }
     const sentBackTo = response.headers.get('location') ?? '';
-    if (!sentBackTo.startsWith(`${DASHBOARD}/`)) {
+    if (!sentBackTo.startsWith(`${dashboardUrl}/`)) {
       throw new Error(
         `Keycloak answered ${response.status} and did not send the request back`,
       );
     }
     const { search, hash } = new URL(sentBackTo);
-    const given = new URLSearchParams(search || hash.slice(1)).get('error');
-    if (given !== reason) throw new Error(`the reason given was ${given}`);
+    const error = new URLSearchParams(search || hash.slice(1)).get('error');
+    if (error !== expectedError) throw new Error(`the error code given was ${error}`);
   };
 }
 
-// The password flow, which hands the password to the client itself. A client
-// that may not use it is told so before the password is even looked at.
+// A client that may not use the password flow is told so before the password
+// is even looked at.
 async function passwordFlowIsRefused() {
-  const response = await fetch(`${REALM}/protocol/openid-connect/token`, {
-    method: 'POST',
-    body: new URLSearchParams({
-      grant_type: 'password',
-      client_id: 'dashboard',
-      username: 'nobody',
-      password: 'wrong',
-    }),
-  });
+  const response = await requestTokenWithPassword(realmUrl, 'dashboard', 'nobody', 'wrong');
   const { error } = await response.json();
   if (error !== 'unauthorized_client') {
     throw new Error(`Keycloak looked at the password and answered ${error}`);
@@ -294,33 +329,33 @@ function loginScreenLacks(link) {
 }
 
 async function signUpAddressRefuses() {
-  const loginUrl = (await loginRequest()).url;
-  const response = await fetch(loginUrl.replace('/auth?', '/registrations?'));
+  const response = await fetch(
+    `${realmUrl}/protocol/openid-connect/registrations?${loginQuery()}`,
+  );
   const page = await response.text();
   if (page.includes('id="kc-register-form"')) throw new Error('it serves the sign-up form');
-  if (response.status !== 400) throw new Error(`Keycloak answered ${response.status}`);
+  expectStatus(response, 400);
 }
 
 // One phrase from each language's login screen. The English and the Arabic
 // are Keycloak's own wording. The Kurdish is the theme's draft, so when that
 // wording changes this copy changes with it.
-const LANGUAGES = [
+const languages = [
   { name: 'Kurdish', tag: 'ckb', direction: 'rtl', heading: 'چوونەژوورەوە بۆ هەژمارەکەت' },
   { name: 'Arabic', tag: 'ar', direction: 'rtl', heading: 'تسجيل الدخول إلى حسابك' },
   { name: 'English', tag: 'en', direction: 'ltr', heading: 'Sign in to your account' },
 ];
-const DIRECTIONS = { rtl: 'right to left', ltr: 'left to right' };
+const directions = { rtl: 'right to left', ltr: 'left to right' };
 
 // What the page says about itself in its opening <html> tag.
 function declared(page, attribute) {
   return page.match(new RegExp(`<html[^>]*\\s${attribute}="([^"]*)"`))?.[1];
 }
 
-// Opens the login screen and makes sure it came back in the language meant.
-// When Keycloak does not offer a language it serves the default one instead,
-// and a check made on that page would say nothing about the language asked for.
-async function openLoginScreenIn(tag, asked = tag) {
-  const page = await openLoginScreen(asked);
+// Makes sure a login screen came back in the language meant. When Keycloak
+// does not offer a language it serves the default one instead, and a check
+// made on that page would say nothing about the language asked for.
+function inLanguage(tag, page) {
   const language = declared(page, 'lang');
   if (language !== tag) throw new Error(`the page says its language is ${language}`);
   return page;
@@ -328,14 +363,15 @@ async function openLoginScreenIn(tag, asked = tag) {
 
 function loginScreenIsServedIn({ tag, heading }) {
   return async () => {
-    const page = await openLoginScreenIn(tag);
+    const page = inLanguage(tag, await openLoginScreen(tag));
     if (!page.includes(heading)) throw new Error(`the page does not say "${heading}"`);
   };
 }
 
 function loginScreenIsLaidOut({ tag, direction }) {
   return async () => {
-    const declaredDirection = declared(await openLoginScreenIn(tag), 'dir');
+    const page = inLanguage(tag, await openLoginScreen(tag));
+    const declaredDirection = declared(page, 'dir');
     if (declaredDirection !== direction) {
       throw new Error(`the page declares the direction ${declaredDirection}`);
     }
@@ -343,12 +379,12 @@ function loginScreenIsLaidOut({ tag, direction }) {
 }
 
 async function unaskedLoginScreenIsKurdish() {
-  await openLoginScreenIn('ckb', undefined);
+  inLanguage('ckb', await openLoginScreen());
 }
 
 async function defaultLanguageIsKurdish() {
   const response = await readAsAdministrator('');
-  if (!response.ok) throw new Error(`Keycloak answered ${response.status}`);
+  expectStatus(response, 200);
   const { defaultLocale } = await response.json();
   if (defaultLocale !== 'ckb') throw new Error(`the default language is ${defaultLocale}`);
 }
@@ -363,7 +399,7 @@ if (keycloakAnswers) {
   await check('The vendor role exists', roleExists('vendor'));
   const loginScreenOpens = await check(
     "A login request from the dashboard's address with a PKCE challenge reaches the login screen",
-    openLoginScreen,
+    () => openLoginScreen(),
   );
   // Each line below changes one thing about that request, or reads that
   // screen. None of them means anything unless the request itself works.
@@ -396,13 +432,13 @@ if (keycloakAnswers) {
       loginScreenLacks('login-actions/reset-credentials'),
     );
     await check('The sign-up address refuses', signUpAddressRefuses);
-    for (const language of LANGUAGES) {
+    for (const language of languages) {
       await check(
         `The login screen is served in ${language.name}, with its text`,
         loginScreenIsServedIn(language),
       );
       await check(
-        `The ${language.name} login screen is laid out ${DIRECTIONS[language.direction]}`,
+        `The ${language.name} login screen is laid out ${directions[language.direction]}`,
         loginScreenIsLaidOut(language),
       );
     }
@@ -413,7 +449,7 @@ if (keycloakAnswers) {
   }
   await check("Kurdish is the realm's default language", defaultLanguageIsKurdish);
 } else {
-  console.log(`      Keycloak cannot be reached. ${START_HINT}`);
+  console.log(`      Keycloak cannot be reached. ${startHint}`);
 }
 
 if (failures > 0) process.exitCode = 1;

@@ -20,3 +20,8 @@ CREATE DATABASE keycloak OWNER keycloak;
 -- to it, so a bug in the API can never touch Keycloak's tables.
 REVOKE CONNECT ON DATABASE pcp FROM PUBLIC;
 REVOKE CONNECT ON DATABASE keycloak FROM PUBLIC;
+
+-- The same for the two databases PostgreSQL creates for itself, so that each
+-- user can reach its own database and no other.
+REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;
+REVOKE CONNECT ON DATABASE template1 FROM PUBLIC;

@@ -12,7 +12,7 @@ const envFile = join(root, '.env');
 
 // A setting whose name ends in _PASSWORD gets a random value. Any other
 // setting needs a value here.
-const fixedValues = { KEYCLOAK_ADMIN_USERNAME: 'keycloak-admin' };
+const fixedValues = { KEYCLOAK_ADMINISTRATOR_NAME: 'keycloak-administrator' };
 
 function valueFor(name) {
   if (name in fixedValues) return fixedValues[name];
@@ -36,17 +36,17 @@ function createEnvFileIfMissing() {
   console.log('Created .env with new local passwords.');
 }
 
-function stop(message) {
+function exitWith(message) {
   console.error(message);
   process.exit(1);
 }
 
 const docker = spawnSync('docker', ['info'], { stdio: 'ignore' });
 if (docker.error?.code === 'ENOENT') {
-  stop('Docker is not installed, or the "docker" command is not on the PATH.');
+  exitWith('Docker is not installed, or the "docker" command is not on the PATH.');
 }
 if (docker.status !== 0) {
-  stop('Docker is not running. Start Docker, then run "pnpm services:up" again.');
+  exitWith('Docker is not running. Start Docker, then run "pnpm services:up" again.');
 }
 
 createEnvFileIfMissing();

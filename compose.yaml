@@ -46,8 +46,8 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set it in .env, as .env.example describes}
       # Keycloak's own administrator account, which opens Keycloak's console.
       # It is created on the first start and is not the platform's Admin.
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?set it in .env, as .env.example describes}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set it in .env, as .env.example describes}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMINISTRATOR_NAME:?set it in .env, as .env.example describes}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMINISTRATOR_PASSWORD:?set it in .env, as .env.example describes}
       # Serves the health pages on port 9000, which only the health check
       # below reaches.
       KC_HEALTH_ENABLED: 'true'
