@@ -2,6 +2,15 @@ packages:
   - 'apps/*'
   - 'libs/*'
 
+# The root manifest lists `supports-color`, which nothing imports. `debug`
+# takes it as an optional peer, and pnpm keeps a copy of a package for each
+# set of peers it resolves. With two versions of `supports-color` in the
+# workspace, the API and `core` each got a copy of NestJS of their own, and
+# NestJS cannot inject a class from one copy into the other. pnpm resolves a
+# peer from the root's dependencies first, so one version there keeps NestJS
+# to one copy. Remove it only after checking that `apps/api` and `libs/core`
+# still link to the same `@nestjs/core`.
+
 # pnpm fails an install when a dependency has an install script that is not
 # listed here. Add a package only after checking what its script does.
 allowBuilds:
