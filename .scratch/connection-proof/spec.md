@@ -425,4 +425,13 @@ Each line is seen to fail once, by a deliberate fault that is then reverted: the
   - Which of the workplace's eight Jest rules, and which Playwright rules, the pinned Oxlint has.
 - **One reset.** The audience mapper changes the realm file, so the owner's services need `pnpm services:reset` and a new start. The development Admin is created again by that start.
 - **The lesson from steps 1 to 3.** Results left over from earlier runs hid faults in all three. Every claim in this step is checked on a fresh clone, with Nx's cache skipped and the services reset.
+- **Where the result differs from this spec,** after the work and its code review on 9 October 2026. The Comments of the tickets give the reasons:
+  - Nx's Playwright plugin starts the three apps, as dependencies of the tests, and stops what it started. The spec has the command do it.
+  - While the realm's keys cannot be had, a request with a token is answered 503. The spec says "a server error".
+  - The guard also refuses a token that states no expiry, and one that names no key while the realm publishes more than one. The keys are kept for ten minutes at a time.
+  - When Keycloak refuses to renew a token, it is the adapter that sends the browser to the login screen. When Keycloak cannot be asked, the dashboard makes no call and says so.
+  - `pnpm platform:check` itself says when the browser is missing, and its tests set the password in the page without typing it.
+  - It has one line more than this spec lists: that the browser's storage holds no token.
+  - CONTEXT.md gained **Login** and **Caller**.
+  - The owner's own login in their own browser is still to be done. Ticket 07 waits for it.
 - **Next steps.** This step closes the infrastructure. The capability map's build order begins with `languages`, `catalog` and `accounts`, and each gets its own spec in its own directory under `.scratch/`.

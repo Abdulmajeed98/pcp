@@ -8,7 +8,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 
 **Blocked by:** 06
 
-**Status:** resolved
+**Status:** ready-for-human
 
 - [x] In a fresh clone in a new directory, with no `.env` and no Docker volumes left from earlier runs, one install followed by `pnpm check --skip-nx-cache` passes, with Docker stopped and before any browser is installed.
 - [x] In the same clone, `pnpm boundaries:check` passes on every line, and Git then reports a clean working tree.
@@ -74,3 +74,34 @@ Two things about that table. Docker itself was never stopped: the owner's servic
 **ADR-0004** now writes the public decorator as `@Public()` and says that it followed the workplace's document until this step. It says that the guard is built and checks the audience as well, and that the API's description and the client are committed.
 
 **No fault was found** in this ticket.
+
+### 9 October 2026: the code review
+
+Two reviewers read everything since the commit that added this step's spec, each without the other's findings: one against the repository's documented standards, one against the spec and these tickets. Both read the code and ran nothing. Every finding was checked against the code before it was acted on.
+
+This ticket's status is `ready-for-human` and not `resolved`, as the spec review pointed out: one box is open, and only the owner can tick it.
+
+**Changed because of the review.**
+
+| Finding | What was done |
+|---|---|
+| A token that states no expiry was accepted. `jose` checks the expiry only of a token that states one. | The guard now requires the claim. A new test showed the token answered 200 before the change. |
+| A token that names no key, while the realm publishes two, was answered 503. | It is answered 401. A new test showed the 503 first. |
+| The dashboard started a login whenever a token could not be renewed, also when Keycloak was only unreachable, and could send a call with a token that had run out. | Read in the adapter's source: when Keycloak refuses, the adapter drops its tokens and starts the login itself. The dashboard now leaves that case to it and makes no call. When Keycloak cannot be asked, the call is not made and the page says so. Both were tried by hand, with tokens made to last 40 seconds for the run: after the session was ended at Keycloak the browser arrived at the login screen, and with Keycloak stopped the page stayed and said so. No call reached the API in either. |
+| A failed run could print the password, because Playwright writes what `fill` types into a step's log. | The tests set the password in the page and no longer type it. |
+| `pnpm platform:check` left it to Playwright to say that the browser is missing, and Playwright names the command that installs every browser. | The command checks first and names `pnpm exec playwright install chromium`. |
+| The MVP spec's new blocks misdescribed the code in four places. | Corrected: a call with no token is answered 401 also at an endpoint with no access rule; the keys are kept for ten minutes at a time; the clock is mocked in the tests that let time pass; only the dashboard reads a missing response. |
+| ADR-0004 still kept `*.spec.ts` for unit tests with mocked Stores, and did not say that an endpoint may have no use case. | Both are now in the ADR. |
+| `Caller` and "login" were in the code and in the API's answers and not in CONTEXT.md. | The glossary gains **Login** and **Caller**, worded as this step's spec defines them. The owner may want to word them differently. |
+| The tests that move the clock depended on their order. Found while the first two rows were fixed. | The clock now only moves forward, for every test that follows. |
+| Smaller things: the login lookup written twice in the service scripts; the stand-in's set-up written twice in the API's tests; a test that named the list of endpoints; a branch only its own test reached; a catch that could not fire; a file named like a class that holds one function; the origin decorator in the settings file; the caller's behaviour tested in the wrong folder; a failure text that named Keycloak. | Each was changed as the reviewer suggested. |
+
+**Not changed, and why.**
+
+- **Role names are compared without regard to case,** so a realm role named `Admin` would count as the platform's `admin`. The spec asks for this, to follow the workplace. Keycloak's role names do distinguish case, and only someone who can already create roles in the realm could use the difference. It is the owner's call whether to compare exactly.
+- **A failed fetch of the realm's discovery document is not remembered.** While Keycloak cannot be reached, each request with a token tries again, and may wait up to five seconds if Keycloak neither answers nor refuses. Remembering a failure for a short while would be new behaviour that the spec does not ask for.
+- **The two tests of a token with no algorithm and of a symmetric signature** would pass without the guard's list of allowed algorithms, because `jose` refuses both on its own. The list states the intent and costs nothing. No test can tell it apart from `jose`'s own refusal.
+- **`access.spec.ts` and `access-without-keycloak.spec.ts` mirror no file of the API.** They test `core`'s guard through the API's HTTP surface, which is where the spec put those tests, and they sit beside the tests of the set-up function.
+- **Reuse of an app started outside Nx** was tried for the API only.
+
+**After the changes.** `pnpm check --skip-nx-cache` passed for all nine projects with Docker made unreachable. `pnpm boundaries:check` passed on all 108 lines, `pnpm services:check` on all 33 and `pnpm platform:check` on all seven. The API has 47 tests and `core` has 37.
