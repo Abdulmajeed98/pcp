@@ -10,7 +10,13 @@
 // The file the bans are written to, in each frontend's folder.
 export const writtenFile = '.oxlintrc.feature-sliced.json';
 
-export const frontends = [{ folder: 'apps/dashboard', app: 'app', pages: 'pages' }];
+// In the Shopper app Next.js keeps the names `app` and `pages` for itself, so
+// its App and Pages layers are `_app` and `_pages`. `routing` is Next's own
+// routing folder, which sits beside `src`, outside the layers.
+export const frontends = [
+  { folder: 'apps/dashboard', app: 'app', pages: 'pages' },
+  { folder: 'apps/shopper', app: '_app', pages: '_pages', routing: 'app' },
+];
 
 const messages = {
   layer:
@@ -25,6 +31,8 @@ const messages = {
     "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated.",
   crossing:
     'A relative import may not cross into another layer. Use the `@/` alias, where the layer rules apply.',
+  routing:
+    "Next's routing folder only routes. A route file takes a page from the Pages layer or a layout from the App layer, through its index file, and imports nothing else from the project.",
 };
 
 // How many folders below a slice a climbing relative import is followed: the
@@ -76,7 +84,7 @@ function aliasPatterns(layers, index) {
 }
 
 // The bans for one frontend, as the content of the file it extends.
-export function featureSlicedBans({ app, pages }) {
+export function featureSlicedBans({ app, pages, routing }) {
   // From the top. The App and Shared layers have segments and no slices.
   const layers = [
     { folder: app, sliced: false, indexed: 'layer' },
@@ -112,5 +120,21 @@ export function featureSlicedBans({ app, pages }) {
     }
     return blocks;
   });
+  if (routing !== undefined) {
+    const [appLayer, pagesLayer, ...lower] = layers;
+    overrides.push(
+      block(
+        [`${routing}/**`],
+        [
+          {
+            group: lower.flatMap(({ folder }) => [`@/${folder}`, `@/${folder}/**`]),
+            message: messages.routing,
+          },
+          { group: [appLayer, pagesLayer].map(pastTheIndex), message: messages.index },
+          { regex: '^(\\.\\./)+src(/|$)', message: messages.crossing },
+        ],
+      ),
+    );
+  }
   return { overrides };
 }
