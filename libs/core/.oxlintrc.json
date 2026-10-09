@@ -1,4 +1,22 @@
 {
-  "extends": ["../../.oxlintrc.json"],
-  "plugins": ["jest"]
+  "extends": ["../../.oxlintrc.json", "../../.oxlintrc.test-files.json"],
+  "plugins": ["jest"],
+  "overrides": [
+    {
+      "files": ["src/domain/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^\\.{1,2}/(.*/)?infrastructure(/|$)",
+                "message": "The domain layer may not import the infrastructure layer. Define the type or the abstract class in the domain layer and let infrastructure depend on it."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

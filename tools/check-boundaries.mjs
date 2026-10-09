@@ -16,6 +16,7 @@ const root = join(import.meta.dirname, '..');
 const plantedSuffix = '.boundary-proof.ts';
 
 const api = { name: '@pcp/api', folder: 'apps/api' };
+const core = { name: '@pcp/core', folder: 'libs/core' };
 const shopper = { name: '@pcp/shopper', folder: 'apps/shopper' };
 const dashboard = { name: '@pcp/dashboard', folder: 'apps/dashboard' };
 const ui = { name: '@pcp/ui', folder: 'libs/ui' };
@@ -79,6 +80,7 @@ function casesFor(project, label) {
 }
 
 const inTheApi = casesFor(api, 'The API');
+const inCore = casesFor(core, '@pcp/core');
 const inTheDashboard = casesFor(dashboard, 'The dashboard');
 const inTheShopperApp = casesFor(shopper, 'The Shopper app');
 const inALibrary = casesFor(ui, 'A library');
@@ -142,7 +144,7 @@ const casesBetweenProjects = [
   ),
 ];
 
-const infrastructure = '~/infrastructure/placeholder/placeholder.module';
+const infrastructure = '~/infrastructure/status/status.module';
 const domain = 'src/app/domain/boundary-proof';
 
 const casesInTheApi = [
@@ -155,7 +157,7 @@ const casesInTheApi = [
   inTheApi.refused(
     'a domain file that imports infrastructure through a relative path',
     `${domain}/through-a-relative-path`,
-    '../../infrastructure/placeholder/placeholder.module',
+    '../../infrastructure/status/status.module',
     domainMayNotImportInfrastructure,
   ),
   inTheApi.refused(
@@ -449,9 +451,33 @@ const casesInTheRoutingFolder = [
   ),
 ];
 
+// `core` has the API's two layers and the API's ban. It has no alias of its
+// own, so a relative path is the only way from one layer to the other.
+const casesInCore = [
+  inCore.refused(
+    'a domain file that imports infrastructure',
+    'src/domain/boundary-proof/imports-infrastructure',
+    '../../infrastructure/errors/error.module',
+    domainMayNotImportInfrastructure,
+  ),
+  inCore.refused(
+    'a domain file that imports an infrastructure type',
+    'src/domain/boundary-proof/as-a-type',
+    '../../infrastructure/errors/error.module',
+    domainMayNotImportInfrastructure,
+    'type-only',
+  ),
+  inCore.allowed(
+    'an infrastructure file that imports a domain file',
+    'src/infrastructure/boundary-proof/imports-the-domain',
+    '../../domain/boundary-proof/entity',
+  ),
+];
+
 const cases = [
   ...casesBetweenProjects,
   ...casesInTheApi,
+  ...casesInCore,
   ...casesInAFrontend(inTheDashboard, { app: 'app', pages: 'pages' }),
   ...casesInAFrontend(inTheShopperApp, { app: '_app', pages: '_pages' }),
   ...casesInTheRoutingFolder,
