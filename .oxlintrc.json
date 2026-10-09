@@ -5,42 +5,36 @@
   "categories": {
     "correctness": "error"
   },
-  "rules": {},
-  "overrides": [
-    {
-      "files": ["**/src/**", "**/app/**"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "depConstraints": [
           {
-            "depConstraints": [
-              {
-                "sourceTag": "scope:api",
-                "onlyDependOnLibsWithTags": ["scope:api", "scope:shared"]
-              },
-              {
-                "sourceTag": "scope:web",
-                "onlyDependOnLibsWithTags": ["scope:web", "scope:shared"]
-              },
-              {
-                "sourceTag": "scope:shared",
-                "onlyDependOnLibsWithTags": ["scope:shared"],
-                "bannedExternalImports": ["*"]
-              },
-              {
-                "sourceTag": "type:app",
-                "onlyDependOnLibsWithTags": ["type:lib"]
-              },
-              {
-                "sourceTag": "type:lib",
-                "onlyDependOnLibsWithTags": []
-              }
-            ]
+            "sourceTag": "scope:api",
+            "onlyDependOnLibsWithTags": ["scope:api", "scope:shared"]
+          },
+          {
+            "sourceTag": "scope:web",
+            "onlyDependOnLibsWithTags": ["scope:web", "scope:shared"]
+          },
+          {
+            "sourceTag": "scope:shared",
+            "onlyDependOnLibsWithTags": ["scope:shared"],
+            "bannedExternalImports": ["*"]
+          },
+          {
+            "sourceTag": "type:app",
+            "onlyDependOnLibsWithTags": ["type:lib"]
+          },
+          {
+            "sourceTag": "type:lib",
+            "onlyDependOnLibsWithTags": []
           }
         ]
       }
-    }
-  ],
+    ]
+  },
   "env": {
     "builtin": true
   }

@@ -1,0 +1,6 @@
+{
+  "extends": ["./.oxlintrc.json"],
+  "rules": {
+    "@nx/enforce-module-boundaries": "off"
+  }
+}
