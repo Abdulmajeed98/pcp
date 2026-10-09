@@ -298,11 +298,11 @@ The infrastructure is established first, with no product features:
 
 Automated checks on GitHub are added when the GitHub repository exists. Each app's libraries are chosen when work on that app begins, not before.
 
-Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/workspace](../workspace/spec.md). The commands and layout it produced are below. The commands for running PostgreSQL and Keycloak, the boundary and layer checks, and the code conventions are added here as steps 2 to 4 are finished.
+Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/workspace](../workspace/spec.md). Step 2 was finished on 9 October 2026; its spec and tickets are in [.scratch/dev-services](../dev-services/spec.md). The commands, services and layout they produced are below. The boundary and layer checks and the code conventions are added here as steps 3 and 4 are finished.
 
 **Commands**
 
-All commands are run from the repository root, with Node 24 and pnpm. An install under another Node major version, or with npm or yarn, is refused.
+All commands are run from the repository root, with Node 24 and pnpm. An install under another Node major version, or with npm or yarn, is refused. The four `services` commands also need Docker to be running; no other command does.
 
 | Command | What it does |
 |---|---|
@@ -314,8 +314,28 @@ All commands are run from the repository root, with Node 24 and pnpm. An install
 | `pnpm exec nx serve @pcp/api` | Starts the API on port 3001. |
 | `pnpm exec nx serve @pcp/dashboard` | Starts the dashboard on port 3002. |
 | `pnpm exec nx <target> <project>` | Runs one target for one project, for example `pnpm exec nx test @pcp/core`. |
+| `pnpm services:up` | Starts PostgreSQL and Keycloak in Docker, in the background, and returns when both are healthy. The first start creates `.env` with random local passwords. An `.env` that exists is never changed. |
+| `pnpm services:down` | Stops both services and keeps their data. |
+| `pnpm services:reset` | Stops both services and deletes their data. The next start is a first start. |
+| `pnpm services:check` | Checks the running services from the outside and prints one line for each thing it checked. It exits non-zero if any line fails, and says so plainly when the services are not running. |
 
 Every project has a `lint` and a `typecheck` target. Only the API and `core` have a `test` target, and only the three apps have a `build` target.
+
+`pnpm check` does not start or need the services.
+
+**Development services**
+
+Both services listen on the owner's machine only, and are for development only.
+
+| Service | Address | What it holds |
+|---|---|---|
+| PostgreSQL 18.6 | `localhost:5432` | The `pcp` database, which is the platform's and is owned by the user `pcp`, and the `keycloak` database, owned by the user `keycloak`. Neither user can connect to the other's database. |
+| Keycloak 26.8.0 | `http://localhost:8080` | The `pcp` realm, whose issuer is `http://localhost:8080/realms/pcp`. It has the roles `admin` and `vendor` and one client, `dashboard`, and holds no logins. Its login screen is in Kurdish (Sorani), Arabic and English. |
+
+- **Passwords.** No password is committed. They are in `.env`, which Git ignores; `.env.example` lists the settings without their values. Keycloak's own console is at `http://localhost:8080/admin` and is opened with Keycloak's own administrator account, whose name and password are in `.env`. That account is not the platform's Admin.
+- **The reset rule.** PostgreSQL runs its set-up script only when its data is empty, and Keycloak imports the realm only when the realm does not exist yet. A change to the database set-up script or to the realm file, which holds the realm's languages, therefore takes effect only after `pnpm services:reset` and a new start. The theme is different: in development mode Keycloak reads it afresh for every page, so a change to its text or to its language list shows on the next page load.
+- **The data and the passwords belong together.** The data is created with the passwords that are in `.env` at the first start. If `.env` is deleted while the data is kept, the next start writes new passwords that the data does not know; `pnpm services:reset` and a new start put that right.
+- **Renaming the realm.** Keycloak refuses to start when the realm file's name and the realm's name differ, so the two are changed together.
 
 **Directory layout**
 
@@ -325,8 +345,9 @@ Every project has a `lint` and a `typecheck` target. Only the API and `core` hav
 | `apps/shopper` | The Shopper app. Next's `app` folder only routes; the Feature-Sliced Design layers are under `src`, with the App and Pages layers named `_app` and `_pages`. |
 | `apps/dashboard` | The dashboard. Its Feature-Sliced Design layers are under `src`. |
 | `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n` | The five shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. |
-| `tools` | Scripts the workspace itself needs. |
-| The repository root | The workspace's own configuration: the package manifest and lockfile, the pnpm workspace file, and the Nx, TypeScript, Oxlint, Oxfmt and Jest settings that every project extends. |
+| `services` | What the development services are set up from: PostgreSQL's set-up script, and Keycloak's realm file and theme. The Sorani text of the login screen is in the theme. |
+| `tools` | Scripts the workspace itself needs, among them the ones behind `pnpm services:up` and `pnpm services:check`. |
+| The repository root | The workspace's own configuration: the package manifest and lockfile, the pnpm workspace file, and the Nx, TypeScript, Oxlint, Oxfmt and Jest settings that every project extends. Also the Compose file for the development services and `.env.example`. |
 
 Inside the API the `~/` alias means `src/app`. Inside each frontend the `@/` alias means `src`.
 
