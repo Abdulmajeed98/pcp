@@ -281,7 +281,7 @@ The stack and each app's architecture are decided and recorded in [ADR-0003](../
 - REST between the frontends and the API. The API describes itself with OpenAPI, and the frontends call it only through `api-client`.
 - The API uses NestJS 11 and follows the conventions of the owner's workplace backend: two layers (`domain` and `infrastructure`), Command and Query classes for use cases, abstract Store classes as ports, and errors returned as Effect `Either` values instead of thrown. ADR-0004 lists the conventions in full.
 - Both frontends follow Feature-Sliced Design, with its import rules enforced by Oxlint.
-- Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository; it is still before version 1.0, so its version is pinned exactly. Oxlint's version is pinned exactly as well, because the rule between projects runs on a part of Oxlint that may change in any release.
+- Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository, except the two files of import bans that a script writes; it is still before version 1.0, so its version is pinned exactly. Oxlint's version is pinned exactly as well, because the rule between projects runs on a part of Oxlint that may change in any release.
 - Tailwind CSS with shadcn/ui for the interface.
 - next-intl for the three languages in the Next.js app.
 - The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one rented server with 4 GB of memory running everything, with Cloudflare in front and nightly database backups.
@@ -307,7 +307,7 @@ All commands are run from the repository root, with Node 24 and pnpm. An install
 | Command | What it does |
 |---|---|
 | `pnpm install` | Installs everything for all eight projects. |
-| `pnpm check` | Runs the format check, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
+| `pnpm check` | Runs the format check, compares the frontends' written import bans with their statement, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
 | `pnpm check --skip-nx-cache` | The same, with every task run again. Nx keeps its cache under the home directory, so a fresh clone on the same machine reuses old results unless the cache is skipped. |
 | `pnpm format` | Rewrites source and configuration files into the agreed format. |
 | `pnpm exec nx serve @pcp/shopper` | Starts the Shopper app on port 3000. |
@@ -375,7 +375,7 @@ _Between the eight projects._ Each project carries a scope tag and a type tag in
 - A library may import no other library. The first dependency between two libraries is made by changing that constraint on purpose.
 - The ban on npm packages in `@pcp/compatibility` sees a package only once it is installed. An import of a package that is not installed fails type-checking instead.
 - This is Nx's boundary rule, run under Oxlint through a bridge that Nx marks as experimental. It reads the project graph that Nx caches on disk. With no cached graph it prints a warning, checks nothing and passes. `pnpm check` and `pnpm exec nx lint <project>` have the graph. Bare `oxlint` is not a boundary check, and neither is a run in which Nx has been told not to cache the graph (`NX_CACHE_PROJECT_GRAPH=false`).
-- The rule applies to files under a project's `src` folder and under the Shopper app's routing folder. A project's own tool configuration, at its root, is not covered.
+- The rule applies to every file of a project, the files at its root among them. The files that belong to no project are linted before Nx has cached a graph, with a second configuration at the repository root that extends the first and switches this one rule off.
 
 _Inside the API._ A file in the domain layer may not import the infrastructure layer, by the `~/` alias or by a relative path. The infrastructure layer may import the domain layer. The test tree is not covered, as at the workplace.
 
@@ -392,11 +392,15 @@ _Inside each frontend._ The layers, from the top, with what a file in each may i
 
 - **No import from a layer above.**
 - **No import of another slice on the same layer.** Two slices are joined on a layer above. Inside a slice, imports are relative.
-- **Nothing past an index file.** A slice is imported as `@/<layer>/<slice>`, a segment of the Shared layer as `@/shared/<segment>`, and the App layer as a whole.
-- **A relative import stays at home.** It may not leave its own slice, and in the App and Shared layers it may not cross into another layer. A climb is followed from a slice's own folder, from a segment and from one folder inside a segment. A file at any other depth may not climb with a relative import at all.
-- **Next's routing folder only routes.** In the Shopper app, a file in Next's `app` folder imports a page from the Pages layer or the App layer, each through its index file, and nothing else from the project.
+- **Nothing past an index file.** A slice is imported as `@/<layer>/<slice>`, a segment of the Shared layer as `@/shared/<segment>`, and the App layer as a whole. A layer that has slices or segments is never imported with nothing named after it.
+- **The `@/` alias reaches the six layers and nothing else.** A folder in `src` that is not a layer cannot be imported from a layer or from a route file.
+- **A relative import stays at home.** Home is the slice, or the layer in the App and Shared layers, which have no slices. A climb is followed from the home folder itself, from a segment and from one folder inside a segment. A file at any other depth may not climb with a relative import at all.
+- **A relative import is written in its shortest form:** any climbing first, as `../`, and no `.` or `..` after it. The bans count the `../` an import starts with, and a longer spelling would get past the count.
+- **A layer that has slices holds no files of its own.** A file put straight into its folder may make no relative import.
+- **Next's routing folder only routes.** In the Shopper app, a file in Next's `app` folder imports a page from the Pages layer or the App layer, each through its index file, and nothing else from the project. It reaches them through the alias and never by a relative path.
 - The bans cover all six layers, although the Widgets, Features and Entities folders are created only when the first slice needs them.
-- The bans are stated once, in `tools`, and `pnpm boundaries:write` writes them into `.oxlintrc.feature-sliced.json` in each frontend's folder. That file is never edited by hand: change the statement and write it again. `pnpm boundaries:check` fails when the two differ.
+- The bans are stated once, in `tools`, and `pnpm boundaries:write` writes them into `.oxlintrc.feature-sliced.json` in each frontend's folder. That file is never edited by hand: change the statement and write it again. `pnpm check` fails when the two differ.
+- Two things the bans cannot see. A file with no imports, put straight into a layer that has slices, can still be imported as if it were a slice. A file in `src` outside the six layers is under no ban itself, though nothing in a layer or in the routing folder can import it.
 - Type-only imports, re-exports and lazy `import()` count as imports under every rule here.
 
 ## Testing strategy
