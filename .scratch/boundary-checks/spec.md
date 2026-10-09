@@ -1,6 +1,6 @@
 # Spec: The boundary and layer checks
 
-Status: ready-for-agent
+Status: resolved
 
 This is step 3 of the four infrastructure steps listed under "Order of work" in [the MVP spec](../mvp/spec.md). Steps 1 and 2, [the workspace](../workspace/spec.md) and [the development services](../dev-services/spec.md), are finished. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md) and [ADR-0004](../../docs/adr/0004-architecture-per-app.md). The owner confirmed its test seam on 9 October 2026.
 
@@ -103,7 +103,7 @@ The eight shells already obey every rule, so no source file in the three apps or
 
 - Every rule in this step is a lint rule that runs under Oxlint, inside each project's existing `lint` target. `pnpm check` gains no new part and the repository gains no new linter. ESLint stays as ADR-0004 describes it: installed as a library that Nx's rule needs, configured nowhere and run by nothing.
 - The rules between projects use Nx's boundary rule, through the bridge that Nx ships for Oxlint and marks as experimental. The rules inside an app use Oxlint's own `no-restricted-imports` rule, as ADR-0004 decided.
-- Nx's boundary rule reads Nx's cached project graph. When lint runs through Nx the graph is there. When bare `oxlint` runs with no cached graph, the rule prints a warning, checks nothing and passes. The boundary rule therefore counts only when lint runs through Nx, which is how `pnpm check` and each project's `lint` target run it. The MVP spec says so.
+- Nx's boundary rule reads Nx's cached project graph. When lint runs through Nx the graph is there. When bare `oxlint` runs with no cached graph, the rule prints a warning, checks nothing and passes. The boundary rule therefore counts only when lint runs through Nx, which is how `pnpm check` and each project's `lint` target run it. The MVP spec says so. (Corrected on 9 October 2026. Through Nx the graph is there by default, but not when Nx has been told not to cache it. See the Comments of ticket 02.)
 - The boundary rule is switched on for files inside the eight projects only. `pnpm check` lints the files that belong to no project before Nx starts, and that lint does not load the rule, so a fresh clone prints no skipped-rule warning.
 - The bridge is declared in a JSON Oxlint configuration. Nx's plugin reads only JSON configurations when it works out what a lint result depends on, and it is the bridge's presence there that makes a project's cached lint result depend on the files and package manifests of the projects it imports.
 - Whatever file states a rule is an input of every lint target it governs, so that a change to a rule never leaves a cached pass behind.
@@ -142,7 +142,7 @@ Together they allow exactly this:
 | `@pcp/dashboard` | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n`, `@pcp/compatibility` |
 | Each of the five libraries | No other project |
 
-- The rule's built-in bans are kept as they are: no import of an app, no relative or absolute path into another project, no circular dependency between projects, and no imports of other projects at all for a project whose tags match no constraint.
+- The rule's built-in bans are kept as they are: no import of an app, no relative or absolute path into another project, no circular dependency between projects, and no imports of other projects at all for a project whose tags match no constraint. (Noted on 9 October 2026. An app cannot be imported by its name at all, because the apps export nothing. The way into an app is a relative path, which the rule refuses. See the Comments of ticket 02.)
 - A library's single entry file needs no new rule if it is already enforced, and it should be: each library's package manifest exports its entry file and nothing else, so an import that reaches past it should fail type-checking. This step shows that failure once and records it. A lint ban is added only if the import turns out to pass.
 - The first dependency between two libraries, when one is needed, is made by changing the `type:lib` constraint on purpose.
 
