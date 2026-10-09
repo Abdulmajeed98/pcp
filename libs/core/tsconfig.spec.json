@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./out-tsc/jest",
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["jest.config.cts", "src/test/**/*.ts", "src/**/*.d.ts"],
   "references": [

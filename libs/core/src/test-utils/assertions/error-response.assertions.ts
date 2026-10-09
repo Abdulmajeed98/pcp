@@ -1,0 +1,16 @@
+import { expect } from '@jest/globals';
+
+export type ExpectedErrorResponse = {
+  code: string;
+  title: string;
+  detail: string;
+};
+
+// Asserts that a body is the agreed error body and nothing more: a list of
+// errors, each with a code, a title and a detail.
+export function expectErrorResponseShape(
+  body: unknown,
+  expectedErrors: ExpectedErrorResponse[],
+): void {
+  expect(body).toEqual({ errors: expectedErrors });
+}
