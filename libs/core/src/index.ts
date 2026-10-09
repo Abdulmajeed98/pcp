@@ -6,7 +6,6 @@ export { PreAuthorize } from './infrastructure/authentication/PreAuthorize';
 export { Public } from './infrastructure/authentication/Public';
 export {
   CoreEnvironmentVariables,
-  IsOrigin,
   validateEnvironment,
 } from './infrastructure/configuration/env.validation';
 export {
@@ -16,3 +15,4 @@ export {
 export { ErrorModule } from './infrastructure/errors/error.module';
 export { ErrorResponseExceptionFilter } from './infrastructure/errors/ErrorResponseExceptionFilter';
 export { getCorsConfiguration, parseAllowedOrigins } from './infrastructure/security/cors';
+export { IsOrigin } from './infrastructure/security/IsOrigin';

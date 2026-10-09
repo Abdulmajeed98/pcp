@@ -43,6 +43,9 @@ const tokenFaults = new Set([
   errors.JOSEAlgNotAllowed.code,
   errors.JOSENotSupported.code,
   errors.JWKSNoMatchingKey.code,
+  // The token does not say which key signed it, and the realm publishes more
+  // than one. Keycloak always says which.
+  errors.JWKSMultipleMatchingKeys.code,
 ]);
 
 const discoveryTimeout = 5000;
@@ -73,6 +76,9 @@ export class AccessTokenVerifier {
         issuer: this.issuer,
         audience: this.audience,
         algorithms: asymmetricAlgorithms,
+        // `jose` checks the expiry of a token that states one. A token that
+        // states none would otherwise never expire.
+        requiredClaims: ['exp'],
       });
       return payload;
     } catch (error) {
@@ -96,8 +102,10 @@ export class AccessTokenVerifier {
   }
 
   // The realm says where its keys are in its discovery document. The key set
-  // keeps the keys, and fetches them again when a token names a key it does
-  // not have, which is how a change of the realm's keys is picked up.
+  // keeps the keys for ten minutes and then fetches them again, so a key the
+  // realm has withdrawn is not trusted for long. It also fetches them again
+  // when a token names a key it does not have, though not within thirty
+  // seconds of its last fetch, which is how a new key is picked up.
   private async discoverKeys(): Promise<RemoteJWKSet> {
     const response = await fetch(`${this.issuer}/.well-known/openid-configuration`, {
       signal: AbortSignal.timeout(discoveryTimeout),

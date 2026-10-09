@@ -9,6 +9,7 @@ export {
   bearerHeader,
   createTestKey,
   signToken,
+  signTokenWithoutKeyName,
   type TestKey,
   tokenClaims,
   type TokenOptions,

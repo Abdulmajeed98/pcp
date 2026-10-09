@@ -1,5 +1,5 @@
 import { Role } from '../../../domain/caller/Role';
-import { callerFromClaims } from '../../../infrastructure/authentication/AccessTokenClaims';
+import { callerFromClaims } from '../../../infrastructure/authentication/caller-from-claims';
 
 // The claims of a real access token for the dashboard's login client, as
 // Keycloak wrote them on 9 October 2026, with the identifier made up.
@@ -59,13 +59,5 @@ describe('reading the caller from the claims of a token', () => {
     ['a login name that is not text', { preferred_username: 42 }],
   ])('reads no caller from claims with %s', (_what, change) => {
     expect(callerFromClaims({ ...claims, ...change })).toBeUndefined();
-  });
-
-  it('says which roles a caller holds any one of', () => {
-    const caller = callerFromClaims(claims);
-
-    expect(caller?.hasAnyRole([Role.VENDOR, Role.ADMIN])).toBe(true);
-    expect(caller?.hasAnyRole([Role.VENDOR])).toBe(false);
-    expect(caller?.hasAnyRole([])).toBe(false);
   });
 });

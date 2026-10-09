@@ -3,8 +3,6 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 // Reads the setting that lists the allowed origins: one string, with the
 // origins separated by commas.
 export function parseAllowedOrigins(value: unknown): Set<string> {
-  if (value instanceof Set) return value;
-
   return new Set(
     String(value ?? '')
       .split(',')

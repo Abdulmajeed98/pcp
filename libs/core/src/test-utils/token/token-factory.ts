@@ -35,7 +35,8 @@ export type TokenOptions = {
   roles?: string[];
   loginName?: string;
   subject?: string;
-  expiresAt?: Date;
+  // When the token expires. `null` makes a token that never says so.
+  expiresAt?: Date | null;
 };
 
 // The roles Keycloak gives every login, whatever its platform roles are.
@@ -49,6 +50,10 @@ function seconds(date: Date): number {
 // login client. They follow a real token, read on 9 October 2026.
 export function tokenClaims(options: TokenOptions): JWTPayload {
   const now = new Date();
+  const expiresAt =
+    options.expiresAt === undefined
+      ? new Date(now.getTime() + 5 * 60 * 1000)
+      : options.expiresAt;
 
   return {
     iss: options.issuer,
@@ -57,7 +62,7 @@ export function tokenClaims(options: TokenOptions): JWTPayload {
     typ: 'Bearer',
     azp: 'dashboard',
     iat: seconds(now),
-    exp: seconds(options.expiresAt ?? new Date(now.getTime() + 5 * 60 * 1000)),
+    ...(expiresAt === null ? {} : { exp: seconds(expiresAt) }),
     preferred_username: options.loginName ?? 'a-login',
     realm_access: { roles: [...keycloakOwnRoles, ...(options.roles ?? [])] },
     scope: 'openid profile email',
@@ -67,6 +72,17 @@ export function tokenClaims(options: TokenOptions): JWTPayload {
 export function signToken(key: TestKey, options: TokenOptions): Promise<string> {
   return new SignJWT(tokenClaims(options))
     .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: key.kid })
+    .sign(key.privateKey);
+}
+
+// A token that does not say which of the realm's keys signed it. Keycloak
+// always says so.
+export function signTokenWithoutKeyName(
+  key: TestKey,
+  options: TokenOptions,
+): Promise<string> {
+  return new SignJWT(tokenClaims(options))
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
     .sign(key.privateKey);
 }
 

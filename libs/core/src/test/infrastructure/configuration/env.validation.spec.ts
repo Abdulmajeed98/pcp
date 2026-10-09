@@ -1,11 +1,9 @@
 import { Transform } from 'class-transformer';
 import { IsInt, Max, Min } from 'class-validator';
 
-import {
-  IsOrigin,
-  validateEnvironment,
-} from '../../../infrastructure/configuration/env.validation';
+import { validateEnvironment } from '../../../infrastructure/configuration/env.validation';
 import { parseAllowedOrigins } from '../../../infrastructure/security/cors';
+import { IsOrigin } from '../../../infrastructure/security/IsOrigin';
 
 // A settings class of the kind an application writes.
 class Settings {

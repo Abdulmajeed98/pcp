@@ -1,35 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import {
-  buildMessage,
-  IsNotEmpty,
-  IsString,
-  IsUrl,
-  registerDecorator,
-  validateSync,
-  ValidationOptions,
-} from 'class-validator';
-
-import { isOrigin } from '../security/cors';
-
-// Marks a setting as an origin. With `each`, every entry of a list is one.
-export function IsOrigin(validationOptions?: ValidationOptions): PropertyDecorator {
-  return (target, propertyName) => {
-    registerDecorator({
-      name: 'isOrigin',
-      target: target.constructor,
-      propertyName: String(propertyName),
-      options: validationOptions,
-      validator: {
-        validate: isOrigin,
-        defaultMessage: buildMessage(
-          (eachPrefix) =>
-            `${eachPrefix}$property must be an origin, such as http://localhost:3002`,
-          validationOptions,
-        ),
-      },
-    });
-  };
-}
+import { IsNotEmpty, IsString, IsUrl, validateSync } from 'class-validator';
 
 // Checks the environment against an application's settings class and returns
 // the settings, each in the type the class gives it. A setting the

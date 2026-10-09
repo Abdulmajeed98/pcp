@@ -1,6 +1,14 @@
 import { Type } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
+import {
+  createTestKey,
+  KeycloakStandIn,
+  signToken,
+  startKeycloakStandIn,
+  TestKey,
+  TokenOptions,
+} from '@pcp/core/test-utils';
 
 export type TestApp = {
   app: NestExpressApplication;
@@ -31,4 +39,39 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<TestA
   await app.listen(0, '127.0.0.1');
 
   return { app, baseUrl: await app.getUrl() };
+}
+
+export type TestAppWithLogins = TestApp & {
+  // What stands in for Keycloak, and the key its tokens are signed with.
+  keycloak: KeycloakStandIn;
+  key: TestKey;
+  // A token as the realm would issue it, for a login with these roles.
+  tokenOf(options?: Omit<TokenOptions, 'issuer'>): Promise<string>;
+  close(): Promise<void>;
+};
+
+// The application with a stand-in for Keycloak beside it, for a test that
+// calls an endpoint as someone. The API is told that the stand-in is its
+// realm before it reads its settings.
+export async function createTestAppWithLogins(
+  options: TestAppOptions = {},
+): Promise<TestAppWithLogins> {
+  const keycloak = await startKeycloakStandIn();
+  const key = await createTestKey();
+  keycloak.publish(key);
+
+  process.env.KEYCLOAK_ISSUER = keycloak.issuer;
+  const testApp = await createTestApp(options);
+
+  return {
+    ...testApp,
+    keycloak,
+    key,
+    tokenOf: (tokenOptions = {}) =>
+      signToken(key, { issuer: keycloak.issuer, ...tokenOptions }),
+    close: async () => {
+      await testApp.app.close();
+      await keycloak.stop();
+    },
+  };
 }

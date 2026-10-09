@@ -28,15 +28,16 @@ describe("the API's description of itself", () => {
     expect(document).toEqual(committed);
   });
 
-  it('describes the two endpoints and no other', () => {
-    expect(Object.keys(document.paths).sort()).toEqual(['/v1/caller', '/v1/status']);
-    expect(Object.keys(document.paths['/v1/caller'])).toEqual(['get']);
-    expect(Object.keys(document.paths['/v1/status'])).toEqual(['get']);
-  });
+  it('names each operation after the method that serves it, and no two alike', () => {
+    const names = Object.values(document.paths).flatMap((path) =>
+      Object.values(path).map(
+        (operation) => (operation as { operationId: string }).operationId,
+      ),
+    );
 
-  it('names each operation after what it does', () => {
-    expect(document.paths['/v1/caller'].get?.operationId).toBe('getCaller');
-    expect(document.paths['/v1/status'].get?.operationId).toBe('getStatus');
+    expect(names).toContain('getCaller');
+    expect(names).toContain('getStatus');
+    expect(new Set(names).size).toBe(names.length);
   });
 
   it('declares bearer authentication once, for the whole document', () => {
@@ -79,8 +80,13 @@ describe("the API's description of itself", () => {
   });
 
   it('states the error body as the answer for any refusal, at every endpoint', () => {
-    for (const path of ['/v1/caller', '/v1/status']) {
-      expect(document.paths[path].get?.responses.default).toMatchObject({
+    const operations = Object.values(document.paths).flatMap((path) => Object.values(path));
+
+    expect(operations.length).toBeGreaterThan(0);
+    for (const operation of operations) {
+      expect(
+        (operation as { responses: Record<string, unknown> }).responses.default,
+      ).toMatchObject({
         content: {
           'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
         },

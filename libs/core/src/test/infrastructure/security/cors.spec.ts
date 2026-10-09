@@ -15,12 +15,6 @@ describe('the allowed-origins rule', () => {
     it('reads an empty setting as no origin at all', () => {
       expect(parseAllowedOrigins('').size).toBe(0);
     });
-
-    it('leaves a set of origins as it is', () => {
-      const origins = new Set(['http://localhost:3002']);
-
-      expect(parseAllowedOrigins(origins)).toEqual(origins);
-    });
   });
 
   describe('telling an origin from something else', () => {

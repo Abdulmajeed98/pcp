@@ -1,36 +1,23 @@
-import {
-  bearerHeader,
-  createTestKey,
-  KeycloakStandIn,
-  signToken,
-  startKeycloakStandIn,
-  TestKey,
-} from '@pcp/core/test-utils';
+import { bearerHeader } from '@pcp/core/test-utils';
 
-import { createTestApp, TestApp } from '../../../test-utils/create-test-app';
+import {
+  createTestAppWithLogins,
+  TestAppWithLogins,
+} from '../../../test-utils/create-test-app';
 
 describe('the caller endpoint', () => {
-  let keycloak: KeycloakStandIn;
-  let key: TestKey;
-  let testApp: TestApp;
+  let testApp: TestAppWithLogins;
 
   beforeAll(async () => {
-    keycloak = await startKeycloakStandIn();
-    key = await createTestKey();
-    keycloak.publish(key);
-
-    process.env.KEYCLOAK_ISSUER = keycloak.issuer;
-    testApp = await createTestApp();
+    testApp = await createTestAppWithLogins();
   });
 
   afterAll(async () => {
-    await testApp.app.close();
-    await keycloak.stop();
+    await testApp.close();
   });
 
   it('answers an Admin with its identifier, its name and its one platform role', async () => {
-    const token = await signToken(key, {
-      issuer: keycloak.issuer,
+    const token = await testApp.tokenOf({
       subject: '0b6f1c1e-6f0a-4c59-9d0a-3c1f6d2a7b10',
       loginName: 'an-admin',
       roles: ['admin'],
@@ -49,8 +36,7 @@ describe('the caller endpoint', () => {
   });
 
   it('answers a Vendor in the same way', async () => {
-    const token = await signToken(key, {
-      issuer: keycloak.issuer,
+    const token = await testApp.tokenOf({
       subject: '7a1d9c52-3b7e-4e0f-8a46-d1c0b5e9f233',
       loginName: '07501234567',
       roles: ['vendor'],

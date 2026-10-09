@@ -10,7 +10,7 @@ import {
 import { Reflector } from '@nestjs/core';
 
 import { Caller } from '../../domain/caller/Caller';
-import { callerFromClaims } from './AccessTokenClaims';
+import { callerFromClaims } from './caller-from-claims';
 import { AccessTokenVerifier, InvalidAccessToken } from './AccessTokenVerifier';
 import { CallerResolver } from './CallerResolver';
 import { PreAuthorize } from './PreAuthorize';
