@@ -5,8 +5,18 @@
 // `pnpm boundaries:check`: `pnpm check` and a development server would both
 // see the planted files.
 import { spawn } from 'node:child_process';
-import { globSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  globSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { basename, dirname, join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
+
+import { featureSlicedBans, frontends, writtenFile } from './feature-sliced-bans.mjs';
 
 const root = join(import.meta.dirname, '..');
 
@@ -37,6 +47,154 @@ const noPathIntoAnotherProject =
   'Projects cannot be imported by a relative or absolute path';
 const sharedMayImportNoPackage =
   'A project tagged with "scope:shared" is not allowed to import "rxjs"';
+
+// The first sentence of each of the frontends' bans.
+const noLayerAbove = 'A layer may not import from a layer above it.';
+const noOtherSlice = 'A slice may not import another slice on its own layer.';
+const noPastAnIndex = 'Nothing is imported past an index file.';
+const noLeavingTheSlice = 'A relative import may not leave its own slice.';
+const noClimbingAtThisDepth = 'A file at this depth may not climb with a relative import.';
+const noCrossingLayers = 'A relative import may not cross into another layer.';
+
+// The cases every frontend has to pass. `app` and `pages` are the folders of
+// its App and Pages layers, which the Shopper app spells differently. The
+// Widgets, Features and Entities layers have no folder yet: a case planted in
+// one creates the folder for a moment.
+function frontendCases({ project, label, app, pages }) {
+  const slice = `src/${pages}/boundary-proof`;
+  const aPage = `@/${pages}/placeholder`;
+  const refused = (name, file, specifier, refusal, form) => ({
+    name: `${label}: ${name} is refused`,
+    project,
+    file,
+    form,
+    specifier,
+    refusal,
+  });
+  const allowed = (name, file, specifier) => ({
+    name: `${label}: ${name} is allowed`,
+    project,
+    file,
+    specifier,
+  });
+  const shared = 'src/shared/boundary-proof';
+  return [
+    refused(
+      'a Shared file that imports a page',
+      `${shared}/imports-a-page`,
+      aPage,
+      noLayerAbove,
+    ),
+    refused(
+      'a Shared file that imports a page lazily',
+      `${shared}/imports-a-page-lazily`,
+      aPage,
+      noLayerAbove,
+      'lazy',
+    ),
+    refused(
+      'a Features file that imports the Widgets layer',
+      'src/features/boundary-proof/ui/imports-a-widget',
+      '@/widgets/header',
+      noLayerAbove,
+    ),
+    refused(
+      'a page that imports another page',
+      `${slice}/ui/imports-another-page`,
+      aPage,
+      noOtherSlice,
+    ),
+    refused(
+      'an import past the index file of a slice',
+      `${slice}/ui/reaches-into-an-entity`,
+      '@/entities/part/model/part',
+      noPastAnIndex,
+    ),
+    refused(
+      'an import from the App layer past the index file of a page',
+      `src/${app}/boundary-proof/reaches-into-a-page`,
+      `${aPage}/ui/placeholder-page`,
+      noPastAnIndex,
+    ),
+    refused(
+      'an import past the index file of a Shared segment',
+      `${slice}/ui/reaches-into-shared`,
+      '@/shared/config/libraries',
+      noPastAnIndex,
+    ),
+    refused(
+      "a relative import that leaves its slice from the slice's own folder",
+      `${slice}/leaves-the-slice`,
+      '../placeholder',
+      noLeavingTheSlice,
+    ),
+    refused(
+      'a relative import that leaves its slice from a segment',
+      `${slice}/ui/leaves-the-slice`,
+      '../../placeholder',
+      noLeavingTheSlice,
+    ),
+    refused(
+      'a relative import that leaves its slice from a folder inside a segment',
+      `${slice}/ui/part/leaves-the-slice`,
+      '../../../placeholder',
+      noLeavingTheSlice,
+    ),
+    refused(
+      'a climbing relative import in a file nested deeper than that',
+      `${slice}/ui/part/deeper/climbs`,
+      '../sibling',
+      noClimbingAtThisDepth,
+    ),
+    refused(
+      'a relative import in Shared that climbs into another layer',
+      `${shared}/climbs-into-pages`,
+      `../../${pages}/placeholder`,
+      noCrossingLayers,
+    ),
+    refused(
+      'a relative import in the App layer that climbs into another layer',
+      `src/${app}/boundary-proof/climbs-into-pages`,
+      `../../${pages}/placeholder`,
+      noCrossingLayers,
+    ),
+    allowed(
+      'a page that imports Shared through the index file of a segment',
+      `${slice}/ui/imports-shared`,
+      '@/shared/config',
+    ),
+    allowed(
+      'a page that imports an entity through its index file',
+      `${slice}/ui/imports-an-entity`,
+      '@/entities/part',
+    ),
+    allowed(
+      'a relative import between two segments of one slice',
+      `${slice}/ui/imports-its-own-model`,
+      '../model/thing',
+    ),
+    allowed(
+      'a relative import to another segment from a folder inside a segment',
+      `${slice}/ui/part/imports-its-own-model`,
+      '../../model/thing',
+    ),
+    allowed(
+      'a Shared segment that imports another through its index file',
+      `${shared}/imports-another-segment`,
+      '@/shared/config',
+    ),
+    allowed(
+      'a relative import between two Shared segments',
+      `${shared}/imports-a-neighbour`,
+      '../config',
+    ),
+    allowed(
+      'the App layer importing a page through its index file',
+      `src/${app}/boundary-proof/imports-a-page`,
+      aPage,
+    ),
+  ];
+}
 
 // A case is one planted file. `file` is its path inside the project, without
 // the suffix, and `specifier` is what its one import names. `form` says how
@@ -155,6 +313,12 @@ const cases = [
     file: 'src/test/domain/boundary-proof/imports-infrastructure',
     specifier: '~/infrastructure/placeholder/placeholder.module',
   },
+  ...frontendCases({
+    project: dashboard,
+    label: 'The dashboard',
+    app: 'app',
+    pages: 'pages',
+  }),
 ];
 
 function plantedPath({ project, file }) {
@@ -294,6 +458,19 @@ function judge(each, reported) {
   } else if (!said(reported[0]).includes(each.refusal)) {
     fail(each.name, `another rule caught it: ${said(reported[0])}`);
   } else pass(each.name);
+}
+
+// The frontends' bans are stated once and written out for Oxlint to read. A
+// written file that has fallen behind would be linted and proven in place of
+// what is stated.
+for (const frontend of frontends) {
+  const path = join(frontend.folder, writtenFile);
+  const name = `${path} holds the bans as they are stated`;
+  const written = existsSync(join(root, path))
+    ? JSON.parse(readFileSync(join(root, path), 'utf8'))
+    : undefined;
+  if (isDeepStrictEqual(written, featureSlicedBans(frontend))) pass(name);
+  else fail(name, 'it does not. Write it again with "pnpm boundaries:write"');
 }
 
 for (const each of cases) plant(each);
