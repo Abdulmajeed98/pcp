@@ -6,6 +6,7 @@
     "@pcp/api-client": "workspace:*",
     "@pcp/i18n": "workspace:*",
     "@pcp/ui": "workspace:*",
+    "keycloak-js": "^26.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
