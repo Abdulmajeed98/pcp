@@ -151,7 +151,7 @@ Nothing in the three apps changes in this step. The API does not connect to the 
 | `pnpm services:reset` | Stops both services and deletes their data. The next start is a first start. |
 | `pnpm services:check` | Checks the running services from the outside and reports each result. |
 
-- Keycloak imports the realm only when the realm does not exist yet. A change to the realm file, the theme's language list or the database set-up script therefore takes effect only after a reset. This is written into the MVP spec beside the commands.
+- Keycloak imports the realm only when the realm does not exist yet. A change to the realm file or the database set-up script therefore takes effect only after a reset. This is written into the MVP spec beside the commands. (Corrected on 9 October 2026. This sentence first named the theme's language list as well. In development mode Keycloak reads the theme afresh for every page, so a change to that list needs no reset. See the Comments of ticket 05.)
 - `pnpm check` does not start or need the services. It formats and lints the new files as it does every other file.
 
 ### The scripted check

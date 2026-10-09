@@ -74,3 +74,11 @@ Each line was also seen to fail before the code that satisfies it existed: with 
 | `pnpm services:up` with the `docker` command pointed at a socket where no daemon listens | "Docker is not running. Start Docker, then run "pnpm services:up" again." Exits 1. Docker itself was left running; ticket 05 repeats this with Docker really stopped. |
 | `pnpm services:up` with no `docker` command on the path | "Docker is not installed, or the "docker" command is not on the PATH." Exits 1. |
 | `pnpm check` with the services stopped and no daemon reachable | Passes: the format check, the root lint and all 21 tasks. |
+
+### 9 October 2026: after the code review
+
+Three things recorded above changed afterwards. Ticket 05 gives the reasons.
+
+- `pnpm services:down` and `pnpm services:reset` now run through a script and work with no `.env`.
+- The two settings for Keycloak's own administrator account were renamed.
+- Each database user is also kept out of the two databases PostgreSQL creates for itself, and the check has two more lines for that.

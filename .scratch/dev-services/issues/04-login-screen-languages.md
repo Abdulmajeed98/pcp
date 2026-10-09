@@ -48,7 +48,7 @@ This ticket holds the step's one unknown. Keycloak's documentation does not say 
 **What differs from the first plan, or is not obvious.**
 
 - **The theme gives Sorani no name of its own.** Keycloak's name, "کوردیی ناوەندی" (Central Kurdish), is shown on all three screens. The shorter "کوردی" was tried and works, but it would show on the Kurdish screen only unless it were also added for Arabic and English. Which name to use is the owner's choice, at review.
-- **The Sorani draft is nine lines:** the page title, the heading, the two field labels, the button, the two labels of the show-password button, and the message for a wrong name or password. Everything else on the login screens falls back to Keycloak's English.
+- **The Sorani draft is eight lines:** the page title, the heading, the two field labels, the button, the two labels of the show-password button, and the message for a wrong name or password. Everything else on the login screens falls back to Keycloak's English.
 - **The check holds a copy of one Sorani phrase,** the heading. It needs a known phrase to tell Sorani text from the English fallback. When the review changes that heading, the copy in the check changes with it.
 - **A request that names no language** is one without `ui_locales`. A browser also sends its own language, and Keycloak follows it: a browser set to English gets the English screen, and one set to German, which the realm does not offer, gets Kurdish. That is the rule of LANG-6.
 - The theme's parents are Keycloak's current themes: `keycloak.v2` for login, `keycloak.v3` for account and `keycloak` for email.

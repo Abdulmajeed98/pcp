@@ -330,11 +330,11 @@ Both services listen on the owner's machine only, and are for development only.
 | Service | Address | What it holds |
 |---|---|---|
 | PostgreSQL 18.6 | `localhost:5432` | The `pcp` database, which is the platform's and is owned by the user `pcp`, and the `keycloak` database, owned by the user `keycloak`. Neither user can connect to the other's database. |
-| Keycloak 26.8.0 | `http://localhost:8080` | The `pcp` realm, whose issuer is `http://localhost:8080/realms/pcp`. It has the roles `admin` and `vendor` and one client, `dashboard`, and holds no logins. Its login screen is in Kurdish (Sorani), Arabic and English. |
+| Keycloak 26.8.0 | `http://localhost:8080` | The `pcp` realm, whose issuer is `http://localhost:8080/realms/pcp`. It has the roles `admin` and `vendor` and holds no logins. The platform's one client in it is `dashboard`; Keycloak adds six clients of its own to every realm. Its login screen is in Kurdish (Sorani), Arabic and English. |
 
 - **Passwords.** No password is committed. They are in `.env`, which Git ignores; `.env.example` lists the settings without their values. Keycloak's own console is at `http://localhost:8080/admin` and is opened with Keycloak's own administrator account, whose name and password are in `.env`. That account is not the platform's Admin.
 - **The reset rule.** PostgreSQL runs its set-up script only when its data is empty, and Keycloak imports the realm only when the realm does not exist yet. A change to the database set-up script or to the realm file, which holds the realm's languages, therefore takes effect only after `pnpm services:reset` and a new start. The theme is different: in development mode Keycloak reads it afresh for every page, so a change to its text or to its language list shows on the next page load.
-- **The data and the passwords belong together.** The data is created with the passwords that are in `.env` at the first start. If `.env` is deleted while the data is kept, the next start writes new passwords that the data does not know; `pnpm services:reset` and a new start put that right.
+- **The data and the passwords belong together.** The data is created with the passwords that are in `.env` at the first start. If `.env` is deleted while the data is kept, the next start writes new passwords that the data does not know; `pnpm services:reset` and a new start put that right. Stopping and resetting work without `.env`.
 - **Renaming the realm.** Keycloak refuses to start when the realm file's name and the realm's name differ, so the two are changed together.
 
 **Directory layout**
