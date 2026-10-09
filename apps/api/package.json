@@ -16,6 +16,10 @@
     "@nestjs/testing": "^11.0.0"
   },
   "nx": {
+    "tags": [
+      "scope:api",
+      "type:app"
+    ],
     "targets": {
       "serve": {
         "continuous": true,

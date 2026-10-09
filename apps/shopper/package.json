@@ -12,6 +12,10 @@
     "react-dom": "^19.0.0"
   },
   "nx": {
+    "tags": [
+      "scope:web",
+      "type:app"
+    ],
     "sourceRoot": "apps/shopper",
     "targets": {
       "typecheck": {
