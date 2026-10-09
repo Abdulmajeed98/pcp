@@ -55,6 +55,7 @@ const noPastAnIndex = 'Nothing is imported past an index file.';
 const noLeavingTheSlice = 'A relative import may not leave its own slice.';
 const noClimbingAtThisDepth = 'A file at this depth may not climb with a relative import.';
 const noCrossingLayers = 'A relative import may not cross into another layer.';
+const routingFolderOnlyRoutes = "Next's routing folder only routes.";
 
 // The cases every frontend has to pass. `app` and `pages` are the folders of
 // its App and Pages layers, which the Shopper app spells differently. The
@@ -319,6 +320,60 @@ const cases = [
     app: 'app',
     pages: 'pages',
   }),
+  ...frontendCases({
+    project: shopper,
+    label: 'The Shopper app',
+    app: '_app',
+    pages: '_pages',
+  }),
+  // Next's own routing folder, which only the Shopper app has. It sits beside
+  // `src`, outside the layers.
+  {
+    name: 'The Shopper app: a route file that imports the Shared layer is refused',
+    project: shopper,
+    file: 'app/boundary-proof/imports-shared',
+    specifier: '@/shared/config',
+    refusal: routingFolderOnlyRoutes,
+  },
+  {
+    name: 'The Shopper app: a route file that reaches past the index file of the App layer is refused',
+    project: shopper,
+    file: 'app/boundary-proof/reaches-into-the-app-layer',
+    specifier: '@/_app/layouts/root-layout',
+    refusal: noPastAnIndex,
+  },
+  {
+    name: 'The Shopper app: a route file that reaches past the index file of a page is refused',
+    project: shopper,
+    file: 'app/boundary-proof/reaches-into-a-page',
+    specifier: '@/_pages/placeholder/ui/placeholder-page',
+    refusal: noPastAnIndex,
+  },
+  {
+    name: 'The Shopper app: a route file that reaches a layer by a relative path is refused',
+    project: shopper,
+    file: 'app/boundary-proof/climbs-into-a-layer',
+    specifier: '../../src/_pages/placeholder',
+    refusal: noCrossingLayers,
+  },
+  {
+    name: 'The Shopper app: a route file that imports a page through its index file is allowed',
+    project: shopper,
+    file: 'app/boundary-proof/imports-a-page',
+    specifier: '@/_pages/placeholder',
+  },
+  {
+    name: 'The Shopper app: a route file that imports the App layer through its index file is allowed',
+    project: shopper,
+    file: 'app/boundary-proof/imports-the-app-layer',
+    specifier: '@/_app',
+  },
+  {
+    name: 'The Shopper app: a relative import between two files of the routing folder is allowed',
+    project: shopper,
+    file: 'app/boundary-proof/imports-a-neighbour',
+    specifier: '../layout',
+  },
 ];
 
 function plantedPath({ project, file }) {
