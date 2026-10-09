@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc",
+    "tsBuildInfoFile": "out-tsc/tsconfig.tsbuildinfo",
+    "lib": ["es2022", "dom"],
+    "types": ["node"]
+  },
+  "include": ["playwright.config.ts", "src/**/*.ts"]
+}

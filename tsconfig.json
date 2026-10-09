@@ -26,6 +26,9 @@
     },
     {
       "path": "./apps/dashboard"
+    },
+    {
+      "path": "./apps/e2e"
     }
   ]
 }

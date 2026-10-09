@@ -21,6 +21,7 @@ const shopper = { name: '@pcp/shopper', folder: 'apps/shopper' };
 const dashboard = { name: '@pcp/dashboard', folder: 'apps/dashboard' };
 const ui = { name: '@pcp/ui', folder: 'libs/ui' };
 const compatibility = { name: '@pcp/compatibility', folder: 'libs/compatibility' };
+const endToEnd = { name: '@pcp/e2e', folder: 'apps/e2e' };
 
 // The first sentence of each ban's message. They are written out here and not
 // read from the lint configuration, so that a ban which changes its meaning
@@ -39,6 +40,8 @@ const libraryMayImportNoLibrary =
   'A project tagged with "type:lib" cannot depend on any libs with tags';
 const noPathIntoAnotherProject =
   'Projects cannot be imported by a relative or absolute path';
+const endToEndMayImportNoProject =
+  'A project tagged with "scope:e2e" cannot depend on any libs with tags';
 const sharedMayImportNoPackage =
   'A project tagged with "scope:shared" is not allowed to import "rxjs"';
 
@@ -85,8 +88,9 @@ const inTheDashboard = casesFor(dashboard, 'The dashboard');
 const inTheShopperApp = casesFor(shopper, 'The Shopper app');
 const inALibrary = casesFor(ui, 'A library');
 const inCompatibility = casesFor(compatibility, '@pcp/compatibility');
+const inTheEndToEndTests = casesFor(endToEnd, 'The end-to-end tests');
 
-// Between the eight projects. The API's case is planted in its domain layer,
+// Between the nine projects. The API's case is planted in its domain layer,
 // where its own ban applies as well, to show that both hold on one file.
 const casesBetweenProjects = [
   inTheDashboard.refused(
@@ -136,6 +140,12 @@ const casesBetweenProjects = [
     'src/boundary-proof/imports-a-package',
     'rxjs',
     sharedMayImportNoPackage,
+  ),
+  inTheEndToEndTests.refused(
+    'an import of a library',
+    'src/boundary-proof/imports-ui',
+    '@pcp/ui',
+    endToEndMayImportNoProject,
   ),
   inTheDashboard.allowed(
     'an import of @pcp/compatibility',

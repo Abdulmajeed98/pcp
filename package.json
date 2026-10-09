@@ -12,7 +12,8 @@
     "services:check": "node tools/check-services.mjs",
     "boundaries:check": "node tools/check-boundaries.mjs",
     "boundaries:write": "node tools/write-feature-sliced-bans.mjs",
-    "api-client:write": "node tools/write-api-client.mjs"
+    "api-client:write": "node tools/write-api-client.mjs",
+    "platform:check": "node tools/check-platform.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
@@ -41,10 +42,12 @@
     "@nx/next": "23.2.1",
     "@nx/node": "23.2.1",
     "@nx/oxlint": "23.2.1",
+    "@nx/playwright": "23.2.1",
     "@nx/react": "23.2.1",
     "@nx/vite": "23.2.1",
     "@nx/web": "23.2.1",
     "@nx/webpack": "23.2.1",
+    "@playwright/test": "^1.64.0",
     "@swc-node/register": "~1.11.1",
     "@swc/cli": "~0.8.1",
     "@swc/core": "~1.15.8",
