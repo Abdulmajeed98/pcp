@@ -5,7 +5,8 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": true,
-    "types": []
+    "types": [],
+    "lib": ["es2022", "dom", "dom.iterable"]
   },
   "include": ["src/**/*.ts"],
   "references": []

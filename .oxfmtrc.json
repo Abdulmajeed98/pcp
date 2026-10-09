@@ -8,6 +8,7 @@
     "CLAUDE.md",
     "CONTEXT.md",
     "PRODUCT.md",
-    "**/.oxlintrc.feature-sliced.json"
+    "**/.oxlintrc.feature-sliced.json",
+    "libs/api-client/src/generated/**"
   ]
 }

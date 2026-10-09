@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "preinstall": "node tools/require-pnpm.mjs",
-    "check": "oxfmt --check && node tools/write-feature-sliced-bans.mjs --check && oxlint --config .oxlintrc.outside-projects.json --ignore-pattern apps --ignore-pattern libs && nx run-many --targets=lint,typecheck,test,build",
+    "check": "oxfmt --check && node tools/write-feature-sliced-bans.mjs --check && node tools/write-api-client.mjs --check && oxlint --config .oxlintrc.outside-projects.json --ignore-pattern apps --ignore-pattern libs && nx run-many --targets=lint,typecheck,test,build",
     "format": "oxfmt",
     "services:up": "node tools/start-services.mjs",
     "services:down": "node tools/stop-services.mjs",
     "services:reset": "node tools/stop-services.mjs --delete-data",
     "services:check": "node tools/check-services.mjs",
     "boundaries:check": "node tools/check-boundaries.mjs",
-    "boundaries:write": "node tools/write-feature-sliced-bans.mjs"
+    "boundaries:write": "node tools/write-feature-sliced-bans.mjs",
+    "api-client:write": "node tools/write-api-client.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
@@ -30,6 +31,7 @@
     "rxjs": "^7.8.0"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
     "@jest/globals": "~30.3.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
