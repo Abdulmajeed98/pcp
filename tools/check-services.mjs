@@ -230,8 +230,12 @@ function isLoginScreen(page) {
   return page.includes('id="kc-form-login"');
 }
 
-async function openLoginScreen() {
-  const response = await loginRequest();
+// A client names a language with the `ui_locales` part of the login request.
+// With none, Keycloak chooses.
+async function openLoginScreen(language) {
+  const response = await loginRequest((query) => {
+    if (language !== undefined) query.set('ui_locales', language);
+  });
   const page = await response.text();
   if (!isLoginScreen(page)) {
     throw new Error(`Keycloak answered ${response.status} without a login form`);
@@ -297,6 +301,58 @@ async function signUpAddressRefuses() {
   if (response.status !== 400) throw new Error(`Keycloak answered ${response.status}`);
 }
 
+// One phrase from each language's login screen. The English and the Arabic
+// are Keycloak's own wording. The Kurdish is the theme's draft, so when that
+// wording changes this copy changes with it.
+const LANGUAGES = [
+  { name: 'Kurdish', tag: 'ckb', direction: 'rtl', heading: 'چوونەژوورەوە بۆ هەژمارەکەت' },
+  { name: 'Arabic', tag: 'ar', direction: 'rtl', heading: 'تسجيل الدخول إلى حسابك' },
+  { name: 'English', tag: 'en', direction: 'ltr', heading: 'Sign in to your account' },
+];
+const DIRECTIONS = { rtl: 'right to left', ltr: 'left to right' };
+
+// What the page says about itself in its opening <html> tag.
+function declared(page, attribute) {
+  return page.match(new RegExp(`<html[^>]*\\s${attribute}="([^"]*)"`))?.[1];
+}
+
+// Opens the login screen and makes sure it came back in the language meant.
+// When Keycloak does not offer a language it serves the default one instead,
+// and a check made on that page would say nothing about the language asked for.
+async function openLoginScreenIn(tag, asked = tag) {
+  const page = await openLoginScreen(asked);
+  const language = declared(page, 'lang');
+  if (language !== tag) throw new Error(`the page says its language is ${language}`);
+  return page;
+}
+
+function loginScreenIsServedIn({ tag, heading }) {
+  return async () => {
+    const page = await openLoginScreenIn(tag);
+    if (!page.includes(heading)) throw new Error(`the page does not say "${heading}"`);
+  };
+}
+
+function loginScreenIsLaidOut({ tag, direction }) {
+  return async () => {
+    const declaredDirection = declared(await openLoginScreenIn(tag), 'dir');
+    if (declaredDirection !== direction) {
+      throw new Error(`the page declares the direction ${declaredDirection}`);
+    }
+  };
+}
+
+async function unaskedLoginScreenIsKurdish() {
+  await openLoginScreenIn('ckb', undefined);
+}
+
+async function defaultLanguageIsKurdish() {
+  const response = await readAsAdministrator('');
+  if (!response.ok) throw new Error(`Keycloak answered ${response.status}`);
+  const { defaultLocale } = await response.json();
+  if (defaultLocale !== 'ckb') throw new Error(`the default language is ${defaultLocale}`);
+}
+
 const keycloakAnswers = await check('Keycloak answers on port 8080', askKeycloak);
 if (keycloakAnswers) {
   await check(
@@ -340,7 +396,22 @@ if (keycloakAnswers) {
       loginScreenLacks('login-actions/reset-credentials'),
     );
     await check('The sign-up address refuses', signUpAddressRefuses);
+    for (const language of LANGUAGES) {
+      await check(
+        `The login screen is served in ${language.name}, with its text`,
+        loginScreenIsServedIn(language),
+      );
+      await check(
+        `The ${language.name} login screen is laid out ${DIRECTIONS[language.direction]}`,
+        loginScreenIsLaidOut(language),
+      );
+    }
+    await check(
+      'The login screen is in Kurdish when the request names no language',
+      unaskedLoginScreenIsKurdish,
+    );
   }
+  await check("Kurdish is the realm's default language", defaultLanguageIsKurdish);
 } else {
   console.log(`      Keycloak cannot be reached. ${START_HINT}`);
 }
