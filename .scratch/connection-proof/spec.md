@@ -1,6 +1,6 @@
 # Spec: Proof that the parts connect
 
-Status: ready-for-agent
+Status: ready-for-human
 
 This is step 4, the last of the four infrastructure steps listed under "Order of work" in [the MVP spec](../mvp/spec.md). Steps 1 to 3, [the workspace](../workspace/spec.md), [the development services](../dev-services/spec.md) and [the boundary and layer checks](../boundary-checks/spec.md), are finished. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md) and [ADR-0004](../../docs/adr/0004-architecture-per-app.md). The owner confirmed its test seams on 9 October 2026.
 
