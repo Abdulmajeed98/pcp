@@ -1,0 +1,37 @@
+# The services the platform needs while it is being developed. This file is
+# for development only: nothing in it is fit for a server.
+#
+# Start, stop and check the services with the `pnpm services:*` commands.
+# Every setting comes from `.env`, which `pnpm services:up` creates.
+
+services:
+  postgres:
+    image: postgres:18.6
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in .env, as .env.example describes}
+      # Read by the set-up script below, which creates the two database users.
+      PCP_DB_PASSWORD: ${PCP_DB_PASSWORD:?set it in .env, as .env.example describes}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set it in .env, as .env.example describes}
+    ports:
+      # Published on the loopback address only, so that the database is never
+      # open to the network the machine happens to be on.
+      - '127.0.0.1:5432:5432'
+    volumes:
+      # Since version 18 the image keeps its data in a folder named after the
+      # major version, under this path.
+      - postgres-data:/var/lib/postgresql
+      # The image runs this script once, when the data volume is empty.
+      - ./services/postgres/create-databases.sql:/docker-entrypoint-initdb.d/create-databases.sql:ro
+    healthcheck:
+      # Asked over TCP on purpose. While the image sets a new database up it
+      # runs a temporary server that listens on a socket only, and that server
+      # must not count as ready.
+      test: ['CMD', 'pg_isready', '--host', '127.0.0.1', '--username', 'postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+
+volumes:
+  postgres-data:
