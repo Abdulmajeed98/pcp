@@ -44,6 +44,16 @@ _Avoid_: Stale offer, outdated offer, inactive offer
 One tap by a Shopper on the button that sends their Build to a Vendor over WhatsApp.
 _Avoid_: Lead, order, enquiry, click
 
+### Logins
+
+**Login**:
+The account in the identity service that the Admin or a Vendor logs in with, holding the role of one or the other. Shoppers have none.
+_Avoid_: User, credentials
+
+**Caller**:
+The Login a request to the platform's API was made with.
+_Avoid_: Current user, principal
+
 ### Prices
 
 **Quoted Price**:
