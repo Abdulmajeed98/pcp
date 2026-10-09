@@ -1,6 +1,6 @@
 # Spec: PostgreSQL and Keycloak for development
 
-Status: ready-for-agent
+Status: resolved
 
 This is step 2 of the four infrastructure steps listed under "Order of work" in [the MVP spec](../mvp/spec.md). Step 1, [the workspace](../workspace/spec.md), is finished. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md). The owner confirmed its test seam on 7 October 2026.
 

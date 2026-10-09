@@ -1,6 +1,6 @@
 # Spec: The workspace, with every app and library as an empty shell
 
-Status: ready-for-agent
+Status: resolved
 
 This is step 1 of the four infrastructure steps listed under "Order of work" in [the MVP spec](../mvp/spec.md). It uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md) and [ADR-0004](../../docs/adr/0004-architecture-per-app.md). The owner confirmed its scope and its test seam on 7 October 2026.
 
