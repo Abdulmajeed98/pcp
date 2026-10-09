@@ -10,19 +10,158 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app/**",
+                  "@/_pages",
                   "@/_pages/*/**",
+                  "@/widgets",
                   "@/widgets/*/**",
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./)+(_pages|widgets|features|entities|shared)(/|$)",
-                "message": "A relative import may not cross into another layer. Use the `@/` alias, where the layer rules apply."
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb down to one folder inside a segment and no further. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/_app/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/*/**",
+                  "@/widgets",
+                  "@/widgets/*/**",
+                  "@/features",
+                  "@/features/*/**",
+                  "@/entities",
+                  "@/entities/*/**",
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
+                "message": "A relative import may not leave its own layer. Import another layer through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/_app/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/*/**",
+                  "@/widgets",
+                  "@/widgets/*/**",
+                  "@/features",
+                  "@/features/*/**",
+                  "@/entities",
+                  "@/entities/*/**",
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\.(/|$)",
+                "message": "A relative import may not leave its own layer. Import another layer through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/_app/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/*/**",
+                  "@/widgets",
+                  "@/widgets/*/**",
+                  "@/features",
+                  "@/features/*/**",
+                  "@/entities",
+                  "@/entities/*/**",
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./\\.\\.(/|$)",
+                "message": "A relative import may not leave its own layer. Import another layer through the `@/` alias, where the layer rules apply."
               }
             ]
           }
@@ -39,6 +178,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**"
@@ -54,16 +197,73 @@
               },
               {
                 "group": [
+                  "@/widgets",
                   "@/widgets/*/**",
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){1}",
-                "message": "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated."
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb down to one folder inside a segment and no further. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/_pages/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app",
+                  "@/_app/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/_pages",
+                  "@/_pages/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/widgets",
+                  "@/widgets/*/**",
+                  "@/features",
+                  "@/features/*/**",
+                  "@/entities",
+                  "@/entities/*/**",
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\.",
+                "message": "A layer that has slices holds slices and no files of its own. Move this file into a slice."
               }
             ]
           }
@@ -80,6 +280,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**"
@@ -95,15 +299,23 @@
               },
               {
                 "group": [
+                  "@/widgets",
                   "@/widgets/*/**",
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){1}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -121,6 +333,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**"
@@ -136,15 +352,23 @@
               },
               {
                 "group": [
+                  "@/widgets",
                   "@/widgets/*/**",
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){2}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -162,6 +386,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**"
@@ -177,15 +405,23 @@
               },
               {
                 "group": [
+                  "@/widgets",
                   "@/widgets/*/**",
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){3}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -203,6 +439,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -220,15 +460,71 @@
               },
               {
                 "group": [
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){1}",
-                "message": "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated."
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb down to one folder inside a segment and no further. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/widgets/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app",
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/features",
+                  "@/features/*/**",
+                  "@/entities",
+                  "@/entities/*/**",
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\.",
+                "message": "A layer that has slices holds slices and no files of its own. Move this file into a slice."
               }
             ]
           }
@@ -245,6 +541,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -262,14 +562,21 @@
               },
               {
                 "group": [
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){1}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -287,6 +594,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -304,14 +615,21 @@
               },
               {
                 "group": [
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){2}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -329,6 +647,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -346,14 +668,21 @@
               },
               {
                 "group": [
+                  "@/features",
                   "@/features/*/**",
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){3}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -371,6 +700,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -390,14 +723,69 @@
               },
               {
                 "group": [
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){1}",
-                "message": "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated."
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb down to one folder inside a segment and no further. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/features/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app",
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/**",
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/entities",
+                  "@/entities/*/**",
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\.",
+                "message": "A layer that has slices holds slices and no files of its own. Move this file into a slice."
               }
             ]
           }
@@ -414,6 +802,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -433,13 +825,19 @@
               },
               {
                 "group": [
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){1}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -457,6 +855,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -476,13 +878,19 @@
               },
               {
                 "group": [
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){2}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -500,6 +908,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -519,13 +931,19 @@
               },
               {
                 "group": [
+                  "@/entities",
                   "@/entities/*/**",
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){3}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -543,6 +961,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -564,13 +986,67 @@
               },
               {
                 "group": [
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){1}",
-                "message": "A file at this depth may not climb with a relative import. The bans follow a climb from a slice's own folder, from a segment and from one folder inside a segment, and from nowhere else. Keep the file within that depth, or raise the depth where the bans are stated."
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb down to one folder inside a segment and no further. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/entities/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app",
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A slice may not import another slice on its own layer. Join the two on a layer above. Inside one slice, use a relative import."
+              },
+              {
+                "group": [
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\.",
+                "message": "A layer that has slices holds slices and no files of its own. Move this file into a slice."
               }
             ]
           }
@@ -587,6 +1063,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -608,12 +1088,17 @@
               },
               {
                 "group": [
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){1}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -631,6 +1116,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -652,12 +1141,17 @@
               },
               {
                 "group": [
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){2}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -675,6 +1169,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -696,12 +1194,17 @@
               },
               {
                 "group": [
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./){3}",
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./\\.\\.(/|$)",
                 "message": "A relative import may not leave its own slice. Import another slice through the `@/` alias, where the layer rules apply."
               }
             ]
@@ -719,6 +1222,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/_app",
                   "@/_app/**",
@@ -735,13 +1242,162 @@
               },
               {
                 "group": [
+                  "@/shared",
                   "@/shared/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./)+(_app|_pages|widgets|features|entities)(/|$)",
-                "message": "A relative import may not cross into another layer. Use the `@/` alias, where the layer rules apply."
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
+                "message": "A file at this depth may not climb with a relative import. The bans follow a climb down to one folder inside a segment and no further. Keep the file within that depth, or raise the depth where the bans are stated."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/shared/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app",
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**",
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\.(/|$)",
+                "message": "A relative import may not leave its own layer. Import another layer through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/shared/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app",
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**",
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\.(/|$)",
+                "message": "A relative import may not leave its own layer. Import another layer through the `@/` alias, where the layer rules apply."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/shared/*/*/*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app",
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**",
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "A layer may not import from a layer above it. From the top, the layers are App, Pages, Widgets, Features, Entities and Shared. Move what is needed down to a layer both may import, or join the two on the higher layer."
+              },
+              {
+                "group": [
+                  "@/shared",
+                  "@/shared/*/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./\\.\\.(/|$)",
+                "message": "A relative import may not leave its own layer. Import another layer through the `@/` alias, where the layer rules apply."
               }
             ]
           }
@@ -758,6 +1414,10 @@
           {
             "patterns": [
               {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
                 "group": [
                   "@/widgets",
                   "@/widgets/**",
@@ -773,13 +1433,18 @@
               {
                 "group": [
                   "@/_app/**",
+                  "@/_pages",
                   "@/_pages/*/**"
                 ],
                 "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
               },
               {
-                "regex": "^(\\.\\./)+src(/|$)",
-                "message": "A relative import may not cross into another layer. Use the `@/` alias, where the layer rules apply."
+                "regex": "^\\./\\.\\.?(/|$)|/\\.(/|$)|^(\\.\\.?/)*[^/]*[^./][^/]*/(.*/)?\\.\\.(/|$)",
+                "message": "A relative import is written in its shortest form: any climbing first, as `../`, and no `.` or `..` after it. The bans count how far an import climbs and cannot follow a longer spelling."
+              },
+              {
+                "regex": "^(\\.\\./)+(.*/)?src(/|$)",
+                "message": "A route file reaches the layers through the `@/` alias and never by a relative path."
               }
             ]
           }
