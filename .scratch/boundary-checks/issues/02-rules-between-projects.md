@@ -45,7 +45,7 @@ The rule runs under Oxlint through the bridge that Nx ships and marks as experim
 
 - **The bridge is named at the top of the root configuration, and the rule is switched on in a block for source files.** Nx's plugin looks for the bridge only at the top of a JSON configuration, and that is what makes a lint result depend on the files and manifests of the projects it imports. The rule itself applies to files under a `src` folder or an `app` folder, at any depth. Written that way the patterns match both from the repository root, which is how the four libraries without a configuration of their own meet them, and from a project's own folder, which is how the four projects that extend the root meet them.
 - **The files outside the projects never start the rule.** None of them is under a `src` or an `app` folder. `pnpm check` on a workspace with no cached project graph printed no skipped-rule warning.
-- **A project's own tool configuration is not covered.** The files at a project's root, such as its webpack, Vite, Next and Jest configuration, are outside `src` and `app`. They import build tools and no other project.
+- **A project's own tool configuration is not covered.** The files at a project's root, such as its webpack, Vite, Next and Jest configuration, are outside `src` and `app`. They import build tools and no other project. (Changed by the code review on 9 October 2026. The rule now applies to every file of a project: see the Comments of ticket 05.)
 - **A new project is covered without doing anything,** as long as its code is under `src` and its configuration, if it has one, extends the root's. Until it is tagged it may import no other project.
 
 **What differs from the first plan, or is not obvious.**

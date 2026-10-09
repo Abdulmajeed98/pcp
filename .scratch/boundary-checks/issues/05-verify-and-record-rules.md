@@ -39,7 +39,7 @@
 
 | Group | Refused | Allowed | Other |
 |---|---|---|---|
-| Between projects | 6 | 1 | |
+| Between projects | 7 | 1 | |
 | The API | 5 | 3 | |
 | The dashboard | 13 | 7 | |
 | The Shopper app | 13 | 7 | |
@@ -76,3 +76,64 @@ The spec's case "a project imports an app" is covered by the line for a relative
 
 **Faults found in this ticket:** none. Three things found earlier are recorded where they were dealt with: Oxlint not linting a planted file that Git ignores (ticket 01), an app that cannot be imported by its name (ticket 02), and the boundary rule being skipped under Nx when the graph is not cached (ticket 02).
 
+### 9 October 2026: the code review
+
+Two reviews were run over everything since the commit that added this step's spec: one against the repository's standards and one against the spec. Neither found a broken standard. Both found ways round the frontends' bans, and the first found faults in the proof command itself. Each hole was first written as a case in the proof and seen to fail, and then closed.
+
+**Changed as a result.**
+
+- **A relative import could step round every ban by its spelling.** The bans count the `../` an import starts with. `./../../other-slice` starts with `./`, and `../model/../../other-slice` climbs after going down, so neither was counted. A relative import must now be in its shortest form.
+- **A climb out of the App and Shared layers is now counted, as it is for a slice.** It had been refused by the name of the folder it reached. That refused `../widgets` inside Shared, where a folder may well be named like a layer, and it let `../../../src/pages/x` back in. The ban now reads "may not leave its own layer".
+- **The `@/` alias reaches the six layers and nothing else.** `@/i18n/request` had passed from any layer and from a route file, although the spec says that a route file imports project code only from the App layer and from a page. Rust's regular expressions have no lookahead, so the pattern for "a folder that is none of the layers" is worked out by the script from the layers' names. It was checked against 94 words outside Oxlint before it was used.
+- **A layer is never imported with nothing named after it.** `@/entities` and `@/shared` had passed.
+- **A file put straight into a layer that has slices may make no relative import.** It belongs to no slice, and it could reach into every slice beside it.
+- **A route file reaches the layers through the alias only.** A relative path from the routing folder into `src` is refused wherever it goes, with a message of its own.
+- **The boundary rule now applies to every file of a project.** It had been switched on for `src` and `app` folders, so a file at a project's root, such as a middleware file, could import any project. Ticket 04 said that the rules between projects applied to such a file. They did not then, and they do now. The files outside the projects have a configuration of their own, which extends the root's and switches the one rule off, because they are linted before Nx has cached a project graph.
+- **`pnpm check` compares the written bans with their statement.** Before, a statement that was changed and not written out left `pnpm check` green, with lint reading the old bans. This adds a part to `pnpm check`, which the spec said would gain none. It takes a twentieth of a second and plants nothing. The owner can take it out again: the proof makes the same comparison.
+- **An allowed case can no longer pass because its file was never linted.** Every planted file ends with a `debugger` statement, which lint always reports. A file with no such report fails its line.
+- **The proof removes only what it planted.** It had removed a folder it created together with everything in it, and a real file added to that folder during the run would have gone with it. It now removes its own files and then each folder it made, if the folder is empty again. Checked by hand: a file written into a created folder while the proof ran was still there afterwards.
+- **A report that cannot be read fails its lines.** It had ended the command with a stack trace. A lint that has not finished after two minutes is stopped, and two cases that would plant the same file are refused at the start.
+- **The proof's cases are built by one pair of helpers,** and every line has the same form. The two relative-path cases between projects moved to the API, because in a frontend the new layer ban reports them too.
+- **An index ban, a layer ban and a slice ban are each planted at a second depth.** Each depth of a layer with slices has a block of its own, and only the segment's block had been proven for the alias bans.
+
+**Left as it is, with the reason.**
+
+- **"A project imports an app" still has no line of its own.** The rule's own wording for it cannot be reached while the apps export nothing, as ticket 02 records. The line for a relative path into an app is the case that can happen.
+- **A file with no imports, put straight into a layer that has slices, can be imported as if it were a slice.** `@/features/helpers` reads the same whether `helpers` is a folder or a file. The MVP spec says so.
+- **A file in `src` outside the six layers is under no ban itself.** Nothing in a layer or in the routing folder can import it. The MVP spec says so.
+- **The frontends' folder names are written out in the proof as well as in the statement.** That is deliberate, like the messages: the proof would prove nothing if it read its expectations from what it checks. A comment now says so.
+- **The proof compares the written bans with the statement,** although the spec says it does not assert the contents of the lint configuration. It asserts nothing about what the bans are, only that the file lint reads is the one the statement produces.
+- **Three scripts and a second command, where the spec named one of each.** Ticket 03 records why the bans are written out by a script.
+- **The proof knows a skipped rule by Nx's wording.** If the wording changed, the refused lines between projects would still fail, because a skipped rule reports nothing.
+
+**The proof after the review** has 100 lines:
+
+| Group | Refused | Allowed | Other |
+|---|---|---|---|
+| Between projects | 8 | 1 | |
+| The API | 5 | 3 | |
+| The dashboard | 22 | 9 | |
+| The Shopper app | 22 | 9 | |
+| The Shopper app's routing folder | 6 | 3 | |
+| Each of the five projects that are linted | | | 2 |
+| Each frontend | | | 1 |
+
+**Fault checks,** each made in the statement or the root configuration and reverted:
+
+| Fault | What failed |
+|---|---|
+| The alias allowed to reach any folder | The line for a folder that is not a layer, in each frontend and in the routing folder |
+| Any spelling of a relative import allowed | Both lines for leaving a slice by a longer spelling, in each frontend, and the routing folder's |
+| A file outside any slice allowed its relative imports | Its line, in each frontend |
+| A whole layer allowed to be imported | Its line, in each frontend |
+| The App and Shared layers allowed to be left | All three lines for leaving a layer, in each frontend |
+| The shortest-form ban widened to refuse every climb | Every allowed relative import, in each frontend and in the routing folder, and three refused lines, each reported twice |
+| The boundary rule limited to source folders again | The Shopper app's line for a file at its root |
+
+**From scratch again,** in a second fresh clone at the commit that brought the documents in line:
+
+- One install, then `pnpm check --skip-nx-cache` passed with no skipped-rule warning.
+- `pnpm boundaries:check` passed on all 100 lines in 6 seconds, and Git reported a clean working tree.
+- A second `pnpm check` came from the cache, 21 of 21. `pnpm check --skip-nx-cache` took 4 seconds, with a run of 3.2 seconds, against the baseline of 4 and 3.0.
+- With a written file edited by hand, and again with the statement changed and not written out, `pnpm check` failed at the comparison and named the file.
+- Interrupted with SIGINT and with SIGTERM while 88 files were planted, the proof left nothing behind.

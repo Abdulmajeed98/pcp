@@ -43,7 +43,7 @@ The Shopper app has one thing the dashboard has not: Next's own routing folder, 
 - **The routing folder's two sources are the ones the guide uses:** a page, and the App layer. Everything a route file needs from further down reaches it through one of those.
 - **An API route's code will come through the App layer's one index file.** The guide's own example imports the `api-routes` segment directly. Here the App layer has a single index file, so that import would be refused as reaching past it. When the first API route is written, either the App layer's index file re-exports it or the rule is opened for that segment.
 - **A second index file for server-only code is refused as well,** as an import past the index file. That is a decision for the first slice that needs one.
-- **Files at the Shopper app's root are not covered.** No middleware or instrumentation file exists yet. One that appears is outside both `src` and the routing folder, so only the rules between projects apply to it.
+- **Files at the Shopper app's root are not covered by these bans.** No middleware or instrumentation file exists yet. One that appears is outside both `src` and the routing folder. (Corrected on 9 October 2026. This first said that the rules between projects applied to such a file. They did not at the time, and they do since the code review: see the Comments of ticket 05.)
 
 **What differs from the first plan, or is not obvious.**
 

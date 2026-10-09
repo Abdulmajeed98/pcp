@@ -270,3 +270,8 @@ A good test of this step puts an import where a rule applies and observes what l
 - **Checked in the workplace repository on 9 October 2026.** Its lint configuration bans imports of the infrastructure layer from files in the domain layer, by alias and by relative path, and leaves spec files out. Its projects carry no tags and its boundary rule allows every project to depend on every other, so the tags here are this project's own.
 - **The lesson from steps 1 and 2.** Results left over from earlier runs hid faults in both. Every claim in this step is checked on a fresh clone with the cache skipped.
 - **Next steps.** Step 4 is the proof that the parts connect. It is the first step to write real code in the API and in both frontends, and so the first to meet these rules.
+- **Changed by the code review on 9 October 2026.** The Comments of ticket 05 list everything. Where this spec and the result differ:
+  - `pnpm check` gained one part: it compares the frontends' written bans with their statement.
+  - The boundary rule applies to every file of a project, not only to its source folders, and the files outside the projects are linted with a second configuration that switches it off.
+  - In the App and Shared layers a relative import may not leave the layer, counted by depth as for a slice. This spec had it refused when it climbed into a folder named like a layer.
+  - Four bans were added to close ways round the first three: a relative import is in its shortest form, the `@/` alias reaches only the layers, a layer is not imported with nothing named after it, and a file outside any slice makes no relative import.
