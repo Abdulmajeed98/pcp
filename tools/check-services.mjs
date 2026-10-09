@@ -2,6 +2,7 @@
 // clients meet them, and prints one line for each thing it checked. It exits
 // non-zero when any line fails. Run it with `pnpm services:check`.
 import { spawnSync } from 'node:child_process';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { connect } from 'node:net';
 import { join } from 'node:path';
@@ -205,6 +206,97 @@ function roleExists(name) {
   };
 }
 
+const DASHBOARD = 'http://localhost:3002';
+
+// The request the dashboard makes when it sends someone to Keycloak to log
+// in: the authorisation code flow with a PKCE challenge, returning to the
+// dashboard's own address. `change` alters one thing about it, to show that
+// Keycloak refuses the request once that thing is wrong.
+function loginRequest(change = () => {}) {
+  const verifier = randomBytes(32).toString('base64url');
+  const query = new URLSearchParams({
+    client_id: 'dashboard',
+    redirect_uri: `${DASHBOARD}/`,
+    response_type: 'code',
+    scope: 'openid',
+    code_challenge: createHash('sha256').update(verifier).digest('base64url'),
+    code_challenge_method: 'S256',
+  });
+  change(query);
+  return fetch(`${REALM}/protocol/openid-connect/auth?${query}`, { redirect: 'manual' });
+}
+
+function isLoginScreen(page) {
+  return page.includes('id="kc-form-login"');
+}
+
+async function openLoginScreen() {
+  const response = await loginRequest();
+  const page = await response.text();
+  if (!isLoginScreen(page)) {
+    throw new Error(`Keycloak answered ${response.status} without a login form`);
+  }
+  return page;
+}
+
+// Keycloak refuses in two ways. A request it cannot trust at all gets an
+// error page. A request from a client it knows is sent back to that client's
+// address with the reason, and `reason` is the one expected then.
+function loginIsRefused(change, reason) {
+  return async () => {
+    const response = await loginRequest(change);
+    if (isLoginScreen(await response.text())) {
+      throw new Error('the request reached the login screen');
+    }
+    if (reason === undefined) {
+      if (response.status !== 400) throw new Error(`Keycloak answered ${response.status}`);
+      return;
+    }
+    const sentBackTo = response.headers.get('location') ?? '';
+    if (!sentBackTo.startsWith(`${DASHBOARD}/`)) {
+      throw new Error(
+        `Keycloak answered ${response.status} and did not send the request back`,
+      );
+    }
+    const { search, hash } = new URL(sentBackTo);
+    const given = new URLSearchParams(search || hash.slice(1)).get('error');
+    if (given !== reason) throw new Error(`the reason given was ${given}`);
+  };
+}
+
+// The password flow, which hands the password to the client itself. A client
+// that may not use it is told so before the password is even looked at.
+async function passwordFlowIsRefused() {
+  const response = await fetch(`${REALM}/protocol/openid-connect/token`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      grant_type: 'password',
+      client_id: 'dashboard',
+      username: 'nobody',
+      password: 'wrong',
+    }),
+  });
+  const { error } = await response.json();
+  if (error !== 'unauthorized_client') {
+    throw new Error(`Keycloak looked at the password and answered ${error}`);
+  }
+}
+
+function loginScreenLacks(link) {
+  return async () => {
+    const page = await openLoginScreen();
+    if (page.includes(link)) throw new Error('the link is on the login screen');
+  };
+}
+
+async function signUpAddressRefuses() {
+  const loginUrl = (await loginRequest()).url;
+  const response = await fetch(loginUrl.replace('/auth?', '/registrations?'));
+  const page = await response.text();
+  if (page.includes('id="kc-register-form"')) throw new Error('it serves the sign-up form');
+  if (response.status !== 400) throw new Error(`Keycloak answered ${response.status}`);
+}
+
 const keycloakAnswers = await check('Keycloak answers on port 8080', askKeycloak);
 if (keycloakAnswers) {
   await check(
@@ -213,6 +305,42 @@ if (keycloakAnswers) {
   );
   await check('The admin role exists', roleExists('admin'));
   await check('The vendor role exists', roleExists('vendor'));
+  const loginScreenOpens = await check(
+    "A login request from the dashboard's address with a PKCE challenge reaches the login screen",
+    openLoginScreen,
+  );
+  // Each line below changes one thing about that request, or reads that
+  // screen. None of them means anything unless the request itself works.
+  if (loginScreenOpens) {
+    await check(
+      'The same request returning to another address is refused',
+      loginIsRefused((query) => query.set('redirect_uri', 'https://example.com/')),
+    );
+    await check(
+      'The same request without a PKCE challenge is refused',
+      loginIsRefused((query) => {
+        query.delete('code_challenge');
+        query.delete('code_challenge_method');
+      }, 'invalid_request'),
+    );
+    await check(
+      'The same request asking for the implicit flow is refused',
+      loginIsRefused((query) => {
+        query.set('response_type', 'token');
+        query.set('nonce', 'check');
+      }, 'unauthorized_client'),
+    );
+    await check('The password flow is refused', passwordFlowIsRefused);
+    await check(
+      'The login screen offers no sign-up link',
+      loginScreenLacks('login-actions/registration'),
+    );
+    await check(
+      'The login screen offers no "forgot password" link',
+      loginScreenLacks('login-actions/reset-credentials'),
+    );
+    await check('The sign-up address refuses', signUpAddressRefuses);
+  }
 } else {
   console.log(`      Keycloak cannot be reached. ${START_HINT}`);
 }
