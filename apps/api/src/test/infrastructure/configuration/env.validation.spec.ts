@@ -1,5 +1,10 @@
 describe("the API's settings", () => {
-  const settingNames = ['PORT', 'CORS_ALLOWED_ORIGINS'];
+  const settingNames = [
+    'PORT',
+    'CORS_ALLOWED_ORIGINS',
+    'KEYCLOAK_ISSUER',
+    'KEYCLOAK_AUDIENCE',
+  ];
   const environmentBefore = new Map(settingNames.map((name) => [name, process.env[name]]));
 
   beforeEach(() => {
@@ -31,6 +36,8 @@ describe("the API's settings", () => {
 
     expect(settings.PORT).toBe(3001);
     expect([...settings.CORS_ALLOWED_ORIGINS]).toEqual(['http://localhost:3002']);
+    expect(settings.KEYCLOAK_ISSUER).toBe('http://localhost:8080/realms/pcp');
+    expect(settings.KEYCLOAK_AUDIENCE).toBe('pcp-api');
   });
 
   it('let the application start when none is set', async () => {
@@ -47,5 +54,17 @@ describe("the API's settings", () => {
     process.env.CORS_ALLOWED_ORIGINS = 'http://localhost:3002/';
 
     await expect(startTheApplication()).rejects.toThrow(/CORS_ALLOWED_ORIGINS/);
+  });
+
+  it("stop the application when the realm's issuer is malformed, and name the setting", async () => {
+    process.env.KEYCLOAK_ISSUER = 'localhost:8080/realms/pcp';
+
+    await expect(startTheApplication()).rejects.toThrow(/KEYCLOAK_ISSUER/);
+  });
+
+  it('stop the application when the audience is empty, and name the setting', async () => {
+    process.env.KEYCLOAK_AUDIENCE = '';
+
+    await expect(startTheApplication()).rejects.toThrow(/KEYCLOAK_AUDIENCE/);
   });
 });

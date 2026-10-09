@@ -1,10 +1,15 @@
 import { Transform } from 'class-transformer';
 import { IsInt, Max, Min } from 'class-validator';
-import { IsOrigin, parseAllowedOrigins, validateEnvironment } from '@pcp/core';
+import {
+  CoreEnvironmentVariables,
+  IsOrigin,
+  parseAllowedOrigins,
+  validateEnvironment,
+} from '@pcp/core';
 
 // The API's settings. Each has the fixed development value as its default, so
 // the API starts with no environment at all. None of them is a secret.
-export class EnvironmentVariables {
+export class EnvironmentVariables extends CoreEnvironmentVariables {
   @IsInt()
   @Min(1)
   @Max(65535)

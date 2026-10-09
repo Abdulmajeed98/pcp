@@ -7,11 +7,22 @@
         "jest/no-disabled-tests": "warn",
         "jest/expect-expect": [
           "error",
-          { "assertFunctionNames": ["expect", "expectErrorResponseShape"] }
+          {
+            "assertFunctionNames": [
+              "expect",
+              "expectErrorResponse",
+              "expectErrorResponseShape"
+            ]
+          }
         ],
         "jest/no-identical-title": "error",
         "jest/valid-expect": "error",
-        "jest/consistent-test-it": ["error", { "fn": "it" }],
+        "jest/consistent-test-it": [
+          "error",
+          {
+            "fn": "it"
+          }
+        ],
         "jest/require-top-level-describe": "error",
         "jest/no-test-return-statement": "warn"
       }

@@ -14,8 +14,24 @@ import { ErrorResponse, SubErrorResponse } from './endpoints/ErrorResponse';
 // answers with is told apart by the status in its code.
 const errorsByStatus = new Map<number, SubErrorResponse>([
   [
+    HttpStatus.UNAUTHORIZED,
+    new SubErrorResponse('UNAUTHORIZED', 'unauthorized_title', 'unauthorized_details'),
+  ],
+  [
+    HttpStatus.FORBIDDEN,
+    new SubErrorResponse('ACCESS_DENIED', 'access_denied_title', 'access_denied_details'),
+  ],
+  [
     HttpStatus.NOT_FOUND,
     new SubErrorResponse('NOT_FOUND', 'not_found_title', 'not_found_details'),
+  ],
+  [
+    HttpStatus.SERVICE_UNAVAILABLE,
+    new SubErrorResponse(
+      'SERVICE_UNAVAILABLE',
+      'service_unavailable_title',
+      'service_unavailable_details',
+    ),
   ],
 ]);
 

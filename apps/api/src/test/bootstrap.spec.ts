@@ -1,16 +1,20 @@
 import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
+import { Public } from '@pcp/core';
 import { expectErrorResponseShape } from '@pcp/core/test-utils';
 
 import { createTestApp, TestApp } from './test-utils/create-test-app';
 
-// Endpoints the real API does not have: each fails in a way of its own.
+// Endpoints the real API does not have: each fails in a way of its own. They
+// are open to anyone, so that the failure is the endpoint's and not the guard's.
 @Controller()
 class FailingController {
+  @Public()
   @Get('test/unexpected-failure')
   failUnexpectedly(): never {
     throw new Error('the database password is hunter2');
   }
 
+  @Public()
   @Get('test/teapot')
   refuseToBrewCoffee(): never {
     throw new HttpException('short and stout', HttpStatus.I_AM_A_TEAPOT);

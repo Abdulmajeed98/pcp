@@ -14,3 +14,14 @@ export function expectErrorResponseShape(
 ): void {
   expect(body).toEqual({ errors: expectedErrors });
 }
+
+// Asserts that a response is a refusal: the status expected, with the agreed
+// error body.
+export async function expectErrorResponse(
+  response: Response,
+  status: number,
+  expectedErrors: ExpectedErrorResponse[],
+): Promise<void> {
+  expect(response.status).toBe(status);
+  expectErrorResponseShape(await response.json(), expectedErrors);
+}

@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { Public } from '@pcp/core';
 
 import { StatusResponse } from './StatusResponse';
 
@@ -10,6 +11,7 @@ export class StatusController {
   // the time the API started.
   private readonly startedAt = new Date();
 
+  @Public()
   @Get('v1/status')
   getStatus(): StatusResponse {
     return StatusResponse.of(this.startedAt);

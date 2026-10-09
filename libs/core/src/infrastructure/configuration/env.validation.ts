@@ -1,6 +1,9 @@
 import { plainToInstance } from 'class-transformer';
 import {
   buildMessage,
+  IsNotEmpty,
+  IsString,
+  IsUrl,
   registerDecorator,
   validateSync,
   ValidationOptions,
@@ -46,4 +49,19 @@ export function validateEnvironment<Settings extends object>(
   }
 
   return settings;
+}
+
+// The settings `core` itself reads. An application's settings class extends
+// this one.
+export class CoreEnvironmentVariables {
+  // The realm that issues the platform's logins. A token is accepted only
+  // when it names exactly this as its issuer, and the realm's keys are
+  // fetched from where its discovery document says they are.
+  @IsUrl({ require_tld: false, require_protocol: true, protocols: ['http', 'https'] })
+  KEYCLOAK_ISSUER = 'http://localhost:8080/realms/pcp';
+
+  // The audience a token must name to be accepted by this API.
+  @IsString()
+  @IsNotEmpty()
+  KEYCLOAK_AUDIENCE = 'pcp-api';
 }
