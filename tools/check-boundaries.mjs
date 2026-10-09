@@ -14,6 +14,10 @@ const root = join(import.meta.dirname, '..');
 const plantedSuffix = '.boundary-proof.ts';
 
 const api = { name: '@pcp/api', folder: 'apps/api' };
+const shopper = { name: '@pcp/shopper', folder: 'apps/shopper' };
+const dashboard = { name: '@pcp/dashboard', folder: 'apps/dashboard' };
+const ui = { name: '@pcp/ui', folder: 'libs/ui' };
+const compatibility = { name: '@pcp/compatibility', folder: 'libs/compatibility' };
 
 // The first sentence of each ban's message. They are written out here and not
 // read from the lint configuration, so that a ban which changes its meaning
@@ -21,12 +25,80 @@ const api = { name: '@pcp/api', folder: 'apps/api' };
 const domainMayNotImportInfrastructure =
   'The domain layer may not import the infrastructure layer.';
 
+// What Nx's boundary rule says for each of its constraints. The wording is
+// Nx's own and cannot be changed.
+const webMayNotLeaveItsScope =
+  'A project tagged with "scope:web" can only depend on libs tagged with "scope:web", "scope:shared"';
+const apiMayNotLeaveItsScope =
+  'A project tagged with "scope:api" can only depend on libs tagged with "scope:api", "scope:shared"';
+const libraryMayImportNoLibrary =
+  'A project tagged with "type:lib" cannot depend on any libs with tags';
+const noPathIntoAnotherProject =
+  'Projects cannot be imported by a relative or absolute path';
+const sharedMayImportNoPackage =
+  'A project tagged with "scope:shared" is not allowed to import "rxjs"';
+
 // A case is one planted file. `file` is its path inside the project, without
 // the suffix, and `specifier` is what its one import names. `form` says how
 // the import is written, when it is not a plain one. A case with a `refusal`
 // must be reported with that message, and a case without one must not be
 // reported at all.
 const cases = [
+  {
+    name: 'The dashboard cannot import @pcp/core',
+    project: dashboard,
+    file: 'src/shared/boundary-proof/imports-core',
+    specifier: '@pcp/core',
+    refusal: webMayNotLeaveItsScope,
+  },
+  {
+    name: 'The Shopper app cannot import @pcp/core',
+    project: shopper,
+    file: 'src/shared/boundary-proof/imports-core',
+    specifier: '@pcp/core',
+    refusal: webMayNotLeaveItsScope,
+  },
+  {
+    name: 'The API cannot import a frontend library',
+    project: api,
+    file: 'src/app/domain/boundary-proof/imports-ui',
+    specifier: '@pcp/ui',
+    refusal: apiMayNotLeaveItsScope,
+  },
+  {
+    name: 'A library cannot import another library',
+    project: ui,
+    file: 'src/boundary-proof/imports-i18n',
+    specifier: '@pcp/i18n',
+    refusal: libraryMayImportNoLibrary,
+  },
+  {
+    name: 'A relative path cannot reach into a library',
+    project: dashboard,
+    file: 'src/shared/boundary-proof/reaches-into-ui',
+    specifier: '../../../../../libs/ui/src/index',
+    refusal: noPathIntoAnotherProject,
+  },
+  {
+    name: 'A relative path cannot reach into an app',
+    project: dashboard,
+    file: 'src/shared/boundary-proof/reaches-into-the-shopper-app',
+    specifier: '../../../../shopper/src/shared/config',
+    refusal: noPathIntoAnotherProject,
+  },
+  {
+    name: '@pcp/compatibility cannot import an npm package',
+    project: compatibility,
+    file: 'src/boundary-proof/imports-a-package',
+    specifier: 'rxjs',
+    refusal: sharedMayImportNoPackage,
+  },
+  {
+    name: 'The dashboard may import @pcp/compatibility',
+    project: dashboard,
+    file: 'src/shared/boundary-proof/imports-compatibility',
+    specifier: '@pcp/compatibility',
+  },
   {
     name: 'The API: a domain file that imports infrastructure through the alias is refused',
     project: api,
@@ -254,6 +326,15 @@ for (const project of projects) {
       report.diagnostics.filter((diagnostic) => diagnostic.filename === file),
     );
   }
+  // With no cached project graph, Nx's boundary rule says so, checks nothing
+  // and lets lint pass. That must never count as the rule holding.
+  const notSkipped = `${project.name}: lint skipped no rule`;
+  if (output.includes('The rule will be skipped')) {
+    fail(
+      notSkipped,
+      "Nx's boundary rule found no cached project graph and checked nothing",
+    );
+  } else pass(notSkipped);
   const others = report.diagnostics.filter(
     (diagnostic) => !diagnostic.filename.endsWith(plantedSuffix),
   );
