@@ -33,5 +33,49 @@ services:
       start_period: 30s
       start_interval: 1s
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.0
+    # Development mode, and the realm file below loaded on the first start.
+    command: ['start-dev', '--import-realm']
+    environment:
+      # Keycloak keeps everything in its own database on the PostgreSQL server.
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set it in .env, as .env.example describes}
+      # Keycloak's own administrator account, which opens Keycloak's console.
+      # It is created on the first start and is not the platform's Admin.
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?set it in .env, as .env.example describes}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set it in .env, as .env.example describes}
+      # Serves the health pages on port 9000, which only the health check
+      # below reaches.
+      KC_HEALTH_ENABLED: 'true'
+    ports:
+      - '127.0.0.1:8080:8080'
+    # Keycloak's container guide asks for a limit always to be set, because
+    # the Java heap is sized from it.
+    mem_limit: 1536m
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      # Keycloak imports a realm from this folder only when the realm does
+      # not exist yet.
+      - ./services/keycloak/import:/opt/keycloak/data/import:ro
+    healthcheck:
+      # The image has no curl, so the request is written to a socket by hand,
+      # as Keycloak's health guide shows.
+      test:
+        - CMD
+        - bash
+        - -c
+        - "{ printf 'HEAD /health/ready HTTP/1.0\\r\\n\\r\\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+      start_interval: 2s
+
 volumes:
   postgres-data:

@@ -1,0 +1,14 @@
+{
+  "realm": "pcp",
+  "enabled": true,
+  "displayName": "Platform",
+  "roles": {
+    "realm": [
+      { "name": "admin", "description": "The Admin: the platform's operator." },
+      {
+        "name": "vendor",
+        "description": "A Vendor: a business that shows its Offers on the platform."
+      }
+    ]
+  }
+}
