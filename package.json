@@ -10,7 +10,8 @@
     "services:down": "node tools/stop-services.mjs",
     "services:reset": "node tools/stop-services.mjs --delete-data",
     "services:check": "node tools/check-services.mjs",
-    "boundaries:check": "node tools/check-boundaries.mjs"
+    "boundaries:check": "node tools/check-boundaries.mjs",
+    "boundaries:write": "node tools/write-feature-sliced-bans.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
