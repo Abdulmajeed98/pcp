@@ -63,6 +63,9 @@ services:
       # Keycloak imports a realm from this folder only when the realm does
       # not exist yet.
       - ./services/keycloak/import:/opt/keycloak/data/import:ro
+      # The platform's own theme, which adds Kurdish (Sorani) to the login
+      # screens.
+      - ./services/keycloak/themes:/opt/keycloak/themes:ro
     healthcheck:
       # The image has no curl, so the request is written to a socket by hand,
       # as Keycloak's health guide shows.

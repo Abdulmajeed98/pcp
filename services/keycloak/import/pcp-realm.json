@@ -5,9 +5,18 @@
   "registrationAllowed": false,
   "resetPasswordAllowed": false,
   "loginWithEmailAllowed": false,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["ckb", "ar", "en"],
+  "defaultLocale": "ckb",
+  "loginTheme": "pcp",
+  "accountTheme": "pcp",
+  "emailTheme": "pcp",
   "roles": {
     "realm": [
-      { "name": "admin", "description": "The Admin: the platform's operator." },
+      {
+        "name": "admin",
+        "description": "The Admin: the platform's operator."
+      },
       {
         "name": "vendor",
         "description": "A Vendor: a business that shows its Offers on the platform."
