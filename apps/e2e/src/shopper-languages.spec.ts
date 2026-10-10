@@ -6,8 +6,8 @@ import {
   checkInEveryLanguage,
   expectADifferentTextInEachLanguage,
   fetchWithNoBrowser,
-  type Language,
   languages,
+  readInEveryLanguage,
 } from './languages';
 import { shopperUrl } from './platform';
 
@@ -62,40 +62,43 @@ test("each language's address, fetched with no browser, declares that language a
   page,
   request,
 }) => {
-  await checkInEveryLanguage(page, '', async (language) => {
-    const shown = await page.getByTestId('placeholder').innerText();
-    const served = await fetchWithNoBrowser(request, addressIn(language));
+  await readInEveryLanguage(page, '', async (language) => {
+    const shown = (await page.getByTestId('placeholder').innerText()).trim();
+    const sent = await fetchWithNoBrowser(request, addressIn(language));
 
-    expect(served.status).toBe(200);
-    expect(served.language).toBe(language.tag);
-    expect(served.direction).toBe(language.direction);
-    expect(shown.trim()).not.toBe('');
-    expect(served.text).toContain(shown.trim());
+    expect(sent.status).toBe(200);
+    expect(sent.language).toBe(language.tag);
+    expect(sent.direction).toBe(language.direction);
+    expect(shown).not.toBe('');
+    expect(sent.text).toContain(shown);
   });
 });
 
 test('the same piece of text is different in each of the three languages', async ({
   page,
 }) => {
-  const notices = new Map<Language, string>();
-  await checkInEveryLanguage(page, '', async (language) => {
-    notices.set(language, await page.getByTestId('placeholder').innerText());
-  });
+  const notices = await readInEveryLanguage(page, '', () =>
+    page.getByTestId('placeholder').innerText(),
+  );
 
   expectADifferentTextInEachLanguage(notices);
 });
 
+// Next answers such an address with the status 404 and a bare document, and
+// the browser draws the "not found" screen from it. The screen is therefore
+// checked as the browser shows it, and what the server sent is not read.
 test("an address that matches no page is answered 404, with the frame, in the visitor's language", async ({
   page,
 }) => {
-  const headings = new Map<Language, string>();
-  await checkInEveryLanguage(page, '/no-such-page', async (language, response) => {
-    expect(response.status()).toBe(404);
-    headings.set(
-      language,
-      await page.getByTestId('frame').getByRole('heading').innerText(),
-    );
-  });
+  const headings = await readInEveryLanguage(
+    page,
+    '/no-such-page',
+    async (_language, response) => {
+      expect(response.status()).toBe(404);
+      return page.getByTestId('frame').getByRole('heading').innerText();
+    },
+    { drawnByScript: true },
+  );
 
   expectADifferentTextInEachLanguage(headings);
 });
@@ -121,10 +124,7 @@ test("the answer to a language's address names that page's address in all three 
 });
 
 test("the tab's title is different in each language", async ({ page }) => {
-  const titles = new Map<Language, string>();
-  await checkInEveryLanguage(page, '', async (language) => {
-    titles.set(language, await page.title());
-  });
+  const titles = await readInEveryLanguage(page, '', () => page.title());
 
   expectADifferentTextInEachLanguage(titles);
 });

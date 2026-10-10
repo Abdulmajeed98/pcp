@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 
-// The "not found" screen, in the visitor's language. Next shows it, inside
-// the frame and with the status 404, when a route asks for it.
+// The "not found" screen, in the visitor's language. When a route asks for
+// it, Next answers with the status 404 and a bare document, and the browser
+// draws this screen inside the frame.
 export async function NotFoundPage() {
   const t = await getTranslations('NotFoundPage');
 

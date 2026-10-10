@@ -1,6 +1,6 @@
 # The language files
 
-Every translated text of the platform is in this folder, and nowhere else. A file holds nothing but text, so that it can be corrected without reading code.
+The translated text of the platform's own screens is in this folder. A file holds nothing but text, so that it can be corrected without reading code. The one translated text kept elsewhere is the Sorani text of Keycloak's login screen, which is with Keycloak's theme, under `services/keycloak`.
 
 - `shopper/` is the Shopper app's text: one file for each language, in next-intl's format, which is ICU.
 

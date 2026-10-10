@@ -51,8 +51,7 @@ const messages = {
     "Next's routing folder only routes. A route file takes a page from the Pages layer or a layout from the App layer, through its index file, and imports nothing else from the project.",
   routingPath:
     'A route file reaches the layers through the `@/` alias and never by a relative path.',
-  proxy:
-    "Next's proxy file takes next-intl's statement of the languages from the `i18n` segment of the Shared layer, through its index file, and imports nothing else from the project.",
+  proxy: `Next's proxy file takes next-intl's statement of the languages from the \`${languagesSegment}\` segment of the Shared layer, through its index file, and imports nothing else from the project.`,
   proxyPath:
     'The proxy file reaches that segment through the `@/` alias and never by a relative path.',
 };

@@ -19,9 +19,9 @@ export const languages = [
 
 export type Language = (typeof languages)[number];
 
-// The width of the window the language tests run in, which the Playwright
-// configuration sets for the files named `…-languages.spec.ts`.
-const narrowWidth = 360;
+// The window the language tests run in: as wide as a narrow phone. The
+// Playwright configuration gives it to the files named `…-languages.spec.ts`.
+export const narrowWindow = { width: 360, height: 740 };
 
 // A page's address in a language. The language is the first part of every
 // address of the Shopper app, and `address` is what follows it: nothing for
@@ -30,11 +30,20 @@ export function addressIn(language: Language, address = ''): string {
   return `${shopperUrl}/${language.tag}${address}`;
 }
 
+// What a test says about the page it checks. `drawnByScript` is for the one
+// screen the server does not send whole: Next answers an address that matches
+// no page with a bare document, and the browser draws the "not found" screen
+// from it. That screen is checked as the browser shows it. Every other page
+// has to declare its language and its direction in what the server sends.
+interface About {
+  drawnByScript?: boolean;
+}
+
 // Opens a page of the Shopper app in each of the three languages, in a window
 // as wide as a narrow phone, and checks what holds for every page: the
-// language it declares, its direction, that it is inside the frame every
-// page shares, and that it does not scroll sideways.
-// The test of a page calls it once, and reads what is its own in `look`.
+// language it declares, its direction, that the server sent it with both,
+// that it is inside the frame every page shares, and that it does not scroll
+// sideways. The test of a page calls it once.
 //
 // It confirms that the page came back in the language it asked for before it
 // reads anything else. Kurdish and Arabic are both right to left, so a check
@@ -42,38 +51,62 @@ export function addressIn(language: Language, address = ''): string {
 export async function checkInEveryLanguage(
   page: Page,
   address = '',
-  look: (language: Language, response: Response) => Promise<void> = async () => {},
+  about: About = {},
 ): Promise<void> {
+  await readInEveryLanguage(page, address, async () => {}, about);
+}
+
+// The same checks, and then what the test reads from the page in each
+// language, such as a piece of text to tell the three apart by.
+export async function readInEveryLanguage<Read>(
+  page: Page,
+  address: string,
+  read: (language: Language, response: Response) => Promise<Read>,
+  { drawnByScript = false }: About = {},
+): Promise<Map<Language, Read>> {
   expect(page.viewportSize()?.width, 'the window is as wide as a narrow phone').toBe(
-    narrowWidth,
+    narrowWindow.width,
   );
 
+  const readings = new Map<Language, Read>();
   for (const language of languages) {
     await test.step(`in ${language.name}`, async () => {
       const response = await page.goto(addressIn(language, address));
       if (response === null) throw new Error('The address was answered with no page.');
 
-      const document = page.locator('html');
-      await expect(document).toHaveAttribute('lang', language.tag);
-      await expect(document).toHaveAttribute('dir', language.direction);
+      const html = page.locator('html');
+      await expect(html).toHaveAttribute('lang', language.tag);
+      await expect(html).toHaveAttribute('dir', language.direction);
+      if (!drawnByScript) {
+        const sent = await fetchWithNoBrowser(page.request, addressIn(language, address));
+        expect(sent.language, 'the server sends the page with its language').toBe(
+          language.tag,
+        );
+        expect(sent.direction, 'the server sends the page with its direction').toBe(
+          language.direction,
+        );
+      }
       await expect(page.getByTestId('frame')).toBeVisible();
       await expectNoSidewaysScroll(page);
 
-      await look(language, response);
+      readings.set(language, await read(language, response));
     });
   }
+  return readings;
 }
 
 // A page scrolls sideways when something in it is wider than the window. In a
 // page that is laid out right to left, what is too wide runs off to the left,
 // and the document counts that as well.
 async function expectNoSidewaysScroll(page: Page): Promise<void> {
-  const { content, window } = await page.evaluate(() => ({
-    content: document.documentElement.scrollWidth,
-    window: document.documentElement.clientWidth,
+  const { pageWidth, windowWidth } = await page.evaluate(() => ({
+    pageWidth: document.documentElement.scrollWidth,
+    windowWidth: document.documentElement.clientWidth,
   }));
 
-  expect(content, 'the page is no wider than the window').toBeLessThanOrEqual(window);
+  expect(pageWidth, 'the page is no wider than the window').toBeLessThanOrEqual(
+    windowWidth,
+  );
 }
 
 // The same piece of text, read in each of the three languages, is there and
@@ -97,16 +130,17 @@ export async function fetchWithNoBrowser(
 ): Promise<{ status: number; language?: string; direction?: string; text: string }> {
   const response = await request.get(address);
   const html = await response.text();
-  const document = /<html\b[^>]*>/.exec(html)?.[0] ?? '';
+  const openingTag = /<html\b[^>]*>/.exec(html)?.[0] ?? '';
 
   return {
     status: response.status(),
-    language: /\blang="([^"]*)"/.exec(document)?.[1],
-    direction: /\bdir="([^"]*)"/.exec(document)?.[1],
+    language: /\blang="([^"]*)"/.exec(openingTag)?.[1],
+    direction: /\bdir="([^"]*)"/.exec(openingTag)?.[1],
     text: readableText(html),
   };
 }
 
+// How React writes the characters that HTML keeps for itself.
 const entities: Record<string, string> = {
   '&amp;': '&',
   '&lt;': '<',
@@ -115,6 +149,7 @@ const entities: Record<string, string> = {
   '&#x27;': "'",
   '&#39;': "'",
 };
+const anEntity = new RegExp(Object.keys(entities).join('|'), 'g');
 
 // What is left of a page's HTML when everything a reader does not see is
 // taken out. Next also sends the page's content inside scripts, for the
@@ -125,7 +160,7 @@ function readableText(html: string): string {
     .replace(/<(script|style|template)\b[\s\S]*?<\/\1>/g, '')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<[^>]*>/g, ' ')
-    .replace(/&(amp|lt|gt|quot|#x27|#39);/g, (entity) => entities[entity] ?? entity)
+    .replace(anEntity, (entity) => entities[entity] ?? entity)
     .replace(/\s+/g, ' ');
 }
 

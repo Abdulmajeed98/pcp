@@ -12,9 +12,9 @@ export type Direction = 'rtl' | 'ltr';
 // The language used wherever nothing else decides.
 export const fallbackLanguage: Language = 'ckb';
 
-// What the language switch calls each language: its own name, in its own
-// script. The names are the same on every page and are never translated, so
-// that a Shopper can find theirs on a page they cannot read.
+// Each language's own name, in its own script. A list of the languages shows
+// these names on every page and never translates them, so that a Shopper can
+// find theirs on a page they cannot read.
 export const languageNames: Record<Language, string> = {
   ckb: 'کوردی',
   ar: 'العربية',
@@ -35,9 +35,13 @@ export const directions: Record<Language, Direction> = {
 // in Iraq is Arabic.
 //
 // next-intl decides the Shopper app's first visit with this library and this
-// method, "best fit". The dashboard decides with this function, so the two
-// cannot disagree. The method also knows a few relations between languages:
-// it gives English for a browser set to Urdu.
+// method, "best fit". A frontend without next-intl decides with this
+// function, and so decides alike. next-intl hands the library the languages
+// with the longest tag first, to get round a fault in it, and the three are
+// in that order as they stand.
+//
+// The method also knows a few relations between languages: it gives English
+// for a browser set to Urdu.
 export function languageForBrowser(preferred: readonly string[]): Language {
   try {
     const matched = match(preferred, languages, fallbackLanguage, {

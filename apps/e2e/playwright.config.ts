@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import { defineConfig, devices } from '@playwright/test';
 
+import { narrowWindow } from './src/languages';
 import { apiUrl, dashboardUrl, shopperUrl } from './src/platform';
 
 const root = join(__dirname, '..', '..');
@@ -28,7 +29,6 @@ function app(project: string, url: string) {
 // screen of the Vendor portal has to be usable at that width in both
 // directions (LANG-8). The other tests keep the window of a desktop browser.
 const languageTests = /-languages\.spec\.ts$/;
-const narrowWindow = { width: 360, height: 740 };
 
 // Run it with `pnpm platform:check`, which first makes sure that the
 // development services are running. They are not started from here.

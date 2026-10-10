@@ -12,10 +12,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t('title') };
 }
 
-// The server sends every page with its language and its direction declared
-// on the document, so a Kurdish or an Arabic page arrives right to left and
+// The server sends a page with its language and its direction declared on
+// the document, so a Kurdish or an Arabic page arrives right to left and
 // nothing flashes. No script sets either. Every page is shown inside the
 // frame.
+//
+// The "not found" screen is the exception. Next answers an address that
+// matches no page with a bare document, and the browser draws this layout
+// and that screen from it, by script.
 export async function RootLayout({ children }: { children: ReactNode }) {
   const language = await getLocale();
 

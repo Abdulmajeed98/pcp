@@ -9,8 +9,14 @@ import { defineRouting } from 'next-intl/routing';
 //
 // With each page next-intl sends that page's address in the other languages,
 // for search engines. That is on unless it is switched off here.
+//
+// next-intl can also remember a language in a cookie, and would then send an
+// address with no language to the language of the last address opened, for
+// as long as the browser stays open. Nothing is remembered: an address with
+// no language follows the browser alone.
 export const routing = defineRouting({
   locales: languages,
   defaultLocale: fallbackLanguage,
   localePrefix: 'always',
+  localeCookie: false,
 });

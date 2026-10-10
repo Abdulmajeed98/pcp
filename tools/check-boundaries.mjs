@@ -498,6 +498,14 @@ const casesInTheProxyFile = [
     'proxy.imports-the-languages',
     '@/shared/i18n',
   ),
+  // The proxy file's bans are for the file at the app's root. A file inside
+  // a layer that carries its name keeps the bans of its layer.
+  inTheShopperApp.refused(
+    'a Shared file named like the proxy file that imports a page',
+    'src/shared/boundary-proof/proxy.imports-a-page',
+    '@/_pages/placeholder',
+    noLayerAbove,
+  ),
 ];
 
 // `core` has the API's two layers and the API's ban. It has no alias of its
