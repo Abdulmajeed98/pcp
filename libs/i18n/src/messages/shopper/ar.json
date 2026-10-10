@@ -1,0 +1,14 @@
+{
+  "App": {
+    "title": "تطبيق المتسوّق"
+  },
+  "PlaceholderPage": {
+    "notice": "صفحة مؤقتة لتطبيق المتسوّق. المكتبات: {libraries}.",
+    "apiStartedAt": "بدأ تشغيل الـ API في <time>{startedAt}</time>.",
+    "apiUnreachable": "تعذّر الوصول إلى الـ API."
+  },
+  "NotFoundPage": {
+    "title": "الصفحة غير موجودة",
+    "description": "هذا العنوان لا يطابق أي صفحة."
+  }
+}

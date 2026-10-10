@@ -1,0 +1,14 @@
+{
+  "App": {
+    "title": "ئەپی کڕیار"
+  },
+  "PlaceholderPage": {
+    "notice": "شوێنگرەوەی ئەپی کڕیار. کتێبخانەکان: {libraries}.",
+    "apiStartedAt": "API لە <time>{startedAt}</time> دەستی پێکرد.",
+    "apiUnreachable": "ناتوانرێت پەیوەندی بە API بکرێت."
+  },
+  "NotFoundPage": {
+    "title": "پەڕە نەدۆزرایەوە",
+    "description": "ئەم ناونیشانە هیچ پەڕەیەکی نییە."
+  }
+}

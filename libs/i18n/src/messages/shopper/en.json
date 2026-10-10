@@ -1,0 +1,14 @@
+{
+  "App": {
+    "title": "Shopper app"
+  },
+  "PlaceholderPage": {
+    "notice": "Shopper app placeholder. Libraries: {libraries}.",
+    "apiStartedAt": "The API started at <time>{startedAt}</time>.",
+    "apiUnreachable": "The API cannot be reached."
+  },
+  "NotFoundPage": {
+    "title": "Page not found",
+    "description": "This address matches no page."
+  }
+}
