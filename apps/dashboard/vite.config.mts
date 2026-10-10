@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 // The dashboard's fixed development port. `strictPort` makes Vite stop when
 // the port is taken instead of moving to the next one, which is not ours.
@@ -14,7 +15,7 @@ export default defineConfig(() => ({
   cacheDir: '../../node_modules/.vite/apps/dashboard',
   server,
   preview: server,
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     // Resolves the `@/` alias declared in tsconfig.app.json
     tsconfigPaths: true,

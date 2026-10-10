@@ -1,0 +1,19 @@
+/*
+ * The theme both frontends are styled from. Each frontend's own stylesheet
+ * imports this file, as `@pcp/ui/theme.css`, and takes Tailwind CSS from
+ * nowhere else.
+ *
+ * It sets nothing of its own yet: no colour scheme, no typeface and no logo.
+ * Tailwind's defaults stand until the platform's look is designed, and its
+ * default fonts are the device's own, so no font is downloaded. A token both
+ * frontends need is added here, in a `@theme` block.
+ */
+@import 'tailwindcss';
+
+/*
+ * Tailwind CSS reads the files of the app it is building and looks into no
+ * other project. The frontends take this library as source, with no build
+ * step, so this line tells it to read the library's files as well. The path
+ * is relative to this file.
+ */
+@source './';

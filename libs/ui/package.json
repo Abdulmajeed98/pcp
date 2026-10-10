@@ -11,9 +11,12 @@
       "import": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./theme.css": "./src/theme.css",
     "./package.json": "./package.json"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tailwindcss": "^4.3.3"
+  },
   "nx": {
     "tags": [
       "scope:web",

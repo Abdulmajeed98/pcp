@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { startLogin } from '@/shared/auth';
 
 import { App } from './app';
+import './styles/global.css';
 
 const root = createRoot(document.getElementById('root') as HTMLElement);
 
