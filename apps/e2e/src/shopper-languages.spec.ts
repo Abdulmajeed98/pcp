@@ -3,7 +3,6 @@ import { type Browser, expect, type Page, test } from '@playwright/test';
 import {
   addressIn,
   alternateAddresses,
-  checkInEveryLanguage,
   expectADifferentTextInEachLanguage,
   expectPageIn,
   expectTheSwitchInWhatTheServerSent,
@@ -354,8 +353,18 @@ test("an address that matches no page is answered 404, with the frame and the sw
   expectADifferentTextInEachLanguage(headings);
 });
 
-test('in each language the page does not scroll sideways', async ({ page }) => {
-  await checkInEveryLanguage(page);
+// The helper measures the page in each language. The sample is first seen to
+// be on it, because the sample is what could make it too wide: text that is
+// kept apart from its sentence, and lines in a script that is not the page's.
+test('with the sample on it, the page still does not scroll sideways in any language', async ({
+  page,
+}) => {
+  await readInEveryLanguage(page, '', async () => {
+    await expect(page.getByTestId('category-names')).toBeVisible();
+    await expect(page.getByTestId('counted-sentence')).toHaveCount(sampleCounts.length);
+    await expect(page.getByText('1,575,000 IOPS', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('as-written')).toHaveCount(2);
+  });
 });
 
 test("the answer to a language's address names that page's address in all three languages", async ({
