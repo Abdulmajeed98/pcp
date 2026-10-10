@@ -23,6 +23,13 @@ function app(project: string, url: string) {
   };
 }
 
+// The language tests are the files named `…-languages.spec.ts`. They run in a
+// window as wide as a narrow phone, because every Shopper page and every
+// screen of the Vendor portal has to be usable at that width in both
+// directions (LANG-8). The other tests keep the window of a desktop browser.
+const languageTests = /-languages\.spec\.ts$/;
+const narrowWindow = { width: 360, height: 740 };
+
 // Run it with `pnpm platform:check`, which first makes sure that the
 // development services are running. They are not started from here.
 export default defineConfig({
@@ -36,7 +43,14 @@ export default defineConfig({
   use: {
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: languageTests },
+    {
+      name: 'chromium-360',
+      use: { ...devices['Desktop Chrome'], viewport: narrowWindow },
+      testMatch: languageTests,
+    },
+  ],
   webServer: [
     app('@pcp/api', `${apiUrl}/v1/status`),
     app('@pcp/shopper', shopperUrl),

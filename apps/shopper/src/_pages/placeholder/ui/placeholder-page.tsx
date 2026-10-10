@@ -1,28 +1,37 @@
+import { getTranslations } from 'next-intl/server';
+
 import { libraries } from '@/shared/config';
 
 import { readApiStatus } from '../api/read-api-status';
 
 // Placeholder: scaffolding, not a screen. It shows one thing fetched from the
-// API on the server, which is the pattern every Shopper page copies. The first
-// real page replaces it, and from then on every page is built in all three
-// languages and both directions.
+// API on the server, in the Shopper's language, which is the pattern every
+// Shopper page copies: a page reads its text on the server, from the language
+// files, and none of that text is sent to the browser as data. The first real
+// page replaces it.
 //
 // Its text is set in from the start side, which is the left in English and
 // the right in Kurdish and Arabic. A class that has a side is always written
 // that way, with start and end.
 export async function PlaceholderPage() {
-  const status = await readApiStatus();
+  const [t, status] = await Promise.all([
+    getTranslations('PlaceholderPage'),
+    readApiStatus(),
+  ]);
 
   return (
-    <main className="m-4 ps-4">
-      <p>Shopper app placeholder. Libraries: {libraries.join(', ')}.</p>
+    <div className="ps-4">
+      <p data-testid="placeholder">{t('notice', { libraries: libraries.join(', ') })}</p>
       {status === undefined ? (
-        <p>The API cannot be reached.</p>
+        <p>{t('apiUnreachable')}</p>
       ) : (
         <p>
-          The API started at <time dateTime={status.startedAt}>{status.startedAt}</time>.
+          {t.rich('apiStartedAt', {
+            startedAt: status.startedAt,
+            time: (chunks) => <time dateTime={status.startedAt}>{chunks}</time>,
+          })}
         </p>
       )}
-    </main>
+    </div>
   );
 }
