@@ -27,3 +27,11 @@ The reviewer also gets what they need to start: every draft marked as one, and a
 - [ ] `pnpm check` passes with Docker stopped and no browser installed.
 - [ ] The results of the fault checks are recorded under Comments.
 - [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+
+## Comments
+
+### 10 October 2026: from ticket 04
+
+- **A check this ticket's list does not have. The owner decides whether it gains it.** Ticket 04 holds every number to Western digits by a rule: no message of the Shopper app writes `#` or `{…, number}`. next-intl formats both in the page's language, and a Kurdish page then shows Arabic-Indic digits. With `#` in the Arabic and the English file only, every line of the Shopper app's tests passed. This step reads every message already, and could fail on `#`, and on `number`, `date` and `time` inside braces, in the Shopper app's files.
+- **One name at the top of two sets.** The Shopper app adds the shared terms to its own text. A name used at the top of both, such as a second `Category`, would let one hide the other. This step could fail on that too.
+- **A counted message of the Shopper app names its count twice:** `{count, plural, …}` picks the form, and `{countText}` is the count as it is shown. An Arabic form that says the count in a word, such as `one`, holds no `{countText}`. So the placeholders are compared for a whole message, and not for each plural form.

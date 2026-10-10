@@ -32,3 +32,13 @@ i18next writes a count differently from next-intl: one key for each plural form 
 - [ ] `pnpm check` passes with Docker stopped.
 - [ ] The results of the fault check are recorded under Comments.
 - [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+
+## Comments
+
+### 10 October 2026: from ticket 04
+
+- **This ticket's fault check passes wrongly in a browser set to English.** Chromium has no number formatting for Kurdish, and formats a Kurdish number in the language the browser itself is set to. A number formatted in the browser for a Kurdish page therefore comes out in Western digits in a browser set to English, and in Arabic-Indic digits in one set to Arabic as written in Iraq. Ticket 04 planted such a number in the Shopper app's frame, and every line passed.
+- **The language tests' browser is now set to Arabic as written in Iraq,** for every file named `…-languages.spec.ts`. A test that sets a language of its own gives that up. The Shopper app's helper first confirms that the browser is one that shows the fault, and the Vendor portal's helper should do the same.
+- **Pinning the digits is not enough.** In a browser set to French, a Kurdish number comes out as "1 575 000,5", also with the digits pinned to Western ones. The grouping follows the visitor's browser too. Ticket 04's Comments have the table.
+- **What ticket 04 settled for next-intl:** no message formats a number. `formatNumber` writes it, and the message is given the text. A counted message is given `count`, which picks the plural form, and `countText`, which it shows. Whether the same holds in i18next is this ticket's to find out, on i18next itself.
+- **Three things to build on.** In the tests' helper, `linesAsDrawn` reads the order a piece of text is drawn in, and `layoutOf` reads its direction and whether it is kept apart. The sample's values on the Shopper app's page start with a number where that matters, because that is the text a Kurdish sentence reorders: "Ryzen 5 7600" is left alone, and "80 mm" is drawn "mm 80".
