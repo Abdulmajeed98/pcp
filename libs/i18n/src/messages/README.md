@@ -2,6 +2,7 @@
 
 The translated text of the platform's own screens is in this folder. A file holds nothing but text, so that it can be corrected without reading code. The one translated text kept elsewhere is the Sorani text of Keycloak's login screen, which is with Keycloak's theme, under `services/keycloak`.
 
+- `shared/` is the shared terms: text that both frontends show, with the same wording. Here that is the names of the eight Categories. One file for each language, and plain text only: a shared term has nothing in braces and nothing in angle brackets, because the two frontends read those differently.
 - `shopper/` is the Shopper app's text: one file for each language, in next-intl's format, which is ICU.
 
 English is the source. `en.json` defines which messages there are, and the other two files hold the same messages under the same keys.

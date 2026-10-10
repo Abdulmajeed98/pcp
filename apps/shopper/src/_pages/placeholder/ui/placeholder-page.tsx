@@ -10,6 +10,17 @@ import { readApiStatus } from '../api/read-api-status';
 // The sample: one of each kind of text a later screen will hold. Every value
 // is fixed here and made up.
 //
+// The eight Categories, by the keys of their names in the shared terms.
+const sampleCategories = [
+  'cpu',
+  'cpuCooler',
+  'motherboard',
+  'ram',
+  'storage',
+  'gpu',
+  'case',
+  'psu',
+] as const;
 // A sentence that counts is shown for each of these counts. Between them they
 // take every plural form Arabic has but the one for nothing.
 const sampleCounts = [1, 2, 3, 11, 100];
@@ -43,8 +54,9 @@ function english(chunks: ReactNode) {
 // the right in Kurdish and Arabic. A class that has a side is always written
 // that way, with start and end.
 export async function PlaceholderPage() {
-  const [t, status] = await Promise.all([
+  const [t, category, status] = await Promise.all([
     getTranslations('PlaceholderPage'),
+    getTranslations('Category'),
     readApiStatus(),
   ]);
 
@@ -64,6 +76,11 @@ export async function PlaceholderPage() {
         </p>
       )}
       <p>{t('sample')}</p>
+      <ul data-testid="category-names">
+        {sampleCategories.map((key) => (
+          <li key={key}>{category(key)}</li>
+        ))}
+      </ul>
       <ul>
         {sampleCounts.map((count) => (
           <li key={count} data-testid="counted-sentence">

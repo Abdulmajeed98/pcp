@@ -7,5 +7,6 @@ export {
   languageNames,
   languages,
 } from './languages';
+export { type SharedTerms, sharedTerms } from './messages/shared';
 export { type ShopperMessages, shopperMessages } from './messages/shopper';
 export { formatNumber } from './numbers';

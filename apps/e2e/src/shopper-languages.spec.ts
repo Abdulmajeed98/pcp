@@ -316,6 +316,25 @@ test('the sample number reads 1,575,000 in all three languages, and no Arabic-In
   });
 });
 
+// Category names are translated, unlike the names of Parts (LANG-3). There
+// are eight Categories.
+test('the list of Category names is different in each of the three languages', async ({
+  page,
+}) => {
+  const lists = await readInEveryLanguage(page, '', async () => {
+    const names = await page
+      .getByTestId('category-names')
+      .getByRole('listitem')
+      .allInnerTexts();
+
+    expect(names).toHaveLength(8);
+    expect(new Set(names).size, `each of ${JSON.stringify(names)} differs`).toBe(8);
+    return names.join(', ');
+  });
+
+  expectADifferentTextInEachLanguage(lists);
+});
+
 // Next answers such an address with the status 404 and a bare document, and
 // the browser draws the "not found" screen from it. The screen is therefore
 // checked as the browser shows it, and what the server sent is not read.

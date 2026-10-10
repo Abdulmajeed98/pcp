@@ -1,4 +1,4 @@
-import { shopperMessages } from '@pcp/i18n';
+import { sharedTerms, shopperMessages } from '@pcp/i18n';
 import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -10,6 +10,9 @@ import { routing } from './routing';
 // being rendered. next-intl's plugin is given this file's path in
 // `next.config.js`, and nothing imports it.
 //
+// The text is the Shopper app's own and the shared terms, which a page asks
+// for alike.
+//
 // The language is the first part of the address, which Next knows as the
 // root parameter `locale`. An address that the proxy file does not see, such
 // as one for a file, can put anything there, and it is answered "not found".
@@ -17,5 +20,8 @@ export default getRequestConfig(async ({ locale }) => {
   const language = locale ?? (await languageOfTheAddress());
   if (!hasLocale(routing.locales, language)) notFound();
 
-  return { locale: language, messages: shopperMessages[language] };
+  return {
+    locale: language,
+    messages: { ...sharedTerms[language], ...shopperMessages[language] },
+  };
 });

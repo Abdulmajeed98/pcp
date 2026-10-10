@@ -1,0 +1,12 @@
+{
+  "Category": {
+    "cpu": "CPU",
+    "cpuCooler": "CPU cooler",
+    "motherboard": "Motherboard",
+    "ram": "RAM",
+    "storage": "Storage",
+    "gpu": "GPU",
+    "case": "Case",
+    "psu": "PSU"
+  }
+}
