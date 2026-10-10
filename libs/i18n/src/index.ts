@@ -8,3 +8,4 @@ export {
   languages,
 } from './languages';
 export { type ShopperMessages, shopperMessages } from './messages/shopper';
+export { formatNumber } from './numbers';

@@ -16,3 +16,11 @@ The owner, or someone the owner trusts, reviews both before launch.
 ## Correcting a message
 
 Change the text between the quotation marks and nothing else. The key before the colon stays as it is. So does anything inside braces, such as `{libraries}`, and anything inside angle brackets, such as `<time>` and `</time>`: the page puts a value or an element there, and each may move within the sentence to where the language wants it.
+
+A sentence that counts holds one wording for each plural form its language has: `one` and `other` in English and in Kurdish, and `zero`, `one`, `two`, `few`, `many` and `other` in Arabic. Each form's name stays as it is, and the wording is what follows it in braces.
+
+## Numbers
+
+No message formats a number. A number reaches a message as text, already written in Western digits by `formatNumber`, and the message only places it. A sentence that counts is therefore given its count twice: `{count, plural, …}` picks the wording, and `{countText}` is the count as it is shown.
+
+`#` and `{…, number}` are never written here, although both are valid in this format. Each lets the library format the number in the page's language, and a Kurdish page then shows Arabic-Indic digits (LANG-5).

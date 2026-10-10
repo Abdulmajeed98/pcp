@@ -8,7 +8,10 @@
   "PlaceholderPage": {
     "notice": "شوێنگرەوەی ئەپی کڕیار. کتێبخانەکان: {libraries}.",
     "apiStartedAt": "API لە <time>{startedAt}</time> دەستی پێکرد.",
-    "apiUnreachable": "ناتوانرێت پەیوەندی بە API بکرێت."
+    "apiUnreachable": "ناتوانرێت پەیوەندی بە API بکرێت.",
+    "sample": "نموونەیەک لە هەر جۆرە دەقێک لە خوارەوەیە. هەموو بەهاکانی ساختەن.",
+    "partsFound": "{count, plural, one {{countText} پارچە دۆزرایەوە} other {{countText} پارچە دۆزرایەوە}}",
+    "readsAt": "تا <english>{speed}</english> دەخوێنێتەوە."
   },
   "NotFoundPage": {
     "title": "پەڕە نەدۆزرایەوە",

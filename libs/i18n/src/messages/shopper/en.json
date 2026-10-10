@@ -8,7 +8,10 @@
   "PlaceholderPage": {
     "notice": "Shopper app placeholder. Libraries: {libraries}.",
     "apiStartedAt": "The API started at <time>{startedAt}</time>.",
-    "apiUnreachable": "The API cannot be reached."
+    "apiUnreachable": "The API cannot be reached.",
+    "sample": "A sample of each kind of text follows. Every value in it is made up.",
+    "partsFound": "{count, plural, one {{countText} Part found} other {{countText} Parts found}}",
+    "readsAt": "It reads at up to <english>{speed}</english>."
   },
   "NotFoundPage": {
     "title": "Page not found",

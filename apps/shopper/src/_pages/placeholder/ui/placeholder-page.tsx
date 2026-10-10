@@ -1,8 +1,18 @@
+import { formatNumber } from '@pcp/i18n';
 import { getTranslations } from 'next-intl/server';
 
 import { libraries } from '@/shared/config';
 
 import { readApiStatus } from '../api/read-api-status';
+
+// The sample: one of each kind of text a later screen will hold. Every value
+// is fixed here and made up.
+//
+// A sentence that counts is shown for each of these counts. Between them they
+// take every plural form Arabic has but the one for nothing.
+const sampleCounts = [1, 2, 3, 11, 100];
+// A number beside its unit.
+const sampleSpeed = { amount: 1575000, unit: 'IOPS' };
 
 // Placeholder: scaffolding, not a screen. It shows one thing fetched from the
 // API on the server, in the Shopper's language, which is the pattern every
@@ -32,6 +42,20 @@ export async function PlaceholderPage() {
           })}
         </p>
       )}
+      <p>{t('sample')}</p>
+      <ul>
+        {sampleCounts.map((count) => (
+          <li key={count} data-testid="counted-sentence">
+            {t('partsFound', { count, countText: formatNumber(count) })}
+          </li>
+        ))}
+      </ul>
+      <p>
+        {t.rich('readsAt', {
+          speed: `${formatNumber(sampleSpeed.amount)} ${sampleSpeed.unit}`,
+          english: (chunks) => <span>{chunks}</span>,
+        })}
+      </p>
     </div>
   );
 }

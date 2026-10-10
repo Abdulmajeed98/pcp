@@ -50,8 +50,9 @@ interface About {
 // as wide as a narrow phone, and checks what holds for every page: the
 // language it declares, its direction, that the server sent it with both and
 // with the language switch's three links, that it is inside the frame every
-// page shares, that the switch is where a Shopper can tap it, and that the
-// page does not scroll sideways. The test of a page calls it once.
+// page shares, that the switch is where a Shopper can tap it, that every digit
+// on it is a Western one, and that the page does not scroll sideways. The test
+// of a page calls it once.
 //
 // It confirms that the page came back in the language it asked for before it
 // reads anything else. Kurdish and Arabic are both right to left, so a check
@@ -92,9 +93,14 @@ export async function readInEveryLanguage<Read>(
           language.direction,
         );
         expectTheSwitchInWhatTheServerSent(sent.links, address);
+        expect(
+          arabicIndicDigitsIn(sent.text),
+          'the server sends the page with no Arabic-Indic digit',
+        ).toEqual([]);
       }
       await expect(page.getByTestId('frame')).toBeVisible();
       await expectTheSwitchOnThePage(page, language, address);
+      await expectWesternDigitsOnly(page);
       await expectNoSidewaysScroll(page);
 
       readings.set(language, await read(language, response));
@@ -200,6 +206,24 @@ async function expectNoSidewaysScroll(page: Page): Promise<void> {
   expect(pageWidth, 'the page is no wider than the window').toBeLessThanOrEqual(
     windowWidth,
   );
+}
+
+// The digits a page must never show: ٠ to ٩, the Arabic set, and ۰ to ۹, the
+// Persian set. Every number the platform shows is in Western digits, 0 to 9,
+// in every language (LANG-5).
+const anArabicIndicDigit = /[\u0660-\u0669\u06F0-\u06F9]/g;
+
+// The Arabic-Indic digits in a piece of text, of either set.
+function arabicIndicDigitsIn(text: string): string[] {
+  return text.match(anArabicIndicDigit) ?? [];
+}
+
+// Nothing a Shopper reads on the page, and nothing in the tab's title, holds
+// an Arabic-Indic digit.
+async function expectWesternDigitsOnly(page: Page): Promise<void> {
+  const read = `${await page.title()}\n${await page.locator('body').innerText()}`;
+
+  expect(arabicIndicDigitsIn(read), 'the page shows no Arabic-Indic digit').toEqual([]);
 }
 
 // The same piece of text, read in each of the three languages, is there and

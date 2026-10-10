@@ -224,6 +224,31 @@ test('the same piece of text is different in each of the three languages', async
   expectADifferentTextInEachLanguage(notices);
 });
 
+// The sample the placeholder page shows: a sentence that counts, drawn once
+// for each of these counts, which between them take every plural form Arabic
+// has but the one for nothing.
+const sampleCounts = [1, 2, 3, 11, 100];
+
+// The helper finds an Arabic-Indic digit anywhere on the page, in each
+// language. The page has to hold numbers for that to mean anything: on the
+// installed Node, a library that formats a number for Kurdish writes it in
+// Arabic-Indic digits, and a page in English never shows it.
+test('the sample number reads 1,575,000 in all three languages, and no Arabic-Indic digit is anywhere on the page in any language, the counted sentences among it', async ({
+  page,
+}) => {
+  await readInEveryLanguage(page, '', async () => {
+    await expect(page.getByText('1,575,000 IOPS', { exact: true })).toBeVisible();
+
+    const sentences = await page.getByTestId('counted-sentence').allInnerTexts();
+    expect(sentences).toHaveLength(sampleCounts.length);
+    for (const [index, count] of sampleCounts.entries()) {
+      // A language may have a word of its own for one and for two, as Arabic
+      // has. From three up every language writes the count in digits.
+      if (count >= 3) expect(sentences[index]).toContain(String(count));
+    }
+  });
+});
+
 // Next answers such an address with the status 404 and a bare document, and
 // the browser draws the "not found" screen from it. The screen is therefore
 // checked as the browser shows it, and what the server sent is not read.
