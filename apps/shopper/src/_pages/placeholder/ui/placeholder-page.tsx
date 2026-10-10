@@ -1,5 +1,5 @@
 import { formatNumber } from '@pcp/i18n';
-import { AlwaysEnglish } from '@pcp/ui';
+import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
@@ -17,6 +17,12 @@ const sampleCounts = [1, 2, 3, 11, 100];
 const sampleSpeed = { amount: 1575000, unit: 'IOPS' };
 // A Part name and a specification, which are in English in every language.
 const samplePart = { name: 'Ryzen 5 7600', memory: 'DDR5-6000' };
+// Two lines as someone wrote them, one in Arabic script and one in Latin
+// script. No Vendor has this name.
+const sampleAsWritten = [
+  'حاسبات المثال، شارع 60 متري، أربيل',
+  'Example Computers, 60 Meter Street, Erbil',
+];
 
 // What a message's `<english>` tag becomes: text that is in English and runs
 // left to right in every language, kept apart from the sentence around it.
@@ -74,6 +80,11 @@ export async function PlaceholderPage() {
       <p>
         {t.rich('partTakes', { part: samplePart.name, memory: samplePart.memory, english })}
       </p>
+      {sampleAsWritten.map((line) => (
+        <p key={line}>
+          <AsWritten data-testid="as-written">{line}</AsWritten>
+        </p>
+      ))}
     </div>
   );
 }

@@ -245,6 +245,47 @@ test('the Part name and the specification are the same characters in all three l
   });
 });
 
+// The direction a piece of text has of its own: that of its first letter.
+// Arabic script runs right to left, and Latin script left to right.
+function directionOfItsOwn(text: string): 'rtl' | 'ltr' {
+  const firstLetter = /\p{L}/u.exec(text)?.[0] ?? '';
+
+  return /\p{Script=Arabic}/u.test(firstLetter) ? 'rtl' : 'ltr';
+}
+
+// What someone wrote, such as a Vendor's name and address, is shown as
+// written on every page (LANG-4). Each line runs in its own direction,
+// whatever the page's is: the one in Arabic script right to left on the
+// English page, and the one in Latin script left to right on the other two.
+test('the two as-written lines are the same in all three languages, and each carries its own direction', async ({
+  page,
+}) => {
+  const written = await readInEveryLanguage(page, '', async () => {
+    const lines = page.getByTestId('as-written');
+    await expect(lines).toHaveCount(2);
+
+    const texts: string[] = [];
+    for (const line of await lines.all()) {
+      const text = await line.innerText();
+      expect(await layoutOf(line)).toEqual({
+        direction: directionOfItsOwn(text),
+        keptApart: true,
+      });
+      texts.push(text);
+    }
+    // One line in each script, so both directions were checked.
+    expect(texts.map(directionOfItsOwn).sort()).toEqual(['ltr', 'rtl']);
+
+    return texts;
+  });
+
+  const [inKurdish, inArabic, inEnglish] = languages.map((language) =>
+    written.get(language),
+  );
+  expect(inArabic).toEqual(inKurdish);
+  expect(inEnglish).toEqual(inKurdish);
+});
+
 // The sample the placeholder page shows: a sentence that counts, drawn once
 // for each of these counts, which between them take every plural form Arabic
 // has but the one for nothing.
