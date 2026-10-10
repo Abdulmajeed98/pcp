@@ -10,6 +10,7 @@ import {
   fetchWithNoBrowser,
   languages,
   linkTo,
+  narrowWindow,
   readInEveryLanguage,
 } from './languages';
 import { shopperUrl } from './platform';
@@ -109,6 +110,84 @@ for (const { where, address } of [
     }
   });
 }
+
+// A Shopper whose browser is set to English uses the switch once, and
+// chooses Arabic.
+test.describe('after a switch to Arabic, in a browser set to English', () => {
+  const browserSetTo = 'en-GB';
+  test.use({ locale: browserSetTo });
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto(shopperUrl);
+    await expect(page).toHaveURL(addressIn(english));
+
+    await linkTo(page, arabic).click();
+    await expect(page).toHaveURL(addressIn(arabic));
+  });
+
+  test('the bare address goes to the chosen language, although the browser is set to another, and the browser holds the choice for about a year, and not only for the session', async ({
+    page,
+    context,
+    browser,
+  }) => {
+    await page.goto(shopperUrl);
+    await expect(page).toHaveURL(addressIn(arabic));
+
+    // A browser drops a cookie that has no end when it is closed, and keeps
+    // one that has an end until then. What it keeps here is the choice, and
+    // it keeps it for a year.
+    const cookies = await context.cookies(shopperUrl);
+    const kept = cookies.filter((cookie) => cookie.expires !== -1);
+    const choice = kept.filter((cookie) => cookie.value === arabic.tag);
+    expect(choice).toHaveLength(1);
+    const daysLeft = (choice[0].expires - Date.now() / 1000) / (60 * 60 * 24);
+    expect(daysLeft).toBeGreaterThan(364);
+    expect(daysLeft).toBeLessThan(366);
+
+    // The same browser on another day: it was closed in between, and has
+    // only what it kept.
+    const anotherDay = await browser.newContext({
+      locale: browserSetTo,
+      viewport: narrowWindow,
+      storageState: { cookies: kept, origins: [] },
+    });
+    const opened = await anotherDay.newPage();
+    await opened.goto(shopperUrl);
+    await expect(opened).toHaveURL(addressIn(arabic));
+    await anotherDay.close();
+  });
+
+  test('with Arabic remembered, the English address shows English', async ({ page }) => {
+    await page.goto(shopperUrl);
+    await expect(page).toHaveURL(addressIn(arabic));
+
+    await page.goto(addressIn(english));
+    await expect(page).toHaveURL(addressIn(english));
+    await expectPageIn(page, english);
+  });
+});
+
+// A page on a weak connection is read before its scripts have loaded, and
+// some browsers run none. The switch is three links, so it works in both.
+test.describe('with scripts switched off in the browser', () => {
+  test.use({ javaScriptEnabled: false, locale: 'en-GB' });
+
+  test('the switch still changes the language, and the choice is remembered', async ({
+    page,
+  }) => {
+    await page.goto(addressIn(english));
+    // The browser does run no script. Without this, a setting that did not
+    // take would pass as a switch that needs none.
+    expect(await page.evaluate(() => matchMedia('(scripting: none)').matches)).toBe(true);
+
+    await linkTo(page, arabic).click();
+    await expect(page).toHaveURL(addressIn(arabic));
+    await expectPageIn(page, arabic);
+
+    await page.goto(shopperUrl);
+    await expect(page).toHaveURL(addressIn(arabic));
+  });
+});
 
 test('the same piece of text is different in each of the three languages', async ({
   page,

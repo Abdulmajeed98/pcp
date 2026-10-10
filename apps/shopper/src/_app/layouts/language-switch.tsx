@@ -30,6 +30,7 @@ export function LanguageSwitch({ label }: { label: string }) {
               href={address}
               locale={language}
               lang={language}
+              hrefLang={language}
               aria-current={language === current ? 'page' : undefined}
               className="flex min-h-11 min-w-11 items-center justify-center px-3 underline aria-[current=page]:font-bold aria-[current=page]:no-underline"
             >
