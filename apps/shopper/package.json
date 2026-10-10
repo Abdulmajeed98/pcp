@@ -7,7 +7,7 @@
     "@pcp/compatibility": "workspace:*",
     "@pcp/i18n": "workspace:*",
     "@pcp/ui": "workspace:*",
-    "next": "~16.1.6",
+    "next": "~16.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
