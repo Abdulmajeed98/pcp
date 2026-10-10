@@ -13,7 +13,9 @@
     },
     "./package.json": "./package.json"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@formatjs/intl-localematcher": "^0.8.1"
+  },
   "nx": {
     "tags": [
       "scope:web",

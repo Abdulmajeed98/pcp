@@ -16,6 +16,7 @@
     "platform:check": "node tools/check-platform.mjs"
   },
   "dependencies": {
+    "@formatjs/intl-localematcher": "^0.8.1",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.0",
@@ -27,6 +28,7 @@
     "keycloak-js": "^26.2.4",
     "nestjs-cls": "^7.0.1",
     "next": "~16.4.0",
+    "next-intl": "^4.14.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "reflect-metadata": "^0.2.0",

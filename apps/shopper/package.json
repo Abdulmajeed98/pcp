@@ -8,6 +8,7 @@
     "@pcp/i18n": "workspace:*",
     "@pcp/ui": "workspace:*",
     "next": "~16.4.0",
+    "next-intl": "^4.14.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
