@@ -3,7 +3,7 @@
     "title": "ئەپی کڕیار"
   },
   "Frame": {
-    "languages": "زمان"
+    "languageSwitch": "زمان"
   },
   "PlaceholderPage": {
     "notice": "شوێنگرەوەی ئەپی کڕیار. کتێبخانەکان: {libraries}.",

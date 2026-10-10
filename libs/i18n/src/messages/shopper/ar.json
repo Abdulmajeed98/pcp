@@ -3,7 +3,7 @@
     "title": "تطبيق المتسوّق"
   },
   "Frame": {
-    "languages": "اللغة"
+    "languageSwitch": "اللغة"
   },
   "PlaceholderPage": {
     "notice": "صفحة مؤقتة لتطبيق المتسوّق. المكتبات: {libraries}.",

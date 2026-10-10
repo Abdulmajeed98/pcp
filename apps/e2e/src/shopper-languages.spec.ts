@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { type Browser, expect, type Page, test } from '@playwright/test';
 
 import {
   addressIn,
@@ -6,8 +6,9 @@ import {
   checkInEveryLanguage,
   expectADifferentTextInEachLanguage,
   expectPageIn,
-  expectTheSwitchsLinks,
+  expectTheSwitchInWhatTheServerSent,
   fetchWithNoBrowser,
+  type Language,
   languages,
   linkTo,
   narrowWindow,
@@ -85,7 +86,8 @@ test("each language's address, fetched with no browser, holds the switch's three
     const sent = await fetchWithNoBrowser(request, addressIn(language));
 
     expect(sent.status).toBe(200);
-    expectTheSwitchsLinks(sent.links);
+    expect(sent.language).toBe(language.tag);
+    expectTheSwitchInWhatTheServerSent(sent.links);
   }
 });
 
@@ -102,7 +104,7 @@ for (const { where, address } of [
     await page.goto(addressIn(english, address));
     await expectPageIn(page, english);
 
-    for (const next of [arabic, kurdish, english]) {
+    for (const next of [kurdish, arabic, english]) {
       await linkTo(page, next).click();
 
       await expect(page).toHaveURL(addressIn(next, address));
@@ -113,48 +115,68 @@ for (const { where, address } of [
 
 // A Shopper whose browser is set to English uses the switch once, and
 // chooses Arabic.
-test.describe('after a switch to Arabic, in a browser set to English', () => {
-  const browserSetTo = 'en-GB';
+const browserSetTo = 'en-GB';
+
+// What a use of the switch leaves behind, in the browser it was made in. The
+// bare address goes to the chosen language, whatever the browser is set to.
+// The browser holds the choice for about a year. And it still has it on
+// another day, after it was closed.
+async function expectTheChoiceIsKept(
+  page: Page,
+  browser: Browser,
+  chosen: Language,
+): Promise<void> {
+  await page.goto(shopperUrl);
+  await expect(page).toHaveURL(addressIn(chosen));
+
+  // A browser drops a cookie that has no end when it is closed, and keeps one
+  // that has an end until then. What it keeps here is the choice.
+  const cookies = await page.context().cookies(shopperUrl);
+  const kept = cookies.filter((cookie) => cookie.expires !== -1);
+  const choice = kept.filter((cookie) => cookie.value === chosen.tag);
+  expect(choice).toHaveLength(1);
+  const daysLeft = (choice[0].expires - Date.now() / 1000) / (60 * 60 * 24);
+  expect(daysLeft).toBeGreaterThan(364);
+  expect(daysLeft).toBeLessThan(366);
+
+  const anotherDay = await browser.newContext({
+    locale: browserSetTo,
+    viewport: narrowWindow,
+    storageState: { cookies: kept, origins: [] },
+  });
+  const opened = await anotherDay.newPage();
+  await opened.goto(shopperUrl);
+  await expect(opened).toHaveURL(addressIn(chosen));
+  await anotherDay.close();
+}
+
+test.describe('in a browser set to English, after a switch to Arabic', () => {
   test.use({ locale: browserSetTo });
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(shopperUrl);
+    // The page is left alone until its scripts have loaded and run. From
+    // then on a link that a script handles asks the server for no page.
+    await page.goto(shopperUrl, { waitUntil: 'networkidle' });
     await expect(page).toHaveURL(addressIn(english));
 
+    // The tap asks the server for the page, with scripts running too. The
+    // server's answer is then what writes the choice down, and a browser
+    // keeps that for as long as the answer says. What a page's own script
+    // writes down, Safari keeps for seven days at most.
+    const asked = page.waitForRequest(
+      (request) => request.isNavigationRequest() && request.url() === addressIn(arabic),
+      { timeout: 5000 },
+    );
     await linkTo(page, arabic).click();
+    await asked;
     await expect(page).toHaveURL(addressIn(arabic));
   });
 
   test('the bare address goes to the chosen language, although the browser is set to another, and the browser holds the choice for about a year, and not only for the session', async ({
     page,
-    context,
     browser,
   }) => {
-    await page.goto(shopperUrl);
-    await expect(page).toHaveURL(addressIn(arabic));
-
-    // A browser drops a cookie that has no end when it is closed, and keeps
-    // one that has an end until then. What it keeps here is the choice, and
-    // it keeps it for a year.
-    const cookies = await context.cookies(shopperUrl);
-    const kept = cookies.filter((cookie) => cookie.expires !== -1);
-    const choice = kept.filter((cookie) => cookie.value === arabic.tag);
-    expect(choice).toHaveLength(1);
-    const daysLeft = (choice[0].expires - Date.now() / 1000) / (60 * 60 * 24);
-    expect(daysLeft).toBeGreaterThan(364);
-    expect(daysLeft).toBeLessThan(366);
-
-    // The same browser on another day: it was closed in between, and has
-    // only what it kept.
-    const anotherDay = await browser.newContext({
-      locale: browserSetTo,
-      viewport: narrowWindow,
-      storageState: { cookies: kept, origins: [] },
-    });
-    const opened = await anotherDay.newPage();
-    await opened.goto(shopperUrl);
-    await expect(opened).toHaveURL(addressIn(arabic));
-    await anotherDay.close();
+    await expectTheChoiceIsKept(page, browser, arabic);
   });
 
   test('with Arabic remembered, the English address shows English', async ({ page }) => {
@@ -168,14 +190,18 @@ test.describe('after a switch to Arabic, in a browser set to English', () => {
 });
 
 // A page on a weak connection is read before its scripts have loaded, and
-// some browsers run none. The switch is three links, so it works in both.
-test.describe('with scripts switched off in the browser', () => {
-  test.use({ javaScriptEnabled: false, locale: 'en-GB' });
+// some browsers run none. The switch is three links in the page as the server
+// sends it, so it works in both. The "not found" screen is the exception:
+// the browser draws that screen by script, the switch with it.
+test.describe('in a browser set to English, with scripts switched off', () => {
+  test.use({ locale: browserSetTo, javaScriptEnabled: false });
 
-  test('the switch still changes the language, and the choice is remembered', async ({
+  test('the switch still changes the language, and the choice is kept as it is with scripts', async ({
     page,
+    browser,
   }) => {
     await page.goto(addressIn(english));
+    await expectPageIn(page, english);
     // The browser does run no script. Without this, a setting that did not
     // take would pass as a switch that needs none.
     expect(await page.evaluate(() => matchMedia('(scripting: none)').matches)).toBe(true);
@@ -184,8 +210,7 @@ test.describe('with scripts switched off in the browser', () => {
     await expect(page).toHaveURL(addressIn(arabic));
     await expectPageIn(page, arabic);
 
-    await page.goto(shopperUrl);
-    await expect(page).toHaveURL(addressIn(arabic));
+    await expectTheChoiceIsKept(page, browser, arabic);
   });
 });
 

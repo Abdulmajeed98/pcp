@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
 import { LanguageSwitch } from './language-switch';
@@ -14,7 +14,7 @@ import { LanguageSwitch } from './language-switch';
 //
 // It does no visual design: no colour, no typeface, no logo and no name.
 export async function Frame({ children }: { children: ReactNode }) {
-  const t = await getTranslations('Frame');
+  const [language, t] = await Promise.all([getLocale(), getTranslations('Frame')]);
 
   return (
     <div
@@ -22,7 +22,7 @@ export async function Frame({ children }: { children: ReactNode }) {
       className="mx-auto min-h-dvh w-full max-w-3xl px-4 py-4 wrap-break-word sm:px-6 sm:py-6"
     >
       <header className="flex justify-end">
-        <LanguageSwitch label={t('languages')} />
+        <LanguageSwitch current={language} label={t('languageSwitch')} />
       </header>
       <main>{children}</main>
     </div>

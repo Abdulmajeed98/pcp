@@ -40,17 +40,18 @@ export function addressIn(language: Language, address = ''): string {
 // screen the server does not send whole: Next answers an address that matches
 // no page with a bare document, and the browser draws the "not found" screen
 // from it. That screen is checked as the browser shows it. Every other page
-// has to declare its language and its direction in what the server sends.
+// has to declare its language and its direction in what the server sends,
+// and to hold the switch's three links there.
 interface About {
   drawnByScript?: boolean;
 }
 
 // Opens a page of the Shopper app in each of the three languages, in a window
 // as wide as a narrow phone, and checks what holds for every page: the
-// language it declares, its direction, that the server sent it with both,
-// that it is inside the frame every page shares, that the frame holds the
-// language switch, and that it does not scroll sideways. The test of a page
-// calls it once.
+// language it declares, its direction, that the server sent it with both and
+// with the language switch's three links, that it is inside the frame every
+// page shares, that the switch is where a Shopper can tap it, and that the
+// page does not scroll sideways. The test of a page calls it once.
 //
 // It confirms that the page came back in the language it asked for before it
 // reads anything else. Kurdish and Arabic are both right to left, so a check
@@ -90,10 +91,10 @@ export async function readInEveryLanguage<Read>(
         expect(sent.direction, 'the server sends the page with its direction').toBe(
           language.direction,
         );
-        expectTheSwitchsLinks(sent.links, address);
+        expectTheSwitchInWhatTheServerSent(sent.links, address);
       }
       await expect(page.getByTestId('frame')).toBeVisible();
-      await expectTheSwitch(page, language, address);
+      await expectTheSwitchOnThePage(page, language, address);
       await expectNoSidewaysScroll(page);
 
       readings.set(language, await read(language, response));
@@ -110,7 +111,7 @@ export async function expectPageIn(page: Page, language: Language): Promise<void
 }
 
 // The language switch, which the frame holds on every page.
-export function languageSwitch(page: Page): Locator {
+function languageSwitch(page: Page): Locator {
   return page.getByTestId('language-switch');
 }
 
@@ -124,13 +125,13 @@ export function linkTo(page: Page, language: Language): Locator {
 // (Enhanced)" give.
 const largeEnoughToTap = 44;
 
-// The switch as a Shopper finds it on a page in `language`: three links, to
-// Kurdish, Arabic and English in that order, each under its own name and each
-// to the page the Shopper is on. The one the page is in is marked as the
-// current one. Each is inside the window and large enough to tap, and the
-// switch is on the end side of the frame: the right in English, and the left
-// in Kurdish and Arabic.
-async function expectTheSwitch(
+// The switch as a Shopper finds it in the browser, on a page in `language`:
+// three links, to Kurdish, Arabic and English in that order, each under its
+// own name and each to the page the Shopper is on. The one the page is in is
+// marked as the current one. Each is inside the window and large enough to
+// tap, and the switch is on the end side of the frame: the right in English,
+// and the left in Kurdish and Arabic.
+async function expectTheSwitchOnThePage(
   page: Page,
   language: Language,
   address: string,
@@ -149,21 +150,15 @@ async function expectTheSwitch(
     ).toBe(addressIn(other, address));
 
     const box = await boxOf(link);
+    const insideTheWindow =
+      box.left >= 0 &&
+      box.right <= narrowWindow.width &&
+      box.top >= 0 &&
+      box.bottom <= narrowWindow.height;
     expect(
-      box.left,
-      `the link to ${other.name} is inside the window`,
-    ).toBeGreaterThanOrEqual(0);
-    expect(box.right, `the link to ${other.name} is inside the window`).toBeLessThanOrEqual(
-      narrowWindow.width,
-    );
-    expect(
-      box.top,
-      `the link to ${other.name} is inside the window`,
-    ).toBeGreaterThanOrEqual(0);
-    expect(
-      box.bottom,
-      `the link to ${other.name} is inside the window`,
-    ).toBeLessThanOrEqual(narrowWindow.height);
+      insideTheWindow,
+      `the link to ${other.name}, at ${JSON.stringify(box)}, is inside the window`,
+    ).toBe(true);
     expect(
       Math.min(box.right - box.left, box.bottom - box.top),
       `the link to ${other.name} is large enough to tap`,
@@ -222,7 +217,7 @@ export function expectADifferentTextInEachLanguage(texts: Map<Language, string>)
 // A link in a page: the whole address it leads to, and the text a reader
 // sees in it.
 interface Link {
-  address: string;
+  leadsTo: string;
   text: string;
 }
 
@@ -252,21 +247,23 @@ export async function fetchWithNoBrowser(
   };
 }
 
-// The links in the HTML of the page at `address`.
-function linksIn(html: string, address: string): Link[] {
+// The links in a page's HTML. A link may be written from the page's own
+// address, which is `from`.
+function linksIn(html: string, from: string): Link[] {
   const anchors = html.matchAll(/<a\b[^>]*\bhref="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g);
 
   return [...anchors].map(([, href, content]) => ({
-    address: new URL(withoutEntities(href), address).href,
+    leadsTo: new URL(withoutEntities(href), from).href,
     text: readableText(content).trim(),
   }));
 }
 
-// The switch's three links are among the links of the page at `address`, as
-// the server sent it: one to that page in each language, under the language's
-// own name, in the order the languages are listed in. They are links in the
-// page as it arrives, so a tap on one needs no script.
-export function expectTheSwitchsLinks(links: Link[], address = ''): void {
+// The switch's three links are among the links of a page as the server sent
+// it: one to that page in each language, under the language's own name, in
+// the order the languages are listed in. They are links in the page as it
+// arrives, so a tap on one needs no script. `address` is what follows the
+// language in the page's address.
+export function expectTheSwitchInWhatTheServerSent(links: Link[], address = ''): void {
   const ownNames: string[] = languages.map(({ ownName }) => ownName);
 
   expect(
@@ -274,7 +271,7 @@ export function expectTheSwitchsLinks(links: Link[], address = ''): void {
     "the server sends the page with the switch's three links",
   ).toEqual(
     languages.map((language) => ({
-      address: addressIn(language, address),
+      leadsTo: addressIn(language, address),
       text: language.ownName,
     })),
   );
