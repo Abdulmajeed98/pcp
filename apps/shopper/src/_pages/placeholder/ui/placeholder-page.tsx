@@ -8,7 +8,8 @@ import { libraries } from '@/shared/config';
 import { readApiStatus } from '../api/read-api-status';
 
 // The sample: one of each kind of text a later screen will hold. Every value
-// is fixed here and made up.
+// is fixed here. No Part and no Vendor has the names in it, and its figures
+// are made up.
 //
 // The eight Categories, by the keys of their names in the shared terms.
 const sampleCategories = [
@@ -27,16 +28,19 @@ const sampleCounts = [1, 2, 3, 11, 100];
 // A number beside its unit.
 const sampleSpeed = { amount: 1575000, unit: 'IOPS' };
 // A Part name and a specification, which are in English in every language.
-const samplePart = { name: 'Ryzen 5 7600', memory: 'DDR5-6000' };
-// Two lines as someone wrote them, one in Arabic script and one in Latin
-// script. No Vendor has this name.
-const sampleAsWritten = [
-  'حاسبات المثال، شارع 60 متري، أربيل',
-  'Example Computers, 60 Meter Street, Erbil',
-];
+// Each starts with a number, which is the text a Kurdish or an Arabic
+// sentence reorders when nothing keeps it apart.
+const samplePart = { name: '500 Sample 1TB', length: '80 mm' };
+// Two lines as someone wrote them. The first starts in Arabic script and
+// holds Latin script too, and the second is in Latin script and starts with
+// a number.
+const sampleAsWritten = ['حاسبات المثال (Example Computers)', '12 Sample Street, Erbil'];
 
-// What a message's `<english>` tag becomes: text that is in English and runs
-// left to right in every language, kept apart from the sentence around it.
+// What a message's `<english>` tag becomes: text that is the same in every
+// language and runs left to right, kept apart from the sentence around it.
+// The names of the libraries and the time the API started are such text too.
+// Unmarked, a Kurdish sentence draws "@pcp/compatibility" with its "@" at the
+// far end.
 function english(chunks: ReactNode) {
   return <AlwaysEnglish>{chunks}</AlwaysEnglish>;
 }
@@ -54,7 +58,7 @@ function english(chunks: ReactNode) {
 // the right in Kurdish and Arabic. A class that has a side is always written
 // that way, with start and end.
 export async function PlaceholderPage() {
-  const [t, category, status] = await Promise.all([
+  const [t, categoryName, status] = await Promise.all([
     getTranslations('PlaceholderPage'),
     getTranslations('Category'),
     readApiStatus(),
@@ -78,7 +82,7 @@ export async function PlaceholderPage() {
       <p>{t('sample')}</p>
       <ul data-testid="category-names">
         {sampleCategories.map((key) => (
-          <li key={key}>{category(key)}</li>
+          <li key={key}>{categoryName(key)}</li>
         ))}
       </ul>
       <ul>
@@ -95,7 +99,11 @@ export async function PlaceholderPage() {
         })}
       </p>
       <p>
-        {t.rich('partTakes', { part: samplePart.name, memory: samplePart.memory, english })}
+        {t.rich('partLength', {
+          part: samplePart.name,
+          length: samplePart.length,
+          english,
+        })}
       </p>
       {sampleAsWritten.map((line) => (
         <p key={line}>

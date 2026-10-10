@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 import { defineConfig, devices } from '@playwright/test';
 
-import { narrowWindow } from './src/languages';
+import { arabicOfIraq, narrowWindow } from './src/languages';
 import { apiUrl, dashboardUrl, shopperUrl } from './src/platform';
 
 const root = join(__dirname, '..', '..');
@@ -27,7 +27,9 @@ function app(project: string, url: string) {
 // The language tests are the files named `…-languages.spec.ts`. They run in a
 // window as wide as a narrow phone, because every Shopper page and every
 // screen of the Vendor portal has to be usable at that width in both
-// directions (LANG-8). The other tests keep the window of a desktop browser.
+// directions (LANG-8). Their browser is set to Arabic as written in Iraq,
+// which is where a number formatted in the browser shows its fault. The
+// other tests keep the window and the language of a desktop browser.
 const languageTests = /-languages\.spec\.ts$/;
 
 // Run it with `pnpm platform:check`, which first makes sure that the
@@ -47,7 +49,7 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: languageTests },
     {
       name: 'chromium-360',
-      use: { ...devices['Desktop Chrome'], viewport: narrowWindow },
+      use: { ...devices['Desktop Chrome'], viewport: narrowWindow, locale: arabicOfIraq },
       testMatch: languageTests,
     },
   ],

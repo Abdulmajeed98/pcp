@@ -12,7 +12,7 @@
     "sample": "في ما يلي نموذج من كل نوع من النصوص. جميع القيم فيه غير حقيقية.",
     "partsFound": "{count, plural, zero {لم يُعثر على أي قطعة} one {تم العثور على قطعة واحدة} two {تم العثور على قطعتين} few {تم العثور على {countText} قطع} many {تم العثور على {countText} قطعة} other {تم العثور على {countText} قطعة}}",
     "readsAt": "يقرأ بسرعة تصل إلى <english>{speed}</english>.",
-    "partTakes": "يدعم <english>{part}</english> ذاكرة <english>{memory}</english>."
+    "partLength": "يأتي <english>{part}</english> بطول <english>{length}</english>."
   },
   "NotFoundPage": {
     "title": "الصفحة غير موجودة",

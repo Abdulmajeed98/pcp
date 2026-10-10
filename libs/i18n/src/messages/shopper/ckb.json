@@ -12,7 +12,7 @@
     "sample": "نموونەیەک لە هەر جۆرە دەقێک لە خوارەوەیە. هەموو بەهاکانی ساختەن.",
     "partsFound": "{count, plural, one {{countText} پارچە دۆزرایەوە} other {{countText} پارچە دۆزرایەوە}}",
     "readsAt": "تا <english>{speed}</english> دەخوێنێتەوە.",
-    "partTakes": "<english>{part}</english> ڕامی <english>{memory}</english> وەردەگرێت."
+    "partLength": "<english>{part}</english> بە درێژیی <english>{length}</english> دێت."
   },
   "NotFoundPage": {
     "title": "پەڕە نەدۆزرایەوە",

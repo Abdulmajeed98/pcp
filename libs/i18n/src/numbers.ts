@@ -1,8 +1,10 @@
 // Every number the platform shows is written by this one function, so that no
-// screen can show digits of its own choosing (LANG-5). It writes Western
-// digits, 0 to 9, with the thousands grouped by a comma and a point before
-// the decimals, as in 1,575,000.5. It takes no language, because its answer
-// is the same in all three, and the same on the server as in the browser.
+// screen can show digits of its own choosing. LANG-5 asks for Western digits
+// in prices and specifications, and the platform writes every number so. It
+// writes the digits 0 to 9, with the thousands grouped by a comma and a point
+// before the decimals, as in 1,575,000.5. It takes no language, because its
+// answer is the same in all three, and the same on the server as in the
+// browser.
 //
 // Neither next-intl's nor i18next's number formatting is used in its place.
 // Each formats a number in the page's language. For Kurdish, Node then writes
@@ -12,8 +14,8 @@
 // to French, also when the digits are pinned to Western ones. So the language
 // is fixed here, and it is not the page's.
 //
-// It does not round. It writes the number it is given, and a screen that
-// wants fewer decimals rounds first.
+// It keeps every decimal it is given, up to twenty. A screen that wants fewer
+// rounds first.
 const western = new Intl.NumberFormat('en-US', {
   numberingSystem: 'latn',
   maximumFractionDigits: 20,

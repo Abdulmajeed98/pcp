@@ -29,6 +29,17 @@ export type Language = (typeof languages)[number];
 // Playwright configuration gives it to the files named `…-languages.spec.ts`.
 export const narrowWindow = { width: 360, height: 740 };
 
+// The language the language tests' browser is set to, unless a test sets its
+// own: Arabic as written in Iraq. The Playwright configuration gives it to
+// the same files.
+//
+// It is the browser in which a number shows its fault. Chromium has no number
+// formatting for Kurdish, and formats a Kurdish number in the language the
+// browser itself is set to. A page that let the browser format a number in
+// the page's language would show Western digits in a browser set to English,
+// and no test there would see it. In this one it shows Arabic-Indic digits.
+export const arabicOfIraq = 'ar-IQ';
+
 // A page's address in a language. The language is the first part of every
 // address of the Shopper app, and `address` is what follows it: nothing for
 // the first page, or a path that starts with a slash.
@@ -76,6 +87,12 @@ export async function readInEveryLanguage<Read>(
   expect(page.viewportSize()?.width, 'the window is as wide as a narrow phone').toBe(
     narrowWindow.width,
   );
+  // Without this, a page that formats a number in the browser would pass the
+  // check of its digits in a browser that happens to write Western ones.
+  expect(
+    await page.evaluate(() => new Intl.NumberFormat('ckb').format(3)),
+    'this browser writes a number it formats for Kurdish in Arabic-Indic digits',
+  ).toBe('٣');
 
   const readings = new Map<Language, Read>();
   for (const language of languages) {
@@ -222,9 +239,47 @@ export async function layoutOf(
   });
 }
 
+// The characters of an element's text as the browser drew them: line by line,
+// and in each line from left to right. Text that runs left to right is drawn
+// as it is written. Where the browser has reordered its pieces, as it does
+// with "80 mm" inside a Kurdish sentence, this answers "mm 80".
+export async function linesAsDrawn(element: Locator): Promise<string[]> {
+  return element.evaluate((root) => {
+    const characters: { character: string; left: number; top: number; height: number }[] =
+      [];
+    const texts = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let text = texts.nextNode(); text !== null; text = texts.nextNode()) {
+      const written = text.textContent ?? '';
+      for (let index = 0; index < written.length; index += 1) {
+        const one = document.createRange();
+        one.setStart(text, index);
+        one.setEnd(text, index + 1);
+        const { left, top, height } = one.getBoundingClientRect();
+        characters.push({ character: written[index], left, top, height });
+      }
+    }
+
+    // A character is on the line of the one above it in this list when it is
+    // less than half its own height further down.
+    const lines: (typeof characters)[] = [];
+    for (const one of characters.sort((a, b) => a.top - b.top)) {
+      const line = lines.at(-1);
+      if (line !== undefined && one.top - line[0].top < one.height / 2) line.push(one);
+      else lines.push([one]);
+    }
+
+    return lines.map((line) =>
+      line
+        .sort((a, b) => a.left - b.left)
+        .map(({ character }) => character)
+        .join(''),
+    );
+  });
+}
+
 // The digits a page must never show: ٠ to ٩, the Arabic set, and ۰ to ۹, the
-// Persian set. Every number the platform shows is in Western digits, 0 to 9,
-// in every language (LANG-5).
+// Persian set. LANG-5 asks for Western digits, 0 to 9, in prices and
+// specifications, and the platform writes every number so, in every language.
 const anArabicIndicDigit = /[\u0660-\u0669\u06F0-\u06F9]/g;
 
 // The Arabic-Indic digits in a piece of text, of either set.
@@ -326,8 +381,9 @@ const entities: Record<string, string> = {
 };
 const anEntity = new RegExp(Object.keys(entities).join('|'), 'g');
 
-// The elements that sit inside a line of text. A reader sees no gap where
-// one starts or ends, so "<bdi>name</bdi>." reads "name." and not "name .".
+// The elements that sit inside a line of text: the ones the HTML Standard
+// lists as text-level, but for the line break. A reader sees no gap where one
+// starts or ends, so "<bdi>name</bdi>." reads "name." and not "name .".
 const anElementInALine =
   /<\/?(?:a|abbr|b|bdi|bdo|cite|code|data|dfn|em|i|kbd|mark|q|s|samp|small|span|strong|sub|sup|time|u|var)\b[^>]*>/g;
 

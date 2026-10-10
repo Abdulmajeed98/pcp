@@ -12,7 +12,7 @@
     "sample": "A sample of each kind of text follows. Every value in it is made up.",
     "partsFound": "{count, plural, one {{countText} Part found} other {{countText} Parts found}}",
     "readsAt": "It reads at up to <english>{speed}</english>.",
-    "partTakes": "The <english>{part}</english> takes <english>{memory}</english> memory."
+    "partLength": "The <english>{part}</english> is <english>{length}</english> long."
   },
   "NotFoundPage": {
     "title": "Page not found",

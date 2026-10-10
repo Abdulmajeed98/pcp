@@ -1,4 +1,4 @@
-import { type Browser, expect, type Page, test } from '@playwright/test';
+import { type Browser, expect, type Locator, type Page, test } from '@playwright/test';
 
 import {
   addressIn,
@@ -10,6 +10,7 @@ import {
   type Language,
   languages,
   layoutOf,
+  linesAsDrawn,
   linkTo,
   narrowWindow,
   readInEveryLanguage,
@@ -224,23 +225,54 @@ test('the same piece of text is different in each of the three languages', async
   expectADifferentTextInEachLanguage(notices);
 });
 
-// Text that is in English and runs left to right on every page: a Part name,
-// a specification, and a number beside its unit. In a Kurdish or an Arabic
-// sentence the browser reorders the pieces of such text unless it is kept
-// apart from the sentence.
-const leftToRightAndKeptApart = { direction: 'ltr', keptApart: true };
+// The sample the placeholder page shows: one of each kind of text a later
+// screen will hold. Its values are fixed in the page and made up, and they
+// are the same in every language, so a test may name them.
+//
+// A sentence that counts is drawn once for each of these counts. Between them
+// they take every plural form Arabic has but the one for nothing.
+const sampleCounts = [1, 2, 3, 11, 100];
+// A number beside its unit, a Part name and a specification. Each starts with
+// a number. That is the text a Kurdish or an Arabic sentence reorders: it
+// draws "80 mm" as "mm 80", unless the text is kept apart from the sentence.
+const numberBesideItsUnit = '1,575,000 IOPS';
+const partName = '500 Sample 1TB';
+const specification = '80 mm';
+// There are eight Categories (CAT-1).
+const categories = 8;
+// One line as someone wrote it in Arabic script, and one in Latin script.
+const asWrittenLines = 2;
+
+function countedSentences(page: Page): Locator {
+  return page.getByTestId('counted-sentence');
+}
+
+function categoryNames(page: Page): Locator {
+  return page.getByTestId('category-names').getByRole('listitem');
+}
+
+function linesAsWritten(page: Page): Locator {
+  return page.getByTestId('as-written');
+}
+
+// A piece of text that is in English on every page, found by its own
+// characters, as an element that holds nothing else. It is drawn in the order
+// it is written in, whatever the direction of the sentence around it, because
+// it runs left to right and is kept apart from that sentence.
+async function expectDrawnAsWritten(page: Page, alwaysEnglish: string): Promise<void> {
+  const marked = page.getByText(alwaysEnglish, { exact: true });
+
+  await expect(marked).toBeVisible();
+  expect((await linesAsDrawn(marked)).join('')).toBe(alwaysEnglish);
+  expect(await layoutOf(marked)).toEqual({ direction: 'ltr', keptApart: true });
+}
 
 test('the Part name and the specification are the same characters in all three languages, and each carries a left-to-right direction of its own', async ({
   page,
 }) => {
   await readInEveryLanguage(page, '', async () => {
-    for (const alwaysEnglish of ['Ryzen 5 7600', 'DDR5-6000']) {
-      // Found by its own characters, as an element that holds nothing else.
-      const marked = page.getByText(alwaysEnglish, { exact: true });
-
-      await expect(marked).toBeVisible();
-      expect(await layoutOf(marked)).toEqual(leftToRightAndKeptApart);
-    }
+    await expectDrawnAsWritten(page, partName);
+    await expectDrawnAsWritten(page, specification);
   });
 });
 
@@ -256,20 +288,27 @@ function directionOfItsOwn(text: string): 'rtl' | 'ltr' {
 // written on every page (LANG-4). Each line runs in its own direction,
 // whatever the page's is: the one in Arabic script right to left on the
 // English page, and the one in Latin script left to right on the other two.
+// So each starts on its own side: its first character is drawn at the far
+// right of a line that runs right to left, and at the far left of one that
+// runs left to right.
 test('the two as-written lines are the same in all three languages, and each carries its own direction', async ({
   page,
 }) => {
   const written = await readInEveryLanguage(page, '', async () => {
-    const lines = page.getByTestId('as-written');
-    await expect(lines).toHaveCount(2);
+    const lines = linesAsWritten(page);
+    await expect(lines).toHaveCount(asWrittenLines);
 
     const texts: string[] = [];
     for (const line of await lines.all()) {
       const text = await line.innerText();
-      expect(await layoutOf(line)).toEqual({
-        direction: directionOfItsOwn(text),
-        keptApart: true,
-      });
+      const ownDirection = directionOfItsOwn(text);
+      const [firstLineDrawn] = await linesAsDrawn(line);
+
+      expect(
+        ownDirection === 'rtl' ? firstLineDrawn.at(-1) : firstLineDrawn[0],
+        `"${text}", drawn "${firstLineDrawn}", starts on its own side`,
+      ).toBe(text[0]);
+      expect(await layoutOf(line)).toEqual({ direction: ownDirection, keptApart: true });
       texts.push(text);
     }
     // One line in each script, so both directions were checked.
@@ -285,27 +324,19 @@ test('the two as-written lines are the same in all three languages, and each car
   expect(inEnglish).toEqual(inKurdish);
 });
 
-// The sample the placeholder page shows: a sentence that counts, drawn once
-// for each of these counts, which between them take every plural form Arabic
-// has but the one for nothing.
-const sampleCounts = [1, 2, 3, 11, 100];
-
 // The helper finds an Arabic-Indic digit anywhere on the page, in each
-// language. The page has to hold numbers for that to mean anything: on the
-// installed Node, a library that formats a number for Kurdish writes it in
-// Arabic-Indic digits, and a page in English never shows it.
+// language, in what the server sent and in what the browser shows. The page
+// has to hold numbers for that to mean anything. On the installed Node, a
+// library that formats a number for Kurdish writes it in Arabic-Indic digits,
+// and a page in English never shows it.
 test('the sample number reads 1,575,000 in all three languages, and no Arabic-Indic digit is anywhere on the page in any language, the counted sentences among it', async ({
   page,
 }) => {
   await readInEveryLanguage(page, '', async () => {
-    // The number is beside its unit. The two are one piece of text that runs
-    // left to right, so that they do not swap places in a sentence that runs
-    // the other way.
-    const numberWithUnit = page.getByText('1,575,000 IOPS', { exact: true });
-    await expect(numberWithUnit).toBeVisible();
-    expect(await layoutOf(numberWithUnit)).toEqual(leftToRightAndKeptApart);
+    // The number is beside its unit, and the two do not swap places.
+    await expectDrawnAsWritten(page, numberBesideItsUnit);
 
-    const sentences = await page.getByTestId('counted-sentence').allInnerTexts();
+    const sentences = await countedSentences(page).allInnerTexts();
     expect(sentences).toHaveLength(sampleCounts.length);
     for (const [index, count] of sampleCounts.entries()) {
       // A language may have a word of its own for one and for two, as Arabic
@@ -315,19 +346,17 @@ test('the sample number reads 1,575,000 in all three languages, and no Arabic-In
   });
 });
 
-// Category names are translated, unlike the names of Parts (LANG-3). There
-// are eight Categories.
+// Category names are translated, unlike the names of Parts (LANG-3).
 test('the list of Category names is different in each of the three languages', async ({
   page,
 }) => {
   const lists = await readInEveryLanguage(page, '', async () => {
-    const names = await page
-      .getByTestId('category-names')
-      .getByRole('listitem')
-      .allInnerTexts();
+    const names = await categoryNames(page).allInnerTexts();
 
-    expect(names).toHaveLength(8);
-    expect(new Set(names).size, `each of ${JSON.stringify(names)} differs`).toBe(8);
+    expect(names).toHaveLength(categories);
+    expect(new Set(names).size, `each of ${JSON.stringify(names)} differs`).toBe(
+      categories,
+    );
     return names.join(', ');
   });
 
@@ -353,17 +382,19 @@ test("an address that matches no page is answered 404, with the frame and the sw
   expectADifferentTextInEachLanguage(headings);
 });
 
-// The helper measures the page in each language. The sample is first seen to
-// be on it, because the sample is what could make it too wide: text that is
-// kept apart from its sentence, and lines in a script that is not the page's.
+// The helper measures the page in each language. This line also sees that
+// the sample is on the page that was measured, because the sample is what
+// could make it too wide: text that is kept apart from its sentence, and
+// lines in a script that is not the page's.
 test('with the sample on it, the page still does not scroll sideways in any language', async ({
   page,
 }) => {
   await readInEveryLanguage(page, '', async () => {
-    await expect(page.getByTestId('category-names')).toBeVisible();
-    await expect(page.getByTestId('counted-sentence')).toHaveCount(sampleCounts.length);
-    await expect(page.getByText('1,575,000 IOPS', { exact: true })).toBeVisible();
-    await expect(page.getByTestId('as-written')).toHaveCount(2);
+    await expect(categoryNames(page)).toHaveCount(categories);
+    await expect(countedSentences(page)).toHaveCount(sampleCounts.length);
+    await expect(page.getByText(numberBesideItsUnit, { exact: true })).toBeVisible();
+    await expect(page.getByText(partName, { exact: true })).toBeVisible();
+    await expect(linesAsWritten(page)).toHaveCount(asWrittenLines);
   });
 });
 
