@@ -9,9 +9,9 @@ import { type CallerAnswer, readCaller } from '../api/read-caller';
 // caller is, which proves the login, the call and the API's check of the
 // token. The first real Vendor portal or Admin console page replaces it.
 //
-// The bar that marks it as a placeholder is on the start side, which is the
-// left in English and the right in Kurdish and Arabic. A class that has a
-// side is always written that way, with start and end.
+// Its text is set in from the start side, which is the left in English and
+// the right in Kurdish and Arabic. A class that has a side is always written
+// that way, with start and end.
 export function PlaceholderPage() {
   const [answer, setAnswer] = useState<CallerAnswer | undefined>(undefined);
 
@@ -25,7 +25,7 @@ export function PlaceholderPage() {
   }
 
   return (
-    <main className="m-4 border-s-4 ps-4">
+    <main className="m-4 ps-4">
       <p>Dashboard placeholder. Libraries: {libraries.join(', ')}.</p>
       {answer === undefined && <p>Asking the API who the caller is.</p>}
       {answer?.kind === 'caller' && (
