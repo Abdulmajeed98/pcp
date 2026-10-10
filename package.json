@@ -68,6 +68,7 @@
     "nx": "23.2.1",
     "oxfmt": "0.72.0",
     "oxlint": "1.87.0",
+    "oxlint-tailwindcss": "1.14.0",
     "supports-color": "7.2.0",
     "tailwindcss": "^4.3.3",
     "ts-jest": "^29.4.7",

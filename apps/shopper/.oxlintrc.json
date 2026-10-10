@@ -1,4 +1,8 @@
 {
-  "extends": ["../../.oxlintrc.json", "./.oxlintrc.feature-sliced.json"],
+  "extends": [
+    "../../.oxlintrc.json",
+    "../../.oxlintrc.logical-classes.json",
+    "./.oxlintrc.feature-sliced.json"
+  ],
   "plugins": ["nextjs", "react"]
 }

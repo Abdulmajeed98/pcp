@@ -1,0 +1,6 @@
+{
+  "jsPlugins": ["oxlint-tailwindcss"],
+  "rules": {
+    "tailwindcss/enforce-logical": ["error", { "direction": "inline" }]
+  }
+}
