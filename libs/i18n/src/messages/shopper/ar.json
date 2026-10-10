@@ -2,6 +2,9 @@
   "App": {
     "title": "تطبيق المتسوّق"
   },
+  "Frame": {
+    "languages": "اللغة"
+  },
   "PlaceholderPage": {
     "notice": "صفحة مؤقتة لتطبيق المتسوّق. المكتبات: {libraries}.",
     "apiStartedAt": "بدأ تشغيل الـ API في <time>{startedAt}</time>.",

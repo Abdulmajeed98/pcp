@@ -5,8 +5,11 @@ import {
   alternateAddresses,
   checkInEveryLanguage,
   expectADifferentTextInEachLanguage,
+  expectPageIn,
+  expectTheSwitchsLinks,
   fetchWithNoBrowser,
   languages,
+  linkTo,
   readInEveryLanguage,
 } from './languages';
 import { shopperUrl } from './platform';
@@ -74,6 +77,39 @@ test("each language's address, fetched with no browser, declares that language a
   });
 });
 
+test("each language's address, fetched with no browser, holds the switch's three links", async ({
+  request,
+}) => {
+  for (const language of languages) {
+    const sent = await fetchWithNoBrowser(request, addressIn(language));
+
+    expect(sent.status).toBe(200);
+    expectTheSwitchsLinks(sent.links);
+  }
+});
+
+// The first page, and an address that matches no page, which has the switch
+// as every page has. The second shows that the page is kept and not only the
+// language changed: a tap does not lead back to the first page.
+for (const { where, address } of [
+  { where: 'on the first page', address: '' },
+  { where: 'on the "not found" screen', address: '/no-such-page' },
+]) {
+  test(`a tap on another language arrives at the same page in that language, ${where}`, async ({
+    page,
+  }) => {
+    await page.goto(addressIn(english, address));
+    await expectPageIn(page, english);
+
+    for (const next of [arabic, kurdish, english]) {
+      await linkTo(page, next).click();
+
+      await expect(page).toHaveURL(addressIn(next, address));
+      await expectPageIn(page, next);
+    }
+  });
+}
+
 test('the same piece of text is different in each of the three languages', async ({
   page,
 }) => {
@@ -87,7 +123,7 @@ test('the same piece of text is different in each of the three languages', async
 // Next answers such an address with the status 404 and a bare document, and
 // the browser draws the "not found" screen from it. The screen is therefore
 // checked as the browser shows it, and what the server sent is not read.
-test("an address that matches no page is answered 404, with the frame, in the visitor's language", async ({
+test("an address that matches no page is answered 404, with the frame and the switch, in the visitor's language", async ({
   page,
 }) => {
   const headings = await readInEveryLanguage(
