@@ -57,6 +57,9 @@ const noClimbingAtThisDepth = 'A file at this depth may not climb with a relativ
 const noLooseFiles = 'A layer that has slices holds slices and no files of its own.';
 const routingFolderOnlyRoutes = "Next's routing folder only routes.";
 const routesUseTheAlias = 'A route file reaches the layers through the `@/` alias';
+const proxyTakesOnlyTheLanguages =
+  "Next's proxy file takes next-intl's statement of the languages";
+const proxyUsesTheAlias = 'The proxy file reaches that segment through the `@/` alias';
 
 // A case is one planted file. `file` is its path inside the project, without
 // the suffix, and `specifier` is what its one import names. `form` says how
@@ -461,6 +464,42 @@ const casesInTheRoutingFolder = [
   ),
 ];
 
+// Next's proxy file, which only the Shopper app has. It sits beside the
+// routing folder, outside the layers, and Next runs it before it answers a
+// request. A planted file is named like it: the bans are for every file at
+// the app's root whose name starts with `proxy.`.
+const casesInTheProxyFile = [
+  inTheShopperApp.refused(
+    'the proxy file importing a page',
+    'proxy.imports-a-page',
+    '@/_pages/placeholder',
+    proxyTakesOnlyTheLanguages,
+  ),
+  inTheShopperApp.refused(
+    'the proxy file importing another segment of the Shared layer',
+    'proxy.imports-another-segment',
+    '@/shared/config',
+    proxyTakesOnlyTheLanguages,
+  ),
+  inTheShopperApp.refused(
+    'the proxy file reaching past the index file of the languages segment',
+    'proxy.reaches-into-the-segment',
+    '@/shared/i18n/routing',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'the proxy file reaching the languages segment by a relative path',
+    'proxy.climbs-into-the-segment',
+    './src/shared/i18n',
+    proxyUsesTheAlias,
+  ),
+  inTheShopperApp.allowed(
+    'the proxy file importing the languages segment through its index file',
+    'proxy.imports-the-languages',
+    '@/shared/i18n',
+  ),
+];
+
 // `core` has the API's two layers and the API's ban. It has no alias of its
 // own, so a relative path is the only way from one layer to the other.
 const casesInCore = [
@@ -491,6 +530,7 @@ const cases = [
   ...casesInAFrontend(inTheDashboard, { app: 'app', pages: 'pages' }),
   ...casesInAFrontend(inTheShopperApp, { app: '_app', pages: '_pages' }),
   ...casesInTheRoutingFolder,
+  ...casesInTheProxyFile,
 ];
 
 // A planted file's name, as the project's lint target is given it and as the

@@ -15,11 +15,18 @@ export const writtenFile = '.oxlintrc.feature-sliced.json';
 
 // In the Shopper app Next.js keeps the names `app` and `pages` for itself, so
 // its App and Pages layers are `_app` and `_pages`. `routing` is Next's own
-// routing folder, which sits beside `src`, outside the layers.
+// routing folder, which sits beside `src`, outside the layers. `proxy` is
+// Next's proxy file, which sits beside the routing folder. Next runs it
+// before it answers a request, and next-intl's redirect to a language is
+// there.
 export const frontends = [
   { folder: 'apps/dashboard', app: 'app', pages: 'pages' },
-  { folder: 'apps/shopper', app: '_app', pages: '_pages', routing: 'app' },
+  { folder: 'apps/shopper', app: '_app', pages: '_pages', routing: 'app', proxy: 'proxy' },
 ];
+
+// The segment of the Shared layer that holds next-intl's statement of the
+// languages. It is the one thing of the project the proxy file may import.
+const languagesSegment = 'i18n';
 
 const messages = {
   alias:
@@ -44,6 +51,10 @@ const messages = {
     "Next's routing folder only routes. A route file takes a page from the Pages layer or a layout from the App layer, through its index file, and imports nothing else from the project.",
   routingPath:
     'A route file reaches the layers through the `@/` alias and never by a relative path.',
+  proxy:
+    "Next's proxy file takes next-intl's statement of the languages from the `i18n` segment of the Shared layer, through its index file, and imports nothing else from the project.",
+  proxyPath:
+    'The proxy file reaches that segment through the `@/` alias and never by a relative path.',
 };
 
 // How far below its home a file's climbing relative import is followed. Home
@@ -138,7 +149,7 @@ function climbing(folders, message) {
 }
 
 // The bans for one frontend, as the content of the file it extends.
-export function featureSlicedBans({ app, pages, routing }) {
+export function featureSlicedBans({ app, pages, routing, proxy }) {
   // From the top. The App and Shared layers have segments and no slices.
   const layers = [
     { folder: app, sliced: false, oneIndex: true },
@@ -187,6 +198,32 @@ export function featureSlicedBans({ app, pages, routing }) {
           { group: [appLayer, pagesLayer].flatMap(pastTheIndex), message: messages.index },
           notInShortestForm,
           { regex: '^(\\.\\./)+(.*/)?src(/|$)', message: messages.routingPath },
+        ],
+      ),
+    );
+  }
+  if (proxy !== undefined) {
+    const shared = layers.at(-1);
+    const above = layers.slice(0, -1);
+    // The block is for every file at the frontend's root whose name starts
+    // with the proxy file's. It goes first: a later block replaces an earlier
+    // one's patterns, so a file inside a layer or the routing folder that
+    // happens to carry the name keeps the bans of where it is.
+    overrides.unshift(
+      block(
+        [`${proxy}.*`],
+        [
+          outsideTheLayers(layers),
+          { group: above.flatMap(wholeLayer), message: messages.proxy },
+          {
+            regex: `^@/${shared.folder}(/?$|/${segmentOtherThan([languagesSegment])}(/|$))`,
+            message: messages.proxy,
+          },
+          {
+            group: [`@/${shared.folder}/${languagesSegment}/**`],
+            message: messages.index,
+          },
+          { regex: '^\\.', message: messages.proxyPath },
         ],
       ),
     );

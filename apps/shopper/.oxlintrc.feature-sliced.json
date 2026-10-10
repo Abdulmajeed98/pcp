@@ -2,6 +2,53 @@
   "overrides": [
     {
       "files": [
+        "proxy.*"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/([^/_wfes][^/]*|_[^/ap][^/]*|_|_a[^/p][^/]*|_a|_ap[^/p][^/]*|_ap|_app[^/][^/]*|_p[^/a][^/]*|_p|_pa[^/g][^/]*|_pa|_pag[^/e][^/]*|_pag|_page[^/s][^/]*|_page|_pages[^/][^/]*|w[^/i][^/]*|w|wi[^/d][^/]*|wi|wid[^/g][^/]*|wid|widg[^/e][^/]*|widg|widge[^/t][^/]*|widge|widget[^/s][^/]*|widget|widgets[^/][^/]*|f[^/e][^/]*|f|fe[^/a][^/]*|fe|fea[^/t][^/]*|fea|feat[^/u][^/]*|feat|featu[^/r][^/]*|featu|featur[^/e][^/]*|featur|feature[^/s][^/]*|feature|features[^/][^/]*|e[^/n][^/]*|e|en[^/t][^/]*|en|ent[^/i][^/]*|ent|enti[^/t][^/]*|enti|entit[^/i][^/]*|entit|entiti[^/e][^/]*|entiti|entitie[^/s][^/]*|entitie|entities[^/][^/]*|s[^/h][^/]*|s|sh[^/a][^/]*|sh|sha[^/r][^/]*|sha|shar[^/e][^/]*|shar|share[^/d][^/]*|share|shared[^/][^/]*)(/|$)",
+                "message": "The `@/` alias reaches the six layers and nothing else. From the top they are App, Pages, Widgets, Features, Entities and Shared. Put the file in one of them."
+              },
+              {
+                "group": [
+                  "@/_app",
+                  "@/_app/**",
+                  "@/_pages",
+                  "@/_pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**",
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "Next's proxy file takes next-intl's statement of the languages from the `i18n` segment of the Shared layer, through its index file, and imports nothing else from the project."
+              },
+              {
+                "regex": "^@/shared(/?$|/([^/i][^/]*|i[^/1][^/]*|i|i1[^/8][^/]*|i1|i18[^/n][^/]*|i18|i18n[^/][^/]*)(/|$))",
+                "message": "Next's proxy file takes next-intl's statement of the languages from the `i18n` segment of the Shared layer, through its index file, and imports nothing else from the project."
+              },
+              {
+                "group": [
+                  "@/shared/i18n/**"
+                ],
+                "message": "Nothing is imported past an index file. Import a slice as `@/<layer>/<slice>` and a segment of the Shared layer as `@/shared/<segment>`, and export what is needed from that index file."
+              },
+              {
+                "regex": "^\\.",
+                "message": "The proxy file reaches that segment through the `@/` alias and never by a relative path."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
         "src/_app/**"
       ],
       "rules": {
