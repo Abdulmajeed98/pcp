@@ -208,6 +208,20 @@ async function expectNoSidewaysScroll(page: Page): Promise<void> {
   );
 }
 
+// How the browser lays out the text of an element: the direction the text
+// runs in, and whether it is kept apart from the sentence around it, so that
+// neither reorders the other. Both are read as the browser worked them out,
+// whatever markup they came from.
+export async function layoutOf(
+  element: Locator,
+): Promise<{ direction: string; keptApart: boolean }> {
+  return element.evaluate((node) => {
+    const style = getComputedStyle(node);
+
+    return { direction: style.direction, keptApart: style.unicodeBidi === 'isolate' };
+  });
+}
+
 // The digits a page must never show: ٠ to ٩, the Arabic set, and ۰ to ۹, the
 // Persian set. Every number the platform shows is in Western digits, 0 to 9,
 // in every language (LANG-5).
@@ -312,6 +326,11 @@ const entities: Record<string, string> = {
 };
 const anEntity = new RegExp(Object.keys(entities).join('|'), 'g');
 
+// The elements that sit inside a line of text. A reader sees no gap where
+// one starts or ends, so "<bdi>name</bdi>." reads "name." and not "name .".
+const anElementInALine =
+  /<\/?(?:a|abbr|b|bdi|bdo|cite|code|data|dfn|em|i|kbd|mark|q|s|samp|small|span|strong|sub|sup|time|u|var)\b[^>]*>/g;
+
 // What is left of a page's HTML when everything a reader does not see is
 // taken out. Next also sends the page's content inside scripts, for the
 // browser to take over from, and text found only there was never on the
@@ -321,6 +340,7 @@ function readableText(html: string): string {
     html
       .replace(/<(script|style|template)\b[\s\S]*?<\/\1>/g, '')
       .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(anElementInALine, '')
       .replace(/<[^>]*>/g, ' '),
   ).replace(/\s+/g, ' ');
 }

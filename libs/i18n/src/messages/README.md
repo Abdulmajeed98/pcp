@@ -17,6 +17,8 @@ The owner, or someone the owner trusts, reviews both before launch.
 
 Change the text between the quotation marks and nothing else. The key before the colon stays as it is. So does anything inside braces, such as `{libraries}`, and anything inside angle brackets, such as `<time>` and `</time>`: the page puts a value or an element there, and each may move within the sentence to where the language wants it.
 
+What stands between `<english>` and `</english>` is a Part name, a manufacturer name, a specification or a number beside its unit. The page puts it there in English, in every language, and it is never written in these files (LANG-3).
+
 A sentence that counts holds one wording for each plural form its language has: `one` and `other` in English and in Kurdish, and `zero`, `one`, `two`, `few`, `many` and `other` in Arabic. Each form's name stays as it is, and the wording is what follows it in braces.
 
 ## Numbers

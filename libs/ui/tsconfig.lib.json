@@ -5,8 +5,10 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": true,
-    "types": []
+    "types": [],
+    "jsx": "react-jsx",
+    "lib": ["es2022", "dom"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "references": []
 }

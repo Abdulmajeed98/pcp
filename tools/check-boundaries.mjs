@@ -276,13 +276,13 @@ function casesInAFrontend({ refused, allowed }, { app, pages }) {
     refused(
       'an import past the index file of a Shared segment',
       `${slice}/ui/reaches-into-shared`,
-      '@/shared/config/libraries',
+      '@/shared/api/api-client',
       noPastAnIndex,
     ),
     refused(
       'an import past an index file in a file nested deeper than the bans follow',
       `${slice}/ui/part/deeper/reaches-into-shared`,
-      '@/shared/config/libraries',
+      '@/shared/api/api-client',
       noPastAnIndex,
     ),
     refused(

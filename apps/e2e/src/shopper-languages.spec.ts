@@ -10,6 +10,7 @@ import {
   fetchWithNoBrowser,
   type Language,
   languages,
+  layoutOf,
   linkTo,
   narrowWindow,
   readInEveryLanguage,
@@ -224,6 +225,26 @@ test('the same piece of text is different in each of the three languages', async
   expectADifferentTextInEachLanguage(notices);
 });
 
+// Text that is in English and runs left to right on every page: a Part name,
+// a specification, and a number beside its unit. In a Kurdish or an Arabic
+// sentence the browser reorders the pieces of such text unless it is kept
+// apart from the sentence.
+const leftToRightAndKeptApart = { direction: 'ltr', keptApart: true };
+
+test('the Part name and the specification are the same characters in all three languages, and each carries a left-to-right direction of its own', async ({
+  page,
+}) => {
+  await readInEveryLanguage(page, '', async () => {
+    for (const alwaysEnglish of ['Ryzen 5 7600', 'DDR5-6000']) {
+      // Found by its own characters, as an element that holds nothing else.
+      const marked = page.getByText(alwaysEnglish, { exact: true });
+
+      await expect(marked).toBeVisible();
+      expect(await layoutOf(marked)).toEqual(leftToRightAndKeptApart);
+    }
+  });
+});
+
 // The sample the placeholder page shows: a sentence that counts, drawn once
 // for each of these counts, which between them take every plural form Arabic
 // has but the one for nothing.
@@ -237,7 +258,12 @@ test('the sample number reads 1,575,000 in all three languages, and no Arabic-In
   page,
 }) => {
   await readInEveryLanguage(page, '', async () => {
-    await expect(page.getByText('1,575,000 IOPS', { exact: true })).toBeVisible();
+    // The number is beside its unit. The two are one piece of text that runs
+    // left to right, so that they do not swap places in a sentence that runs
+    // the other way.
+    const numberWithUnit = page.getByText('1,575,000 IOPS', { exact: true });
+    await expect(numberWithUnit).toBeVisible();
+    expect(await layoutOf(numberWithUnit)).toEqual(leftToRightAndKeptApart);
 
     const sentences = await page.getByTestId('counted-sentence').allInnerTexts();
     expect(sentences).toHaveLength(sampleCounts.length);

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 import { logOut } from '@/shared/auth';
-import { libraries } from '@/shared/config';
 
 import { type CallerAnswer, readCaller } from '../api/read-caller';
 
@@ -26,7 +25,7 @@ export function PlaceholderPage() {
 
   return (
     <main className="m-4 ps-4">
-      <p>Dashboard placeholder. Libraries: {libraries.join(', ')}.</p>
+      <p>Dashboard placeholder.</p>
       {answer === undefined && <p>Asking the API who the caller is.</p>}
       {answer?.kind === 'caller' && (
         <p>
