@@ -18,7 +18,10 @@ export {
   CoreEnvironmentVariables,
   validateEnvironment,
 } from './infrastructure/configuration/env.validation';
-export { databaseErrorOf } from './infrastructure/database/database-errors';
+export {
+  databaseErrorOf,
+  isDatabaseUnavailable,
+} from './infrastructure/database/database-errors';
 export { connectionOf, type Datasource } from './infrastructure/database/datasource';
 export {
   ErrorResponse,

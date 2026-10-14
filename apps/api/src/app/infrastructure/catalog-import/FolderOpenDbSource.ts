@@ -45,8 +45,8 @@ export class FolderOpenDbSource implements OpenDbSource {
     }
   }
 
-  // Each JSON file of the folder, in the order of their names. A file that
-  // does not hold JSON is given with no record, for the import to name.
+  // Each JSON file of the folder. A file that does not hold JSON is given with
+  // no record, for the import to name.
   async readFolder(
     name: string,
   ): Promise<Either.Either<Option.Option<readonly OpenDbFile[]>, StructuredError>> {
@@ -54,8 +54,7 @@ export class FolderOpenDbSource implements OpenDbSource {
     try {
       const fileNames = (await readdir(folder, { withFileTypes: true }))
         .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
-        .map((entry) => entry.name)
-        .sort();
+        .map((entry) => entry.name);
 
       const files: OpenDbFile[] = [];
       for (const fileName of fileNames) {

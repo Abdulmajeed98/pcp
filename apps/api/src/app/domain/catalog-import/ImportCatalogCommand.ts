@@ -42,6 +42,12 @@ type CategoryFolder = {
   leftOut: RecordLeftOut[];
 };
 
+// Two texts in order, compared character by character, which no machine's
+// language settings change.
+function byText(one: string, other: string): number {
+  return one < other ? -1 : one > other ? 1 : 0;
+}
+
 // The values left out, counted for each specification and reason. The rows
 // of a list are counted together.
 function valuesLeftOutOf(problems: readonly SpecificationProblem[]): ValuesLeftOut[] {
@@ -53,16 +59,14 @@ function valuesLeftOutOf(problems: readonly SpecificationProblem[]): ValuesLeftO
     counts.set(key, new ValuesLeftOut(specification, problem.reason, count));
   }
   return [...counts.entries()]
-    .sort(([one], [other]) => one.localeCompare(other))
+    .sort(([one], [other]) => byText(one, other))
     .map(([, values]) => values);
 }
 
-// The owner fills the catalog from OpenDB at the pinned commit, the last
-// released under ODC-By 1.0. OpenDB's later data is under CC BY-NC-SA 4.0, and
-// the import refuses it. Each record of
-// the eight Categories' folders becomes a Part, unless the catalog already
-// holds a Part with its OpenDB ID, which is left as it is. Everything is
-// written at once, or nothing is.
+// The owner fills the catalog from OpenDB at the pinned commit, and the
+// import refuses any other. Each record of the eight Categories' folders
+// becomes a Part, unless the catalog already holds a Part with its OpenDB ID,
+// which is left as it is. Everything is written at once, or nothing is.
 //
 // It has no Input: what it reads is the source it is given, a folder or the
 // pinned commit fetched from GitHub, and it takes nothing else.
@@ -105,7 +109,13 @@ export class ImportCatalogCommand {
       }
 
       const folder: CategoryFolder = { category, parts: [], leftOut: [] };
-      for (const file of files.right.value) {
+      // In the order of their names, so that the report's order, and which of
+      // two records with one OpenDB ID is taken, never depend on the source or
+      // the machine.
+      const byName = [...files.right.value].sort((one, other) =>
+        byText(one.getName(), other.getName()),
+      );
+      for (const file of byName) {
         const leftOut = (reason: RecordLeftOutReason) =>
           folder.leftOut.push(new RecordLeftOut(`${folderName}/${file.getName()}`, reason));
         Either.match(partOfRecord(file, category), {

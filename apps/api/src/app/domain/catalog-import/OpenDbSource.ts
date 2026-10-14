@@ -25,8 +25,8 @@ export abstract class OpenDbSource {
   // error that says why.
   abstract readCommit(): Promise<Either.Either<string, StructuredError>>;
 
-  // The record files of one of OpenDB's folders, such as `CPU`, or none when
-  // the source has no such folder.
+  // The record files of one of OpenDB's folders, such as `CPU`, in any order,
+  // or none when the source has no such folder.
   abstract readFolder(
     name: string,
   ): Promise<Either.Either<Option.Option<readonly OpenDbFile[]>, StructuredError>>;

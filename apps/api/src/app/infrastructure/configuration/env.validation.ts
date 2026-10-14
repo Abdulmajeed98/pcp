@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsString, IsUrl, Max, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, IsUrl, Matches, Max, Min } from 'class-validator';
 import {
   CoreEnvironmentVariables,
   IsOrigin,
@@ -48,7 +48,15 @@ export class EnvironmentVariables extends CoreEnvironmentVariables {
   // Where OpenDB is kept, from which the import fetches the archive of the
   // pinned commit when it is given no folder. The default is OpenDB's own
   // repository on GitHub. Only the import reads it.
+  //
+  // The import takes the commit an archive names in its own header, so the
+  // archive has to come over HTTPS, which no one on the way can change. Plain
+  // HTTP is taken only from this machine, where the tests' stand-in for
+  // GitHub listens.
   @IsUrl({ require_tld: false, require_protocol: true, protocols: ['https', 'http'] })
+  @Matches(/^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$))/, {
+    message: 'OPENDB_REPOSITORY_URL must use HTTPS, unless it names this machine',
+  })
   OPENDB_REPOSITORY_URL = openDbRepository;
 }
 

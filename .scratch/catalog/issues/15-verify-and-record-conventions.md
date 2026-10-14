@@ -27,14 +27,14 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - The Catalog screens and the footer match DESIGN.md, and Impeccable's design hook raises nothing left unanswered.
   - Whether commit messages follow the workplace's document on them. Ticket 08's review found that this repository's history does not: no subject starts with one of its prefixes (add, rm, refactor, temp, feat, fix), and some subjects are longer than 50 characters. The answer is recorded where the conventions are written.
 - [ ] The Technology section of the MVP spec gains the conventions this module set:
-  - the database settings and the first secret setting;
+  - the database settings and the first secret setting, and `OPENDB_REPOSITORY_URL`, which only the import reads, and which takes plain HTTP only from this machine;
   - migrations: how they are generated, applied and checked;
   - the Command, Query and Store pattern as built, with Effect 3's `Either` and the structured errors;
   - paging;
   - the shared test database and `pnpm integration:check`;
   - photos and the `PhotoStore` port;
   - the dashboard's libraries, and shadcn/ui's place in `ui`;
-  - the import and its pinned commit;
+  - the import and its pinned commit, written once in a sixth shared library, `@pcp/opendb` (`scope:shared`, `type:lib`), which the API imports and the Shopper app's credit will. The projects table, the count of shared libraries and of projects, and what `@pcp/api` imports change with it. The API's domain is the first to import a library other than `core` and `effect`;
   - DESIGN.md, the accessibility standard and the research behind them.
 - [ ] The conventions that ticket 01 changed are corrected where they are written:
   - ADR-0004 and the MVP spec list `apps/api/src/drizzle`, which drizzle-kit writes, among the files Oxfmt does not format. Ticket 08 added the import's made-up folder shaped like OpenDB, which holds a file that is not JSON on purpose.

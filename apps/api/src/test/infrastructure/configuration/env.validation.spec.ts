@@ -7,6 +7,7 @@ describe("the API's settings", () => {
     'DATASOURCE_URL',
     'DATASOURCE_USERNAME',
     'DATASOURCE_PASSWORD',
+    'OPENDB_REPOSITORY_URL',
   ];
   const environmentBefore = new Map(settingNames.map((name) => [name, process.env[name]]));
 
@@ -46,6 +47,9 @@ describe("the API's settings", () => {
     expect(settings.KEYCLOAK_AUDIENCE).toBe('pcp-api');
     expect(settings.DATASOURCE_URL).toBe('postgresql://localhost:5432/pcp');
     expect(settings.DATASOURCE_USERNAME).toBe('pcp');
+    expect(settings.OPENDB_REPOSITORY_URL).toBe(
+      'https://github.com/buildcores/buildcores-open-db',
+    );
   });
 
   it('let the application start when only the database password is set', async () => {
@@ -86,6 +90,12 @@ describe("the API's settings", () => {
     process.env.KEYCLOAK_ISSUER = 'localhost:8080/realms/pcp';
 
     await expect(startTheApplication()).rejects.toThrow(/KEYCLOAK_ISSUER/);
+  });
+
+  it("stop the application when OpenDB's repository is reached over plain HTTP on another machine, and name the setting", async () => {
+    process.env.OPENDB_REPOSITORY_URL = 'http://github.com/buildcores/buildcores-open-db';
+
+    await expect(startTheApplication()).rejects.toThrow(/OPENDB_REPOSITORY_URL/);
   });
 
   it('stop the application when the audience is empty, and name the setting', async () => {

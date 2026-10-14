@@ -78,11 +78,13 @@ async function anArchiveOf(folder: string, commit?: string): Promise<Buffer> {
 }
 
 // What stands in for GitHub. It answers every request with the archive and the
-// status it is given, and keeps the path of each request.
+// status it is given, and keeps the path of each request. Told to cut off,
+// it sends that many bytes of the archive and then drops the connection.
 type GitHubStandIn = {
   repository: string;
   archive: Buffer;
   status: number;
+  cutOffAfter: number | undefined;
   requested: string[];
   close(): Promise<void>;
 };
@@ -91,7 +93,13 @@ async function startGitHubStandIn(): Promise<GitHubStandIn> {
   const server = createServer((request, response) => {
     standIn.requested.push(request.url ?? '');
     response.writeHead(standIn.status, { 'content-type': 'application/x-gzip' });
-    response.end(standIn.status === 200 ? standIn.archive : undefined);
+    if (standIn.cutOffAfter === undefined) {
+      response.end(standIn.status === 200 ? standIn.archive : undefined);
+    } else {
+      response.write(standIn.archive.subarray(0, standIn.cutOffAfter), () =>
+        response.destroy(),
+      );
+    }
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address() as AddressInfo;
@@ -99,6 +107,7 @@ async function startGitHubStandIn(): Promise<GitHubStandIn> {
     repository: `http://127.0.0.1:${port}/buildcores/buildcores-open-db`,
     archive: Buffer.alloc(0),
     status: 200,
+    cutOffAfter: undefined,
     requested: [],
     close: () => new Promise((resolve) => server.close(() => resolve())),
   };
@@ -593,6 +602,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     beforeEach(() => {
       gitHub.requested = [];
       gitHub.status = 200;
+      gitHub.cutOffAfter = undefined;
     });
 
     it("fetches the pinned commit's archive and imports its eight folders", async () => {
@@ -630,6 +640,39 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       expect(run.exitCode).toBe(1);
       expect(run.errors).toEqual([
         `The archive fetched from ${gitHub.repository}/archive/${pinnedCommit}.tar.gz does not say which commit of OpenDB it holds. Nothing was imported.`,
+      ]);
+      expect(await partsFound({})).toEqual([]);
+    });
+
+    it('says so plainly when the download is cut off, and imports nothing', async () => {
+      gitHub.archive = await anArchiveOf(sample, pinnedCommit);
+      gitHub.cutOffAfter = gitHub.archive.length / 2;
+
+      const run = await runTheImport();
+
+      expect(run.exitCode).toBe(1);
+      expect(run.errors).toEqual([
+        expect.stringMatching(
+          new RegExp(
+            `^The download of ${gitHub.repository}/archive/${pinnedCommit}\\.tar\\.gz was cut off: .+\\. Nothing was imported\\.$`,
+          ),
+        ),
+      ]);
+      expect(await partsFound({})).toEqual([]);
+    });
+
+    it('refuses what GitHub sends when it is not an archive, and imports nothing', async () => {
+      gitHub.archive = Buffer.from('<html><body>Not an archive</body></html>');
+
+      const run = await runTheImport();
+
+      expect(run.exitCode).toBe(1);
+      expect(run.errors).toEqual([
+        expect.stringMatching(
+          new RegExp(
+            `^The archive fetched from ${gitHub.repository}/archive/${pinnedCommit}\\.tar\\.gz could not be read: .+\\. Nothing was imported\\.$`,
+          ),
+        ),
       ]);
       expect(await partsFound({})).toEqual([]);
     });
