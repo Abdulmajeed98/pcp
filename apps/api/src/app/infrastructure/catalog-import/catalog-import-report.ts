@@ -7,6 +7,7 @@ const recordReasons: Record<RecordLeftOutReason, string> = {
   notARecord: 'it holds no JSON record',
   noOpenDbId: 'it has no OpenDB ID that is a UUID',
   openDbIdNotTheFileName: 'its OpenDB ID is not its file name',
+  openDbIdTaken: 'another record has its OpenDB ID',
   noName: 'it has no name',
   noManufacturer: 'it has no manufacturer',
 };
@@ -21,6 +22,7 @@ const valueReasons: Record<SpecificationProblemReason, string> = {
   notInTheSet: 'not one of its values',
   notAList: 'not a list',
   notARow: 'not a row',
+  notAGroup: 'not a group of values',
   unknown: 'not on the list',
 };
 

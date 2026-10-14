@@ -1,4 +1,4 @@
-import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -123,38 +123,31 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     return (await response.json()) as ReadPart;
   }
 
-  it('makes a Part of every complete record of each Category, which a search finds', async () => {
+  it('makes a Part of each record that has an OpenDB ID, a name and a manufacturer, which a search finds', async () => {
     const run = await runTheImport(sample);
 
     expect(run.errors).toEqual([]);
     expect(run.exitCode).toBe(0);
-    expect({
-      cpu: await namesFound({ category: 'cpu' }),
-      cpuCooler: await namesFound({ category: 'cpuCooler' }),
-      motherboard: await namesFound({ category: 'motherboard' }),
-      ram: await namesFound({ category: 'ram' }),
-      storage: await namesFound({ category: 'storage' }),
-      gpu: await namesFound({ category: 'gpu' }),
-      case: await namesFound({ category: 'case' }),
-      psu: await namesFound({ category: 'psu' }),
-    }).toEqual({
-      cpu: ['Made-up Ryzen 5 7600', 'Made-up Ryzen 7 7700'],
-      cpuCooler: ['Made-up Tower Cooler'],
-      motherboard: ['Made-up B650M Board'],
-      ram: ['Made-up DDR5 32 GB'],
-      storage: ['Made-up NVMe 1 TB'],
-      gpu: ['Made-up RX 7600'],
-      case: ['Made-up Mesh Tower'],
-      psu: ['Made-up 650 W'],
-    });
+    expect(await namesFound({})).toEqual([
+      'Made-up 650 W',
+      'Made-up B650M Board',
+      'Made-up DDR5 32 GB',
+      'Made-up Mesh Tower',
+      'Made-up NVMe 1 TB',
+      'Made-up RX 7600',
+      'Made-up Ryzen 5 7600',
+      'Made-up Ryzen 7 7700',
+      'Made-up Tower Cooler',
+    ]);
 
+    // One complete record in full.
     expect(await theOnePart({ search: 'Made-up Ryzen 5 7600' })).toEqual({
       id: expect.any(String),
       openDbId: '00000000-0000-4000-8000-000000000101',
       category: 'cpu',
       name: 'Made-up Ryzen 5 7600',
       manufacturer: 'AMD',
-      partNumbers: expect.any(Array),
+      partNumbers: ['100-000000001', '100-000000001BOX'],
       specifications: {
         series: 'Made-up 7000',
         microarchitecture: 'Made-up Arch',
@@ -185,18 +178,144 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       updatedAt: expect.any(String),
       photoPath: null,
     });
+
+    // A complete record of each other Category, as the parts of it a Part
+    // keeps.
+    const kept = (part: ReadPart) => ({
+      openDbId: part.openDbId,
+      category: part.category,
+      manufacturer: part.manufacturer,
+      specifications: part.specifications,
+      missingNeededSpecifications: part.missingNeededSpecifications,
+    });
+    expect(kept(await theOnePart({ search: 'Made-up B650M Board' }))).toEqual({
+      openDbId: '00000000-0000-4000-8000-000000000301',
+      category: 'motherboard',
+      manufacturer: 'Made-up Boards',
+      specifications: {
+        socket: 'AM5',
+        form_factor: 'Micro ATX',
+        chipset: 'B650',
+        memory: { max: 192, ram_type: 'DDR5', slots: 4 },
+        pcie_slots: [{ gen: '4.0', quantity: 1, lanes: 16 }],
+        m2_slots: [{ size: '2280', key: 'M', interface: 'PCIe 4.0 x4' }],
+        storage_devices: { sata_6_gb_s: 4, sata_3_gb_s: 0, u2: 0 },
+        power_connectors: { main_power: '24-pin', cpu_power: ['8-pin'] },
+        back_connect_connectors: false,
+      },
+      missingNeededSpecifications: [],
+    });
+    expect(kept(await theOnePart({ search: 'Made-up DDR5 32 GB' }))).toEqual({
+      openDbId: '00000000-0000-4000-8000-000000000401',
+      category: 'ram',
+      manufacturer: 'Made-up Memory',
+      specifications: {
+        ram_type: 'DDR5',
+        modules: { quantity: 2, capacity_gb: 16 },
+        capacity: 32,
+        speed: 6000,
+      },
+      missingNeededSpecifications: [],
+    });
+    expect(kept(await theOnePart({ search: 'Made-up NVMe 1 TB' }))).toEqual({
+      openDbId: '00000000-0000-4000-8000-000000000501',
+      category: 'storage',
+      manufacturer: 'Made-up Storage',
+      specifications: {
+        interface: 'M.2 PCIe 4.0 x4',
+        form_factor: 'M.2-2280',
+        storage_type: 'SSD',
+        capacity: 1000,
+        nvme: true,
+      },
+      missingNeededSpecifications: [],
+    });
+    expect(kept(await theOnePart({ search: 'Made-up Mesh Tower' }))).toEqual({
+      openDbId: '00000000-0000-4000-8000-000000000701',
+      category: 'case',
+      manufacturer: 'Made-up Cases',
+      specifications: {
+        form_factor: 'Micro ATX Mini Tower',
+        supported_motherboard_form_factors: ['Micro ATX', 'Mini-ITX'],
+        max_video_card_length: 338,
+        expansion_slots: 4,
+        internal_3_5_bays: 2,
+        internal_2_5_bays: 2,
+        max_cpu_cooler_height: 170,
+        supported_power_supply_form_factors: ['ATX'],
+        max_psu_length: 180,
+        supports_rear_connecting_motherboard: false,
+      },
+      missingNeededSpecifications: [],
+    });
+    expect(kept(await theOnePart({ search: 'Made-up 650 W' }))).toEqual({
+      openDbId: '00000000-0000-4000-8000-000000000801',
+      category: 'psu',
+      manufacturer: 'Made-up Power',
+      specifications: {
+        wattage: 650,
+        form_factor: 'ATX',
+        length: 140,
+        connectors: {
+          atx_24_pin: 1,
+          eps_8_pin: 2,
+          pcie_6_plus_2_pin: 2,
+          pcie_12vhpwr: 0,
+          sata: 6,
+          molex_4_pin: 2,
+          floppy_4_pin: 0,
+        },
+      },
+      missingNeededSpecifications: [],
+    });
+    // The cooler and the GPU each hold a value that does not fit, which the
+    // next tests are about.
+    expect(kept(await theOnePart({ search: 'Made-up Tower Cooler' }))).toEqual({
+      openDbId: '00000000-0000-4000-8000-000000000201',
+      category: 'cpuCooler',
+      manufacturer: 'Made-up Cooling',
+      specifications: {
+        water_cooled: false,
+        height: 155,
+        fan_quantity: 1,
+        color: ['BLACK'],
+      },
+      missingNeededSpecifications: ['cpu_sockets'],
+    });
+    expect(kept(await theOnePart({ search: 'Made-up RX 7600' }))).toEqual({
+      openDbId: '00000000-0000-4000-8000-000000000601',
+      category: 'gpu',
+      manufacturer: 'Made-up Graphics',
+      specifications: {
+        chipset: 'Made-up 7600',
+        total_slot_width: 2,
+        tdp: 165,
+        power_connectors: {
+          pcie_6_pin: 0,
+          pcie_8_pin: 1,
+          pcie_12VHPWR: 0,
+          pcie_12V_2x6: 0,
+        },
+      },
+      missingNeededSpecifications: ['length'],
+    });
   });
 
-  it('leaves out a record without a name, without a manufacturer, or whose OpenDB ID is not its file name, and names each', async () => {
+  it('leaves out a record that is not JSON, has no OpenDB ID that is its file name or that another record has, or has no name or manufacturer, and names each', async () => {
     const run = await runTheImport(sample);
 
     expect(linesUnder('Records left out:', run.printed)).toEqual([
       'CPU/00000000-0000-4000-8000-000000000102.json: it has no manufacturer',
       'CPU/00000000-0000-4000-8000-000000000199.json: its OpenDB ID is not its file name',
       'Motherboard/00000000-0000-4000-8000-000000000302.json: it has no name',
+      'RAM/made-up-ram.json: it has no OpenDB ID that is a UUID',
+      'Storage/00000000-0000-4000-8000-000000000502.json: it holds no JSON record',
+      'PSU/00000000-0000-4000-8000-000000000101.json: another record has its OpenDB ID',
     ]);
     expect(await namesFound({ search: 'Made-up Ryzen 3' })).toEqual([]);
     expect(await namesFound({ search: 'Made-up Ryzen 5 5600' })).toEqual([]);
+    expect(await namesFound({ search: 'Made-up DDR4' })).toEqual([]);
+    expect(await namesFound({ search: 'Made-up 750 W' })).toEqual([]);
   });
 
   it('leaves out and counts a value that does not fit, keeps the rest, and lists a length of 0 among the missing needed specifications', async () => {
@@ -206,6 +325,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       'cpu, cores.total, not a number: 1',
       'cpuCooler, cpu_sockets, not one of its values: 1',
       'gpu, length, 0, where 0 cannot be true: 1',
+      'case, dimensions_mm, not a group of values: 1',
     ]);
 
     const ryzen = await theOnePart({ search: 'Made-up Ryzen 7 7700' });
@@ -225,6 +345,10 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     const gpu = await theOnePart({ search: 'Made-up RX 7600' });
     expect(gpu.specifications).not.toHaveProperty('length');
     expect(gpu.missingNeededSpecifications).toEqual(['length']);
+
+    // Its dimensions were given as text, where a group of values belongs.
+    const tower = await theOnePart({ search: 'Made-up Mesh Tower' });
+    expect(tower.specifications).not.toHaveProperty('dimensions_mm');
   });
 
   it('imports nothing from a folder that holds no Category, such as Monitor', async () => {
@@ -271,24 +395,24 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       cpu: [2, 0, 2, 1],
       cpuCooler: [1, 0, 0, 1],
       motherboard: [1, 0, 1, 0],
-      ram: [1, 0, 0, 0],
-      storage: [1, 0, 0, 0],
+      ram: [1, 0, 1, 0],
+      storage: [1, 0, 1, 0],
       gpu: [1, 0, 0, 1],
-      case: [1, 0, 0, 0],
-      psu: [1, 0, 0, 0],
-      Total: [9, 0, 3, 3],
+      case: [1, 0, 0, 1],
+      psu: [1, 0, 1, 0],
+      Total: [9, 0, 6, 4],
     });
     expect(second.exitCode).toBe(0);
     expect(tableIn(second.printed)).toEqual({
       cpu: [0, 2, 2, 0],
       cpuCooler: [0, 1, 0, 0],
       motherboard: [0, 1, 1, 0],
-      ram: [0, 1, 0, 0],
-      storage: [0, 1, 0, 0],
+      ram: [0, 1, 1, 0],
+      storage: [0, 1, 1, 0],
       gpu: [0, 1, 0, 0],
       case: [0, 1, 0, 0],
-      psu: [0, 1, 0, 0],
-      Total: [0, 9, 3, 0],
+      psu: [0, 1, 1, 0],
+      Total: [0, 9, 6, 0],
     });
     expect(await partsFound({})).toHaveLength(9);
   });
@@ -317,45 +441,37 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     expect(await partsFound({ category: 'psu' })).toHaveLength(1);
   });
 
-  it('leaves no Part behind when the database refuses a record partway through', async () => {
+  it('leaves no Part behind when the database refuses a record partway through, and names the record', async () => {
     const folder = await aCopyOfTheSample();
-    // Enough made-up power supplies that the import writes them in several
-    // statements, and after them, the last in the last folder, one that the
-    // database refuses: PostgreSQL keeps no NUL character in text.
-    const psus = join(folder, 'PSU');
-    const madeUp = Array.from(
-      { length: 2500 },
-      (_, index) => `00000000-0000-4000-8001-${String(index).padStart(12, '0')}`,
-    );
-    await Promise.all(
-      madeUp.map((openDbId, index) =>
-        writeFile(
-          join(psus, `${openDbId}.json`),
-          JSON.stringify({
-            opendb_id: openDbId,
-            metadata: { name: `Made-up PSU ${index}`, manufacturer: 'Made-up Power' },
-          }),
-        ),
-      ),
-    );
-    const refused = 'ffffffff-ffff-4fff-bfff-ffffffffffff';
-    await writeFile(
-      join(psus, `${refused}.json`),
-      JSON.stringify({
-        opendb_id: refused,
-        metadata: { name: 'Made-up PSU \u0000', manufacturer: 'Made-up Power' },
-      }),
-    );
+    // The power supply is the last Part written, after the Parts of every
+    // other folder. PostgreSQL keeps no NUL character in text.
+    const psu = join(folder, 'PSU', '00000000-0000-4000-8000-000000000801.json');
+    const record = JSON.parse(await readFile(psu, 'utf8')) as {
+      metadata: { name: string };
+    };
+    record.metadata.name = 'Made-up 650 W \u0000';
+    await writeFile(psu, JSON.stringify(record));
 
     const run = await runTheImport(folder);
 
     expect(run.exitCode).toBe(1);
     expect(run.errors).toEqual([
-      expect.stringMatching(
-        /^The catalog could not be written, and nothing was imported: /,
-      ),
+      'The catalog could not be written, and nothing was imported: the record with OpenDB ID 00000000-0000-4000-8000-000000000801 was not taken: invalid byte sequence for encoding "UTF8": 0x00',
     ]);
     expect(run.printed).toEqual([]);
+    expect(await partsFound({})).toEqual([]);
+  });
+
+  it('refuses a folder that lacks one of the eight folders, and imports nothing', async () => {
+    const folder = await aCopyOfTheSample();
+    await rm(join(folder, 'PSU'), { recursive: true });
+
+    const run = await runTheImport(folder);
+
+    expect(run.exitCode).toBe(1);
+    expect(run.errors).toEqual([
+      'The source has no PSU folder, so it is not shaped like OpenDB. Nothing was imported.',
+    ]);
     expect(await partsFound({})).toEqual([]);
   });
 

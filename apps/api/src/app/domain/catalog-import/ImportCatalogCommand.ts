@@ -7,16 +7,8 @@ import { SpecificationProblem } from '../specification/Specification';
 import { CatalogImportStore } from './CatalogImportStore';
 import { CategoryImport, RecordLeftOut, ValuesLeftOut } from './CategoryImport';
 import { openDbFolders, pinnedCommit } from './opendb';
-import { ImportedRecord, importedRecordOf } from './opendb-record';
+import { PartOfRecord, partOfRecord, RecordLeftOutReason } from './opendb-record';
 import { OpenDbSource } from './OpenDbSource';
-
-class Input {
-  constructor(private readonly source: OpenDbSource) {}
-
-  getSource(): OpenDbSource {
-    return this.source;
-  }
-}
 
 // What the import did: the commit it read, and what it did with each
 // Category's records, in the order of OpenDB's folders.
@@ -39,14 +31,13 @@ class Output {
   }
 }
 
-export { Input as ImportCatalogCommandInput };
 export { Output as ImportCatalogCommandOutput };
 
-// One Category's folder as read: the records that make Parts, and those left
-// out.
-type CategoryRecords = {
+// One Category's folder as read: the Parts its records make, and the records
+// left out.
+type CategoryFolder = {
   category: Category;
-  imported: ImportedRecord[];
+  parts: PartOfRecord[];
   leftOut: RecordLeftOut[];
 };
 
@@ -69,14 +60,18 @@ function valuesLeftOutOf(problems: readonly SpecificationProblem[]): ValuesLeftO
 // the eight Categories' folders becomes a Part, unless the catalog already
 // holds a Part with its OpenDB ID, which is left as it is. Everything is
 // written at once, or nothing is.
+//
+// It has no Input: what it reads is the source it is given, a folder or, later,
+// the pinned commit fetched from GitHub, and it takes nothing else.
 @Injectable()
 export class ImportCatalogCommand {
-  constructor(private readonly catalogImportStore: CatalogImportStore) {}
+  constructor(
+    private readonly openDbSource: OpenDbSource,
+    private readonly catalogImportStore: CatalogImportStore,
+  ) {}
 
-  async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
-    const source = input.getSource();
-
-    const commit = await source.readCommit();
+  async execute(): Promise<Either.Either<Output, StructuredError>> {
+    const commit = await this.openDbSource.readCommit();
     if (Either.isLeft(commit)) return Either.left(commit.left);
     if (commit.right !== pinnedCommit) {
       return Either.left(
@@ -88,51 +83,64 @@ export class ImportCatalogCommand {
       );
     }
 
-    const read: CategoryRecords[] = [];
-    for (const [folder, category] of openDbFolders) {
-      const files = await source.readFolder(folder);
+    const folders: CategoryFolder[] = [];
+    // Each OpenDB ID is kept by one Part only. A second record with an ID
+    // already read is left out, so that it is named rather than counted as
+    // imported when the database skips it.
+    const openDbIds = new Set<string>();
+    for (const [folderName, category] of openDbFolders) {
+      const files = await this.openDbSource.readFolder(folderName);
       if (Either.isLeft(files)) return Either.left(files.left);
       if (Option.isNone(files.right)) {
         return Either.left(
           NotValidError.of(
             'OPENDB_FOLDER_MISSING',
-            `The source has no ${folder} folder, so it is not shaped like OpenDB. Nothing was imported.`,
-            { folder },
+            `The source has no ${folderName} folder, so it is not shaped like OpenDB. Nothing was imported.`,
+            { folder: folderName },
           ),
         );
       }
 
-      const records: CategoryRecords = { category, imported: [], leftOut: [] };
+      const folder: CategoryFolder = { category, parts: [], leftOut: [] };
       for (const file of files.right.value) {
-        Either.match(importedRecordOf(file, category), {
-          onLeft: (reason) =>
-            records.leftOut.push(new RecordLeftOut(`${folder}/${file.getName()}`, reason)),
-          onRight: (imported) => records.imported.push(imported),
+        const leftOut = (reason: RecordLeftOutReason) =>
+          folder.leftOut.push(new RecordLeftOut(`${folderName}/${file.getName()}`, reason));
+        Either.match(partOfRecord(file, category), {
+          onLeft: leftOut,
+          onRight: (made) => {
+            const openDbId = made.part.getOpenDbId();
+            if (openDbIds.has(openDbId)) {
+              leftOut('openDbIdTaken');
+            } else {
+              openDbIds.add(openDbId);
+              folder.parts.push(made);
+            }
+          },
         });
       }
-      read.push(records);
+      folders.push(folder);
     }
 
     const created = await this.catalogImportStore.importParts(
-      read.flatMap((records) => records.imported.map((imported) => imported.part)),
+      folders.flatMap((folder) => folder.parts.map((made) => made.part)),
     );
     if (Either.isLeft(created)) return Either.left(created.left);
 
     return Either.right(
       Output.of(
         commit.right,
-        read.map(({ category, imported, leftOut }) => {
+        folders.map(({ category, parts, leftOut }) => {
           // The values left out are counted only for the Parts this run
           // created. A Part already there was not written.
-          const createdNow = imported.filter((each) =>
-            created.right.has(each.part.getOpenDbId()),
+          const createdNow = parts.filter((made) =>
+            created.right.has(made.part.getOpenDbId()),
           );
           return new CategoryImport(
             category,
             createdNow.length,
-            imported.length - createdNow.length,
+            parts.length - createdNow.length,
             leftOut,
-            valuesLeftOutOf(createdNow.flatMap((each) => each.valuesLeftOut)),
+            valuesLeftOutOf(createdNow.flatMap((made) => made.valuesLeftOut)),
           );
         }),
       ),

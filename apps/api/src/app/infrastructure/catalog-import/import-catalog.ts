@@ -2,10 +2,7 @@ import { INestApplicationContext } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Either } from 'effect';
 
-import {
-  ImportCatalogCommand,
-  ImportCatalogCommandInput,
-} from '~/domain/catalog-import/ImportCatalogCommand';
+import { ImportCatalogCommand } from '~/domain/catalog-import/ImportCatalogCommand';
 
 import { CatalogImportModule } from './catalog-import.module';
 import { reportOf } from './catalog-import-report';
@@ -34,9 +31,10 @@ export async function importCatalog(
   let context: INestApplicationContext;
   try {
     // What went wrong is printed plainly below, so Nest prints nothing.
-    context = await NestFactory.createApplicationContext(CatalogImportModule, {
-      logger: false,
-    });
+    context = await NestFactory.createApplicationContext(
+      CatalogImportModule.readingFrom(new FolderOpenDbSource(folder)),
+      { logger: false },
+    );
   } catch (error) {
     // The settings were refused, such as when the database password is not
     // given.
@@ -45,9 +43,7 @@ export async function importCatalog(
   }
 
   try {
-    const outcome = await context
-      .get(ImportCatalogCommand)
-      .execute(new ImportCatalogCommandInput(new FolderOpenDbSource(folder)));
+    const outcome = await context.get(ImportCatalogCommand).execute();
     if (Either.isLeft(outcome)) {
       printer.error(outcome.left.getMessage());
       return 1;
@@ -55,6 +51,12 @@ export async function importCatalog(
 
     for (const line of reportOf(outcome.right)) printer.log(line);
     return 0;
+  } catch (error) {
+    // Domain and Store code return their failures, so this is a fault in the
+    // import itself. It is still said plainly. The Store writes in one
+    // transaction, so the catalog holds all of the Parts or none of them.
+    printer.error(`The import stopped on an unexpected error: ${(error as Error).message}`);
+    return 1;
   } finally {
     await context.close();
   }

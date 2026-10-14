@@ -10,6 +10,7 @@
     "PRODUCT.md",
     "**/.oxlintrc.feature-sliced.json",
     "libs/api-client/src/generated/**",
-    "apps/api/src/drizzle/**"
+    "apps/api/src/drizzle/**",
+    "apps/api/src/test/infrastructure/catalog-import/fixtures/**"
   ]
 }

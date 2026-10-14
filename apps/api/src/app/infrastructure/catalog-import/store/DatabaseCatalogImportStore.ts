@@ -8,28 +8,32 @@ import {
 } from '~/domain/catalog-import/CatalogImportStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { part } from '~/infrastructure/part/part.schema';
-import { searchTextOf } from '~/infrastructure/part/search-text';
+import { columnsOf } from '~/infrastructure/part/part-columns';
 
-// The most rows one statement writes. PostgreSQL takes at most 65,535 values
-// in a statement, and each row has seven.
-const largestBatch = 1000;
-
-// The Parts in batches of at most the largest size, in the order they were
-// given.
-function batchesOf(parts: readonly ImportPartParams[]): ImportPartParams[][] {
-  const batches: ImportPartParams[][] = [];
-  for (let start = 0; start < parts.length; start += largestBatch) {
-    batches.push(parts.slice(start, start + largestBatch));
+// A failure to write one record's Part, and which record it was.
+class RecordNotWritten extends Error {
+  constructor(
+    readonly openDbId: string,
+    override readonly cause: unknown,
+  ) {
+    super(`The record with OpenDB ID ${openDbId} could not be written`);
   }
-  return batches;
 }
 
-// What the database said, rather than Drizzle's wrapping of it, which holds
-// the whole statement and every value in it.
+// What went wrong at the bottom, rather than Drizzle's wrapping of it, which
+// holds the whole statement and every value in it. Node gives a connection it
+// tried at several addresses as an error of errors, with no message of its
+// own.
 function reasonOf(error: unknown): string {
-  const { cause, message } = error as { cause?: { message?: unknown }; message?: unknown };
-  if (typeof cause?.message === 'string') return cause.message;
-  return typeof message === 'string' ? message : String(error);
+  const { cause, message, errors } = error as {
+    cause?: unknown;
+    message?: unknown;
+    errors?: unknown;
+  };
+  if (cause !== undefined) return reasonOf(cause);
+  if (typeof message === 'string' && message !== '') return message;
+  if (Array.isArray(errors)) return errors.map(reasonOf).join('; ');
+  return String(error);
 }
 
 @Injectable()
@@ -46,37 +50,34 @@ export class DatabaseCatalogImportStore implements CatalogImportStore {
         .getClient()
         .transaction(async (transaction) => {
           const openDbIds = new Set<string>();
-          for (const batch of batchesOf(parts)) {
-            // A Part whose OpenDB ID is already in the catalog is skipped, and
-            // never changed.
-            const rows = await transaction
-              .insert(part)
-              .values(
-                batch.map((each) => ({
+          // One statement for each Part, so that a failure names its record.
+          for (const each of parts) {
+            try {
+              // A Part whose OpenDB ID is already in the catalog is skipped,
+              // and never changed.
+              const [row] = await transaction
+                .insert(part)
+                .values({
                   openDbId: each.getOpenDbId(),
                   category: each.getCategory().getKey(),
-                  name: each.getName(),
-                  manufacturer: each.getManufacturer(),
-                  partNumbers: [...each.getPartNumbers()],
-                  specifications: each.getSpecifications(),
-                  searchText: searchTextOf(
-                    each.getName(),
-                    each.getManufacturer(),
-                    each.getPartNumbers(),
-                  ),
-                })),
-              )
-              .onConflictDoNothing({ target: part.openDbId })
-              .returning({ openDbId: part.openDbId });
-            for (const row of rows) {
-              if (row.openDbId !== null) openDbIds.add(row.openDbId);
+                  ...columnsOf(each),
+                })
+                .onConflictDoNothing({ target: part.openDbId })
+                .returning({ openDbId: part.openDbId });
+              if (row?.openDbId) openDbIds.add(row.openDbId);
+            } catch (error) {
+              throw new RecordNotWritten(each.getOpenDbId(), error);
             }
           }
           return openDbIds;
         });
       return Either.right(created);
     } catch (error) {
-      const message = `The catalog could not be written, and nothing was imported: ${reasonOf(error)}`;
+      const record =
+        error instanceof RecordNotWritten
+          ? `the record with OpenDB ID ${error.openDbId} was not taken: `
+          : '';
+      const message = `The catalog could not be written, and nothing was imported: ${record}${reasonOf(error)}`;
       this.logger.error(error, message);
       return Either.left(databaseErrorOf(error, message));
     }

@@ -17,7 +17,7 @@ import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
 
 import { part, PartRow } from '../part.schema';
-import { searchTextOf } from '../search-text';
+import { columnsOf } from '../part-columns';
 
 // A Part's row and its photo's identifier, as a read gives them.
 const partWithPhoto = { part, photoId: partPhoto.id };
@@ -69,18 +69,7 @@ export class DatabasePartStore implements PartStore {
       const [row] = await this.databaseProvider
         .getClient()
         .insert(part)
-        .values({
-          category: params.getCategory().getKey(),
-          name: params.getName(),
-          manufacturer: params.getManufacturer(),
-          partNumbers: [...params.getPartNumbers()],
-          specifications: params.getSpecifications(),
-          searchText: searchTextOf(
-            params.getName(),
-            params.getManufacturer(),
-            params.getPartNumbers(),
-          ),
-        })
+        .values({ category: params.getCategory().getKey(), ...columnsOf(params) })
         .returning();
 
       // A Part has no photo when it is created.
@@ -100,17 +89,7 @@ export class DatabasePartStore implements PartStore {
       const [row] = await this.databaseProvider
         .getClient()
         .update(part)
-        .set({
-          name: params.getName(),
-          manufacturer: params.getManufacturer(),
-          partNumbers: [...params.getPartNumbers()],
-          specifications: params.getSpecifications(),
-          searchText: searchTextOf(
-            params.getName(),
-            params.getManufacturer(),
-            params.getPartNumbers(),
-          ),
-        })
+        .set(columnsOf(params))
         .where(eq(part.id, params.getPartId()))
         .returning();
 

@@ -5,25 +5,26 @@ import { cleanPartNumbers } from '../part/part-numbers';
 import { SpecificationProblem } from '../specification/Specification';
 import { isPlainObject } from '../specification/specification-document';
 import { specificationListOf } from '../specification/specification-lists';
+import { isUuid } from '../uuid';
 import { ImportPartParams } from './CatalogImportStore';
 import { OpenDbFile } from './OpenDbSource';
 
-// Why one of OpenDB's records was left out of the catalog.
+// Why one of OpenDB's records was left out of the catalog. Its OpenDB ID is
+// taken when another record read before it has the same one.
 export type RecordLeftOutReason =
   | 'notARecord'
   | 'noOpenDbId'
   | 'openDbIdNotTheFileName'
+  | 'openDbIdTaken'
   | 'noName'
   | 'noManufacturer';
 
-// A record as a Part, and the values in it that did not fit their
-// specifications and were left out of the Part.
-export type ImportedRecord = {
+// The Part a record makes, and the values in the record that did not fit
+// their specifications and were left out of the Part.
+export type PartOfRecord = {
   part: ImportPartParams;
   valuesLeftOut: readonly SpecificationProblem[];
 };
-
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // A name or a manufacturer has to hold more than spaces, as the Admin's do.
 const notBlank = /\S/;
@@ -48,18 +49,18 @@ function partNumbersOf(partNumbers: unknown, identifiers: unknown): string[] {
   return cleanPartNumbers([...listed, ...identified]);
 }
 
-// One of OpenDB's records as a Part of a Category, or why it is left out. A
-// record becomes a Part when it has an OpenDB ID that is its file's name, a
-// name and a manufacturer.
-export function importedRecordOf(
+// The Part of a Category that one of OpenDB's records makes, or why it is
+// left out. A record makes a Part when it has an OpenDB ID that is its file's
+// name, a name and a manufacturer.
+export function partOfRecord(
   file: OpenDbFile,
   category: Category,
-): Either.Either<ImportedRecord, RecordLeftOutReason> {
+): Either.Either<PartOfRecord, RecordLeftOutReason> {
   const record = Option.getOrUndefined(file.getRecord());
   if (!isPlainObject(record)) return Either.left('notARecord');
 
   const openDbId = record.opendb_id;
-  if (!isString(openDbId) || !uuid.test(openDbId)) return Either.left('noOpenDbId');
+  if (!isString(openDbId) || !isUuid(openDbId)) return Either.left('noOpenDbId');
   if (file.getName() !== `${openDbId}.json`) return Either.left('openDbIdNotTheFileName');
 
   const metadata = isPlainObject(record.metadata) ? record.metadata : {};

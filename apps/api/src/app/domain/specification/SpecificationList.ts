@@ -27,7 +27,7 @@ export class SpecificationList {
   }
 
   // Checks every value against its specification, in the list's order, and
-  // then names each value the list has no specification for.
+  // then names each value the list has no place for.
   check(document: SpecificationDocument): SpecificationCheck {
     const kept: SpecificationDocument = {};
     const problems: SpecificationProblem[] = [];
@@ -38,7 +38,10 @@ export class SpecificationList {
       problems.push(...checked.problems);
     }
 
-    return { document: kept, problems: [...problems, ...this.unknownIn(document, '')] };
+    return {
+      document: kept,
+      problems: [...problems, ...this.outsideTheList(document, '')],
+    };
   }
 
   // The needed specifications a Part's specifications do not hold, by their
@@ -50,10 +53,15 @@ export class SpecificationList {
       .filter((path) => valueAt(document, path) === undefined);
   }
 
-  // A name no specification has, whatever its value, null included. An object
-  // with specifications inside it is looked into, and when it is null they
-  // are all missing.
-  private unknownIn(node: SpecificationDocument, prefix: string): SpecificationProblem[] {
+  // A name no specification has, whatever its value, null included. A name
+  // with specifications inside it, such as a GPU's `power_connectors`, holds
+  // an object that is looked into, or null, when they are all missing.
+  // Anything else there is not a group of values, and the specifications in
+  // it are lost with it.
+  private outsideTheList(
+    node: SpecificationDocument,
+    prefix: string,
+  ): SpecificationProblem[] {
     return Object.entries(node).flatMap(([name, value]) => {
       const path = prefix === '' ? name : `${prefix}.${name}`;
       if (this.specifications.some((each) => each.getPath() === path)) return [];
@@ -62,8 +70,10 @@ export class SpecificationList {
         each.getPath().startsWith(`${path}.`),
       );
       if (holdsSpecifications && (value === null || value === undefined)) return [];
-      if (holdsSpecifications && isPlainObject(value)) return this.unknownIn(value, path);
-      return [{ path, reason: 'unknown' as const }];
+      if (holdsSpecifications && isPlainObject(value)) {
+        return this.outsideTheList(value, path);
+      }
+      return [{ path, reason: holdsSpecifications ? 'notAGroup' : 'unknown' }];
     });
   }
 }

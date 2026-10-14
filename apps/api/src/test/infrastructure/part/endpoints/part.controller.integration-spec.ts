@@ -504,6 +504,22 @@ describe('the Part endpoints', () => {
       ]);
     });
 
+    it('refuse a value where a group of specifications belongs, naming the group', async () => {
+      const response = await createPart({
+        category: 'gpu',
+        name: 'Made-up RX 7600',
+        manufacturer: 'Made-up Graphics',
+        specifications: { power_connectors: '8-pin' },
+      });
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.power_connectors', {
+          specification: 'power_connectors',
+          reason: 'notAGroup',
+        }),
+      ]);
+    });
+
     it('refuse a row that is not an object, naming the row', async () => {
       const response = await createPart(aMotherboard({ pcie_slots: ['x16'] }));
 

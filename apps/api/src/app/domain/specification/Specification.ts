@@ -27,6 +27,7 @@ export type SpecificationProblemReason =
   | 'notInTheSet'
   | 'notAList'
   | 'notARow'
+  | 'notAGroup'
   | 'unknown';
 
 // A value that was not taken, and why. Its path is the specification's, or,
