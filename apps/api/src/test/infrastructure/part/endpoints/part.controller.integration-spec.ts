@@ -1,7 +1,9 @@
 import {
+  accessDenied,
   bearerHeader,
   expectErrorResponse,
-  type ExpectedErrorResponse,
+  notValid,
+  unauthorized,
 } from '@pcp/core/test-utils';
 
 import {
@@ -104,15 +106,6 @@ describe('the Part endpoints', () => {
       expect((await partOf(created)).partNumbers).toEqual([]);
     });
 
-    function notValid(field: string): ExpectedErrorResponse {
-      return {
-        code: 'NOT_VALID',
-        title: 'not_valid_title',
-        detail: 'not_valid_details',
-        additionalInformation: { field },
-      };
-    }
-
     const aValidPart = {
       category: 'gpu',
       name: 'Made-up RX 7600',
@@ -152,18 +145,31 @@ describe('the Part endpoints', () => {
       await expectErrorResponse(response, 400, [notValid('partNumbers')]);
     });
 
+    it('refuses part numbers given as null, naming the field', async () => {
+      const response = await createPart({ ...aValidPart, partNumbers: null });
+
+      await expectErrorResponse(response, 400, [notValid('partNumbers')]);
+    });
+
+    it('keeps a name and a manufacturer as they were written', async () => {
+      const created = await createPart({
+        ...aValidPart,
+        name: 'Made-up RX 7600 ',
+        manufacturer: ' Made-up Graphics',
+      });
+
+      expect(created.status).toBe(201);
+      const part = await partOf(created);
+      expect(part.name).toBe('Made-up RX 7600 ');
+      expect(part.manufacturer).toBe(' Made-up Graphics');
+    });
+
     it('refuses a Vendor', async () => {
       const vendorToken = await testApp.tokenOf({ roles: ['vendor'] });
 
       const response = await createPart(aValidPart, vendorToken);
 
-      await expectErrorResponse(response, 403, [
-        {
-          code: 'ACCESS_DENIED',
-          title: 'access_denied_title',
-          detail: 'access_denied_details',
-        },
-      ]);
+      await expectErrorResponse(response, 403, accessDenied);
     });
 
     it('refuses a call without a token', async () => {
@@ -173,13 +179,7 @@ describe('the Part endpoints', () => {
         body: JSON.stringify(aValidPart),
       });
 
-      await expectErrorResponse(response, 401, [
-        {
-          code: 'UNAUTHORIZED',
-          title: 'unauthorized_title',
-          detail: 'unauthorized_details',
-        },
-      ]);
+      await expectErrorResponse(response, 401, unauthorized);
     });
   });
 
@@ -229,13 +229,7 @@ describe('the Part endpoints', () => {
 
       const response = await fetch(`${testApp.baseUrl}/v1/parts/${part.id}`);
 
-      await expectErrorResponse(response, 401, [
-        {
-          code: 'UNAUTHORIZED',
-          title: 'unauthorized_title',
-          detail: 'unauthorized_details',
-        },
-      ]);
+      await expectErrorResponse(response, 401, unauthorized);
     });
   });
 });

@@ -1,8 +1,11 @@
 // Helpers for tests. Only test files import this entry.
 export {
+  accessDenied,
   expectErrorResponse,
   expectErrorResponseShape,
   type ExpectedErrorResponse,
+  notValid,
+  unauthorized,
 } from './assertions/error-response.assertions';
 export {
   emptyTables,

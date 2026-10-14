@@ -1,14 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsArray, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsIn, IsString, Matches, ValidateIf } from 'class-validator';
 
 import { Category } from '~/domain/part/Category';
 import { CreatePartCommandInput } from '~/domain/part/CreatePartCommand';
 
-// Space around a name is not part of it, and a name of spaces alone is empty.
-function trimmed({ value }: { value: unknown }): unknown {
-  return typeof value === 'string' ? value.trim() : value;
-}
+// A name or a manufacturer is kept as it was written, and has to hold more
+// than spaces.
+const notBlank = /\S/;
 
 export class CreatePartRequest {
   @ApiProperty({
@@ -20,15 +18,13 @@ export class CreatePartRequest {
   readonly category!: string;
 
   @ApiProperty({ description: "The Part's name.", example: 'AMD Ryzen 5 7600' })
-  @Transform(trimmed)
   @IsString()
-  @IsNotEmpty()
+  @Matches(notBlank)
   readonly name!: string;
 
   @ApiProperty({ description: "The Part's manufacturer.", example: 'AMD' })
-  @Transform(trimmed)
   @IsString()
-  @IsNotEmpty()
+  @Matches(notBlank)
   readonly manufacturer!: string;
 
   @ApiPropertyOptional({
@@ -36,7 +32,8 @@ export class CreatePartRequest {
     type: [String],
     example: ['100-100001015BOX'],
   })
-  @IsOptional()
+  // Left out, the list is empty. Given, even as null, it has to be a list.
+  @ValidateIf((_request, value) => value !== undefined)
   @IsArray()
   @IsString({ each: true })
   readonly partNumbers: string[] = [];

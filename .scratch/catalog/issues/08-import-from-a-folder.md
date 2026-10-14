@@ -15,7 +15,7 @@ The import is a second entry point of the API, as the OpenAPI writer is. It is a
 - [ ] `ImportCatalogCommand`, with its Input and Output, a port through which it reads records, and an adapter that reads a folder.
 - [ ] The import reads from a source that names the commit it holds, and refuses one that names any other than the pinned commit. How a folder names its commit is decided here and recorded.
 - [ ] Only the eight folders are read, mapped to the Categories as the spec lists. Every other folder is ignored.
-- [ ] A record without an OpenDB ID that matches its file name, without a name or without a manufacturer is left out and named in the report with its reason. Ticket 04's count says how many there will be. If it is more than a handful, the owner is told before this ticket is closed.
+- [ ] A record without an OpenDB ID that is a UUID and matches its file name, without a name or without a manufacturer is left out and named in the report with its reason. Ticket 04's count says how many there will be. If it is more than a handful, the owner is told before this ticket is closed.
 - [ ] Part numbers are `metadata.part_numbers` together with every `mpn` identifier, cleaned as the API cleans them. Barcodes, retailer listings, store codes and other metadata are not kept.
 - [ ] A value that does not fit its specification is left out and counted. So is a 0 where 0 cannot be true. A field that the list does not name is ignored.
 - [ ] A record whose OpenDB ID is in the catalog is skipped. The import never changes or removes a Part.

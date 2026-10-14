@@ -14,19 +14,19 @@ import { part, PartRow } from '../part.schema';
 // Part, and is never sent to the database, which would refuse it.
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function toDomain(row: PartRow): Part {
+// A row as a Part. The database's own list of Categories is made from the
+// domain's, so a row whose Category the domain does not know means the two
+// have drifted apart.
+function toDomain(row: PartRow): Either.Either<Part, StructuredError> {
   const category = Category.withKey(row.category);
   if (category === undefined) {
-    throw new Error(`The database holds a Category the API does not know: ${row.category}`);
+    return Either.left(
+      ServerError.of(`A Part has a Category the API does not know: ${row.category}`),
+    );
   }
 
-  return new Part(
-    row.id,
-    category,
-    row.name,
-    row.manufacturer,
-    row.partNumbers,
-    row.openDbId,
+  return Either.right(
+    new Part(row.id, category, row.name, row.manufacturer, row.partNumbers, row.openDbId),
   );
 }
 
@@ -42,14 +42,14 @@ export class DatabasePartStore implements PartStore {
         .getClient()
         .insert(part)
         .values({
-          category: params.getCategory().getKey() as PartRow['category'],
+          category: params.getCategory().getKey(),
           name: params.getName(),
           manufacturer: params.getManufacturer(),
           partNumbers: [...params.getPartNumbers()],
         })
         .returning();
 
-      return Either.right(toDomain(row));
+      return toDomain(row);
     } catch (error) {
       this.logger.error(error, 'A Part could not be created');
       return Either.left(ServerError.of('A Part could not be created'));
@@ -66,7 +66,8 @@ export class DatabasePartStore implements PartStore {
         .from(part)
         .where(eq(part.id, id));
 
-      return Either.right(Option.fromNullable(row).pipe(Option.map(toDomain)));
+      if (row === undefined) return Either.right(Option.none());
+      return Either.map(toDomain(row), Option.some);
     } catch (error) {
       this.logger.error(error, 'A Part could not be read');
       return Either.left(ServerError.of('A Part could not be read'));

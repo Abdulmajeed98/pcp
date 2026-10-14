@@ -1,12 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { PreAuthorize, Role } from '@pcp/core';
 import {
+  accessDenied,
   bearerHeader,
   createTestKey,
   expectErrorResponse,
   signToken,
   signTokenWithoutKeyName,
   tokenSignedWithThePublicKeyAsSecret,
+  unauthorized,
   unsignedToken,
   withChangedClaims,
 } from '@pcp/core/test-utils';
@@ -27,13 +29,6 @@ class ProbeController {
     return { reached: true };
   }
 }
-
-const unauthorized = [
-  { code: 'UNAUTHORIZED', title: 'unauthorized_title', detail: 'unauthorized_details' },
-];
-const accessDenied = [
-  { code: 'ACCESS_DENIED', title: 'access_denied_title', detail: 'access_denied_details' },
-];
 
 describe('who may call the API', () => {
   let testApp: TestAppWithLogins;

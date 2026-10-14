@@ -1,5 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { connectionOf } from '@pcp/core';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
@@ -16,15 +17,13 @@ export class DatabaseProvider implements OnModuleDestroy {
   private readonly client: NodePgDatabase<Schema>;
 
   constructor(settings: ConfigService<EnvironmentVariables, true>) {
-    const url = new URL(settings.get('DATASOURCE_URL', { infer: true }));
-
-    this.pool = new Pool({
-      host: url.hostname,
-      port: url.port === '' ? 5432 : Number(url.port),
-      database: url.pathname.slice(1),
-      user: settings.get('DATASOURCE_USERNAME', { infer: true }),
-      password: settings.get('DATASOURCE_PASSWORD', { infer: true }),
-    });
+    this.pool = new Pool(
+      connectionOf({
+        url: settings.get('DATASOURCE_URL', { infer: true }),
+        username: settings.get('DATASOURCE_USERNAME', { infer: true }),
+        password: settings.get('DATASOURCE_PASSWORD', { infer: true }),
+      }),
+    );
     this.client = drizzle({ client: this.pool, schema });
   }
 

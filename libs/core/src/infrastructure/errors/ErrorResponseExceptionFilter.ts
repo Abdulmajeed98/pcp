@@ -59,6 +59,9 @@ function subErrorOf(error: StructuredError): SubErrorResponse {
   );
 }
 
+// What the API answers to an error: the status and the errors in the body.
+type Answer = { status: number; errors: SubErrorResponse[] };
+
 // Gives every error the API answers the same body. What an exception says is
 // never put into the body, so nothing about the inside of the API leaves it.
 @Catch()
@@ -70,8 +73,8 @@ export class ErrorResponseExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const { status, errors } =
       exception instanceof ErrorStructureException
-        ? this.structuredErrorsFor(exception)
-        : this.errorFor(exception);
+        ? this.answerToUseCase(exception)
+        : this.answerToException(exception);
 
     this.httpAdapterHost.httpAdapter.reply(
       host.switchToHttp().getResponse(),
@@ -83,10 +86,7 @@ export class ErrorResponseExceptionFilter implements ExceptionFilter {
   // The errors a use case returned, each with its own code. A server error
   // says what failed in the log only, and is answered as any other internal
   // error is.
-  private structuredErrorsFor(exception: ErrorStructureException): {
-    status: number;
-    errors: SubErrorResponse[];
-  } {
+  private answerToUseCase(exception: ErrorStructureException): Answer {
     const structuredErrors = exception.getErrors();
     const status = statusesByErrorType[structuredErrors[0].getType()];
 
@@ -98,21 +98,16 @@ export class ErrorResponseExceptionFilter implements ExceptionFilter {
     return { status, errors: structuredErrors.map(subErrorOf) };
   }
 
-  private errorFor(exception: unknown): { status: number; errors: SubErrorResponse[] } {
-    const { status, error } = this.singleErrorFor(exception);
-    return { status, errors: [error] };
-  }
-
-  private singleErrorFor(exception: unknown): { status: number; error: SubErrorResponse } {
+  private answerToException(exception: unknown): Answer {
     if (!(exception instanceof HttpException)) {
       this.logger.error(exception);
-      return { status: HttpStatus.INTERNAL_SERVER_ERROR, error: internalServerError };
+      return { status: HttpStatus.INTERNAL_SERVER_ERROR, errors: [internalServerError] };
     }
 
     const status = exception.getStatus();
     const error =
       errorsByStatus.get(status) ??
       new SubErrorResponse(`HTTP_${status}`, 'http_error_title', 'http_error_details');
-    return { status, error };
+    return { status, errors: [error] };
   }
 }

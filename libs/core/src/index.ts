@@ -15,6 +15,7 @@ export {
   CoreEnvironmentVariables,
   validateEnvironment,
 } from './infrastructure/configuration/env.validation';
+export { connectionOf, type Datasource } from './infrastructure/database/datasource';
 export {
   ErrorResponse,
   SubErrorResponse,

@@ -23,8 +23,9 @@ export class EnvironmentVariables extends CoreEnvironmentVariables {
   @Transform(({ value }) => parseAllowedOrigins(value))
   CORS_ALLOWED_ORIGINS = new Set(['http://localhost:3002']);
 
-  // Where the platform's database is, without the login, which the next two
-  // settings give. The default is the development database.
+  // Where the platform's database is: its host, its port and the database's
+  // name. A login or options written into it are not read; the login is the
+  // next two settings. The default is the development database.
   @IsUrl({
     require_tld: false,
     require_protocol: true,

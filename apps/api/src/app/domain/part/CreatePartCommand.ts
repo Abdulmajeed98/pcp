@@ -15,13 +15,20 @@ class Input {
     private readonly partNumbers: readonly string[],
   ) {}
 
-  toStoreParams(): CreatePartParams {
-    return new CreatePartParams(
-      this.category,
-      this.name,
-      this.manufacturer,
-      cleanPartNumbers(this.partNumbers),
-    );
+  getCategory(): Category {
+    return this.category;
+  }
+
+  getName(): string {
+    return this.name;
+  }
+
+  getManufacturer(): string {
+    return this.manufacturer;
+  }
+
+  getPartNumbers(): readonly string[] {
+    return this.partNumbers;
   }
 }
 
@@ -46,7 +53,14 @@ export class CreatePartCommand {
   constructor(private readonly partStore: PartStore) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
-    const created = await this.partStore.create(input.toStoreParams());
+    const created = await this.partStore.create(
+      new CreatePartParams(
+        input.getCategory(),
+        input.getName(),
+        input.getManufacturer(),
+        cleanPartNumbers(input.getPartNumbers()),
+      ),
+    );
 
     return Either.map(created, Output.of);
   }

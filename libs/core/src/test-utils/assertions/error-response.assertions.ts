@@ -32,3 +32,23 @@ export async function expectErrorResponse(
   expect(response.status).toBe(status);
   expectErrorResponseShape(await response.json(), expectedErrors);
 }
+
+// The body of a refusal for a call without a good token, as a whole.
+export const unauthorized: ExpectedErrorResponse[] = [
+  { code: 'UNAUTHORIZED', title: 'unauthorized_title', detail: 'unauthorized_details' },
+];
+
+// The body of a refusal for a caller that lacks the role, as a whole.
+export const accessDenied: ExpectedErrorResponse[] = [
+  { code: 'ACCESS_DENIED', title: 'access_denied_title', detail: 'access_denied_details' },
+];
+
+// One error of a request that broke a rule, naming the field it got wrong.
+export function notValid(field: string): ExpectedErrorResponse {
+  return {
+    code: 'NOT_VALID',
+    title: 'not_valid_title',
+    detail: 'not_valid_details',
+    additionalInformation: { field },
+  };
+}

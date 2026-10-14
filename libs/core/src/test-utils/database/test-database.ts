@@ -4,15 +4,12 @@ import {
 } from '@testcontainers/postgresql';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { Client, ClientConfig, Pool } from 'pg';
+import { Client, Pool } from 'pg';
 
-// Where the test database is, the way an application's settings say it: an
-// address without credentials, and the login apart from it.
-export type TestDatabaseSettings = {
-  url: string;
-  username: string;
-  password: string;
-};
+import { connectionOf, Datasource } from '../../infrastructure/database/datasource';
+
+// Where the test database is, the way an application's settings give it.
+export type TestDatabaseSettings = Datasource;
 
 // The image the development services run, so that tests meet the same
 // PostgreSQL.
@@ -22,18 +19,6 @@ const image = 'postgres:18.6';
 // nothing else, so the container is kept there between the two.
 const containerKey = Symbol.for('@pcp/core/test-database');
 type WithContainer = { [containerKey]?: StartedPostgreSqlContainer };
-
-function connectionOf(settings: TestDatabaseSettings): ClientConfig {
-  const url = new URL(settings.url);
-
-  return {
-    host: url.hostname,
-    port: Number(url.port),
-    database: url.pathname.slice(1),
-    user: settings.username,
-    password: settings.password,
-  };
-}
 
 // Starts a PostgreSQL of the tests' own in a container and applies the
 // migrations in the folder to it. It is meant for Jest's global set-up, so

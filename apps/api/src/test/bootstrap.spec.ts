@@ -1,6 +1,10 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Post } from '@nestjs/common';
 import { ErrorStructureException, NotFoundError, Public, ServerError } from '@pcp/core';
-import { expectErrorResponse, expectErrorResponseShape } from '@pcp/core/test-utils';
+import {
+  expectErrorResponse,
+  expectErrorResponseShape,
+  notValid,
+} from '@pcp/core/test-utils';
 import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 import { createTestApp, TestApp } from './test-utils/create-test-app';
@@ -130,12 +134,6 @@ describe('the application as it is set up', () => {
         body: JSON.stringify({ count: 'many', colour: 'red' }),
       });
 
-      const notValid = (field: string) => ({
-        code: 'NOT_VALID',
-        title: 'not_valid_title',
-        detail: 'not_valid_details',
-        additionalInformation: { field },
-      });
       // In any order: a form shows each beside its own field.
       expect(response.status).toBe(400);
       const { errors } = (await response.json()) as { errors: unknown[] };
