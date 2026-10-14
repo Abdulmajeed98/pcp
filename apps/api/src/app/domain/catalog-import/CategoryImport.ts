@@ -40,9 +40,27 @@ export class ValuesLeftOut {
   }
 }
 
+// A record whose manufacturer was taken from its name: its file, as
+// `CPU/<opendb_id>.json`, and the manufacturer.
+export class ManufacturerFromName {
+  constructor(
+    private readonly file: string,
+    private readonly manufacturer: string,
+  ) {}
+
+  getFile(): string {
+    return this.file;
+  }
+
+  getManufacturer(): string {
+    return this.manufacturer;
+  }
+}
+
 // What the import did with one Category's records: the Parts it created, the
-// records whose Part the catalog already held, the records it left out, and
-// the values it left out of the Parts it created.
+// records whose Part the catalog already held, the records it left out, the
+// values it left out of the Parts it created, and which of those Parts took
+// their manufacturer from their name.
 export class CategoryImport {
   constructor(
     private readonly category: Category,
@@ -50,6 +68,7 @@ export class CategoryImport {
     private readonly alreadyThere: number,
     private readonly recordsLeftOut: readonly RecordLeftOut[],
     private readonly valuesLeftOut: readonly ValuesLeftOut[],
+    private readonly manufacturersFromNames: readonly ManufacturerFromName[],
   ) {}
 
   getCategory(): Category {
@@ -70,6 +89,10 @@ export class CategoryImport {
 
   getValuesLeftOut(): readonly ValuesLeftOut[] {
     return this.valuesLeftOut;
+  }
+
+  getManufacturersFromNames(): readonly ManufacturerFromName[] {
+    return this.manufacturersFromNames;
   }
 
   getValuesLeftOutCount(): number {

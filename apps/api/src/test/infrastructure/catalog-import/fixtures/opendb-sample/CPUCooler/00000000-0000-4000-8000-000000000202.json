@@ -1,0 +1,16 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000202",
+  "cpu_sockets": [
+    "AM4",
+    "LGA 1151",
+    "LGA 1151v2"
+  ],
+  "height": 47,
+  "metadata": {
+    "name": "Made-up Low Profile Cooler",
+    "manufacturer": "Made-up Cooling",
+    "part_numbers": [
+      "MU-LP-1"
+    ]
+  }
+}

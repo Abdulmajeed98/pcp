@@ -190,10 +190,15 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
 
     expect(run.errors).toEqual([]);
     expect(run.exitCode).toBe(0);
-    expect(await namesFound({})).toEqual([
+    // In the order of the names, compared character by character, which the
+    // database's own order of capitals and small letters need not follow.
+    expect((await namesFound({})).sort()).toEqual([
+      'AMD Made-up Athlon 3000G',
+      'MADE-UP POWER Bronze 550 W',
       'Made-up 650 W',
       'Made-up B650M Board',
       'Made-up DDR5 32 GB',
+      'Made-up Low Profile Cooler',
       'Made-up Mesh Tower',
       'Made-up NVMe 1 TB',
       'Made-up RX 7600',
@@ -413,6 +418,34 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     expect(tower.specifications).not.toHaveProperty('dimensions_mm');
   });
 
+  it("keeps a cooler's sockets when the one outside the set is LGA 1151v2 beside LGA 1151", async () => {
+    await runTheImport(sample);
+
+    // A cooler mounts the same way on both, so the variant adds nothing.
+    const cooler = await theOnePart({ search: 'Made-up Low Profile Cooler' });
+    expect(cooler.specifications.cpu_sockets).toEqual(['AM4', 'LGA 1151']);
+    expect(cooler.missingNeededSpecifications).toEqual([]);
+  });
+
+  it("takes a missing manufacturer from the name when it begins with one of the folder's manufacturers, in that one's spelling, and names the record", async () => {
+    const run = await runTheImport(sample);
+
+    expect((await theOnePart({ search: 'AMD Made-up Athlon 3000G' })).manufacturer).toBe(
+      'AMD',
+    );
+    expect((await theOnePart({ search: 'MADE-UP POWER Bronze' })).manufacturer).toBe(
+      'Made-up Power',
+    );
+    expect(linesUnder('Manufacturers taken from the name:', run.printed)).toEqual([
+      'CPU/00000000-0000-4000-8000-000000000105.json: AMD',
+      'PSU/00000000-0000-4000-8000-000000000802.json: Made-up Power',
+    ]);
+    // Its name begins with no manufacturer of the CPU folder.
+    expect(linesUnder('Records left out:', run.printed)).toContain(
+      'CPU/00000000-0000-4000-8000-000000000102.json: it has no manufacturer',
+    );
+  });
+
   it('imports nothing from a folder that holds no Category, such as Monitor', async () => {
     await runTheImport(sample);
 
@@ -454,29 +487,29 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
 
     expect(first.printed[0]).toBe(`Read OpenDB at commit ${pinnedCommit}.`);
     expect(tableIn(first.printed)).toEqual({
-      cpu: [2, 0, 2, 1],
-      cpuCooler: [1, 0, 0, 1],
+      cpu: [3, 0, 2, 1],
+      cpuCooler: [2, 0, 0, 1],
       motherboard: [1, 0, 1, 0],
       ram: [1, 0, 1, 0],
       storage: [1, 0, 1, 0],
       gpu: [1, 0, 0, 1],
       case: [1, 0, 0, 1],
-      psu: [1, 0, 1, 0],
-      Total: [9, 0, 6, 4],
+      psu: [2, 0, 1, 0],
+      Total: [12, 0, 6, 4],
     });
     expect(second.exitCode).toBe(0);
     expect(tableIn(second.printed)).toEqual({
-      cpu: [0, 2, 2, 0],
-      cpuCooler: [0, 1, 0, 0],
+      cpu: [0, 3, 2, 0],
+      cpuCooler: [0, 2, 0, 0],
       motherboard: [0, 1, 1, 0],
       ram: [0, 1, 1, 0],
       storage: [0, 1, 1, 0],
       gpu: [0, 1, 0, 0],
       case: [0, 1, 0, 0],
-      psu: [0, 1, 1, 0],
-      Total: [0, 9, 6, 0],
+      psu: [0, 2, 1, 0],
+      Total: [0, 12, 6, 0],
     });
-    expect(await partsFound({})).toHaveLength(9);
+    expect(await partsFound({})).toHaveLength(12);
   });
 
   it("keeps the Admin's edit through a second run, and an edit leaves the OpenDB ID as it was", async () => {
@@ -500,12 +533,14 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     await runTheImport(sample);
 
     expect(await (await readPart(imported.id)).json()).toEqual(edited);
-    expect(await partsFound({ category: 'psu' })).toHaveLength(1);
+    expect(await namesFound({ search: 'MU-650' })).toEqual([
+      'Made-up 650 W, as the Admin names it',
+    ]);
   });
 
   it('leaves no Part behind when the database refuses a record partway through, and names the record', async () => {
     const folder = await aCopyOfTheSample();
-    // The power supply is the last Part written, after the Parts of every
+    // A power supply is among the last Parts written, after the Parts of every
     // other folder. PostgreSQL keeps no NUL character in text.
     const psu = join(folder, 'PSU', '00000000-0000-4000-8000-000000000801.json');
     const record = JSON.parse(await readFile(psu, 'utf8')) as {
@@ -614,8 +649,8 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       expect(run.exitCode).toBe(0);
       expect(gitHub.requested).toEqual([archivePath]);
       expect(run.printed[0]).toBe(`Read OpenDB at commit ${pinnedCommit}.`);
-      expect(tableIn(run.printed).Total).toEqual([9, 0, 6, 4]);
-      expect(await partsFound({})).toHaveLength(9);
+      expect(tableIn(run.printed).Total).toEqual([12, 0, 6, 4]);
+      expect(await partsFound({})).toHaveLength(12);
       expect(await namesFound({ search: 'monitor' })).toEqual([]);
     });
 

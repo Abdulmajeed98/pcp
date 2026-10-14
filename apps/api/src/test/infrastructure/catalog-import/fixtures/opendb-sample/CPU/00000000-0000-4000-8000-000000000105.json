@@ -1,0 +1,19 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000105",
+  "socket": "AM4",
+  "specifications": {
+    "tdp": 35,
+    "memory": {
+      "types": [
+        "DDR4"
+      ]
+    }
+  },
+  "metadata": {
+    "name": "AMD Made-up Athlon 3000G",
+    "manufacturer": null,
+    "part_numbers": [
+      "MU-ATH-3000G"
+    ]
+  }
+}

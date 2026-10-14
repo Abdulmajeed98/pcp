@@ -48,8 +48,9 @@ function countsOf(category: CategoryImport): number[] {
 }
 
 // What the import did, as the owner reads it: the commit, a table of the
-// counts for each Category and in total, every record left out and why, and
-// the values left out, counted for each specification and reason.
+// counts for each Category and in total, every record left out and why, each
+// Part whose manufacturer was taken from its name, and the values left out,
+// counted for each specification and reason.
 export function reportOf(output: ImportCatalogCommandOutput): string[] {
   const categories = output.getCategories();
   const totals = categories
@@ -60,6 +61,11 @@ export function reportOf(output: ImportCatalogCommandOutput): string[] {
     category
       .getRecordsLeftOut()
       .map((record) => `  ${record.getFile()}: ${recordReasons[record.getReason()]}`),
+  );
+  const manufacturersFromNames = categories.flatMap((category) =>
+    category
+      .getManufacturersFromNames()
+      .map((taken) => `  ${taken.getFile()}: ${taken.getManufacturer()}`),
   );
   const valuesLeftOut = categories.flatMap((category) =>
     category
@@ -81,6 +87,11 @@ export function reportOf(output: ImportCatalogCommandOutput): string[] {
     '',
     recordsLeftOut.length === 0 ? 'No record was left out.' : 'Records left out:',
     ...recordsLeftOut,
+    '',
+    manufacturersFromNames.length === 0
+      ? 'No manufacturer was taken from a name.'
+      : 'Manufacturers taken from the name:',
+    ...manufacturersFromNames,
     '',
     valuesLeftOut.length === 0 ? 'No value was left out.' : 'Values left out:',
     ...valuesLeftOut,

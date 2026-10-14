@@ -6,9 +6,19 @@ import { Either, Option } from 'effect';
 import { Category } from '../part/Category';
 import { SpecificationProblem } from '../specification/Specification';
 import { CatalogImportStore } from './CatalogImportStore';
-import { CategoryImport, RecordLeftOut, ValuesLeftOut } from './CategoryImport';
+import {
+  CategoryImport,
+  ManufacturerFromName,
+  RecordLeftOut,
+  ValuesLeftOut,
+} from './CategoryImport';
 import { openDbFolders } from './opendb';
-import { PartOfRecord, partOfRecord, RecordLeftOutReason } from './opendb-record';
+import {
+  manufacturersOf,
+  PartOfRecord,
+  partOfRecord,
+  RecordLeftOutReason,
+} from './opendb-record';
 import { OpenDbSource } from './OpenDbSource';
 
 // What the import did: the commit it read, and what it did with each
@@ -34,11 +44,11 @@ class Output {
 
 export { Output as ImportCatalogCommandOutput };
 
-// One Category's folder as read: the Parts its records make, and the records
-// left out.
+// One Category's folder as read: the Parts its records make, each with its
+// file, and the records left out.
 type CategoryFolder = {
   category: Category;
-  parts: PartOfRecord[];
+  parts: (PartOfRecord & { file: string })[];
   leftOut: RecordLeftOut[];
 };
 
@@ -115,10 +125,12 @@ export class ImportCatalogCommand {
       const byName = [...files.right.value].sort((one, other) =>
         byText(one.getName(), other.getName()),
       );
+      const manufacturers = manufacturersOf(byName);
       for (const file of byName) {
+        const path = `${folderName}/${file.getName()}`;
         const leftOut = (reason: RecordLeftOutReason) =>
-          folder.leftOut.push(new RecordLeftOut(`${folderName}/${file.getName()}`, reason));
-        Either.match(partOfRecord(file, category), {
+          folder.leftOut.push(new RecordLeftOut(path, reason));
+        Either.match(partOfRecord(file, category, manufacturers), {
           onLeft: leftOut,
           onRight: (made) => {
             const openDbId = made.part.getOpenDbId();
@@ -126,7 +138,7 @@ export class ImportCatalogCommand {
               leftOut('openDbIdTaken');
             } else {
               openDbIds.add(openDbId);
-              folder.parts.push(made);
+              folder.parts.push({ ...made, file: path });
             }
           },
         });
@@ -154,6 +166,11 @@ export class ImportCatalogCommand {
             parts.length - createdNow.length,
             leftOut,
             valuesLeftOutOf(createdNow.flatMap((made) => made.valuesLeftOut)),
+            createdNow
+              .filter((made) => made.manufacturerFromName)
+              .map(
+                (made) => new ManufacturerFromName(made.file, made.part.getManufacturer()),
+              ),
           );
         }),
       ),
