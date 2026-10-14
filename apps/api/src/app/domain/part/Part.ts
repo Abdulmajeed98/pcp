@@ -14,6 +14,7 @@ export class Part {
     private readonly specifications: SpecificationDocument,
     private readonly createdAt: Date,
     private readonly updatedAt: Date,
+    private readonly photoId: string | null,
   ) {}
 
   getId(): string {
@@ -54,6 +55,11 @@ export class Part {
   // When the Part last changed. An edit sets it.
   getUpdatedAt(): Date {
     return this.updatedAt;
+  }
+
+  // The identifier of the Part's photo, or null when it has none.
+  getPhotoId(): string | null {
+    return this.photoId;
   }
 
   // The specifications a Compatibility Rule reads that this Part lacks, by

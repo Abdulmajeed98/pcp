@@ -18,6 +18,7 @@ type FoundPart = {
   name: string;
   manufacturer: string;
   partNumbers: string[];
+  photoPath: string | null;
 };
 
 type PageOfParts = {
@@ -60,7 +61,7 @@ describe('searching the catalog', () => {
     });
     expect(response.status).toBe(201);
     const { id } = (await response.json()) as { id: string };
-    return { id, category, name, manufacturer, partNumbers };
+    return { id, category, name, manufacturer, partNumbers, photoPath: null };
   }
 
   function search(query: Record<string, string>, token = adminToken): Promise<Response> {

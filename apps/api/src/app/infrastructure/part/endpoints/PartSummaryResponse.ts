@@ -3,6 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Category } from '~/domain/part/Category';
 import { Part } from '~/domain/part/Part';
 
+import { photoPathOf } from './photo-path';
+
 // A Part as a list of found Parts shows it.
 export class PartSummaryResponse {
   @ApiProperty({
@@ -31,27 +33,24 @@ export class PartSummaryResponse {
   })
   readonly partNumbers: string[];
 
-  private constructor(
-    id: string,
-    category: string,
-    name: string,
-    manufacturer: string,
-    partNumbers: string[],
-  ) {
-    this.id = id;
-    this.category = category;
-    this.name = name;
-    this.manufacturer = manufacturer;
-    this.partNumbers = partNumbers;
+  @ApiProperty({
+    description: "The address of the Part's photo on this API, or null when it has none.",
+    type: String,
+    nullable: true,
+    example: '/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f',
+  })
+  readonly photoPath: string | null;
+
+  private constructor(part: Part) {
+    this.id = part.getId();
+    this.category = part.getCategory().getKey();
+    this.name = part.getName();
+    this.manufacturer = part.getManufacturer();
+    this.partNumbers = [...part.getPartNumbers()];
+    this.photoPath = photoPathOf(part);
   }
 
   static of(part: Part): PartSummaryResponse {
-    return new PartSummaryResponse(
-      part.getId(),
-      part.getCategory().getKey(),
-      part.getName(),
-      part.getManufacturer(),
-      [...part.getPartNumbers()],
-    );
+    return new PartSummaryResponse(part);
   }
 }

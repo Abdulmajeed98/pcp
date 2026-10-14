@@ -303,6 +303,104 @@
         "summary": "One Part of the catalog",
         "tags": ["Part"]
       }
+    },
+    "/v1/parts/{partId}/photo": {
+      "put": {
+        "operationId": "addPartPhoto",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["photo"],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "A JPEG, PNG or WebP picture of up to 10 MB."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add a photo to a Part, in place of the one it has",
+        "tags": ["Part"]
+      }
+    },
+    "/v1/photos/{photoId}": {
+      "get": {
+        "operationId": "readPhoto",
+        "parameters": [
+          {
+            "name": "photoId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Part's photo",
+        "tags": ["Photo"]
+      }
     }
   },
   "info": {
@@ -613,6 +711,12 @@
               "type": "string"
             }
           },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          },
           "createdAt": {
             "type": "string",
             "description": "When the Part was created.",
@@ -633,6 +737,7 @@
           "openDbId",
           "specifications",
           "missingNeededSpecifications",
+          "photoPath",
           "createdAt",
           "updatedAt"
         ]
@@ -715,9 +820,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
           }
         },
-        "required": ["id", "category", "name", "manufacturer", "partNumbers"]
+        "required": ["id", "category", "name", "manufacturer", "partNumbers", "photoPath"]
       },
       "PartPageResponse": {
         "type": "object",

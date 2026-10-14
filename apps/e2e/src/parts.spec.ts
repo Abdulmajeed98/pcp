@@ -41,5 +41,6 @@ test("the API stores a Part: the development Admin creates a made-up Part, and t
     ],
     createdAt: expect.any(String),
     updatedAt: expect.any(String),
+    photoPath: null,
   });
 });

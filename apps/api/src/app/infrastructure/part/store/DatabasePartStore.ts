@@ -13,19 +13,21 @@ import {
   SearchPartsParams,
 } from '~/domain/part/PartStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
+import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
+import { partPhoto } from '~/infrastructure/photo/photo.schema';
 
 import { part, PartRow } from '../part.schema';
 
-// Whether an identifier has the form the database holds. Anything else names
-// no Part, and is never sent to the database, which would refuse it.
-function couldBePartId(id: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-}
+// A Part's row and its photo's identifier, as a read gives them.
+const partWithPhoto = { part, photoId: partPhoto.id };
 
 // A row as a Part. The database's own list of Categories is made from the
 // domain's, so a row whose Category the domain does not know means the two
 // have drifted apart.
-function toDomain(row: PartRow): Either.Either<Part, StructuredError> {
+function toDomain(
+  row: PartRow,
+  photoId: string | null,
+): Either.Either<Part, StructuredError> {
   const category = Category.withKey(row.category);
   if (category === undefined) {
     return Either.left(
@@ -44,6 +46,7 @@ function toDomain(row: PartRow): Either.Either<Part, StructuredError> {
       row.specifications,
       row.createdAt,
       row.updatedAt,
+      photoId,
     ),
   );
 }
@@ -90,7 +93,8 @@ export class DatabasePartStore implements PartStore {
         })
         .returning();
 
-      return toDomain(row);
+      // A Part has no photo when it is created.
+      return toDomain(row, null);
     } catch (error) {
       this.logger.error(error, 'A Part could not be created');
       return Either.left(databaseErrorOf(error, 'A Part could not be created'));
@@ -100,11 +104,11 @@ export class DatabasePartStore implements PartStore {
   async edit(
     params: EditPartParams,
   ): Promise<Either.Either<Option.Option<Part>, StructuredError>> {
-    if (!couldBePartId(params.getPartId())) return Either.right(Option.none());
+    if (!couldBeIdentifier(params.getPartId())) return Either.right(Option.none());
 
     try {
-      const [row] = await this.databaseProvider
-        .getClient()
+      const client = this.databaseProvider.getClient();
+      const [row] = await client
         .update(part)
         .set({
           name: params.getName(),
@@ -121,7 +125,11 @@ export class DatabasePartStore implements PartStore {
         .returning();
 
       if (row === undefined) return Either.right(Option.none());
-      return Either.map(toDomain(row), Option.some);
+      const [photo] = await client
+        .select({ id: partPhoto.id })
+        .from(partPhoto)
+        .where(eq(partPhoto.partId, row.id));
+      return Either.map(toDomain(row, photo?.id ?? null), Option.some);
     } catch (error) {
       this.logger.error(error, 'A Part could not be edited');
       return Either.left(databaseErrorOf(error, 'A Part could not be edited'));
@@ -148,8 +156,9 @@ export class DatabasePartStore implements PartStore {
           (transaction) =>
             Promise.all([
               transaction
-                .select()
+                .select(partWithPhoto)
                 .from(part)
+                .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
                 .where(where)
                 .orderBy(asc(part.name), asc(part.id))
                 .limit(pageable.getLimit())
@@ -159,7 +168,7 @@ export class DatabasePartStore implements PartStore {
           { isolationLevel: 'repeatable read', accessMode: 'read only' },
         );
 
-      const parts = Either.all(rows.map(toDomain));
+      const parts = Either.all(rows.map((row) => toDomain(row.part, row.photoId)));
       return Either.map(
         parts,
         (found) => new PartsPage(found, PageAttributes.of(pageable, total)),
@@ -171,17 +180,18 @@ export class DatabasePartStore implements PartStore {
   }
 
   async readById(id: string): Promise<Either.Either<Option.Option<Part>, StructuredError>> {
-    if (!couldBePartId(id)) return Either.right(Option.none());
+    if (!couldBeIdentifier(id)) return Either.right(Option.none());
 
     try {
       const [row] = await this.databaseProvider
         .getClient()
-        .select()
+        .select(partWithPhoto)
         .from(part)
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
         .where(eq(part.id, id));
 
       if (row === undefined) return Either.right(Option.none());
-      return Either.map(toDomain(row), Option.some);
+      return Either.map(toDomain(row.part, row.photoId), Option.some);
     } catch (error) {
       this.logger.error(error, 'A Part could not be read');
       return Either.left(databaseErrorOf(error, 'A Part could not be read'));

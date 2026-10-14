@@ -24,6 +24,7 @@ type PartBody = {
   missingNeededSpecifications: string[];
   createdAt: string;
   updatedAt: string;
+  photoPath: string | null;
 };
 
 function partOf(response: Response): Promise<PartBody> {
@@ -102,6 +103,7 @@ describe('the Part endpoints', () => {
         ],
         createdAt: expect.any(String),
         updatedAt: part.createdAt,
+        photoPath: null,
       });
 
       const read = await readPart(part.id, adminToken);

@@ -1,9 +1,31 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
 import { CreatePartCommand } from '~/domain/part/CreatePartCommand';
+import {
+  AddPartPhotoCommand,
+  AddPartPhotoCommandInput,
+  LARGEST_PICTURE_BYTES,
+} from '~/domain/photo/AddPartPhotoCommand';
 import { EditPartCommand } from '~/domain/part/EditPartCommand';
 import { ReadPartQuery, ReadPartQueryInput } from '~/domain/part/ReadPartQuery';
 import { SearchPartsQuery } from '~/domain/part/SearchPartsQuery';
@@ -21,6 +43,7 @@ export class PartController {
     private readonly editPartCommand: EditPartCommand,
     private readonly readPartQuery: ReadPartQuery,
     private readonly searchPartsQuery: SearchPartsQuery,
+    private readonly addPartPhotoCommand: AddPartPhotoCommand,
   ) {}
 
   @ApiOperation({ summary: 'Add a Part to the catalog' })
@@ -63,6 +86,47 @@ export class PartController {
 
     return result.pipe(
       Either.map((output) => PartPageResponse.of(output.getPartsPage())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({ summary: 'Add a photo to a Part, in place of the one it has' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['photo'],
+      properties: {
+        photo: {
+          type: 'string',
+          format: 'binary',
+          description: 'A JPEG, PNG or WebP picture of up to 10 MB.',
+        },
+      },
+    },
+  })
+  @ApiOkResponse({ type: PartResponse })
+  @PreAuthorize([Role.ADMIN])
+  @Put('v1/parts/:partId/photo')
+  // A picture somewhat over the largest is still received, so that the use
+  // case refuses it naming the field. One far over it is refused as it
+  // arrives, before it fills the API's memory.
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: { fileSize: LARGEST_PICTURE_BYTES + 2 * 1024 * 1024 },
+    }),
+  )
+  async addPartPhoto(
+    @Param('partId') partId: string,
+    // The file as Multer receives it, kept in memory. Only its bytes are used.
+    @UploadedFile() photo: { buffer: Buffer } | undefined,
+  ): Promise<PartResponse> {
+    const result = await this.addPartPhotoCommand.execute(
+      new AddPartPhotoCommandInput(partId, photo?.buffer),
+    );
+
+    return result.pipe(
+      Either.map((output) => PartResponse.of(output.getPart())),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

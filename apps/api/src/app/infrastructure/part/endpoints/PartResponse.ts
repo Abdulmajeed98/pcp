@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { Category } from '~/domain/part/Category';
 import { Part } from '~/domain/part/Part';
+
+import { photoPathOf } from './photo-path';
 import type { SpecificationDocument } from '~/domain/specification/specification-document';
 
 export class PartResponse {
@@ -56,6 +58,14 @@ export class PartResponse {
   })
   readonly missingNeededSpecifications: string[];
 
+  @ApiProperty({
+    description: "The address of the Part's photo on this API, or null when it has none.",
+    type: String,
+    nullable: true,
+    example: '/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f',
+  })
+  readonly photoPath: string | null;
+
   @ApiProperty({ description: 'When the Part was created.', format: 'date-time' })
   readonly createdAt: string;
 
@@ -73,6 +83,7 @@ export class PartResponse {
     this.missingNeededSpecifications = part.getMissingNeededSpecifications();
     this.createdAt = part.getCreatedAt().toISOString();
     this.updatedAt = part.getUpdatedAt().toISOString();
+    this.photoPath = photoPathOf(part);
   }
 
   static of(part: Part): PartResponse {

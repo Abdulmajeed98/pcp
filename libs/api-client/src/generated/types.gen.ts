@@ -158,6 +158,10 @@ export type PartResponse = {
      */
     missingNeededSpecifications: Array<string>;
     /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+    /**
      * When the Part was created.
      */
     createdAt: string;
@@ -209,6 +213,10 @@ export type PartSummaryResponse = {
      * The manufacturer's part numbers.
      */
     partNumbers: Array<string>;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
 };
 
 export type PartPageResponse = {
@@ -416,3 +424,56 @@ export type EditPartResponses = {
 };
 
 export type EditPartResponse = EditPartResponses[keyof EditPartResponses];
+
+export type AddPartPhotoData = {
+    body: {
+        /**
+         * A JPEG, PNG or WebP picture of up to 10 MB.
+         */
+        photo: Blob | File;
+    };
+    path: {
+        partId: string;
+    };
+    query?: never;
+    url: '/v1/parts/{partId}/photo';
+};
+
+export type AddPartPhotoErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type AddPartPhotoError = AddPartPhotoErrors[keyof AddPartPhotoErrors];
+
+export type AddPartPhotoResponses = {
+    200: PartResponse;
+};
+
+export type AddPartPhotoResponse = AddPartPhotoResponses[keyof AddPartPhotoResponses];
+
+export type ReadPhotoData = {
+    body?: never;
+    path: {
+        photoId: string;
+    };
+    query?: never;
+    url: '/v1/photos/{photoId}';
+};
+
+export type ReadPhotoErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPhotoError = ReadPhotoErrors[keyof ReadPhotoErrors];
+
+export type ReadPhotoResponses = {
+    200: Blob | File;
+};
+
+export type ReadPhotoResponse = ReadPhotoResponses[keyof ReadPhotoResponses];
