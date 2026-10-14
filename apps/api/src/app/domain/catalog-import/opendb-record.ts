@@ -7,6 +7,7 @@ import { isPlainObject } from '../specification/specification-document';
 import { specificationListOf } from '../specification/specification-lists';
 import { isUuid } from '../uuid';
 import { ImportPartParams } from './CatalogImportStore';
+import { knownCopies } from './known-copies';
 import { OpenDbFile } from './OpenDbSource';
 
 // Why one of OpenDB's records was left out of the catalog. Its OpenDB ID is
@@ -21,7 +22,8 @@ export type RecordLeftOutReason =
   | 'openDbIdTaken'
   | 'noName'
   | 'noManufacturer'
-  | 'copiesAnotherRecord';
+  | 'copiesAnotherRecord'
+  | 'knownCopy';
 
 // The Part a record makes, the values in the record that did not fit their
 // specifications and were left out of the Part, and whether its manufacturer
@@ -145,6 +147,7 @@ export function partOfRecord(
   const openDbId = record.opendb_id;
   if (!isString(openDbId) || !isUuid(openDbId)) return Either.left('noOpenDbId');
   if (file.getName() !== `${openDbId}.json`) return Either.left('openDbIdNotTheFileName');
+  if (knownCopies.has(openDbId.toLowerCase())) return Either.left('knownCopy');
 
   const metadata = isPlainObject(record.metadata) ? record.metadata : {};
   const { name, manufacturer: named } = metadata;

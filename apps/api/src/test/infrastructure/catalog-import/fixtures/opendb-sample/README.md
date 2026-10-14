@@ -5,3 +5,7 @@ OpenDB. The folder has OpenDB's layout: one folder for each of its categories,
 one JSON file for each record, named by the record's `opendb_id`. `COMMIT`
 names the commit the folder holds, which is how a folder tells the import
 its commit.
+
+One made-up case has the OpenDB ID of a real record that the import's list of
+known copies names, so that the tests can show the list at work. Only the ID
+is OpenDB's.

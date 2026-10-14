@@ -379,6 +379,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       'Motherboard/00000000-0000-4000-8000-000000000302.json: it has no name',
       'RAM/made-up-ram.json: it has no OpenDB ID that is a UUID',
       'Storage/00000000-0000-4000-8000-000000000502.json: it holds no JSON record',
+      'PCCase/b668e577-4caf-4106-bdd0-af4f3785ebe8.json: it copies another record, as the list of known copies says',
       'PSU/00000000-0000-4000-8000-000000000101.json: another record has its OpenDB ID',
       'PSU/00000000-0000-4000-8000-000000000803.json: it has no manufacturer, and another record has its part number',
     ]);
@@ -508,9 +509,9 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       ram: [1, 0, 1, 0],
       storage: [3, 0, 1, 0],
       gpu: [1, 0, 0, 1],
-      case: [1, 0, 0, 1],
+      case: [1, 0, 1, 1],
       psu: [2, 0, 2, 0],
-      Total: [14, 0, 7, 4],
+      Total: [14, 0, 8, 4],
     });
     expect(second.exitCode).toBe(0);
     expect(tableIn(second.printed)).toEqual({
@@ -520,9 +521,9 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       ram: [0, 1, 1, 0],
       storage: [0, 3, 1, 0],
       gpu: [0, 1, 0, 0],
-      case: [0, 1, 0, 0],
+      case: [0, 1, 1, 0],
       psu: [0, 2, 2, 0],
-      Total: [0, 14, 7, 0],
+      Total: [0, 14, 8, 0],
     });
     expect(await partsFound({})).toHaveLength(14);
   });
@@ -664,7 +665,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       expect(run.exitCode).toBe(0);
       expect(gitHub.requested).toEqual([archivePath]);
       expect(run.printed[0]).toBe(`Read OpenDB at commit ${pinnedCommit}.`);
-      expect(tableIn(run.printed).Total).toEqual([14, 0, 7, 4]);
+      expect(tableIn(run.printed).Total).toEqual([14, 0, 8, 4]);
       expect(await partsFound({})).toHaveLength(14);
       expect(await namesFound({ search: 'monitor' })).toEqual([]);
     });
