@@ -4,7 +4,7 @@ import { jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-co
 // A relative path and not the `~/` alias, because drizzle-kit reads this file
 // by itself when it generates a migration, and it knows no alias.
 import { Category } from '../../domain/part/Category';
-import { SpecificationDocument } from '../../domain/specification/SpecificationList';
+import { SpecificationDocument } from '../../domain/specification/specification-document';
 
 // The database's list of Categories is the domain's. Drizzle wants it as a
 // list that is known not to be empty.

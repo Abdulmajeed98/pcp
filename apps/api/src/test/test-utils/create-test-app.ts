@@ -61,7 +61,15 @@ export async function createTestAppWithLogins(
   keycloak.publish(key);
 
   process.env.KEYCLOAK_ISSUER = keycloak.issuer;
-  const testApp = await createTestApp(options);
+  // An application that cannot be built would leave the stand-in listening,
+  // and Jest would wait for it for ever instead of reporting the failure.
+  let testApp: TestApp;
+  try {
+    testApp = await createTestApp(options);
+  } catch (error) {
+    await keycloak.stop();
+    throw error;
+  }
 
   return {
     ...testApp,

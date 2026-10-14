@@ -3,17 +3,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Specification } from '~/domain/specification/Specification';
 import type { SpecificationKind } from '~/domain/specification/Specification';
 
-const kinds: SpecificationKind[] = [
-  'wholeNumber',
-  'decimalNumber',
-  'text',
-  'yesNo',
-  'oneOf',
-  'severalOf',
-  'listOfText',
-  'listOfRows',
-];
-
 export class SpecificationResponse {
   @ApiProperty({
     description:
@@ -30,7 +19,7 @@ export class SpecificationResponse {
 
   @ApiProperty({
     description: 'The kind of value it holds.',
-    enum: kinds,
+    enum: Specification.kinds(),
     example: 'severalOf',
   })
   readonly kind: SpecificationKind;
@@ -65,7 +54,7 @@ export class SpecificationResponse {
     this.label = specification.getLabel();
     this.kind = specification.getKind();
     this.needed = specification.isNeeded();
-    this.zeroMeansMissing = specification.doesZeroMeanMissing();
+    this.zeroMeansMissing = specification.isZeroMissing();
 
     const unit = specification.getUnit();
     if (unit !== undefined) this.unit = unit;

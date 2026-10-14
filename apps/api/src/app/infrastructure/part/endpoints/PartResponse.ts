@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { Category } from '~/domain/part/Category';
 import { Part } from '~/domain/part/Part';
+import type { SpecificationDocument } from '~/domain/specification/specification-document';
 
 export class PartResponse {
   @ApiProperty({
@@ -45,7 +46,7 @@ export class PartResponse {
     additionalProperties: true,
     example: { socket: 'AM5', specifications: { tdp: 65, memory: { types: ['DDR5'] } } },
   })
-  readonly specifications: Record<string, unknown>;
+  readonly specifications: SpecificationDocument;
 
   @ApiProperty({
     description:

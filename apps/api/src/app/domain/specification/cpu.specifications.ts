@@ -2,8 +2,10 @@ import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
 // The sockets OpenDB's CPUs use at the commit the catalog is imported from.
-// A CPU of a newer socket is added here, in code.
-export const cpuSockets = [
+// A CPU of a newer socket is added here, in code. A Compatibility Rule compares
+// a CPU's socket with a motherboard's and a cooler's, so this is a fixed set:
+// two spellings of one socket would make a false Compatibility Problem.
+const cpuSockets = [
   'AM3+',
   'AM4',
   'AM5',
@@ -26,7 +28,7 @@ export const cpuSockets = [
   'TR4',
 ] as const;
 
-export const ramTypes = ['DDR3', 'DDR4', 'DDR5'] as const;
+const ramTypes = ['DDR3', 'DDR4', 'DDR5'] as const;
 
 // Every specification of a CPU that OpenDB defines, apart from retailer and
 // identity data. A 0 means "not known" in OpenDB wherever 0 cannot be true:
@@ -93,7 +95,7 @@ export const cpuSpecifications = new SpecificationList([
   ),
   Specification.yesNo('specifications.eccSupport', 'ECC memory support'),
   Specification.yesNo('specifications.includesCooler', 'Cooler included'),
-  Specification.oneOf('specifications.packaging', 'Packaging', ['Boxed', 'OEM/Tray']),
+  Specification.text('specifications.packaging', 'Packaging'),
   Specification.text('specifications.lithography', 'Lithography'),
   Specification.yesNo(
     'specifications.simultaneousMultithreading',

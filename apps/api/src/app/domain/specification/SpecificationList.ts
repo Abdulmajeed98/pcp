@@ -1,47 +1,22 @@
-import { Specification, SpecificationProblemReason } from './Specification';
-
-// A Part's specifications, in OpenDB's field names and nesting: for a CPU,
-// `{ socket: 'AM5', specifications: { tdp: 65, memory: { types: ['DDR5'] } } }`.
-export type SpecificationDocument = Record<string, unknown>;
-
-// A value that was not taken, and why. Its path names the specification, or a
-// field of one of its rows.
-export type SpecificationProblem = {
-  path: string;
-  reason: SpecificationProblemReason;
-};
+import { Specification, SpecificationProblem } from './Specification';
+import {
+  isPlainObject,
+  setAt,
+  SpecificationDocument,
+  valueAt,
+} from './specification-document';
 
 // What checking a Part's specifications gives: the ones that fit, as they are
 // kept, and what did not fit. Creating a Part refuses any problem. The import
 // leaves the values with problems out, and counts them.
+//
+// This is a plain value and not an `Either`, because a check that finds
+// problems still gives what fits: the import keeps that. A use case turns a
+// problem into the left side of its own `Either`.
 export type SpecificationCheck = {
   document: SpecificationDocument;
   problems: SpecificationProblem[];
 };
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function valueAt(document: SpecificationDocument, path: string): unknown {
-  return path
-    .split('.')
-    .reduce<unknown>(
-      (node, name) => (isPlainObject(node) ? node[name] : undefined),
-      document,
-    );
-}
-
-function setAt(document: SpecificationDocument, path: string, value: unknown): void {
-  const names = path.split('.');
-  const last = names.pop() as string;
-  let node = document;
-  for (const name of names) {
-    if (!isPlainObject(node[name])) node[name] = {};
-    node = node[name] as SpecificationDocument;
-  }
-  node[last] = value;
-}
 
 // Every specification a Part of one Category can hold.
 export class SpecificationList {
@@ -59,19 +34,15 @@ export class SpecificationList {
 
     for (const specification of this.specifications) {
       const checked = specification.check(valueAt(document, specification.getPath()));
-      if (checked.outcome === 'kept') setAt(kept, specification.getPath(), checked.value);
-      if (checked.outcome === 'refused') {
-        problems.push({ path: checked.path, reason: checked.reason });
-      }
+      if (checked.value !== undefined) setAt(kept, specification.getPath(), checked.value);
+      problems.push(...checked.problems);
     }
 
-    return {
-      document: kept,
-      problems: [...problems, ...this.unknownIn(document, '')],
-    };
+    return { document: kept, problems: [...problems, ...this.unknownIn(document, '')] };
   }
 
-  // The needed specifications a Part's specifications do not hold.
+  // The needed specifications a Part's specifications do not hold, by their
+  // paths, in the list's order.
   missingNeeded(document: SpecificationDocument): string[] {
     return this.specifications
       .filter((specification) => specification.isNeeded())
@@ -79,19 +50,19 @@ export class SpecificationList {
       .filter((path) => valueAt(document, path) === undefined);
   }
 
-  // A value at a place no specification has. An object is looked into only
-  // when some specification lies inside it.
+  // A name no specification has, whatever its value, null included. An object
+  // with specifications inside it is looked into, and when it is null they
+  // are all missing.
   private unknownIn(node: SpecificationDocument, prefix: string): SpecificationProblem[] {
     return Object.entries(node).flatMap(([name, value]) => {
       const path = prefix === '' ? name : `${prefix}.${name}`;
-      if (value === null || value === undefined) return [];
       if (this.specifications.some((each) => each.getPath() === path)) return [];
-      if (
-        isPlainObject(value) &&
-        this.specifications.some((each) => each.getPath().startsWith(`${path}.`))
-      ) {
-        return this.unknownIn(value, path);
-      }
+
+      const holdsSpecifications = this.specifications.some((each) =>
+        each.getPath().startsWith(`${path}.`),
+      );
+      if (holdsSpecifications && (value === null || value === undefined)) return [];
+      if (holdsSpecifications && isPlainObject(value)) return this.unknownIn(value, path);
       return [{ path, reason: 'unknown' as const }];
     });
   }

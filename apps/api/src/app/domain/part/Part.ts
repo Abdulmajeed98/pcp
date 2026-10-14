@@ -1,5 +1,5 @@
 import { specificationListOf } from '../specification/specification-lists';
-import { SpecificationDocument } from '../specification/SpecificationList';
+import { SpecificationDocument } from '../specification/specification-document';
 import { Category } from './Category';
 
 // A specific model of PC component, defined once by the platform.

@@ -3,7 +3,7 @@ import { StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
 import { checkSpecifications } from '../specification/check-specifications';
-import { SpecificationDocument } from '../specification/SpecificationList';
+import { SpecificationDocument } from '../specification/specification-document';
 import { Category } from './Category';
 import { Part } from './Part';
 import { cleanPartNumbers } from './part-numbers';

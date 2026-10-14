@@ -3,6 +3,7 @@ import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { PreAuthorize, Role } from '@pcp/core';
 
 import { Category } from '~/domain/part/Category';
+import { specificationListOf } from '~/domain/specification/specification-lists';
 
 import { CategoryResponse } from './CategoryResponse';
 
@@ -16,6 +17,8 @@ export class CategoryController {
   @PreAuthorize([Role.ADMIN, Role.VENDOR])
   @Get('v1/categories')
   readCategories(): CategoryResponse[] {
-    return Category.values().map(CategoryResponse.of);
+    return Category.values().map((category) =>
+      CategoryResponse.of(category, specificationListOf(category)),
+    );
   }
 }

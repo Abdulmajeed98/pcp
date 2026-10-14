@@ -1,15 +1,20 @@
+import { isPlainObject } from './specification-document';
+
+const kinds = [
+  'wholeNumber',
+  'decimalNumber',
+  'text',
+  'yesNo',
+  'oneOf',
+  'severalOf',
+  'listOfText',
+  'listOfRows',
+] as const;
+
 // The kinds of value a specification holds. A list of rows is for a
 // specification with several parts of its own, such as a motherboard's PCIe
 // slots, and each row's fields have kinds of their own.
-export type SpecificationKind =
-  | 'wholeNumber'
-  | 'decimalNumber'
-  | 'text'
-  | 'yesNo'
-  | 'oneOf'
-  | 'severalOf'
-  | 'listOfText'
-  | 'listOfRows';
+export type SpecificationKind = (typeof kinds)[number];
 
 // Why a value was not taken.
 export type SpecificationProblemReason =
@@ -20,28 +25,31 @@ export type SpecificationProblemReason =
   | 'notText'
   | 'notYesOrNo'
   | 'notInTheSet'
-  | 'repeated'
   | 'notAList'
   | 'notARow'
   | 'unknown';
 
-// What checking one value gives: the value to keep, nothing because it is
-// missing, or the reason it does not fit. A problem may be about a field of a
-// row, which `path` then names after the specification's own place.
-export type ValueCheck =
-  | { outcome: 'kept'; value: unknown }
-  | { outcome: 'missing' }
-  | { outcome: 'refused'; path: string; reason: SpecificationProblemReason };
+// A value that was not taken, and why. Its path is the specification's, or,
+// for a field of a row, the specification's followed by the row's place and
+// the field's name: `pcie_slots.0.lanes`.
+export type SpecificationProblem = {
+  path: string;
+  reason: SpecificationProblemReason;
+};
 
-type Options = {
+// What checking one value gives: the value to keep, if any, and the problems
+// found in it. A missing value gives neither. A list of rows keeps its rows
+// and the fields in them that fit, and names each one that does not.
+export type ValueCheck = {
+  value?: unknown;
+  problems: SpecificationProblem[];
+};
+
+export type SpecificationOptions = {
   unit?: string;
   needed?: boolean;
   zeroMeansMissing?: boolean;
 };
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 // One named property of a Part, defined for its Category, such as a CPU's
 // socket. Its path is its place in a Part's specifications, in OpenDB's field
@@ -59,19 +67,35 @@ export class Specification {
     private readonly zeroMeansMissing: boolean,
   ) {}
 
-  static wholeNumber(path: string, label: string, options: Options = {}): Specification {
+  static wholeNumber(
+    path: string,
+    label: string,
+    options: SpecificationOptions = {},
+  ): Specification {
     return Specification.of(path, label, 'wholeNumber', options);
   }
 
-  static decimalNumber(path: string, label: string, options: Options = {}): Specification {
+  static decimalNumber(
+    path: string,
+    label: string,
+    options: SpecificationOptions = {},
+  ): Specification {
     return Specification.of(path, label, 'decimalNumber', options);
   }
 
-  static text(path: string, label: string, options: Options = {}): Specification {
+  static text(
+    path: string,
+    label: string,
+    options: SpecificationOptions = {},
+  ): Specification {
     return Specification.of(path, label, 'text', options);
   }
 
-  static yesNo(path: string, label: string, options: Options = {}): Specification {
+  static yesNo(
+    path: string,
+    label: string,
+    options: SpecificationOptions = {},
+  ): Specification {
     return Specification.of(path, label, 'yesNo', options);
   }
 
@@ -82,7 +106,7 @@ export class Specification {
     path: string,
     label: string,
     values: readonly string[],
-    options: Options = {},
+    options: SpecificationOptions = {},
   ): Specification {
     return Specification.of(path, label, 'oneOf', options, values);
   }
@@ -91,12 +115,16 @@ export class Specification {
     path: string,
     label: string,
     values: readonly string[],
-    options: Options = {},
+    options: SpecificationOptions = {},
   ): Specification {
     return Specification.of(path, label, 'severalOf', options, values);
   }
 
-  static listOfText(path: string, label: string, options: Options = {}): Specification {
+  static listOfText(
+    path: string,
+    label: string,
+    options: SpecificationOptions = {},
+  ): Specification {
     return Specification.of(path, label, 'listOfText', options);
   }
 
@@ -106,7 +134,7 @@ export class Specification {
     path: string,
     label: string,
     fields: readonly Specification[],
-    options: Options = {},
+    options: SpecificationOptions = {},
   ): Specification {
     return Specification.of(path, label, 'listOfRows', options, undefined, fields);
   }
@@ -115,7 +143,7 @@ export class Specification {
     path: string,
     label: string,
     kind: SpecificationKind,
-    options: Options,
+    options: SpecificationOptions,
     values?: readonly string[],
     fields?: readonly Specification[],
   ): Specification {
@@ -129,6 +157,10 @@ export class Specification {
       options.needed ?? false,
       options.zeroMeansMissing ?? false,
     );
+  }
+
+  static kinds(): readonly SpecificationKind[] {
+    return kinds;
   }
 
   getPath(): string {
@@ -163,27 +195,26 @@ export class Specification {
 
   // Whether 0 stands for "not known" rather than for nothing, because 0 cannot
   // be true for this specification, as for a length or a clock speed.
-  doesZeroMeanMissing(): boolean {
+  isZeroMissing(): boolean {
     return this.zeroMeansMissing;
   }
 
   // Checks one value against this specification. Null, an empty text and an
   // empty choice of several are missing, not refused.
   check(value: unknown): ValueCheck {
-    if (value === null || value === undefined || value === '')
-      return { outcome: 'missing' };
+    if (value === null || value === undefined || value === '') return missing;
 
     switch (this.kind) {
       case 'wholeNumber':
       case 'decimalNumber':
         return this.checkNumber(value);
       case 'text':
-        return typeof value === 'string' ? this.kept(value) : this.refused('notText');
+        return typeof value === 'string' ? kept(value) : this.refused('notText');
       case 'yesNo':
-        return typeof value === 'boolean' ? this.kept(value) : this.refused('notYesOrNo');
+        return typeof value === 'boolean' ? kept(value) : this.refused('notYesOrNo');
       case 'oneOf':
         return typeof value === 'string' && this.values?.includes(value)
-          ? this.kept(value)
+          ? kept(value)
           : this.refused('notInTheSet');
       case 'severalOf':
         return this.checkSeveral(value);
@@ -194,12 +225,8 @@ export class Specification {
     }
   }
 
-  private kept(value: unknown): ValueCheck {
-    return { outcome: 'kept', value };
-  }
-
-  private refused(reason: SpecificationProblemReason, path = this.path): ValueCheck {
-    return { outcome: 'refused', path, reason };
+  private refused(reason: SpecificationProblemReason): ValueCheck {
+    return { problems: [{ path: this.path, reason }] };
   }
 
   private checkNumber(value: unknown): ValueCheck {
@@ -210,50 +237,67 @@ export class Specification {
     }
     if (value < 0) return this.refused('negative');
     if (value === 0 && this.zeroMeansMissing) return this.refused('zeroMeansMissing');
-    return this.kept(value);
+    return kept(value);
   }
 
+  // A value given twice is kept once.
   private checkSeveral(value: unknown): ValueCheck {
     if (!Array.isArray(value)) return this.refused('notAList');
-    if (value.length === 0) return { outcome: 'missing' };
+    if (value.length === 0) return missing;
     if (!value.every((each) => typeof each === 'string' && this.values?.includes(each))) {
       return this.refused('notInTheSet');
     }
-    if (new Set(value).size !== value.length) return this.refused('repeated');
-    return this.kept(value);
+    return kept([...new Set(value)]);
   }
 
   private checkListOfText(value: unknown): ValueCheck {
     if (!Array.isArray(value)) return this.refused('notAList');
-    if (value.length === 0) return { outcome: 'missing' };
+    if (value.length === 0) return missing;
     if (!value.every((each) => typeof each === 'string' && each !== '')) {
       return this.refused('notText');
     }
-    return this.kept(value);
+    return kept(value);
   }
 
   // An empty list of rows is a value: a motherboard with no M.2 slot has none.
+  // A row that is not an object is left out, and so is a field of a row that
+  // does not fit, so that one bad field does not cost the other rows.
   private checkRows(value: unknown): ValueCheck {
     if (!Array.isArray(value)) return this.refused('notAList');
 
     const rows: Record<string, unknown>[] = [];
+    const problems: SpecificationProblem[] = [];
     for (const [index, row] of value.entries()) {
-      if (!isPlainObject(row)) return this.refused('notARow', `${this.path}.${index}`);
+      const rowPath = `${this.path}.${index}`;
+      if (!isPlainObject(row)) {
+        problems.push({ path: rowPath, reason: 'notARow' });
+        continue;
+      }
 
-      const kept: Record<string, unknown> = {};
+      const keptFields: Record<string, unknown> = {};
       for (const [name, fieldValue] of Object.entries(row)) {
         const field = this.fields?.find((each) => each.getPath() === name);
-        if (field === undefined)
-          return this.refused('unknown', `${this.path}.${index}.${name}`);
-
-        const checked = field.check(fieldValue);
-        if (checked.outcome === 'refused') {
-          return this.refused(checked.reason, `${this.path}.${index}.${name}`);
+        if (field === undefined) {
+          problems.push({ path: `${rowPath}.${name}`, reason: 'unknown' });
+          continue;
         }
-        if (checked.outcome === 'kept') kept[name] = checked.value;
+        const checked = field.check(fieldValue);
+        problems.push(
+          ...checked.problems.map((problem) => ({
+            ...problem,
+            path: `${rowPath}.${name}`,
+          })),
+        );
+        if (checked.value !== undefined) keptFields[name] = checked.value;
       }
-      rows.push(kept);
+      rows.push(keptFields);
     }
-    return this.kept(rows);
+    return { value: rows, problems };
   }
+}
+
+const missing: ValueCheck = { problems: [] };
+
+function kept(value: unknown): ValueCheck {
+  return { value, problems: [] };
 }

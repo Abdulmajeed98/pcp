@@ -3,6 +3,7 @@ import { IsArray, IsIn, IsObject, IsString, Matches, ValidateIf } from 'class-va
 
 import { Category } from '~/domain/part/Category';
 import { CreatePartCommandInput } from '~/domain/part/CreatePartCommand';
+import type { SpecificationDocument } from '~/domain/specification/specification-document';
 
 // A name or a manufacturer is kept as it was written, and has to hold more
 // than spaces.
@@ -49,7 +50,7 @@ export class CreatePartRequest {
   // What it holds is checked against the Category's list by the use case.
   @ValidateIf((_request, value) => value !== undefined)
   @IsObject()
-  readonly specifications: Record<string, unknown> = {};
+  readonly specifications: SpecificationDocument = {};
 
   toCommandInput(): CreatePartCommandInput {
     return new CreatePartCommandInput(

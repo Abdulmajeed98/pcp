@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import { Category } from '~/domain/part/Category';
-import { specificationListOf } from '~/domain/specification/specification-lists';
+import { SpecificationList } from '~/domain/specification/SpecificationList';
 
 import { SpecificationResponse } from './SpecificationResponse';
 
@@ -24,10 +24,10 @@ export class CategoryResponse {
     this.specifications = specifications;
   }
 
-  static of(category: Category): CategoryResponse {
+  static of(category: Category, specifications: SpecificationList): CategoryResponse {
     return new CategoryResponse(
       category.getKey(),
-      specificationListOf(category).getSpecifications().map(SpecificationResponse.of),
+      specifications.getSpecifications().map(SpecificationResponse.of),
     );
   }
 }

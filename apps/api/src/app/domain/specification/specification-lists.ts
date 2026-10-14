@@ -15,6 +15,8 @@ const lists = new Map<Category, SpecificationList>([
   [Category.PSU, new SpecificationList([])],
 ]);
 
+// Every Category has its list above. The test of the Categories endpoint reads
+// all eight, and fails if one has none.
 export function specificationListOf(category: Category): SpecificationList {
   return lists.get(category) as SpecificationList;
 }

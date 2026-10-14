@@ -43,12 +43,16 @@ export const accessDenied: ExpectedErrorResponse[] = [
   { code: 'ACCESS_DENIED', title: 'access_denied_title', detail: 'access_denied_details' },
 ];
 
-// One error of a request that broke a rule, naming the field it got wrong.
-export function notValid(field: string): ExpectedErrorResponse {
+// One error of a request that broke a rule, naming the field it got wrong,
+// and anything more the error says about it.
+export function notValid(
+  field: string,
+  more: Record<string, string> = {},
+): ExpectedErrorResponse {
   return {
     code: 'NOT_VALID',
     title: 'not_valid_title',
     detail: 'not_valid_details',
-    additionalInformation: { field },
+    additionalInformation: { field, ...more },
   };
 }

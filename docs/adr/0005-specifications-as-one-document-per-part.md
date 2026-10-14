@@ -14,4 +14,5 @@ What a document may hold is not left open. Each Category has a specification lis
 - Changing how specifications are stored once real Vendor data exists needs the owner's agreement, as the MVP spec says of Parts and Offers.
 - A query that filters on a specification, as a Category page's filters will, reads it from the document. PostgreSQL can index a path in a JSON document if that proves slow.
 - A specification is added, or a fixed set gains a value such as a new socket, by a change to the list in code. No migration is needed.
+- Checking a document gives a plain value, what fits and what does not, rather than an `Either`, because a check that finds problems still gives what fits, and the import keeps that. A use case turns a problem into the left side of its own `Either`, as ADR-0004 has it.
 - The document's type in the API's description is a plain JSON object. A type for each Category would run to several hundred fields and says nothing the list does not already say.

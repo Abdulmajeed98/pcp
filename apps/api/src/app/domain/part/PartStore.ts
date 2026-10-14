@@ -1,7 +1,7 @@
 import { StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
-import { SpecificationDocument } from '../specification/SpecificationList';
+import { SpecificationDocument } from '../specification/specification-document';
 import { Category } from './Category';
 import { Part } from './Part';
 
