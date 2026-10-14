@@ -20,6 +20,9 @@
     },
     {
       "path": "../../libs/compatibility/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/opendb/tsconfig.lib.json"
     }
   ]
 }

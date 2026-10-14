@@ -6,6 +6,7 @@ import {
   parseAllowedOrigins,
   validateEnvironment,
 } from '@pcp/core';
+import { openDbRepository } from '@pcp/opendb';
 
 // The API's settings. Each has the fixed development value as its default,
 // apart from the database password, which is a secret and has none. The API
@@ -43,6 +44,12 @@ export class EnvironmentVariables extends CoreEnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   DATASOURCE_PASSWORD!: string;
+
+  // Where OpenDB is kept, from which the import fetches the archive of the
+  // pinned commit when it is given no folder. The default is OpenDB's own
+  // repository on GitHub. Only the import reads it.
+  @IsUrl({ require_tld: false, require_protocol: true, protocols: ['https', 'http'] })
+  OPENDB_REPOSITORY_URL = openDbRepository;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

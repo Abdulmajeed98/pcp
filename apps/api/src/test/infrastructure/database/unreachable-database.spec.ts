@@ -1,28 +1,10 @@
-import { createServer } from 'node:net';
-
 import { bearerHeader, expectErrorResponse } from '@pcp/core/test-utils';
 
 import {
   createTestAppWithLogins,
   TestAppWithLogins,
 } from '../../test-utils/create-test-app';
-
-// A port on this machine where nothing listens, so that a connection to it is
-// refused at once, as one to a stopped database is.
-function aPortWhereNothingListens(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = createServer();
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', () => {
-      const address = server.address();
-      server.close(() =>
-        typeof address === 'object' && address !== null
-          ? resolve(address.port)
-          : reject(new Error('No port was given')),
-      );
-    });
-  });
-}
+import { aPortWhereNothingListens } from '../../test-utils/network';
 
 const databaseUnavailable = [
   {

@@ -6,7 +6,6 @@ import { ImportCatalogCommand } from '~/domain/catalog-import/ImportCatalogComma
 
 import { CatalogImportModule } from './catalog-import.module';
 import { reportOf } from './catalog-import-report';
-import { FolderOpenDbSource } from './FolderOpenDbSource';
 
 // Where the import says what it did, and what went wrong.
 export type Printer = {
@@ -15,24 +14,21 @@ export type Printer = {
 };
 
 // Fills the catalog from the folder shaped like OpenDB that the arguments
-// name, prints the report, and gives the code the command ends with: 0 when
-// it imported, 1 when it imported nothing. Run it with
+// name, or, when they name none, from the pinned commit fetched from GitHub.
+// It prints the report, and gives the code the command ends with: 0 when it
+// imported, 1 when it imported nothing. Run it with `pnpm catalog:import`, or
 // `pnpm catalog:import <folder>`.
 export async function importCatalog(
   args: readonly string[],
   printer: Printer,
 ): Promise<number> {
   const [folder] = args;
-  if (folder === undefined) {
-    printer.error('Name the folder to import: pnpm catalog:import <folder>');
-    return 1;
-  }
 
   let context: INestApplicationContext;
   try {
     // What went wrong is printed plainly below, so Nest prints nothing.
     context = await NestFactory.createApplicationContext(
-      CatalogImportModule.readingFrom(new FolderOpenDbSource(folder)),
+      CatalogImportModule.readingFrom(folder),
       { logger: false },
     );
   } catch (error) {

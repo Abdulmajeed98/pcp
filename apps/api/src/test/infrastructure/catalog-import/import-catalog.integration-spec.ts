@@ -1,8 +1,12 @@
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
 
 import { bearerHeader } from '@pcp/core/test-utils';
+import { create, Pax } from 'tar';
 
 import { importCatalog } from '~/infrastructure/catalog-import/import-catalog';
 
@@ -11,6 +15,7 @@ import {
   TestAppWithLogins,
 } from '../../test-utils/create-test-app';
 import { emptyTheDatabase } from '../../test-utils/database/test-database';
+import { aPortWhereNothingListens } from '../../test-utils/network';
 
 // A made-up folder shaped like OpenDB, at the pinned commit. Its README says
 // what it holds.
@@ -51,6 +56,54 @@ function tableIn(lines: readonly string[]): Record<string, number[]> {
 }
 
 const pinnedCommit = 'ef7e601b78875a931a4ad9fa1ccce7000f3e5ecf';
+
+// An archive of a folder shaped like OpenDB, made as GitHub makes the archive
+// of a commit: the folder's content under `buildcores-open-db-<commit>/open-db`,
+// after a first header that names the commit, as `git archive` writes it. With
+// no commit, the archive names none.
+async function anArchiveOf(folder: string, commit?: string): Promise<Buffer> {
+  const entries: Buffer[] = [];
+  for await (const chunk of create(
+    {
+      cwd: folder,
+      prefix: `buildcores-open-db-${commit ?? 'unknown'}/open-db`,
+      portable: true,
+    },
+    await readdir(folder),
+  )) {
+    entries.push(chunk as Buffer);
+  }
+  const header = commit === undefined ? [] : [new Pax({ comment: commit }, true).encode()];
+  return gzipSync(Buffer.concat([...header, ...entries]));
+}
+
+// What stands in for GitHub. It answers every request with the archive and the
+// status it is given, and keeps the path of each request.
+type GitHubStandIn = {
+  repository: string;
+  archive: Buffer;
+  status: number;
+  requested: string[];
+  close(): Promise<void>;
+};
+
+async function startGitHubStandIn(): Promise<GitHubStandIn> {
+  const server = createServer((request, response) => {
+    standIn.requested.push(request.url ?? '');
+    response.writeHead(standIn.status, { 'content-type': 'application/x-gzip' });
+    response.end(standIn.status === 200 ? standIn.archive : undefined);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  const standIn: GitHubStandIn = {
+    repository: `http://127.0.0.1:${port}/buildcores/buildcores-open-db`,
+    archive: Buffer.alloc(0),
+    status: 200,
+    requested: [],
+    close: () => new Promise((resolve) => server.close(() => resolve())),
+  };
+  return standIn;
+}
 
 type FoundPart = { id: string; name: string };
 
@@ -501,5 +554,121 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       `There is no file ${join(folder, 'COMMIT')} that names the commit of OpenDB the folder holds. Nothing was imported.`,
     ]);
     expect(await partsFound({})).toEqual([]);
+  });
+
+  it('says so plainly when the database cannot be reached, and imports nothing', async () => {
+    const database = process.env.DATASOURCE_URL;
+    process.env.DATASOURCE_URL = `postgresql://127.0.0.1:${await aPortWhereNothingListens()}/pcp`;
+    let run: Run;
+    try {
+      run = await runTheImport(sample);
+    } finally {
+      process.env.DATASOURCE_URL = database;
+    }
+
+    expect(run.exitCode).toBe(1);
+    expect(run.errors).toEqual([
+      expect.stringMatching(
+        /^The database could not be reached, and nothing was imported: .*ECONNREFUSED/,
+      ),
+    ]);
+    expect(run.printed).toEqual([]);
+    expect(await partsFound({})).toEqual([]);
+  });
+
+  describe('from GitHub, when no folder is given', () => {
+    let gitHub: GitHubStandIn;
+    const archivePath = `/buildcores/buildcores-open-db/archive/${pinnedCommit}.tar.gz`;
+
+    beforeAll(async () => {
+      gitHub = await startGitHubStandIn();
+      process.env.OPENDB_REPOSITORY_URL = gitHub.repository;
+    });
+
+    afterAll(async () => {
+      delete process.env.OPENDB_REPOSITORY_URL;
+      await gitHub.close();
+    });
+
+    beforeEach(() => {
+      gitHub.requested = [];
+      gitHub.status = 200;
+    });
+
+    it("fetches the pinned commit's archive and imports its eight folders", async () => {
+      gitHub.archive = await anArchiveOf(sample, pinnedCommit);
+
+      const run = await runTheImport();
+
+      expect(run.errors).toEqual([]);
+      expect(run.exitCode).toBe(0);
+      expect(gitHub.requested).toEqual([archivePath]);
+      expect(run.printed[0]).toBe(`Read OpenDB at commit ${pinnedCommit}.`);
+      expect(tableIn(run.printed).Total).toEqual([9, 0, 6, 4]);
+      expect(await partsFound({})).toHaveLength(9);
+      expect(await namesFound({ search: 'monitor' })).toEqual([]);
+    });
+
+    it('refuses an archive that holds another commit, and imports nothing', async () => {
+      const another = '0123456789abcdef0123456789abcdef01234567';
+      gitHub.archive = await anArchiveOf(sample, another);
+
+      const run = await runTheImport();
+
+      expect(run.exitCode).toBe(1);
+      expect(run.errors).toEqual([
+        `The source holds OpenDB at commit ${another}, and the import reads only commit ${pinnedCommit}, the last released under ODC-By 1.0. Nothing was imported.`,
+      ]);
+      expect(await partsFound({})).toEqual([]);
+    });
+
+    it('refuses an archive that does not say which commit it holds, and imports nothing', async () => {
+      gitHub.archive = await anArchiveOf(sample);
+
+      const run = await runTheImport();
+
+      expect(run.exitCode).toBe(1);
+      expect(run.errors).toEqual([
+        `The archive fetched from ${gitHub.repository}/archive/${pinnedCommit}.tar.gz does not say which commit of OpenDB it holds. Nothing was imported.`,
+      ]);
+      expect(await partsFound({})).toEqual([]);
+    });
+
+    it('says so plainly when GitHub answers with an error, and leaves the catalog as it was', async () => {
+      await runTheImport(sample);
+      const before = await partsFound({});
+      gitHub.status = 503;
+
+      const run = await runTheImport();
+
+      expect(run.exitCode).toBe(1);
+      expect(run.errors).toEqual([
+        `GitHub answered 503 when asked for ${gitHub.repository}/archive/${pinnedCommit}.tar.gz. Nothing was imported.`,
+      ]);
+      expect(await partsFound({})).toEqual(before);
+    });
+
+    it('says so plainly when GitHub cannot be reached, and leaves the catalog as it was', async () => {
+      await runTheImport(sample);
+      const before = await partsFound({});
+      const nowhere = `http://127.0.0.1:${await aPortWhereNothingListens()}/buildcores/buildcores-open-db`;
+      process.env.OPENDB_REPOSITORY_URL = nowhere;
+      let run: Run;
+      try {
+        run = await runTheImport();
+      } finally {
+        process.env.OPENDB_REPOSITORY_URL = gitHub.repository;
+      }
+
+      expect(run.exitCode).toBe(1);
+      expect(run.errors).toEqual([
+        expect.stringMatching(
+          new RegExp(
+            `^GitHub could not be reached to fetch ${nowhere}/archive/${pinnedCommit}\\.tar\\.gz: .*ECONNREFUSED.*\\. Nothing was imported\\.$`,
+          ),
+        ),
+      ]);
+      expect(await partsFound({})).toEqual(before);
+    });
   });
 });

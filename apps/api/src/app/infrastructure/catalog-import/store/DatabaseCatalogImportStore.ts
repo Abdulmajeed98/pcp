@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { databaseErrorOf, StructuredError } from '@pcp/core';
+import {
+  databaseErrorOf,
+  ServerError,
+  ServiceUnavailableError,
+  StructuredError,
+} from '@pcp/core';
 import { Either } from 'effect';
 
 import {
@@ -10,6 +15,8 @@ import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { part } from '~/infrastructure/part/part.schema';
 import { columnsOf } from '~/infrastructure/part/part-columns';
 
+import { reasonOf } from '../opendb-file';
+
 // A failure to write one record's Part, and which record it was.
 class RecordNotWritten extends Error {
   constructor(
@@ -18,22 +25,6 @@ class RecordNotWritten extends Error {
   ) {
     super(`The record with OpenDB ID ${openDbId} could not be written`);
   }
-}
-
-// What went wrong at the bottom, rather than Drizzle's wrapping of it, which
-// holds the whole statement and every value in it. Node gives a connection it
-// tried at several addresses as an error of errors, with no message of its
-// own.
-function reasonOf(error: unknown): string {
-  const { cause, message, errors } = error as {
-    cause?: unknown;
-    message?: unknown;
-    errors?: unknown;
-  };
-  if (cause !== undefined) return reasonOf(cause);
-  if (typeof message === 'string' && message !== '') return message;
-  if (Array.isArray(errors)) return errors.map(reasonOf).join('; ');
-  return String(error);
 }
 
 @Injectable()
@@ -73,13 +64,27 @@ export class DatabaseCatalogImportStore implements CatalogImportStore {
         });
       return Either.right(created);
     } catch (error) {
+      this.logger.error(error, 'The catalog could not be written');
+      // A database that could not be reached says so, and a failure while a
+      // record was written names the record.
+      const failure = databaseErrorOf(error, 'The catalog could not be written');
+      if (failure.getType() === 'SERVICE_UNAVAILABLE') {
+        return Either.left(
+          ServiceUnavailableError.of(
+            failure.getCode(),
+            `The database could not be reached, and nothing was imported: ${reasonOf(error)}`,
+          ),
+        );
+      }
       const record =
         error instanceof RecordNotWritten
           ? `the record with OpenDB ID ${error.openDbId} was not taken: `
           : '';
-      const message = `The catalog could not be written, and nothing was imported: ${record}${reasonOf(error)}`;
-      this.logger.error(error, message);
-      return Either.left(databaseErrorOf(error, message));
+      return Either.left(
+        ServerError.of(
+          `The catalog could not be written, and nothing was imported: ${record}${reasonOf(error)}`,
+        ),
+      );
     }
   }
 }

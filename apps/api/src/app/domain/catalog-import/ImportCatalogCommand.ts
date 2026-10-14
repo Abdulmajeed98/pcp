@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { NotValidError, StructuredError } from '@pcp/core';
+import { pinnedOpenDbCommit } from '@pcp/opendb';
 import { Either, Option } from 'effect';
 
 import { Category } from '../part/Category';
 import { SpecificationProblem } from '../specification/Specification';
 import { CatalogImportStore } from './CatalogImportStore';
 import { CategoryImport, RecordLeftOut, ValuesLeftOut } from './CategoryImport';
-import { openDbFolders, pinnedCommit } from './opendb';
+import { openDbFolders } from './opendb';
 import { PartOfRecord, partOfRecord, RecordLeftOutReason } from './opendb-record';
 import { OpenDbSource } from './OpenDbSource';
 
@@ -56,13 +57,15 @@ function valuesLeftOutOf(problems: readonly SpecificationProblem[]): ValuesLeftO
     .map(([, values]) => values);
 }
 
-// The owner fills the catalog from OpenDB at the pinned commit. Each record of
+// The owner fills the catalog from OpenDB at the pinned commit, the last
+// released under ODC-By 1.0. OpenDB's later data is under CC BY-NC-SA 4.0, and
+// the import refuses it. Each record of
 // the eight Categories' folders becomes a Part, unless the catalog already
 // holds a Part with its OpenDB ID, which is left as it is. Everything is
 // written at once, or nothing is.
 //
-// It has no Input: what it reads is the source it is given, a folder or, later,
-// the pinned commit fetched from GitHub, and it takes nothing else.
+// It has no Input: what it reads is the source it is given, a folder or the
+// pinned commit fetched from GitHub, and it takes nothing else.
 @Injectable()
 export class ImportCatalogCommand {
   constructor(
@@ -73,11 +76,11 @@ export class ImportCatalogCommand {
   async execute(): Promise<Either.Either<Output, StructuredError>> {
     const commit = await this.openDbSource.readCommit();
     if (Either.isLeft(commit)) return Either.left(commit.left);
-    if (commit.right !== pinnedCommit) {
+    if (commit.right !== pinnedOpenDbCommit) {
       return Either.left(
         NotValidError.of(
           'OPENDB_COMMIT_NOT_PINNED',
-          `The source holds OpenDB at commit ${commit.right}, and the import reads only commit ${pinnedCommit}, the last released under ODC-By 1.0. Nothing was imported.`,
+          `The source holds OpenDB at commit ${commit.right}, and the import reads only commit ${pinnedOpenDbCommit}, the last released under ODC-By 1.0. Nothing was imported.`,
           { commit: commit.right },
         ),
       );

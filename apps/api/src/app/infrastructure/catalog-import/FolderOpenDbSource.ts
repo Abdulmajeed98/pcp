@@ -6,6 +6,8 @@ import { Either, Option } from 'effect';
 
 import { OpenDbFile, OpenDbSource } from '~/domain/catalog-import/OpenDbSource';
 
+import { openDbFileOf } from './opendb-file';
+
 // The file in which a folder names the commit of OpenDB it holds, as its
 // full 40-character identifier and nothing else.
 export const commitFileName = 'COMMIT';
@@ -57,12 +59,7 @@ export class FolderOpenDbSource implements OpenDbSource {
 
       const files: OpenDbFile[] = [];
       for (const fileName of fileNames) {
-        files.push(
-          new OpenDbFile(
-            fileName,
-            recordIn(await readFile(join(folder, fileName), 'utf8')),
-          ),
-        );
+        files.push(openDbFileOf(fileName, await readFile(join(folder, fileName), 'utf8')));
       }
       return Either.right(Option.some(files));
     } catch (error) {
@@ -75,13 +72,5 @@ export class FolderOpenDbSource implements OpenDbSource {
         ),
       );
     }
-  }
-}
-
-function recordIn(text: string): Option.Option<unknown> {
-  try {
-    return Option.some(JSON.parse(text) as unknown);
-  } catch {
-    return Option.none();
   }
 }
