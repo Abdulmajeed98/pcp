@@ -25,6 +25,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - The import's report makes sense, and a few well-known Parts, such as an AMD Ryzen 5 7600, are found with the right specifications.
   - How long the import took on the owner's connection.
   - The Catalog screens and the footer match DESIGN.md, and Impeccable's design hook raises nothing left unanswered.
+  - Whether commit messages follow the workplace's document on them. Ticket 08's review found that this repository's history does not: no subject starts with one of its prefixes (add, rm, refactor, temp, feat, fix), and some subjects are longer than 50 characters. The answer is recorded where the conventions are written.
 - [ ] The Technology section of the MVP spec gains the conventions this module set:
   - the database settings and the first secret setting;
   - migrations: how they are generated, applied and checked;
@@ -36,11 +37,11 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - the import and its pinned commit;
   - DESIGN.md, the accessibility standard and the research behind them.
 - [ ] The conventions that ticket 01 changed are corrected where they are written:
-  - ADR-0004 and the MVP spec list `apps/api/src/drizzle`, which drizzle-kit writes, among the files Oxfmt does not format.
+  - ADR-0004 and the MVP spec list `apps/api/src/drizzle`, which drizzle-kit writes, among the files Oxfmt does not format. Ticket 08 added the import's made-up folder shaped like OpenDB, which holds a file that is not JSON on purpose.
   - "An endpoint carries `@ApiOperation` and `@ApiOkResponse`" is widened to the success response that fits, such as `@ApiCreatedResponse` for a create.
   - Every request is checked against its Request class, a field the class does not declare is refused, and each refused field is named in `additionalInformation`.
   - An error a use case returns has a code of its own, from which its title and detail keys are made.
-  - The MVP spec's settings section no longer says that no app reads `.env`: when Nx runs the API's `serve` or `migrate` target, a file of the target's own (`apps/api/.serve.env`, `apps/api/.migrate.env`) gives `DATASOURCE_PASSWORD` the value `.env` holds for the `pcp` user, and a value set in the shell wins. The same goes for each later target that reaches the database.
+  - The MVP spec's settings section no longer says that no app reads `.env`: when Nx runs the API's `serve`, `migrate` or `catalog-import` target, a file of the target's own (`apps/api/.serve.env`, `apps/api/.migrate.env`, `apps/api/.catalog-import.env`) gives `DATASOURCE_PASSWORD` the value `.env` holds for the `pcp` user, and a value set in the shell wins. The same goes for each later target that reaches the database.
   - A database that cannot be reached is answered 503 with `DATABASE_UNAVAILABLE`, and the API listens to its pool's error event so that a database that stops does not end it.
 - [ ] Its commands table gains `pnpm catalog:import`, `pnpm db:migrate`, `pnpm integration:check` and the command that generates a migration. Its settings table gains the database settings.
 - [ ] It says when to run `pnpm integration:check`: after a change to a schema, a migration, a Store, a Command or a Query, and after an upgrade of Drizzle, `pg`, Effect or Testcontainers.
