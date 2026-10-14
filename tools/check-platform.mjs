@@ -14,6 +14,7 @@ import { parseEnv } from 'node:util';
 import { chromium } from '@playwright/test';
 
 import { keycloakUrl } from './keycloak-administrator.mjs';
+import { missingMigrations } from './platform-migrations.mjs';
 
 const startHint = 'Start the services with "pnpm services:up".';
 
@@ -48,6 +49,22 @@ async function realmAnswers() {
 
 if (!(await realmAnswers())) {
   exitWith(`Keycloak cannot be reached, so the services are not running. ${startHint}`);
+}
+
+// The API the tests start stores data, so the platform's database has to have
+// every migration first.
+let missing;
+try {
+  missing = missingMigrations(settings.PCP_DB_PASSWORD);
+} catch (error) {
+  exitWith(
+    `The platform's database could not be asked which migrations it has: ${error.message}. ${startHint}`,
+  );
+}
+if (missing.length > 0) {
+  exitWith(
+    `The platform's database lacks the migrations ${missing.map((migration) => migration.name).join(', ')}. ${startHint}`,
+  );
 }
 
 // `pnpm install` downloads no browser. Playwright says where Chromium would

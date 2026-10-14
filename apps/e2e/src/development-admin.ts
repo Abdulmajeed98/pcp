@@ -4,7 +4,7 @@ import { parseEnv } from 'node:util';
 
 import { expect, type Page } from '@playwright/test';
 
-import { dashboardUrl, realmUrl } from './platform';
+import { apiUrl, dashboardUrl, realmUrl } from './platform';
 
 // The development Admin is the one login `pnpm services:up` creates. Its name
 // and password are in `.env` at the repository root, and are never printed.
@@ -37,4 +37,19 @@ export async function logInToTheDashboard(page: Page): Promise<void> {
   await page.locator('#kc-login').click();
 
   await page.waitForURL(`${dashboardUrl}/**`);
+}
+
+// Logs in to the dashboard as the development Admin, and gives the
+// authorisation the dashboard sends the API, so that a test can call the API
+// as the Admin. The dashboard's page asks the API who the caller is, and the
+// token is taken from that call.
+export async function authorisationOfTheDevelopmentAdmin(page: Page): Promise<string> {
+  const called = page.waitForRequest(
+    (request) => request.url() === `${apiUrl}/v1/caller` && request.method() === 'GET',
+  );
+  await logInToTheDashboard(page);
+
+  const authorisation = (await called).headers().authorization;
+  expect(authorisation).toMatch(/^Bearer \S+$/);
+  return authorisation;
 }
