@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreatePartData, CreatePartErrors, CreatePartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses } from './types.gen';
+import type { CreatePartData, CreatePartErrors, CreatePartResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -61,4 +61,17 @@ export const readPart = <ThrowOnError extends boolean = false>(options: Options<
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/parts/{partId}',
     ...options
+});
+
+/**
+ * Replace a Part's name, manufacturer, part numbers and specifications. Its Category never changes.
+ */
+export const editPart = <ThrowOnError extends boolean = false>(options: Options<EditPartData, ThrowOnError>): RequestResult<EditPartResponses, EditPartErrors, ThrowOnError> => (options.client ?? client).put<EditPartResponses, EditPartErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/parts/{partId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });

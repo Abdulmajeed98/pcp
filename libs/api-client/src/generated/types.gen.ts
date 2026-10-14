@@ -99,10 +99,6 @@ export type CategoryResponse = {
 
 export type CreatePartRequest = {
     /**
-     * The Part's Category, which never changes afterwards.
-     */
-    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
-    /**
      * The Part's name.
      */
     name: string;
@@ -120,6 +116,10 @@ export type CreatePartRequest = {
     specifications?: {
         [key: string]: unknown;
     };
+    /**
+     * The Part's Category, which never changes afterwards.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
 };
 
 export type PartResponse = {
@@ -157,6 +157,35 @@ export type PartResponse = {
      * The paths of the specifications a Compatibility Rule reads that the Part lacks, in its list's order.
      */
     missingNeededSpecifications: Array<string>;
+    /**
+     * When the Part was created.
+     */
+    createdAt: string;
+    /**
+     * When the Part last changed.
+     */
+    updatedAt: string;
+};
+
+export type EditPartRequest = {
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers. None is given as an empty list.
+     */
+    partNumbers?: Array<string>;
+    /**
+     * The Part's specifications, in OpenDB's field names and nesting. Its Category's specification list says what they may hold. Left out, the Part has none.
+     */
+    specifications?: {
+        [key: string]: unknown;
+    };
 };
 
 export type GetCallerData = {
@@ -270,3 +299,27 @@ export type ReadPartResponses = {
 };
 
 export type ReadPartResponse = ReadPartResponses[keyof ReadPartResponses];
+
+export type EditPartData = {
+    body: EditPartRequest;
+    path: {
+        partId: string;
+    };
+    query?: never;
+    url: '/v1/parts/{partId}';
+};
+
+export type EditPartErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type EditPartError = EditPartErrors[keyof EditPartErrors];
+
+export type EditPartResponses = {
+    200: PartResponse;
+};
+
+export type EditPartResponse = EditPartResponses[keyof EditPartResponses];

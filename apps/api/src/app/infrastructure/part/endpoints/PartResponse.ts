@@ -56,6 +56,12 @@ export class PartResponse {
   })
   readonly missingNeededSpecifications: string[];
 
+  @ApiProperty({ description: 'When the Part was created.', format: 'date-time' })
+  readonly createdAt: string;
+
+  @ApiProperty({ description: 'When the Part last changed.', format: 'date-time' })
+  readonly updatedAt: string;
+
   private constructor(part: Part) {
     this.id = part.getId();
     this.category = part.getCategory().getKey();
@@ -65,6 +71,8 @@ export class PartResponse {
     this.openDbId = part.getOpenDbId();
     this.specifications = part.getSpecifications();
     this.missingNeededSpecifications = part.getMissingNeededSpecifications();
+    this.createdAt = part.getCreatedAt().toISOString();
+    this.updatedAt = part.getUpdatedAt().toISOString();
   }
 
   static of(part: Part): PartResponse {

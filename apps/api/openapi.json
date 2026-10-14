@@ -136,6 +136,53 @@
       }
     },
     "/v1/parts/{partId}": {
+      "put": {
+        "operationId": "editPart",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditPartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Replace a Part's name, manufacturer, part numbers and specifications. Its Category never changes.",
+        "tags": ["Part"]
+      },
       "get": {
         "operationId": "readPart",
         "parameters": [
@@ -364,21 +411,6 @@
       "CreatePartRequest": {
         "type": "object",
         "properties": {
-          "category": {
-            "type": "string",
-            "description": "The Part's Category, which never changes afterwards.",
-            "enum": [
-              "cpu",
-              "cpuCooler",
-              "motherboard",
-              "ram",
-              "storage",
-              "gpu",
-              "case",
-              "psu"
-            ],
-            "example": "cpu"
-          },
           "name": {
             "type": "string",
             "description": "The Part's name.",
@@ -410,9 +442,24 @@
                 }
               }
             }
+          },
+          "category": {
+            "type": "string",
+            "description": "The Part's Category, which never changes afterwards.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
           }
         },
-        "required": ["category", "name", "manufacturer"]
+        "required": ["name", "manufacturer", "category"]
       },
       "PartResponse": {
         "type": "object",
@@ -482,6 +529,16 @@
             "items": {
               "type": "string"
             }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the Part was created.",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "When the Part last changed.",
+            "format": "date-time"
           }
         },
         "required": [
@@ -492,8 +549,48 @@
           "partNumbers",
           "openDbId",
           "specifications",
-          "missingNeededSpecifications"
+          "missingNeededSpecifications",
+          "createdAt",
+          "updatedAt"
         ]
+      },
+      "EditPartRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The Part's name.",
+            "example": "AMD Ryzen 5 7600"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "The Part's manufacturer.",
+            "example": "AMD"
+          },
+          "partNumbers": {
+            "description": "The manufacturer's part numbers. None is given as an empty list.",
+            "example": ["100-100001015BOX"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "specifications": {
+            "type": "object",
+            "description": "The Part's specifications, in OpenDB's field names and nesting. Its Category's specification list says what they may hold. Left out, the Part has none.",
+            "additionalProperties": true,
+            "example": {
+              "socket": "AM5",
+              "specifications": {
+                "tdp": 65,
+                "memory": {
+                  "types": ["DDR5"]
+                }
+              }
+            }
+          }
+        },
+        "required": ["name", "manufacturer"]
       }
     }
   },

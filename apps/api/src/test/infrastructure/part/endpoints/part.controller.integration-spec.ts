@@ -22,6 +22,8 @@ type PartBody = {
   openDbId: string | null;
   specifications: Record<string, unknown>;
   missingNeededSpecifications: string[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 function partOf(response: Response): Promise<PartBody> {
@@ -48,6 +50,14 @@ describe('the Part endpoints', () => {
   function createPart(body: unknown, token = adminToken): Promise<Response> {
     return fetch(`${testApp.baseUrl}/v1/parts`, {
       method: 'POST',
+      headers: { ...bearerHeader(token), 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  function editPart(partId: string, body: unknown, token = adminToken): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/parts/${partId}`, {
+      method: 'PUT',
       headers: { ...bearerHeader(token), 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
@@ -84,6 +94,8 @@ describe('the Part endpoints', () => {
           'specifications.tdp',
           'specifications.memory.types',
         ],
+        createdAt: expect.any(String),
+        updatedAt: part.createdAt,
       });
 
       const read = await readPart(part.id, adminToken);
@@ -530,6 +542,138 @@ describe('the Part endpoints', () => {
       const part = await partOf(created);
       expect(part.specifications).toEqual({ m2_slots: [] });
       expect(part.missingNeededSpecifications).not.toContain('m2_slots');
+    });
+  });
+
+  describe('editing a Part', () => {
+    const cpuSpecifications = {
+      socket: 'AM5',
+      specifications: { tdp: 65, memory: { types: ['DDR5'] } },
+    };
+
+    async function aCpu(): Promise<PartBody> {
+      return partOf(
+        await createPart({
+          category: 'cpu',
+          name: 'Made-up Ryzen 5 7600',
+          manufacturer: 'AMD',
+          partNumbers: ['100-100001015BOX'],
+          specifications: cpuSpecifications,
+        }),
+      );
+    }
+
+    it('replaces the name, the manufacturer, the part numbers and the specifications, and keeps the rest', async () => {
+      const before = await aCpu();
+
+      const edited = await editPart(before.id, {
+        name: 'Made-up Ryzen 5 7600X',
+        manufacturer: 'Advanced Micro Devices',
+        partNumbers: [' 100-100000593WOF ', '100-100000593wof'],
+        specifications: { socket: 'AM5', cores: { total: 6 } },
+      });
+
+      expect(edited.status).toBe(200);
+      const after = await partOf(edited);
+      expect(after).toEqual({
+        ...before,
+        name: 'Made-up Ryzen 5 7600X',
+        manufacturer: 'Advanced Micro Devices',
+        partNumbers: ['100-100000593WOF'],
+        specifications: { socket: 'AM5', cores: { total: 6 } },
+        missingNeededSpecifications: ['specifications.tdp', 'specifications.memory.types'],
+        updatedAt: expect.any(String),
+      });
+      expect(new Date(after.updatedAt).getTime()).toBeGreaterThan(
+        new Date(before.updatedAt).getTime(),
+      );
+      expect(await partOf(await readPart(before.id, adminToken))).toEqual(after);
+    });
+
+    it('clears a needed specification it leaves out, and the Part then lists it as missing', async () => {
+      const before = await aCpu();
+
+      const edited = await editPart(before.id, {
+        name: before.name,
+        manufacturer: before.manufacturer,
+        specifications: { socket: 'AM5', specifications: { memory: { types: ['DDR5'] } } },
+      });
+
+      expect((await partOf(edited)).missingNeededSpecifications).toEqual([
+        'specifications.tdp',
+      ]);
+    });
+
+    it('refuses a value outside a fixed set, naming the specification, and changes nothing', async () => {
+      const before = await aCpu();
+
+      const response = await editPart(before.id, {
+        name: before.name,
+        manufacturer: before.manufacturer,
+        specifications: { ...cpuSpecifications, socket: 'AM 5' },
+      });
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.socket', {
+          specification: 'socket',
+          reason: 'notInTheSet',
+        }),
+      ]);
+      expect(await partOf(await readPart(before.id, adminToken))).toEqual(before);
+    });
+
+    it('does not change the Category: one sent with an edit is refused', async () => {
+      const before = await aCpu();
+
+      const response = await editPart(before.id, {
+        category: 'gpu',
+        name: before.name,
+        manufacturer: before.manufacturer,
+      });
+
+      await expectErrorResponse(response, 400, [notValid('category')]);
+      expect((await partOf(await readPart(before.id, adminToken))).category).toBe('cpu');
+    });
+
+    it('answers a Part that does not exist with its own error', async () => {
+      const response = await editPart('6f1d2c3b-4a5e-4f60-8b7a-9c0d1e2f3a4b', {
+        name: 'Made-up',
+        manufacturer: 'Made-up',
+      });
+
+      await expectErrorResponse(response, 404, [
+        {
+          code: 'PART_NOT_FOUND',
+          title: 'part_not_found_title',
+          detail: 'part_not_found_details',
+        },
+      ]);
+    });
+
+    it('refuses a Vendor, and changes nothing', async () => {
+      const before = await aCpu();
+      const vendorToken = await testApp.tokenOf({ roles: ['vendor'] });
+
+      const response = await editPart(
+        before.id,
+        { name: 'Changed by a Vendor', manufacturer: 'AMD' },
+        vendorToken,
+      );
+
+      await expectErrorResponse(response, 403, accessDenied);
+      expect((await partOf(await readPart(before.id, adminToken))).name).toBe(before.name);
+    });
+
+    it('refuses a call without a token', async () => {
+      const before = await aCpu();
+
+      const response = await fetch(`${testApp.baseUrl}/v1/parts/${before.id}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: 'Made-up', manufacturer: 'Made-up' }),
+      });
+
+      await expectErrorResponse(response, 401, unauthorized);
     });
   });
 

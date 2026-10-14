@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundError, StructuredError } from '@pcp/core';
+import { StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
 import { Part } from './Part';
+import { partNotFound } from './part-errors';
 import { PartStore } from './PartStore';
 
 class Input {
@@ -38,10 +39,7 @@ export class ReadPartQuery {
 
     return Either.flatMap(found, (part) =>
       Option.match(part, {
-        onNone: () =>
-          Either.left(
-            NotFoundError.of('PART_NOT_FOUND', `There is no Part ${input.getPartId()}`),
-          ),
+        onNone: () => Either.left(partNotFound(input.getPartId())),
         onSome: (existing) => Either.right(Output.of(existing)),
       }),
     );

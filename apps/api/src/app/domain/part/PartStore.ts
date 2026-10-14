@@ -35,10 +35,48 @@ export class CreatePartParams {
   }
 }
 
+// What an edit replaces. The Category, the OpenDB ID and the time the Part was
+// created are not among it.
+export class EditPartParams {
+  constructor(
+    private readonly partId: string,
+    private readonly name: string,
+    private readonly manufacturer: string,
+    private readonly partNumbers: readonly string[],
+    private readonly specifications: SpecificationDocument,
+  ) {}
+
+  getPartId(): string {
+    return this.partId;
+  }
+
+  getName(): string {
+    return this.name;
+  }
+
+  getManufacturer(): string {
+    return this.manufacturer;
+  }
+
+  getPartNumbers(): readonly string[] {
+    return this.partNumbers;
+  }
+
+  getSpecifications(): SpecificationDocument {
+    return this.specifications;
+  }
+}
+
 // Where Parts are kept. It is the port: the domain says what it needs, and
 // infrastructure provides it.
 export abstract class PartStore {
   abstract create(params: CreatePartParams): Promise<Either.Either<Part, StructuredError>>;
+
+  // Replaces what the params hold and gives the Part as it now is, or none
+  // when there is no such Part.
+  abstract edit(
+    params: EditPartParams,
+  ): Promise<Either.Either<Option.Option<Part>, StructuredError>>;
 
   // The Part with this identifier, or none when there is no such Part.
   abstract readById(

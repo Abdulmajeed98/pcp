@@ -5,7 +5,7 @@ import { Either, Option } from 'effect';
 
 import { Category } from '~/domain/part/Category';
 import { Part } from '~/domain/part/Part';
-import { CreatePartParams, PartStore } from '~/domain/part/PartStore';
+import { CreatePartParams, EditPartParams, PartStore } from '~/domain/part/PartStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 
 import { part, PartRow } from '../part.schema';
@@ -34,6 +34,8 @@ function toDomain(row: PartRow): Either.Either<Part, StructuredError> {
       row.partNumbers,
       row.openDbId,
       row.specifications,
+      row.createdAt,
+      row.updatedAt,
     ),
   );
 }
@@ -62,6 +64,32 @@ export class DatabasePartStore implements PartStore {
     } catch (error) {
       this.logger.error(error, 'A Part could not be created');
       return Either.left(databaseErrorOf(error, 'A Part could not be created'));
+    }
+  }
+
+  async edit(
+    params: EditPartParams,
+  ): Promise<Either.Either<Option.Option<Part>, StructuredError>> {
+    if (!uuidPattern.test(params.getPartId())) return Either.right(Option.none());
+
+    try {
+      const [row] = await this.databaseProvider
+        .getClient()
+        .update(part)
+        .set({
+          name: params.getName(),
+          manufacturer: params.getManufacturer(),
+          partNumbers: [...params.getPartNumbers()],
+          specifications: params.getSpecifications(),
+        })
+        .where(eq(part.id, params.getPartId()))
+        .returning();
+
+      if (row === undefined) return Either.right(Option.none());
+      return Either.map(toDomain(row), Option.some);
+    } catch (error) {
+      this.logger.error(error, 'A Part could not be edited');
+      return Either.left(databaseErrorOf(error, 'A Part could not be edited'));
     }
   }
 

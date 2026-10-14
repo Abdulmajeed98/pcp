@@ -39,5 +39,7 @@ test("the API stores a Part: the development Admin creates a made-up Part, and t
       'specifications.tdp',
       'specifications.memory.types',
     ],
+    createdAt: expect.any(String),
+    updatedAt: expect.any(String),
   });
 });

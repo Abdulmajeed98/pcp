@@ -12,6 +12,8 @@ export class Part {
     private readonly partNumbers: readonly string[],
     private readonly openDbId: string | null,
     private readonly specifications: SpecificationDocument,
+    private readonly createdAt: Date,
+    private readonly updatedAt: Date,
   ) {}
 
   getId(): string {
@@ -43,6 +45,15 @@ export class Part {
   // Its specifications, as its Category's list keeps them.
   getSpecifications(): SpecificationDocument {
     return this.specifications;
+  }
+
+  getCreatedAt(): Date {
+    return this.createdAt;
+  }
+
+  // When the Part last changed. An edit sets it.
+  getUpdatedAt(): Date {
+    return this.updatedAt;
   }
 
   // The specifications a Compatibility Rule reads that this Part lacks, by

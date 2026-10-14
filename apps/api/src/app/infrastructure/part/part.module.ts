@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { CreatePartCommand } from '~/domain/part/CreatePartCommand';
+import { EditPartCommand } from '~/domain/part/EditPartCommand';
 import { PartStore } from '~/domain/part/PartStore';
 import { ReadPartQuery } from '~/domain/part/ReadPartQuery';
 
@@ -13,6 +14,7 @@ import { DatabasePartStore } from './store/DatabasePartStore';
     // The abstract class is the token the domain asks for.
     { provide: PartStore, useClass: DatabasePartStore },
     CreatePartCommand,
+    EditPartCommand,
     ReadPartQuery,
   ],
 })
