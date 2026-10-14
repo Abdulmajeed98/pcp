@@ -20,12 +20,13 @@ import {
 import { ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
-import { CreatePartCommand } from '~/domain/part/CreatePartCommand';
 import {
   AddPartPhotoCommand,
   AddPartPhotoCommandInput,
   LARGEST_PICTURE_BYTES,
-} from '~/domain/photo/AddPartPhotoCommand';
+} from '~/domain/part/AddPartPhotoCommand';
+import { CreatePartCommand } from '~/domain/part/CreatePartCommand';
+
 import { EditPartCommand } from '~/domain/part/EditPartCommand';
 import { ReadPartQuery, ReadPartQueryInput } from '~/domain/part/ReadPartQuery';
 import { SearchPartsQuery } from '~/domain/part/SearchPartsQuery';
@@ -34,6 +35,7 @@ import { CreatePartRequest } from './CreatePartRequest';
 import { EditPartRequest } from './EditPartRequest';
 import { PartPageResponse } from './PartPageResponse';
 import { PartResponse } from './PartResponse';
+import { PictureUploadErrorsInterceptor } from './picture-upload-errors.interceptor';
 import { SearchPartsRequest } from './SearchPartsRequest';
 
 @Controller()
@@ -112,6 +114,7 @@ export class PartController {
   // case refuses it naming the field. One far over it is refused as it
   // arrives, before it fills the API's memory.
   @UseInterceptors(
+    PictureUploadErrorsInterceptor,
     FileInterceptor('photo', {
       limits: { fileSize: LARGEST_PICTURE_BYTES + 2 * 1024 * 1024 },
     }),

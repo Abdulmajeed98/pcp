@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { NotValidError, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
-import { Part } from '../part/Part';
-import { partNotFound } from '../part/part-errors';
-import { PartStore } from '../part/PartStore';
-import { PhotoProcessor } from './PhotoProcessor';
-import { PhotoStore } from './PhotoStore';
+import { PhotoProcessor, PictureRefusal } from '../photo/PhotoProcessor';
+import { PhotoStore } from '../photo/PhotoStore';
+import { Part } from './Part';
+import { partNotFound } from './part-errors';
+import { PartStore } from './PartStore';
 
 // The largest picture the Admin may send. A photo from a phone's camera is
 // well under it.
@@ -43,7 +43,7 @@ class Output {
 export { Input as AddPartPhotoCommandInput };
 export { Output as AddPartPhotoCommandOutput };
 
-function refused(reason: 'missing' | 'tooLarge' | 'notAPhoto'): NotValidError {
+function refused(reason: 'missing' | 'tooLarge' | PictureRefusal): NotValidError {
   return NotValidError.of('NOT_VALID', `The photo was refused: ${reason}`, {
     field: 'photo',
     reason,
@@ -69,9 +69,9 @@ export class AddPartPhotoCommand {
     if (Option.isNone(found.right)) return Either.left(partNotFound(input.getPartId()));
 
     const photo = await this.photoProcessor.prepare(picture);
-    if (Option.isNone(photo)) return Either.left(refused('notAPhoto'));
+    if (Either.isLeft(photo)) return Either.left(refused(photo.left));
 
-    const stored = await this.photoStore.replaceForPart(input.getPartId(), photo.value);
+    const stored = await this.photoStore.replaceForPart(input.getPartId(), photo.right);
     if (Either.isLeft(stored)) return Either.left(stored.left);
 
     const withPhoto = await this.partStore.readById(input.getPartId());

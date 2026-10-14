@@ -159,6 +159,64 @@ describe("a Part's photo", () => {
     await expectErrorResponse(response, 400, [notValid('photo', { reason: 'tooLarge' })]);
   });
 
+  it('is refused in the same way when it is far larger, before it is all received', async () => {
+    const part = await aPart();
+
+    const response = await addPhoto(part.id, Buffer.alloc(13 * 1024 * 1024, 1));
+
+    await expectErrorResponse(response, 400, [notValid('photo', { reason: 'tooLarge' })]);
+  });
+
+  it('is refused when it has more pixels than the largest', async () => {
+    const part = await aPart();
+    // Small as a file, but over 100 million pixels once decoded.
+    const huge = await sharp({
+      create: { width: 12000, height: 9000, channels: 3, background: '#000000' },
+    })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+
+    const response = await addPhoto(part.id, huge, { name: 'huge.png', type: 'image/png' });
+
+    await expectErrorResponse(response, 400, [
+      notValid('photo', { reason: 'tooManyPixels' }),
+    ]);
+  });
+
+  it('is refused, naming the field, when it is sent under another name', async () => {
+    const part = await aPart();
+    const form = new FormData();
+    form.append(
+      'picture',
+      new Blob([new Uint8Array(await aSmallPng())], { type: 'image/png' }),
+      'a.png',
+    );
+
+    const response = await fetch(`${testApp.baseUrl}/v1/parts/${part.id}/photo`, {
+      method: 'PUT',
+      headers: bearerHeader(adminToken),
+      body: form,
+    });
+
+    await expectErrorResponse(response, 400, [notValid('photo', { reason: 'missing' })]);
+  });
+
+  it('takes two replacements sent at once one after the other, and keeps one photo', async () => {
+    const part = await aPart();
+
+    const [first, second] = await Promise.all([
+      addPhoto(part.id, await aSmallPng()),
+      addPhoto(part.id, await aPhotoFromAPhone()),
+    ]);
+
+    expect([first.status, second.status]).toEqual([200, 200]);
+    const read = await fetch(`${testApp.baseUrl}/v1/parts/${part.id}`, {
+      headers: bearerHeader(adminToken),
+    });
+    const { photoPath } = (await read.json()) as PartWithPhoto;
+    expect((await served(photoPath as string)).status).toBe(200);
+  });
+
   it('is refused when none is sent', async () => {
     const part = await aPart();
     const response = await fetch(`${testApp.baseUrl}/v1/parts/${part.id}/photo`, {
@@ -201,6 +259,7 @@ describe("a Part's photo", () => {
 
     expect(photo.status).toBe(200);
     expect(photo.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
+    expect(photo.headers.get('x-content-type-options')).toBe('nosniff');
   });
 
   it("is named in the Part's answer and in each search result", async () => {

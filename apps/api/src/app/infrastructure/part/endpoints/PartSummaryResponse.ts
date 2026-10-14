@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Category } from '~/domain/part/Category';
 import { Part } from '~/domain/part/Part';
 
-import { photoPathOf } from './photo-path';
+import { photoPathOf } from '~/infrastructure/photo/endpoints/photo-path';
 
 // A Part as a list of found Parts shows it.
 export class PartSummaryResponse {
@@ -47,7 +47,7 @@ export class PartSummaryResponse {
     this.name = part.getName();
     this.manufacturer = part.getManufacturer();
     this.partNumbers = [...part.getPartNumbers()];
-    this.photoPath = photoPathOf(part);
+    this.photoPath = photoPathOf(part.getPhotoId());
   }
 
   static of(part: Part): PartSummaryResponse {

@@ -5,9 +5,12 @@ import { Either } from 'effect';
 
 import { ReadPhotoQuery, ReadPhotoQueryInput } from '~/domain/photo/ReadPhotoQuery';
 
+import { photosPath } from './photo-path';
+
 // Serves Parts' photos to anyone. A photo never changes at its address, since
 // a replaced one gets a new address, so it may be cached for a year by the
-// browser and by any cache in front of the API.
+// browser and by any cache in front of the API. The browser is told not to
+// guess a different type from the bytes.
 @Controller()
 export class PhotoController {
   constructor(private readonly readPhotoQuery: ReadPhotoQuery) {}
@@ -16,7 +19,7 @@ export class PhotoController {
   @ApiProduces('image/webp')
   @ApiOkResponse({ schema: { type: 'string', format: 'binary' } })
   @Public()
-  @Get('v1/photos/:photoId')
+  @Get(`${photosPath}/:photoId`)
   async readPhoto(
     @Param('photoId') photoId: string,
     // Express's response, of which only its headers are set here.
@@ -26,6 +29,7 @@ export class PhotoController {
     const photo = result.pipe(Either.getOrThrowWith(ErrorStructureException.of));
 
     response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    return new StreamableFile(photo.getImage(), { type: 'image/webp' });
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    return new StreamableFile(photo.getPhoto(), { type: 'image/webp' });
   }
 }

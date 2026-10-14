@@ -107,8 +107,8 @@ export class DatabasePartStore implements PartStore {
     if (!couldBeIdentifier(params.getPartId())) return Either.right(Option.none());
 
     try {
-      const client = this.databaseProvider.getClient();
-      const [row] = await client
+      const [row] = await this.databaseProvider
+        .getClient()
         .update(part)
         .set({
           name: params.getName(),
@@ -125,15 +125,13 @@ export class DatabasePartStore implements PartStore {
         .returning();
 
       if (row === undefined) return Either.right(Option.none());
-      const [photo] = await client
-        .select({ id: partPhoto.id })
-        .from(partPhoto)
-        .where(eq(partPhoto.partId, row.id));
-      return Either.map(toDomain(row, photo?.id ?? null), Option.some);
     } catch (error) {
       this.logger.error(error, 'A Part could not be edited');
       return Either.left(databaseErrorOf(error, 'A Part could not be edited'));
     }
+
+    // Read again, as every read is, with its photo.
+    return this.readById(params.getPartId());
   }
 
   async search(

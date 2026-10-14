@@ -13,15 +13,15 @@ class Input {
 }
 
 class Output {
-  private constructor(private readonly image: Buffer) {}
+  private constructor(private readonly photo: Buffer) {}
 
-  static of(image: Buffer): Output {
-    return new Output(image);
+  static of(photo: Buffer): Output {
+    return new Output(photo);
   }
 
   // The photo as it is kept: WebP.
-  getImage(): Buffer {
-    return this.image;
+  getPhoto(): Buffer {
+    return this.photo;
   }
 }
 
@@ -37,8 +37,8 @@ export class ReadPhotoQuery {
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const found = await this.photoStore.readById(input.getPhotoId());
 
-    return Either.flatMap(found, (image) =>
-      Option.match(image, {
+    return Either.flatMap(found, (photo) =>
+      Option.match(photo, {
         onNone: () =>
           Either.left(
             NotFoundError.of('PHOTO_NOT_FOUND', `There is no photo ${input.getPhotoId()}`),

@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Category } from '~/domain/part/Category';
 import { Part } from '~/domain/part/Part';
 
-import { photoPathOf } from './photo-path';
+import { photoPathOf } from '~/infrastructure/photo/endpoints/photo-path';
 import type { SpecificationDocument } from '~/domain/specification/specification-document';
 
 export class PartResponse {
@@ -83,7 +83,7 @@ export class PartResponse {
     this.missingNeededSpecifications = part.getMissingNeededSpecifications();
     this.createdAt = part.getCreatedAt().toISOString();
     this.updatedAt = part.getUpdatedAt().toISOString();
-    this.photoPath = photoPathOf(part);
+    this.photoPath = photoPathOf(part.getPhotoId());
   }
 
   static of(part: Part): PartResponse {

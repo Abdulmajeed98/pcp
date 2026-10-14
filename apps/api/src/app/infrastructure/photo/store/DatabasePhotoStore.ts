@@ -5,9 +5,10 @@ import { Either, Option } from 'effect';
 
 import { PhotoStore } from '~/domain/photo/PhotoStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
+import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
+import { part } from '~/infrastructure/part/part.schema';
 
-import { couldBeIdentifier } from '../database/identifiers';
-import { partPhoto } from './photo.schema';
+import { partPhoto } from '../photo.schema';
 
 @Injectable()
 export class DatabasePhotoStore implements PhotoStore {
@@ -16,19 +17,26 @@ export class DatabasePhotoStore implements PhotoStore {
   constructor(private readonly databaseProvider: DatabaseProvider) {}
 
   // The old photo is deleted and the new one stored in one transaction, so a
-  // Part never has two and never loses its photo to a failure halfway.
+  // Part never has two and never loses its photo to a failure halfway. The
+  // Part's row is locked first, so that two replacements sent at once, as by
+  // a double tap, wait for each other rather than collide.
   async replaceForPart(
     partId: string,
-    image: Buffer,
+    photo: Buffer,
   ): Promise<Either.Either<string, StructuredError>> {
     try {
       const id = await this.databaseProvider
         .getClient()
         .transaction(async (transaction) => {
+          await transaction
+            .select({ id: part.id })
+            .from(part)
+            .where(eq(part.id, partId))
+            .for('update');
           await transaction.delete(partPhoto).where(eq(partPhoto.partId, partId));
           const [row] = await transaction
             .insert(partPhoto)
-            .values({ partId, image })
+            .values({ partId, image: photo })
             .returning({ id: partPhoto.id });
           return row.id;
         });
