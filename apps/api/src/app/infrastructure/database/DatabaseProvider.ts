@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { connectionOf } from '@pcp/core';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -13,6 +13,7 @@ import { schema, Schema } from './schema';
 // be reached.
 @Injectable()
 export class DatabaseProvider implements OnModuleDestroy {
+  private readonly logger = new Logger(DatabaseProvider.name);
   private readonly pool: Pool;
   private readonly client: NodePgDatabase<Schema>;
 
@@ -26,6 +27,13 @@ export class DatabaseProvider implements OnModuleDestroy {
       // A database that does not answer is given up on, so that a call waits
       // seconds and not for ever. `pg` waits for ever unless told otherwise.
       connectionTimeoutMillis: 5000,
+    });
+    // A connection that waits unused in the pool can be ended by the database,
+    // when it stops. The pool then drops it and says so as an error event, and
+    // an error event nobody listens to ends the whole process. The next call
+    // opens a new connection, or is answered 503 while there is no database.
+    this.pool.on('error', (error) => {
+      this.logger.warn(`A connection waiting in the pool was ended: ${error.message}`);
     });
     this.client = drizzle({ client: this.pool, schema });
   }

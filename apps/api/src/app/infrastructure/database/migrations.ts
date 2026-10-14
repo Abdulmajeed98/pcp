@@ -8,12 +8,17 @@ import { Client } from 'pg';
 // up to date, or nothing because another run held the lock.
 export type MigrationOutcome = { kind: 'applied'; count: number } | { kind: 'locked' };
 
-// The lock every run takes, so that two runs never change the database at
-// the same time. PostgreSQL holds it for the connection that took it.
-const lock = `hashtext('pcp-api-migrations')`;
+// The name of the lock every run takes, so that two runs never change the
+// database at the same time. PostgreSQL holds the lock for the connection
+// that took it, and lets it go when that connection ends.
+export const migrationLockName = 'pcp-api-migrations';
+const migrationLock = `hashtext('${migrationLockName}')`;
 
 // The time of the last migration the database has, in the record Drizzle
-// keeps of them, or none when Drizzle has never run there.
+// keeps of them, or none when Drizzle has never run there. Drizzle applies
+// every committed migration made after that time, and so counts this. The
+// workspace's check of the development database, in `tools`, reads the same
+// record the same way.
 async function lastAppliedAt(client: Client): Promise<number | undefined> {
   const { rows: table } = await client.query<{ found: string | null }>(
     `SELECT to_regclass('drizzle.__drizzle_migrations') AS found`,
@@ -34,27 +39,26 @@ export async function applyMigrations(
   datasource: Datasource,
   migrationsFolder: string,
 ): Promise<MigrationOutcome> {
-  const client = new Client(connectionOf(datasource));
+  // A database that does not answer is given up on, as the API gives up on it.
+  const client = new Client({ ...connectionOf(datasource), connectionTimeoutMillis: 5000 });
   await client.connect();
   try {
     const { rows } = await client.query<{ acquired: boolean }>(
-      `SELECT pg_try_advisory_lock(${lock}) AS acquired`,
+      `SELECT pg_try_advisory_lock(${migrationLock}) AS acquired`,
     );
     if (!rows[0].acquired) return { kind: 'locked' };
 
-    try {
-      const appliedAt = await lastAppliedAt(client);
-      const pending = readMigrationFiles({ migrationsFolder }).filter(
-        (migration) => appliedAt === undefined || migration.folderMillis > appliedAt,
-      );
+    const appliedAt = await lastAppliedAt(client);
+    const pending = readMigrationFiles({ migrationsFolder }).filter(
+      (migration) => appliedAt === undefined || migration.folderMillis > appliedAt,
+    );
 
-      await migrate(drizzle({ client }), { migrationsFolder });
+    await migrate(drizzle({ client }), { migrationsFolder });
 
-      return { kind: 'applied', count: pending.length };
-    } finally {
-      await client.query(`SELECT pg_advisory_unlock(${lock})`);
-    }
+    return { kind: 'applied', count: pending.length };
   } finally {
-    await client.end();
+    // Ending the connection lets the lock go, also when a migration failed,
+    // and a failure to end it would only hide why.
+    await client.end().catch(() => undefined);
   }
 }

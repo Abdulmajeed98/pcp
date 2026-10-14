@@ -1,7 +1,6 @@
 // Checks the running development services from the outside, the way their
 // clients meet them, and prints one line for each thing it checked. It exits
 // non-zero when any line fails. Run it with `pnpm services:check`.
-import { spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { connect } from 'node:net';
@@ -14,7 +13,8 @@ import {
   logInAsAdministrator,
   requestTokenWithPassword,
 } from './keycloak-administrator.mjs';
-import { missingMigrations } from './platform-migrations.mjs';
+import { migrationNames, missingMigrations } from './platform-migrations.mjs';
+import { psql } from './postgres-container.mjs';
 
 const startHint = 'Start the services with "pnpm services:up".';
 
@@ -67,35 +67,6 @@ function askPostgres() {
       reject(new Error('the connection closed without an answer')),
     );
   });
-}
-
-// Runs one statement with the client inside the PostgreSQL container, so that
-// no database driver is needed here. It connects to the container's network
-// address, not its loopback address, because PostgreSQL asks for a password
-// only there. That is what a client outside the container meets.
-function psql({ user, password, database }, statement) {
-  const inContainer = ['compose', 'exec', '--no-TTY', '--env', 'PGPASSWORD', 'postgres'];
-  const connection = ['--host', 'postgres', '--username', user, '--dbname', database];
-  const format = ['--no-psqlrc', '--tuples-only', '--no-align'];
-  const result = spawnSync(
-    'docker',
-    [...inContainer, 'psql', ...connection, ...format, '--command', statement],
-    { cwd: root, encoding: 'utf8', env: { ...process.env, PGPASSWORD: password } },
-  );
-  if (result.error) throw result.error;
-  return {
-    connected: result.status === 0,
-    output: result.stdout.trim(),
-    error: whatPostgresSaid(result.stderr),
-  };
-}
-
-// What PostgreSQL said went wrong, without the address it was said from. It
-// is on the line marked FATAL or ERROR, and a line of detail may follow.
-function whatPostgresSaid(stderr) {
-  const lines = stderr.trim().split('\n');
-  const line = lines.find((each) => /(FATAL|ERROR):/.test(each)) ?? lines.at(-1);
-  return line.replace(/^.*(FATAL|ERROR):\s+/, '');
 }
 
 const superuser = {
@@ -180,7 +151,7 @@ if (postgresAnswers) {
     const missing = missingMigrations(settings.PCP_DB_PASSWORD);
     if (missing.length > 0) {
       throw new Error(
-        `it lacks ${missing.map((migration) => migration.name).join(', ')}. Apply them with "pnpm db:migrate"`,
+        `it lacks ${migrationNames(missing)}. Apply them with "pnpm db:migrate"`,
       );
     }
   });

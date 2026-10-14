@@ -1,28 +1,20 @@
 import { randomBytes } from 'node:crypto';
 import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 
 import { connectionOf, Datasource } from '@pcp/core';
 import { Client } from 'pg';
 
-import { applyMigrations } from '~/infrastructure/database/migrations';
+import { applyMigrations, migrationLockName } from '~/infrastructure/database/migrations';
 
-// The migrations as they are committed.
-const migrationsFolder = join(__dirname, '..', '..', '..', 'drizzle');
-const committedMigrations = readdirSync(migrationsFolder).filter((name) =>
+import {
+  migrationsFolder,
+  testDatabaseSettings,
+} from '../../test-utils/database/test-database';
+
+// How many migrations are committed, counted from the files themselves.
+const committedMigrationCount = readdirSync(migrationsFolder).filter((name) =>
   name.endsWith('.sql'),
 ).length;
-
-// The test database's server, as the global set-up gave it. Its user may
-// create databases, so each test gets an empty database of its own.
-function testServer(): Datasource {
-  const { DATASOURCE_URL, DATASOURCE_USERNAME, DATASOURCE_PASSWORD } = process.env;
-  return {
-    url: DATASOURCE_URL ?? '',
-    username: DATASOURCE_USERNAME ?? '',
-    password: DATASOURCE_PASSWORD ?? '',
-  };
-}
 
 async function onTheServer<T>(
   database: Datasource,
@@ -41,16 +33,20 @@ describe('applying the migrations', () => {
   let emptyDatabase: Datasource;
   let name: string;
 
+  // The test database's user may create databases, so each test gets an
+  // empty database of its own beside the shared one.
   beforeEach(async () => {
     name = `migrations_${randomBytes(4).toString('hex')}`;
-    await onTheServer(testServer(), (client) => client.query(`CREATE DATABASE ${name}`));
-    const url = new URL(testServer().url);
+    await onTheServer(testDatabaseSettings(), (client) =>
+      client.query(`CREATE DATABASE ${name}`),
+    );
+    const url = new URL(testDatabaseSettings().url);
     url.pathname = `/${name}`;
-    emptyDatabase = { ...testServer(), url: url.toString() };
+    emptyDatabase = { ...testDatabaseSettings(), url: url.toString() };
   });
 
   afterEach(async () => {
-    await onTheServer(testServer(), (client) =>
+    await onTheServer(testDatabaseSettings(), (client) =>
       client.query(`DROP DATABASE ${name} WITH (FORCE)`),
     );
   });
@@ -65,7 +61,7 @@ describe('applying the migrations', () => {
   it('applies every committed migration to an empty database', async () => {
     const outcome = await applyMigrations(emptyDatabase, migrationsFolder);
 
-    expect(outcome).toEqual({ kind: 'applied', count: committedMigrations });
+    expect(outcome).toEqual({ kind: 'applied', count: committedMigrationCount });
     expect(await hasThePartTable()).toBe(true);
   });
 
@@ -81,7 +77,7 @@ describe('applying the migrations', () => {
     const otherRun = new Client(connectionOf(emptyDatabase));
     await otherRun.connect();
     try {
-      await otherRun.query(`SELECT pg_advisory_lock(hashtext('pcp-api-migrations'))`);
+      await otherRun.query(`SELECT pg_advisory_lock(hashtext($1))`, [migrationLockName]);
 
       const outcome = await applyMigrations(emptyDatabase, migrationsFolder);
 

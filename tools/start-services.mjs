@@ -145,12 +145,9 @@ try {
   exitWith(`The development Admin login could not be created: ${error.message}.`);
 }
 
-// The platform's database gets the API's migrations, the way `pnpm db:migrate`
-// applies them. It says what it applied.
-const migrated = spawnSync('pnpm', ['exec', 'nx', 'run', '@pcp/api:migrate'], {
-  cwd: root,
-  stdio: 'inherit',
-});
+// The platform's database gets the API's migrations from `pnpm db:migrate`
+// itself, which says what it applied.
+const migrated = spawnSync('pnpm', ['db:migrate'], { cwd: root, stdio: 'inherit' });
 if (migrated.status !== 0) {
   exitWith('The migrations could not be applied. Run "pnpm db:migrate" to see why.');
 }

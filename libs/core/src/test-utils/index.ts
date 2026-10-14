@@ -9,6 +9,8 @@ export {
 } from './assertions/error-response.assertions';
 export {
   emptyTables,
+  startSeparateTestDatabase,
+  type StartedTestDatabase,
   startTestDatabase,
   stopTestDatabase,
   type TestDatabaseSettings,

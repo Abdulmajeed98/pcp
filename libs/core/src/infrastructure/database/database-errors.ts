@@ -59,7 +59,8 @@ function isUnavailable(error: unknown): boolean {
 
 // The error a Store returns when a query fails. A database that cannot be
 // reached is answered 503, so that the caller knows to try again. Anything
-// else is a server error. Either way, what failed goes to the log only.
+// else is a server error. Either way the answer says nothing of what failed:
+// the Store logs that.
 export function databaseErrorOf(error: unknown, message: string): StructuredError {
   return errorsIn(error).some(isUnavailable)
     ? ServiceUnavailableError.of('DATABASE_UNAVAILABLE', message)

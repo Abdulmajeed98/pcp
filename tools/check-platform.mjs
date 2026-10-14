@@ -14,7 +14,7 @@ import { parseEnv } from 'node:util';
 import { chromium } from '@playwright/test';
 
 import { keycloakUrl } from './keycloak-administrator.mjs';
-import { missingMigrations } from './platform-migrations.mjs';
+import { migrationNames, missingMigrations } from './platform-migrations.mjs';
 
 const startHint = 'Start the services with "pnpm services:up".';
 
@@ -63,7 +63,7 @@ try {
 }
 if (missing.length > 0) {
   exitWith(
-    `The platform's database lacks the migrations ${missing.map((migration) => migration.name).join(', ')}. ${startHint}`,
+    `The platform's database lacks the migrations ${migrationNames(missing)}. Apply them with "pnpm services:up".`,
   );
 }
 

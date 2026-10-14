@@ -1,7 +1,4 @@
-import {
-  PostgreSqlContainer,
-  StartedPostgreSqlContainer,
-} from '@testcontainers/postgresql';
+import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Client, Pool } from 'pg';
@@ -15,23 +12,24 @@ export type TestDatabaseSettings = Datasource;
 // PostgreSQL.
 const image = 'postgres:18.6';
 
-// Jest's global set-up and its global teardown share `globalThis`, and
-// nothing else, so the container is kept there between the two.
-const containerKey = Symbol.for('@pcp/core/test-database');
-type WithContainer = { [containerKey]?: StartedPostgreSqlContainer };
+// A database in a container of its own, with the migrations applied, and
+// the way to stop it.
+export type StartedTestDatabase = {
+  settings: TestDatabaseSettings;
+  stop(): Promise<void>;
+};
 
-// Starts a PostgreSQL of the tests' own in a container and applies the
-// migrations in the folder to it. It is meant for Jest's global set-up, so
-// that one database serves every test file of a run.
-export async function startTestDatabase(
+// Starts a PostgreSQL in a container and applies the migrations in the folder
+// to it. A test that has to stop its database, to see what happens then,
+// starts one of its own with this and leaves the shared one alone.
+export async function startSeparateTestDatabase(
   migrationsFolder: string,
-): Promise<TestDatabaseSettings> {
+): Promise<StartedTestDatabase> {
   const container = await new PostgreSqlContainer(image)
     .withDatabase('pcp')
     .withUsername('pcp')
     .withPassword('test-database-password')
     .start();
-  (globalThis as WithContainer)[containerKey] = container;
 
   const settings = {
     url: `postgresql://${container.getHost()}:${container.getPort()}/${container.getDatabase()}`,
@@ -46,15 +44,38 @@ export async function startTestDatabase(
     await pool.end();
   }
 
-  return settings;
+  let stopped = false;
+  return {
+    settings,
+    stop: async () => {
+      if (stopped) return;
+      stopped = true;
+      await container.stop();
+    },
+  };
 }
 
-// Stops the container the global set-up started. It is meant for Jest's
+// Jest's global set-up and its global teardown share `globalThis`, and
+// nothing else, so the database is kept there between the two.
+const databaseKey = Symbol.for('@pcp/core/test-database');
+type WithDatabase = { [databaseKey]?: StartedTestDatabase };
+
+// Starts the database that every test file of a run shares. It is meant for
+// Jest's global set-up.
+export async function startTestDatabase(
+  migrationsFolder: string,
+): Promise<TestDatabaseSettings> {
+  const database = await startSeparateTestDatabase(migrationsFolder);
+  (globalThis as WithDatabase)[databaseKey] = database;
+  return database.settings;
+}
+
+// Stops the database the global set-up started. It is meant for Jest's
 // global teardown.
 export async function stopTestDatabase(): Promise<void> {
-  const holder = globalThis as WithContainer;
-  await holder[containerKey]?.stop();
-  delete holder[containerKey];
+  const holder = globalThis as WithDatabase;
+  await holder[databaseKey]?.stop();
+  delete holder[databaseKey];
 }
 
 // Empties every table the migrations made, so that each test starts from an

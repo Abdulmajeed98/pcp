@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-import { authorisationOfTheDevelopmentAdmin } from './development-admin';
+import { authorizationOfTheDevelopmentAdmin } from './development-admin';
 import { apiUrl } from './platform';
 
 test("the API stores a Part: the development Admin creates a made-up Part, and the platform's database gives it back", async ({
   page,
   request,
 }) => {
-  const authorization = await authorisationOfTheDevelopmentAdmin(page);
+  const authorization = await authorizationOfTheDevelopmentAdmin(page);
   // Unique to the run, and plainly test data. It stays in the development
   // database, which `pnpm services:reset` empties.
   const run = Date.now();

@@ -40,16 +40,16 @@ export async function logInToTheDashboard(page: Page): Promise<void> {
 }
 
 // Logs in to the dashboard as the development Admin, and gives the
-// authorisation the dashboard sends the API, so that a test can call the API
-// as the Admin. The dashboard's page asks the API who the caller is, and the
-// token is taken from that call.
-export async function authorisationOfTheDevelopmentAdmin(page: Page): Promise<string> {
+// Authorization header the dashboard sends the API, so that a test can call
+// the API as the Admin. The dashboard's page asks the API who the caller is,
+// and the header is taken from that call.
+export async function authorizationOfTheDevelopmentAdmin(page: Page): Promise<string> {
   const called = page.waitForRequest(
     (request) => request.url() === `${apiUrl}/v1/caller` && request.method() === 'GET',
   );
   await logInToTheDashboard(page);
 
-  const authorisation = (await called).headers().authorization;
-  expect(authorisation).toMatch(/^Bearer \S+$/);
-  return authorisation;
+  const authorization = (await called).headers().authorization;
+  expect(authorization).toMatch(/^Bearer \S+$/);
+  return authorization;
 }
