@@ -204,7 +204,9 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       'Made-up RX 7600',
       'Made-up Ryzen 5 7600',
       'Made-up Ryzen 7 7700',
+      'Made-up Storage SATA 500 GB',
       'Made-up Tower Cooler',
+      'Other Made-up SSD 500 GB',
     ]);
 
     // One complete record in full.
@@ -368,7 +370,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     });
   });
 
-  it('leaves out a record that is not JSON, has no OpenDB ID that is its file name or that another record has, or has no name or manufacturer, and names each', async () => {
+  it('leaves out a record that is not JSON, has no OpenDB ID that is its file name or that another record has, has no name, or has no manufacturer it can take, and names each', async () => {
     const run = await runTheImport(sample);
 
     expect(linesUnder('Records left out:', run.printed)).toEqual([
@@ -378,6 +380,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       'RAM/made-up-ram.json: it has no OpenDB ID that is a UUID',
       'Storage/00000000-0000-4000-8000-000000000502.json: it holds no JSON record',
       'PSU/00000000-0000-4000-8000-000000000101.json: another record has its OpenDB ID',
+      'PSU/00000000-0000-4000-8000-000000000803.json: it has no manufacturer, and another record has its part number',
     ]);
     expect(await namesFound({ search: 'Made-up Ryzen 3' })).toEqual([]);
     expect(await namesFound({ search: 'Made-up Ryzen 5 5600' })).toEqual([]);
@@ -438,12 +441,24 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     );
     expect(linesUnder('Manufacturers taken from the name:', run.printed)).toEqual([
       'CPU/00000000-0000-4000-8000-000000000105.json: AMD',
+      'Storage/00000000-0000-4000-8000-000000000504.json: Made-up Storage',
       'PSU/00000000-0000-4000-8000-000000000802.json: Made-up Power',
     ]);
+    // A record of another manufacturer has its part number, which makes it no
+    // copy: OpenDB gives some records another make's part number by mistake.
+    expect((await theOnePart({ search: 'Made-up Storage SATA' })).manufacturer).toBe(
+      'Made-up Storage',
+    );
     // Its name begins with no manufacturer of the CPU folder.
     expect(linesUnder('Records left out:', run.printed)).toContain(
       'CPU/00000000-0000-4000-8000-000000000102.json: it has no manufacturer',
     );
+    // Its name begins with one, but it is a thinner copy of the complete
+    // record of that manufacturer that has its part number, in any case.
+    expect(linesUnder('Records left out:', run.printed)).toContain(
+      'PSU/00000000-0000-4000-8000-000000000803.json: it has no manufacturer, and another record has its part number',
+    );
+    expect(await namesFound({ search: 'Made-up Power 650 W Gold' })).toEqual([]);
   });
 
   it('imports nothing from a folder that holds no Category, such as Monitor', async () => {
@@ -491,11 +506,11 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       cpuCooler: [2, 0, 0, 1],
       motherboard: [1, 0, 1, 0],
       ram: [1, 0, 1, 0],
-      storage: [1, 0, 1, 0],
+      storage: [3, 0, 1, 0],
       gpu: [1, 0, 0, 1],
       case: [1, 0, 0, 1],
-      psu: [2, 0, 1, 0],
-      Total: [12, 0, 6, 4],
+      psu: [2, 0, 2, 0],
+      Total: [14, 0, 7, 4],
     });
     expect(second.exitCode).toBe(0);
     expect(tableIn(second.printed)).toEqual({
@@ -503,13 +518,13 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       cpuCooler: [0, 2, 0, 0],
       motherboard: [0, 1, 1, 0],
       ram: [0, 1, 1, 0],
-      storage: [0, 1, 1, 0],
+      storage: [0, 3, 1, 0],
       gpu: [0, 1, 0, 0],
       case: [0, 1, 0, 0],
-      psu: [0, 2, 1, 0],
-      Total: [0, 12, 6, 0],
+      psu: [0, 2, 2, 0],
+      Total: [0, 14, 7, 0],
     });
-    expect(await partsFound({})).toHaveLength(12);
+    expect(await partsFound({})).toHaveLength(14);
   });
 
   it("keeps the Admin's edit through a second run, and an edit leaves the OpenDB ID as it was", async () => {
@@ -649,8 +664,8 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       expect(run.exitCode).toBe(0);
       expect(gitHub.requested).toEqual([archivePath]);
       expect(run.printed[0]).toBe(`Read OpenDB at commit ${pinnedCommit}.`);
-      expect(tableIn(run.printed).Total).toEqual([12, 0, 6, 4]);
-      expect(await partsFound({})).toHaveLength(12);
+      expect(tableIn(run.printed).Total).toEqual([14, 0, 7, 4]);
+      expect(await partsFound({})).toHaveLength(14);
       expect(await namesFound({ search: 'monitor' })).toEqual([]);
     });
 

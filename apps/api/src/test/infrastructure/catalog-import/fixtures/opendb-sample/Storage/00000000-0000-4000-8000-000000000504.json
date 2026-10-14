@@ -1,0 +1,13 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000504",
+  "interface": "SATA 6.0 Gb/s",
+  "form_factor": "2.5\"",
+  "capacity": 500,
+  "metadata": {
+    "name": "Made-up Storage SATA 500 GB",
+    "manufacturer": null,
+    "part_numbers": [
+      "MU-SHARED-1"
+    ]
+  }
+}

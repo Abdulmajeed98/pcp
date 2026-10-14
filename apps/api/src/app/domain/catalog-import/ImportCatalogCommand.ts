@@ -14,7 +14,7 @@ import {
 } from './CategoryImport';
 import { openDbFolders } from './opendb';
 import {
-  manufacturersOf,
+  folderRecordsOf,
   PartOfRecord,
   partOfRecord,
   RecordLeftOutReason,
@@ -125,12 +125,12 @@ export class ImportCatalogCommand {
       const byName = [...files.right.value].sort((one, other) =>
         byText(one.getName(), other.getName()),
       );
-      const manufacturers = manufacturersOf(byName);
+      const folderRecords = folderRecordsOf(byName);
       for (const file of byName) {
         const path = `${folderName}/${file.getName()}`;
         const leftOut = (reason: RecordLeftOutReason) =>
           folder.leftOut.push(new RecordLeftOut(path, reason));
-        Either.match(partOfRecord(file, category, manufacturers), {
+        Either.match(partOfRecord(file, category, folderRecords), {
           onLeft: leftOut,
           onRight: (made) => {
             const openDbId = made.part.getOpenDbId();

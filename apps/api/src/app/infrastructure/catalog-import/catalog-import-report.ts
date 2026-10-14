@@ -10,6 +10,7 @@ const recordReasons: Record<RecordLeftOutReason, string> = {
   openDbIdTaken: 'another record has its OpenDB ID',
   noName: 'it has no name',
   noManufacturer: 'it has no manufacturer',
+  copiesAnotherRecord: 'it has no manufacturer, and another record has its part number',
 };
 
 const valueReasons: Record<SpecificationProblemReason, string> = {
