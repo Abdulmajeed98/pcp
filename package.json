@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "preinstall": "node tools/require-pnpm.mjs",
+    "prepare": "husky",
     "check": "oxfmt --check && node tools/write-feature-sliced-bans.mjs --check && node tools/write-api-client.mjs --check && node tools/check-migrations.mjs && oxlint --config .oxlintrc.outside-projects.json --ignore-pattern apps --ignore-pattern libs && nx run-many --targets=lint,typecheck,test,build",
     "format": "oxfmt",
     "services:up": "node tools/start-services.mjs",
@@ -44,6 +45,8 @@
     "tar": "~7.5.22"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
     "@hey-api/openapi-ts": "0.99.0",
     "@jest/globals": "~30.3.0",
     "@nestjs/schematics": "^11.0.0",
@@ -75,6 +78,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.0",
     "drizzle-kit": "0.31.11",
+    "husky": "9.1.7",
     "jest": "~30.3.0",
     "jest-environment-node": "~30.3.0",
     "jest-util": "~30.3.0",
