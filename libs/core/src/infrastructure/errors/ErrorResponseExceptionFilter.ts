@@ -15,6 +15,7 @@ import { ErrorStructureException } from './ErrorStructureException';
 // The status each kind of error a use case returns is answered with.
 const statusesByErrorType: Record<ErrorType, number> = {
   SERVER_ERROR: HttpStatus.INTERNAL_SERVER_ERROR,
+  SERVICE_UNAVAILABLE: HttpStatus.SERVICE_UNAVAILABLE,
   NOT_FOUND: HttpStatus.NOT_FOUND,
   VALIDATION_ERROR: HttpStatus.BAD_REQUEST,
 };

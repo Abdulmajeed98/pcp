@@ -5,6 +5,7 @@ export {
   NotFoundError,
   NotValidError,
   ServerError,
+  ServiceUnavailableError,
   StructuredError,
 } from './domain/errors/StructuredError';
 export { AuthModule } from './infrastructure/authentication/auth.module';
@@ -15,6 +16,7 @@ export {
   CoreEnvironmentVariables,
   validateEnvironment,
 } from './infrastructure/configuration/env.validation';
+export { databaseErrorOf } from './infrastructure/database/database-errors';
 export { connectionOf, type Datasource } from './infrastructure/database/datasource';
 export {
   ErrorResponse,

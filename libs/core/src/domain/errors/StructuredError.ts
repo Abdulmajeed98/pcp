@@ -1,6 +1,10 @@
 // What kind of failure an error is. The HTTP layer answers each kind with a
 // status of its own.
-export type ErrorType = 'SERVER_ERROR' | 'NOT_FOUND' | 'VALIDATION_ERROR';
+export type ErrorType =
+  | 'SERVER_ERROR'
+  | 'SERVICE_UNAVAILABLE'
+  | 'NOT_FOUND'
+  | 'VALIDATION_ERROR';
 
 // A failure that domain and Store code returns, as the left side of an
 // `Either`, instead of throwing. Its code is fixed, and its title and detail
@@ -48,6 +52,15 @@ export class StructuredError {
 export class ServerError extends StructuredError {
   static of(message: string): ServerError {
     return new ServerError('INTERNAL_SERVER_ERROR', message, 'SERVER_ERROR');
+  }
+}
+
+// Something the API needs, such as its database, cannot be reached now. The
+// caller may try again later. Each such thing has a code of its own, such as
+// `DATABASE_UNAVAILABLE`.
+export class ServiceUnavailableError extends StructuredError {
+  static of(code: string, message: string): ServiceUnavailableError {
+    return new ServiceUnavailableError(code, message, 'SERVICE_UNAVAILABLE');
   }
 }
 

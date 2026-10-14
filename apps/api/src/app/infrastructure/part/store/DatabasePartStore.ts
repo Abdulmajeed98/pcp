@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ServerError, StructuredError } from '@pcp/core';
+import { databaseErrorOf, ServerError, StructuredError } from '@pcp/core';
 import { eq } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
@@ -52,7 +52,7 @@ export class DatabasePartStore implements PartStore {
       return toDomain(row);
     } catch (error) {
       this.logger.error(error, 'A Part could not be created');
-      return Either.left(ServerError.of('A Part could not be created'));
+      return Either.left(databaseErrorOf(error, 'A Part could not be created'));
     }
   }
 
@@ -70,7 +70,7 @@ export class DatabasePartStore implements PartStore {
       return Either.map(toDomain(row), Option.some);
     } catch (error) {
       this.logger.error(error, 'A Part could not be read');
-      return Either.left(ServerError.of('A Part could not be read'));
+      return Either.left(databaseErrorOf(error, 'A Part could not be read'));
     }
   }
 }

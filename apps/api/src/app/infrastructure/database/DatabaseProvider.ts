@@ -17,13 +17,16 @@ export class DatabaseProvider implements OnModuleDestroy {
   private readonly client: NodePgDatabase<Schema>;
 
   constructor(settings: ConfigService<EnvironmentVariables, true>) {
-    this.pool = new Pool(
-      connectionOf({
+    this.pool = new Pool({
+      ...connectionOf({
         url: settings.get('DATASOURCE_URL', { infer: true }),
         username: settings.get('DATASOURCE_USERNAME', { infer: true }),
         password: settings.get('DATASOURCE_PASSWORD', { infer: true }),
       }),
-    );
+      // A database that does not answer is given up on, so that a call waits
+      // seconds and not for ever. `pg` waits for ever unless told otherwise.
+      connectionTimeoutMillis: 5000,
+    });
     this.client = drizzle({ client: this.pool, schema });
   }
 
