@@ -42,7 +42,9 @@ export const motherboardSpecifications = new SpecificationList([
     'M.2 slots',
     [
       Specification.text('size', 'Sizes'),
-      Specification.text('key', 'Key'),
+      // A drive goes only in a slot keyed M. Slots keyed E are for wireless
+      // cards.
+      Specification.oneOf('key', 'Key', ['B', 'E', 'M']),
       Specification.text('interface', 'Interface'),
     ],
     { needed: true },

@@ -2,8 +2,8 @@ import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
 // The values OpenDB's drives use at the commit the catalog is imported from.
-// Rules count drives by these: SATA drives against SATA ports, M.2 drives
-// against M.2 slots, 3.5-inch and 2.5-inch drives against bays.
+// Compatibility Rules count drives by these: SATA drives against SATA ports,
+// M.2 drives against M.2 slots, 3.5-inch and 2.5-inch drives against bays.
 const storageFormFactors = [
   '2.5"',
   '3.5"',
@@ -41,13 +41,14 @@ const storageInterfaces = [
 ] as const;
 
 // Every specification of a drive that OpenDB defines, apart from retailer and
-// identity data. A 0 means "not known" for a capacity or a cache.
+// identity data. A 0 means "not known" for a capacity. A 0 cache is true: an
+// SSD without DRAM has none.
 export const storageSpecifications = new SpecificationList([
   Specification.oneOf('interface', 'Interface', storageInterfaces, { needed: true }),
   Specification.oneOf('form_factor', 'Form factor', storageFormFactors, { needed: true }),
-  Specification.text('storage_type', 'Type'),
+  Specification.text('storage_type', 'Drive type'),
   Specification.wholeNumber('capacity', 'Capacity', { unit: 'GB', zeroMeansMissing: true }),
-  Specification.wholeNumber('cache', 'Cache', { unit: 'MB', zeroMeansMissing: true }),
+  Specification.wholeNumber('cache', 'Cache', { unit: 'MB' }),
   Specification.yesNo('nvme', 'NVMe'),
   Specification.listOfText('lighting', 'Lighting'),
 ]);

@@ -5,9 +5,10 @@ import { SpecificationList } from './SpecificationList';
 // Every specification of a case that OpenDB defines, apart from retailer and
 // identity data. A 0 means "not known" for a largest size the case takes, for
 // expansion slots and for the case's own size and weight. A 0 drive bay of
-// one kind is true.
+// one kind is true: 498 cases give 0 internal 2.5-inch bays, older towers
+// among them that mount such drives in their 3.5-inch bays.
 export const caseSpecifications = new SpecificationList([
-  Specification.text('form_factor', 'Type'),
+  Specification.text('form_factor', 'Form factor'),
   Specification.severalOf(
     'supported_motherboard_form_factors',
     'Motherboard form factors it takes',
@@ -55,7 +56,7 @@ export const caseSpecifications = new SpecificationList([
       needed: true,
     },
   ),
-  Specification.text('power_supply', 'PSU included'),
+  Specification.text('power_supply', 'PSU it comes with'),
   Specification.yesNo('power_supply_included', 'Comes with a PSU'),
   Specification.yesNo('power_supply_shroud', 'PSU shroud'),
   Specification.text('side_panel', 'Side panel'),
@@ -76,7 +77,8 @@ export const caseSpecifications = new SpecificationList([
     zeroMeansMissing: true,
   }),
   Specification.decimalNumber('volume', 'Volume', { unit: 'L', zeroMeansMissing: true }),
-  Specification.decimalNumber('weight', 'Weight', { unit: 'kg', zeroMeansMissing: true }),
+  // In pounds, as OpenDB's schema has it.
+  Specification.decimalNumber('weight', 'Weight', { unit: 'lb', zeroMeansMissing: true }),
   Specification.listOfText('color', 'Colours'),
   Specification.listOfText('lighting', 'Lighting'),
 ]);

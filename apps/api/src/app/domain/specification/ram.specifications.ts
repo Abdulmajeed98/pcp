@@ -19,7 +19,8 @@ export const ramSpecifications = new SpecificationList([
     unit: 'GB',
     zeroMeansMissing: true,
   }),
-  Specification.wholeNumber('speed', 'Speed', { unit: 'MT/s', zeroMeansMissing: true }),
+  // In MHz as OpenDB and the shops give it: DDR5-6000 is 6000.
+  Specification.wholeNumber('speed', 'Speed', { unit: 'MHz', zeroMeansMissing: true }),
   Specification.text('form_factor', 'Form factor'),
   Specification.wholeNumber('cas_latency', 'CAS latency', { zeroMeansMissing: true }),
   Specification.text('timings', 'Timings'),

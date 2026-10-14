@@ -416,9 +416,17 @@ describe('the Part endpoints', () => {
       return document;
     }
 
-    it.each(['cpuCooler', 'motherboard', 'ram', 'storage', 'gpu', 'case', 'psu'])(
-      'take a value for every specification of a %s, and give them all back unchanged',
-      async (category) => {
+    it.each([
+      ['a CPU cooler', 'cpuCooler'],
+      ['a motherboard', 'motherboard'],
+      ['a RAM kit', 'ram'],
+      ['a drive', 'storage'],
+      ['a GPU', 'gpu'],
+      ['a case', 'case'],
+      ['a PSU', 'psu'],
+    ])(
+      'take a value for every specification of %s, and give them all back unchanged',
+      async (_name, category) => {
         const specifications = documentWithEvery(await listOf(category));
 
         const created = await createPart({

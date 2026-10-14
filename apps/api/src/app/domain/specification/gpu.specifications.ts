@@ -3,7 +3,8 @@ import { SpecificationList } from './SpecificationList';
 
 // Every specification of a GPU that OpenDB defines, apart from retailer and
 // identity data. A 0 means "not known" for a size, a clock, a memory figure,
-// the TDP, a radiator, a fan and the number of fans. A 0 power connector or
+// the TDP and the number of cores. The radiator and its fans are only those of
+// a hybrid or liquid-cooled card, and a 0 there stands for none. A 0 power connector or
 // video output of one kind is true: a card has none of that kind.
 export const gpuSpecifications = new SpecificationList([
   Specification.text('chipset_manufacturer', 'Chipset manufacturer'),
@@ -62,12 +63,17 @@ export const gpuSpecifications = new SpecificationList([
     needed: true,
   }),
   Specification.text('cooling', 'Cooling'),
-  Specification.wholeNumber('radiator_size', 'Radiator size', {
+  Specification.wholeNumber('radiator_size', 'External radiator size', {
     unit: 'mm',
     zeroMeansMissing: true,
   }),
-  Specification.wholeNumber('fan_size', 'Fan size', { unit: 'mm', zeroMeansMissing: true }),
-  Specification.wholeNumber('fan_quantity', 'Fans', { zeroMeansMissing: true }),
+  Specification.wholeNumber('fan_size', 'External radiator fan size', {
+    unit: 'mm',
+    zeroMeansMissing: true,
+  }),
+  Specification.wholeNumber('fan_quantity', 'External radiator fans', {
+    zeroMeansMissing: true,
+  }),
   Specification.text('frame_sync', 'Frame sync'),
   Specification.wholeNumber('video_outputs.hdmi_2_2', 'HDMI 2.2 outputs'),
   Specification.wholeNumber('video_outputs.hdmi_2_1', 'HDMI 2.1 outputs'),

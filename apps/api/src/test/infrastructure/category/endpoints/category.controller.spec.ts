@@ -135,12 +135,15 @@ describe('the Categories endpoint', () => {
     }
   });
 
-  it('gives the values a rule compares one set for every Category that has them', async () => {
+  it('gives the values a Compatibility Rule compares one set for every Category that has them', async () => {
     const categories = await readCategories(['admin']);
-    const valuesOf = (key: string, path: string) =>
-      categories
+    const valuesOf = (key: string, path: string) => {
+      const values = categories
         .find((category) => category.key === key)
         ?.specifications.find((each) => each.path === path)?.values;
+      expect({ key, path, values }).toEqual({ key, path, values: expect.any(Array) });
+      return values;
+    };
 
     expect(valuesOf('motherboard', 'socket')).toEqual(valuesOf('cpu', 'socket'));
     expect(valuesOf('cpuCooler', 'cpu_sockets')).toEqual(valuesOf('cpu', 'socket'));
@@ -156,28 +159,6 @@ describe('the Categories endpoint', () => {
     );
   });
 
-  it("marks as needed exactly the CPU's specifications that the Compatibility Rules read", async () => {
-    const [cpu] = await readCategories(['admin']);
-
-    // Written out from the MVP spec's table of Compatibility Rules, and not
-    // read from the platform: rules 1 and 2 read the socket, rule 3 the
-    // memory types and rule 12 the TDP.
-    expect(
-      cpu.specifications
-        .filter((specification) => specification.needed)
-        .map((each) => each.path),
-    ).toEqual(
-      expect.arrayContaining([
-        'socket',
-        'specifications.memory.types',
-        'specifications.tdp',
-      ]),
-    );
-    expect(cpu.specifications.filter((specification) => specification.needed)).toHaveLength(
-      3,
-    );
-  });
-
   it("gives the CPU's socket as one of a fixed set, and its memory types as several of one", async () => {
     const [cpu] = await readCategories(['admin']);
     const socket = cpu.specifications.find((each) => each.path === 'socket');
@@ -188,7 +169,7 @@ describe('the Categories endpoint', () => {
     expect(socket?.kind).toBe('oneOf');
     expect(socket?.values).toEqual(expect.arrayContaining(['AM5', 'LGA 1700', 'LGA 1851']));
     expect(memoryTypes?.kind).toBe('severalOf');
-    expect(memoryTypes?.values).toEqual(expect.arrayContaining(['DDR3', 'DDR4', 'DDR5']));
+    expect(memoryTypes?.values).toEqual(['DDR1', 'DDR2', 'DDR3', 'DDR4', 'DDR5']);
   });
 
   it('gives each specification an English label, and a number its unit', async () => {

@@ -4,7 +4,7 @@ import { SpecificationList } from './SpecificationList';
 
 // Every specification of a CPU cooler that OpenDB defines, apart from retailer
 // and identity data. A 0 means "not known" for a size, a speed or a level of
-// noise; a cooler with no fan says so as fanless.
+// noise. A 0 fans is true: some liquid coolers come without them.
 export const cpuCoolerSpecifications = new SpecificationList([
   Specification.severalOf('cpu_sockets', 'Sockets', sockets, { needed: true }),
   Specification.yesNo('water_cooled', 'Liquid cooled'),
@@ -19,7 +19,7 @@ export const cpuCoolerSpecifications = new SpecificationList([
   }),
   Specification.yesNo('fanless', 'Fanless'),
   Specification.wholeNumber('fan_size', 'Fan size', { unit: 'mm', zeroMeansMissing: true }),
-  Specification.wholeNumber('fan_quantity', 'Fans', { zeroMeansMissing: true }),
+  Specification.wholeNumber('fan_quantity', 'Fans'),
   Specification.wholeNumber('min_fan_rpm', 'Lowest fan speed', {
     unit: 'RPM',
     zeroMeansMissing: true,
@@ -29,11 +29,11 @@ export const cpuCoolerSpecifications = new SpecificationList([
     zeroMeansMissing: true,
   }),
   Specification.decimalNumber('min_noise_level', 'Lowest noise level', {
-    unit: 'dBA',
+    unit: 'dB',
     zeroMeansMissing: true,
   }),
   Specification.decimalNumber('max_noise_level', 'Highest noise level', {
-    unit: 'dBA',
+    unit: 'dB',
     zeroMeansMissing: true,
   }),
   Specification.listOfText('color', 'Colours'),
