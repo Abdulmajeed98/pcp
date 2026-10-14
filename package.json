@@ -13,6 +13,8 @@
     "boundaries:check": "node tools/check-boundaries.mjs",
     "boundaries:write": "node tools/write-feature-sliced-bans.mjs",
     "api-client:write": "node tools/write-api-client.mjs",
+    "db:migrate": "nx run @pcp/api:migrate",
+    "db:generate": "pnpm --dir apps/api exec drizzle-kit generate",
     "platform:check": "node tools/check-platform.mjs",
     "integration:check": "node tools/check-integration.mjs"
   },

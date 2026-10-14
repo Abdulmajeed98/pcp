@@ -38,6 +38,17 @@
           "cwd": "{projectRoot}"
         }
       },
+      "migrate": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node --require @swc-node/register src/migrate.ts",
+          "cwd": "{projectRoot}",
+          "env": {
+            "SWC_NODE_PROJECT": "tsconfig.app.json"
+          }
+        }
+      },
       "serve": {
         "continuous": true,
         "executor": "@nx/js:node",
