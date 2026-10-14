@@ -67,8 +67,10 @@ export class EditPartCommand {
     if (Either.isLeft(found)) return Either.left(found.left);
     if (Option.isNone(found.right)) return Either.left(partNotFound(input.getPartId()));
 
+    const existing = found.right.value;
+
     const specifications = checkSpecifications(
-      found.right.value.getCategory(),
+      existing.getCategory(),
       input.getSpecifications(),
     );
     if (Either.isLeft(specifications)) return Either.left(specifications.left);
@@ -83,10 +85,10 @@ export class EditPartCommand {
       ),
     );
 
-    return Either.flatMap(edited, (part) =>
-      Option.match(part, {
+    return Either.flatMap(edited, (editedPart) =>
+      Option.match(editedPart, {
         onNone: () => Either.left(partNotFound(input.getPartId())),
-        onSome: (existing) => Either.right(Output.of(existing)),
+        onSome: (part) => Either.right(Output.of(part)),
       }),
     );
   }

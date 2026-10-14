@@ -29,7 +29,7 @@ The import is a second entry point of the API, as the OpenAPI writer is. It is a
   - A value of the wrong kind is left out and counted, and a length of 0 is listed among the missing needed specifications.
   - Part numbers combine both sources without duplicates, and no barcode or retailer data is anywhere in the Part.
   - A second run imports nothing, and reports every Part as already there.
-  - A Part the Admin edited keeps the edit after a second run.
+  - A Part the Admin edited keeps the edit after a second run, and an edit leaves an imported Part's OpenDB ID as it was. Ticket 05 could not test that last point, because no Part had an OpenDB ID before the import.
   - A run that fails partway, on a record planted to make the database refuse it, leaves no Part behind.
   - A folder that names another commit is refused, and nothing is imported.
 - [ ] Shown once and then reverted, each failing its own test:

@@ -30,10 +30,12 @@ export const part = pgTable('part', {
     .notNull()
     .default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  // Set by the database's clock on every change, as the time of creation is,
+  // so that the two never disagree about which came first.
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()
     .defaultNow()
-    .$onUpdate(() => new Date()),
+    .$onUpdate(() => sql`now()`),
 });
 
 export type PartRow = typeof part.$inferSelect;

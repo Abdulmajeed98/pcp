@@ -180,7 +180,7 @@
             }
           }
         },
-        "summary": "Replace a Part's name, manufacturer, part numbers and specifications. Its Category never changes.",
+        "summary": "Replace what the Admin may change in a Part",
         "tags": ["Part"]
       },
       "get": {

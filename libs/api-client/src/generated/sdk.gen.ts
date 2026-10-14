@@ -64,7 +64,7 @@ export const readPart = <ThrowOnError extends boolean = false>(options: Options<
 });
 
 /**
- * Replace a Part's name, manufacturer, part numbers and specifications. Its Category never changes.
+ * Replace what the Admin may change in a Part
  */
 export const editPart = <ThrowOnError extends boolean = false>(options: Options<EditPartData, ThrowOnError>): RequestResult<EditPartResponses, EditPartErrors, ThrowOnError> => (options.client ?? client).put<EditPartResponses, EditPartErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

@@ -32,10 +32,7 @@ export class PartController {
     );
   }
 
-  @ApiOperation({
-    summary:
-      "Replace a Part's name, manufacturer, part numbers and specifications. Its Category never changes.",
-  })
+  @ApiOperation({ summary: 'Replace what the Admin may change in a Part' })
   @ApiOkResponse({ type: PartResponse })
   @PreAuthorize([Role.ADMIN])
   @Put('v1/parts/:partId')

@@ -10,9 +10,11 @@ import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 
 import { part, PartRow } from '../part.schema';
 
-// The form of an identifier the database can hold. Anything else names no
-// Part, and is never sent to the database, which would refuse it.
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Whether an identifier has the form the database holds. Anything else names
+// no Part, and is never sent to the database, which would refuse it.
+function couldBePartId(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
 
 // A row as a Part. The database's own list of Categories is made from the
 // domain's, so a row whose Category the domain does not know means the two
@@ -70,7 +72,7 @@ export class DatabasePartStore implements PartStore {
   async edit(
     params: EditPartParams,
   ): Promise<Either.Either<Option.Option<Part>, StructuredError>> {
-    if (!uuidPattern.test(params.getPartId())) return Either.right(Option.none());
+    if (!couldBePartId(params.getPartId())) return Either.right(Option.none());
 
     try {
       const [row] = await this.databaseProvider
@@ -94,7 +96,7 @@ export class DatabasePartStore implements PartStore {
   }
 
   async readById(id: string): Promise<Either.Either<Option.Option<Part>, StructuredError>> {
-    if (!uuidPattern.test(id)) return Either.right(Option.none());
+    if (!couldBePartId(id)) return Either.right(Option.none());
 
     try {
       const [row] = await this.databaseProvider

@@ -30,6 +30,12 @@ function partOf(response: Response): Promise<PartBody> {
   return response.json() as Promise<PartBody>;
 }
 
+const partNotFound = {
+  code: 'PART_NOT_FOUND',
+  title: 'part_not_found_title',
+  detail: 'part_not_found_details',
+};
+
 describe('the Part endpoints', () => {
   let testApp: TestAppWithLogins;
   let adminToken: string;
@@ -622,6 +628,28 @@ describe('the Part endpoints', () => {
       expect(await partOf(await readPart(before.id, adminToken))).toEqual(before);
     });
 
+    it('refuses a name of spaces alone, as creation does', async () => {
+      const before = await aCpu();
+
+      const response = await editPart(before.id, { name: '   ', manufacturer: 'AMD' });
+
+      await expectErrorResponse(response, 400, [notValid('name')]);
+    });
+
+    it('refuses a specification the list does not name, as creation does', async () => {
+      const before = await aCpu();
+
+      const response = await editPart(before.id, {
+        name: before.name,
+        manufacturer: before.manufacturer,
+        specifications: { ...cpuSpecifications, colour: 'black' },
+      });
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.colour', { specification: 'colour', reason: 'unknown' }),
+      ]);
+    });
+
     it('does not change the Category: one sent with an edit is refused', async () => {
       const before = await aCpu();
 
@@ -641,13 +669,7 @@ describe('the Part endpoints', () => {
         manufacturer: 'Made-up',
       });
 
-      await expectErrorResponse(response, 404, [
-        {
-          code: 'PART_NOT_FOUND',
-          title: 'part_not_found_title',
-          detail: 'part_not_found_details',
-        },
-      ]);
+      await expectErrorResponse(response, 404, [partNotFound]);
     });
 
     it('refuses a Vendor, and changes nothing', async () => {
@@ -678,12 +700,6 @@ describe('the Part endpoints', () => {
   });
 
   describe('reading a Part', () => {
-    const partNotFound = {
-      code: 'PART_NOT_FOUND',
-      title: 'part_not_found_title',
-      detail: 'part_not_found_details',
-    };
-
     async function aPart(): Promise<PartBody> {
       const created = await createPart({
         category: 'ram',
