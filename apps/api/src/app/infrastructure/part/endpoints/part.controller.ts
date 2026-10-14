@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
@@ -6,10 +6,13 @@ import { Either } from 'effect';
 import { CreatePartCommand } from '~/domain/part/CreatePartCommand';
 import { EditPartCommand } from '~/domain/part/EditPartCommand';
 import { ReadPartQuery, ReadPartQueryInput } from '~/domain/part/ReadPartQuery';
+import { SearchPartsQuery } from '~/domain/part/SearchPartsQuery';
 
 import { CreatePartRequest } from './CreatePartRequest';
 import { EditPartRequest } from './EditPartRequest';
+import { PartPageResponse } from './PartPageResponse';
 import { PartResponse } from './PartResponse';
+import { SearchPartsRequest } from './SearchPartsRequest';
 
 @Controller()
 export class PartController {
@@ -17,6 +20,7 @@ export class PartController {
     private readonly createPartCommand: CreatePartCommand,
     private readonly editPartCommand: EditPartCommand,
     private readonly readPartQuery: ReadPartQuery,
+    private readonly searchPartsQuery: SearchPartsQuery,
   ) {}
 
   @ApiOperation({ summary: 'Add a Part to the catalog' })
@@ -44,6 +48,21 @@ export class PartController {
 
     return result.pipe(
       Either.map((output) => PartResponse.of(output.getPart())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary: 'One page of the Parts that match a search of the whole catalog',
+  })
+  @ApiOkResponse({ type: PartPageResponse })
+  @PreAuthorize([Role.ADMIN, Role.VENDOR])
+  @Get('v1/parts')
+  async searchParts(@Query() request: SearchPartsRequest): Promise<PartPageResponse> {
+    const result = await this.searchPartsQuery.execute(request.toQueryInput());
+
+    return result.pipe(
+      Either.map((output) => PartPageResponse.of(output.getPage())),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreatePartData, CreatePartErrors, CreatePartResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses } from './types.gen';
+import type { CreatePartData, CreatePartErrors, CreatePartResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -38,6 +38,15 @@ export const getStatus = <ThrowOnError extends boolean = false>(options?: Option
 export const readCategories = <ThrowOnError extends boolean = false>(options?: Options<ReadCategoriesData, ThrowOnError>): RequestResult<ReadCategoriesResponses, ReadCategoriesErrors, ThrowOnError> => (options?.client ?? client).get<ReadCategoriesResponses, ReadCategoriesErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/categories',
+    ...options
+});
+
+/**
+ * One page of the Parts that match a search of the whole catalog
+ */
+export const searchParts = <ThrowOnError extends boolean = false>(options?: Options<SearchPartsData, ThrowOnError>): RequestResult<SearchPartsResponses, SearchPartsErrors, ThrowOnError> => (options?.client ?? client).get<SearchPartsResponses, SearchPartsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/parts',
     ...options
 });
 

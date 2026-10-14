@@ -4,6 +4,7 @@ import { CreatePartCommand } from '~/domain/part/CreatePartCommand';
 import { EditPartCommand } from '~/domain/part/EditPartCommand';
 import { PartStore } from '~/domain/part/PartStore';
 import { ReadPartQuery } from '~/domain/part/ReadPartQuery';
+import { SearchPartsQuery } from '~/domain/part/SearchPartsQuery';
 
 import { PartController } from './endpoints/part.controller';
 import { DatabasePartStore } from './store/DatabasePartStore';
@@ -16,6 +17,7 @@ import { DatabasePartStore } from './store/DatabasePartStore';
     CreatePartCommand,
     EditPartCommand,
     ReadPartQuery,
+    SearchPartsQuery,
   ],
 })
 export class PartModule {}

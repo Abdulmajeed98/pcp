@@ -1,4 +1,4 @@
-import { StructuredError } from '@pcp/core';
+import { PageableAttributes, PageAttributes, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
 import { SpecificationDocument } from '../specification/specification-document';
@@ -67,6 +67,45 @@ export class EditPartParams {
   }
 }
 
+// What a search asks for: the words every Part found holds, an optional
+// Category, and the page.
+export class SearchPartsParams {
+  constructor(
+    private readonly words: readonly string[],
+    private readonly category: Category | undefined,
+    private readonly pageable: PageableAttributes,
+  ) {}
+
+  getWords(): readonly string[] {
+    return this.words;
+  }
+
+  getCategory(): Category | undefined {
+    return this.category;
+  }
+
+  getPageable(): PageableAttributes {
+    return this.pageable;
+  }
+}
+
+// One page of the Parts a search found, in name order, and where the page
+// stands among them all.
+export class PartsPage {
+  constructor(
+    private readonly parts: readonly Part[],
+    private readonly page: PageAttributes,
+  ) {}
+
+  getParts(): readonly Part[] {
+    return this.parts;
+  }
+
+  getPage(): PageAttributes {
+    return this.page;
+  }
+}
+
 // Where Parts are kept. It is the port: the domain says what it needs, and
 // infrastructure provides it.
 export abstract class PartStore {
@@ -77,6 +116,13 @@ export abstract class PartStore {
   abstract edit(
     params: EditPartParams,
   ): Promise<Either.Either<Option.Option<Part>, StructuredError>>;
+
+  // The Parts that hold every word in their name, manufacturer or part
+  // numbers, regardless of case, ordered by name and then by identifier, so
+  // that moving between pages never skips or repeats one.
+  abstract search(
+    params: SearchPartsParams,
+  ): Promise<Either.Either<PartsPage, StructuredError>>;
 
   // The Part with this identifier, or none when there is no such Part.
   abstract readById(

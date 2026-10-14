@@ -188,6 +188,60 @@ export type EditPartRequest = {
     };
 };
 
+export type PartSummaryResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+};
+
+export type PartPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items there are on every page.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Parts, in name order.
+     */
+    content: Array<PartSummaryResponse>;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -253,6 +307,45 @@ export type ReadCategoriesResponses = {
 };
 
 export type ReadCategoriesResponse = ReadCategoriesResponses[keyof ReadCategoriesResponses];
+
+export type SearchPartsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+        /**
+         * Words a Part must hold, in any order and any case, in its name, its manufacturer or a part number. Left out or empty, every Part is found.
+         */
+        search?: string;
+        /**
+         * The one Category to search in.
+         */
+        category?: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    };
+    url: '/v1/parts';
+};
+
+export type SearchPartsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type SearchPartsError = SearchPartsErrors[keyof SearchPartsErrors];
+
+export type SearchPartsResponses = {
+    200: PartPageResponse;
+};
+
+export type SearchPartsResponse = SearchPartsResponses[keyof SearchPartsResponses];
 
 export type CreatePartData = {
     body: CreatePartRequest;

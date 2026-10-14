@@ -1,11 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { databaseErrorOf, ServerError, StructuredError } from '@pcp/core';
-import { eq } from 'drizzle-orm';
+import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
+import { and, asc, count, eq, ilike, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import { Category } from '~/domain/part/Category';
 import { Part } from '~/domain/part/Part';
-import { CreatePartParams, EditPartParams, PartStore } from '~/domain/part/PartStore';
+import {
+  CreatePartParams,
+  EditPartParams,
+  PartsPage,
+  PartStore,
+  SearchPartsParams,
+} from '~/domain/part/PartStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 
 import { part, PartRow } from '../part.schema';
@@ -42,6 +48,23 @@ function toDomain(row: PartRow): Either.Either<Part, StructuredError> {
   );
 }
 
+// What a search looks in: the name, the manufacturer and the part numbers,
+// in lower case. It is stored beside them, because an index cannot be made on
+// the list of part numbers joined in a query.
+function searchTextOf(
+  name: string,
+  manufacturer: string,
+  partNumbers: readonly string[],
+): string {
+  return [name, manufacturer, ...partNumbers].join(' ').toLowerCase();
+}
+
+// A word to be found anywhere in the search text. Its `%`, `_` and `\` are
+// taken as themselves and not as parts of a pattern.
+function containing(word: string): string {
+  return `%${word.toLowerCase().replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+}
+
 @Injectable()
 export class DatabasePartStore implements PartStore {
   private readonly logger = new Logger(DatabasePartStore.name);
@@ -59,6 +82,11 @@ export class DatabasePartStore implements PartStore {
           manufacturer: params.getManufacturer(),
           partNumbers: [...params.getPartNumbers()],
           specifications: params.getSpecifications(),
+          searchText: searchTextOf(
+            params.getName(),
+            params.getManufacturer(),
+            params.getPartNumbers(),
+          ),
         })
         .returning();
 
@@ -83,6 +111,11 @@ export class DatabasePartStore implements PartStore {
           manufacturer: params.getManufacturer(),
           partNumbers: [...params.getPartNumbers()],
           specifications: params.getSpecifications(),
+          searchText: searchTextOf(
+            params.getName(),
+            params.getManufacturer(),
+            params.getPartNumbers(),
+          ),
         })
         .where(eq(part.id, params.getPartId()))
         .returning();
@@ -92,6 +125,41 @@ export class DatabasePartStore implements PartStore {
     } catch (error) {
       this.logger.error(error, 'A Part could not be edited');
       return Either.left(databaseErrorOf(error, 'A Part could not be edited'));
+    }
+  }
+
+  async search(
+    params: SearchPartsParams,
+  ): Promise<Either.Either<PartsPage, StructuredError>> {
+    const conditions: SQL[] = params
+      .getWords()
+      .map((word) => ilike(part.searchText, containing(word)));
+    const category = params.getCategory();
+    if (category !== undefined) conditions.push(eq(part.category, category.getKey()));
+    const where = conditions.length === 0 ? undefined : and(...conditions);
+    const pageable = params.getPageable();
+
+    try {
+      const client = this.databaseProvider.getClient();
+      const [rows, [{ total }]] = await Promise.all([
+        client
+          .select()
+          .from(part)
+          .where(where)
+          .orderBy(asc(part.name), asc(part.id))
+          .limit(pageable.getLimit())
+          .offset(pageable.getOffset()),
+        client.select({ total: count() }).from(part).where(where),
+      ]);
+
+      const parts = Either.all(rows.map(toDomain));
+      return Either.map(
+        parts,
+        (found) => new PartsPage(found, PageAttributes.of(pageable, total)),
+      );
+    } catch (error) {
+      this.logger.error(error, 'The catalog could not be searched');
+      return Either.left(databaseErrorOf(error, 'The catalog could not be searched'));
     }
   }
 

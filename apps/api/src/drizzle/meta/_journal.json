@@ -15,6 +15,20 @@
       "when": 1791990856817,
       "tag": "0001_add-part-specifications",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791993109101,
+      "tag": "0002_create-trigram-extension",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791993117192,
+      "tag": "0003_add-part-search-text",
+      "breakpoints": true
     }
   ]
 }
