@@ -29,7 +29,7 @@ export class SearchPartsRequest extends PagingRequest {
     return new SearchPartsQueryInput(
       this.search ?? '',
       this.category === undefined ? undefined : Category.withKey(this.category),
-      this.toPageable(),
+      this.toDomain(),
     );
   }
 }

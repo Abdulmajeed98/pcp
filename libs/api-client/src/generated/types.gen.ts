@@ -221,7 +221,7 @@ export type PartPageResponse = {
      */
     pageSize: number;
     /**
-     * How many items there are on every page.
+     * How many items were found, on all the pages together.
      */
     totalElements: number;
     /**

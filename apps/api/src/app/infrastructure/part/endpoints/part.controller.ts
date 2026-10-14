@@ -62,7 +62,7 @@ export class PartController {
     const result = await this.searchPartsQuery.execute(request.toQueryInput());
 
     return result.pipe(
-      Either.map((output) => PartPageResponse.of(output.getPage())),
+      Either.map((output) => PartPageResponse.of(output.getPartsPage())),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

@@ -101,7 +101,7 @@ export class PartsPage {
     return this.parts;
   }
 
-  getPage(): PageAttributes {
+  getPageAttributes(): PageAttributes {
     return this.page;
   }
 }

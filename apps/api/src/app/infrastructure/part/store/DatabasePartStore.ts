@@ -140,17 +140,24 @@ export class DatabasePartStore implements PartStore {
     const pageable = params.getPageable();
 
     try {
-      const client = this.databaseProvider.getClient();
-      const [rows, [{ total }]] = await Promise.all([
-        client
-          .select()
-          .from(part)
-          .where(where)
-          .orderBy(asc(part.name), asc(part.id))
-          .limit(pageable.getLimit())
-          .offset(pageable.getOffset()),
-        client.select({ total: count() }).from(part).where(where),
-      ]);
+      // One snapshot for both, so that a Part created between them cannot make
+      // the totals disagree with the page.
+      const [rows, [{ total }]] = await this.databaseProvider
+        .getClient()
+        .transaction(
+          (transaction) =>
+            Promise.all([
+              transaction
+                .select()
+                .from(part)
+                .where(where)
+                .orderBy(asc(part.name), asc(part.id))
+                .limit(pageable.getLimit())
+                .offset(pageable.getOffset()),
+              transaction.select({ total: count() }).from(part).where(where),
+            ]),
+          { isolationLevel: 'repeatable read', accessMode: 'read only' },
+        );
 
       const parts = Either.all(rows.map(toDomain));
       return Either.map(

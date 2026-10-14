@@ -27,7 +27,7 @@ export {
 export { ErrorModule } from './infrastructure/errors/error.module';
 export { ErrorResponseExceptionFilter } from './infrastructure/errors/ErrorResponseExceptionFilter';
 export { ErrorStructureException } from './infrastructure/errors/ErrorStructureException';
-export { PageResponse } from './infrastructure/paging/PageResponse';
+export { PagingResponse } from './infrastructure/paging/PagingResponse';
 export { PagingRequest } from './infrastructure/paging/PagingRequest';
 export { getCorsConfiguration, parseAllowedOrigins } from './infrastructure/security/cors';
 export { IsOrigin } from './infrastructure/security/IsOrigin';

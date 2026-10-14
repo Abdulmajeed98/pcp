@@ -4,14 +4,17 @@ import { PageAttributes } from '../../domain/paging/PageAttributes';
 
 // Where a page stands in the whole list. The answer of an endpoint that
 // answers in pages extends it with its `content`, the page's items.
-export abstract class PageResponse {
+export abstract class PagingResponse {
   @ApiProperty({ description: 'The page, counted from 0.', example: 0 })
   readonly pageNumber: number;
 
   @ApiProperty({ description: 'How many items a page holds.', example: 20 })
   readonly pageSize: number;
 
-  @ApiProperty({ description: 'How many items there are on every page.', example: 42 })
+  @ApiProperty({
+    description: 'How many items were found, on all the pages together.',
+    example: 42,
+  })
   readonly totalElements: number;
 
   @ApiProperty({ description: 'How many pages there are.', example: 3 })

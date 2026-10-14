@@ -40,8 +40,9 @@ export const part = pgTable(
       .$onUpdate(() => sql`now()`),
     // The name, the manufacturer and the part numbers, in lower case, kept by
     // the Store whenever they change, for searching. The trigram index finds a
-    // word anywhere in it.
-    searchText: text('search_text').notNull().default(''),
+    // word anywhere in it. It has no default, so that nothing can store a Part
+    // without it, which no search would then find.
+    searchText: text('search_text').notNull(),
   },
   (table) => [
     index('part_search_text_index').using('gin', table.searchText.op('gin_trgm_ops')),

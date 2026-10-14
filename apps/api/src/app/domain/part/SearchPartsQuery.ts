@@ -32,7 +32,7 @@ class Output {
     return new Output(page);
   }
 
-  getPage(): PartsPage {
+  getPartsPage(): PartsPage {
     return this.page;
   }
 }

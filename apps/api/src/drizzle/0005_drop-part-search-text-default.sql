@@ -1,0 +1,1 @@
+ALTER TABLE "part" ALTER COLUMN "search_text" DROP DEFAULT;

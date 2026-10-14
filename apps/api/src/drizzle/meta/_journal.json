@@ -29,6 +29,20 @@
       "when": 1791993117192,
       "tag": "0003_add-part-search-text",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791993461477,
+      "tag": "0004_fill-part-search-text",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791993473907,
+      "tag": "0005_drop-part-search-text-default",
+      "breakpoints": true
     }
   ]
 }

@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PageResponse } from '@pcp/core';
+import { PagingResponse } from '@pcp/core';
 
 import { PartsPage } from '~/domain/part/PartStore';
 
 import { PartSummaryResponse } from './PartSummaryResponse';
 
 // One page of the Parts a search found.
-export class PartPageResponse extends PageResponse {
+export class PartPageResponse extends PagingResponse {
   @ApiProperty({
     description: "The page's Parts, in name order.",
     type: [PartSummaryResponse],
@@ -14,7 +14,7 @@ export class PartPageResponse extends PageResponse {
   readonly content: PartSummaryResponse[];
 
   private constructor(page: PartsPage) {
-    super(page.getPage());
+    super(page.getPageAttributes());
     this.content = page.getParts().map(PartSummaryResponse.of);
   }
 

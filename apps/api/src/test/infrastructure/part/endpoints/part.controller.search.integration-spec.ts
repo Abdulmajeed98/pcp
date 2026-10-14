@@ -125,6 +125,22 @@ describe('searching the catalog', () => {
     expect(await namesFound({ search: '1_00' })).toEqual([]);
   });
 
+  it('takes a backslash in a term as itself', async () => {
+    await aPart('storage', 'Made-up C:\\ Drive', 'Made-up Storage');
+    await aPart('storage', 'Made-up C: Drive', 'Made-up Storage');
+
+    expect(await namesFound({ search: 'c:\\' })).toEqual(['Made-up C:\\ Drive']);
+  });
+
+  it('answers a page far past the last one as empty, and refuses a page number past the largest', async () => {
+    await aPart('psu', 'Made-up A', 'Made-up Power');
+
+    const farPast = await search({ page: '1000000' });
+    expect(((await farPast.json()) as PageOfParts).content).toEqual([]);
+
+    await expectErrorResponse(await search({ page: '1e20' }), 400, [notValid('page')]);
+  });
+
   it('gives each Part once across the pages, in name order, with the totals', async () => {
     for (const letter of ['E', 'C', 'A', 'D', 'B'])
       await aPart('psu', `Made-up ${letter}`, 'Made-up Power');

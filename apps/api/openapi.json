@@ -144,6 +144,7 @@
             "description": "The page, counted from 0.",
             "schema": {
               "minimum": 0,
+              "maximum": 1000000,
               "default": 0,
               "type": "number"
             }
@@ -156,7 +157,7 @@
             "schema": {
               "minimum": 1,
               "maximum": 100,
-              "default": 20,
+              "default": 10,
               "type": "number"
             }
           },
@@ -733,7 +734,7 @@
           },
           "totalElements": {
             "type": "number",
-            "description": "How many items there are on every page.",
+            "description": "How many items were found, on all the pages together.",
             "example": 42
           },
           "totalPages": {
