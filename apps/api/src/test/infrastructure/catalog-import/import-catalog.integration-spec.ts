@@ -215,11 +215,14 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       specifications: { tdp: 105, memory: { types: ['DDR5'] } },
     });
 
-    // One socket of three is a variant the set does not hold.
-    const cooler = await theOnePart({ category: 'cpuCooler' });
-    expect(cooler.specifications.cpu_sockets).toEqual(['AM5', 'LGA 1700']);
+    // One socket of three is a variant the set does not hold. The list is
+    // left out whole, so that a rule says it could not check rather than
+    // that a CPU on a socket the list leaves unnamed does not fit.
+    const cooler = await theOnePart({ search: 'Made-up Tower Cooler' });
+    expect(cooler.specifications).not.toHaveProperty('cpu_sockets');
+    expect(cooler.missingNeededSpecifications).toEqual(['cpu_sockets']);
 
-    const gpu = await theOnePart({ category: 'gpu' });
+    const gpu = await theOnePart({ search: 'Made-up RX 7600' });
     expect(gpu.specifications).not.toHaveProperty('length');
     expect(gpu.missingNeededSpecifications).toEqual(['length']);
   });
@@ -237,7 +240,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     expect(ryzen.partNumbers).toEqual(['100-000000001', '100-000000001BOX']);
     // This record lists its part numbers only among its identifiers, once in
     // capitals and once not.
-    const gpu = await theOnePart({ category: 'gpu' });
+    const gpu = await theOnePart({ search: 'Made-up RX 7600' });
     expect(gpu.partNumbers).toEqual(['MU-RX7600']);
 
     // The sample's barcodes, retailer listing and store codes.
@@ -292,7 +295,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
 
   it("keeps the Admin's edit through a second run, and an edit leaves the OpenDB ID as it was", async () => {
     await runTheImport(sample);
-    const imported = await theOnePart({ category: 'psu' });
+    const imported = await theOnePart({ search: 'Made-up 650 W' });
 
     const edit = await fetch(`${testApp.baseUrl}/v1/parts/${imported.id}`, {
       method: 'PUT',

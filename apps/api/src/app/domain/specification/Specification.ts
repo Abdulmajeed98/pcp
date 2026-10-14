@@ -240,20 +240,14 @@ export class Specification {
     return kept(value);
   }
 
-  // A value given twice is kept once. Each value outside the set is named,
-  // and the others are kept, so that one socket the set does not hold does
-  // not cost a cooler all the sockets it does. Creating a Part still refuses
-  // it.
+  // A value given twice is kept once.
   private checkSeveral(value: unknown): ValueCheck {
     if (!Array.isArray(value)) return this.refused('notAList');
-
-    const inTheSet = (each: unknown): each is string =>
-      typeof each === 'string' && (this.values?.includes(each) ?? false);
-    const problems = value
-      .filter((each) => !inTheSet(each))
-      .map(() => ({ path: this.path, reason: 'notInTheSet' as const }));
-    const known = [...new Set(value.filter(inTheSet))];
-    return known.length === 0 ? { problems } : { value: known, problems };
+    if (value.length === 0) return missing;
+    if (!value.every((each) => typeof each === 'string' && this.values?.includes(each))) {
+      return this.refused('notInTheSet');
+    }
+    return kept([...new Set(value)]);
   }
 
   private checkListOfText(value: unknown): ValueCheck {
