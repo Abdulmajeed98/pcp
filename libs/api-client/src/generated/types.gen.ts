@@ -17,6 +17,12 @@ export type SubErrorResponse = {
      * The key of a longer text for the error.
      */
     detail: string;
+    /**
+     * Fixed keys and values about the error, such as the field it is about.
+     */
+    additionalInformation?: {
+        [key: string]: string;
+    };
 };
 
 export type ErrorResponse = {

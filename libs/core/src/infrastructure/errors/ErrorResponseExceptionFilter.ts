@@ -8,7 +8,16 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 
+import { ErrorType, StructuredError } from '../../domain/errors/StructuredError';
 import { ErrorResponse, SubErrorResponse } from './endpoints/ErrorResponse';
+import { ErrorStructureException } from './ErrorStructureException';
+
+// The status each kind of error a use case returns is answered with.
+const statusesByErrorType: Record<ErrorType, number> = {
+  SERVER_ERROR: HttpStatus.INTERNAL_SERVER_ERROR,
+  NOT_FOUND: HttpStatus.NOT_FOUND,
+  VALIDATION_ERROR: HttpStatus.BAD_REQUEST,
+};
 
 // The statuses that have an error of their own. Any other status an endpoint
 // answers with is told apart by the status in its code.
@@ -41,6 +50,15 @@ const internalServerError = new SubErrorResponse(
   'internal_server_error_details',
 );
 
+function subErrorOf(error: StructuredError): SubErrorResponse {
+  return new SubErrorResponse(
+    error.getCode(),
+    error.getTitle(),
+    error.getDetail(),
+    error.getAdditionalInformation(),
+  );
+}
+
 // Gives every error the API answers the same body. What an exception says is
 // never put into the body, so nothing about the inside of the API leaves it.
 @Catch()
@@ -50,16 +68,42 @@ export class ErrorResponseExceptionFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
-    const { status, error } = this.errorFor(exception);
+    const { status, errors } =
+      exception instanceof ErrorStructureException
+        ? this.structuredErrorsFor(exception)
+        : this.errorFor(exception);
 
     this.httpAdapterHost.httpAdapter.reply(
       host.switchToHttp().getResponse(),
-      new ErrorResponse([error]),
+      new ErrorResponse(errors),
       status,
     );
   }
 
-  private errorFor(exception: unknown): { status: number; error: SubErrorResponse } {
+  // The errors a use case returned, each with its own code. A server error
+  // says what failed in the log only, and is answered as any other internal
+  // error is.
+  private structuredErrorsFor(exception: ErrorStructureException): {
+    status: number;
+    errors: SubErrorResponse[];
+  } {
+    const structuredErrors = exception.getErrors();
+    const status = statusesByErrorType[structuredErrors[0].getType()];
+
+    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.logger.error(exception.message);
+      return { status, errors: [internalServerError] };
+    }
+
+    return { status, errors: structuredErrors.map(subErrorOf) };
+  }
+
+  private errorFor(exception: unknown): { status: number; errors: SubErrorResponse[] } {
+    const { status, error } = this.singleErrorFor(exception);
+    return { status, errors: [error] };
+  }
+
+  private singleErrorFor(exception: unknown): { status: number; error: SubErrorResponse } {
     if (!(exception instanceof HttpException)) {
       this.logger.error(exception);
       return { status: HttpStatus.INTERNAL_SERVER_ERROR, error: internalServerError };

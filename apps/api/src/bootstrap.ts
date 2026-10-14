@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { getCorsConfiguration } from '@pcp/core';
+import { createValidationPipe, getCorsConfiguration } from '@pcp/core';
 
 import { AppModule } from '~/app.module';
 import { EnvironmentVariables } from '~/infrastructure/configuration/env.validation';
@@ -19,6 +19,7 @@ export function configureApplication(app: NestExpressApplication): void {
   const allowedOrigins = settingsOf(app).get('CORS_ALLOWED_ORIGINS', { infer: true });
 
   app.enableCors(getCorsConfiguration(allowedOrigins));
+  app.useGlobalPipes(createValidationPipe());
 }
 
 export async function bootstrap(): Promise<NestExpressApplication> {

@@ -1,7 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 // One thing that went wrong. `title` and `detail` are keys for the frontends
-// to turn into text, and never text written for a person.
+// to turn into text, and never text written for a person. When there is more
+// a frontend can act on, such as the field a refusal is about, it is in
+// `additionalInformation`, as fixed keys and values.
 export class SubErrorResponse {
   @ApiProperty({
     description: 'What went wrong, as a fixed code.',
@@ -21,10 +23,26 @@ export class SubErrorResponse {
   })
   readonly detail: string;
 
-  constructor(code: string, title: string, detail: string) {
+  @ApiPropertyOptional({
+    description: 'Fixed keys and values about the error, such as the field it is about.',
+    type: 'object',
+    additionalProperties: { type: 'string' },
+    example: { field: 'manufacturer' },
+  })
+  readonly additionalInformation?: Readonly<Record<string, string>>;
+
+  constructor(
+    code: string,
+    title: string,
+    detail: string,
+    additionalInformation?: Readonly<Record<string, string>>,
+  ) {
     this.code = code;
     this.title = title;
     this.detail = detail;
+    if (additionalInformation && Object.keys(additionalInformation).length > 0) {
+      this.additionalInformation = additionalInformation;
+    }
   }
 }
 

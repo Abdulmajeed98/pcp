@@ -4,6 +4,7 @@ export type ExpectedErrorResponse = {
   code: string;
   title: string;
   detail: string;
+  additionalInformation?: Record<string, string>;
 };
 
 // Asserts that a body is the agreed error body and nothing more: a list of

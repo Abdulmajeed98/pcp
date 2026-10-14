@@ -97,6 +97,16 @@
             "type": "string",
             "description": "The key of a longer text for the error.",
             "example": "access_denied_details"
+          },
+          "additionalInformation": {
+            "type": "object",
+            "description": "Fixed keys and values about the error, such as the field it is about.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "field": "manufacturer"
+            }
           }
         },
         "required": ["code", "title", "detail"]
