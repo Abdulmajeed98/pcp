@@ -1,0 +1,41 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000801",
+  "wattage": 650,
+  "form_factor": "ATX",
+  "length": 140,
+  "connectors": {
+    "atx_24_pin": 1,
+    "eps_8_pin": 2,
+    "pcie_6_plus_2_pin": 2,
+    "pcie_12vhpwr": 0,
+    "sata": 6,
+    "molex_4_pin": 2,
+    "floppy_4_pin": 0
+  },
+  "metadata": {
+    "name": "Made-up 650 W",
+    "manufacturer": "Made-up Power",
+    "part_numbers": ["MU-650"],
+    "series": "Made-up",
+    "variant": ""
+  },
+  "identifiers": {
+    "version": 1,
+    "identifiers": [
+      {
+        "type": "mpn",
+        "value": "MU-650",
+        "region": "all"
+      }
+    ],
+    "retailer_listings": [
+      {
+        "source": "made-up-shop",
+        "channel": "us",
+        "source_product_id": "MU-1",
+        "pricing_enabled": true,
+        "verified": false
+      }
+    ]
+  }
+}

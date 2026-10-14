@@ -1,0 +1,36 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000201",
+  "cpu_sockets": ["AM5", "LGA 1700", "LGA 1151v2"],
+  "water_cooled": false,
+  "height": 155,
+  "fan_quantity": 1,
+  "color": ["BLACK"],
+  "lighting": [],
+  "metadata": {
+    "name": "Made-up Tower Cooler",
+    "manufacturer": "Made-up Cooling",
+    "part_numbers": ["MU-TC-1"],
+    "series": "Made-up",
+    "variant": ""
+  },
+  "general_product_information": {},
+  "identifiers": {
+    "version": 1,
+    "identifiers": [
+      {
+        "type": "mpn",
+        "value": "MU-TC-1",
+        "region": "all"
+      }
+    ],
+    "retailer_listings": [
+      {
+        "source": "made-up-shop",
+        "channel": "us",
+        "source_product_id": "MU-1",
+        "pricing_enabled": true,
+        "verified": false
+      }
+    ]
+  }
+}

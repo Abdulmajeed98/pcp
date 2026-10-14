@@ -1,0 +1,34 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000501",
+  "interface": "M.2 PCIe 4.0 x4",
+  "form_factor": "M.2-2280",
+  "storage_type": "SSD",
+  "capacity": 1000,
+  "nvme": true,
+  "metadata": {
+    "name": "Made-up NVMe 1 TB",
+    "manufacturer": "Made-up Storage",
+    "part_numbers": ["MU-NV-1T"],
+    "series": "Made-up",
+    "variant": ""
+  },
+  "identifiers": {
+    "version": 1,
+    "identifiers": [
+      {
+        "type": "mpn",
+        "value": "MU-NV-1T",
+        "region": "all"
+      }
+    ],
+    "retailer_listings": [
+      {
+        "source": "made-up-shop",
+        "channel": "us",
+        "source_product_id": "MU-1",
+        "pricing_enabled": true,
+        "verified": false
+      }
+    ]
+  }
+}

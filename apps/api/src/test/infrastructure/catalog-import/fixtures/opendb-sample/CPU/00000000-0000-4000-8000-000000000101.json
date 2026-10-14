@@ -1,0 +1,83 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000101",
+  "series": "Made-up 7000",
+  "microarchitecture": "Made-up Arch",
+  "coreFamily": "Made-up",
+  "socket": "AM5",
+  "cores": {
+    "total": 6,
+    "performance": 6,
+    "threads": 12
+  },
+  "clocks": {
+    "performance": {
+      "base": 3.8,
+      "boost": 5.1
+    }
+  },
+  "cache": {
+    "l1": "6 x 64 KB",
+    "l2": 6,
+    "l3": 32
+  },
+  "specifications": {
+    "tdp": 65,
+    "ppt": 88,
+    "integratedGraphics": {
+      "model": "Made-up Graphics",
+      "baseClock": 400,
+      "boostClock": 2200,
+      "shaderCount": 128
+    },
+    "eccSupport": false,
+    "includesCooler": true,
+    "packaging": "Boxed",
+    "lithography": "5 nm",
+    "simultaneousMultithreading": true,
+    "memory": {
+      "maxSupport": 192,
+      "types": ["DDR5"],
+      "channels": 2
+    }
+  },
+  "metadata": {
+    "name": "Made-up Ryzen 5 7600",
+    "manufacturer": "AMD",
+    "part_numbers": ["100-000000001"],
+    "series": "Made-up",
+    "variant": ""
+  },
+  "general_product_information": {
+    "manufacturer_url": "https://example.invalid/made-up",
+    "amazon_sku": "MADEUP1"
+  },
+  "identifiers": {
+    "version": 1,
+    "identifiers": [
+      {
+        "type": "mpn",
+        "value": "100-000000001",
+        "region": "all"
+      },
+      {
+        "type": "mpn",
+        "value": "100-000000001BOX",
+        "region": "all"
+      },
+      {
+        "type": "ean",
+        "value": "0000000000017",
+        "region": "all"
+      }
+    ],
+    "retailer_listings": [
+      {
+        "source": "made-up-shop",
+        "channel": "us",
+        "source_product_id": "MU-1",
+        "pricing_enabled": true,
+        "verified": false
+      }
+    ]
+  }
+}

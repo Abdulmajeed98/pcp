@@ -1,0 +1,21 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000104",
+  "socket": "AM5",
+  "cores": {
+    "total": "six",
+    "threads": 12
+  },
+  "specifications": {
+    "tdp": 105,
+    "memory": {
+      "types": ["DDR5"]
+    }
+  },
+  "metadata": {
+    "name": "Made-up Ryzen 7 7700",
+    "manufacturer": "AMD",
+    "part_numbers": ["100-000000002"],
+    "series": "Made-up",
+    "variant": ""
+  }
+}

@@ -39,6 +39,17 @@
           "cwd": "{projectRoot}"
         }
       },
+      "catalog-import": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node --require @swc-node/register src/import-catalog.ts",
+          "cwd": "{projectRoot}",
+          "env": {
+            "SWC_NODE_PROJECT": "tsconfig.app.json"
+          }
+        }
+      },
       "migrate": {
         "executor": "nx:run-commands",
         "cache": false,

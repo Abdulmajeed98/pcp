@@ -1,0 +1,24 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000102",
+  "socket": "AM4",
+  "metadata": {
+    "name": "Made-up Ryzen 3 3200",
+    "manufacturer": null,
+    "part_numbers": [],
+    "series": "Made-up",
+    "variant": ""
+  },
+  "identifiers": {
+    "version": 1,
+    "identifiers": [],
+    "retailer_listings": [
+      {
+        "source": "made-up-shop",
+        "channel": "us",
+        "source_product_id": "MU-1",
+        "pricing_enabled": true,
+        "verified": false
+      }
+    ]
+  }
+}

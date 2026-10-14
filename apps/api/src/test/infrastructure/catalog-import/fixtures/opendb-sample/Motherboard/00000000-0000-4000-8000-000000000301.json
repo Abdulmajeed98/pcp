@@ -1,0 +1,61 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000301",
+  "socket": "AM5",
+  "form_factor": "Micro ATX",
+  "chipset": "B650",
+  "memory": {
+    "max": 192,
+    "ram_type": "DDR5",
+    "slots": 4
+  },
+  "pcie_slots": [
+    {
+      "gen": "4.0",
+      "quantity": 1,
+      "lanes": 16
+    }
+  ],
+  "m2_slots": [
+    {
+      "size": "2280",
+      "key": "M",
+      "interface": "PCIe 4.0 x4"
+    }
+  ],
+  "storage_devices": {
+    "sata_6_gb_s": 4,
+    "sata_3_gb_s": 0,
+    "u2": 0
+  },
+  "power_connectors": {
+    "main_power": "24-pin",
+    "cpu_power": ["8-pin"]
+  },
+  "back_connect_connectors": false,
+  "metadata": {
+    "name": "Made-up B650M Board",
+    "manufacturer": "Made-up Boards",
+    "part_numbers": ["MU-B650M"],
+    "series": "Made-up",
+    "variant": ""
+  },
+  "identifiers": {
+    "version": 1,
+    "identifiers": [
+      {
+        "type": "mpn",
+        "value": "MU-B650M",
+        "region": "all"
+      }
+    ],
+    "retailer_listings": [
+      {
+        "source": "made-up-shop",
+        "channel": "us",
+        "source_product_id": "MU-1",
+        "pricing_enabled": true,
+        "verified": false
+      }
+    ]
+  }
+}

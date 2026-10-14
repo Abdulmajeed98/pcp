@@ -1,0 +1,39 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000701",
+  "form_factor": "Micro ATX Mini Tower",
+  "supported_motherboard_form_factors": ["Micro ATX", "Mini-ITX"],
+  "max_video_card_length": 338,
+  "expansion_slots": 4,
+  "internal_3_5_bays": 2,
+  "internal_2_5_bays": 2,
+  "max_cpu_cooler_height": 170,
+  "supported_power_supply_form_factors": ["ATX"],
+  "max_psu_length": 180,
+  "supports_rear_connecting_motherboard": false,
+  "metadata": {
+    "name": "Made-up Mesh Tower",
+    "manufacturer": "Made-up Cases",
+    "part_numbers": ["MU-MESH"],
+    "series": "Made-up",
+    "variant": ""
+  },
+  "identifiers": {
+    "version": 1,
+    "identifiers": [
+      {
+        "type": "mpn",
+        "value": "MU-MESH",
+        "region": "all"
+      }
+    ],
+    "retailer_listings": [
+      {
+        "source": "made-up-shop",
+        "channel": "us",
+        "source_product_id": "MU-1",
+        "pricing_enabled": true,
+        "verified": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "opendb_id": "00000000-0000-4000-8000-000000000401",
+  "ram_type": "DDR5",
+  "modules": {
+    "quantity": 2,
+    "capacity_gb": 16
+  },
+  "capacity": 32,
+  "speed": 6000,
+  "metadata": {
+    "name": "Made-up DDR5 32 GB",
+    "manufacturer": "Made-up Memory",
+    "part_numbers": ["MU-D5-32"],
+    "series": "Made-up",
+    "variant": ""
+  },
+  "identifiers": {
+    "version": 1,
+    "identifiers": [
+      {
+        "type": "mpn",
+        "value": "MU-D5-32",
+        "region": "all"
+      }
+    ],
+    "retailer_listings": [
+      {
+        "source": "made-up-shop",
+        "channel": "us",
+        "source_product_id": "MU-1",
+        "pricing_enabled": true,
+        "verified": false
+      }
+    ]
+  }
+}
