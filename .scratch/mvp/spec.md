@@ -242,10 +242,16 @@ Field names are those of OpenDB. "Coverage" is the share of OpenDB Parts in whic
 
 Rules 5, 6 and 13 to 16 count every kit and drive in the Build, multiplied by its quantity.
 
-Rules 11 and 20 are the only rules that can produce a Compatibility Warning, because a strict reading would report Builds that in fact work:
+Rules 11, 15 and 20 are the only rules that can produce a Compatibility Warning, because a strict reading would report Builds that in fact work:
 
 - **Rule 11.** It is a Compatibility Problem when the PSU has fewer 6+2-pin connectors than the GPU has 6-pin and 8-pin sockets, or when the GPU has a 12V-2x6 or 12VHPWR socket and the PSU has neither that cable nor any 6+2-pin connector. It is a Compatibility Warning when the GPU has a 12V-2x6 or 12VHPWR socket and the PSU has no such cable but does have 6+2-pin connectors: the Build works only with the adapter that usually comes with the GPU.
+- **Rule 15.** A 2.5-inch drive may take a free 3.5-inch bay when no 2.5-inch bay is left, because 466 of the 498 cases that give 0 internal 2.5-inch bays have 3.5-inch bays, which usually take one. It is a Compatibility Problem when the drives outnumber the bays that way. It is a Compatibility Warning when the case gives no internal bays at all and the Build has a 2.5-inch drive: test benches and small cases such as the FormD T1 mount an SSD somewhere OpenDB does not count as a bay.
 - **Rule 20.** It is a Compatibility Problem when the PSU has no EPS connector at all. It is a Compatibility Warning when the PSU has at least one EPS connector but fewer than the motherboard has CPU power sockets: the extra socket is often optional.
+
+Two rules read some of OpenDB's values in a way of their own, as the owner decided on 15 October 2026:
+
+- **Rule 1.** A motherboard socket written "2 x <socket>", on 20 dual-socket server boards, takes a CPU of that socket. A socket written "Integrated …", on 13 boards with a CPU built in, means the board brings its own CPU, and any CPU added to it is a Compatibility Problem.
+- **Rule 7.** A Thin Mini-ITX board fits any case that takes Mini-ITX, and a Flex ATX board any case that takes Micro ATX, because they share the mounting. No case at the pinned commit lists Thin Mini-ITX, and one lists Flex ATX.
 
 With these rules every Category takes part in at least one rule, and every pair of Categories that physically connect is covered.
 

@@ -50,7 +50,7 @@ The owner gets the groundwork every later module copies. PostgreSQL is reached t
 7. As the Admin, I want a Part I have edited left exactly as I left it whenever the import runs, so that my corrections are never lost.
 8. As the owner, I want the import to be all or nothing, so that a failure halfway never leaves half a catalog.
 9. As the owner, I want a report for each Category of how many Parts were imported, how many were already there and how many were left out and why, so that I know what the catalog holds.
-10. As the owner, I want a record with no name or no manufacturer left out and named in the report, so that the catalog holds no Part a Vendor could not recognise.
+10. As the owner, I want a record with no name, or with no manufacturer that its name shows, left out and named in the report, so that the catalog holds no Part a Vendor could not recognise.
 11. As the owner, I want a value that does not fit its specification left out and counted, so that a bad value in OpenDB cannot reach a Compatibility Rule.
 12. As a Shopper, I want a length, a height or a wattage that OpenDB gives as 0 treated as unknown, so that a rule says it could not check instead of saying that a GPU fits.
 13. As the owner, I want OpenDB's US retailer listings, store codes and barcodes left behind, so that the catalog holds only what the platform uses.
@@ -214,7 +214,8 @@ The owner gets the groundwork every later module copies. PostgreSQL is reached t
 - It is a second entry point of the API, as the OpenAPI writer already is, because the API is the only part that touches the database (ADR-0003). It is run with `pnpm catalog:import`.
 - It fetches the pinned commit's eight folders from GitHub, or reads them from a folder on disk when it is given one. How it fetches them, as an archive of the commit or as a shallow clone, is settled first. Either way it checks that what it holds is the pinned commit, and it imports nothing otherwise.
 - It is a Command with its own Store and a port through which it reads OpenDB's records. Fetching, unpacking and reading files are infrastructure.
-- A record becomes a Part when it has an OpenDB ID that matches its file name, a name and a manufacturer. Any other record is left out, and named in the report with its reason.
+- A record becomes a Part when it has an OpenDB ID that matches its file name, a name and a manufacturer. A record that names no manufacturer takes the one its name begins with, among those its folder's other records name, and the report names it. Any other record is left out, and named in the report with its reason.
+- A cooler's sockets that list "LGA 1151v2" beside "LGA 1151" lose the variant, which the set of sockets does not hold, and keep the rest. Any other list with a socket outside the set is left out whole and counted.
 - A specification value that does not fit its entry on the list is left out of the Part and counted. So is a value of 0 where 0 cannot be true. A field that the list does not name is ignored.
 - A record whose OpenDB ID is already in the catalog is skipped. The import never changes or removes a Part.
 - Everything is written in one transaction. A failure leaves the catalog as it was, and the command exits non-zero with a plain message.
@@ -497,13 +498,28 @@ Each group is seen to fail once, by a deliberate fault that is then reverted: th
   - The Category is fixed once a Part exists.
   - An edit replaces a Part's fields as a whole, and clears a specification it leaves out.
   - Part numbers are OpenDB's `part_numbers` together with its `mpn` identifiers. Some `mpn` values are fragments, such as `WHT` or `MESH`, which may make a sheet row match more than one Part. SHT-5 reports that.
-  - Records with no manufacturer are left out, not imported with a blank one. CAT-3 says that a Part has a manufacturer.
+  - Records with no manufacturer are not imported with a blank one. CAT-3 says that a Part has a manufacturer. On 15 October 2026 the owner decided that one whose name begins with a manufacturer of its folder takes that one.
   - Specifications compared for equality are fixed sets, and a new value is a change to code.
   - Photos: JPEG, PNG and WebP up to 10 MB, stored as WebP at most 1,200 pixels on the longer side.
   - The database settings' names: `DATASOURCE_URL`, `DATASOURCE_USERNAME` and `DATASOURCE_PASSWORD`.
   - The Parts that `pnpm platform:check` creates are left in the development database.
   - The credit's wording follows the licence's own example.
   - The specifications' type in the API's description is a plain JSON object.
+- **The owner's decisions of 15 October 2026,** on what tickets 01 to 09 left open:
+  1. A cooler that lists "LGA 1151v2" beside "LGA 1151" keeps its other sockets. "LGA 115", "LGA 1121" and a motherboard's "LGA 1151v2" are not mapped, and the Admin fills those in.
+  2. A record with no manufacturer takes the one its name begins with, among its folder's manufacturers: 26 of 28 become Parts.
+  3. A case's 0 internal 2.5-inch bays is kept, and rule 15 lets a 2.5-inch drive take a free 3.5-inch bay. The MVP spec's rule notes say how.
+  4. Dual-socket and CPU-built-in boards are kept, and rule 1 reads their sockets. The MVP spec's rule notes say how.
+  5. Rule 7 fits a Thin Mini-ITX board where Mini-ITX fits, and a Flex ATX board where Micro ATX fits.
+  6. A 0 stays "not known" for motherboards' SATA ports and power supplies' EPS, PCIe, SATA and 24-pin connectors.
+  7. The API keeps JPEG, PNG and WebP. Ticket 13's photo field asks for them, so that an iPhone converts its HEIC.
+  8. Search keeps matching words as written. Folding accents and Arabic-script letters is designed in `browse`, where Shoppers search.
+  9. A refusal of specifications names the first one that does not fit.
+  10. When two edits of one Part overlap, the last one wins.
+  11. `@pcp/opendb` holds the pinned commit, and `OPENDB_REPOSITORY_URL` names where the archive is fetched from.
+  12. The API's targets get the database password through a committed env file of their own, which names `.env`'s value.
+  13. Commit messages follow Conventional Commits 1.0.0, with commitlint's conventional types and the project's folder as the scope, checked by commitlint in a commit-msg hook.
+  14. CONTEXT.md gains Specification, Specification list and Needed specification.
 - **OpenDB's licence, as found on 14 October 2026.** This is a reading of the licences, not legal advice.
   - Up to commit `ef7e601b78875a931a4ad9fa1ccce7000f3e5ecf` (5 October 2026, 14:25 UTC), OpenDB's licence file was ODC-By 1.0.
   - Commit `80c21e10f1` (5 October 2026, 14:33 UTC) introduced CC BY-NC-SA 4.0 for new data. Its notice said that earlier ODC-By material "retains its earlier permissions, including commercial use". It named commit `2ec94628fa91bcd175742da900b89d56ddcb810d` (4 September 2026) as a legacy baseline, and said that the baseline is not the only ODC-By release.

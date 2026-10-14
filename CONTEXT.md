@@ -14,6 +14,18 @@ _Avoid_: Product, item, component, listing
 The kind of Part: CPU, CPU cooler, motherboard, RAM, storage, GPU, case or PSU.
 _Avoid_: Type, group, section
 
+**Specification**:
+One named property of a Part, defined for its Category, such as a CPU's socket or a case's longest GPU.
+_Avoid_: Spec, attribute, field, property
+
+**Specification list**:
+Every Specification that a Part of one Category can hold.
+_Avoid_: Schema, template
+
+**Needed specification**:
+A Specification that a Compatibility Rule reads.
+_Avoid_: Required field, key spec
+
 **Part Request**:
 A Vendor's request that the Admin add a Part missing from the catalog.
 _Avoid_: Suggestion, submission, new part

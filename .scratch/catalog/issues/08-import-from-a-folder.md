@@ -109,3 +109,15 @@ All but the last are corrected.
 - `pnpm integration:check` passes 92 tests, 11 of them the import's.
 - In a throwaway PostgreSQL, the local copy imported 26,212 Parts and left out 28 records and 11,191 values, in 12.5 s and at most about 460 MB. A second run imported none and found 26,212 already there.
 - On the development database, `pnpm catalog:import` did the same in 13 s, and a second run in 11 s. The database then held 26,212 Parts with an OpenDB ID, and for each Category as many as the report says, beside the 8 Parts the end-to-end test had created.
+
+### 15 October 2026: the owner's decisions
+
+The owner decided the two questions above, and the import changed with them:
+
+- A cooler that lists "LGA 1151v2" beside "LGA 1151" drops the variant and keeps its other sockets. 18 coolers keep theirs. The 13 that name "LGA 115" or "LGA 1121" are still left out whole.
+- A record with no manufacturer takes the one its name begins with, among those its folder's other records name, in the spelling most of them use. 26 of the 28 become Parts, and the report names each one under "Manufacturers taken from the name". "MB ASRock AMD TRX50 Threadripper" and the Louqe "Ghost S1" are still left out.
+
+At the pinned commit the import now makes 26,238 Parts, leaves out 2 records, and leaves out 11,179 values. Three planted faults each failed their own test: the variant kept, no manufacturer taken from a name, and the name's own spelling taken instead of the folder's.
+
+The catalog spec's Further Notes list all fourteen of the day's decisions.
+
