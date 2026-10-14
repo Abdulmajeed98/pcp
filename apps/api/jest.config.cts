@@ -19,5 +19,6 @@ module.exports = {
   moduleNameMapper: {
     '^~/(.*)$': '<rootDir>/src/app/$1',
   },
+  setupFiles: ['<rootDir>/src/test/test-utils/setup/database-password.ts'],
   coverageDirectory: 'test-output/jest/coverage',
 };

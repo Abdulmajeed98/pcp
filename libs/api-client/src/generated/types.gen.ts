@@ -51,6 +51,52 @@ export type StatusResponse = {
     startedAt: string;
 };
 
+export type CreatePartRequest = {
+    /**
+     * The Part's Category, which never changes afterwards.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers. None is given as an empty list.
+     */
+    partNumbers?: Array<string>;
+};
+
+export type PartResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+    /**
+     * The Part's identifier in OpenDB, or null for a Part the Admin created.
+     */
+    openDbId: string | null;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -94,3 +140,49 @@ export type GetStatusResponses = {
 };
 
 export type GetStatusResponse = GetStatusResponses[keyof GetStatusResponses];
+
+export type CreatePartData = {
+    body: CreatePartRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/parts';
+};
+
+export type CreatePartErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type CreatePartError = CreatePartErrors[keyof CreatePartErrors];
+
+export type CreatePartResponses = {
+    201: PartResponse;
+};
+
+export type CreatePartResponse = CreatePartResponses[keyof CreatePartResponses];
+
+export type ReadPartData = {
+    body?: never;
+    path: {
+        partId: string;
+    };
+    query?: never;
+    url: '/v1/parts/{partId}';
+};
+
+export type ReadPartErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPartError = ReadPartErrors[keyof ReadPartErrors];
+
+export type ReadPartResponses = {
+    200: PartResponse;
+};
+
+export type ReadPartResponse = ReadPartResponses[keyof ReadPartResponses];

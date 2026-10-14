@@ -4,11 +4,17 @@ describe("the API's settings", () => {
     'CORS_ALLOWED_ORIGINS',
     'KEYCLOAK_ISSUER',
     'KEYCLOAK_AUDIENCE',
+    'DATASOURCE_URL',
+    'DATASOURCE_USERNAME',
+    'DATASOURCE_PASSWORD',
   ];
   const environmentBefore = new Map(settingNames.map((name) => [name, process.env[name]]));
 
+  // The database password has no default, so each case starts with one and
+  // the case about the password takes it away.
   beforeEach(() => {
     for (const name of settingNames) delete process.env[name];
+    process.env.DATASOURCE_PASSWORD = 'a-password';
   });
 
   afterAll(() => {
@@ -29,19 +35,39 @@ describe("the API's settings", () => {
     });
   }
 
-  it('have the development values as their defaults', async () => {
+  it('have the development values as their defaults, apart from the database password', async () => {
     const { validate } = await import('~/infrastructure/configuration/env.validation');
 
-    const settings = validate({});
+    const settings = validate({ DATASOURCE_PASSWORD: 'a-password' });
 
     expect(settings.PORT).toBe(3001);
     expect([...settings.CORS_ALLOWED_ORIGINS]).toEqual(['http://localhost:3002']);
     expect(settings.KEYCLOAK_ISSUER).toBe('http://localhost:8080/realms/pcp');
     expect(settings.KEYCLOAK_AUDIENCE).toBe('pcp-api');
+    expect(settings.DATASOURCE_URL).toBe('postgresql://localhost:5432/pcp');
+    expect(settings.DATASOURCE_USERNAME).toBe('pcp');
   });
 
-  it('let the application start when none is set', async () => {
+  it('let the application start when only the database password is set', async () => {
     await expect(startTheApplication()).resolves.toBeUndefined();
+  });
+
+  it('stop the application when the database password is not set, and name the setting', async () => {
+    delete process.env.DATASOURCE_PASSWORD;
+
+    await expect(startTheApplication()).rejects.toThrow(/DATASOURCE_PASSWORD/);
+  });
+
+  it("stop the application when the database's address is malformed, and name the setting", async () => {
+    process.env.DATASOURCE_URL = 'localhost:5432/pcp';
+
+    await expect(startTheApplication()).rejects.toThrow(/DATASOURCE_URL/);
+  });
+
+  it('stop the application when the database user is empty, and name the setting', async () => {
+    process.env.DATASOURCE_USERNAME = '';
+
+    await expect(startTheApplication()).rejects.toThrow(/DATASOURCE_USERNAME/);
   });
 
   it('stop the application when the port is malformed, and name the setting', async () => {

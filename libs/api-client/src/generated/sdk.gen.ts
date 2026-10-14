@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses } from './types.gen';
+import type { CreatePartData, CreatePartErrors, CreatePartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadPartData, ReadPartErrors, ReadPartResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -31,3 +31,25 @@ export const getCaller = <ThrowOnError extends boolean = false>(options?: Option
  * When this API process started
  */
 export const getStatus = <ThrowOnError extends boolean = false>(options?: Options<GetStatusData, ThrowOnError>): RequestResult<GetStatusResponses, GetStatusErrors, ThrowOnError> => (options?.client ?? client).get<GetStatusResponses, GetStatusErrors, ThrowOnError>({ url: '/v1/status', ...options });
+
+/**
+ * Add a Part to the catalog
+ */
+export const createPart = <ThrowOnError extends boolean = false>(options: Options<CreatePartData, ThrowOnError>): RequestResult<CreatePartResponses, CreatePartErrors, ThrowOnError> => (options.client ?? client).post<CreatePartResponses, CreatePartErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/parts',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * One Part of the catalog
+ */
+export const readPart = <ThrowOnError extends boolean = false>(options: Options<ReadPartData, ThrowOnError>): RequestResult<ReadPartResponses, ReadPartErrors, ThrowOnError> => (options.client ?? client).get<ReadPartResponses, ReadPartErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/parts/{partId}',
+    ...options
+});

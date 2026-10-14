@@ -1,4 +1,10 @@
-import { expect } from '@jest/globals';
+import type { expect as jestExpect } from '@jest/globals';
+
+// Jest gives every test file `expect` as a global, and it is read from there
+// rather than imported. Jest refuses `@jest/globals` outside a test file, and
+// this entry is also loaded by the global set-up of the tests against a real
+// database, which runs before any test file.
+declare const expect: typeof jestExpect;
 
 export type ExpectedErrorResponse = {
   code: string;

@@ -9,7 +9,12 @@
       "~/*": ["./src/app/*"]
     }
   },
-  "include": ["jest.config.cts", "src/test/**/*.ts", "src/**/*.d.ts"],
+  "include": [
+    "jest.config.cts",
+    "jest.integration.config.cts",
+    "src/test/**/*.ts",
+    "src/**/*.d.ts"
+  ],
   "references": [
     {
       "path": "./tsconfig.app.json"

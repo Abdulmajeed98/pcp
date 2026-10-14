@@ -4,6 +4,12 @@ export {
   expectErrorResponseShape,
   type ExpectedErrorResponse,
 } from './assertions/error-response.assertions';
+export {
+  emptyTables,
+  startTestDatabase,
+  stopTestDatabase,
+  type TestDatabaseSettings,
+} from './database/test-database';
 export { type KeycloakStandIn, startKeycloakStandIn } from './keycloak/keycloak-stand-in';
 export {
   bearerHeader,

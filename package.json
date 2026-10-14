@@ -13,7 +13,8 @@
     "boundaries:check": "node tools/check-boundaries.mjs",
     "boundaries:write": "node tools/write-feature-sliced-bans.mjs",
     "api-client:write": "node tools/write-api-client.mjs",
-    "platform:check": "node tools/check-platform.mjs"
+    "platform:check": "node tools/check-platform.mjs",
+    "integration:check": "node tools/check-integration.mjs"
   },
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.8.1",

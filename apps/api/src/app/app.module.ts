@@ -5,6 +5,8 @@ import { ClsModule } from 'nestjs-cls';
 
 import { CallerModule } from '~/infrastructure/caller/caller.module';
 import { validate } from '~/infrastructure/configuration/env.validation';
+import { DatabaseModule } from '~/infrastructure/database/database.module';
+import { PartModule } from '~/infrastructure/part/part.module';
 import { StatusModule } from '~/infrastructure/status/status.module';
 
 @Module({
@@ -16,8 +18,10 @@ import { StatusModule } from '~/infrastructure/status/status.module';
     ClsModule.forRoot({ global: true, middleware: { mount: true } }),
     AuthModule,
     ErrorModule,
+    DatabaseModule,
     CallerModule,
     StatusModule,
+    PartModule,
   ],
 })
 export class AppModule {}
