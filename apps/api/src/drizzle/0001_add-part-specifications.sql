@@ -1,0 +1,1 @@
+ALTER TABLE "part" ADD COLUMN "specifications" jsonb DEFAULT '{}'::jsonb NOT NULL;

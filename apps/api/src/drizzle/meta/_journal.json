@@ -8,6 +8,13 @@
       "when": 1791988205947,
       "tag": "0000_create-part",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791990856817,
+      "tag": "0001_add-part-specifications",
+      "breakpoints": true
     }
   ]
 }

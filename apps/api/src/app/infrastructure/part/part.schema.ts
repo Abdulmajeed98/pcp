@@ -1,9 +1,10 @@
 import { sql } from 'drizzle-orm';
-import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 // A relative path and not the `~/` alias, because drizzle-kit reads this file
 // by itself when it generates a migration, and it knows no alias.
 import { Category } from '../../domain/part/Category';
+import { SpecificationDocument } from '../../domain/specification/SpecificationList';
 
 // The database's list of Categories is the domain's. Drizzle wants it as a
 // list that is known not to be empty.
@@ -22,6 +23,12 @@ export const part = pgTable('part', {
     .array()
     .notNull()
     .default(sql`'{}'::text[]`),
+  // One document per Part, in OpenDB's field names and nesting, holding only
+  // what the Category's specification list names.
+  specifications: jsonb('specifications')
+    .$type<SpecificationDocument>()
+    .notNull()
+    .default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()

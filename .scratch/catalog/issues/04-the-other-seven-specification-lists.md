@@ -29,7 +29,8 @@ The needed specifications, taken from the MVP spec's rule table, are:
 - [ ] The needed specifications are exactly those in the table above. Where a rule needs a field that the table does not name, such as whether a cooler is water-cooled for rule 17, it is recorded under Comments for the owner and not marked.
 - [ ] Every specification that a rule compares for equality is a fixed set of the values found at the pinned commit: sockets, form factors, RAM types, storage interfaces and the like.
 - [ ] Every specification for which 0 cannot be true is marked so, such as lengths, heights, wattages and numbers of slots or bays.
-- [ ] Lists of rows, such as a motherboard's PCIe and M.2 slots, have their own fields, and their kinds are checked.
+- [ ] Lists of rows, such as a motherboard's PCIe and M.2 slots, have their own fields, and their kinds are checked. A CPU has no list of rows, so ticket 03 could not test one through the API: here a row that is not an object, a row with a field its list does not name, and a row field of the wrong kind are each refused, naming the row's field (`specifications.pcie_slots.0.lanes`), and an empty list of rows is kept as a value.
+- [ ] The sockets are one set, shared by the CPU's `socket`, the motherboard's `socket` and the CPU cooler's `cpu_sockets`, holding every value the three use at the pinned commit. Ticket 03 made it from the CPU folder alone. A value one of them spells differently from the others is recorded under Comments for the owner rather than added as a second spelling.
 - [ ] `pnpm integration:check` passes with these tests:
   - For each of the seven Categories, a made-up Part with a value for every specification on its list is created and read back unchanged.
   - The Categories' answer holds, for each Category, every field the table above names, marked as needed. The test writes the table out itself, and does not read the platform's lists.

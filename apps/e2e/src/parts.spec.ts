@@ -29,5 +29,15 @@ test("the API stores a Part: the development Admin creates a made-up Part, and t
     headers: { authorization },
   });
   expect(read.status()).toBe(200);
-  expect(await read.json()).toEqual({ id: stored.id, openDbId: null, ...part });
+  expect(await read.json()).toEqual({
+    id: stored.id,
+    openDbId: null,
+    ...part,
+    specifications: {},
+    missingNeededSpecifications: [
+      'socket',
+      'specifications.tdp',
+      'specifications.memory.types',
+    ],
+  });
 });

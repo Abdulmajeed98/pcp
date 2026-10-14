@@ -396,6 +396,20 @@
             "items": {
               "type": "string"
             }
+          },
+          "specifications": {
+            "type": "object",
+            "description": "The Part's specifications, in OpenDB's field names and nesting. Its Category's specification list says what they may hold. Left out, the Part has none.",
+            "additionalProperties": true,
+            "example": {
+              "socket": "AM5",
+              "specifications": {
+                "tdp": 65,
+                "memory": {
+                  "types": ["DDR5"]
+                }
+              }
+            }
           }
         },
         "required": ["category", "name", "manufacturer"]
@@ -446,9 +460,40 @@
             "description": "The Part's identifier in OpenDB, or null for a Part the Admin created.",
             "nullable": true,
             "example": null
+          },
+          "specifications": {
+            "type": "object",
+            "description": "The Part's specifications, in OpenDB's field names and nesting. Its Category's specification list says what they may hold.",
+            "additionalProperties": true,
+            "example": {
+              "socket": "AM5",
+              "specifications": {
+                "tdp": 65,
+                "memory": {
+                  "types": ["DDR5"]
+                }
+              }
+            }
+          },
+          "missingNeededSpecifications": {
+            "description": "The paths of the specifications a Compatibility Rule reads that the Part lacks, in its list's order.",
+            "example": ["specifications.tdp"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
-        "required": ["id", "category", "name", "manufacturer", "partNumbers", "openDbId"]
+        "required": [
+          "id",
+          "category",
+          "name",
+          "manufacturer",
+          "partNumbers",
+          "openDbId",
+          "specifications",
+          "missingNeededSpecifications"
+        ]
       }
     }
   },

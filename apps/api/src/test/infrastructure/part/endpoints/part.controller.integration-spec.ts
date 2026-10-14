@@ -20,6 +20,8 @@ type PartBody = {
   manufacturer: string;
   partNumbers: string[];
   openDbId: string | null;
+  specifications: Record<string, unknown>;
+  missingNeededSpecifications: string[];
 };
 
 function partOf(response: Response): Promise<PartBody> {
@@ -75,6 +77,13 @@ describe('the Part endpoints', () => {
         manufacturer: 'AMD',
         partNumbers: ['100-100001015BOX'],
         openDbId: null,
+        specifications: {},
+        // In the list's order.
+        missingNeededSpecifications: [
+          'socket',
+          'specifications.tdp',
+          'specifications.memory.types',
+        ],
       });
 
       const read = await readPart(part.id, adminToken);
@@ -180,6 +189,130 @@ describe('the Part endpoints', () => {
       });
 
       await expectErrorResponse(response, 401, unauthorized);
+    });
+  });
+
+  describe("a CPU's specifications", () => {
+    // A made-up CPU with a value of every kind a CPU's list has.
+    const specifications = {
+      socket: 'AM5',
+      series: 'Made-up 7000',
+      cores: { total: 6, efficiency: 0, threads: 12 },
+      clocks: { performance: { base: 3.8, boost: 5.1 } },
+      cache: { l1: '6 × 32 KB Instruction + 6 × 32 KB Data', l2: 6, l3: 32 },
+      specifications: {
+        tdp: 65,
+        integratedGraphics: {
+          model: 'AMD Radeon Graphics',
+          baseClock: 400,
+          boostClock: 2200,
+        },
+        includesCooler: true,
+        packaging: 'Boxed',
+        memory: { maxSupport: 192, types: ['DDR5'], channels: 2 },
+      },
+    };
+
+    function aCpu(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+      return {
+        category: 'cpu',
+        name: 'Made-up Ryzen 5 7600',
+        manufacturer: 'AMD',
+        specifications,
+        ...overrides,
+      };
+    }
+
+    it('are stored as they were given, and read back', async () => {
+      const created = await createPart(aCpu());
+
+      expect(created.status).toBe(201);
+      const part = await partOf(created);
+      expect(part.specifications).toEqual(specifications);
+      expect(part.missingNeededSpecifications).toEqual([]);
+      expect(await partOf(await readPart(part.id, adminToken))).toEqual(part);
+    });
+
+    it('may leave needed ones out, and the Part then lists them as missing', async () => {
+      const created = await createPart(aCpu({ specifications: { socket: 'LGA 1700' } }));
+
+      expect(created.status).toBe(201);
+      const part = await partOf(created);
+      expect(part.missingNeededSpecifications).toEqual([
+        'specifications.tdp',
+        'specifications.memory.types',
+      ]);
+    });
+
+    it('count an empty choice of several, and null, as missing', async () => {
+      const created = await createPart(
+        aCpu({
+          specifications: {
+            socket: 'AM5',
+            series: null,
+            specifications: { memory: { types: [] } },
+          },
+        }),
+      );
+
+      const part = await partOf(created);
+      expect(part.specifications).toEqual({ socket: 'AM5' });
+      expect(part.missingNeededSpecifications).toEqual([
+        'specifications.tdp',
+        'specifications.memory.types',
+      ]);
+    });
+
+    it('refuse a value outside a fixed set, naming the specification', async () => {
+      const response = await createPart(
+        aCpu({ specifications: { ...specifications, socket: 'AM 5' } }),
+      );
+
+      await expectErrorResponse(response, 400, [notValid('specifications.socket')]);
+    });
+
+    it('refuse a word where a number belongs, naming the specification', async () => {
+      const response = await createPart(
+        aCpu({ specifications: { ...specifications, cores: { total: 'six' } } }),
+      );
+
+      await expectErrorResponse(response, 400, [notValid('specifications.cores.total')]);
+    });
+
+    it('refuse a specification the list does not name', async () => {
+      const response = await createPart(
+        aCpu({ specifications: { ...specifications, colour: 'black' } }),
+      );
+
+      await expectErrorResponse(response, 400, [notValid('specifications.colour')]);
+    });
+
+    it('refuse 0 where 0 cannot be true, naming the specification', async () => {
+      const response = await createPart(
+        aCpu({
+          specifications: {
+            ...specifications,
+            specifications: { ...specifications.specifications, tdp: 0 },
+          },
+        }),
+      );
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.specifications.tdp'),
+      ]);
+    });
+
+    it('take 0 where 0 can be true', async () => {
+      const created = await createPart(aCpu({ specifications: { cache: { l3: 0 } } }));
+
+      expect(created.status).toBe(201);
+      expect((await partOf(created)).specifications).toEqual({ cache: { l3: 0 } });
+    });
+
+    it('refuse specifications that are not an object, naming the field', async () => {
+      const response = await createPart(aCpu({ specifications: ['AM5'] }));
+
+      await expectErrorResponse(response, 400, [notValid('specifications')]);
     });
   });
 

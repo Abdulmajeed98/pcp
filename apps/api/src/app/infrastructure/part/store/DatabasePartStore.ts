@@ -26,7 +26,15 @@ function toDomain(row: PartRow): Either.Either<Part, StructuredError> {
   }
 
   return Either.right(
-    new Part(row.id, category, row.name, row.manufacturer, row.partNumbers, row.openDbId),
+    new Part(
+      row.id,
+      category,
+      row.name,
+      row.manufacturer,
+      row.partNumbers,
+      row.openDbId,
+      row.specifications,
+    ),
   );
 }
 
@@ -46,6 +54,7 @@ export class DatabasePartStore implements PartStore {
           name: params.getName(),
           manufacturer: params.getManufacturer(),
           partNumbers: [...params.getPartNumbers()],
+          specifications: params.getSpecifications(),
         })
         .returning();
 

@@ -1,6 +1,7 @@
 import { StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
+import { SpecificationDocument } from '../specification/SpecificationList';
 import { Category } from './Category';
 import { Part } from './Part';
 
@@ -10,6 +11,7 @@ export class CreatePartParams {
     private readonly name: string,
     private readonly manufacturer: string,
     private readonly partNumbers: readonly string[],
+    private readonly specifications: SpecificationDocument,
   ) {}
 
   getCategory(): Category {
@@ -26,6 +28,10 @@ export class CreatePartParams {
 
   getPartNumbers(): readonly string[] {
     return this.partNumbers;
+  }
+
+  getSpecifications(): SpecificationDocument {
+    return this.specifications;
   }
 }
 

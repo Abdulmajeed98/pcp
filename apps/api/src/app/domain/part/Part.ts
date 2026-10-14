@@ -1,3 +1,5 @@
+import { specificationListOf } from '../specification/specification-lists';
+import { SpecificationDocument } from '../specification/SpecificationList';
 import { Category } from './Category';
 
 // A specific model of PC component, defined once by the platform.
@@ -9,6 +11,7 @@ export class Part {
     private readonly manufacturer: string,
     private readonly partNumbers: readonly string[],
     private readonly openDbId: string | null,
+    private readonly specifications: SpecificationDocument,
   ) {}
 
   getId(): string {
@@ -35,5 +38,16 @@ export class Part {
   // The Part's identifier in OpenDB, or null for a Part the Admin created.
   getOpenDbId(): string | null {
     return this.openDbId;
+  }
+
+  // Its specifications, as its Category's list keeps them.
+  getSpecifications(): SpecificationDocument {
+    return this.specifications;
+  }
+
+  // The specifications a Compatibility Rule reads that this Part lacks, by
+  // their paths, in its list's order.
+  getMissingNeededSpecifications(): string[] {
+    return specificationListOf(this.category).missingNeeded(this.specifications);
   }
 }

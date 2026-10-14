@@ -38,30 +38,35 @@ export class PartResponse {
   })
   readonly openDbId: string | null;
 
-  private constructor(
-    id: string,
-    category: string,
-    name: string,
-    manufacturer: string,
-    partNumbers: string[],
-    openDbId: string | null,
-  ) {
-    this.id = id;
-    this.category = category;
-    this.name = name;
-    this.manufacturer = manufacturer;
-    this.partNumbers = partNumbers;
-    this.openDbId = openDbId;
+  @ApiProperty({
+    description:
+      "The Part's specifications, in OpenDB's field names and nesting. Its Category's specification list says what they may hold.",
+    type: 'object',
+    additionalProperties: true,
+    example: { socket: 'AM5', specifications: { tdp: 65, memory: { types: ['DDR5'] } } },
+  })
+  readonly specifications: Record<string, unknown>;
+
+  @ApiProperty({
+    description:
+      "The paths of the specifications a Compatibility Rule reads that the Part lacks, in its list's order.",
+    type: [String],
+    example: ['specifications.tdp'],
+  })
+  readonly missingNeededSpecifications: string[];
+
+  private constructor(part: Part) {
+    this.id = part.getId();
+    this.category = part.getCategory().getKey();
+    this.name = part.getName();
+    this.manufacturer = part.getManufacturer();
+    this.partNumbers = [...part.getPartNumbers()];
+    this.openDbId = part.getOpenDbId();
+    this.specifications = part.getSpecifications();
+    this.missingNeededSpecifications = part.getMissingNeededSpecifications();
   }
 
   static of(part: Part): PartResponse {
-    return new PartResponse(
-      part.getId(),
-      part.getCategory().getKey(),
-      part.getName(),
-      part.getManufacturer(),
-      [...part.getPartNumbers()],
-      part.getOpenDbId(),
-    );
+    return new PartResponse(part);
   }
 }

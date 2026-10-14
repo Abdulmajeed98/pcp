@@ -114,6 +114,12 @@ export type CreatePartRequest = {
      * The manufacturer's part numbers. None is given as an empty list.
      */
     partNumbers?: Array<string>;
+    /**
+     * The Part's specifications, in OpenDB's field names and nesting. Its Category's specification list says what they may hold. Left out, the Part has none.
+     */
+    specifications?: {
+        [key: string]: unknown;
+    };
 };
 
 export type PartResponse = {
@@ -141,6 +147,16 @@ export type PartResponse = {
      * The Part's identifier in OpenDB, or null for a Part the Admin created.
      */
     openDbId: string | null;
+    /**
+     * The Part's specifications, in OpenDB's field names and nesting. Its Category's specification list says what they may hold.
+     */
+    specifications: {
+        [key: string]: unknown;
+    };
+    /**
+     * The paths of the specifications a Compatibility Rule reads that the Part lacks, in its list's order.
+     */
+    missingNeededSpecifications: Array<string>;
 };
 
 export type GetCallerData = {

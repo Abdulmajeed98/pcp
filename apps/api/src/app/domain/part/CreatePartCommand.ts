@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
+import { checkSpecifications } from '../specification/check-specifications';
+import { SpecificationDocument } from '../specification/SpecificationList';
 import { Category } from './Category';
 import { Part } from './Part';
 import { cleanPartNumbers } from './part-numbers';
@@ -13,6 +15,7 @@ class Input {
     private readonly name: string,
     private readonly manufacturer: string,
     private readonly partNumbers: readonly string[],
+    private readonly specifications: SpecificationDocument,
   ) {}
 
   getCategory(): Category {
@@ -29,6 +32,10 @@ class Input {
 
   getPartNumbers(): readonly string[] {
     return this.partNumbers;
+  }
+
+  getSpecifications(): SpecificationDocument {
+    return this.specifications;
   }
 }
 
@@ -53,12 +60,19 @@ export class CreatePartCommand {
   constructor(private readonly partStore: PartStore) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
+    const specifications = checkSpecifications(
+      input.getCategory(),
+      input.getSpecifications(),
+    );
+    if (Either.isLeft(specifications)) return Either.left(specifications.left);
+
     const created = await this.partStore.create(
       new CreatePartParams(
         input.getCategory(),
         input.getName(),
         input.getManufacturer(),
         cleanPartNumbers(input.getPartNumbers()),
+        specifications.right,
       ),
     );
 
