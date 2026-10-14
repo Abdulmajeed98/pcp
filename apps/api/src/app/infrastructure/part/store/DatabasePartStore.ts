@@ -17,6 +17,7 @@ import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
 
 import { part, PartRow } from '../part.schema';
+import { searchTextOf } from '../search-text';
 
 // A Part's row and its photo's identifier, as a read gives them.
 const partWithPhoto = { part, photoId: partPhoto.id };
@@ -49,17 +50,6 @@ function toDomain(
       photoId,
     ),
   );
-}
-
-// What a search looks in: the name, the manufacturer and the part numbers,
-// in lower case. It is stored beside them, because an index cannot be made on
-// the list of part numbers joined in a query.
-function searchTextOf(
-  name: string,
-  manufacturer: string,
-  partNumbers: readonly string[],
-): string {
-  return [name, manufacturer, ...partNumbers].join(' ').toLowerCase();
 }
 
 // A word to be found anywhere in the search text. Its `%`, `_` and `\` are
