@@ -1,5 +1,7 @@
 export { Caller } from './domain/caller/Caller';
 export { Role } from './domain/caller/Role';
+export { PageableAttributes } from './domain/paging/PageableAttributes';
+export { PageAttributes } from './domain/paging/PageAttributes';
 export {
   type ErrorType,
   NotFoundError,
@@ -25,6 +27,8 @@ export {
 export { ErrorModule } from './infrastructure/errors/error.module';
 export { ErrorResponseExceptionFilter } from './infrastructure/errors/ErrorResponseExceptionFilter';
 export { ErrorStructureException } from './infrastructure/errors/ErrorStructureException';
+export { PageResponse } from './infrastructure/paging/PageResponse';
+export { PagingRequest } from './infrastructure/paging/PagingRequest';
 export { getCorsConfiguration, parseAllowedOrigins } from './infrastructure/security/cors';
 export { IsOrigin } from './infrastructure/security/IsOrigin';
 export { createValidationPipe } from './infrastructure/validation/request-validation';
