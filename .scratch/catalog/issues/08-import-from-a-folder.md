@@ -21,7 +21,7 @@ The import is a second entry point of the API, as the OpenAPI writer is. It is a
 - [ ] A record whose OpenDB ID is in the catalog is skipped. The import never changes or removes a Part.
 - [ ] Everything is written in one transaction. A failure leaves the catalog as it was, and the command exits non-zero with a plain message.
 - [ ] The report names the commit and gives, for each Category and in total, the Parts imported, those already there, the records left out and the values left out.
-- [ ] `pnpm catalog:import` given a folder imports it into the development database.
+- [ ] `pnpm catalog:import` given a folder imports it into the development database. Its Nx target gets the database password the way `serve` and `migrate` do, from a file of its own beside them that names `.env`'s value (see ticket 02's Comments).
 - [ ] `pnpm integration:check` passes with these tests, which run the import through its entry on a made-up folder and read the result through the report and the API:
   - A complete record of each Category becomes a Part that a search finds.
   - Records without a name, without a manufacturer, or whose ID does not match the file name are left out and named.

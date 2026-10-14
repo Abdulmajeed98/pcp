@@ -40,6 +40,8 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - "An endpoint carries `@ApiOperation` and `@ApiOkResponse`" is widened to the success response that fits, such as `@ApiCreatedResponse` for a create.
   - Every request is checked against its Request class, a field the class does not declare is refused, and each refused field is named in `additionalInformation`.
   - An error a use case returns has a code of its own, from which its title and detail keys are made.
+  - The MVP spec's settings section no longer says that no app reads `.env`: when Nx runs the API's `serve` or `migrate` target, a file of the target's own (`apps/api/.serve.env`, `apps/api/.migrate.env`) gives `DATASOURCE_PASSWORD` the value `.env` holds for the `pcp` user, and a value set in the shell wins. The same goes for each later target that reaches the database.
+  - A database that cannot be reached is answered 503 with `DATABASE_UNAVAILABLE`, and the API listens to its pool's error event so that a database that stops does not end it.
 - [ ] Its commands table gains `pnpm catalog:import`, `pnpm db:migrate`, `pnpm integration:check` and the command that generates a migration. Its settings table gains the database settings.
 - [ ] It says when to run `pnpm integration:check`: after a change to a schema, a migration, a Store, a Command or a Query, and after an upgrade of Drizzle, `pg`, Effect or Testcontainers.
 - [ ] CAT-2 names the pinned commit, and CAT-8 says that its list arrives with `offers`.
