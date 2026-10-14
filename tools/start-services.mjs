@@ -1,6 +1,7 @@
 // Starts the development services in the background and returns when they are
-// healthy and the development Admin login exists. On the first start it also
-// creates the local environment file. Run it with `pnpm services:up`.
+// healthy, the development Admin login exists and the platform's database has
+// every migration. On the first start it also creates the local environment
+// file. Run it with `pnpm services:up`.
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -142,4 +143,14 @@ try {
   await createDevelopmentAdminIfMissing();
 } catch (error) {
   exitWith(`The development Admin login could not be created: ${error.message}.`);
+}
+
+// The platform's database gets the API's migrations, the way `pnpm db:migrate`
+// applies them. It says what it applied.
+const migrated = spawnSync('pnpm', ['exec', 'nx', 'run', '@pcp/api:migrate'], {
+  cwd: root,
+  stdio: 'inherit',
+});
+if (migrated.status !== 0) {
+  exitWith('The migrations could not be applied. Run "pnpm db:migrate" to see why.');
 }

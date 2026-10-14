@@ -14,6 +14,7 @@ import {
   logInAsAdministrator,
   requestTokenWithPassword,
 } from './keycloak-administrator.mjs';
+import { missingMigrations } from './platform-migrations.mjs';
 
 const startHint = 'Start the services with "pnpm services:up".';
 
@@ -175,6 +176,14 @@ if (postgresAnswers) {
     'The keycloak user may connect to no database but its own',
     mayConnectOnlyTo(keycloakUser, 'keycloak'),
   );
+  await check("The platform's database has every committed migration", () => {
+    const missing = missingMigrations(settings.PCP_DB_PASSWORD);
+    if (missing.length > 0) {
+      throw new Error(
+        `it lacks ${missing.map((migration) => migration.name).join(', ')}. Apply them with "pnpm db:migrate"`,
+      );
+    }
+  });
 } else {
   console.log(`      PostgreSQL cannot be reached. ${startHint}`);
 }
