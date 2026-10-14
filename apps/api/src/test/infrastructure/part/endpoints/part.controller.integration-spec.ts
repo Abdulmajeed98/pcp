@@ -356,6 +356,175 @@ describe('the Part endpoints', () => {
     });
   });
 
+  describe("every Category's specifications", () => {
+    // A specification as the Categories endpoint describes it.
+    type SpecificationBody = {
+      path: string;
+      kind: string;
+      values?: string[];
+      fields?: SpecificationBody[];
+    };
+
+    async function listOf(category: string): Promise<SpecificationBody[]> {
+      const response = await fetch(`${testApp.baseUrl}/v1/categories`, {
+        headers: bearerHeader(adminToken),
+      });
+      const categories = (await response.json()) as {
+        key: string;
+        specifications: SpecificationBody[];
+      }[];
+      return categories.find((each) => each.key === category)?.specifications ?? [];
+    }
+
+    // A made-up value of the specification's kind.
+    function aValueFor(specification: SpecificationBody): unknown {
+      switch (specification.kind) {
+        case 'wholeNumber':
+          return 2;
+        case 'decimalNumber':
+          return 2.5;
+        case 'text':
+          return 'Made-up';
+        case 'yesNo':
+          return true;
+        case 'oneOf':
+          return specification.values?.[0];
+        case 'severalOf':
+          return specification.values?.slice(0, 2);
+        case 'listOfText':
+          return ['Made-up'];
+        case 'listOfRows':
+          return [
+            Object.fromEntries(
+              (specification.fields ?? []).map((field) => [field.path, aValueFor(field)]),
+            ),
+          ];
+        default:
+          throw new Error(`No made-up value for ${specification.kind}`);
+      }
+    }
+
+    function documentWithEvery(list: SpecificationBody[]): Record<string, unknown> {
+      const document: Record<string, unknown> = {};
+      for (const specification of list) {
+        const names = specification.path.split('.');
+        const last = names.pop() as string;
+        let node = document;
+        for (const name of names) node = (node[name] ??= {}) as Record<string, unknown>;
+        node[last] = aValueFor(specification);
+      }
+      return document;
+    }
+
+    it.each(['cpuCooler', 'motherboard', 'ram', 'storage', 'gpu', 'case', 'psu'])(
+      'take a value for every specification of a %s, and give them all back unchanged',
+      async (category) => {
+        const specifications = documentWithEvery(await listOf(category));
+
+        const created = await createPart({
+          category,
+          name: `Made-up ${category}`,
+          manufacturer: 'Made-up Parts',
+          specifications,
+        });
+
+        expect(created.status).toBe(201);
+        const part = await partOf(created);
+        expect(part.specifications).toEqual(specifications);
+        expect(part.missingNeededSpecifications).toEqual([]);
+        expect((await partOf(await readPart(part.id, adminToken))).specifications).toEqual(
+          specifications,
+        );
+      },
+    );
+
+    function aMotherboard(
+      specifications: Record<string, unknown>,
+    ): Record<string, unknown> {
+      return {
+        category: 'motherboard',
+        name: 'Made-up B650M',
+        manufacturer: 'Made-up Boards',
+        specifications,
+      };
+    }
+
+    it('refuse a value outside a fixed set in a motherboard, as in a CPU', async () => {
+      const response = await createPart(aMotherboard({ socket: 'AM 5' }));
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.socket', {
+          specification: 'socket',
+          reason: 'notInTheSet',
+        }),
+      ]);
+    });
+
+    it('refuse 0 where 0 cannot be true in a case, as in a CPU', async () => {
+      const response = await createPart({
+        category: 'case',
+        name: 'Made-up Mesh Tower',
+        manufacturer: 'Made-up Cases',
+        specifications: { max_video_card_length: 0 },
+      });
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.max_video_card_length', {
+          specification: 'max_video_card_length',
+          reason: 'zeroMeansMissing',
+        }),
+      ]);
+    });
+
+    it('refuse a row that is not an object, naming the row', async () => {
+      const response = await createPart(aMotherboard({ pcie_slots: ['x16'] }));
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.pcie_slots.0', {
+          specification: 'pcie_slots.0',
+          reason: 'notARow',
+        }),
+      ]);
+    });
+
+    it("refuse a field a row's list does not name, naming the row's field", async () => {
+      const response = await createPart(
+        aMotherboard({
+          pcie_slots: [{ gen: '5.0', lanes: 16, quantity: 1, speed: 'fast' }],
+        }),
+      );
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.pcie_slots.0.speed', {
+          specification: 'pcie_slots.0.speed',
+          reason: 'unknown',
+        }),
+      ]);
+    });
+
+    it("refuse a row's field of the wrong kind, naming the row's field", async () => {
+      const response = await createPart(
+        aMotherboard({ pcie_slots: [{ gen: '5.0', lanes: 'sixteen', quantity: 1 }] }),
+      );
+
+      await expectErrorResponse(response, 400, [
+        notValid('specifications.pcie_slots.0.lanes', {
+          specification: 'pcie_slots.0.lanes',
+          reason: 'notANumber',
+        }),
+      ]);
+    });
+
+    it('keep an empty list of rows as a value: a motherboard with no M.2 slot has none', async () => {
+      const created = await createPart(aMotherboard({ m2_slots: [] }));
+
+      expect(created.status).toBe(201);
+      const part = await partOf(created);
+      expect(part.specifications).toEqual({ m2_slots: [] });
+      expect(part.missingNeededSpecifications).not.toContain('m2_slots');
+    });
+  });
+
   describe('reading a Part', () => {
     const partNotFound = {
       code: 'PART_NOT_FOUND',

@@ -1,18 +1,23 @@
 import { Category } from '../part/Category';
+import { caseSpecifications } from './case.specifications';
+import { cpuCoolerSpecifications } from './cpu-cooler.specifications';
 import { cpuSpecifications } from './cpu.specifications';
+import { gpuSpecifications } from './gpu.specifications';
+import { motherboardSpecifications } from './motherboard.specifications';
+import { psuSpecifications } from './psu.specifications';
+import { ramSpecifications } from './ram.specifications';
 import { SpecificationList } from './SpecificationList';
+import { storageSpecifications } from './storage.specifications';
 
-// Each Category's specification list. The seven that are empty arrive with
-// the rest of the catalog's lists.
 const lists = new Map<Category, SpecificationList>([
   [Category.CPU, cpuSpecifications],
-  [Category.CPU_COOLER, new SpecificationList([])],
-  [Category.MOTHERBOARD, new SpecificationList([])],
-  [Category.RAM, new SpecificationList([])],
-  [Category.STORAGE, new SpecificationList([])],
-  [Category.GPU, new SpecificationList([])],
-  [Category.CASE, new SpecificationList([])],
-  [Category.PSU, new SpecificationList([])],
+  [Category.CPU_COOLER, cpuCoolerSpecifications],
+  [Category.MOTHERBOARD, motherboardSpecifications],
+  [Category.RAM, ramSpecifications],
+  [Category.STORAGE, storageSpecifications],
+  [Category.GPU, gpuSpecifications],
+  [Category.CASE, caseSpecifications],
+  [Category.PSU, psuSpecifications],
 ]);
 
 // Every Category has its list above. The test of the Categories endpoint reads

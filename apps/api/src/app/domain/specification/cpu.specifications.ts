@@ -1,41 +1,13 @@
+import { ramTypes, sockets } from './shared-sets';
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
-
-// The sockets OpenDB's CPUs use at the commit the catalog is imported from.
-// A CPU of a newer socket is added here, in code. A Compatibility Rule compares
-// a CPU's socket with a motherboard's and a cooler's, so this is a fixed set:
-// two spellings of one socket would make a false Compatibility Problem.
-const cpuSockets = [
-  'AM3+',
-  'AM4',
-  'AM5',
-  'FM2',
-  'FM2+',
-  'G34',
-  'LGA 1150',
-  'LGA 1151',
-  'LGA 1155',
-  'LGA 1200',
-  'LGA 1356',
-  'LGA 1700',
-  'LGA 1851',
-  'LGA 2011',
-  'LGA 2011-3',
-  'LGA 2066',
-  'sTR4',
-  'sTR5',
-  'sTRX4',
-  'TR4',
-] as const;
-
-const ramTypes = ['DDR3', 'DDR4', 'DDR5'] as const;
 
 // Every specification of a CPU that OpenDB defines, apart from retailer and
 // identity data. A 0 means "not known" in OpenDB wherever 0 cannot be true:
 // a clock speed, a core count other than efficiency cores, a cache size other
 // than L3, which some older AMD processors do not have, and a power figure.
 export const cpuSpecifications = new SpecificationList([
-  Specification.oneOf('socket', 'Socket', cpuSockets, { needed: true }),
+  Specification.oneOf('socket', 'Socket', sockets, { needed: true }),
   Specification.text('series', 'Series'),
   Specification.text('microarchitecture', 'Microarchitecture'),
   Specification.text('coreFamily', 'Core family'),
