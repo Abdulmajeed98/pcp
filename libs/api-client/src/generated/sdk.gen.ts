@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreatePartData, CreatePartErrors, CreatePartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadPartData, ReadPartErrors, ReadPartResponses } from './types.gen';
+import type { CreatePartData, CreatePartErrors, CreatePartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -31,6 +31,15 @@ export const getCaller = <ThrowOnError extends boolean = false>(options?: Option
  * When this API process started
  */
 export const getStatus = <ThrowOnError extends boolean = false>(options?: Options<GetStatusData, ThrowOnError>): RequestResult<GetStatusResponses, GetStatusErrors, ThrowOnError> => (options?.client ?? client).get<GetStatusResponses, GetStatusErrors, ThrowOnError>({ url: '/v1/status', ...options });
+
+/**
+ * The eight Categories, each with its specification list
+ */
+export const readCategories = <ThrowOnError extends boolean = false>(options?: Options<ReadCategoriesData, ThrowOnError>): RequestResult<ReadCategoriesResponses, ReadCategoriesErrors, ThrowOnError> => (options?.client ?? client).get<ReadCategoriesResponses, ReadCategoriesErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/categories',
+    ...options
+});
 
 /**
  * Add a Part to the catalog

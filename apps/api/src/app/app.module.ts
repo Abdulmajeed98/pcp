@@ -4,6 +4,7 @@ import { AuthModule, ErrorModule } from '@pcp/core';
 import { ClsModule } from 'nestjs-cls';
 
 import { CallerModule } from '~/infrastructure/caller/caller.module';
+import { CategoryModule } from '~/infrastructure/category/category.module';
 import { validate } from '~/infrastructure/configuration/env.validation';
 import { DatabaseModule } from '~/infrastructure/database/database.module';
 import { PartModule } from '~/infrastructure/part/part.module';
@@ -21,6 +22,7 @@ import { StatusModule } from '~/infrastructure/status/status.module';
     DatabaseModule,
     CallerModule,
     StatusModule,
+    CategoryModule,
     PartModule,
   ],
 })

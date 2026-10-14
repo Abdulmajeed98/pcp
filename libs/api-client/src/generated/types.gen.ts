@@ -51,6 +51,52 @@ export type StatusResponse = {
     startedAt: string;
 };
 
+export type SpecificationResponse = {
+    /**
+     * The specification's place in a Part's specifications, in OpenDB's field names and nesting. For a field of a row, its name in the row.
+     */
+    path: string;
+    /**
+     * The specification's English label.
+     */
+    label: string;
+    /**
+     * The kind of value it holds.
+     */
+    kind: 'wholeNumber' | 'decimalNumber' | 'text' | 'yesNo' | 'oneOf' | 'severalOf' | 'listOfText' | 'listOfRows';
+    /**
+     * The unit of a number.
+     */
+    unit?: string;
+    /**
+     * The fixed set, for one or several of a fixed set.
+     */
+    values?: Array<string>;
+    /**
+     * The fields of each row, for a list of rows.
+     */
+    fields?: Array<SpecificationResponse>;
+    /**
+     * Whether a Compatibility Rule reads it.
+     */
+    needed: boolean;
+    /**
+     * Whether 0 cannot be true for it, so that 0 stands for "not known".
+     */
+    zeroMeansMissing: boolean;
+};
+
+export type CategoryResponse = {
+    /**
+     * The Category's key, which `i18n`'s shared terms translate it by.
+     */
+    key: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * Every specification a Part of this Category can hold, in order.
+     */
+    specifications: Array<SpecificationResponse>;
+};
+
 export type CreatePartRequest = {
     /**
      * The Part's Category, which never changes afterwards.
@@ -140,6 +186,28 @@ export type GetStatusResponses = {
 };
 
 export type GetStatusResponse = GetStatusResponses[keyof GetStatusResponses];
+
+export type ReadCategoriesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/categories';
+};
+
+export type ReadCategoriesErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadCategoriesError = ReadCategoriesErrors[keyof ReadCategoriesErrors];
+
+export type ReadCategoriesResponses = {
+    200: Array<CategoryResponse>;
+};
+
+export type ReadCategoriesResponse = ReadCategoriesResponses[keyof ReadCategoriesResponses];
 
 export type CreatePartData = {
     body: CreatePartRequest;

@@ -62,6 +62,39 @@
         "tags": ["Status"]
       }
     },
+    "/v1/categories": {
+      "get": {
+        "operationId": "readCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The eight Categories, each with its specification list",
+        "tags": ["Category"]
+      }
+    },
     "/v1/parts": {
       "post": {
         "operationId": "createPart",
@@ -238,6 +271,95 @@
           }
         },
         "required": ["startedAt"]
+      },
+      "SpecificationResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The specification's place in a Part's specifications, in OpenDB's field names and nesting. For a field of a row, its name in the row.",
+            "example": "specifications.memory.types"
+          },
+          "label": {
+            "type": "string",
+            "description": "The specification's English label.",
+            "example": "Memory types"
+          },
+          "kind": {
+            "type": "string",
+            "description": "The kind of value it holds.",
+            "enum": [
+              "wholeNumber",
+              "decimalNumber",
+              "text",
+              "yesNo",
+              "oneOf",
+              "severalOf",
+              "listOfText",
+              "listOfRows"
+            ],
+            "example": "severalOf"
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit of a number.",
+            "example": "W"
+          },
+          "values": {
+            "description": "The fixed set, for one or several of a fixed set.",
+            "example": ["DDR3", "DDR4", "DDR5"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fields": {
+            "description": "The fields of each row, for a list of rows.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecificationResponse"
+            }
+          },
+          "needed": {
+            "type": "boolean",
+            "description": "Whether a Compatibility Rule reads it.",
+            "example": true
+          },
+          "zeroMeansMissing": {
+            "type": "boolean",
+            "description": "Whether 0 cannot be true for it, so that 0 stands for \"not known\".",
+            "example": false
+          }
+        },
+        "required": ["path", "label", "kind", "needed", "zeroMeansMissing"]
+      },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The Category's key, which `i18n`'s shared terms translate it by.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
+          },
+          "specifications": {
+            "description": "Every specification a Part of this Category can hold, in order.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecificationResponse"
+            }
+          }
+        },
+        "required": ["key", "specifications"]
       },
       "CreatePartRequest": {
         "type": "object",
