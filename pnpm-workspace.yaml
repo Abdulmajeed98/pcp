@@ -24,3 +24,11 @@ allowBuilds:
   # Comes with Swagger's own screen, which @nestjs/swagger depends on. Its
   # script reports each install to scarf.sh, so it is not run.
   '@scarf/scarf': false
+  # The next three come with Testcontainers, through the client it talks to
+  # Docker with. `ssh2` and `cpu-features` compile optional native code with
+  # node-gyp, and `ssh2` falls back to plain JavaScript without it; SSH is
+  # used only for a Docker host on another machine. The script of
+  # `protobufjs` only prints a warning about how dependents name its version.
+  ssh2: false
+  cpu-features: false
+  protobufjs: false

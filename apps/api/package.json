@@ -12,13 +12,18 @@
     "@pcp/core": "workspace:*",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.4",
+    "drizzle-orm": "~0.45.4",
+    "effect": "^3.22.2",
     "nestjs-cls": "^7.0.1",
+    "pg": "^8.23.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.0.0"
+    "@nestjs/testing": "^11.0.0",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "~0.31.11"
   },
   "nx": {
     "tags": [
