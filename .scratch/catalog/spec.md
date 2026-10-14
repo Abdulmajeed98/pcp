@@ -214,7 +214,7 @@ The owner gets the groundwork every later module copies. PostgreSQL is reached t
 - It is a second entry point of the API, as the OpenAPI writer already is, because the API is the only part that touches the database (ADR-0003). It is run with `pnpm catalog:import`.
 - It fetches the pinned commit's eight folders from GitHub, or reads them from a folder on disk when it is given one. How it fetches them, as an archive of the commit or as a shallow clone, is settled first. Either way it checks that what it holds is the pinned commit, and it imports nothing otherwise.
 - It is a Command with its own Store and a port through which it reads OpenDB's records. Fetching, unpacking and reading files are infrastructure.
-- A record becomes a Part when it has an OpenDB ID that matches its file name, a name and a manufacturer. A record that names no manufacturer takes the one its name begins with, among those its folder's other records name, and the report names it. Any other record is left out, and named in the report with its reason.
+- A record becomes a Part when it has an OpenDB ID that matches its file name, a name and a manufacturer. A record that names no manufacturer takes the one its name begins with, among those its folder's other records name, and the report names it. It is left out as a copy when a record of that manufacturer has one of its part numbers, or when the import's short list of known copies names it. Any other record is left out, and named in the report with its reason.
 - A cooler's sockets that list "LGA 1151v2" beside "LGA 1151" lose the variant, which the set of sockets does not hold, and keep the rest. Any other list with a socket outside the set is left out whole and counted.
 - A specification value that does not fit its entry on the list is left out of the Part and counted. So is a value of 0 where 0 cannot be true. A field that the list does not name is ignored.
 - A record whose OpenDB ID is already in the catalog is skipped. The import never changes or removes a Part.
@@ -507,7 +507,7 @@ Each group is seen to fail once, by a deliberate fault that is then reverted: th
   - The specifications' type in the API's description is a plain JSON object.
 - **The owner's decisions of 15 October 2026,** on what tickets 01 to 09 left open:
   1. A cooler that lists "LGA 1151v2" beside "LGA 1151" keeps its other sockets. "LGA 115", "LGA 1121" and a motherboard's "LGA 1151v2" are not mapped, and the Admin fills those in.
-  2. A record with no manufacturer takes the one its name begins with, among its folder's manufacturers: 26 of 28 become Parts.
+  2. A record with no manufacturer takes the one its name begins with, among its folder's manufacturers, unless it copies a complete record. 20 of the 28 share a part number with a complete record of that manufacturer and are left out as copies, and 2 more are listed in the import as known copies, because nothing deletes a Part. 4 become Parts, and 2 have no manufacturer their name shows.
   3. A case's 0 internal 2.5-inch bays is kept, and rule 15 lets a 2.5-inch drive take a free 3.5-inch bay. The MVP spec's rule notes say how.
   4. Dual-socket and CPU-built-in boards are kept, and rule 1 reads their sockets. The MVP spec's rule notes say how.
   5. Rule 7 fits a Thin Mini-ITX board where Mini-ITX fits, and a Flex ATX board where Micro ATX fits.

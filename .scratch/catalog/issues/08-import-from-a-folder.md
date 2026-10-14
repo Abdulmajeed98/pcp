@@ -115,9 +115,12 @@ All but the last are corrected.
 The owner decided the two questions above, and the import changed with them:
 
 - A cooler that lists "LGA 1151v2" beside "LGA 1151" drops the variant and keeps its other sockets. 18 coolers keep theirs. The 13 that name "LGA 115" or "LGA 1121" are still left out whole.
-- A record with no manufacturer takes the one its name begins with, among those its folder's other records name, in the spelling most of them use. 26 of the 28 become Parts, and the report names each one under "Manufacturers taken from the name". "MB ASRock AMD TRX50 Threadripper" and the Louqe "Ghost S1" are still left out.
+- A record with no manufacturer takes the one its name begins with, among those its folder's other records name, in the spelling most of them use. The report names each one under "Manufacturers taken from the name".
+  - The first run of this on the development database made duplicates. 20 of the 28 records are thinner copies of a complete record of the same manufacturer, with the same part number. The owner chose to leave such a copy out, and the report names it.
+  - Another manufacturer's record with the same part number does not make a copy, because OpenDB gives some records another make's part number by mistake.
+  - Two more records copy a complete one without sharing a part number with it: "ASRock X370 Killer SLI AM4" and "DeepCool MATREXX 70 RGB". Nothing deletes a Part, so the owner chose to list them in the import as known copies, which it leaves out and names.
+  - 4 records take their manufacturer from their name: the Palit RTX 5060 Infinity 2 OC, a KEDIERS case, the Zalman GigaMax 600W and the Cooler Master MWE Gold 550 V2. "MB ASRock AMD TRX50 Threadripper" and the Louqe "Ghost S1" are still left out.
 
-At the pinned commit the import now makes 26,238 Parts, leaves out 2 records, and leaves out 11,179 values. Three planted faults each failed their own test: the variant kept, no manufacturer taken from a name, and the name's own spelling taken instead of the folder's.
+At the pinned commit the import now makes 26,216 Parts, leaves out 24 records, and leaves out 11,173 values. Each change has a planted fault that failed its own test: the variant socket kept; no manufacturer taken from a name; the name's own spelling taken instead of the folder's; the copy check removed; copies counted across all manufacturers; and the list of known copies ignored.
 
-The catalog spec's Further Notes list all fourteen of the day's decisions.
-
+The development database was reset and imported again, and holds 26,216 Parts with no duplicates. The catalog spec's Further Notes list all fourteen of the day's decisions.
