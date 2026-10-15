@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { authorizationOfTheDevelopmentAdmin } from './development-admin';
+import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { apiUrl } from './platform';
 
 test("the API stores a Part: the development Admin creates a made-up Part, and the platform's database gives it back", async ({

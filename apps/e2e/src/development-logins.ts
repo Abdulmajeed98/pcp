@@ -6,13 +6,25 @@ import { expect, type Page } from '@playwright/test';
 
 import { apiUrl, dashboardUrl, realmUrl } from './platform';
 
-// The development Admin is the one login `pnpm services:up` creates. Its name
-// and password are in `.env` at the repository root, and are never printed.
+// The two logins `pnpm services:up` creates: the development Admin, with the
+// `admin` role, and the development Vendor, with the `vendor` role. Their
+// names and passwords are in `.env` at the repository root, and are never
+// printed.
 const settings = parseEnv(readFileSync(join(__dirname, '..', '..', '..', '.env'), 'utf8'));
 
-export const developmentAdmin = {
+export interface DevelopmentLogin {
+  name: string;
+  password: string;
+}
+
+export const developmentAdmin: DevelopmentLogin = {
   name: settings.DEVELOPMENT_ADMIN_NAME ?? '',
   password: settings.DEVELOPMENT_ADMIN_PASSWORD ?? '',
+};
+
+export const developmentVendor: DevelopmentLogin = {
+  name: settings.DEVELOPMENT_VENDOR_NAME ?? '',
+  password: settings.DEVELOPMENT_VENDOR_PASSWORD ?? '',
 };
 
 // Keycloak's login screen, told apart by its address and its form. The
@@ -23,17 +35,21 @@ export async function expectLoginScreen(page: Page): Promise<void> {
 }
 
 // Opens the dashboard as someone who is not logged in, and logs in at
-// Keycloak's login screen the way the Admin does.
-export async function logInToTheDashboard(page: Page): Promise<void> {
+// Keycloak's login screen the way a person does, as the development Admin
+// unless the test names the development Vendor.
+export async function logInToTheDashboard(
+  page: Page,
+  login: DevelopmentLogin = developmentAdmin,
+): Promise<void> {
   await page.goto(dashboardUrl);
   await expectLoginScreen(page);
 
-  await page.locator('#username').fill(developmentAdmin.name);
+  await page.locator('#username').fill(login.name);
   // Playwright writes what `fill` types into its log, which a failed run
   // prints. The password is therefore set in the page and never typed.
   await page.locator('#password').evaluate((field, password) => {
     (field as HTMLInputElement).value = password;
-  }, developmentAdmin.password);
+  }, login.password);
   await page.locator('#kc-login').click();
 
   await page.waitForURL(`${dashboardUrl}/**`);

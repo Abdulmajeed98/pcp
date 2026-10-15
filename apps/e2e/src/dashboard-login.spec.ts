@@ -2,9 +2,10 @@ import { expect, type Response, test } from '@playwright/test';
 
 import {
   developmentAdmin,
+  developmentVendor,
   expectLoginScreen,
   logInToTheDashboard,
-} from './development-admin';
+} from './development-logins';
 import { apiUrl, dashboardUrl, realmUrl } from './platform';
 
 const callerEndpoint = `${apiUrl}/v1/caller`;
@@ -20,6 +21,15 @@ test('the Admin logs in: the dashboard sends them to Keycloak, and then shows wh
 
   await expect(page.getByTestId('caller-name')).toHaveText(developmentAdmin.name);
   await expect(page.getByTestId('caller-roles')).toHaveText('admin');
+});
+
+test('the development Vendor logs in: the dashboard shows the name and the role vendor that the API says the caller has', async ({
+  page,
+}) => {
+  await logInToTheDashboard(page, developmentVendor);
+
+  await expect(page.getByTestId('caller-name')).toHaveText(developmentVendor.name);
+  await expect(page.getByTestId('caller-roles')).toHaveText('vendor');
 });
 
 test("the API was asked: the dashboard's call carried a token, and the name on the page is the name in the answer", async ({
