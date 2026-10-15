@@ -1,1 +1,1 @@
-export { logOut, startLogin, validToken } from './login';
+export { logOut, realmRolesOfTheLogin, startLogin, validToken } from './login';

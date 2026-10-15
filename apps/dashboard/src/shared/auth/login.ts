@@ -28,6 +28,14 @@ export async function startLogin(): Promise<void> {
   });
 }
 
+// The realm roles of the login, read from the access token's
+// `realm_access.roles`, the claim the API reads them from. They are there as
+// soon as the login has started. The API checks the token itself, so these
+// decide only what the dashboard shows.
+export function realmRolesOfTheLogin(): readonly string[] {
+  return keycloak.realmAccess?.roles ?? [];
+}
+
 // A token that is still valid, for one call to the API. A token that is about
 // to run out is renewed first.
 export async function validToken(): Promise<string | undefined> {
