@@ -7,6 +7,7 @@ import { connect } from 'node:net';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
+import { developmentLogins } from './development-logins.mjs';
 import {
   findLogin,
   keycloakUrl,
@@ -350,21 +351,10 @@ async function defaultLanguageIsKurdish() {
   if (defaultLocale !== 'ckb') throw new Error(`the default language is ${defaultLocale}`);
 }
 
-// The two development logins the start command creates: the development
-// Admin and the development Vendor. Each one's name is in `.env`, beside its
-// password.
-const developmentLogins = [
-  { name: 'Admin', setting: 'DEVELOPMENT_ADMIN_NAME', role: 'admin', otherRole: 'vendor' },
-  {
-    name: 'Vendor',
-    setting: 'DEVELOPMENT_VENDOR_NAME',
-    role: 'vendor',
-    otherRole: 'admin',
-  },
-];
-
-async function findDevelopmentLogin({ setting }) {
-  const name = settings[setting];
+// The two development logins the start command creates. Each one's name is
+// in `.env`, beside its password.
+async function findDevelopmentLogin({ nameSetting }) {
+  const name = settings[nameSetting];
   if (!name) throw new Error(`.env does not name it. ${startHint}`);
 
   const login = await findLogin(await logInAsAdministrator(settings), name);
@@ -485,16 +475,16 @@ if (keycloakAnswers) {
   );
   for (const developmentLogin of developmentLogins) {
     const found = await check(
-      `The development ${developmentLogin.name} login exists and is switched on`,
+      `The development ${developmentLogin.label} login exists and is switched on`,
       developmentLoginExists(developmentLogin),
     );
     if (found) {
       await check(
-        `The development ${developmentLogin.name} holds the ${developmentLogin.role} role`,
+        `The development ${developmentLogin.label} holds the ${developmentLogin.role} role`,
         developmentLoginHolds(developmentLogin, developmentLogin.role),
       );
       await check(
-        `The development ${developmentLogin.name} does not hold the ${developmentLogin.otherRole} role`,
+        `The development ${developmentLogin.label} does not hold the ${developmentLogin.otherRole} role`,
         developmentLoginLacks(developmentLogin, developmentLogin.otherRole),
       );
     }

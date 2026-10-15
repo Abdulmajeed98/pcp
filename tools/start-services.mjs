@@ -1,13 +1,14 @@
 // Starts the development services in the background and returns when they are
 // healthy, the development Admin and Vendor logins exist and the platform's
-// database has every migration. On the first start it also creates the local environment
-// file. Run it with `pnpm services:up`.
+// database has every migration. On the first start it also creates the local
+// environment file. Run it with `pnpm services:up`.
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
+import { developmentLogins } from './development-logins.mjs';
 import { findLogin, logInAsAdministrator } from './keycloak-administrator.mjs';
 
 const root = join(import.meta.dirname, '..');
@@ -68,31 +69,13 @@ async function expectStatus(response, expected, doing) {
   throw new Error(`Keycloak answered ${response.status} when asked to ${doing}`);
 }
 
-// The two development logins, one for each half of the dashboard. Each holds
-// one platform role and no other. `lastName` is what Keycloak shows beside
-// "Development".
-const developmentLogins = [
-  {
-    nameSetting: 'DEVELOPMENT_ADMIN_NAME',
-    passwordSetting: 'DEVELOPMENT_ADMIN_PASSWORD',
-    lastName: 'Admin',
-    role: 'admin',
-  },
-  {
-    nameSetting: 'DEVELOPMENT_VENDOR_NAME',
-    passwordSetting: 'DEVELOPMENT_VENDOR_PASSWORD',
-    lastName: 'Vendor',
-    role: 'vendor',
-  },
-];
-
 // The realm file holds no logins, so each development login is created here,
 // through Keycloak's administration interface. A login that exists is left as
 // it is, its password included.
 async function createDevelopmentLoginIfMissing({
+  label,
   nameSetting,
   passwordSetting,
-  lastName,
   role: roleName,
 }) {
   const settings = parseEnv(readFileSync(envFile, 'utf8'));
@@ -120,7 +103,7 @@ async function createDevelopmentLoginIfMissing({
       // login be created without them, and then sends it to a screen that
       // asks for them before it may log in.
       firstName: 'Development',
-      lastName,
+      lastName: label,
       email: `${name}@pcp.invalid`,
       emailVerified: true,
       credentials: [{ type: 'password', value: password, temporary: false }],
@@ -141,9 +124,7 @@ async function createDevelopmentLoginIfMissing({
     await expectStatus(given, 204, `give the login the ${roleName} role`);
   }
 
-  console.log(
-    `Created the development ${lastName} login, ${name}. Its password is in .env.`,
-  );
+  console.log(`Created the development ${label} login, ${name}. Its password is in .env.`);
 }
 
 const docker = spawnSync('docker', ['info'], { stdio: 'ignore' });
@@ -167,7 +148,7 @@ for (const developmentLogin of developmentLogins) {
     await createDevelopmentLoginIfMissing(developmentLogin);
   } catch (error) {
     exitWith(
-      `The development ${developmentLogin.lastName} login could not be created: ${error.message}.`,
+      `The development ${developmentLogin.label} login could not be created: ${error.message}.`,
     );
   }
 }

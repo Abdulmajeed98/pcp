@@ -13,6 +13,7 @@ import { parseEnv } from 'node:util';
 
 import { chromium } from '@playwright/test';
 
+import { developmentLogins } from './development-logins.mjs';
 import { keycloakUrl } from './keycloak-administrator.mjs';
 import { migrationNames, missingMigrations } from './platform-migrations.mjs';
 
@@ -30,11 +31,12 @@ if (!existsSync(envFile)) {
   exitWith(`There is no .env file, so the services have never been started. ${startHint}`);
 }
 const settings = parseEnv(readFileSync(envFile, 'utf8'));
-if (!settings.DEVELOPMENT_ADMIN_NAME || !settings.DEVELOPMENT_ADMIN_PASSWORD) {
-  exitWith(`.env does not hold the development Admin's name and password. ${startHint}`);
-}
-if (!settings.DEVELOPMENT_VENDOR_NAME || !settings.DEVELOPMENT_VENDOR_PASSWORD) {
-  exitWith(`.env does not hold the development Vendor's name and password. ${startHint}`);
+for (const { label, nameSetting, passwordSetting } of developmentLogins) {
+  if (!settings[nameSetting] || !settings[passwordSetting]) {
+    exitWith(
+      `.env does not hold the development ${label}'s name and password. ${startHint}`,
+    );
+  }
 }
 
 // The realm's public description answers only when Keycloak is up and the
