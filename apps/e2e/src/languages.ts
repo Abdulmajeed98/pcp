@@ -214,7 +214,7 @@ async function boxOf(
 // A page scrolls sideways when something in it is wider than the window. In a
 // page that is laid out right to left, what is too wide runs off to the left,
 // and the document counts that as well.
-async function expectNoSidewaysScroll(page: Page): Promise<void> {
+export async function expectNoSidewaysScroll(page: Page): Promise<void> {
   const { pageWidth, windowWidth } = await page.evaluate(() => ({
     pageWidth: document.documentElement.scrollWidth,
     windowWidth: document.documentElement.clientWidth,
