@@ -1,7 +1,7 @@
 ---
 version: 1
-slug: "apps-shopper"
-primary_target: "apps/shopper"
+slug: "src"
+primary_target: "src"
 related_targets: []
 ---
 
