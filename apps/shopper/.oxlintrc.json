@@ -4,5 +4,5 @@
     "../../.oxlintrc.logical-classes.json",
     "./.oxlintrc.feature-sliced.json"
   ],
-  "plugins": ["nextjs", "react"]
+  "plugins": ["nextjs", "react", "jsx-a11y"]
 }

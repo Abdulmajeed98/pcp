@@ -1,4 +1,4 @@
 {
   "extends": ["../../.oxlintrc.json", "../../.oxlintrc.logical-classes.json"],
-  "plugins": ["react"]
+  "plugins": ["react", "jsx-a11y"]
 }
