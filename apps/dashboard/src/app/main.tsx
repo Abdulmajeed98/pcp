@@ -2,10 +2,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { realmRolesOfTheLogin, startLogin } from '@/shared/auth';
-import { languageOfTheBrowser, startLanguage, t } from '@/shared/i18n';
+import { startLanguage } from '@/shared/i18n';
 
 import { App } from './app';
-import { halfFor, languageOf, titleOf } from './halves';
+import { halfFor, halves } from './halves';
 import { LoginFailed } from './login-failed';
 import './styles/global.css';
 
@@ -22,8 +22,8 @@ const root = createRoot(document.getElementById('root') as HTMLElement);
 startLogin().then(
   async () => {
     const half = halfFor(realmRolesOfTheLogin());
-    await startLanguage(languageOf(half));
-    document.title = titleOf(half);
+    await startLanguage(halves[half].language());
+    document.title = halves[half].title();
 
     root.render(
       <StrictMode>
@@ -32,8 +32,8 @@ startLogin().then(
     );
   },
   async () => {
-    await startLanguage(languageOfTheBrowser());
-    document.title = t('VendorPortal.title');
+    await startLanguage(halves['vendor-portal'].language());
+    document.title = halves['vendor-portal'].title();
 
     root.render(
       <StrictMode>

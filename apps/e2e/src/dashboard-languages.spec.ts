@@ -84,11 +84,20 @@ test("the Vendor portal's text and its tab's title differ in each of the three l
   const notices = new Map<Language, string>();
   const titles = new Map<Language, string>();
   for (const { locale, expected } of browsersSetTo) {
-    await openInABrowserSetTo(browser, locale, developmentVendor, async (page) => {
-      await expectPageIn(page, expected);
-      notices.set(expected, await page.getByTestId('placeholder-notice').innerText());
-      titles.set(expected, await page.title());
-    });
+    const { notice, title } = await openInABrowserSetTo(
+      browser,
+      locale,
+      developmentVendor,
+      async (page) => {
+        await expectPageIn(page, expected);
+        return {
+          notice: await page.getByTestId('placeholder-notice').innerText(),
+          title: await page.title(),
+        };
+      },
+    );
+    notices.set(expected, notice);
+    titles.set(expected, title);
   }
 
   expectADifferentTextInEachLanguage(notices);

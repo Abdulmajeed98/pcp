@@ -17,15 +17,20 @@ export function halfFor(realmRoles: readonly string[]): Half {
     : 'vendor-portal';
 }
 
-// The language each half is shown in. The Admin console is in English,
-// whatever the browser's language is. The Vendor portal follows the browser,
-// and falls back to Kurdish.
-export function languageOf(half: Half): Language {
-  return half === 'admin-console' ? 'en' : languageOfTheBrowser();
-}
-
-// The title of the browser's tab in each half, once its language has
-// started. The Admin console's is English, and is written here.
-export function titleOf(half: Half): string {
-  return half === 'admin-console' ? 'Admin console' : t('VendorPortal.title');
-}
+// What each half is shown in: its language, and the title of the browser's
+// tab once that language has started.
+//
+// The Admin console is in English, whatever the browser's language is, and
+// its title is written here. The Vendor portal follows the browser and falls
+// back to Kurdish, and its title is in the language files. So does what is
+// shown before anyone is known, such as a login that could not be completed.
+export const halves: Record<Half, { language: () => Language; title: () => string }> = {
+  'admin-console': {
+    language: () => 'en',
+    title: () => 'Admin console',
+  },
+  'vendor-portal': {
+    language: languageOfTheBrowser,
+    title: () => t('VendorPortal.title'),
+  },
+};

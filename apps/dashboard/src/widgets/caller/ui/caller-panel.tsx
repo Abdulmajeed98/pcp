@@ -16,8 +16,9 @@ import { type CallerAnswer, readCaller } from '../api/read-caller';
 // The login's name is shown as it was written, and the role names are the
 // API's own, in English. Each is put into the element its sentence names.
 //
-// Every button is at least 44 pixels high, and its border is drawn in the
-// colour of a control's edge, which stands out from the page at 3:1.
+// Every button is at least 44 pixels high, with the corners of a control,
+// and its border is drawn in the colour of a control's edge, which stands
+// out from the page at 3:1.
 export function CallerPanel() {
   const { t } = useTranslation();
   const [answer, setAnswer] = useState<CallerAnswer | undefined>(undefined);
@@ -71,14 +72,14 @@ export function CallerPanel() {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          className="min-h-11 rounded-md border border-input px-3"
+          className="min-h-control rounded-lg border border-input px-3"
           onClick={askAgain}
         >
           {t('Caller.askAgain')}
         </button>
         <button
           type="button"
-          className="min-h-11 rounded-md border border-input px-3"
+          className="min-h-control rounded-lg border border-input px-3"
           onClick={() => void logOut()}
         >
           {t('Caller.logOut')}

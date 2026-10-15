@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 // screen more room, up to a width that still reads well. A word too long for
 // the screen is broken, so that it cannot make the page scroll sideways.
 //
-// It holds no header yet. The language switch arrives in it with ticket 07.
+// It holds no header yet. The Vendor's language switch will be its first.
 export function VendorPortalFrame({ children }: { children: ReactNode }) {
   return (
     <div
