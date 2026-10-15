@@ -33,6 +33,9 @@ const settings = parseEnv(readFileSync(envFile, 'utf8'));
 if (!settings.DEVELOPMENT_ADMIN_NAME || !settings.DEVELOPMENT_ADMIN_PASSWORD) {
   exitWith(`.env does not hold the development Admin's name and password. ${startHint}`);
 }
+if (!settings.DEVELOPMENT_VENDOR_NAME || !settings.DEVELOPMENT_VENDOR_PASSWORD) {
+  exitWith(`.env does not hold the development Vendor's name and password. ${startHint}`);
+}
 
 // The realm's public description answers only when Keycloak is up and the
 // platform's realm is loaded.

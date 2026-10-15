@@ -350,10 +350,21 @@ async function defaultLanguageIsKurdish() {
   if (defaultLocale !== 'ckb') throw new Error(`the default language is ${defaultLocale}`);
 }
 
-// The development Admin is the one login the start command creates. Its name
-// is in `.env`, beside its password.
-async function findDevelopmentAdmin() {
-  const name = settings.DEVELOPMENT_ADMIN_NAME;
+// The two development logins the start command creates: the development
+// Admin and the development Vendor. Each one's name is in `.env`, beside its
+// password.
+const developmentLogins = [
+  { name: 'Admin', setting: 'DEVELOPMENT_ADMIN_NAME', role: 'admin', otherRole: 'vendor' },
+  {
+    name: 'Vendor',
+    setting: 'DEVELOPMENT_VENDOR_NAME',
+    role: 'vendor',
+    otherRole: 'admin',
+  },
+];
+
+async function findDevelopmentLogin({ setting }) {
+  const name = settings[setting];
   if (!name) throw new Error(`.env does not name it. ${startHint}`);
 
   const login = await findLogin(await logInAsAdministrator(settings), name);
@@ -361,30 +372,32 @@ async function findDevelopmentAdmin() {
   return login;
 }
 
-async function developmentAdminExists() {
-  const login = await findDevelopmentAdmin();
-  if (!login.enabled) throw new Error('the login is switched off');
+function developmentLoginExists(developmentLogin) {
+  return async () => {
+    const login = await findDevelopmentLogin(developmentLogin);
+    if (!login.enabled) throw new Error('the login is switched off');
+  };
 }
 
 // The realm roles a login holds, the ones it holds through another role
 // among them.
-async function realmRolesOfDevelopmentAdmin() {
-  const { id } = await findDevelopmentAdmin();
+async function realmRolesOf(developmentLogin) {
+  const { id } = await findDevelopmentLogin(developmentLogin);
   const response = await readAsAdministrator(`/users/${id}/role-mappings/realm/composite`);
   expectStatus(response, 200);
   return (await response.json()).map((role) => role.name);
 }
 
-function developmentAdminHolds(role) {
+function developmentLoginHolds(developmentLogin, role) {
   return async () => {
-    const roles = await realmRolesOfDevelopmentAdmin();
+    const roles = await realmRolesOf(developmentLogin);
     if (!roles.includes(role)) throw new Error(`its realm roles are ${roles.join(', ')}`);
   };
 }
 
-function developmentAdminLacks(role) {
+function developmentLoginLacks(developmentLogin, role) {
   return async () => {
-    const roles = await realmRolesOfDevelopmentAdmin();
+    const roles = await realmRolesOf(developmentLogin);
     if (roles.includes(role)) throw new Error('it holds the role');
   };
 }
@@ -470,19 +483,21 @@ if (keycloakAnswers) {
     "The dashboard client's audience mapper names pcp-api",
     dashboardMapperNamesTheApi,
   );
-  const developmentAdminFound = await check(
-    'The development Admin login exists',
-    developmentAdminExists,
-  );
-  if (developmentAdminFound) {
-    await check(
-      'The development Admin holds the admin role',
-      developmentAdminHolds('admin'),
+  for (const developmentLogin of developmentLogins) {
+    const found = await check(
+      `The development ${developmentLogin.name} login exists and is switched on`,
+      developmentLoginExists(developmentLogin),
     );
-    await check(
-      'The development Admin does not hold the vendor role',
-      developmentAdminLacks('vendor'),
-    );
+    if (found) {
+      await check(
+        `The development ${developmentLogin.name} holds the ${developmentLogin.role} role`,
+        developmentLoginHolds(developmentLogin, developmentLogin.role),
+      );
+      await check(
+        `The development ${developmentLogin.name} does not hold the ${developmentLogin.otherRole} role`,
+        developmentLoginLacks(developmentLogin, developmentLogin.otherRole),
+      );
+    }
   }
 } else {
   console.log(`      Keycloak cannot be reached. ${startHint}`);

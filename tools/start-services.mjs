@@ -1,6 +1,6 @@
 // Starts the development services in the background and returns when they are
-// healthy, the development Admin login exists and the platform's database has
-// every migration. On the first start it also creates the local environment
+// healthy, the development Admin and Vendor logins exist and the platform's
+// database has every migration. On the first start it also creates the local environment
 // file. Run it with `pnpm services:up`.
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -18,6 +18,7 @@ const envFile = join(root, '.env');
 const fixedValues = {
   KEYCLOAK_ADMINISTRATOR_NAME: 'keycloak-administrator',
   DEVELOPMENT_ADMIN_NAME: 'development-admin',
+  DEVELOPMENT_VENDOR_NAME: 'development-vendor',
 };
 
 function valueFor(name) {
@@ -67,18 +68,38 @@ async function expectStatus(response, expected, doing) {
   throw new Error(`Keycloak answered ${response.status} when asked to ${doing}`);
 }
 
-// The development Admin is the one login in the `pcp` realm. The realm file
-// holds no logins, so the login is created here, through Keycloak's
-// administration interface. A login that exists is left as it is, its
-// password included.
-async function createDevelopmentAdminIfMissing() {
+// The two development logins, one for each half of the dashboard. Each holds
+// one platform role and no other. `lastName` is what Keycloak shows beside
+// "Development".
+const developmentLogins = [
+  {
+    nameSetting: 'DEVELOPMENT_ADMIN_NAME',
+    passwordSetting: 'DEVELOPMENT_ADMIN_PASSWORD',
+    lastName: 'Admin',
+    role: 'admin',
+  },
+  {
+    nameSetting: 'DEVELOPMENT_VENDOR_NAME',
+    passwordSetting: 'DEVELOPMENT_VENDOR_PASSWORD',
+    lastName: 'Vendor',
+    role: 'vendor',
+  },
+];
+
+// The realm file holds no logins, so each development login is created here,
+// through Keycloak's administration interface. A login that exists is left as
+// it is, its password included.
+async function createDevelopmentLoginIfMissing({
+  nameSetting,
+  passwordSetting,
+  lastName,
+  role: roleName,
+}) {
   const settings = parseEnv(readFileSync(envFile, 'utf8'));
-  const name = settings.DEVELOPMENT_ADMIN_NAME;
-  const password = settings.DEVELOPMENT_ADMIN_PASSWORD;
+  const name = settings[nameSetting];
+  const password = settings[passwordSetting];
   if (!name || !password) {
-    throw new Error(
-      '.env has no value for DEVELOPMENT_ADMIN_NAME or DEVELOPMENT_ADMIN_PASSWORD',
-    );
+    throw new Error(`.env has no value for ${nameSetting} or ${passwordSetting}`);
   }
 
   const ask = await logInAsAdministrator(settings);
@@ -86,8 +107,8 @@ async function createDevelopmentAdminIfMissing() {
 
   if ((await findLogin(ask, name)) !== undefined) return;
 
-  const role = await ask('/roles/admin');
-  await expectStatus(role, 200, 'read the admin role');
+  const role = await ask(`/roles/${roleName}`);
+  await expectStatus(role, 200, `read the ${roleName} role`);
 
   const created = await ask('/users', {
     method: 'POST',
@@ -99,7 +120,7 @@ async function createDevelopmentAdminIfMissing() {
       // login be created without them, and then sends it to a screen that
       // asks for them before it may log in.
       firstName: 'Development',
-      lastName: 'Admin',
+      lastName,
       email: `${name}@pcp.invalid`,
       emailVerified: true,
       credentials: [{ type: 'password', value: password, temporary: false }],
@@ -117,10 +138,12 @@ async function createDevelopmentAdminIfMissing() {
     // The next start would find a login without its role and leave it as it
     // is. Removing it lets the next start begin again.
     await ask(`/users/${id}`, { method: 'DELETE' });
-    await expectStatus(given, 204, 'give the login the admin role');
+    await expectStatus(given, 204, `give the login the ${roleName} role`);
   }
 
-  console.log(`Created the development Admin login, ${name}. Its password is in .env.`);
+  console.log(
+    `Created the development ${lastName} login, ${name}. Its password is in .env.`,
+  );
 }
 
 const docker = spawnSync('docker', ['info'], { stdio: 'ignore' });
@@ -139,10 +162,14 @@ const compose = spawnSync('docker', ['compose', 'up', '--detach', '--wait'], {
 });
 if (compose.status !== 0) process.exit(compose.status ?? 1);
 
-try {
-  await createDevelopmentAdminIfMissing();
-} catch (error) {
-  exitWith(`The development Admin login could not be created: ${error.message}.`);
+for (const developmentLogin of developmentLogins) {
+  try {
+    await createDevelopmentLoginIfMissing(developmentLogin);
+  } catch (error) {
+    exitWith(
+      `The development ${developmentLogin.lastName} login could not be created: ${error.message}.`,
+    );
+  }
 }
 
 // The platform's database gets the API's migrations from `pnpm db:migrate`
