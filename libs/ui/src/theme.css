@@ -1,12 +1,12 @@
 /*
- * The theme both frontends are styled from. Each frontend's own stylesheet
- * imports this file, as `@pcp/ui/theme.css`, and takes Tailwind CSS from
- * nowhere else.
+ * The foundations both frontends share. Each frontend has a look of its own
+ * (DESIGN.md in its folder): the Shopper app imports
+ * `@pcp/ui/themes/shopper.css` and the dashboard `@pcp/ui/themes/dashboard.css`.
+ * Each of those imports this file, and neither frontend takes Tailwind CSS
+ * from anywhere else.
  *
- * It sets nothing of its own yet: no colour scheme, no typeface and no logo.
- * Tailwind's defaults stand until the platform's look is designed, and its
- * default fonts are the device's own, so no font is downloaded. A token both
- * frontends need is added here, in a `@theme` block.
+ * What is here holds in both looks, because it comes from the accessibility
+ * standard, WCAG 2.2 level AA, and from the languages, not from either look.
  */
 @import 'tailwindcss';
 
@@ -17,3 +17,46 @@
  * is relative to this file.
  */
 @source './';
+
+@theme {
+  /*
+   * No text is smaller than 14 pixels, so the 12-pixel size is taken away.
+   */
+  --text-xs: initial;
+  --text-xs--line-height: initial;
+
+  /*
+   * The smallest a control can be on a touchscreen: 44 by 44 pixels, as
+   * WCAG 2.2's level AAA target size asks, as `h-control`, `min-h-control`
+   * and `size-control`.
+   */
+  --spacing-control: 2.75rem;
+}
+
+/*
+ * Kurdish and Arabic are written in Arabic script, which needs more room than
+ * Latin script at the same size. Every size below a heading is one pixel
+ * larger in those two languages, and every line is looser. The language is
+ * the page's, which the frontends set on the document.
+ */
+:root:lang(ckb),
+:root:lang(ar) {
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: calc(1.5 / 0.9375);
+  --text-base: 1.0625rem;
+  --text-base--line-height: calc(1.75 / 1.0625);
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: calc(2 / 1.1875);
+  --text-xl--line-height: calc(2 / 1.25);
+  --text-2xl--line-height: calc(2.25 / 1.5);
+  --text-3xl--line-height: calc(2.5 / 1.875);
+}
+
+/*
+ * Both looks have a light and a dark scheme, and the page follows the
+ * device's setting. This tells the browser so, so that its own parts, such
+ * as form controls and scroll bars, follow it too.
+ */
+:root {
+  color-scheme: light dark;
+}

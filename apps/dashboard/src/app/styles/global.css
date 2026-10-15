@@ -1,2 +1,2 @@
-/* The dashboard's own stylesheet. Tailwind CSS and the theme come from `ui`. */
-@import '@pcp/ui/theme.css';
+/* The dashboard's own stylesheet. Tailwind CSS and the dashboard's look come from `ui`. */
+@import '@pcp/ui/themes/dashboard.css';

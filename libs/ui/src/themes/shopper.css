@@ -1,0 +1,145 @@
+/*
+ * The Shopper app's look, Fit Diagram: the platform draws how Parts fit, the
+ * way a motherboard manual does. Manual paper and print black, with manual
+ * blue for fit lines, callouts and the one primary action, and red only for
+ * a Compatibility Problem. apps/shopper/DESIGN.md has the rules for using
+ * these tokens.
+ *
+ * The tokens are shadcn/ui's, each surface paired with its `-foreground`,
+ * plus the platform's own states. Every pair meets WCAG 2.2 level AA in both
+ * schemes: 4.5:1 for text, and 3:1 for a control's border and the focus ring.
+ */
+@import '../theme.css';
+
+/*
+ * The faces are downloaded from this app's own server, never from Google
+ * (ADR-0006): Archivo for Latin script, with the width axis that narrows
+ * callouts, and Noto Kufi Arabic for Kurdish and Arabic. A page loads only
+ * the files its letters need.
+ */
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/noto-kufi-arabic';
+
+:root {
+  /* Square corners, as a manual's drawings have. */
+  --radius: 0rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.23 0.004 106.7);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.23 0.004 106.7);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.23 0.004 106.7);
+  --primary: oklch(0.474 0.169 257.2);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.954 0.005 258.3);
+  --secondary-foreground: oklch(0.23 0.004 106.7);
+  --muted: oklch(0.967 0.003 264.5);
+  --muted-foreground: oklch(0.47 0.016 262.3);
+  --accent: oklch(0.946 0.017 256.3);
+  --accent-foreground: oklch(0.384 0.136 257);
+  --destructive: oklch(0.53 0.207 22.3);
+  --destructive-foreground: oklch(1 0 0);
+  --warning: oklch(0.574 0.139 57);
+  --warning-foreground: oklch(1 0 0);
+  --success: oklch(0.519 0.122 152.9);
+  --success-foreground: oklch(1 0 0);
+  --border: oklch(0.884 0.008 260.7);
+  --input: oklch(0.608 0.015 258.4);
+  --ring: oklch(0.474 0.169 257.2);
+
+  /* The diagram: its line drawings, and the dashed lines that join Parts. */
+  --drawing: oklch(0.23 0.004 106.7);
+  --fit-line: oklch(0.474 0.169 257.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.186 0.004 264.5);
+    --foreground: oklch(0.943 0.003 106.5);
+    --card: oklch(0.222 0.006 271.1);
+    --card-foreground: oklch(0.943 0.003 106.5);
+    --popover: oklch(0.222 0.006 271.1);
+    --popover-foreground: oklch(0.943 0.003 106.5);
+    --primary: oklch(0.729 0.12 257.4);
+    --primary-foreground: oklch(0.221 0.044 257.4);
+    --secondary: oklch(0.268 0.008 264.4);
+    --secondary-foreground: oklch(0.943 0.003 106.5);
+    --muted: oklch(0.243 0.006 258.4);
+    --muted-foreground: oklch(0.733 0.013 259.8);
+    --accent: oklch(0.283 0.046 257.8);
+    --accent-foreground: oklch(0.902 0.041 259.6);
+    --destructive: oklch(0.712 0.181 22.8);
+    --destructive-foreground: oklch(0.201 0.053 17.7);
+    --warning: oklch(0.776 0.146 70.8);
+    --warning-foreground: oklch(0.223 0.049 67.6);
+    --success: oklch(0.74 0.136 156.6);
+    --success-foreground: oklch(0.222 0.047 151);
+    --border: oklch(0.336 0.01 260.7);
+    --input: oklch(0.615 0.015 258.4);
+    --ring: oklch(0.729 0.12 257.4);
+    --drawing: oklch(0.943 0.003 106.5);
+    --fit-line: oklch(0.729 0.12 257.4);
+  }
+}
+
+@theme inline {
+  --font-sans:
+    'Archivo Variable', 'Noto Kufi Arabic Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-drawing: var(--drawing);
+  --color-fit-line: var(--fit-line);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+
+  /*
+   * The parts of the page the browser draws carry the look too: the text
+   * selection, the caret, checkboxes and the scroll bars.
+   */
+  :root {
+    accent-color: var(--primary);
+    caret-color: var(--primary);
+    scrollbar-color: var(--input) transparent;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+}

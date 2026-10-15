@@ -1,2 +1,2 @@
-/* The Shopper app's own stylesheet. Tailwind CSS and the theme come from `ui`. */
-@import '@pcp/ui/theme.css';
+/* The Shopper app's own stylesheet. Tailwind CSS and the app's look come from `ui`. */
+@import '@pcp/ui/themes/shopper.css';
