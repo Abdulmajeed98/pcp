@@ -8,6 +8,8 @@
     "CLAUDE.md",
     "CONTEXT.md",
     "PRODUCT.md",
+    "**/DESIGN.md",
+    "**/.impeccable/**",
     "**/.oxlintrc.feature-sliced.json",
     "libs/api-client/src/generated/**",
     "apps/api/src/drizzle/**",

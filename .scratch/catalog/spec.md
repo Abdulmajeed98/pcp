@@ -295,11 +295,11 @@ All paths begin with `v1`, as every path of the API does. The names here describ
   - React Router for the screens' addresses;
   - TanStack Query for calls to the API, which still go through `@pcp/api-client`;
   - React Hook Form for the forms;
-  - shadcn/ui's first components, set up with its right-to-left setting on, as `languages` recorded, and lucide icons.
+  - shadcn/ui's first components, set up with its right-to-left setting on, as `languages` recorded, and lucide icons. They are the dashboard's own set, on Base UI in the Mira style (ADR-0007).
 - The forms are built from the Category's specification list, one field for each specification, with the kind setting the control. The needed specifications are marked. A refusal from the API is shown beside the field it names.
-- The router lives in the App layer. The screens follow Feature-Sliced Design under the import rules that `pnpm boundaries:check` proves. Where shadcn/ui's components sit within `ui`'s single entry is settled when they are added.
+- The router lives in the App layer. The screens follow Feature-Sliced Design under the import rules that `pnpm boundaries:check` proves. Where the dashboard's own shadcn/ui components live is settled when they are added.
 - Every screen is laid out at 360 pixels wide first, with logical classes only, because the Admin works in the Vendors' shops on a phone (LANG-8).
-- **Design.** The screens are built to the visual system that the design research sets (see [The design research](#the-design-research)), with shadcn/ui's components themed from its tokens. They are in English, and follow the same system as the Vendor portal and the Shopper pages will.
+- **Design.** The screens are built to the dashboard's look, Rate Board, in `apps/dashboard/DESIGN.md`, and to the root DESIGN.md (see [The design research](#the-design-research)), with shadcn/ui's components themed from the dashboard's tokens. They are in English, and follow the same look as the Vendor portal will. The Shopper pages have a look of their own.
 - Tokens stay in memory only, as before. A refusal from the API is shown, and never answered by starting a login.
 
 ### The design research
@@ -321,6 +321,14 @@ All paths begin with `v1`, as every path of the API does. The names here describ
   - An ADR for any choice that is hard to undo, such as a downloaded font.
 - The platform's name, a logo and the rest of its brand identity are not part of it. The MVP spec leaves the name open until before launch, and the brand waits for it.
 - Every screen built after it, in this module and later, is built to DESIGN.md.
+- **What it decided, on 15 October 2026.** The research is in [docs/research/design-system.md](../../docs/research/design-system.md), and the owner's choices are recorded there with it:
+  - WCAG 2.2 level AA, checked by axe-core in `pnpm platform:check` and by Oxlint's `jsx-a11y` plugin in `pnpm check`, which is on from this ticket.
+  - Downloaded fonts, overruling `languages` (ADR-0006).
+  - A light and a dark scheme, following the device. Every check of a screen runs in both.
+  - Controls at least 44 by 44 pixels, and no text under 14 pixels.
+  - Apple's rules for what mirrors right to left.
+  - Base UI under shadcn/ui.
+  - Instead of one system, a look and a set of components for each app, after a second search the owner asked for (ADR-0007). The Shopper app's look is Fit Diagram, on the Lyra style, set in Archivo and Noto Kufi Arabic. The dashboard's is Rate Board, on the Mira style, set in Geist, Noto Sans Arabic and Geist Mono. Each app's folder has its own DESIGN.md, which Impeccable reads for it, and the root DESIGN.md holds what both share. Each look's tokens are a theme in `ui`, `@pcp/ui/themes/shopper.css` and `@pcp/ui/themes/dashboard.css`, which import the shared `theme.css`.
 
 ### The footer credit
 

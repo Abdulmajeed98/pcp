@@ -24,12 +24,12 @@ React Hook Form arrives here, as the owner chose on 14 October 2026.
 - [ ] The new Part's form asks for the Category first, and then builds its fields from that Category's specification list, read from the API and never copied into the dashboard.
 - [ ] A fixed set is offered as a choice, and nothing outside it can be entered. Part numbers can be added and removed. Lists of rows can be added to and removed from.
 - [ ] A refusal from the API is shown beside the field it names. Success opens the new Part's page.
-- [ ] The screens follow DESIGN.md, are laid out at 360 pixels wide first, use logical classes only, and keep to Feature-Sliced Design's import rules.
+- [ ] The screens follow `apps/dashboard/DESIGN.md` and the root DESIGN.md, in light and in dark, are laid out at 360 pixels wide first, use logical classes only, and keep to Feature-Sliced Design's import rules.
 - [ ] `pnpm platform:check` gains these lines, and passes on every line, as the development Admin in a window 360 pixels wide:
   - The Admin creates a Part through the form, with a name unique to the run and some needed specifications left out, and arrives at its page.
   - The page marks the needed specifications that were left out.
   - In the form, a value outside a fixed set cannot be chosen, and a word typed where a number belongs is refused beside its field.
-  - Neither screen scrolls sideways, and the accessibility helper passes on both.
+  - Neither screen scrolls sideways, and the accessibility helper passes on both, in light and in dark.
 - [ ] Shown once and then reverted, each failing on its own line: the mark on a missing needed specification taken off; the refusal shown at the top of the form instead of beside its field.
 - [ ] `pnpm check` passes with Docker stopped.
 - [ ] The results of the fault checks are recorded under Comments.

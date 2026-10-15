@@ -12,10 +12,11 @@ Decided by the owner before this file was written, in [ADR-0003](docs/adr/0003-t
 
 - Shopper app: Next.js, rendered on the server, with next-intl.
 - Dashboard: one client-rendered React single-page application holding the Vendor portal and the Admin console.
-- Tailwind CSS with shadcn/ui. Shared components and the Tailwind theme live in the `ui` library, and the text for all three languages in `i18n`.
+- Tailwind CSS with shadcn/ui on Base UI. Each frontend has a look and a set of components of its own ([ADR-0007](docs/adr/0007-a-look-and-components-for-each-app.md)), with downloaded fonts ([ADR-0006](docs/adr/0006-fonts-downloaded-from-our-own-server.md)). The `ui` library holds what both share and each look's theme, and `i18n` the text for all three languages.
 - Both frontends follow Feature-Sliced Design.
+- The visual design is in [DESIGN.md](DESIGN.md) for what both frontends share, [apps/shopper/DESIGN.md](apps/shopper/DESIGN.md) for the Shopper app's look and [apps/dashboard/DESIGN.md](apps/dashboard/DESIGN.md) for the dashboard's.
 
-No application code exists yet. Any further library is chosen when work on that app begins.
+Any further library is chosen when work on that app begins.
 
 ## Users
 
@@ -102,7 +103,6 @@ Orders, payment and delivery; Shopper accounts; used Parts; anything outside the
 
 - The platform's name (see Brand Commitments).
 - Who operates the Vendor portal in a shop, and on what device (see Users).
-- An accessibility standard (see Accessibility & Inclusion).
 
 ## Brand Commitments
 
@@ -112,7 +112,7 @@ Orders, payment and delivery; Shopper accounts; used Parts; anything outside the
 
 ## Evidence on Hand
 
-- **Catalog data.** BuildCores OpenDB: about 26,000 Parts across the eight Categories with structured specifications, licensed under ODC-By 1.0 (ADR-0001). It has not been imported yet.
+- **Catalog data.** BuildCores OpenDB: about 26,000 Parts across the eight Categories with structured specifications, licensed under ODC-By 1.0 (ADR-0001). `pnpm catalog:import` imports 26,216 Parts from it, at the last commit released under ODC-By.
 - **Rule coverage.** The spec's Compatibility Rules table gives, for each rule, the share of OpenDB Parts that have the fields it needs, measured on 5 October 2026. It ranges from 100% down to 16%.
 - **The currency gap.** On 1 October 2026 the Erbil market rate was about 1,575 IQD per USD against an official rate of 1,300 (ADR-0002).
 
@@ -138,4 +138,4 @@ Absent, and not to be invented:
 - Every screen is usable at 360 pixels wide.
 - Pages are built for low to mid-range Android phones on weak mobile data.
 - A Shopper who has never built a PC must be able to understand a Compatibility Problem from the words on the page, which name the Parts involved.
-- No formal accessibility standard, such as a WCAG level, has been decided.
+- **The standard is WCAG 2.2 level AA**, for every screen of the Shopper pages, the Vendor portal and the Admin console, in both colour schemes. The owner chose it on 15 October 2026, after [the design research](docs/research/design-system.md). The part a tool can check is checked by axe-core in `pnpm platform:check` and by Oxlint's `jsx-a11y` plugin in `pnpm check`. The rest is checked by hand against [DESIGN.md](DESIGN.md), which also sets two rules beyond level AA: controls at least 44 by 44 pixels, and no text under 14 pixels.

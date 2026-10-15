@@ -397,7 +397,7 @@ Each group is seen to fail once, by a deliberate fault that is then reverted: th
   - The Shopper's choice is remembered for a year.
   - The switch says "کوردی". Keycloak's login screen says "کوردیی ناوەندی", which is Keycloak's own name for the language. Step 2 left the choice between them to the owner, at review.
   - The addresses use `ckb`, which is the tag for Sorani and the one the realm uses. `ku` is shorter, and names Kurdish as a whole.
-  - No font is downloaded.
+  - No font is downloaded. Overruled on 15 October 2026 by ADR-0006: the `catalog` module's design research downloads fonts, by the owner's choice.
   - Tailwind CSS arrives with this module, and `ui` gains a second entry for its stylesheet. Step 3 recorded that a library has a single entry file, and step 4 gave `core` a second one.
   - The language files are compared by a script of the workspace's own.
   - The names: `development-vendor` and its two settings.
