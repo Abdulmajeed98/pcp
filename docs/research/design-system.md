@@ -256,19 +256,36 @@ Reading: axe-core measures text contrast but not borders or focus rings, so the 
 - **Component library:** Base UI, shadcn/ui's default, made by Radix's original authors. Its single package is now downloaded as often as Radix's, though Radix's older separate packages are still used about four times as widely. Choosing Radix would keep shadcn/ui's full support, with the risk that a later component exists only for Base UI.
 - **Style, base colour and radius:** chosen with the palette in the direction round, because they are part of the look.
 - **Kept:** the token names and their pairs, the `@theme inline` mapping, the radius scale from one `--radius`, the right-to-left setting, and lucide's icons.
-- **Changed:** `border` and `input` to at least 3:1 against the surfaces they sit on; `ring` to at least 3:1, drawn at full strength; `muted-foreground` to at least 4.5:1 on `muted` too; controls to 44 pixels high on a touchscreen; the `.dark` values left out while the scheme is light only.
-- **Added:** tokens for the platform's own states, each a pair: success, warning and the unchecked state, beside `destructive`.
+- **Changed:** `input` to at least 3:1 against the surfaces it sits on, for every control whose border is the only sign of where it is, while `border` stays a light rule for lines that only divide, which WCAG does not hold to 3:1 [5]; `ring` to at least 3:1, drawn at full strength; `muted-foreground` to at least 4.5:1 on `muted` too; controls to 44 pixels high on a touchscreen; the `.dark` values left out while the scheme is light only.
+- **Added:** tokens for the platform's own states, each a pair: success and warning, beside `destructive`. An unchecked rule needs no colour of its own: it is drawn in `muted-foreground` with its own mark and the words "not checked", since colour alone may not carry it.
 - **Left unused until needed:** `chart` and `sidebar`.
 
 ### The owner's choice
 
-15 October 2026: Base UI, as recommended, for both sets of components. Each app's style, base colour and radius come with its look. The `.dark` values are kept, since both schemes are built.
+15 October 2026: Base UI, as recommended, for both sets of components. Each app's style, base colour and radius come with its look. The dark values are kept, since both schemes are built. They switch with the device's setting, through `prefers-color-scheme`, rather than with shadcn/ui's `.dark` class, so that a page arrives in the right scheme with no script; Tailwind's own `dark:` variant follows the same setting [27], and the components' `dark:` classes keep working as long as the set-up does not replace it with a class.
 
 ## 8. The two looks
 
 Each app's look was chosen on 15 October 2026 in a direction round of Impeccable's, which deals visual directions drawn from the audience's world and from a catalogue of challengers, and in which the owner kept, swapped or re-rolled each hand. Every direction lends a working screen four things only: its palette, its type, its density and one signature move. The navigation and the controls stay the ordinary ones of the web.
 
 The fonts were then chosen from specimens setting the same Kurdish, Arabic and English content in four pairings each, all of them from the first list in section 2. The shadcn/ui styles were chosen after comparing them on shadcn/ui's own page.
+
+The pairings shown, with what a Kurdish page would download of each, measured from Google Fonts [15], and each family's rank on Google Fonts by popularity, where 1 is the most used of its 1,950 families [42]:
+
+| | Pairing | A Kurdish page | Ranks |
+|---|---|---|---|
+| Shopper A | Fustat | 56 KiB | 392 |
+| **Shopper B, chosen** | **Noto Kufi Arabic with Archivo** | **209 KiB** | **161 and 33** |
+| Shopper C | Beiruti | 98 KiB | 1,022 |
+| Shopper D | Noto Naskh Arabic with Schibsted Grotesk | 138 KiB | 183 and 69 |
+| Dashboard A | Vazirmatn, figures in Sofia Sans Condensed | 119 KiB | 234 and 251 |
+| **Dashboard B, chosen** | **Geist with Noto Sans Arabic, figures in Geist Mono** | **214 KiB** | **61, 108 and 94** |
+| Dashboard C | Mada, figures in Big Shoulders | 110 KiB | 379 and 425 |
+| Dashboard D | Zain, figures in Antonio | 83 KiB | 639 and 223 |
+
+Noto Sans Arabic is the most used family on Google Fonts that can draw Sorani: the two Arabic-script families ranked above it, Rubik and Cairo, cannot (section 2). Both chosen pairings were the heaviest of their four.
+
+How the fonts are served was weighed too (ADR-0006). Fontsource packages open-source fonts "into individual NPM packages for self-hosting", which removes the connection to a third-party server and keeps each font at a fixed version [43]. Its packages split each font by script, with a `unicode-range` for each file, and set `font-display: swap`, as their CSS shows. Weekly downloads on npm, 6 to 12 October 2026: `@fontsource-variable/geist` 3.3 million, `@fontsource-variable/geist-mono` 2.2 million, `@fontsource-variable/archivo` 0.43 million, `@fontsource-variable/noto-sans-arabic` 0.11 million and `@fontsource-variable/noto-kufi-arabic` 6,800. Next's own font loader is part of Next and Google's font servers are not packages, so neither has a count that compares.
 
 | | The Shopper app | The dashboard |
 |---|---|---|
@@ -277,14 +294,14 @@ The fonts were then chosen from specimens setting the same Kurdish, Arabic and E
 | Palette | Manual paper and print black, manual blue for fit lines, callouts and the primary action, red only for a Compatibility Problem | A warm, quiet page and ink, red for what needs action, amber figures only on the dark plates |
 | Text faces | Archivo, with its width axis, and Noto Kufi Arabic | Geist and Noto Sans Arabic |
 | Figures | The text faces | Geist Mono, on the plates |
-| shadcn/ui style | Lyra: "Boxy and sharp" | Mira: "Compact. Made for dense interfaces." |
+| shadcn/ui style | Lyra: "Boxy and sharp. Pairs well with mono fonts." [32] | Mira: "Compact. Made for dense interfaces." [32] |
 | Corners | Square | 6 pixels |
-| A Kurdish page downloads | 214 KB: Noto Kufi Arabic's Arabic file (124 KB) and Archivo's Latin file (90 KB) | 218 KB: Noto Sans Arabic's Arabic file (166 KB), Geist (29 KB) and Geist Mono (23 KB) |
-| An English page downloads | 90 KB | 52 KB |
+| A page with Arabic script on it downloads | 214 KB: Noto Kufi Arabic's Arabic file (124 KB) and Archivo's Latin file (90 KB) | 218 KB: Noto Sans Arabic's Arabic file (166 KB), Geist (29 KB) and Geist Mono (23 KB) |
+| A page with none downloads | 90 KB | 52 KB |
 
-The download sizes are of the self-hosted files, measured in the built apps on 15 October 2026. At Lighthouse's Slow 4G a Kurdish page's fonts take about 1.1 seconds on the first visit and none after. [16]
+The download sizes are of the self-hosted files, measured in the built apps on 15 October 2026. A page downloads the Arabic file as soon as it shows one word in Arabic script, and every Shopper page does: its language switch names Kurdish and Arabic in their own script, "کوردی" and "العربية". So every Shopper page downloads about 214 KB of fonts on the first visit, in English too, about 1.1 seconds at Lighthouse's Slow 4G, and none after [16]. Only an English page with no Arabic script on it, such as the Admin console's, downloads the smaller amount.
 
-Every colour pair of both looks was measured in both schemes against WCAG 2.2 AA before it was written, and again from the theme files after: no pair fails. The closest are the Shopper app's warning colour with white text, at 4.59:1, and the dashboard's warning colour on its page, at 4.94:1.
+Every colour pair of both looks was measured in both schemes against WCAG 2.2 AA before it was written, and again from the theme files after: no pair fails. The closest are the Shopper app's warning colour with white text, at 4.59:1, and the dashboard's warning colour on its page, at 4.93:1.
 
 ## Sources
 
@@ -330,3 +347,4 @@ Every colour pair of both looks was measured in both schemes against WCAG 2.2 AA
 40. Shopify, [Theme architecture](https://shopify.dev/docs/storefronts/themes/architecture)
 41. W3C Design Tokens Community Group, [Design Tokens specification reaches first stable version](https://www.w3.org/community/design-tokens/2025/10/28/design-tokens-specification-reaches-first-stable-version/), 28 October 2025
 42. Google Fonts, the family metadata at `fonts.google.com/metadata/fonts`, read on 15 October 2026
+43. Fontsource, [Introduction](https://fontsource.org/docs/getting-started/introduction)

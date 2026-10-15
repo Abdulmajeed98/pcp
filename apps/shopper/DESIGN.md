@@ -9,7 +9,7 @@ colors:
   problem-red: "oklch(0.53 0.207 22.3)"
   warning-amber: "oklch(0.574 0.139 57)"
   fits-green: "oklch(0.519 0.122 152.9)"
-  plate-grey: "oklch(0.954 0.005 258.3)"
+  quiet-grey: "oklch(0.954 0.005 258.3)"
   caption-grey: "oklch(0.47 0.016 262.3)"
   rule-grey: "oklch(0.884 0.008 260.7)"
   control-edge: "oklch(0.608 0.015 258.4)"
@@ -33,6 +33,11 @@ typography:
     fontSize: "1.25rem"
     fontWeight: 700
     lineHeight: 1.4
+  body-large:
+    fontFamily: "Archivo Variable, Noto Kufi Arabic Variable, sans-serif"
+    fontSize: "1.125rem"
+    fontWeight: 500
+    lineHeight: 1.556
   body:
     fontFamily: "Archivo Variable, Noto Kufi Arabic Variable, sans-serif"
     fontSize: "1rem"
@@ -65,7 +70,7 @@ spacing:
 
 **Creative North Star: "The Fit Diagram"**
 
-Every builder has unfolded a motherboard manual: a fine line drawing of the board, each part numbered, each number explained in the margin. The Shopper app draws a Build the same way. The Parts are line drawings joined by dashed fit lines, and every Compatibility Rule is a numbered callout on the drawing that opens into plain words. What fits is drawn in manual blue, what does not in red, and what could not be checked is drawn as an empty callout that says so. The platform's promise, to say only what it knows, becomes the drawing's own grammar.
+Anyone who has put a PC together has unfolded a motherboard manual: a fine line drawing of the board, each part numbered, each number explained in the margin. The Shopper app draws a Build the same way. The Parts are line drawings joined by dashed fit lines, and every Compatibility Rule is a numbered callout on the drawing that opens into plain words. What fits is drawn in manual blue, what does not in red, and what could not be checked is drawn as an empty callout that says so. The platform's promise, to say only what it knows, becomes the drawing's own grammar.
 
 Around the drawing the app is a calm, exact working product: manual paper, print black, square corners and ruled lines, set in Archivo and Noto Kufi Arabic. The navigation, the filters, the lists and the buttons are the ordinary ones of the web. The world lends only its palette, its type, its density and the one move above.
 
@@ -81,26 +86,29 @@ The shared floor is in [the root DESIGN.md](../../DESIGN.md), and the reasons in
 
 ## Colors
 
-A manual's palette: paper and black print, one blue for what the drawing explains, and red kept for what does not fit.
+A manual's palette: paper and black print, one blue for what the drawing explains, and red kept for what does not fit. Each colour's name in code follows it, from `@pcp/ui/themes/shopper.css`; the values are in the tokens above.
 
 ### Primary
 
-- **Manual Blue** (oklch(0.474 0.169 257.2)): the fit lines and callouts of the diagram, links, the focus ring, and the one primary action on a screen. In the dark scheme it is **Night Blue** (oklch(0.729 0.12 257.4)).
-- **Manual Blue Wash** (oklch(0.946 0.017 256.3)): the ground of a selected row and of the text selection, under dark blue text.
+- **Manual Blue** (`--primary`, `--ring`, `--fit-line`): the fit lines and callouts of the diagram, links, the focus ring, and the one primary action on a screen. In the dark scheme it is **Night Blue**.
+- **Manual Blue Wash** (`--accent`): the ground of a selected row and of the text selection, under dark blue text.
 
-### States
+### Secondary
 
-- **Problem Red** (oklch(0.53 0.207 22.3)): a Compatibility Problem's callout and words, and nothing else. **Night Red** in the dark scheme.
-- **Warning Amber** (oklch(0.574 0.139 57)): a Compatibility Warning.
-- **Fits Green** (oklch(0.519 0.122 152.9)): in stock, and a rule that passed.
+The states, each also said in words or a mark, never in colour alone.
+
+- **Problem Red** (`--destructive`): a Compatibility Problem's callout and words, and nothing else. **Night Red** in the dark scheme.
+- **Warning Amber** (`--warning`): a Compatibility Warning.
+- **Fits Green** (`--success`): in stock, and a rule that passed.
+- An unchecked rule has no colour of its own: it is drawn in Caption Grey, with an empty, dashed callout and the words "not checked".
 
 ### Neutral
 
-- **Manual Paper** (oklch(1 0 0)) and **Print Black** (oklch(0.23 0.004 106.7)): the page and its text and drawings. **Night Paper** and **Night Ink** in the dark scheme.
-- **Plate Grey** (oklch(0.954 0.005 258.3)): a quiet surface, such as a secondary button.
-- **Caption Grey** (oklch(0.47 0.016 262.3)): secondary lines, at 4.5:1 or more on every surface.
-- **Rule Grey** (oklch(0.884 0.008 260.7)): the rules between rows, which identify nothing.
-- **Control Edge** (oklch(0.608 0.015 258.4)): the border of an input, at 3:1 against the page.
+- **Manual Paper** (`--background`, `--card`) and **Print Black** (`--foreground`, `--drawing`): the page and its text and drawings. **Night Paper** and **Night Ink** in the dark scheme.
+- **Quiet Grey** (`--secondary`): a quiet surface, such as a secondary button.
+- **Caption Grey** (`--muted-foreground`): secondary lines, at 4.5:1 or more on every surface.
+- **Rule Grey** (`--border`): the rules between rows, which identify nothing.
+- **Control Edge** (`--input`): the border of an input or any control whose border is the only sign of where it is, at 3:1 against the page.
 
 ### Named Rules
 
@@ -120,7 +128,8 @@ A manual's palette: paper and black print, one blue for what the drawing explain
 
 - **Heading large** (700, 1.875rem, 1.2): one per page at most, such as a Build's total.
 - **Heading** (700, 1.5rem, 1.333): a page's title on a wider screen.
-- **Title** (700, 1.25rem, 1.4): a page's title on a phone, and a Part's name where it leads.
+- **Title** (700, 1.25rem, 1.4): a page's title on a phone, and a section's.
+- **Body large** (500, 1.125rem, 1.556): a Part's name where it leads.
 - **Body** (400, 1rem, 1.5): reading text, inputs and buttons, at most 70 characters a line.
 - **Price** (700, 1rem, tabular figures): every price, aligned on its last digit.
 - **Callout** (700, 0.875rem, narrowed to 80% width): the text of a callout and of a specification's label.

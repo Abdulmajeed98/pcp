@@ -63,3 +63,14 @@ The research needs the owner, who chooses from its recommendations. It may be do
 **Also corrected**: PRODUCT.md said the catalog had not been imported yet, and that no application code existed.
 
 **Still to be checked by hand**, in tickets 14 and 15: Sorani's letters in both apps' fonts on the owner's phone and on an Android phone from Honor, Infinix, Tecno or Xiaomi.
+
+### 15 October 2026: the review
+
+A review on two axes, the repository's standards and this ticket, found these, and each was corrected:
+
+- **The font cost was understated.** Every Shopper page names Kurdish and Arabic in their own script in its language switch, so an English Shopper page downloads the Arabic font too: about 214 KB, not 90. The research and ADR-0006 now say so, and ADR-0006 notes how an English page could be spared it.
+- **The app DESIGN.md files disagreed with the root one.** A Part's leading name is Body large in both now. The dashboard's large figure is 30 pixels, the shared scale's largest, not 40. The dashboard no longer lets controls shrink to 32 pixels under a mouse, since the owner chose 44 pixels with no exception.
+- **The two themes repeated each other.** The colour names, the corners and the base styles moved into the shared `theme.css`; each look keeps only its values, its fonts and its own colours. `--drawing` and `--fit-line` now point at `--foreground` and `--primary`.
+- **Words the glossary avoids**, "builder" and "customers" for the Shopper and "the platform's owner" for the Admin, were taken out of the DESIGN.md files and the briefs. Each colour in a DESIGN.md now names its CSS variable.
+- **Records left behind.** The `languages` spec's lines on one theme stylesheet and on fonts now say what replaced them. Ticket 15 records the new Oxfmt exceptions and `ui`'s new entries. Ticket 11 keeps the dark scheme on Tailwind's own `dark:` variant and controls' borders in `input`. Ticket 14 plants the same small target as ticket 11. The research cites Fontsource, lists every pairing shown with its weight and rank, and no longer promises an "unchecked" colour: an unchecked rule is drawn grey with its own mark and words.
+- **A commit's scope.** The theme's commit touched three projects, so it was reworded to `feat:` with no scope before anything was pushed.

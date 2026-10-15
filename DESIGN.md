@@ -79,7 +79,7 @@ Each look chooses its own faces. The sizes are shared, in `rem`, so that the bro
 
 ### Do:
 
-- **Do** meet 4.5:1 for text and 3:1 for large text, for a control's border where the border alone shows the control, for a focus ring, and for a mark that shows a state. Each app's tokens already do, in both schemes; a new colour is measured before it is used.
+- **Do** meet 4.5:1 for text and 3:1 for large text, for a control's border where the border alone shows the control, for a focus ring, and for a mark that shows a state. Each app's tokens already do, in both schemes; a new colour is measured before it is used. A control whose border is the only sign of where it is draws that border in `input`; `border` is a light rule for lines that only divide.
 - **Do** say every state in words or a mark as well as its colour: in stock, a Compatibility Problem, a Compatibility Warning, an unchecked rule, a Converted Price with its "≈", an Offer near expiry (WCAG 1.4.1).
 - **Do** show the keyboard focus on every control, at full strength, never hidden behind a sticky bar (WCAG 2.4.7 and 2.4.11).
 - **Do** mirror in a right-to-left page: the layout; back, next and previous; the chevrons of breadcrumbs and of rows that open; progress and sliders; the order of a table's columns; any sequence whose order means something.

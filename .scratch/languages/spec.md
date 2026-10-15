@@ -214,12 +214,12 @@ The two pages are still placeholders. Each becomes the proving ground: it shows 
 
 ### Direction and layout
 
-- Tailwind CSS 4 is set up in both frontends. The theme is one stylesheet in `ui`, which each frontend's own stylesheet imports. `ui` therefore gains a second entry, for that stylesheet.
+- Tailwind CSS 4 is set up in both frontends. The theme is one stylesheet in `ui`, which each frontend's own stylesheet imports. `ui` therefore gains a second entry, for that stylesheet. Changed on 15 October 2026 by ADR-0007: each frontend now imports a theme of its own, `@pcp/ui/themes/shopper.css` or `@pcp/ui/themes/dashboard.css`, and each of those imports the shared `theme.css`.
 - Every class that has a side is written in its logical form: start and end, never left and right.
 - Lint refuses the physical form in both frontends and in `ui`. The rule is `enforce-logical` from `oxlint-tailwindcss`, loaded as a second Oxlint plugin beside Nx's.
 - An icon that points along the reading direction is mirrored in right-to-left pages. An icon that does not point is left alone. No icon exists yet, so this is recorded as the rule for the first one.
 - shadcn/ui is not set up here. The rule for the module that adds its first component is recorded: it is set up with its right-to-left setting on, so that the command that adds a component writes logical classes.
-- No font is downloaded. Pages use the device's own fonts.
+- No font is downloaded. Pages use the device's own fonts. Overruled on 15 October 2026 by ADR-0006: fonts are downloaded, from each app's own server.
 - The frame is designed at 360 pixels wide first and adapts upward.
 
 ### Text that is shown as written

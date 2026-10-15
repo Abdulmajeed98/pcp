@@ -38,14 +38,14 @@ typography:
     fontSize: "0.875rem"
     fontWeight: 500
     lineHeight: 1.429
-  plate-figure:
+  figure:
     fontFamily: "Geist Mono Variable, monospace"
     fontSize: "1.25rem"
     fontWeight: 700
     fontFeature: "tnum"
-  plate-figure-large:
+  figure-large:
     fontFamily: "Geist Mono Variable, monospace"
-    fontSize: "2.5rem"
+    fontSize: "1.875rem"
     fontWeight: 700
     fontFeature: "tnum"
 rounded:
@@ -53,7 +53,6 @@ rounded:
   control: "6px"
 spacing:
   control: "44px"
-  control-under-mouse: "32px"
   row: "8px"
   group: "16px"
 ---
@@ -68,7 +67,7 @@ spacing:
 
 In the window of every money changer in Erbil hangs a board of plain figures on dark plates, set by hand and dated, and the Platform Rate follows it by hand too. The dashboard sets the numbers its people keep the same way. A Vendor's prices, the Platform Rate, the count of Offers about to expire and of Part Requests waiting: each is a figure on a small graphite plate, in amber, with the date it was last set beside it. Everything else is a warm, quiet page and ink, so that the plates are where the eye goes and what needs action is the only red.
 
-The dashboard holds two surfaces. The Admin console, in English, is used on a phone in a Vendor's shop and at a desk. The Vendor portal, in Kurdish, Arabic and English, is used on a phone behind the counter between customers. Both are dense, quick working screens in the manner of Linear: rows rather than cards, few words, nothing that moves without reason. Their navigation, tables, forms and buttons are the ordinary ones of the web, on shadcn/ui's compact Mira style.
+The dashboard holds two surfaces. The Admin console, in English, is used on a phone in a Vendor's shop and at a desk. The Vendor portal, in Kurdish, Arabic and English, is used on a phone behind the counter, between serving people at it. Both are dense, quick working screens in the manner of Linear: rows rather than cards, few words, nothing that moves without reason. Their navigation, tables, forms and buttons are the ordinary ones of the web, on shadcn/ui's compact Mira style.
 
 The shared floor is in [the root DESIGN.md](../../DESIGN.md), and the reasons in ADR-0006 and ADR-0007.
 
@@ -76,32 +75,34 @@ The shared floor is in [the root DESIGN.md](../../DESIGN.md), and the reasons in
 
 - A warm page and ink; colour is for plates, action and state, never decoration.
 - Numbers that matter on dark plates, in amber Geist Mono, each with its date.
-- Dense rows, compact controls, 44 pixels on a touchscreen.
+- Dense rows; every control still 44 pixels high.
 - Small, firm corners; borders, not shadows.
 - The same look in Kurdish and Arabic, right to left, as in English.
 
 ## Colors
 
-A money changer's window: a warm page, black ink, graphite plates with amber figures, and red only where something needs doing.
+A money changer's window: a warm page, black ink, graphite plates with amber figures, and red only where something needs doing. Each colour's name in code follows it, from `@pcp/ui/themes/dashboard.css`; the values are in the tokens above.
 
 ### Primary
 
-- **Ink** (oklch(0.203 0.005 248.1)): text, the focus ring, and the one filled primary button. **Night Ink** in the dark scheme, where the primary button turns light.
-- **Plate Graphite** (oklch(0.303 0.009 248.1)) and **Plate Amber** (oklch(0.791 0.134 79.5)): the plates and their figures, the same in both schemes, at 6.9:1.
+- **Ink** (`--foreground`, `--primary`, `--ring`): text, the focus ring, and the one filled primary button. **Night Ink** in the dark scheme, where the primary button turns light.
+- **Plate Graphite** (`--plate`) and **Plate Amber** (`--plate-figure`): the plates and their figures, the same in both schemes, at 6.9:1.
 
-### States
+### Secondary
 
-- **Action Red** (oklch(0.501 0.178 28.7)): what needs the Vendor's or the Admin's action, such as an Offer about to expire, and destructive actions. **Night Red** in the dark scheme.
-- **Warning Brown** (oklch(0.531 0.119 65.1)): a warning that needs no action yet.
-- **Confirmed Green** (oklch(0.475 0.099 148.2)): confirmed today, and in stock.
+The states, each also said in words or a mark, never in colour alone.
+
+- **Action Red** (`--destructive`): what needs the Vendor's or the Admin's action, such as an Offer about to expire, and destructive actions. **Night Red** in the dark scheme.
+- **Warning Brown** (`--warning`): a warning that needs no action yet.
+- **Confirmed Green** (`--success`): confirmed today, and in stock.
 
 ### Neutral
 
-- **Warm Page** (oklch(0.967 0.007 88.6)) and **Sheet** (oklch(0.985 0.004 91.4)): the page, and a raised surface such as a menu. **Night Page** in the dark scheme.
-- **Shelf** (oklch(0.925 0.01 87.5)): a quiet surface, such as a secondary button or a selected row.
-- **Note Grey** (oklch(0.484 0.013 256.7)): secondary lines, at 4.5:1 or more on every surface.
-- **Rule Sand** (oklch(0.874 0.013 86.8)): the rules between rows.
-- **Control Edge** (oklch(0.599 0.018 82.8)): the border of an input, at 3:1 against the page.
+- **Warm Page** (`--background`) and **Sheet** (`--card`, `--popover`): the page, and a raised surface such as a menu. **Night Page** in the dark scheme.
+- **Shelf** (`--secondary`): a quiet surface, such as a secondary button or a selected row.
+- **Note Grey** (`--muted-foreground`): secondary lines, at 4.5:1 or more on every surface.
+- **Rule Sand** (`--border`): the rules between rows.
+- **Control Edge** (`--input`): the border of an input or any control whose border is the only sign of where it is, at 3:1 against the page.
 
 ### Named Rules
 
@@ -123,8 +124,8 @@ A money changer's window: a warm page, black ink, graphite plates with amber fig
 - **Title** (600, 1.25rem, 1.4): a screen's title on a phone.
 - **Body** (400, 1rem, 1.5): forms, inputs and buttons.
 - **Row** (500, 0.875rem, 1.429): the text of a dense row, with its secondary line in Note Grey.
-- **Plate figure** (700, 1.25rem, tabular figures): a price or a count on a row's plate.
-- **Plate figure large** (700, 2.5rem, tabular figures): the one leading figure of a screen, such as the Platform Rate.
+- **Figure** (700, 1.25rem, tabular figures): a price or a count on a row's plate.
+- **Figure large** (700, 1.875rem, tabular figures): the one leading figure of a screen, such as the Platform Rate, at the shared scale's largest size.
 
 Kurdish and Arabic follow the root's Tall Script Rule. Figures are always Western digits, so Geist Mono serves all three languages.
 
@@ -136,7 +137,7 @@ Kurdish and Arabic follow the root's Tall Script Rule. Figures are always Wester
 
 On a phone, one column: a quiet top bar with the sections behind a menu button, then the screen's search or filters, then rows. On a wider screen the sections move to a side bar, and a list gains a detail pane beside it. Lists are rows, not cards: what the row is, one secondary line, and its plate at the end side.
 
-Rows are 8 pixels apart inside, groups 16. On a touchscreen every control is 44 pixels; under a mouse (`pointer-fine`) a dense table's controls may shrink to 32 pixels, still above WCAG 2.2 AA's 24.
+Rows are 8 pixels apart inside, groups 16. Every control is 44 pixels, under a mouse as on a touchscreen, as the owner chose; density comes from rows and spacing, never from smaller controls.
 
 ## Elevation & Depth
 
@@ -164,5 +165,5 @@ Small, firm corners: 6 pixels on controls and panels, about 4 on plates. Plates 
 - **Don't** put Plate Amber anywhere but on Plate Graphite, or make it glow.
 - **Don't** use cards for lists, or shadows on anything that does not float.
 - **Don't** add a second large plate to a screen.
-- **Don't** shrink a control below 44 pixels on a touchscreen.
+- **Don't** shrink a control below 44 pixels.
 - **Don't** reach for a cold, grey corporate console, the gaming look of neon and dark glows, or a generic template's cards and gradients.

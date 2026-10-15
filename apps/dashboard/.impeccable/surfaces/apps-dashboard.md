@@ -9,7 +9,7 @@ related_targets: []
 
 **Scope and mode.** Every screen of the Admin console (Vendors, Catalog, Missing specifications, Part Requests, Platform Rate, Expiring Offers, Referrals) and of the Vendor portal (Offers, Part Requests, the sheet upload and its report, Referrals, contact details). Mode: Operate.
 
-**Audience and job.** The Admin, the platform's owner, on a phone in a Vendor's shop and at a desk, in English. A Vendor's staff, on a phone behind the counter between customers, in Kurdish, Arabic or English, keeping Offers current and confirmed. Both come back often and want the work done in as few taps as possible.
+**Audience and job.** The Admin, on a phone in a Vendor's shop and at a desk, in English. A Vendor's staff, on a phone behind the counter, between serving people at it, in Kurdish, Arabic or English, keeping Offers current and confirmed. Both come back often and want the work done in as few taps as possible.
 
 **Proof.** Real figures only: the Platform Rate as the Admin set it, each Offer's price and the day it was confirmed, counts that come from the data.
 

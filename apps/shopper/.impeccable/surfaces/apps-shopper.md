@@ -9,7 +9,7 @@ related_targets: []
 
 **Scope and mode.** Every Shopper page: a Category's Parts, a Part and its Offers, a Vendor, the builder and its picker, the Build page, shared Builds, and the footer every page carries. Mode: Operate.
 
-**Audience and job.** A person in Erbil planning a desktop PC, on a low to mid-range Android phone over weak mobile data, in Kurdish, Arabic or English. A first-time builder needs to understand why Parts do or do not fit; an experienced one wants the quickest route to who has a Part and for how much. Where they pull apart, the page explains.
+**Audience and job.** A person in Erbil planning a desktop PC, on a low to mid-range Android phone over weak mobile data, in Kurdish, Arabic or English. A Shopper building a PC for the first time needs to understand why Parts do or do not fit; one who has built before wants the quickest route to who has a Part and for how much. Where they pull apart, the page explains.
 
 **Proof.** Only real Offers from real Vendors, each with its age; the Compatibility Rules, each passed, failed or plainly unchecked. No invented prices, Vendors or reviews.
 
@@ -21,7 +21,7 @@ related_targets: []
 
 ## Direction contract
 
-THESIS: The Shopper app draws how Parts fit, the way a motherboard manual does, so that a first-time builder can see a Build's compatibility and read it in words. It refuses the category's dark gaming tables and its marketplace of cards and badges.
+THESIS: The Shopper app draws how Parts fit, the way a motherboard manual does, so that a Shopper building a PC for the first time can see a Build's compatibility and read it in words. It refuses the category's dark gaming tables and its marketplace of cards and badges.
 
 OWN-WORLD: Manual paper and print black, Manual Blue for fit lines, callouts and the one primary action, Problem Red only for a Compatibility Problem, Archivo and Noto Kufi Arabic, square corners, ruled not raised, numbered circular callouts as the only round shape.
 
