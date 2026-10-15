@@ -1,22 +1,18 @@
 /*
  * The dashboard's look, Rate Board, for the Admin console and the Vendor
- * portal: the numbers a Vendor and the Admin keep are set like a money
- * changer's board, plain figures on dark plates, refreshed by hand and
- * dated. A warm, quiet page with ink for the one primary action, red for
- * what needs action, and amber figures only on the plates.
- * apps/dashboard/DESIGN.md has the rules for using these tokens.
- *
- * The tokens are shadcn/ui's, each surface paired with its `-foreground`,
- * plus the platform's own states. Every pair meets WCAG 2.2 level AA in both
- * schemes: 4.5:1 for text, and 3:1 for a control's border and the focus ring.
+ * portal. The numbers a Vendor and the Admin keep are shown as figures on
+ * dark plates, as a money changer shows the day's rate.
+ * apps/dashboard/DESIGN.md says how each colour is used. Every pair meets
+ * WCAG 2.2 level AA in both schemes: 4.5:1 for text, and 3:1 for an input's
+ * border and for the focus ring.
  */
 @import '../theme.css';
 
 /*
- * The faces are downloaded from this app's own server, never from Google
- * (ADR-0006): Geist for Latin script, Noto Sans Arabic for Kurdish and
- * Arabic, and Geist Mono for the figures on the plates. A page loads only
- * the files its letters need.
+ * The fonts come from this app's own server, never from Google (ADR-0006):
+ * Geist for Latin script, Noto Sans Arabic for Kurdish and Arabic, and Geist
+ * Mono for the figures on the plates. A page loads only the files its
+ * letters need.
  */
 @import '@fontsource-variable/geist';
 @import '@fontsource-variable/noto-sans-arabic';
@@ -50,7 +46,7 @@
   --input: oklch(0.599 0.018 82.8);
   --ring: oklch(0.203 0.005 248.1);
 
-  /* The number plates and the figures lit on them, the same in both schemes. */
+  /* The plates and the figures on them, the same in both schemes. */
   --plate: oklch(0.303 0.009 248.1);
   --plate-figure: oklch(0.791 0.134 79.5);
 }
@@ -88,59 +84,6 @@
     'Geist Variable', 'Noto Sans Arabic Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
 
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
   --color-plate: var(--plate);
   --color-plate-figure: var(--plate-figure);
-
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring;
-  }
-
-  body {
-    @apply bg-background font-sans text-base text-foreground;
-  }
-
-  /*
-   * The parts of the page the browser draws carry the look too: the text
-   * selection, the caret, checkboxes and the scroll bars.
-   */
-  :root {
-    accent-color: var(--primary);
-    caret-color: var(--foreground);
-    scrollbar-color: var(--input) transparent;
-  }
-
-  ::selection {
-    background-color: var(--accent);
-    color: var(--accent-foreground);
-  }
 }

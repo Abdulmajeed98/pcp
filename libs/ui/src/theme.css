@@ -1,12 +1,13 @@
 /*
- * The foundations both frontends share. Each frontend has a look of its own
- * (DESIGN.md in its folder): the Shopper app imports
+ * What both frontends share. Each frontend has a look of its own, described
+ * in the DESIGN.md in its folder: the Shopper app imports
  * `@pcp/ui/themes/shopper.css` and the dashboard `@pcp/ui/themes/dashboard.css`.
  * Each of those imports this file, and neither frontend takes Tailwind CSS
  * from anywhere else.
  *
  * What is here holds in both looks, because it comes from the accessibility
  * standard, WCAG 2.2 level AA, and from the languages, not from either look.
+ * Each look gives its own values to the colours named here.
  */
 @import 'tailwindcss';
 
@@ -55,8 +56,80 @@
 /*
  * Both looks have a light and a dark scheme, and the page follows the
  * device's setting. This tells the browser so, so that its own parts, such
- * as form controls and scroll bars, follow it too.
+ * as form controls and scroll bars, follow it too. Each look switches its
+ * colours with the same setting, so Tailwind's `dark:` follows it as well.
  */
 :root {
   color-scheme: light dark;
+}
+
+/*
+ * The colours every component is styled with, by shadcn/ui's names: each
+ * surface and the `-foreground` drawn on it, then the states. Each look sets
+ * their values, in light and in dark, and adds colours of its own.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Every corner follows the look's one radius. */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+@layer base {
+  /*
+   * `border` draws a light rule, for lines that only divide. A control
+   * whose border is the only sign of where it is draws it in `input`, which
+   * meets WCAG's 3:1. The focus ring is drawn at full strength.
+   */
+  * {
+    @apply border-border outline-ring;
+  }
+
+  /*
+   * Text that sets no size of its own takes the body size, so that it is
+   * larger on a Kurdish or an Arabic page too.
+   */
+  body {
+    @apply bg-background font-sans text-base text-foreground;
+  }
+
+  /*
+   * The parts of the page the browser draws follow the look too: checkboxes,
+   * the caret, the scroll bars and the text selection.
+   */
+  :root {
+    accent-color: var(--primary);
+    caret-color: var(--ring);
+    scrollbar-color: var(--input) transparent;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
 }
