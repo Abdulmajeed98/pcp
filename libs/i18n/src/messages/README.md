@@ -4,6 +4,7 @@ The translated text of the platform's own screens is in this folder. A file hold
 
 - `shared/` is the shared terms: text that both frontends show, with the same wording. Here that is the names of the eight Categories. One file for each language, and plain text only: a shared term has nothing in braces and nothing in angle brackets, because the two frontends read those differently.
 - `shopper/` is the Shopper app's text: one file for each language, in next-intl's format, which is ICU.
+- `dashboard/` is the dashboard's text: what the Vendor portal shows, and the text of a part that both halves of the dashboard share. One file for each language, in i18next's own format. Text that only the Admin console shows is in English in the code, and is not here.
 
 English is the source. `en.json` defines which messages there are, and the other two files hold the same messages under the same keys.
 
@@ -16,7 +17,9 @@ The owner, or someone the owner trusts, reviews both before launch.
 
 ## Correcting a message
 
-Change the text between the quotation marks and nothing else. The key before the colon stays as it is. So does anything inside braces, such as `{libraries}`, and anything inside angle brackets, such as `<time>` and `</time>`: the page puts a value or an element there, and each may move within the sentence to where the language wants it.
+Change the text between the quotation marks and nothing else. The key before the colon stays as it is. So does anything inside braces, such as `{libraries}`, and anything inside angle brackets, such as `<time>` and `</time>` or `<name/>`: the page puts a value or an element there, and each may move within the sentence to where the language wants it.
+
+In the dashboard's files a tag that closes itself, such as `<name/>`, stands for a value the page puts there whole, such as a login's name. It is never written out in these files.
 
 What stands between `<english>` and `</english>` is text that is the same in every language and runs left to right, such as a Part name, a manufacturer name, a specification or a number beside its unit. The page puts it there, and it is never written in these files (LANG-3).
 

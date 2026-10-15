@@ -1,0 +1,19 @@
+{
+  "VendorPortal": {
+    "title": "بوابة البائع"
+  },
+  "LoginFailed": {
+    "message": "تعذّر إكمال تسجيل الدخول."
+  },
+  "VendorPortalPlaceholder": {
+    "notice": "صفحة مؤقتة لبوابة البائع."
+  },
+  "Caller": {
+    "asking": "جارٍ سؤال الـ API عن هوية المتصل.",
+    "answer": "يقول الـ API إن المتصل هو <name/>، بالدور <roles/>.",
+    "refused": "رفض الـ API الطلب: <refusal/>.",
+    "unreachable": "تعذّر إجراء الطلب: لا يمكن الوصول إلى الـ API أو إلى خدمة تسجيل الدخول.",
+    "askAgain": "اسأل الـ API مجدداً",
+    "logOut": "تسجيل الخروج"
+  }
+}
