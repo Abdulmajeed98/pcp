@@ -16,12 +16,14 @@ export interface MadeUpPart {
 }
 
 // Creates a made-up CPU over HTTP as the Admin, with a name and a part number
-// unique to the run, and plainly test data. It stays in the development
-// database, which `pnpm services:reset` empties. The name does not hold the
-// part number, so that a search for the one does not find it by the other.
+// unique to the run, and plainly test data, and any specifications given. It
+// stays in the development database, which `pnpm services:reset` empties.
+// The name does not hold the part number, so that a search for the one does
+// not find it by the other.
 export async function createAMadeUpPart(
   request: APIRequestContext,
   authorization: string,
+  specifications: Record<string, unknown> = {},
 ): Promise<MadeUpPart> {
   const word = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const name = `Made-up test Part ${word}`;
@@ -34,6 +36,7 @@ export async function createAMadeUpPart(
       name,
       manufacturer: 'Made-up Test Parts',
       partNumbers: [partNumber],
+      specifications,
     },
   });
   expect(created.status()).toBe(201);
