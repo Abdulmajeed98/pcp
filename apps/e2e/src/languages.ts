@@ -84,38 +84,82 @@ export async function readInEveryLanguage<Read>(
   read: (language: Language, response: Response) => Promise<Read>,
   { drawnByScript = false }: About = {},
 ): Promise<Map<Language, Read>> {
+  return readInEachLanguage(
+    page,
+    {
+      show: async (language) => {
+        const response = await page.goto(addressIn(language, address));
+        if (response === null) throw new Error('The address was answered with no page.');
+        return response;
+      },
+      expectAlso: drawnByScript
+        ? undefined
+        : (language) => expectWhatTheServerSent(page, language, address),
+      expectTheSwitch: (language) => expectTheSwitchOnThePage(page, language, address),
+    },
+    read,
+  );
+}
+
+// How a language test brings a page up in each language, and what it checks
+// there beyond what holds for every page.
+interface InEachLanguage<Shown> {
+  // Shows the page in a language, and gives what a test may read beside it.
+  show: (language: Language) => Promise<Shown>;
+  // What else holds, once the page declares the language.
+  expectAlso?: (language: Language) => Promise<void>;
+  // The frontend's own language switch, as it is on the page in a language.
+  expectTheSwitch: (language: Language) => Promise<void>;
+}
+
+// What every language test does, for a page of either frontend: it confirms
+// that the browser is one that shows a number's fault, and then, in each
+// language, shows the page, confirms that it came back in that language
+// before it reads anything else, and checks the frame, the switch, the
+// digits and the width before the test reads what it reads.
+async function readInEachLanguage<Shown, Read>(
+  page: Page,
+  { show, expectAlso, expectTheSwitch }: InEachLanguage<Shown>,
+  read: (language: Language, shown: Shown) => Promise<Read>,
+): Promise<Map<Language, Read>> {
   await expectABrowserThatShowsTheFault(page);
 
   const readings = new Map<Language, Read>();
   for (const language of languages) {
     await test.step(`in ${language.name}`, async () => {
-      const response = await page.goto(addressIn(language, address));
-      if (response === null) throw new Error('The address was answered with no page.');
+      const shown = await show(language);
 
       await expectPageIn(page, language);
-      if (!drawnByScript) {
-        const sent = await fetchWithNoBrowser(page.request, addressIn(language, address));
-        expect(sent.language, 'the server sends the page with its language').toBe(
-          language.tag,
-        );
-        expect(sent.direction, 'the server sends the page with its direction').toBe(
-          language.direction,
-        );
-        expectTheSwitchInWhatTheServerSent(sent.links, address);
-        expect(
-          arabicIndicDigitsIn(sent.text),
-          'the server sends the page with no Arabic-Indic digit',
-        ).toEqual([]);
-      }
+      await expectAlso?.(language);
       await expect(page.getByTestId('frame')).toBeVisible();
-      await expectTheSwitchOnThePage(page, language, address);
+      await expectTheSwitch(language);
       await expectWesternDigitsOnly(page);
       await expectNoSidewaysScroll(page);
 
-      readings.set(language, await read(language, response));
+      readings.set(language, await read(language, shown));
     });
   }
   return readings;
+}
+
+// A page as the server sent it, fetched with no browser: it declares its
+// language and its direction, it holds the switch's three links, and it holds
+// no Arabic-Indic digit.
+async function expectWhatTheServerSent(
+  page: Page,
+  language: Language,
+  address: string,
+): Promise<void> {
+  const sent = await fetchWithNoBrowser(page.request, addressIn(language, address));
+  expect(sent.language, 'the server sends the page with its language').toBe(language.tag);
+  expect(sent.direction, 'the server sends the page with its direction').toBe(
+    language.direction,
+  );
+  expectTheSwitchInWhatTheServerSent(sent.links, address);
+  expect(
+    arabicIndicDigitsIn(sent.text),
+    'the server sends the page with no Arabic-Indic digit',
+  ).toEqual([]);
 }
 
 // The page the browser shows declares this language and its direction.
@@ -236,27 +280,24 @@ async function expectTheVendorPortalsSwitch(page: Page, language: Language): Pro
 //
 // It confirms that the screen is in the language it asked for before it
 // reads anything else, as the Shopper app's helper does.
+export async function checkInEveryLanguageOfTheVendorPortal(page: Page): Promise<void> {
+  await readInEveryLanguageOfTheVendorPortal(page, async () => {});
+}
+
+// The same checks, and then what the test reads from the screen in each
+// language.
 export async function readInEveryLanguageOfTheVendorPortal<Read>(
   page: Page,
   read: (language: Language) => Promise<Read>,
 ): Promise<Map<Language, Read>> {
-  await expectABrowserThatShowsTheFault(page);
-
-  const readings = new Map<Language, Read>();
-  for (const language of languages) {
-    await test.step(`in ${language.name}`, async () => {
-      await buttonFor(page, language).click();
-
-      await expectPageIn(page, language);
-      await expect(page.getByTestId('frame')).toBeVisible();
-      await expectTheVendorPortalsSwitch(page, language);
-      await expectWesternDigitsOnly(page);
-      await expectNoSidewaysScroll(page);
-
-      readings.set(language, await read(language));
-    });
-  }
-  return readings;
+  return readInEachLanguage(
+    page,
+    {
+      show: (language) => buttonFor(page, language).click(),
+      expectTheSwitch: (language) => expectTheVendorPortalsSwitch(page, language),
+    },
+    read,
+  );
 }
 
 // The language tests' window is as wide as a narrow phone, and their browser

@@ -16,6 +16,7 @@ import {
 } from './development-logins';
 import {
   buttonFor,
+  checkInEveryLanguageOfTheVendorPortal,
   expectADifferentTextInEachLanguage,
   expectNoSidewaysScroll,
   expectPageIn,
@@ -64,7 +65,7 @@ async function openInABrowserSetTo<Read>(
   login: DevelopmentLogin,
   read: (page: Page) => Promise<Read>,
   kept: KeptByTheDashboard = [],
-): Promise<{ read: Read; kept: KeptByTheDashboard }> {
+): Promise<{ found: Read; kept: KeptByTheDashboard }> {
   const context = await browser.newContext({
     locale,
     viewport: narrowWindow,
@@ -73,9 +74,9 @@ async function openInABrowserSetTo<Read>(
   try {
     const page = await context.newPage();
     await openTheDashboardAs(page, login);
-    const result = await read(page);
+    const found = await read(page);
     const { origins } = await context.storageState();
-    return { read: result, kept: origins.filter(({ origin }) => origin === dashboardUrl) };
+    return { found, kept: origins.filter(({ origin }) => origin === dashboardUrl) };
   } finally {
     await context.close();
   }
@@ -112,7 +113,7 @@ test("the Vendor portal's text and its tab's title differ in each of the three l
   const titles = new Map<Language, string>();
   for (const { locale, expected } of browsersSetTo) {
     const {
-      read: { notice, title },
+      found: { notice, title },
     } = await openInABrowserSetTo(browser, locale, developmentVendor, async (page) => {
       await expectPageIn(page, expected);
       return {
@@ -149,6 +150,7 @@ test('the development Vendor gets the page with the language switch, and the dev
   browser,
 }) => {
   await openInABrowserSetTo(browser, 'ar', developmentVendor, async (page) => {
+    await expectPageIn(page, arabic);
     await expect(languageSwitch(page).getByRole('button')).toHaveCount(languages.length);
   });
   await openInABrowserSetTo(browser, 'ar', developmentAdmin, async (page) => {
@@ -166,7 +168,7 @@ test('in each language the switch is inside the screen, large enough to tap, and
 }) => {
   await openTheDashboardAs(page, developmentVendor);
 
-  await readInEveryLanguageOfTheVendorPortal(page, async () => {});
+  await checkInEveryLanguageOfTheVendorPortal(page);
 });
 
 test("a tap on another language changes the language, the direction and the tab's title in place: the page is not loaded again and Keycloak is not visited", async ({
