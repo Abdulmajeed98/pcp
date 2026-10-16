@@ -6,15 +6,14 @@ import {
   type Page,
 } from '@playwright/test';
 
+import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import {
-  authorizationOfTheDevelopmentAdmin,
-  type LoginDetails,
-  expectLoginScreen,
+  atTheLoginScreenInABrowserOfItsOwn,
   expectNewPasswordScreen,
-  expectTheVendorPortal,
+  type LoginDetails,
   submitTheLoginScreen,
   submitTheNewPasswordScreen,
-} from './development-logins';
+} from './keycloak-screens';
 import { aWordUniqueToTheRun, randomDigits } from './made-up';
 import { apiUrl, dashboardUrl } from './platform';
 
@@ -125,21 +124,50 @@ export function aNewPassword(): string {
   return `new-password-${aWordUniqueToTheRun()}`;
 }
 
+// Logs in to the dashboard as the development Admin, in the page the test
+// gives, and creates a made-up Vendor over HTTP as that Admin.
+export async function createAMadeUpVendorAsTheAdmin(
+  page: Page,
+  request: APIRequestContext,
+): Promise<MadeUpVendor> {
+  return createAMadeUpVendor(request, await authorizationOfTheDevelopmentAdmin(page));
+}
+
+// What a made-up Vendor logs in with before its first login: its login phone
+// number in the stored form and its temporary password.
+export function temporaryLoginOf(vendor: MadeUpVendor): LoginDetails {
+  return { name: vendor.loginPhoneNumber, password: vendor.temporaryPassword };
+}
+
+// The Vendor portal, which a Login that is not the Admin's gets. It is told
+// apart from the Admin console by its frame.
+export async function expectTheVendorPortal(page: Page): Promise<void> {
+  await page.waitForURL(`${dashboardUrl}/**`);
+  await expect(page.getByTestId('frame')).toBeVisible();
+}
+
+interface HowTheNumberIsTyped {
+  // The login phone number as the Vendor types it, such as in Arabic-Indic
+  // digits with spaces. Unless the test gives one, it is the stored form.
+  loginPhoneNumberAsTyped?: string;
+}
+
 // Logs in as a made-up Vendor through its first login, the path a real
-// Vendor takes: it opens the dashboard, types its login phone number at
-// Keycloak's login screen, in the stored form unless the test gives another,
-// gives its temporary password, chooses a new password made for the run on
-// the screen that asks for one, and waits for the Vendor portal. Both
-// passwords are set in the page. It gives back what the Vendor logs in with
-// from then on.
+// Vendor takes, from Keycloak's login screen, which the page shows: it types
+// its login phone number, gives its temporary password, chooses a new
+// password made for the run on the screen that asks for one, and waits for
+// the Vendor portal. Both passwords are set in the page. It gives back what
+// the Vendor logs in with from then on.
 export async function logInForTheFirstTime(
   page: Page,
   vendor: MadeUpVendor,
-  typed = vendor.loginPhoneNumber,
+  { loginPhoneNumberAsTyped = vendor.loginPhoneNumber }: HowTheNumberIsTyped = {},
 ): Promise<LoginDetails> {
-  await page.goto(dashboardUrl);
-  await expectLoginScreen(page);
-  await submitTheLoginScreen(page, typed, vendor.temporaryPassword, 'typed');
+  await submitTheLoginScreen(
+    page,
+    { ...temporaryLoginOf(vendor), name: loginPhoneNumberAsTyped },
+    { typeTheName: true },
+  );
 
   await expectNewPasswordScreen(page);
   const password = aNewPassword();
@@ -158,16 +186,17 @@ export async function aMadeUpVendorThatHasLoggedIn(
   browser: Browser,
 ): Promise<LoginDetails> {
   const adminsContext = await browser.newContext();
-  const vendorsContext = await browser.newContext();
+  let vendor: MadeUpVendor;
   try {
-    const authorization = await authorizationOfTheDevelopmentAdmin(
+    vendor = await createAMadeUpVendorAsTheAdmin(
       await adminsContext.newPage(),
+      adminsContext.request,
     );
-    const vendor = await createAMadeUpVendor(adminsContext.request, authorization);
-
-    return await logInForTheFirstTime(await vendorsContext.newPage(), vendor);
   } finally {
     await adminsContext.close();
-    await vendorsContext.close();
   }
+
+  return atTheLoginScreenInABrowserOfItsOwn(browser, (page) =>
+    logInForTheFirstTime(page, vendor),
+  );
 }

@@ -1,14 +1,10 @@
 import { expect, type Response, test } from '@playwright/test';
 
 import { catalogHeading } from './catalog';
-import {
-  authorizationOfTheDevelopmentAdmin,
-  developmentAdmin,
-  expectLoginScreen,
-  logInToTheDashboard,
-} from './development-logins';
+import { developmentAdmin, logInToTheDashboard } from './development-logins';
+import { atTheLoginScreenInABrowserOfItsOwn, expectLoginScreen } from './keycloak-screens';
 import { apiUrl, dashboardUrl, realmUrl } from './platform';
-import { createAMadeUpVendor, logInForTheFirstTime } from './vendors';
+import { createAMadeUpVendorAsTheAdmin, logInForTheFirstTime } from './vendors';
 
 const callerEndpoint = `${apiUrl}/v1/caller`;
 
@@ -34,16 +30,16 @@ test('a made-up Vendor logs in: the dashboard shows the name and the role vendor
   page,
   request,
 }) => {
-  const authorization = await authorizationOfTheDevelopmentAdmin(page);
-  const vendor = await createAMadeUpVendor(request, authorization);
+  const vendor = await createAMadeUpVendorAsTheAdmin(page, request);
 
-  const context = await browser.newContext();
-  const vendorsPage = await context.newPage();
-  await logInForTheFirstTime(vendorsPage, vendor);
+  await atTheLoginScreenInABrowserOfItsOwn(browser, async (vendorsPage) => {
+    await logInForTheFirstTime(vendorsPage, vendor);
 
-  await expect(vendorsPage.getByTestId('caller-name')).toHaveText(vendor.loginPhoneNumber);
-  await expect(vendorsPage.getByTestId('caller-roles')).toHaveText('vendor');
-  await context.close();
+    await expect(vendorsPage.getByTestId('caller-name')).toHaveText(
+      vendor.loginPhoneNumber,
+    );
+    await expect(vendorsPage.getByTestId('caller-roles')).toHaveText('vendor');
+  });
 });
 
 test("the API was asked: the dashboard's call carried a token, and the name on the page is the name in the answer", async ({

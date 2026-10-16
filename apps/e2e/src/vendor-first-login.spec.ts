@@ -3,57 +3,53 @@ import { join } from 'node:path';
 
 import { expect, type Page, test } from '@playwright/test';
 
+import { authorizationOfTheDevelopmentAdmin, developmentAdmin } from './development-logins';
 import {
-  authorizationOfTheDevelopmentAdmin,
+  atTheLoginScreenInABrowserOfItsOwn,
   chooseKeycloaksLanguage,
-  developmentAdmin,
   expectLoginScreen,
   expectNewPasswordScreen,
-  expectTheVendorPortal,
+  expectTheLoginScreenToRefuse,
+  expectTheNewPasswordScreenToRefuse,
   submitTheLoginScreen,
   submitTheNewPasswordScreen,
-} from './development-logins';
+} from './keycloak-screens';
 import {
   expectADifferentTextInEachLanguage,
   expectPageIn,
   type Language,
   languages,
 } from './languages';
-import { dashboardUrl, realmUrl } from './platform';
+import { dashboardUrl } from './platform';
 import {
   aNewPassword,
   createAMadeUpVendor,
+  createAMadeUpVendorAsTheAdmin,
+  expectTheVendorPortal,
   inArabicIndicDigitsWithSpaces,
   inLocalFormWithDashes,
   logInForTheFirstTime,
+  temporaryLoginOf,
 } from './vendors';
 
 const [kurdish, , english] = languages;
 
 // The whole path on the running platform: the API makes the Vendor's Login in
 // the development Keycloak, through the API's own client, with a temporary
-// password, and Keycloak then makes the Vendor choose its own.
+// password, and Keycloak then makes the Vendor choose its own. Each Vendor
+// logs in in a browser of its own, which knows nothing of the Admin's login.
 test("a made-up Vendor logs in at Keycloak's login screen with its login phone number in the stored form and its temporary password, and Keycloak shows the screen that asks for a new password", async ({
   browser,
   page,
   request,
 }) => {
-  const authorization = await authorizationOfTheDevelopmentAdmin(page);
-  const vendor = await createAMadeUpVendor(request, authorization);
+  const vendor = await createAMadeUpVendorAsTheAdmin(page, request);
 
-  // A browser of its own, which knows nothing of the Admin's login.
-  const context = await browser.newContext();
-  const vendorsPage = await context.newPage();
-  await vendorsPage.goto(dashboardUrl);
-  await expectLoginScreen(vendorsPage);
-  await submitTheLoginScreen(
-    vendorsPage,
-    vendor.loginPhoneNumber,
-    vendor.temporaryPassword,
-  );
+  await atTheLoginScreenInABrowserOfItsOwn(browser, async (vendorsPage) => {
+    await submitTheLoginScreen(vendorsPage, temporaryLoginOf(vendor));
 
-  await expectNewPasswordScreen(vendorsPage);
-  await context.close();
+    await expectNewPasswordScreen(vendorsPage);
+  });
 });
 
 // A Vendor's Login is named by its login phone number, so the field is
@@ -76,75 +72,50 @@ test('the login screen\'s name field is labelled "Phone number", in a different 
 });
 
 // The theme's script turns what is typed into the stored form before the
-// form is sent. Each Vendor logs in in a browser of its own.
-for (const { form, write } of [
-  { form: 'in Arabic-Indic digits with spaces', write: inArabicIndicDigitsWithSpaces },
-  { form: 'in local form with dashes', write: inLocalFormWithDashes },
+// form is sent.
+for (const { form, inThatForm } of [
+  { form: 'in Arabic-Indic digits with spaces', inThatForm: inArabicIndicDigitsWithSpaces },
+  { form: 'in local form with dashes', inThatForm: inLocalFormWithDashes },
 ]) {
   test(`a made-up Vendor types its login phone number ${form}, and logs in to the Vendor portal through its first login`, async ({
     browser,
     page,
     request,
   }) => {
-    const authorization = await authorizationOfTheDevelopmentAdmin(page);
-    const vendor = await createAMadeUpVendor(request, authorization);
+    const vendor = await createAMadeUpVendorAsTheAdmin(page, request);
 
-    const context = await browser.newContext();
-    const vendorsPage = await context.newPage();
-    const login = await logInForTheFirstTime(
-      vendorsPage,
-      vendor,
-      write(vendor.loginPhoneNumber),
-    );
+    await atTheLoginScreenInABrowserOfItsOwn(browser, async (vendorsPage) => {
+      const login = await logInForTheFirstTime(vendorsPage, vendor, {
+        loginPhoneNumberAsTyped: inThatForm(vendor.loginPhoneNumber),
+      });
 
-    await expect(vendorsPage.getByTestId('caller-name')).toHaveText(login.name);
-    await context.close();
+      await expect(vendorsPage.getByTestId('caller-name')).toHaveText(login.name);
+    });
   });
 }
 
-// Sends a new password on the screen that asks for one, and expects it to be
-// refused: Keycloak answers the form with the same screen, an error above the
-// form, rather than sending the browser on to the dashboard.
-async function expectTheNewPasswordRefused(page: Page, password: string): Promise<void> {
-  const answered = page.waitForResponse(
-    (response) =>
-      response.request().method() === 'POST' &&
-      response.url().startsWith(`${realmUrl}/login-actions/required-action`),
-  );
-  await submitTheNewPasswordScreen(page, password);
-
-  expect((await answered).status()).toBe(200);
-  await expectNewPasswordScreen(page);
-  await expect(page.locator('.pf-v5-c-alert.pf-m-danger')).toBeVisible();
-}
-
 // The realm's password policy: at least 8 characters, and not the Login's
-// name, which is the login phone number in the stored form.
+// name, which is the login phone number in the stored form. Each refusal is
+// shown in the alert above the form.
 test('the screen that asks for a new password refuses one of 4 characters, and one that is the login phone number, and then takes a good one, and the Vendor portal opens', async ({
   browser,
   page,
   request,
 }) => {
-  const authorization = await authorizationOfTheDevelopmentAdmin(page);
-  const vendor = await createAMadeUpVendor(request, authorization);
+  const vendor = await createAMadeUpVendorAsTheAdmin(page, request);
 
-  const context = await browser.newContext();
-  const vendorsPage = await context.newPage();
-  await vendorsPage.goto(dashboardUrl);
-  await expectLoginScreen(vendorsPage);
-  await submitTheLoginScreen(
-    vendorsPage,
-    vendor.loginPhoneNumber,
-    vendor.temporaryPassword,
-  );
-  await expectNewPasswordScreen(vendorsPage);
+  await atTheLoginScreenInABrowserOfItsOwn(browser, async (vendorsPage) => {
+    await submitTheLoginScreen(vendorsPage, temporaryLoginOf(vendor));
+    await expectNewPasswordScreen(vendorsPage);
 
-  await expectTheNewPasswordRefused(vendorsPage, 'abcd');
-  await expectTheNewPasswordRefused(vendorsPage, vendor.loginPhoneNumber);
-  await submitTheNewPasswordScreen(vendorsPage, aNewPassword());
+    for (const refused of ['abcd', vendor.loginPhoneNumber]) {
+      await expectTheNewPasswordScreenToRefuse(vendorsPage, refused);
+      await expect(vendorsPage.locator('.pf-v5-c-alert.pf-m-danger')).toBeVisible();
+    }
+    await submitTheNewPasswordScreen(vendorsPage, aNewPassword());
 
-  await expectTheVendorPortal(vendorsPage);
-  await context.close();
+    await expectTheVendorPortal(vendorsPage);
+  });
 });
 
 // What the screen that asks for a new password says, piece by piece: its
@@ -159,47 +130,55 @@ const piecesOfTheNewPasswordScreen = [
   '#kc-submit',
 ];
 
+// What it says when it refuses a new password: the two refusals of the
+// password policy, a missing password and a confirmation that does not match.
+// Each is sent once the pieces above are read.
+async function readTheRefusals(page: Page, loginPhoneNumber: string): Promise<string[]> {
+  return [
+    await expectTheNewPasswordScreenToRefuse(page, 'abcd'),
+    await expectTheNewPasswordScreenToRefuse(page, loginPhoneNumber),
+    await expectTheNewPasswordScreenToRefuse(page, ''),
+    await expectTheNewPasswordScreenToRefuse(page, aNewPassword(), aNewPassword()),
+  ];
+}
+
 // The language is chosen on the login screen, with its own select, before the
 // Vendor logs in. Each language has a made-up Vendor of its own, in a browser
 // of its own, so that no earlier choice is remembered.
-test("the screen that asks for a new password, opened in each of the three languages with the login screen's own choice of language, declares that language, its text differs between the three, and its Kurdish text is not its English text", async ({
+test("the screen that asks for a new password, opened in each of the three languages with the login screen's own choice of language, declares that language, its text and its refusals differ between the three, and its Kurdish text is not its English text", async ({
   browser,
   page,
   request,
 }) => {
+  // The Admin logs in once: a second login in the same page would find the
+  // Admin logged in already.
   const authorization = await authorizationOfTheDevelopmentAdmin(page);
-
   const texts = new Map<Language, string[]>();
   for (const language of languages) {
     const vendor = await createAMadeUpVendor(request, authorization);
-    const context = await browser.newContext();
-    const vendorsPage = await context.newPage();
-    await vendorsPage.goto(dashboardUrl);
-    await expectLoginScreen(vendorsPage);
-    await chooseKeycloaksLanguage(vendorsPage, language);
-    await submitTheLoginScreen(
-      vendorsPage,
-      vendor.loginPhoneNumber,
-      vendor.temporaryPassword,
-    );
+    const said = await atTheLoginScreenInABrowserOfItsOwn(browser, async (vendorsPage) => {
+      await chooseKeycloaksLanguage(vendorsPage, language);
+      await submitTheLoginScreen(vendorsPage, temporaryLoginOf(vendor));
 
-    await expectNewPasswordScreen(vendorsPage);
-    await expectPageIn(vendorsPage, language);
-    const pieces: string[] = [];
-    for (const piece of piecesOfTheNewPasswordScreen) {
-      pieces.push((await vendorsPage.locator(piece).innerText()).trim());
-    }
-    texts.set(language, pieces);
-    await context.close();
+      await expectNewPasswordScreen(vendorsPage);
+      await expectPageIn(vendorsPage, language);
+      const pieces: string[] = [];
+      for (const piece of piecesOfTheNewPasswordScreen) {
+        pieces.push((await vendorsPage.locator(piece).innerText()).trim());
+      }
+      return [...pieces, ...(await readTheRefusals(vendorsPage, vendor.loginPhoneNumber))];
+    });
+    texts.set(language, said);
   }
 
   expectADifferentTextInEachLanguage(
-    new Map([...texts].map(([language, pieces]) => [language, pieces.join('\n')])),
+    new Map([...texts].map(([language, said]) => [language, said.join('\n')])),
   );
   const inKurdish = texts.get(kurdish) ?? [];
   const inEnglish = texts.get(english) ?? [];
-  piecesOfTheNewPasswordScreen.forEach((piece, index) => {
-    expect(inKurdish[index], `${piece} in Kurdish`).not.toBe(inEnglish[index]);
+  expect(inKurdish).toHaveLength(inEnglish.length);
+  inKurdish.forEach((text, index) => {
+    expect(text, `piece ${index + 1} in Kurdish`).not.toBe(inEnglish[index]);
   });
 });
 
@@ -214,57 +193,33 @@ const { failureFactor, quickLoginCheckMilliSeconds } = JSON.parse(
   ),
 ) as { failureFactor: number; quickLoginCheckMilliSeconds: number };
 
-// Sends the login screen a name and a password, and expects the login to be
-// refused: Keycloak answers the form with the login screen again, with an
-// error under the name field, rather than sending the browser on.
-async function expectTheLoginRefused(
-  page: Page,
-  name: string,
-  password: string,
-): Promise<void> {
-  const answered = page.waitForResponse(
-    (response) =>
-      response.request().method() === 'POST' &&
-      response.url().startsWith(`${realmUrl}/login-actions/authenticate`),
-  );
-  await submitTheLoginScreen(page, name, password);
-
-  expect((await answered).status()).toBe(200);
-  await expectLoginScreen(page);
-  await expect(page.locator('#input-error-username')).toBeVisible();
-}
-
 // A locked Login is told the same as a wrong password, so the right password
-// being refused is what shows the lock. The Vendor is never used again.
-test('after the configured number of wrong passwords in a row, sent more than a second apart, a made-up Vendor of its own is refused its right password', async ({
+// being refused is what shows the lock. On the Kurdish login screen both are
+// the theme's Kurdish, the same text. The Vendor is never used again.
+test("after the configured number of wrong passwords in a row, sent further apart than the quick-login check's interval, a made-up Vendor of its own is refused its right password, on the Kurdish login screen with a wrong password's text", async ({
   browser,
   page,
   request,
 }) => {
   const apart = quickLoginCheckMilliSeconds + 500;
   test.setTimeout(30_000 + failureFactor * apart);
-  const authorization = await authorizationOfTheDevelopmentAdmin(page);
-  const vendor = await createAMadeUpVendor(request, authorization);
+  const vendor = await createAMadeUpVendorAsTheAdmin(page, request);
+  const login = temporaryLoginOf(vendor);
 
-  const context = await browser.newContext();
-  const vendorsPage = await context.newPage();
-  await vendorsPage.goto(dashboardUrl);
-  await expectLoginScreen(vendorsPage);
-  for (let failure = 1; failure <= failureFactor; failure++) {
-    await expectTheLoginRefused(
-      vendorsPage,
-      vendor.loginPhoneNumber,
-      `wrong-password-${failure}`,
-    );
-    await vendorsPage.waitForTimeout(apart);
-  }
+  await atTheLoginScreenInABrowserOfItsOwn(browser, async (vendorsPage) => {
+    await chooseKeycloaksLanguage(vendorsPage, kurdish);
+    let wrongPasswordsText = '';
+    for (let failure = 1; failure <= failureFactor; failure++) {
+      wrongPasswordsText = await expectTheLoginScreenToRefuse(vendorsPage, {
+        ...login,
+        password: `wrong-password-${failure}`,
+      });
+      await vendorsPage.waitForTimeout(apart);
+    }
 
-  await expectTheLoginRefused(
-    vendorsPage,
-    vendor.loginPhoneNumber,
-    vendor.temporaryPassword,
-  );
-  await context.close();
+    const lockedText = await expectTheLoginScreenToRefuse(vendorsPage, login);
+    expect(lockedText).toBe(wrongPasswordsText);
+  });
 });
 
 // The script leaves a name with a letter in it alone, dashes and all.
@@ -273,12 +228,7 @@ test('the development Admin still logs in by its name, typed at the login screen
 }) => {
   await page.goto(dashboardUrl);
   await expectLoginScreen(page);
-  await submitTheLoginScreen(
-    page,
-    developmentAdmin.name,
-    developmentAdmin.password,
-    'typed',
-  );
+  await submitTheLoginScreen(page, developmentAdmin, { typeTheName: true });
 
   await page.waitForURL(`${dashboardUrl}/**`);
   await expect(page.getByTestId('caller-name')).toHaveText(developmentAdmin.name);

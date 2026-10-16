@@ -8,11 +8,11 @@ import {
 
 import {
   developmentAdmin,
-  type LoginDetails,
   logInToTheDashboard,
   logOutOfTheDashboard,
   openTheDashboardAs,
 } from './development-logins';
+import { type LoginDetails } from './keycloak-screens';
 import {
   buttonFor,
   checkInEveryLanguageOfTheVendorPortal,
