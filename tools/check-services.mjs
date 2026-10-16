@@ -9,9 +9,12 @@ import { parseEnv } from 'node:util';
 
 import { developmentLogins } from './development-logins.mjs';
 import {
+  apiClient,
   findLogin,
   keycloakUrl,
   logInAsAdministrator,
+  logInAsTheApisClient,
+  requestTokenAsTheApisClient,
   requestTokenWithPassword,
 } from './keycloak-administrator.mjs';
 import { migrationNames, missingMigrations } from './platform-migrations.mjs';
@@ -410,6 +413,35 @@ async function dashboardMapperNamesTheApi() {
   }
 }
 
+// The API's own client logs in with the secret in `.env`, as the API does,
+// and looks a Login up by its name. The development Admin is the Login asked
+// for, because the start command makes sure it exists.
+async function apisClientFindsLogins() {
+  if (!settings.PCP_API_CLIENT_SECRET) {
+    throw new Error(`.env does not hold PCP_API_CLIENT_SECRET. ${startHint}`);
+  }
+  const name = settings.DEVELOPMENT_ADMIN_NAME;
+  if (!name) throw new Error(`.env does not name the development Admin. ${startHint}`);
+
+  const login = await findLogin(await logInAsTheApisClient(settings), name);
+  if (login === undefined) throw new Error(`it found no login named ${name}`);
+}
+
+// The API's client gets its tokens with its secret alone. Keycloak answers
+// a wrong secret with the same error code, so this means something only once
+// the client has logged in with the secret it is given here.
+async function apisClientMayNotUsePasswordFlow() {
+  const response = await requestTokenAsTheApisClient(settings, {
+    grant_type: 'password',
+    username: 'nobody',
+    password: 'wrong',
+  });
+  const { error } = await response.json();
+  if (error !== 'unauthorized_client') {
+    throw new Error(`Keycloak looked at the password and answered ${error}`);
+  }
+}
+
 const keycloakAnswers = await check('Keycloak answers on port 8080', askKeycloak);
 if (keycloakAnswers) {
   await check(
@@ -473,6 +505,22 @@ if (keycloakAnswers) {
     "The dashboard client's audience mapper names pcp-api",
     dashboardMapperNamesTheApi,
   );
+  const apisClientLogsIn = await check(
+    `The API's client, ${apiClient}, logs in to Keycloak with the secret in .env and finds the realm's Logins`,
+    apisClientFindsLogins,
+  );
+  // The API's client logs in as itself only: never with a person's password,
+  // and never through a browser.
+  if (apisClientLogsIn) {
+    await check(
+      "The password flow is refused to the API's client",
+      apisClientMayNotUsePasswordFlow,
+    );
+    await check(
+      "A login request through the API's client is refused",
+      loginIsRefused((query) => query.set('client_id', apiClient)),
+    );
+  }
   for (const developmentLogin of developmentLogins) {
     const found = await check(
       `The development ${developmentLogin.label} login exists and is switched on`,
