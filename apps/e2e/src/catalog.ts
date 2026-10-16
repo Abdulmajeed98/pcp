@@ -1,5 +1,6 @@
 import { type APIRequestContext, expect, type Locator, type Page } from '@playwright/test';
 
+import { aWordUniqueToTheRun } from './made-up';
 import { apiUrl, dashboardUrl } from './platform';
 
 // The Admin console's Catalog. The Admin console is in English only, so its
@@ -27,7 +28,7 @@ export async function createAMadeUpPart(
   specifications: Record<string, unknown> = {},
   category = 'cpu',
 ): Promise<MadeUpPart> {
-  const word = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  const word = aWordUniqueToTheRun();
   const name = `Made-up test Part ${word}`;
   const partNumber = `TEST-${word}`;
 

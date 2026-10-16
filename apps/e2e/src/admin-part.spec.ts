@@ -16,6 +16,7 @@ import {
 } from './catalog';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
+import { aWordUniqueToTheRun } from './made-up';
 import { apiUrl } from './platform';
 
 // The Admin works in the Vendors' shops, on a phone (LANG-8).
@@ -25,7 +26,7 @@ test.use({ viewport: narrowWindow });
 // create stay in the development database, which `pnpm services:reset`
 // empties.
 function aMadeUpName(): string {
-  return `Made-up test Part ${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  return `Made-up test Part ${aWordUniqueToTheRun()}`;
 }
 
 let authorization: string;
