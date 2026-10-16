@@ -177,8 +177,12 @@ test("the screen that asks for a new password, opened in each of the three langu
   const inKurdish = texts.get(kurdish) ?? [];
   const inEnglish = texts.get(english) ?? [];
   expect(inKurdish).toHaveLength(inEnglish.length);
+  // Keycloak's English length message, shown on the Kurdish screen, would
+  // differ from the English screen's only by its digit, ٨ for 8. The
+  // platform's numbers are in Western digits (LANG-5).
   inKurdish.forEach((text, index) => {
     expect(text, `piece ${index + 1} in Kurdish`).not.toBe(inEnglish[index]);
+    expect(text, `piece ${index + 1} in Kurdish`).not.toMatch(/[٠-٩۰-۹]/);
   });
 });
 
