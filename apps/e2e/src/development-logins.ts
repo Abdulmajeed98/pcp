@@ -55,6 +55,25 @@ export async function logInToTheDashboard(
   await page.waitForURL(`${dashboardUrl}/**`);
 }
 
+// Logs in as one of the development logins, and waits until the dashboard
+// shows who the API says the caller is. The page is then drawn whole, in
+// whichever half and language it chose.
+export async function openTheDashboardAs(
+  page: Page,
+  login: DevelopmentLogin,
+): Promise<void> {
+  await logInToTheDashboard(page, login);
+  await expect(page.getByTestId('caller-name')).toHaveText(login.name);
+}
+
+// Logs out of the dashboard with its button, and waits for Keycloak's login
+// screen. The button's text is in the page's language, so it is found by
+// what it is and not by what it says.
+export async function logOutOfTheDashboard(page: Page): Promise<void> {
+  await page.getByTestId('log-out').click();
+  await expectLoginScreen(page);
+}
+
 // Logs in to the dashboard as the development Admin, and gives the
 // Authorization header the dashboard sends the API, so that a test can call
 // the API as the Admin. The dashboard's page asks the API who the caller is,

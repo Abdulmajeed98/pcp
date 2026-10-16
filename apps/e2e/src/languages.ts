@@ -84,15 +84,7 @@ export async function readInEveryLanguage<Read>(
   read: (language: Language, response: Response) => Promise<Read>,
   { drawnByScript = false }: About = {},
 ): Promise<Map<Language, Read>> {
-  expect(page.viewportSize()?.width, 'the window is as wide as a narrow phone').toBe(
-    narrowWindow.width,
-  );
-  // Without this, a page that formats a number in the browser would pass the
-  // check of its digits in a browser that happens to write Western ones.
-  expect(
-    await page.evaluate(() => new Intl.NumberFormat('ckb').format(3)),
-    'this browser writes a number it formats for Kurdish in Arabic-Indic digits',
-  ).toBe('٣');
+  await expectABrowserThatShowsTheFault(page);
 
   const readings = new Map<Language, Read>();
   for (const language of languages) {
@@ -133,8 +125,9 @@ export async function expectPageIn(page: Page, language: Language): Promise<void
   await expect(html).toHaveAttribute('dir', language.direction);
 }
 
-// The language switch, which the frame holds on every page.
-function languageSwitch(page: Page): Locator {
+// The language switch, which the frame holds on every page of the Shopper
+// app and every screen of the Vendor portal.
+export function languageSwitch(page: Page): Locator {
   return page.getByTestId('language-switch');
 }
 
@@ -151,9 +144,7 @@ const largeEnoughToTap = 44;
 // The switch as a Shopper finds it in the browser, on a page in `language`:
 // three links, to Kurdish, Arabic and English in that order, each under its
 // own name and each to the page the Shopper is on. The one the page is in is
-// marked as the current one. Each is inside the window and large enough to
-// tap, and the switch is on the end side of the frame: the right in English,
-// and the left in Kurdish and Arabic.
+// marked as the current one, and the switch is within reach of a thumb.
 async function expectTheSwitchOnThePage(
   page: Page,
   language: Language,
@@ -166,13 +157,26 @@ async function expectTheSwitchOnThePage(
   ]);
 
   for (const other of languages) {
-    const link = linkTo(page, other);
     expect(
-      await link.evaluate((anchor) => (anchor as HTMLAnchorElement).href),
+      await linkTo(page, other).evaluate((anchor) => (anchor as HTMLAnchorElement).href),
       `the link to ${other.name} is to this page in ${other.name}`,
     ).toBe(addressIn(other, address));
+  }
 
-    const box = await boxOf(link);
+  await expectTheSwitchWithinReach(page, language, (other) => linkTo(page, other));
+}
+
+// The switch on a page in `language` is where a thumb can reach it. What it
+// offers for each language, found by `choiceOf`, is inside the window and
+// large enough to tap, and the switch is on the end side of the frame: the
+// right in English, and the left in Kurdish and Arabic.
+async function expectTheSwitchWithinReach(
+  page: Page,
+  language: Language,
+  choiceOf: (other: Language) => Locator,
+): Promise<void> {
+  for (const other of languages) {
+    const box = await boxOf(choiceOf(other));
     const insideTheWindow =
       box.left >= 0 &&
       box.right <= narrowWindow.width &&
@@ -180,11 +184,11 @@ async function expectTheSwitchOnThePage(
       box.bottom <= narrowWindow.height;
     expect(
       insideTheWindow,
-      `the link to ${other.name}, at ${JSON.stringify(box)}, is inside the window`,
+      `the choice of ${other.name}, at ${JSON.stringify(box)}, is inside the window`,
     ).toBe(true);
     expect(
       Math.min(box.right - box.left, box.bottom - box.top),
-      `the link to ${other.name} is large enough to tap`,
+      `the choice of ${other.name} is large enough to tap`,
     ).toBeGreaterThanOrEqual(largeEnoughToTap);
   }
 
@@ -199,6 +203,74 @@ async function expectTheSwitchOnThePage(
   expect(roomAtTheEnd, 'the switch is on the end side of the frame').toBeLessThan(
     roomAtTheStart,
   );
+}
+
+// The Vendor portal's switch's button for one language, found by the
+// language's own name. The Vendor portal has no addresses of its own, so its
+// switch changes the language in place, with a button and not a link.
+export function buttonFor(page: Page, language: Language): Locator {
+  return languageSwitch(page).getByRole('button', { name: language.ownName, exact: true });
+}
+
+// The switch as a Vendor finds it, on a screen of the Vendor portal in
+// `language`: three buttons, for Kurdish, Arabic and English in that order,
+// each under its own name. The one the screen is in is shown as pressed, and
+// the switch is within reach of a thumb.
+async function expectTheVendorPortalsSwitch(page: Page, language: Language): Promise<void> {
+  const buttons = languageSwitch(page).getByRole('button');
+  await expect(buttons).toHaveText(languages.map(({ ownName }) => ownName));
+  await expect(languageSwitch(page).getByRole('button', { pressed: true })).toHaveText([
+    language.ownName,
+  ]);
+
+  await expectTheSwitchWithinReach(page, language, (other) => buttonFor(page, other));
+}
+
+// Shows a screen of the Vendor portal, as the development Vendor, in each of
+// the three languages in turn, by a tap on the switch, in a window as wide as
+// a narrow phone. It checks what holds for every screen: the language it
+// declares, its direction, that it is inside the frame, that the switch is
+// where a Vendor can tap it, that every digit on it is a Western one, and
+// that it does not scroll sideways. The test of a screen calls it once,
+// after the screen is open.
+//
+// It confirms that the screen is in the language it asked for before it
+// reads anything else, as the Shopper app's helper does.
+export async function readInEveryLanguageOfTheVendorPortal<Read>(
+  page: Page,
+  read: (language: Language) => Promise<Read>,
+): Promise<Map<Language, Read>> {
+  await expectABrowserThatShowsTheFault(page);
+
+  const readings = new Map<Language, Read>();
+  for (const language of languages) {
+    await test.step(`in ${language.name}`, async () => {
+      await buttonFor(page, language).click();
+
+      await expectPageIn(page, language);
+      await expect(page.getByTestId('frame')).toBeVisible();
+      await expectTheVendorPortalsSwitch(page, language);
+      await expectWesternDigitsOnly(page);
+      await expectNoSidewaysScroll(page);
+
+      readings.set(language, await read(language));
+    });
+  }
+  return readings;
+}
+
+// The language tests' window is as wide as a narrow phone, and their browser
+// is one that writes a number it formats for Kurdish in Arabic-Indic digits.
+// Without this, a page that formats a number in the browser would pass the
+// check of its digits in a browser that happens to write Western ones.
+async function expectABrowserThatShowsTheFault(page: Page): Promise<void> {
+  expect(page.viewportSize()?.width, 'the window is as wide as a narrow phone').toBe(
+    narrowWindow.width,
+  );
+  expect(
+    await page.evaluate(() => new Intl.NumberFormat('ckb').format(3)),
+    'this browser writes a number it formats for Kurdish in Arabic-Indic digits',
+  ).toBe('٣');
 }
 
 // Where an element is in the window, by its four edges.
