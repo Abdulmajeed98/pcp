@@ -6,6 +6,7 @@
     "@pcp/api-client": "workspace:*",
     "@pcp/compatibility": "workspace:*",
     "@pcp/i18n": "workspace:*",
+    "@pcp/opendb": "workspace:*",
     "@pcp/ui": "workspace:*",
     "next": "~16.4.0",
     "next-intl": "^4.14.9",

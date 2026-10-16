@@ -17,5 +17,8 @@
   "NotFoundPage": {
     "title": "پەڕە نەدۆزرایەوە",
     "description": "ئەم ناونیشانە هیچ پەڕەیەکی نییە."
+  },
+  "Footer": {
+    "credit": "زانیاری لە <openDbLink>{openDb}</openDbLink> لەخۆ دەگرێت، کە بەپێی <licenceLink>{licence}</licenceLink> بەردەست خراوە."
   }
 }

@@ -561,6 +561,9 @@ importers:
       '@pcp/i18n':
         specifier: workspace:*
         version: link:../../libs/i18n
+      '@pcp/opendb':
+        specifier: workspace:*
+        version: link:../../libs/opendb
       '@pcp/ui':
         specifier: workspace:*
         version: link:../../libs/ui

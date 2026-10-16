@@ -17,5 +17,8 @@
   "NotFoundPage": {
     "title": "الصفحة غير موجودة",
     "description": "هذا العنوان لا يطابق أي صفحة."
+  },
+  "Footer": {
+    "credit": "يحتوي على معلومات من <openDbLink>{openDb}</openDbLink>، وهي متاحة بموجب <licenceLink>{licence}</licenceLink>."
   }
 }

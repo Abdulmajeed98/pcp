@@ -17,5 +17,8 @@
   "NotFoundPage": {
     "title": "Page not found",
     "description": "This address matches no page."
+  },
+  "Footer": {
+    "credit": "Contains information from <openDbLink>{openDb}</openDbLink> which is made available under the <licenceLink>{licence}</licenceLink>."
   }
 }
