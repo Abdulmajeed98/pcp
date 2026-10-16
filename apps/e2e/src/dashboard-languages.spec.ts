@@ -26,6 +26,16 @@ import {
   readInEveryLanguageOfTheVendorPortal,
 } from './languages';
 import { dashboardUrl, keycloakUrl } from './platform';
+import {
+  expectDrawnAsWritten,
+  expectTheNumbers,
+  expectTheSameInEveryLanguage,
+  expectTheWholeSample,
+  partName,
+  readTheCategoryNames,
+  readTheLinesAsWritten,
+  specification,
+} from './sample';
 
 const [kurdish, arabic, english] = languages;
 
@@ -302,4 +312,57 @@ test("with a language remembered, the browser's storage still holds no token", a
   expect(stored.filter((value) => value.includes(token) || value.includes('eyJ'))).toEqual(
     [],
   );
+});
+
+// The Vendor portal's placeholder shows the sample the Shopper app's page
+// shows, with the same values, built from the same parts. The helper shows it
+// in each language by the switch, and finds an Arabic-Indic digit anywhere
+// on it. Its browser is one in which a number that i18next formats for
+// Kurdish comes out in those digits.
+test.describe("the Vendor portal's sample, as the development Vendor", () => {
+  test.beforeEach(async ({ page }) => {
+    await openTheDashboardAs(page, developmentVendor);
+  });
+
+  test('the sample number reads 1,575,000 in all three languages, and no Arabic-Indic digit is anywhere on the page in any language, the counted sentences among it', async ({
+    page,
+  }) => {
+    await readInEveryLanguageOfTheVendorPortal(page, () => expectTheNumbers(page));
+  });
+
+  test('the Part name and the specification are the same characters in all three languages, and each carries a left-to-right direction of its own', async ({
+    page,
+  }) => {
+    await readInEveryLanguageOfTheVendorPortal(page, async () => {
+      await expectDrawnAsWritten(page, partName);
+      await expectDrawnAsWritten(page, specification);
+    });
+  });
+
+  test('the two as-written lines are the same in all three languages, and each carries its own direction', async ({
+    page,
+  }) => {
+    const written = await readInEveryLanguageOfTheVendorPortal(page, () =>
+      readTheLinesAsWritten(page),
+    );
+
+    expectTheSameInEveryLanguage(written);
+  });
+
+  // The Category names are the shared terms, which the Shopper reads too.
+  test('the list of Category names is different in each of the three languages', async ({
+    page,
+  }) => {
+    const lists = await readInEveryLanguageOfTheVendorPortal(page, () =>
+      readTheCategoryNames(page),
+    );
+
+    expectADifferentTextInEachLanguage(lists);
+  });
+
+  test('with the sample on it, the page still does not scroll sideways in any language', async ({
+    page,
+  }) => {
+    await readInEveryLanguageOfTheVendorPortal(page, () => expectTheWholeSample(page));
+  });
 });
