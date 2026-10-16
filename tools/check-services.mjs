@@ -356,8 +356,8 @@ async function defaultLanguageIsKurdish() {
   if (defaultLocale !== 'ckb') throw new Error(`the default language is ${defaultLocale}`);
 }
 
-// The two development logins the start command creates. Each one's name is
-// in `.env`, beside its password.
+// The development logins the start command creates. Each one's name is in
+// `.env`, beside its password.
 async function findDevelopmentLogin({ nameSetting }) {
   const name = settings[nameSetting];
   if (!name) throw new Error(`.env does not name it. ${startHint}`);

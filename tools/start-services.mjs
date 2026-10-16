@@ -1,6 +1,6 @@
 // Starts the development services in the background and returns when they are
-// healthy, the development Admin and Vendor logins exist and the platform's
-// database has every migration. On the first start it also creates the local
+// healthy, the development Admin's login exists and the platform's database
+// has every migration. On the first start it also creates the local
 // environment file. Run it with `pnpm services:up`.
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -19,7 +19,6 @@ const envFile = join(root, '.env');
 const fixedValues = {
   KEYCLOAK_ADMINISTRATOR_NAME: 'keycloak-administrator',
   DEVELOPMENT_ADMIN_NAME: 'development-admin',
-  DEVELOPMENT_VENDOR_NAME: 'development-vendor',
 };
 
 function valueFor(name) {
