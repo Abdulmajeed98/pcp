@@ -32,7 +32,16 @@ import {
   temporaryLoginOf,
 } from './vendors';
 
-const [kurdish, , english] = languages;
+const [kurdish, arabic, english] = languages;
+
+// The realm file's settings that the tests below check: its password policy,
+// and its brute-force detection.
+const realm = JSON.parse(
+  readFileSync(
+    join(__dirname, '..', '..', '..', 'services', 'keycloak', 'import', 'pcp-realm.json'),
+    'utf8',
+  ),
+) as { passwordPolicy: string; failureFactor: number; quickLoginCheckMilliSeconds: number };
 
 // The whole path on the running platform: the API makes the Vendor's Login in
 // the development Keycloak, through the API's own client, with a temporary
@@ -132,7 +141,8 @@ const piecesOfTheNewPasswordScreen = [
 
 // What it says when it refuses a new password: the two refusals of the
 // password policy, a missing password and a confirmation that does not match.
-// Each is sent once the pieces above are read.
+// Each is sent once the pieces above are read, so the first refusal is the
+// piece after them.
 async function readTheRefusals(page: Page, loginPhoneNumber: string): Promise<string[]> {
   return [
     await expectTheNewPasswordScreenToRefuse(page, 'abcd'),
@@ -142,10 +152,18 @@ async function readTheRefusals(page: Page, loginPhoneNumber: string): Promise<st
   ];
 }
 
+// The words for the field, a Vendor's login phone number, in each language,
+// as the word list gives them.
+const thePhoneNumber = new Map<Language, string>([
+  [kurdish, 'ژمارەی تەلەفۆن'],
+  [arabic, 'رقم الهاتف'],
+  [english, 'phone number'],
+]);
+
 // The language is chosen on the login screen, with its own select, before the
 // Vendor logs in. Each language has a made-up Vendor of its own, in a browser
 // of its own, so that no earlier choice is remembered.
-test("the screen that asks for a new password, opened in each of the three languages with the login screen's own choice of language, declares that language, its text and its refusals differ between the three, and its Kurdish text is not its English text", async ({
+test("the screen that asks for a new password, opened in each of the three languages with the login screen's own choice of language, declares that language, its text and its refusals differ between the three, its Kurdish text is not its English text, and its refusals give the realm's length in Western digits and name the phone number", async ({
   browser,
   page,
   request,
@@ -182,20 +200,32 @@ test("the screen that asks for a new password, opened in each of the three langu
   // platform's numbers are in Western digits (LANG-5).
   inKurdish.forEach((text, index) => {
     expect(text, `piece ${index + 1} in Kurdish`).not.toBe(inEnglish[index]);
-    expect(text, `piece ${index + 1} in Kurdish`).not.toMatch(/[٠-٩۰-۹]/);
   });
+  // The theme writes the policy's length into the Kurdish and the Arabic
+  // message itself, so a change to the realm's length fails here until the
+  // messages follow it. The policy's other refusal names the field as the
+  // login screen does.
+  const minimumLength = /length\((\d+)\)/.exec(realm.passwordPolicy)?.[1];
+  expect(minimumLength, "the realm's password policy names a length").toBeDefined();
+  const lengthRefusal = piecesOfTheNewPasswordScreen.length;
+  for (const [language, said] of texts) {
+    said.forEach((text, index) => {
+      expect(text, `piece ${index + 1} in ${language.name}`).not.toMatch(/[٠-٩۰-۹]/);
+    });
+    expect(said[lengthRefusal], `the length refusal in ${language.name}`).toContain(
+      minimumLength,
+    );
+    expect(
+      said[lengthRefusal + 1],
+      `the phone number refusal in ${language.name}`,
+    ).toContain(thePhoneNumber.get(language));
+  }
 });
 
-// The realm's brute-force detection, as the realm file configures it: how
-// many wrong passwords in a row lock a Login, and how far apart two wrong
-// passwords must be for its quick-login check, which locks a Login sooner,
-// to leave it alone.
-const { failureFactor, quickLoginCheckMilliSeconds } = JSON.parse(
-  readFileSync(
-    join(__dirname, '..', '..', '..', 'services', 'keycloak', 'import', 'pcp-realm.json'),
-    'utf8',
-  ),
-) as { failureFactor: number; quickLoginCheckMilliSeconds: number };
+// The realm's brute-force detection: how many wrong passwords in a row lock a
+// Login, and how far apart two wrong passwords must be for its quick-login
+// check, which locks a Login sooner, to leave it alone.
+const { failureFactor, quickLoginCheckMilliSeconds } = realm;
 
 // A locked Login is told the same as a wrong password, so the right password
 // being refused is what shows the lock. On the Kurdish login screen both are
