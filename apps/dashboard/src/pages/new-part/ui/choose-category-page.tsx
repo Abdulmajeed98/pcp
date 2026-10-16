@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 
 import { categoryName, useCategories } from '@/entities/category';
 import { WhyNotAnswered } from '@/shared/api';
+import { useAddressKeepingTheQuery } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -20,11 +21,12 @@ import {
 // for, and it cannot be changed once the Part exists. The Categories are the
 // API's, so a refusal to give them is said in words.
 export function ChooseCategoryPage() {
+  const keepingTheQuery = useAddressKeepingTheQuery();
   const categories = useCategories();
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink to="/catalog">Catalog</BackLink>
+      <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
       <h1 className="text-xl font-semibold sm:text-2xl">New Part</h1>
       <p>
         Choose its Category first. The form then asks for that Category's specifications,
@@ -55,7 +57,7 @@ export function ChooseCategoryPage() {
                 <ItemContent>
                   <ItemTitle className="text-base">
                     <Link
-                      to={`/catalog/new/${key}`}
+                      to={keepingTheQuery(`/catalog/new/${key}`)}
                       className="after:absolute after:inset-0 focus-visible:outline-none"
                     >
                       {categoryName(key)}

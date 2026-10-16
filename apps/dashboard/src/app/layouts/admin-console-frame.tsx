@@ -23,7 +23,7 @@ export function AdminConsoleFrame() {
   return (
     <div className="min-h-dvh wrap-break-word">
       <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2 sm:px-6">
           <p className="shrink-0 font-semibold whitespace-nowrap">Admin console</p>
           <div className="ms-auto flex min-w-0 items-center gap-3">
             {caller.data !== undefined && (
@@ -40,7 +40,7 @@ export function AdminConsoleFrame() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-6">
+      <main className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6">
         <Outlet />
       </main>
       <ScrollRestoration />

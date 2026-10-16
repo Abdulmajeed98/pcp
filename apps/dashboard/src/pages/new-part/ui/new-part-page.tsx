@@ -6,11 +6,13 @@ import { categoryName, useCategories } from '@/entities/category';
 import { partsKey } from '@/entities/part';
 import { PartForm } from '@/features/part-form';
 import { apiClient, dataOf, WhyNotAnswered } from '@/shared/api';
+import { useAddressKeepingTheQuery } from '@/shared/lib';
 import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
 
 // The form for a new Part of the Category the address names. Saving creates
 // the Part and opens its page, and the next search finds it.
 export function NewPartPage() {
+  const keepingTheQuery = useAddressKeepingTheQuery();
   const { category: key } = useParams();
   const categories = useCategories();
   const queryClient = useQueryClient();
@@ -19,7 +21,7 @@ export function NewPartPage() {
     mutationFn: (body: CreatePartRequest) => dataOf(apiClient.createPart({ body })),
     onSuccess: async (part) => {
       await queryClient.invalidateQueries({ queryKey: partsKey });
-      await navigate(`/catalog/parts/${part.id}`);
+      await navigate(keepingTheQuery(`/catalog/parts/${part.id}`));
     },
   });
 
@@ -39,7 +41,7 @@ export function NewPartPage() {
   if (category === undefined) {
     return (
       <div className="flex flex-col gap-4">
-        <BackLink to="/catalog/new">Choose a Category</BackLink>
+        <BackLink to={keepingTheQuery('/catalog/new')}>Choose a Category</BackLink>
         <h1 className="text-xl font-semibold sm:text-2xl">Category not found</h1>
         <p>The catalog has no Category of that name.</p>
       </div>
@@ -48,7 +50,7 @@ export function NewPartPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink to="/catalog/new">Choose another Category</BackLink>
+      <BackLink to={keepingTheQuery('/catalog/new')}>Choose another Category</BackLink>
       <h1 className="text-xl font-semibold sm:text-2xl">
         New {categoryName(category.key)}
       </h1>

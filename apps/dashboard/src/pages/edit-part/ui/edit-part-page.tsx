@@ -6,6 +6,7 @@ import { categoryName, useCategories } from '@/entities/category';
 import { partsKey, usePart } from '@/entities/part';
 import { PartForm } from '@/features/part-form';
 import { apiClient, dataOf, Refusal, WhyNotAnswered } from '@/shared/api';
+import { useAddressKeepingTheQuery } from '@/shared/lib';
 import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
 
 // The form for correcting a Part, filled with the Part as it is. Saving
@@ -14,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
 // Category is shown and cannot be changed: a Part in the wrong Category is
 // created again in the right one.
 export function EditPartPage() {
+  const keepingTheQuery = useAddressKeepingTheQuery();
   const { partId = '' } = useParams();
   const part = usePart(partId);
   const categories = useCategories();
@@ -24,7 +26,7 @@ export function EditPartPage() {
       dataOf(apiClient.editPart({ path: { partId }, body })),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: partsKey });
-      await navigate(`/catalog/parts/${partId}`);
+      await navigate(keepingTheQuery(`/catalog/parts/${partId}`));
     },
   });
 
@@ -33,7 +35,7 @@ export function EditPartPage() {
     const missing = error instanceof Refusal && error.status === 404;
     return (
       <div className="flex flex-col gap-4">
-        <BackLink to="/catalog">Catalog</BackLink>
+        <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
         <Alert variant="destructive" data-testid="refusal">
           <AlertTitle>
             {missing ? 'Part not found.' : 'The Part could not be read.'}
@@ -58,7 +60,7 @@ export function EditPartPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink to={`/catalog/parts/${partId}`}>The Part</BackLink>
+      <BackLink to={keepingTheQuery(`/catalog/parts/${partId}`)}>The Part</BackLink>
       <h1 className="text-xl font-semibold sm:text-2xl">Edit the Part</h1>
       <p>
         Category: <span data-testid="category">{categoryName(category.key)}</span>. A Part's

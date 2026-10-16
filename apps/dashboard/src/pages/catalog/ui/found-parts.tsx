@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 
 import { categoryName } from '@/entities/category';
 import { WhyNotAnswered } from '@/shared/api';
+import { useAddressKeepingTheQuery } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -157,6 +158,7 @@ function PastTheLastPage({ onFirstPage }: { onFirstPage: () => void }) {
 }
 
 function NothingFound({ search }: { search: CatalogSearch }) {
+  const keepingTheQuery = useAddressKeepingTheQuery();
   const where =
     search.category === undefined
       ? 'the catalog'
@@ -184,7 +186,10 @@ function NothingFound({ search }: { search: CatalogSearch }) {
       </EmptyHeader>
       <EmptyContent>
         <p>A Part that OpenDB lacks can be created.</p>
-        <Link to="/catalog/new" className={buttonVariants({ variant: 'outline' })}>
+        <Link
+          to={keepingTheQuery('/catalog/new')}
+          className={buttonVariants({ variant: 'outline' })}
+        >
           <PlusIcon data-icon="inline-start" />
           Create a Part
         </Link>

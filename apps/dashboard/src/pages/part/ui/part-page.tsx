@@ -8,6 +8,7 @@ import { categoryName, useCategories } from '@/entities/category';
 import { PartPicture, usePart, valueAt } from '@/entities/part';
 import { PhotoField } from '@/features/add-photo';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
+import { useAddressKeepingTheQuery } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -31,6 +32,7 @@ const day = new Intl.DateTimeFormat('en-GB', {
 // specification of its Category's list under its English label, the missing
 // ones said to be so, and the missing needed ones marked.
 export function PartPage() {
+  const keepingTheQuery = useAddressKeepingTheQuery();
   const { partId = '' } = useParams();
   const part = usePart(partId);
   const categories = useCategories();
@@ -40,7 +42,7 @@ export function PartPage() {
   if (error) {
     return (
       <div className="flex flex-col gap-4">
-        <BackLink to="/catalog">Catalog</BackLink>
+        <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
         <Alert variant="destructive" data-testid="refusal">
           <AlertTitle>The Part could not be read.</AlertTitle>
           <AlertDescription>
@@ -67,12 +69,13 @@ function PartDetails({
   part: PartResponse;
   category: CategoryResponse;
 }) {
+  const keepingTheQuery = useAddressKeepingTheQuery();
   const missing = part.missingNeededSpecifications;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <BackLink to="/catalog">Catalog</BackLink>
+        <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
         <div className="flex items-start gap-4">
           <PartPicture part={part} size="page" />
           <div className="flex min-w-0 flex-col gap-1">
@@ -86,7 +89,10 @@ function PartDetails({
           </div>
         </div>
         <div className="flex flex-wrap items-start gap-2">
-          <Link to="edit" className={buttonVariants({ variant: 'outline' })}>
+          <Link
+            to={keepingTheQuery(`/catalog/parts/${part.id}/edit`)}
+            className={buttonVariants({ variant: 'outline' })}
+          >
             <PencilIcon data-icon="inline-start" aria-hidden="true" />
             Edit
           </Link>
@@ -162,9 +168,10 @@ function PartDetails({
 }
 
 function PartNotFound() {
+  const keepingTheQuery = useAddressKeepingTheQuery();
   return (
     <div className="flex flex-col gap-4">
-      <BackLink to="/catalog">Catalog</BackLink>
+      <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
       <h1 className="text-xl font-semibold sm:text-2xl">Part not found</h1>
       <p>The catalog holds no Part at this address. It may never have existed.</p>
     </div>

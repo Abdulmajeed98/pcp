@@ -1,10 +1,10 @@
 import { ChevronLeftIcon } from 'lucide-react';
 import type * as React from 'react';
-import { Link } from 'react-router';
+import { Link, type To } from 'react-router';
 
 // The way back to the screen above, written above a screen's title, with a
 // chevron that points back in the reading direction.
-function BackLink({ to, children }: { to: string; children: React.ReactNode }) {
+function BackLink({ to, children }: { to: To; children: React.ReactNode }) {
   return (
     <Link
       to={to}

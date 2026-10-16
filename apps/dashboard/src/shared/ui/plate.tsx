@@ -6,7 +6,9 @@ import type * as React from 'react';
 // Amber is drawn here and nowhere else. The figure keeps its digits in
 // columns, and is always written in Western digits by `formatNumber`.
 //
-// A screen has one plate at most.
+// It is drawn at the figure size. A screen's one leading figure, at the
+// large size (the dashboard's DESIGN.md), arrives with the first screen
+// that has one.
 function Plate({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span

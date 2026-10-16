@@ -9,18 +9,25 @@ import { PartPage } from '@/pages/part';
 import { AdminConsoleFrame } from './layouts/admin-console-frame';
 
 // The Admin console's screens, by their addresses. The Admin console opens on
-// the Catalog, its only section so far.
+// the Catalog, its only section so far. A Part, its edit form and a new Part
+// are the Catalog's children, which it shows beside its list on a wide
+// screen.
 const routes = [
   {
     path: '/',
     Component: AdminConsoleFrame,
     children: [
       { index: true, element: <Navigate to="/catalog" replace /> },
-      { path: 'catalog', Component: CatalogPage },
-      { path: 'catalog/new', Component: ChooseCategoryPage },
-      { path: 'catalog/new/:category', Component: NewPartPage },
-      { path: 'catalog/parts/:partId', Component: PartPage },
-      { path: 'catalog/parts/:partId/edit', Component: EditPartPage },
+      {
+        path: 'catalog',
+        Component: CatalogPage,
+        children: [
+          { path: 'new', Component: ChooseCategoryPage },
+          { path: 'new/:category', Component: NewPartPage },
+          { path: 'parts/:partId', Component: PartPage },
+          { path: 'parts/:partId/edit', Component: EditPartPage },
+        ],
+      },
       { path: '*', Component: NotFoundPage },
     ],
   },

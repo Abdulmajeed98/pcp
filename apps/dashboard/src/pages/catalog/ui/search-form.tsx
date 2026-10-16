@@ -6,10 +6,10 @@ import { Button, Input, Label, NativeSelect, NativeSelectOption } from '@/shared
 
 import type { CatalogSearch } from '../model/search';
 
-// The Catalog's search: the words, the Category, and the button. On a phone
-// the words take the whole width and the Category shares the next line with
-// the button; on a wider screen all three sit on one line. Every control is
-// 44 pixels high.
+// The Catalog's search: the words, the Category, and the button. Where the
+// list is narrow, on a phone or beside a Part on a desk, the words take the
+// whole width and the Category shares the next line with the button; where
+// it is wider all three sit on one line. Every control is 44 pixels high.
 //
 // The words are searched when the Admin taps Search or presses Enter. A new
 // Category is searched at once, with the words as they are typed. Either
@@ -47,7 +47,7 @@ export function SearchForm({
 
   return (
     <search>
-      <form className="flex flex-col gap-2 sm:flex-row" onSubmit={submit}>
+      <form className="flex flex-col gap-2 @lg:flex-row" onSubmit={submit}>
         <Label htmlFor="catalog-search" className="sr-only">
           Search the catalog
         </Label>
@@ -73,7 +73,7 @@ export function SearchForm({
           </Label>
           <NativeSelect
             id="catalog-category"
-            className="flex-1 sm:w-48 sm:flex-none"
+            className="flex-1 @lg:w-48 @lg:flex-none"
             value={search.category ?? ''}
             onChange={(event) => choose(event.target.value)}
           >
