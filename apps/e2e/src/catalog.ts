@@ -72,3 +72,27 @@ export function rowOf(page: Page, name: string): Locator {
 export function nothingFound(page: Page): Locator {
   return page.getByTestId('nothing-found');
 }
+
+// A Part's page, told apart by its address.
+export const partPageAddress = new RegExp(`^${dashboardUrl}/catalog/parts/[0-9a-f-]{36}$`);
+
+// Opens the form for a new Part from the Catalog, the way the Admin does:
+// taps New Part, then chooses the Category by its English name.
+export async function openTheFormForANewPart(page: Page, category: string): Promise<void> {
+  await page.getByRole('link', { name: 'New Part' }).click();
+  await page.getByRole('link', { name: category, exact: true }).click();
+  await expect(
+    page.getByRole('heading', { level: 1, name: `New ${category}` }),
+  ).toBeVisible();
+}
+
+// The row of a Part's page that shows one specification, found by its path
+// in the API's specification list, such as `cores.total`.
+export function specificationRow(page: Page, path: string): Locator {
+  return page.locator(`[data-specification="${path}"]`);
+}
+
+// The mark a Part's page gives a needed specification the Part lacks.
+export function missingNeededMark(row: Locator): Locator {
+  return row.getByTestId('missing-needed');
+}
