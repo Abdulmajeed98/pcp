@@ -8,7 +8,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Before anything is written, these are read for the installed releases, and the findings are recorded under Comments:
   - Keycloak 26.8's realm settings for a password policy and for brute-force detection, and what a locked Login sees;
