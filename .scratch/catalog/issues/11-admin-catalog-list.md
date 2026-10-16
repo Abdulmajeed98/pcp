@@ -39,3 +39,37 @@ The dashboard gains its first libraries, the most widely used for each job, as t
 - [ ] `pnpm check` passes with Docker stopped.
 - [ ] The results of the fault checks are recorded under Comments.
 - [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+
+## Comments
+
+### 16 October 2026: settled before anything was written
+
+**React Router 8.4.0, in data mode.**
+
+- Its documentation names three modes. Declarative mode declares routes as JSX inside `<BrowserRouter>`. Data mode declares them as route objects outside React's rendering, passed to `createBrowserRouter`, and adds loaders, actions and pending states. Framework mode wraps data mode in React Router's own Vite plugin, with routes in a configuration file.
+- Framework mode is left out: it brings its own plugin, build and file layout, and the dashboard is a client-rendered app that Nx builds with plain Vite.
+- Data mode is chosen. The routes are plain objects that the App layer declares in one file, apart from the components, which is where Feature-Sliced Design puts them. Its loaders are not used, because TanStack Query fetches the data. It leaves room for an error screen for each route, and for a blocker on a form left half filled, which only data mode has.
+- The router is made once, after the login and only for the Admin console. keycloak-js cleans the login's answer off the address as the dashboard starts, so a router made before that would start from an address with the answer still on it.
+- React Router 8 needs React 19.2.7 or later and Node 22.22 or later. The workspace has React 19.3.0 and Node 24.
+
+**TanStack Query 5, beside `@pcp/api-client`.**
+
+- A query function must throw, or return a rejected promise, for TanStack Query to treat the query as failed. A client that does not throw, as `fetch` does not, has to be made to.
+- `@pcp/api-client`'s calls never throw. They answer with `data`, or with `error`, the API's error body, and with no response at all when the API cannot be reached.
+- So one small function in the Shared layer's `api` segment turns a call's answer into its data, or throws: a refusal, which keeps the status and the API's error body, or "unreachable". Each screen reads `error` and says which it was, and a form reads the error body's `field` to put the refusal beside its field.
+- TanStack Query retries a failed query three times by default, which would hold a 403 or a 404 on screen for several seconds. Only "unreachable" is retried, once.
+- One `QueryClient` is made in the App layer and given to both halves.
+
+**shadcn/ui 4.21.5, with each app's own set (ADR-0007).**
+
+- Its documented monorepo keeps one set in a shared package, and every app's `components.json` must name the same style. Two styles therefore need two `components.json` files and two sets.
+- The dashboard's set is in the dashboard, in the Shared layer's `ui` segment, `apps/dashboard/src/shared/ui`, imported as `@/shared/ui` through its index file. `apps/dashboard/components.json` names the style `base-mira`, Base UI under the Mira style, with `rtl: true`, lucide's icons and the aliases of the Shared layer. The Shopper app's set will have its own `components.json`, in its own folder, when its first component is added.
+- With `rtl: true` the CLI writes logical classes and props in place of physical ones, such as `end-*` for `right-*` and `pe-*` for `pr-*`, and turns icons that point with `rtl:rotate-180`. A right-to-left page also needs Base UI's `DirectionProvider`, which shadcn/ui's `direction` component gives under its own name, and a menu's popup is given `dir` as well.
+- The CLI no longer writes a `utils` file. Components import `cn` from shadcn's own package, `cn`, which replaces `clsx` and `tailwind-merge`.
+- What its output needs before it is kept, found with `shadcn add … --dry-run --view` before anything was written:
+  - It imports one component from another past the index file, as `@/shared/ui/separator`. Feature-Sliced Design's bans refuse that, so such an import is made relative, `./separator`, inside the segment.
+  - The Mira style is compact: controls are 28 pixels high, with 12-pixel text from `text-xs`. The root DESIGN.md asks for 44 pixels and no text under 14, and the theme takes `text-xs` away, so each component is set to `h-control` and the body or small size.
+  - Its focus ring is drawn at 30% strength, `ring-ring/30`. The root DESIGN.md asks for full strength, so each is drawn in `ring` itself.
+  - The outline button draws its border in `border`. The border is what shows such a button's edge, so it is drawn in `input`, which meets 3:1.
+- Two things the set-up must not undo, and does not: the CLI was given the dashboard's own stylesheet as its `tailwind.css`, and adding the components wrote no CSS, so no `.dark` class variant and no colours of shadcn/ui's own reached it. The dark scheme still follows the device through Tailwind's own `dark:`.
+- The components are added with `pnpm dlx shadcn@4.21.5 add …` from the dashboard's folder. `shadcn` and `cn` have no install script.
