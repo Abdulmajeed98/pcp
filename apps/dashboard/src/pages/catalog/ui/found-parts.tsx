@@ -1,16 +1,19 @@
 import type { PartPageResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { ChevronLeftIcon, ChevronRightIcon, SearchXIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, SearchXIcon } from 'lucide-react';
+import { Link } from 'react-router';
 
 import { categoryName } from '@/entities/category';
-import { Refusal } from '@/shared/api';
+import { WhyNotAnswered } from '@/shared/api';
 import {
   Alert,
   AlertDescription,
   AlertTitle,
   Button,
+  buttonVariants,
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -175,25 +178,25 @@ function NothingFound({ search }: { search: CatalogSearch }) {
           )}
         </EmptyDescription>
       </EmptyHeader>
+      <EmptyContent>
+        <p>A Part that OpenDB lacks can be created.</p>
+        <Link to="/catalog/new" className={buttonVariants({ variant: 'outline' })}>
+          <PlusIcon data-icon="inline-start" />
+          Create a Part
+        </Link>
+      </EmptyContent>
     </Empty>
   );
 }
 
-// The search was not answered: the API refused it, with its status and its
-// error's code, or it could not be reached.
+// The search was not answered: the API refused it, or it could not be
+// reached.
 function NotSearched({ error }: { error: Error }) {
   return (
     <Alert variant="destructive" data-testid="refusal">
       <AlertTitle>The catalog could not be searched.</AlertTitle>
       <AlertDescription>
-        {error instanceof Refusal ? (
-          <>
-            The API refused the search with{' '}
-            <AlwaysEnglish>{`${formatNumber(error.status)}, ${error.code}`}</AlwaysEnglish>.
-          </>
-        ) : (
-          <>The API cannot be reached. Check the connection, and search again.</>
-        )}
+        <WhyNotAnswered error={error} />
       </AlertDescription>
     </Alert>
   );

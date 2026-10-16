@@ -1,3 +1,8 @@
+import { PlusIcon } from 'lucide-react';
+import { Link } from 'react-router';
+
+import { buttonVariants } from '@/shared/ui';
+
 import { useSearchInTheAddress } from '../model/search';
 import { FoundParts } from './found-parts';
 import { SearchForm } from './search-form';
@@ -11,7 +16,13 @@ export function CatalogPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold sm:text-2xl">Catalog</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold sm:text-2xl">Catalog</h1>
+        <Link to="/catalog/new" className={buttonVariants({ variant: 'outline' })}>
+          <PlusIcon data-icon="inline-start" />
+          New Part
+        </Link>
+      </div>
       <SearchForm search={search} onSearch={show} />
       <FoundParts search={search} onSearch={show} />
     </div>

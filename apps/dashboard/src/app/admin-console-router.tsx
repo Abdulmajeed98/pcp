@@ -1,7 +1,9 @@
 import { createBrowserRouter, Navigate, type DataRouter } from 'react-router';
 
 import { CatalogPage } from '@/pages/catalog';
+import { ChooseCategoryPage, NewPartPage } from '@/pages/new-part';
 import { NotFoundPage } from '@/pages/not-found';
+import { PartPage } from '@/pages/part';
 
 import { AdminConsoleFrame } from './layouts/admin-console-frame';
 
@@ -14,6 +16,9 @@ const routes = [
     children: [
       { index: true, element: <Navigate to="/catalog" replace /> },
       { path: 'catalog', Component: CatalogPage },
+      { path: 'catalog/new', Component: ChooseCategoryPage },
+      { path: 'catalog/new/:category', Component: NewPartPage },
+      { path: 'catalog/parts/:partId', Component: PartPage },
       { path: '*', Component: NotFoundPage },
     ],
   },

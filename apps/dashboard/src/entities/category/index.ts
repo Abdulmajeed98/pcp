@@ -1,1 +1,1 @@
-export { type CategoryKey, categoryName, useCategories } from './api/categories';
+export { type CategoryKey, categoryName, labelOf, useCategories } from './api/categories';

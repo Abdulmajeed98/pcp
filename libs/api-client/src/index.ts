@@ -2,8 +2,11 @@ export { type ApiClient, type ApiClientOptions, createApiClient } from './api-cl
 export type {
   CallerResponse,
   CategoryResponse,
+  CreatePartRequest,
+  EditPartRequest,
   ErrorResponse,
   PartPageResponse,
+  PartResponse,
   PartSummaryResponse,
   SpecificationResponse,
   StatusResponse,

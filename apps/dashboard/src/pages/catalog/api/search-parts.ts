@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
+import { partsKey } from '@/entities/part';
 import { apiClient, dataOf } from '@/shared/api';
 
 import type { CatalogSearch } from '../model/search';
@@ -12,7 +13,7 @@ export const pageSize = 20;
 // or the next search is on its way, the last answer stays on screen.
 export function useSearchParts({ words, category, page }: CatalogSearch) {
   return useQuery({
-    queryKey: ['parts', 'search', { words, category, page }],
+    queryKey: [...partsKey, 'search', { words, category, page }],
     queryFn: () =>
       dataOf(
         apiClient.searchParts({ query: { search: words, category, page, size: pageSize } }),

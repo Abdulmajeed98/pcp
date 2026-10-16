@@ -1,4 +1,4 @@
-import type { CategoryResponse } from '@pcp/api-client';
+import type { CategoryResponse, SpecificationResponse } from '@pcp/api-client';
 import { useQuery } from '@tanstack/react-query';
 
 import { apiClient, dataOf } from '@/shared/api';
@@ -24,4 +24,10 @@ export function useCategories() {
 // shown in: English in the Admin console.
 export function categoryName(key: CategoryKey): string {
   return t(`Category.${key}`);
+}
+
+// A specification's name as the dashboard shows it: its English label, with
+// its unit when it has one, as in "TDP (W)".
+export function labelOf({ label, unit }: SpecificationResponse): string {
+  return unit === undefined ? label : `${label} (${unit})`;
 }
