@@ -22,6 +22,7 @@ A word in _Notes_ that is marked **to choose** is one the drafter was least sure
 | Login                 | هەژمار             | حساب                     | Vendor portal           | The account. Logging in and out are below.                                                              |
 | Log in                | چوونەژوورەوە       | تسجيل الدخول             | Vendor portal           |                                                                                                         |
 | Log out               | چوونەدەرەوە        | تسجيل الخروج             | Vendor portal           |                                                                                                         |
+| Login phone number    | ژمارەی تەلەفۆن     | رقم الهاتف               | Vendor portal           | "Phone number": Keycloak's login screen labels its field so, and its errors name it so.                 |
 | Caller                | بانگکەر            | المتصل                   | Vendor portal           | On the placeholder page only.                                                                           |
 | Quoted Price          | نرخی دیاریکراو     | السعر المعلن             | Both                    |                                                                                                         |
 | Converted Price       | نرخی گۆڕدراو       | السعر المحوَّل             | Shopper app             |                                                                                                         |

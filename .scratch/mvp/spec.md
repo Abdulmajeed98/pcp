@@ -680,7 +680,7 @@ End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a
 
 A module that leaves another adds it here.
 
-**Traces hold test passwords.** A failed end-to-end test keeps a Playwright trace in `apps/e2e/test-output/`, which git ignores. It holds what the test typed and was answered, the development Admin's password and a made-up Vendor's temporary password among them. On the owner's machine that stays as it is, as the owner decided on 16 October 2026. A CI server that keeps traces, which the hosting work may add, must treat them as holding test passwords.
+**Traces hold test passwords.** A failed end-to-end test keeps a Playwright trace in `apps/e2e/test-output/`, which git ignores. It holds what the test typed and was answered, the development Admin's password and a made-up Vendor's temporary password and new password among them. On the owner's machine that stays as it is, as the owner decided on 16 October 2026. A CI server that keeps traces, which the hosting work may add, must treat them as holding test passwords.
 
 The API's tests use Jest with SWC and live under `src/test/`, mirroring `src/app/`: `*.spec.ts` for unit tests with mocked Stores and for tests of an endpoint through the API's HTTP surface, and `*.integration-spec.ts` for tests against a real PostgreSQL started in a test container. The frontends' unit-test tools are chosen when work on them begins.
 

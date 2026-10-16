@@ -138,3 +138,32 @@ Kept as they are, as the review asked: the 8 written into the Kurdish length mes
 - No password from `.env` and no new password was found in the runs' output.
 - Each of the four commits was gated on `pnpm check`'s exit status in the working tree, holding only that commit's files.
 - The services were stopped again afterwards with `pnpm services:down`. Their data stays in the volume.
+
+### 16 October 2026: the owner's decisions
+
+The five decisions this ticket left open were put to the owner on 16 October 2026, one at a time. Each was decided as recommended, and the first four go further than the recommendation: they are done here, not left for later tickets.
+
+- **The 8 written into the Kurdish length message.** **Kept**, and now checked: the language line reads the length from the realm file's `passwordPolicy` and expects each language's length refusal to hold it, so a change to the realm's length fails `pnpm platform:check` until the messages follow it. The comment beside the message says so.
+- **Keycloak's Arabic ٨ and its title.** **Corrected now**, not in ticket 13. The theme's Arabic writes the length as 8, as the Kurdish does, and titles the screen that asks for a new password "تحديث كلمة المرور", "update the password", in place of "تم تحديث كلمة المرور". The language line now looks for Arabic-Indic digits on the screen in every language, not only in Kurdish. Both are drafts under LANG-7, as the theme's Arabic file says.
+- **"username" in Keycloak's English and Arabic errors.** **Corrected now.** The theme's English and Arabic give `invalidUserMessage`, `accountTemporarilyDisabledMessage` and `invalidPasswordNotUsernameMessage` "phone number": "Invalid phone number or password." and "Invalid password: must not be the phone number.", with the Arabic to match. A locked Login is still shown a wrong password's text, word for word. The language line expects each language's refusal of the login phone number to name the phone number in the word list's words.
+- **The word list's word for "phone number".** **Added now.** `words.md` gains "Login phone number", ژمارەی تەلەفۆن and رقم الهاتف, the words the label already uses, with a note that Keycloak's screen says "Phone number". Ticket 06's box now uses that entry and still adds "temporary password".
+- **A failed test's trace holds a made-up Vendor's new password.** **Noted now** in the MVP spec's Testing strategy, in the paragraph on traces holding test passwords, not left for ticket 13.
+
+**Fault checks**, each planted by a script that refused a changed target file, made one edit, ran `src/vendor-first-login.spec.ts` alone, put the file back and confirmed it unchanged:
+
+| Fault | Failed |
+|---|---|
+| The Arabic length message taken off the theme | The language line, and nothing else: "piece 7 in Arabic", Keycloak's "كلمة المرور غير صالحة: الحد الأدنى للطول ٨." holds an Arabic-Indic digit. 7 passed. |
+| The realm file's length changed to 10, the messages left at 8 | The language line, and nothing else: "the length refusal", expected to hold "10", read "… لانیکەم 8 پیت بێت.". 7 passed. |
+| The English refusal of the phone number taken off the theme | The language line, and nothing else: "the phone number refusal in English", expected to hold "phone number", read Keycloak's "Invalid password: must not be equal to the username.". 7 passed. |
+
+The first runs of these faults named the language as "[object Object]" in the failure; the messages now give its name.
+
+**Results after the decisions**, against the owner's services with no reset, in the owner's own checkout:
+
+- `pnpm platform:check` passes 87 tests.
+- `pnpm services:check` passes 37 lines.
+- `pnpm integration:check` passes, run for the commit that changes the theme.
+- `pnpm check --skip-nx-cache` passes with `DOCKER_HOST` pointed at a socket that does not exist.
+- No password or secret from `.env` was found in the runs' output.
+- The services were stopped again afterwards with `pnpm services:down`. Their data stays in the volume.
