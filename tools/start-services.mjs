@@ -32,8 +32,8 @@ function valueFor(name) {
 
 // The names come from .env.example, so the settings are listed in one place.
 // A value that is in the file is never changed: the services' data was
-// created with the passwords and the secret in it. A setting the file lacks is added, which
-// is how a file written before the setting existed gains it.
+// created with the passwords and the secret in it. A setting the file lacks
+// is added, which is how a file written before the setting existed gains it.
 function writeMissingSettings() {
   const names = Object.keys(parseEnv(readFileSync(join(root, '.env.example'), 'utf8')));
 
@@ -44,7 +44,7 @@ function writeMissingSettings() {
       ...names.map((name) => `${name}=${valueFor(name)}`),
     ];
     writeFileSync(envFile, `${lines.join('\n')}\n`, { mode: 0o600 });
-    console.log('Created .env with new local passwords.');
+    console.log('Created .env with new local passwords and a new secret.');
     return;
   }
 

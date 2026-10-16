@@ -277,13 +277,15 @@ function loginIsRefused(change, expectedError) {
 }
 
 // A client that may not use the password flow is told so before the password
-// is even looked at.
-async function passwordFlowIsRefused() {
-  const response = await requestTokenWithPassword(realmUrl, 'dashboard', 'nobody', 'wrong');
-  const { error } = await response.json();
-  if (error !== 'unauthorized_client') {
-    throw new Error(`Keycloak looked at the password and answered ${error}`);
-  }
+// is even looked at. `requestToken` asks for a token with the password flow,
+// as one client, for a name and a password that are both wrong.
+function passwordFlowIsRefused(requestToken) {
+  return async () => {
+    const { error } = await (await requestToken()).json();
+    if (error !== 'unauthorized_client') {
+      throw new Error(`Keycloak looked at the password and answered ${error}`);
+    }
+  };
 }
 
 function loginScreenLacks(link) {
@@ -424,22 +426,7 @@ async function apisClientFindsLogins() {
   if (!name) throw new Error(`.env does not name the development Admin. ${startHint}`);
 
   const login = await findLogin(await logInAsTheApisClient(settings), name);
-  if (login === undefined) throw new Error(`it found no login named ${name}`);
-}
-
-// The API's client gets its tokens with its secret alone. Keycloak answers
-// a wrong secret with the same error code, so this means something only once
-// the client has logged in with the secret it is given here.
-async function apisClientMayNotUsePasswordFlow() {
-  const response = await requestTokenAsTheApisClient(settings, {
-    grant_type: 'password',
-    username: 'nobody',
-    password: 'wrong',
-  });
-  const { error } = await response.json();
-  if (error !== 'unauthorized_client') {
-    throw new Error(`Keycloak looked at the password and answered ${error}`);
-  }
+  if (login === undefined) throw new Error(`it found no Login named ${name}`);
 }
 
 const keycloakAnswers = await check('Keycloak answers on port 8080', askKeycloak);
@@ -475,7 +462,12 @@ if (keycloakAnswers) {
         query.set('nonce', 'check');
       }, 'unauthorized_client'),
     );
-    await check('The password flow is refused', passwordFlowIsRefused);
+    await check(
+      'The password flow is refused',
+      passwordFlowIsRefused(() =>
+        requestTokenWithPassword(realmUrl, 'dashboard', 'nobody', 'wrong'),
+      ),
+    );
     await check(
       'The login screen offers no sign-up link',
       loginScreenLacks('login-actions/registration'),
@@ -510,11 +502,19 @@ if (keycloakAnswers) {
     apisClientFindsLogins,
   );
   // The API's client logs in as itself only: never with a person's password,
-  // and never through a browser.
+  // and never through a browser. Keycloak answers a wrong secret with the same
+  // error code as a refused flow, so the first means something only once the
+  // client has logged in with the secret it sends.
   if (apisClientLogsIn) {
     await check(
       "The password flow is refused to the API's client",
-      apisClientMayNotUsePasswordFlow,
+      passwordFlowIsRefused(() =>
+        requestTokenAsTheApisClient(settings, {
+          grant_type: 'password',
+          username: 'nobody',
+          password: 'wrong',
+        }),
+      ),
     );
     await check(
       "A login request through the API's client is refused",

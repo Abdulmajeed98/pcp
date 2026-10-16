@@ -1,7 +1,9 @@
-// Speaks to Keycloak's administration interface as Keycloak's own
-// administrator, whose name and password are in `.env`. That account opens
-// Keycloak's console during development. It is not the platform's Admin.
-// Also speaks to it as the API's own client, as the API does.
+// Speaks to the administration interface of Keycloak's `pcp` realm in one of
+// two ways. Keycloak's own administrator, whose name and password are in
+// `.env`, may do everything there. That account opens Keycloak's console
+// during development, and is not the platform's Admin. The API's own client,
+// whose secret is in `.env`, logs in as the API does and may do what the API
+// may.
 export const keycloakUrl = 'http://localhost:8080';
 
 // The password flow: a client hands a name and a password straight to a
@@ -18,10 +20,18 @@ export function requestTokenWithPassword(realm, client, username, password) {
   });
 }
 
-// A function that sends one request to the administration interface of the
-// `pcp` realm with a token. A login lasts a minute, so the function is used
-// at once and not kept.
-function askWith(token) {
+// Takes the token from the answer to a login, by `who`, and returns a
+// function that sends one request to the administration interface of the
+// `pcp` realm with it. A login lasts a minute, so the function is used at
+// once and not kept.
+async function askAs(who, login) {
+  if (!login.ok) {
+    const { error, error_description: description } = await login.json().catch(() => ({}));
+    const reason = error === undefined ? '' : `, ${error}: ${description}`;
+    throw new Error(`${who} could not log in (Keycloak answered ${login.status}${reason})`);
+  }
+  const { access_token: token } = await login.json();
+
   return (path, { headers, ...request } = {}) =>
     fetch(`${keycloakUrl}/admin/realms/pcp${path}`, {
       ...request,
@@ -38,12 +48,8 @@ export async function logInAsAdministrator(settings) {
     settings.KEYCLOAK_ADMINISTRATOR_NAME,
     settings.KEYCLOAK_ADMINISTRATOR_PASSWORD,
   );
-  if (!login.ok) {
-    throw new Error(`Keycloak's own administrator could not log in (${login.status})`);
-  }
-  const { access_token: token } = await login.json();
 
-  return askWith(token);
+  return askAs("Keycloak's own administrator", login);
 }
 
 // The API's own client in the `pcp` realm, whose secret is in `.env`.
@@ -68,13 +74,8 @@ export function requestTokenAsTheApisClient(settings, form = {}) {
 // what that client may do.
 export async function logInAsTheApisClient(settings) {
   const login = await requestTokenAsTheApisClient(settings);
-  if (!login.ok) {
-    const { error, error_description: description } = await login.json();
-    throw new Error(`Keycloak answered ${login.status}, ${error}: ${description}`);
-  }
-  const { access_token: token } = await login.json();
 
-  return askWith(token);
+  return askAs("The API's client", login);
 }
 
 // Finds a login of the `pcp` realm by its name, and answers with nothing when
