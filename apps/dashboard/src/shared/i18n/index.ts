@@ -7,4 +7,5 @@ export {
   rememberedLanguage,
   type ShownIn,
   startLanguage,
+  useDirectionShown,
 } from './languages';

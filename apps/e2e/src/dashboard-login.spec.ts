@@ -1,5 +1,6 @@
 import { expect, type Response, test } from '@playwright/test';
 
+import { catalogHeading } from './catalog';
 import {
   developmentAdmin,
   developmentVendor,
@@ -14,13 +15,15 @@ function isCallOfTheCallerEndpoint(response: Response): boolean {
   return response.url() === callerEndpoint && response.request().method() === 'GET';
 }
 
-test('the Admin logs in: the dashboard sends them to Keycloak, and then shows who the API says the caller is', async ({
+// The Admin console is the half a login with the role admin gets, so the
+// Catalog showing is what the role decided.
+test("the Admin logs in: the dashboard sends them to Keycloak, and then opens the Admin console's Catalog with the name the API says the caller has", async ({
   page,
 }) => {
   await logInToTheDashboard(page);
 
   await expect(page.getByTestId('caller-name')).toHaveText(developmentAdmin.name);
-  await expect(page.getByTestId('caller-roles')).toHaveText('admin');
+  await expect(catalogHeading(page)).toBeVisible();
 });
 
 test('the development Vendor logs in: the dashboard shows the name and the role vendor that the API says the caller has', async ({

@@ -1,13 +1,15 @@
 import {
   dashboardMessages,
+  type Direction,
   directions,
+  fallbackLanguage,
   type Language,
   languageForBrowser,
   languages,
   sharedTerms,
 } from '@pcp/i18n';
 import i18next from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { initReactI18next, useTranslation } from 'react-i18next';
 
 // The language of the browser the dashboard is open in, by `i18n`'s rule:
 // the first of the browser's languages that the platform has, and Kurdish
@@ -102,4 +104,14 @@ function declare(language: Language): void {
   document.documentElement.lang = language;
   document.documentElement.dir = directions[language];
   document.title = titleOfTheTab();
+}
+
+// The reading direction of the language the dashboard is shown in, for the
+// components that lay themselves out by it, such as Base UI's. It follows
+// the switch, as the document's own direction does.
+export function useDirectionShown(): Direction {
+  const { i18n } = useTranslation();
+  const shown = languages.find((language) => language === i18n.language);
+
+  return directions[shown ?? fallbackLanguage];
 }
