@@ -1,8 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { expect, type Page, test } from '@playwright/test';
 
 import {
   authorizationOfTheDevelopmentAdmin,
   chooseKeycloaksLanguage,
+  developmentAdmin,
   expectLoginScreen,
   expectNewPasswordScreen,
   expectTheVendorPortal,
@@ -197,4 +201,85 @@ test("the screen that asks for a new password, opened in each of the three langu
   piecesOfTheNewPasswordScreen.forEach((piece, index) => {
     expect(inKurdish[index], `${piece} in Kurdish`).not.toBe(inEnglish[index]);
   });
+});
+
+// The realm's brute-force detection, as the realm file configures it: how
+// many wrong passwords in a row lock a Login, and how far apart two wrong
+// passwords must be for its quick-login check, which locks a Login sooner,
+// to leave it alone.
+const { failureFactor, quickLoginCheckMilliSeconds } = JSON.parse(
+  readFileSync(
+    join(__dirname, '..', '..', '..', 'services', 'keycloak', 'import', 'pcp-realm.json'),
+    'utf8',
+  ),
+) as { failureFactor: number; quickLoginCheckMilliSeconds: number };
+
+// Sends the login screen a name and a password, and expects the login to be
+// refused: Keycloak answers the form with the login screen again, with an
+// error under the name field, rather than sending the browser on.
+async function expectTheLoginRefused(
+  page: Page,
+  name: string,
+  password: string,
+): Promise<void> {
+  const answered = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      response.url().startsWith(`${realmUrl}/login-actions/authenticate`),
+  );
+  await submitTheLoginScreen(page, name, password);
+
+  expect((await answered).status()).toBe(200);
+  await expectLoginScreen(page);
+  await expect(page.locator('#input-error-username')).toBeVisible();
+}
+
+// A locked Login is told the same as a wrong password, so the right password
+// being refused is what shows the lock. The Vendor is never used again.
+test('after the configured number of wrong passwords in a row, sent more than a second apart, a made-up Vendor of its own is refused its right password', async ({
+  browser,
+  page,
+  request,
+}) => {
+  const apart = quickLoginCheckMilliSeconds + 500;
+  test.setTimeout(30_000 + failureFactor * apart);
+  const authorization = await authorizationOfTheDevelopmentAdmin(page);
+  const vendor = await createAMadeUpVendor(request, authorization);
+
+  const context = await browser.newContext();
+  const vendorsPage = await context.newPage();
+  await vendorsPage.goto(dashboardUrl);
+  await expectLoginScreen(vendorsPage);
+  for (let failure = 1; failure <= failureFactor; failure++) {
+    await expectTheLoginRefused(
+      vendorsPage,
+      vendor.loginPhoneNumber,
+      `wrong-password-${failure}`,
+    );
+    await vendorsPage.waitForTimeout(apart);
+  }
+
+  await expectTheLoginRefused(
+    vendorsPage,
+    vendor.loginPhoneNumber,
+    vendor.temporaryPassword,
+  );
+  await context.close();
+});
+
+// The script leaves a name with a letter in it alone, dashes and all.
+test('the development Admin still logs in by its name, typed at the login screen', async ({
+  page,
+}) => {
+  await page.goto(dashboardUrl);
+  await expectLoginScreen(page);
+  await submitTheLoginScreen(
+    page,
+    developmentAdmin.name,
+    developmentAdmin.password,
+    'typed',
+  );
+
+  await page.waitForURL(`${dashboardUrl}/**`);
+  await expect(page.getByTestId('caller-name')).toHaveText(developmentAdmin.name);
 });
