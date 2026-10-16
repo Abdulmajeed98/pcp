@@ -7,9 +7,8 @@ import {
 } from '@playwright/test';
 
 import {
-  type DevelopmentLogin,
   developmentAdmin,
-  developmentVendor,
+  type LoginDetails,
   logInToTheDashboard,
   logOutOfTheDashboard,
   openTheDashboardAs,
@@ -37,6 +36,7 @@ import {
   readTheLinesAsWritten,
   specification,
 } from './sample';
+import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
 const [kurdish, arabic, english] = languages;
 
@@ -51,6 +51,14 @@ const browsersSetTo = [
 
 const directions = { rtl: 'right to left', ltr: 'left to right' };
 
+// The Vendor these tests log in as: a made-up one, made once for the file,
+// which has been through its first login, as a real Vendor has.
+let vendor: LoginDetails;
+
+test.beforeAll(async ({ browser }) => {
+  vendor = await aMadeUpVendorThatHasLoggedIn(browser);
+});
+
 // What a browser keeps for the dashboard, from one visit to the next, apart
 // from its cookies. The login is kept in Keycloak's cookies, and a browser
 // given these alone has to log in again.
@@ -62,7 +70,7 @@ type KeptByTheDashboard = Awaited<ReturnType<BrowserContext['storageState']>>['o
 async function openInABrowserSetTo<Read>(
   browser: Browser,
   locale: string,
-  login: DevelopmentLogin,
+  login: LoginDetails,
   read: (page: Page) => Promise<Read>,
   kept: KeptByTheDashboard = [],
 ): Promise<{ found: Read; kept: KeptByTheDashboard }> {
@@ -83,13 +91,13 @@ async function openInABrowserSetTo<Read>(
 }
 
 for (const { setTo, locale, expected } of browsersSetTo) {
-  test.describe(`as the development Vendor, with the browser set to ${setTo}`, () => {
+  test.describe(`as a made-up Vendor, with the browser set to ${setTo}`, () => {
     test.use({ locale });
 
     test(`the Vendor portal declares ${expected.name} and ${directions[expected.direction]}`, async ({
       page,
     }) => {
-      await openTheDashboardAs(page, developmentVendor);
+      await openTheDashboardAs(page, vendor);
 
       await expectPageIn(page, expected);
     });
@@ -97,7 +105,7 @@ for (const { setTo, locale, expected } of browsersSetTo) {
     test(`the Vendor portal's page does not scroll sideways in ${expected.name}`, async ({
       page,
     }) => {
-      await openTheDashboardAs(page, developmentVendor);
+      await openTheDashboardAs(page, vendor);
       await expectPageIn(page, expected);
 
       await expect(page.getByTestId('frame')).toBeVisible();
@@ -114,7 +122,7 @@ test("the Vendor portal's text and its tab's title differ in each of the three l
   for (const { locale, expected } of browsersSetTo) {
     const {
       found: { notice, title },
-    } = await openInABrowserSetTo(browser, locale, developmentVendor, async (page) => {
+    } = await openInABrowserSetTo(browser, locale, vendor, async (page) => {
       await expectPageIn(page, expected);
       return {
         notice: await page.getByTestId('placeholder-notice').innerText(),
@@ -146,10 +154,10 @@ test.describe('as the development Admin, with the browser set to Arabic', () => 
   });
 });
 
-test('the development Vendor gets the page with the language switch, and the development Admin gets a page without one', async ({
+test('a made-up Vendor gets the page with the language switch, and the development Admin gets a page without one', async ({
   browser,
 }) => {
-  await openInABrowserSetTo(browser, 'ar', developmentVendor, async (page) => {
+  await openInABrowserSetTo(browser, 'ar', vendor, async (page) => {
     await expectPageIn(page, arabic);
     await expect(languageSwitch(page).getByRole('button')).toHaveCount(languages.length);
   });
@@ -166,7 +174,7 @@ test('the development Vendor gets the page with the language switch, and the dev
 test('in each language the switch is inside the screen, large enough to tap, and on the end side of the frame', async ({
   page,
 }) => {
-  await openTheDashboardAs(page, developmentVendor);
+  await openTheDashboardAs(page, vendor);
 
   await checkInEveryLanguageOfTheVendorPortal(page);
 });
@@ -174,7 +182,7 @@ test('in each language the switch is inside the screen, large enough to tap, and
 test("a tap on another language changes the language, the direction and the tab's title in place: the page is not loaded again and Keycloak is not visited", async ({
   page,
 }) => {
-  await openTheDashboardAs(page, developmentVendor);
+  await openTheDashboardAs(page, vendor);
   await expectPageIn(page, arabic);
   const titles = new Map<Language, string>([[arabic, await page.title()]]);
 
@@ -196,7 +204,7 @@ test("a tap on another language changes the language, the direction and the tab'
   }
 
   expectADifferentTextInEachLanguage(titles);
-  await expect(page.getByTestId('caller-name')).toHaveText(developmentVendor.name);
+  await expect(page.getByTestId('caller-name')).toHaveText(vendor.name);
   expect(await page.evaluate(() => 'stillTheSamePage' in window)).toBe(true);
   expect(pagesLoaded).toEqual([]);
   expect(keycloakVisits).toEqual([]);
@@ -209,13 +217,13 @@ test("a tap on another language changes the language, the direction and the tab'
 test('a language the Vendor portal only found from the browser is not remembered, and one chosen with the switch is', async ({
   browser,
 }) => {
-  const inArabic = await openInABrowserSetTo(browser, 'ar', developmentVendor, (page) =>
+  const inArabic = await openInABrowserSetTo(browser, 'ar', vendor, (page) =>
     expectPageIn(page, arabic),
   );
   const switched = await openInABrowserSetTo(
     browser,
     'en',
-    developmentVendor,
+    vendor,
     async (page) => {
       await expectPageIn(page, english);
       await buttonFor(page, kurdish).click();
@@ -226,7 +234,7 @@ test('a language the Vendor portal only found from the browser is not remembered
   await openInABrowserSetTo(
     browser,
     'en',
-    developmentVendor,
+    vendor,
     (page) => expectPageIn(page, kurdish),
     switched.kept,
   );
@@ -238,24 +246,24 @@ test.describe('in a browser set to English', () => {
   test('the choice holds after a reload, and after logging out and in again', async ({
     page,
   }) => {
-    await openTheDashboardAs(page, developmentVendor);
+    await openTheDashboardAs(page, vendor);
     await expectPageIn(page, english);
     await buttonFor(page, arabic).click();
     await expectPageIn(page, arabic);
 
     await page.reload();
-    await expect(page.getByTestId('caller-name')).toHaveText(developmentVendor.name);
+    await expect(page.getByTestId('caller-name')).toHaveText(vendor.name);
     await expectPageIn(page, arabic);
 
     await logOutOfTheDashboard(page);
-    await openTheDashboardAs(page, developmentVendor);
+    await openTheDashboardAs(page, vendor);
     await expectPageIn(page, arabic);
   });
 
-  test('after the development Vendor has chosen Arabic and logged out, the development Admin in the same browser still gets English, and when the development Vendor logs in again, Arabic is still remembered', async ({
+  test('after a made-up Vendor has chosen Arabic and logged out, the development Admin in the same browser still gets English, and when the Vendor logs in again, Arabic is still remembered', async ({
     page,
   }) => {
-    await openTheDashboardAs(page, developmentVendor);
+    await openTheDashboardAs(page, vendor);
     await buttonFor(page, arabic).click();
     await expectPageIn(page, arabic);
     await logOutOfTheDashboard(page);
@@ -264,7 +272,7 @@ test.describe('in a browser set to English', () => {
     await expectPageIn(page, english);
     await logOutOfTheDashboard(page);
 
-    await openTheDashboardAs(page, developmentVendor);
+    await openTheDashboardAs(page, vendor);
     await expectPageIn(page, arabic);
   });
 
@@ -274,7 +282,7 @@ test.describe('in a browser set to English', () => {
   test('the message for a login that could not be completed follows the remembered choice', async ({
     page,
   }) => {
-    await openTheDashboardAs(page, developmentVendor);
+    await openTheDashboardAs(page, vendor);
     await buttonFor(page, arabic).click();
     await expectPageIn(page, arabic);
     await logOutOfTheDashboard(page);
@@ -282,7 +290,7 @@ test.describe('in a browser set to English', () => {
     await page.route(`${keycloakUrl}/**/protocol/openid-connect/token`, (route) =>
       route.abort(),
     );
-    await logInToTheDashboard(page, developmentVendor);
+    await logInToTheDashboard(page, vendor);
 
     await expect(page.getByTestId('login-failed')).toBeVisible();
     await expectPageIn(page, arabic);
@@ -298,7 +306,7 @@ test("with a language remembered, the browser's storage still holds no token", a
     (response) =>
       response.url().endsWith('/v1/caller') && response.request().method() === 'GET',
   );
-  await openTheDashboardAs(page, developmentVendor);
+  await openTheDashboardAs(page, vendor);
   const token = (await answered).request().headers().authorization.replace('Bearer ', '');
   await buttonFor(page, english).click();
   await expectPageIn(page, english);
@@ -321,9 +329,9 @@ test("with a language remembered, the browser's storage still holds no token", a
 // in each language by the switch, and finds an Arabic-Indic digit anywhere
 // on it. Its browser is one in which a number that i18next formats for
 // Kurdish comes out in those digits.
-test.describe("the Vendor portal's sample, as the development Vendor", () => {
+test.describe("the Vendor portal's sample, as a made-up Vendor", () => {
   test.beforeEach(async ({ page }) => {
-    await openTheDashboardAs(page, developmentVendor);
+    await openTheDashboardAs(page, vendor);
   });
 
   test('the sample number reads 1,575,000 in all three languages, and no Arabic-Indic digit is anywhere on the page in any language, the counted sentences among it', async ({

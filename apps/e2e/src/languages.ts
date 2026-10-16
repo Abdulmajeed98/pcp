@@ -270,7 +270,7 @@ async function expectTheVendorPortalsSwitch(page: Page, language: Language): Pro
   await expectTheSwitchWithinReach(page, language, (other) => buttonFor(page, other));
 }
 
-// Shows a screen of the Vendor portal, as the development Vendor, in each of
+// Shows a screen of the Vendor portal, as a Vendor, in each of
 // the three languages in turn, by a tap on the switch, in a window as wide as
 // a narrow phone. It checks what holds for every screen: the language it
 // declares, its direction, that it is inside the frame, that the switch is

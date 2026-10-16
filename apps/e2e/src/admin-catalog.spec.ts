@@ -12,10 +12,10 @@ import {
 } from './catalog';
 import {
   authorizationOfTheDevelopmentAdmin,
-  developmentVendor,
   openTheDashboardAs,
 } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
+import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
 // The Admin works in the Vendors' shops, on a phone (LANG-8).
 test.use({ viewport: narrowWindow });
@@ -76,10 +76,12 @@ test.describe('the Catalog, as the development Admin', () => {
   });
 });
 
-test("as the development Vendor, the Catalog's address shows the Vendor portal and not the Catalog", async ({
+test("as a made-up Vendor, the Catalog's address shows the Vendor portal and not the Catalog", async ({
+  browser,
   page,
 }) => {
-  await openTheDashboardAs(page, developmentVendor, catalogUrl);
+  const vendor = await aMadeUpVendorThatHasLoggedIn(browser);
+  await openTheDashboardAs(page, vendor, catalogUrl);
 
   await expect(page.getByTestId('placeholder-notice')).toBeVisible();
   await expect(catalogHeading(page)).toHaveCount(0);

@@ -7,25 +7,21 @@ import { expect, type Page } from '@playwright/test';
 import { expectPageIn, type Language } from './languages';
 import { apiUrl, dashboardUrl, realmUrl } from './platform';
 
-// The two logins `pnpm services:up` creates: the development Admin, with the
-// `admin` role, and the development Vendor, with the `vendor` role. Their
-// names and passwords are in `.env` at the repository root, and are never
-// printed.
+// The login `pnpm services:up` creates: the development Admin, with the
+// `admin` role. Its name and password are in `.env` at the repository root,
+// and are never printed. A test that needs a Vendor makes a made-up one, and
+// logs in as it through its first login (see vendors.ts).
 const settings = parseEnv(readFileSync(join(__dirname, '..', '..', '..', '.env'), 'utf8'));
 
-export interface DevelopmentLogin {
+// What a Login logs in with at Keycloak's login screen.
+export interface LoginDetails {
   name: string;
   password: string;
 }
 
-export const developmentAdmin: DevelopmentLogin = {
+export const developmentAdmin: LoginDetails = {
   name: settings.DEVELOPMENT_ADMIN_NAME ?? '',
   password: settings.DEVELOPMENT_ADMIN_PASSWORD ?? '',
-};
-
-export const developmentVendor: DevelopmentLogin = {
-  name: settings.DEVELOPMENT_VENDOR_NAME ?? '',
-  password: settings.DEVELOPMENT_VENDOR_PASSWORD ?? '',
 };
 
 // Keycloak's login screen, told apart by its address and its form. The
@@ -125,11 +121,12 @@ export async function expectTheVendorPortal(page: Page): Promise<void> {
 
 // Opens the dashboard as someone who is not logged in, and logs in at
 // Keycloak's login screen the way a person does, as the development Admin
-// unless the test names the development Vendor. The dashboard is opened at
-// its first address unless the test names another, such as a screen's.
+// unless the test names another Login, such as a made-up Vendor's after its
+// first login. The dashboard is opened at its first address unless the test
+// names another, such as a screen's.
 export async function logInToTheDashboard(
   page: Page,
-  login: DevelopmentLogin = developmentAdmin,
+  login: LoginDetails = developmentAdmin,
   address = dashboardUrl,
 ): Promise<void> {
   await page.goto(address);
@@ -140,12 +137,12 @@ export async function logInToTheDashboard(
   await page.waitForURL(`${dashboardUrl}/**`);
 }
 
-// Logs in as one of the development logins, and waits until the dashboard
+// Logs in as a Login that has logged in before, and waits until the dashboard
 // shows who the API says the caller is. The page is then drawn whole, in
 // whichever half and language it chose.
 export async function openTheDashboardAs(
   page: Page,
-  login: DevelopmentLogin,
+  login: LoginDetails,
   address = dashboardUrl,
 ): Promise<void> {
   await logInToTheDashboard(page, login, address);

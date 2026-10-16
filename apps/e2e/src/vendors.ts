@@ -1,12 +1,14 @@
 import {
   type APIRequestContext,
   type APIResponse,
+  type Browser,
   expect,
   type Page,
 } from '@playwright/test';
 
 import {
-  type DevelopmentLogin,
+  authorizationOfTheDevelopmentAdmin,
+  type LoginDetails,
   expectLoginScreen,
   expectNewPasswordScreen,
   expectTheVendorPortal,
@@ -134,7 +136,7 @@ export async function logInForTheFirstTime(
   page: Page,
   vendor: MadeUpVendor,
   typed = vendor.loginPhoneNumber,
-): Promise<DevelopmentLogin> {
+): Promise<LoginDetails> {
   await page.goto(dashboardUrl);
   await expectLoginScreen(page);
   await submitTheLoginScreen(page, typed, vendor.temporaryPassword, 'typed');
@@ -145,4 +147,27 @@ export async function logInForTheFirstTime(
 
   await expectTheVendorPortal(page);
   return { name: vendor.loginPhoneNumber, password };
+}
+
+// Makes a made-up Vendor, as the development Admin, and logs in as it once
+// through its first login, each in a browser of its own that is closed
+// afterwards. It gives back what the Vendor logs in with from then on, for a
+// test that needs a Vendor whose Login is set up, as a real Vendor's is after
+// its first login.
+export async function aMadeUpVendorThatHasLoggedIn(
+  browser: Browser,
+): Promise<LoginDetails> {
+  const adminsContext = await browser.newContext();
+  const vendorsContext = await browser.newContext();
+  try {
+    const authorization = await authorizationOfTheDevelopmentAdmin(
+      await adminsContext.newPage(),
+    );
+    const vendor = await createAMadeUpVendor(adminsContext.request, authorization);
+
+    return await logInForTheFirstTime(await vendorsContext.newPage(), vendor);
+  } finally {
+    await adminsContext.close();
+    await vendorsContext.close();
+  }
 }
