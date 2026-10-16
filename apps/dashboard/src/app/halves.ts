@@ -1,6 +1,4 @@
-import type { Language } from '@pcp/i18n';
-
-import { languageOfTheBrowser, rememberedLanguage, t } from '@/shared/i18n';
+import { languageOfTheBrowser, rememberedLanguage, type ShownIn, t } from '@/shared/i18n';
 
 // The dashboard's two halves: the Admin console, for the Admin, and the
 // Vendor portal, for a Vendor.
@@ -29,7 +27,7 @@ export function halfFor(realmRoles: readonly string[]): Half {
 // browser, else in the browser's own, else in Kurdish, and its title is in
 // the language files. So does what is shown before anyone is known, such as
 // a login that could not be completed.
-export const halves: Record<Half, { language: () => Language; title: () => string }> = {
+export const halves: Record<Half, ShownIn> = {
   'admin-console': {
     language: () => 'en',
     title: () => 'Admin console',

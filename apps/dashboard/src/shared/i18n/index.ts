@@ -5,5 +5,6 @@ export {
   chooseLanguage,
   languageOfTheBrowser,
   rememberedLanguage,
+  type ShownIn,
   startLanguage,
 } from './languages';

@@ -38,14 +38,21 @@ export function rememberedLanguage(): Language | undefined {
   }
 }
 
-// The title of the browser's tab, in the language the dashboard is shown in.
-// `startLanguage` is given it.
+// What the dashboard is shown in: its language, and the title of the
+// browser's tab, which is asked for once that language has started.
+export interface ShownIn {
+  language: () => Language;
+  title: () => string;
+}
+
+// The title of the browser's tab in the language shown. `startLanguage` sets
+// it, once, as i18next keeps its own state once.
 let titleOfTheTab = (): string => document.title;
 
 // Starts the dashboard's languages, once, before anything is rendered: the
 // text of all three is given to i18next at once, and the dashboard is shown
-// in `language`. The document then declares the language, its direction and
-// the tab's title, which `title` gives in the language shown.
+// in the language `shownIn` gives. The document then declares the language,
+// its direction and the tab's title.
 //
 // The text is the dashboard's own and the shared terms, which a component
 // asks for alike. No language falls back to another: a message missing from
@@ -54,10 +61,8 @@ let titleOfTheTab = (): string => document.title;
 // React escapes what it shows, so i18next does not. A value is never written
 // into a message: it is put into the element the message names for it, such
 // as `<name/>`, and React shows it there as text.
-export async function startLanguage(
-  language: Language,
-  title: () => string,
-): Promise<void> {
+export async function startLanguage(shownIn: ShownIn): Promise<void> {
+  const language = shownIn.language();
   await i18next.use(initReactI18next).init({
     lng: language,
     supportedLngs: languages,
@@ -71,7 +76,7 @@ export async function startLanguage(
     interpolation: { escapeValue: false },
   });
 
-  titleOfTheTab = title;
+  titleOfTheTab = shownIn.title;
   declare(language);
 }
 

@@ -14,11 +14,11 @@ import { chooseLanguage, useTranslation } from '@/shared/i18n';
 //
 // It is buttons and not links, as the Shopper app's switch is, because the
 // Vendor portal has no address for each language.
-export function LanguageSwitch() {
-  const { t, i18n } = useTranslation();
+export function LanguageSwitch({ label }: { label: string }) {
+  const { i18n } = useTranslation();
 
   return (
-    <nav aria-label={t('VendorPortalFrame.languageSwitch')} data-testid="language-switch">
+    <nav aria-label={label} data-testid="language-switch">
       <ul className="flex">
         {languages.map((language) => (
           <li key={language}>

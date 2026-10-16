@@ -22,7 +22,7 @@ const root = createRoot(document.getElementById('root') as HTMLElement);
 startLogin().then(
   async () => {
     const half = halfFor(realmRolesOfTheLogin());
-    await startLanguage(halves[half].language(), halves[half].title);
+    await startLanguage(halves[half]);
 
     root.render(
       <StrictMode>
@@ -31,7 +31,7 @@ startLogin().then(
     );
   },
   async () => {
-    await startLanguage(halves['vendor-portal'].language(), halves['vendor-portal'].title);
+    await startLanguage(halves['vendor-portal']);
 
     root.render(
       <StrictMode>

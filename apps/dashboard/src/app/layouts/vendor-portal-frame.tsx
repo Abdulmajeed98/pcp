@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { useTranslation } from '@/shared/i18n';
+
 import { LanguageSwitch } from './language-switch';
 
 // The frame: the part every screen of the Vendor portal shares. It is laid
@@ -10,13 +12,15 @@ import { LanguageSwitch } from './language-switch';
 // Its header holds the language switch, on the end side: the right in
 // English, and the left in Kurdish and Arabic.
 export function VendorPortalFrame({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+
   return (
     <div
       data-testid="frame"
       className="mx-auto min-h-dvh w-full max-w-3xl px-4 py-4 wrap-break-word sm:px-6 sm:py-6"
     >
       <header className="flex justify-end">
-        <LanguageSwitch />
+        <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
       </header>
       <main>{children}</main>
     </div>
