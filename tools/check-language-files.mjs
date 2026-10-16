@@ -10,7 +10,13 @@
 // a message the English file does not, when a message cannot be read in its
 // set's format, and when a message names different placeholders in different
 // languages. A message that counts must have every plural form its language
-// has. A shared term must be plain text.
+// has. A shared term must be plain text, and a name at the top of the shared
+// terms must not be at the top of a frontend's own set too.
+//
+// It also fails when a message lets its library format a number. next-intl
+// and i18next each format a number in the page's language, and a Kurdish page
+// then shows Arabic-Indic digits, which LANG-5 rules out. A number reaches a
+// message as text, written by `formatNumber` in `i18n`.
 //
 // Each failure names the file, the message and what is wrong with it.
 import { readFileSync } from 'node:fs';
@@ -40,20 +46,27 @@ const fromUseIntl = createRequire(fromNextIntl.resolve('use-intl'));
 const { IntlMessageFormat } = await import(fromUseIntl.resolve('intl-messageformat'));
 
 // The kinds of element in a message as `intl-messageformat` reads it: those
-// that name a value, the plural, and a tag.
+// that name a value, the count written as `#`, and a tag.
 const anArgument = 1;
 const aNumber = 2;
 const aDate = 3;
 const aTime = 4;
 const aSelect = 5;
 const aPlural = 6;
+const thePound = 7;
 const aTag = 8;
+
+// The elements that have next-intl format a value, by what each formats it
+// as.
+const formattedAs = { [aNumber]: 'number', [aDate]: 'date', [aTime]: 'time' };
 
 // Reads a message of the Shopper app's set, which is in next-intl's format,
 // ICU. It gives the placeholders the message names, a value as `{name}` and
 // a tag as `<name>`, or what is wrong with it. A message that counts is read
 // as a whole, because a form may leave out the count, as Arabic does when it
-// says the count in a word.
+// says the count in a word. A message that writes `#`, or formats a value as
+// a number, a date or a time, lets next-intl format it in the page's
+// language.
 function readNextIntlMessage(text, language) {
   let elements;
   try {
@@ -71,6 +84,16 @@ function readNextIntlMessage(text, language) {
     for (const element of each) {
       if ([anArgument, aNumber, aDate, aTime, aSelect, aPlural].includes(element.type)) {
         placeholders.add(`{${element.value}}`);
+      }
+      if (element.type in formattedAs) {
+        problems.push(
+          `formats {${element.value}} itself, as a ${formattedAs[element.type]}. next-intl would format it in the page's language, and a Kurdish page would show Arabic-Indic digits (LANG-5). Give the message the text that formatNumber writes.`,
+        );
+      }
+      if (element.type === thePound) {
+        problems.push(
+          `writes its count with "#". next-intl would format the count in the page's language, and a Kurdish page would show Arabic-Indic digits (LANG-5). Give the message the count as text too, written by formatNumber, as {countText}.`,
+        );
       }
       if (element.type === aTag) {
         placeholders.add(`<${element.value}>`);
@@ -97,12 +120,16 @@ function readNextIntlMessage(text, language) {
 }
 
 // Reads a message of the dashboard's set, which is in i18next's own format,
-// as i18next and react-i18next's `Trans` read it. A value is written in
-// double braces, as `{{name}}`, and an element in angle brackets, as
-// `<name/>` or `<name>…</name>`. It gives the placeholders the message names
-// in that spelling, or what is wrong with it. An angle bracket that starts
-// or ends no element, a pair of braces that starts or ends no value, and an
-// element that is not closed where it should be cannot be read.
+// as i18next and react-i18next's `Trans` read it. An element is written in
+// angle brackets, as `<name/>` or `<name>…</name>`. It gives the elements the
+// message names, which are its placeholders, as `<name>`, or what is wrong
+// with it. An angle bracket that starts or ends no element, and an element
+// that is not closed where it should be, cannot be read.
+//
+// i18next also reads a value written in double braces, as `{{name}}`. The
+// dashboard writes none: it puts every value into an element its message
+// names, so that React shows it as text. In double braces i18next would
+// write a number with no grouping, or format it in the page's language.
 function readI18nextMessage(text) {
   const placeholders = new Set();
   const open = [];
@@ -111,7 +138,9 @@ function readI18nextMessage(text) {
     if (value !== undefined) {
       const named = value.split(',')[0].trim().replace(/^-\s*/, '');
       if (named === '') return { problem: `cannot be read: "${piece}" names no value.` };
-      placeholders.add(`{{${named}}}`);
+      return {
+        problem: `writes a value in double braces, "${piece}". Put it into an element the message names, such as <${named}/>: in double braces i18next would write a number with no grouping, or format it in the page's language, and a Kurdish page would show Arabic-Indic digits (LANG-5).`,
+      };
     } else if (name === undefined) {
       return { problem: `cannot be read: its "${piece}" starts or ends nothing.` };
     } else if (closing !== '') {
@@ -146,12 +175,27 @@ function readSharedTerm(text) {
 const aPluralForm = /^(.+)_(zero|one|two|few|many|other)$/;
 
 // The three sets. In the dashboard's, the keys of one message that counts
-// are read as that one message.
+// are read as that one message. Each frontend adds the shared terms to its
+// own set, with its own set's names over them, so that a name at the top of
+// both would hide the shared terms of that name.
 const sets = [
   { name: 'shared', read: readSharedTerm, keysForEachForm: false },
-  { name: 'shopper', read: readNextIntlMessage, keysForEachForm: false },
-  { name: 'dashboard', read: readI18nextMessage, keysForEachForm: true },
+  {
+    name: 'shopper',
+    read: readNextIntlMessage,
+    keysForEachForm: false,
+    addsTheShared: true,
+  },
+  {
+    name: 'dashboard',
+    read: readI18nextMessage,
+    keysForEachForm: true,
+    addsTheShared: true,
+  },
 ];
+
+// The names at the top of each set's files, by set and by language.
+const namesAtTheTop = {};
 
 const problems = [];
 
@@ -192,6 +236,7 @@ function messagesOf(file, keysForEachForm) {
     return undefined;
   }
   walk(parsed, []);
+  messages.namesAtTheTop = Object.keys(parsed);
   return messages;
 }
 
@@ -252,6 +297,20 @@ for (const set of sets) {
     ]),
   );
   if (languages.some((language) => messages[language] === undefined)) continue;
+  namesAtTheTop[set.name] = Object.fromEntries(
+    languages.map((language) => [language, messages[language].namesAtTheTop]),
+  );
+  if (set.addsTheShared) {
+    for (const language of languages) {
+      for (const name of messages[language].namesAtTheTop) {
+        if (namesAtTheTop.shared?.[language].includes(name)) {
+          problems.push(
+            `${files[language]}, "${name}": is a name at the top of the shared terms too. The frontend adds the shared terms to this set, and this "${name}" would hide theirs.`,
+          );
+        }
+      }
+    }
+  }
 
   const english = messages.en;
   const placeholdersInEnglish = new Map(
