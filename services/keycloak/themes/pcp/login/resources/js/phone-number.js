@@ -8,9 +8,15 @@
 //
 // The theme's properties name this script, and Keycloak loads it in the head
 // of each of its screens, before the form exists. So it listens on the whole
-// document, for the login screen's form only. It reads the number as the
-// API's PhoneNumber does before the number is checked, and the two are kept
-// alike.
+// document, for the login screen's form only.
+//
+// Its clean-up is the API's PhoneNumber's, the same digits and the same
+// separators, and the two are kept alike. What follows differs. The API
+// hands the cleaned digits to libphonenumber-js, which reads a leading 0,
+// 00964, 964 or +964, and also a number typed with no leading 0, such as
+// 750 123 4567, and checks that the number is valid. This script only turns
+// the first four starts into +964, as the accounts spec lists them, and
+// checks nothing: Keycloak finds no Login for anything else.
 
 // Arabic-Indic digits, ٠ to ٩, and Eastern Arabic-Indic digits, ۰ to ۹, as
 // the Western digits they stand for.
