@@ -642,7 +642,7 @@ _The footer credit._
 
 _Commit messages._
 
-- Conventional Commits 1.0.0, with commitlint's conventional types (`build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`) and the Nx project's folder name as the scope, left out when a commit spans several projects. A subject and every body line are at most 72 characters. commitlint checks each message in the commit-msg hook that husky installs, as the owner decided on 15 October 2026. Earlier commits keep their own style.
+- Conventional Commits 1.0.0, with commitlint's conventional types (`build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`) and the Nx project's folder name as the scope, or `tools` for a commit that changes only the workspace's scripts in `tools/`, as the owner decided on 16 October 2026. The scope is left out when a commit spans several projects. A subject and every body line are at most 72 characters. commitlint checks each message in the commit-msg hook that husky installs, as the owner decided on 15 October 2026. Earlier commits keep their own style.
 
 **End-to-end tests**
 
@@ -679,6 +679,8 @@ End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a
 - `catalog`, tickets 13 to 15: the Catalog, a Part's page and both forms used with a thumb; a photo from the phone's camera, an iPhone's HEIC photo among them; the footer's credit drawn clearly in Noto Kufi Arabic and read correctly in Kurdish and Arabic; the Sorani letters in both apps' fonts, on an Android phone from Honor, Infinix, Tecno or Xiaomi if one is at hand (ADR-0006).
 
 A module that leaves another adds it here.
+
+**Traces hold test passwords.** A failed end-to-end test keeps a Playwright trace in `apps/e2e/test-output/`, which git ignores. It holds what the test typed and was answered, the development Admin's password and a made-up Vendor's temporary password among them. On the owner's machine that stays as it is, as the owner decided on 16 October 2026. A CI server that keeps traces, which the hosting work may add, must treat them as holding test passwords.
 
 The API's tests use Jest with SWC and live under `src/test/`, mirroring `src/app/`: `*.spec.ts` for unit tests with mocked Stores and for tests of an endpoint through the API's HTTP surface, and `*.integration-spec.ts` for tests against a real PostgreSQL started in a test container. The frontends' unit-test tools are chosen when work on them begins.
 

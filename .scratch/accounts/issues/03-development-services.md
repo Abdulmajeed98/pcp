@@ -138,14 +138,14 @@ Kept as they are, after the review asked for them to be:
 
 - The two lines about the API's client beyond the one the ticket names, the password flow and a login through a browser. The spec says the client has "no login through a browser", so they check what it asks.
 
-Left for the owner:
+Left for the owner, who decided each on 16 October 2026, one at a time:
 
 - **The API's log of a Login it could not make**, from ticket 01, which names the Login, a login phone number, when a create fails. It prints a made-up number in a failed `pnpm platform:check`, as the red run above did. The owner kept it, as "Decided by the owner" above says.
-- **Playwright's `trace: 'retain-on-failure'`.** A failed test's trace, a file on disk, keeps the create's answer and the password set in the page, as it already does for the development logins. Nothing of it is printed.
-- **Keycloak's quick-login defaults**, which lock a Login for a minute after two failures within a second, before the five that brute-force detection counts. They were kept as Keycloak's defaults; ticket 04's test of a lock has to type slower than that, or count on it.
-- **Every future setting whose name ends in `_SECRET`** gets a random value from `pnpm services:up`, as every `_PASSWORD` does. A secret that must come from somewhere else would need an entry of its own.
-- **Commits without a scope that change only `tools/`.** They follow the owner's rule that a scope names an Nx project, which `tools/` is not, although the comment in `commitlint.config.mjs` allows `tools`.
-- **`MadeUpVendor`'s `id` and `name`**, which no test reads yet. They mirror `MadeUpPart`'s, and ticket 04's tests can use them.
+- **Playwright's `trace: 'retain-on-failure'`.** A failed test's trace, a file on disk, keeps the create's answer and the password set in the page, as it already does for the development logins. Nothing of it is printed. **Kept** by the owner, as the trace is the main way to see why a test failed. The MVP spec's Testing strategy now says that a CI server keeping traces, which hosting may add, must treat them as holding test passwords.
+- **Keycloak's quick-login defaults**, which lock a Login for a minute after two failures within a second, before the five that brute-force detection counts. They were kept as Keycloak's defaults; ticket 04's test of a lock has to type slower than that, or count on it. **Kept** by the owner, as the guard against scripted guessing, which costs a person almost nothing. Ticket 04's line now says that its wrong passwords are sent more than a second apart.
+- **Every future setting whose name ends in `_SECRET`** gets a random value from `pnpm services:up`, as every `_PASSWORD` does. A secret that must come from somewhere else would need an entry of its own. **Kept** by the owner: it is the rule passwords already follow, the MVP has no outside service that issues a secret, and such a secret would fail at its first use. `services:up` never changes a value already in `.env`, so a real value written there stays.
+- **Commits without a scope that change only `tools/`.** They follow the owner's rule that a scope names an Nx project, which `tools/` is not, although the comment in `commitlint.config.mjs` allows `tools`. **Decided** by the owner: from now on such a commit takes the scope `tools`, as the config allows, and the MVP spec's commit rule says so. These commits keep their style.
+- **`MadeUpVendor`'s `id` and `name`**, which no test reads yet. They mirror `MadeUpPart`'s, and ticket 04's tests can use them. **Kept** by the owner: tickets 05, 07 and 09 read them.
 
 **Results after the review**, against the owner's services with no reset:
 

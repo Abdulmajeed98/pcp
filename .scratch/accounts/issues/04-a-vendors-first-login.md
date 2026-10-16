@@ -25,7 +25,7 @@ The development Vendor is retired. The tests that logged in as it make a made-up
   - The screen that asks for a new password refuses one of 4 characters, and one that is the login phone number, and then takes a good one. The Vendor portal opens.
   - The screen that asks for a new password, opened in each of the three languages with the login screen's own choice of language, declares that language. Its text differs between the three, and its Kurdish text is not its English text.
   - The login screen's field label differs between the three languages.
-  - After the configured number of wrong passwords in a row, a made-up Vendor of its own is refused its right password.
+  - After the configured number of wrong passwords in a row, a made-up Vendor of its own is refused its right password. The wrong passwords are sent more than a second apart, so that Keycloak's quick-login check, which locks a Login after two failures within a second, does not lock it first. The owner kept that check, as ticket 03's Comments record.
   - The development Admin still logs in by its name.
 - [ ] Shown once and then reverted, each failing on its own line: the script taken off the theme; the Kurdish text of the screen that asks for a new password taken off the theme; brute-force detection turned off in the running realm.
 - [ ] `pnpm check` passes with Docker stopped.
