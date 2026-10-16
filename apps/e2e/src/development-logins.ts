@@ -36,12 +36,14 @@ export async function expectLoginScreen(page: Page): Promise<void> {
 
 // Opens the dashboard as someone who is not logged in, and logs in at
 // Keycloak's login screen the way a person does, as the development Admin
-// unless the test names the development Vendor.
+// unless the test names the development Vendor. The dashboard is opened at
+// its first address unless the test names another, such as a screen's.
 export async function logInToTheDashboard(
   page: Page,
   login: DevelopmentLogin = developmentAdmin,
+  address = dashboardUrl,
 ): Promise<void> {
-  await page.goto(dashboardUrl);
+  await page.goto(address);
   await expectLoginScreen(page);
 
   await page.locator('#username').fill(login.name);
@@ -61,8 +63,9 @@ export async function logInToTheDashboard(
 export async function openTheDashboardAs(
   page: Page,
   login: DevelopmentLogin,
+  address = dashboardUrl,
 ): Promise<void> {
-  await logInToTheDashboard(page, login);
+  await logInToTheDashboard(page, login, address);
   await expect(page.getByTestId('caller-name')).toHaveText(login.name);
 }
 
