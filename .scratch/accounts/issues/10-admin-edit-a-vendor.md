@@ -8,7 +8,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Before anything is written, these are found out on the installed Keycloak and recorded under Comments: how the admin client renames a Login, and whether the realm needs a setting for it.
+- [ ] Before anything is written, these are found out on the installed Keycloak and recorded under Comments: how the admin client renames a Login; whether, with `editUsernameAllowed` on and the user profile letting only `admin` edit the name, the API's client renames a Login while the Login cannot rename itself in Keycloak's account pages; and how a test asks Keycloak's account interface as a Login. Ticket 01 found that a rename is refused while `editUsernameAllowed` is off, and ticket 03 that the profile lets `user` edit the name too.
+- [ ] **The realm.** The realm file turns `editUsernameAllowed` on, and its user profile lets only `admin` edit a Login's name. The owner's running realm gets the same two changes once, through Keycloak's administration interface as Keycloak's own administrator, with no reset and no script added for it. What was changed is recorded under Comments.
 - [ ] **The API.** `EditVendorCommand` and its endpoint answer the Admin only. The edit replaces every detail, clears an optional detail it leaves out, and checks each detail as tickets 01 and 02 do.
 - [ ] Changing the login phone number renames the Login first and the Vendor second. When the Vendor cannot be stored, the Login's name is put back. When that fails too, the Login's identifier is logged. A login phone number another Vendor holds is refused, and no Login is renamed.
 - [ ] While Keycloak's administration interface cannot be reached, an edit that changes the login phone number is answered 503 with `IDENTITY_SERVICE_UNAVAILABLE`, and nothing changes.
@@ -21,7 +22,8 @@
   - An edit whose Vendor cannot be stored, by a fault planted for the test, leaves the Login with its old name.
   - With the Keycloak container paused, an edit of the login phone number is answered 503, and nothing changes.
   - A Vendor's edit is answered 403, and a call without a token 401.
-- [ ] Shown once and then reverted, each failing its own test: the put-back removed; the Login left with its old name.
+  - A Login that changes its own name through Keycloak's account interface is refused, and keeps its name.
+- [ ] Shown once and then reverted, each failing its own test: the put-back removed; the Login left with its old name; the name made editable by `user` again.
 - [ ] **The edit form.** A Vendor's page gains a way to its edit form, which has the create form's fields, filled with the Vendor's details. A refusal is shown beside the field it names. After a save, the Vendor's page shows the new values.
 - [ ] It follows DESIGN.md, is laid out at 360 pixels wide first, uses logical classes only, and keeps to Feature-Sliced Design's import rules.
 - [ ] `pnpm platform:check` gains these lines, and passes on every line:

@@ -235,6 +235,7 @@ These change the realm file. Keycloak imports it only into a realm that does not
 
 - **The API's client.** A confidential client for the API, with a service account and no login through a browser. Its service account holds the fewest of Keycloak's realm-management roles with which the API can find, create, rename, enable, disable and delete a Login, set its password, give it the `vendor` role and end its sessions. Its secret is not in the realm file: the file names an environment setting that Keycloak reads when it imports the realm, and the Compose file gives it from `.env`. `pnpm services:up` writes a random secret into `.env` at the first start, as it writes each password.
 - **No email and no names.** The realm's user profile asks a Login for no email address, first name or last name, so that Keycloak never sends a Vendor to a screen that asks for them.
+- **Renaming a Login.** The realm allows a Login's name to be changed, which Keycloak refuses otherwise, and its user profile lets only `admin` change it, so that a Vendor cannot rename its own Login in Keycloak's account pages. Ticket 10 makes this change, and makes it in the owner's running realm once through the administration interface, with no reset.
 - **A password policy.** A Login's own password has at least 8 characters and is not its name. Keycloak's own messages say so on the screen that asks for a new password.
 - **Guessing is slow.** Keycloak's brute-force detection is on. After a few wrong passwords in a row a Login is locked for a time that grows with each further failure, up to 15 minutes. The exact numbers are the ticket's.
 - **The login screen.** Its name field is labelled "phone number" in the three languages, through the theme's messages. A script the theme adds turns what is typed there into the stored form before the form is sent, when it looks like a phone number: Arabic-Indic and Eastern Arabic-Indic digits become Western digits, spaces, dashes, dots and brackets go, and a leading 0, 00964 or 964 becomes +964. A name with a letter in it, such as the development Admin's, is left alone. No Keycloak template is copied into the theme.
@@ -315,7 +316,7 @@ All paths begin with `v1`. The names here describe them, and the exact paths are
 ### The development Vendor
 
 - It is retired. `pnpm services:up` no longer creates it, `.env.example` no longer lists its two settings, and neither `pnpm services:check` nor `pnpm platform:check` asks for it. A value already in an owner's `.env` is left there and read by nothing.
-- The reset this module needs removes the Login itself.
+- The reset this module needs removed the Login, but `pnpm services:up` made it again before it was retired. Ticket 04 deletes that one Login from the owner's Keycloak by hand, through Keycloak's administration interface, once no test uses it.
 - The end-to-end tests make a made-up Vendor through the API as the development Admin, as they make a made-up Part. A test that needs the Vendor portal then logs in as that Vendor at Keycloak's login screen and replaces its temporary password, the path a real Vendor takes.
 - During development the owner opens the Vendor portal by creating a Vendor in the Admin console, or by acting as one.
 - The development Admin stays as it is.
