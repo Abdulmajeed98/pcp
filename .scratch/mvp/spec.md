@@ -314,7 +314,7 @@ Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/wor
 
 `languages`, the first module, was finished on 16 October 2026; its spec and tickets are in [.scratch/languages](../languages/spec.md). The review of the Kurdish and the Arabic text, LANG-7, stays open until launch. The conventions it set are below, under **The three languages**, and in the commands, the layout and the import rules.
 
-`catalog`, the second module, was finished on 16 October 2026; its spec and tickets are in [.scratch/catalog](../catalog/spec.md). The checks on a phone that its tickets list are made at the end, once the platform's services are hosted, as the owner decided on 16 October 2026; until then their boxes stay open. The conventions it set are below, under **The catalog's conventions**, and in the commands, the settings, the layout and the import rules.
+`catalog`, the second module, was finished on 16 October 2026; its spec and tickets are in [.scratch/catalog](../catalog/spec.md). The checks on a phone that its tickets list wait for hosting, as every module's do (see **Checks on a phone wait for hosting**, under Testing strategy); until then their boxes stay open. The conventions it set are below, under **The catalog's conventions**, and in the commands, the settings, the layout and the import rules.
 
 **Commands**
 
@@ -672,6 +672,13 @@ Tests are written before the code for logic where a mistake would mislead a Shop
 - Matching sheet rows to Parts (SHT-2 to SHT-5).
 
 End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a Vendor adds, edits and confirms Offers; the Admin creates a Vendor and fulfils a Part Request. They are written with Playwright, in `@pcp/e2e`, and `pnpm platform:check` runs them.
+
+**Checks on a phone wait for hosting.** On 16 October 2026 the owner decided that every check a module asks to be made by hand on a phone, in every module of the project, is made at the end, once the platform's services are hosted, and not on the development services. A ticket records such a check as open, with this reason, and leaves its box open; the check does not hold its module back. The hosting work makes them all. Open so far:
+
+- `languages`, ticket 10: the Sorani letters ڕ, ڵ, ێ, ۆ and ە in the phone's own font, and on an older Android phone if one is at hand; the frame and its language switch used with a thumb, in Kurdish and in English.
+- `catalog`, tickets 13 to 15: the Catalog, a Part's page and both forms used with a thumb; a photo from the phone's camera, an iPhone's HEIC photo among them; the footer's credit drawn clearly in Noto Kufi Arabic and read correctly in Kurdish and Arabic; the Sorani letters in both apps' fonts, on an Android phone from Honor, Infinix, Tecno or Xiaomi if one is at hand (ADR-0006).
+
+A module that leaves another adds it here.
 
 The API's tests use Jest with SWC and live under `src/test/`, mirroring `src/app/`: `*.spec.ts` for unit tests with mocked Stores and for tests of an endpoint through the API's HTTP surface, and `*.integration-spec.ts` for tests against a real PostgreSQL started in a test container. The frontends' unit-test tools are chosen when work on them begins.
 

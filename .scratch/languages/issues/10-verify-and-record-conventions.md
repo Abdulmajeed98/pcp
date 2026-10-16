@@ -88,3 +88,8 @@ The 25 tasks of `pnpm check` took under nine seconds of Nx's time with the cache
 - From ticket 03: whether opening a link in another language should change what the Shopper app remembers. `sharing` decides it.
 - From ticket 02: the "not found" screen, which alone needs a script. `browse` decides it.
 - From ticket 04: how a page's test reads a Vendor's own Arabic-Indic digits in text shown as written. The first page that shows such text decides it.
+
+### 16 October 2026: the readings on a phone wait for hosting
+
+The owner decided on 16 October 2026, for the whole project, that every check by hand on a phone is made at the end, once the platform's services are hosted, and not on the development services. Of the six readings above, two need a phone and wait for that: the Sorani letters in the phone's own font, and on an older Android phone if one is at hand; and the frame and its switch used with a thumb, in Kurdish and in English. The MVP spec's Testing strategy lists them with every other module's.
+
