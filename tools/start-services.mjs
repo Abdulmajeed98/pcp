@@ -14,8 +14,8 @@ import { findLogin, logInAsAdministrator } from './keycloak-administrator.mjs';
 const root = join(import.meta.dirname, '..');
 const envFile = join(root, '.env');
 
-// A setting whose name ends in _PASSWORD gets a random value. Any other
-// setting needs a value here.
+// A setting whose name ends in _PASSWORD or _SECRET gets a random value. Any
+// other setting needs a value here.
 const fixedValues = {
   KEYCLOAK_ADMINISTRATOR_NAME: 'keycloak-administrator',
   DEVELOPMENT_ADMIN_NAME: 'development-admin',
@@ -24,21 +24,23 @@ const fixedValues = {
 
 function valueFor(name) {
   if (name in fixedValues) return fixedValues[name];
-  if (name.endsWith('_PASSWORD')) return randomBytes(24).toString('base64url');
+  if (name.endsWith('_PASSWORD') || name.endsWith('_SECRET')) {
+    return randomBytes(24).toString('base64url');
+  }
   throw new Error(`.env.example lists ${name}, and this script has no value for it.`);
 }
 
 // The names come from .env.example, so the settings are listed in one place.
 // A value that is in the file is never changed: the services' data was
-// created with the passwords in it. A setting the file lacks is added, which
+// created with the passwords and the secret in it. A setting the file lacks is added, which
 // is how a file written before the setting existed gains it.
 function writeMissingSettings() {
   const names = Object.keys(parseEnv(readFileSync(join(root, '.env.example'), 'utf8')));
 
   if (!existsSync(envFile)) {
     const lines = [
-      '# Created by `pnpm services:up`. The passwords are random and local to',
-      '# this machine. .env.example says what each setting is.',
+      '# Created by `pnpm services:up`. The passwords and the secret are random',
+      '# and local to this machine. .env.example says what each setting is.',
       ...names.map((name) => `${name}=${valueFor(name)}`),
     ];
     writeFileSync(envFile, `${lines.join('\n')}\n`, { mode: 0o600 });
