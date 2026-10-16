@@ -4,8 +4,8 @@ import { Either } from 'effect';
 import { PhoneNumber } from '../phone-number/PhoneNumber';
 import { readInstagramName } from './instagram-name';
 import { MapLocation } from './MapLocation';
-import { holdsText, lengthOf } from './text-as-written';
-import { vendorDetailRefused } from './vendor-errors';
+import { holdsText, lengthOf } from './detail-text';
+import { VendorDetailRefusal, vendorDetailRefused, VendorField } from './vendor-errors';
 
 // The longest address and opening hours a Vendor may have, in characters as
 // `lengthOf` counts them.
@@ -18,9 +18,22 @@ function givenText(text: string | null): string | null {
   return holdsText(text) ? text : null;
 }
 
+// A detail a Vendor may leave out: null when it was not given, else what
+// reading it gives, or its refusal naming the field.
+function readIfGiven<A>(
+  field: VendorField,
+  typed: string | null,
+  read: (text: string) => Either.Either<A, VendorDetailRefusal>,
+): Either.Either<A | null, NotValidError> {
+  const text = givenText(typed);
+  if (text === null) return Either.right(null);
+
+  return Either.mapLeft(read(text), (reason) => vendorDetailRefused(field, reason));
+}
+
 // A Vendor's contact details as they were typed, before they are checked.
 // A detail that was not given is null.
-export class TypedContactDetails {
+export class UncheckedContactDetails {
   constructor(
     private readonly address: string | null,
     private readonly latitude: number | null,
@@ -75,7 +88,9 @@ export class ContactDetails {
 
   // The contact details as they will be kept, or the refusal of the first
   // that does not fit, in the order the Vendor form asks for them.
-  static check(typed: TypedContactDetails): Either.Either<ContactDetails, NotValidError> {
+  static check(
+    typed: UncheckedContactDetails,
+  ): Either.Either<ContactDetails, NotValidError> {
     const address = typed.getAddress();
     if (!holdsText(address)) return Either.left(vendorDetailRefused('address', 'missing'));
     if (lengthOf(address) > longestAddress) {
@@ -108,25 +123,19 @@ export class ContactDetails {
       return Either.left(vendorDetailRefused('phoneNumber', phoneNumber.left));
     }
 
-    const typedWhatsAppNumber = givenText(typed.getWhatsAppNumber());
-    let whatsAppNumber: PhoneNumber | null = null;
-    if (typedWhatsAppNumber !== null) {
-      const read = PhoneNumber.readMobile(typedWhatsAppNumber);
-      if (Either.isLeft(read)) {
-        return Either.left(vendorDetailRefused('whatsAppNumber', read.left));
-      }
-      whatsAppNumber = read.right;
-    }
+    const whatsAppNumber = readIfGiven(
+      'whatsAppNumber',
+      typed.getWhatsAppNumber(),
+      PhoneNumber.readMobile,
+    );
+    if (Either.isLeft(whatsAppNumber)) return Either.left(whatsAppNumber.left);
 
-    const typedInstagramName = givenText(typed.getInstagramName());
-    let instagramName: string | null = null;
-    if (typedInstagramName !== null) {
-      const read = readInstagramName(typedInstagramName);
-      if (Either.isLeft(read)) {
-        return Either.left(vendorDetailRefused('instagramName', read.left));
-      }
-      instagramName = read.right;
-    }
+    const instagramName = readIfGiven(
+      'instagramName',
+      typed.getInstagramName(),
+      readInstagramName,
+    );
+    if (Either.isLeft(instagramName)) return Either.left(instagramName.left);
 
     const openingHours = givenText(typed.getOpeningHours());
     if (openingHours !== null && lengthOf(openingHours) > longestOpeningHours) {
@@ -138,8 +147,8 @@ export class ContactDetails {
         address,
         mapLocation,
         phoneNumber.right,
-        whatsAppNumber,
-        instagramName,
+        whatsAppNumber.right,
+        instagramName.right,
         openingHours,
       ),
     );

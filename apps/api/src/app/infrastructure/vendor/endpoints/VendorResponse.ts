@@ -33,7 +33,7 @@ export class VendorResponse {
   readonly address: string;
 
   @ApiProperty({
-    description: "Where the Vendor's shop is, or null when it has not been given.",
+    description: 'Where the Vendor is, or null when it has not been given.',
     type: MapLocationResponse,
     nullable: true,
   })

@@ -275,7 +275,7 @@ export type CreateVendorRequest = {
      */
     address: string;
     /**
-     * Where the Vendor's shop is: a latitude and a longitude, both or neither.
+     * Where the Vendor is: a latitude and a longitude, both or neither.
      */
     mapLocation?: MapLocationRequest | null;
     /**
@@ -340,7 +340,7 @@ export type VendorResponse = {
      */
     address: string;
     /**
-     * Where the Vendor's shop is, or null when it has not been given.
+     * Where the Vendor is, or null when it has not been given.
      */
     mapLocation: MapLocationResponse | null;
     /**

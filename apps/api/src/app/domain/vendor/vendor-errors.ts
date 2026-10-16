@@ -5,7 +5,7 @@ import { InstagramNameRefusal } from './instagram-name';
 import { MapLocationRefusal } from './MapLocation';
 
 // The details of a Vendor a refusal can name.
-type VendorField =
+export type VendorField =
   | 'name'
   | 'city'
   | 'address'
@@ -21,7 +21,7 @@ type VendorField =
 // Why a detail was refused: it is missing, it is too long, it is not one of a
 // fixed set, it is a phone number of the wrong kind, it is a place outside
 // Iraq, it is not an Instagram name, or another Vendor or Login holds it.
-type VendorDetailRefusal =
+export type VendorDetailRefusal =
   | 'missing'
   | 'tooLong'
   | 'notInTheSet'

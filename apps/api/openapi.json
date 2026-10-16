@@ -998,7 +998,7 @@
             "maxLength": 300
           },
           "mapLocation": {
-            "description": "Where the Vendor's shop is: a latitude and a longitude, both or neither.",
+            "description": "Where the Vendor is: a latitude and a longitude, both or neither.",
             "nullable": true,
             "type": "object",
             "allOf": [
@@ -1096,7 +1096,7 @@
             "example": "Made-up Street, Erbil"
           },
           "mapLocation": {
-            "description": "Where the Vendor's shop is, or null when it has not been given.",
+            "description": "Where the Vendor is, or null when it has not been given.",
             "nullable": true,
             "type": "object",
             "allOf": [

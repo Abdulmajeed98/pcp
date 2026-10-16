@@ -11,7 +11,7 @@ export type MapLocationRefusal = 'outsideIraq';
 // edge.
 const aroundIraq = { south: 29.0, north: 37.4, west: 38.7, east: 49.2 };
 
-// Where a Vendor's shop is, as a latitude and a longitude in degrees.
+// Where a Vendor is, as a latitude and a longitude in degrees.
 export class MapLocation {
   private constructor(
     private readonly latitude: number,

@@ -1,5 +1,5 @@
-// Whether a detail kept as it was written was given at all: a text that holds
-// more than spaces and line breaks.
+// Whether a detail typed as text was given at all: a text that holds more
+// than spaces and line breaks.
 export function holdsText(text: string | null): text is string {
   return text !== null && /\S/.test(text);
 }

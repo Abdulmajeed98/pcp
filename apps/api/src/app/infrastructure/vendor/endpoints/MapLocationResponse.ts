@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { MapLocation } from '~/domain/vendor/MapLocation';
 
-// Where a Vendor's shop is, in degrees, which a frontend opens in Google Maps.
+// Where a Vendor is, in degrees, which a frontend opens in Google Maps.
 export class MapLocationResponse {
   @ApiProperty({ description: 'The latitude, in degrees.', example: 36.1911744 })
   readonly latitude: number;

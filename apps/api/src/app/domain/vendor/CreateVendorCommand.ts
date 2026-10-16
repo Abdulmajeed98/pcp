@@ -7,8 +7,8 @@ import { CreateLoginParams, LoginStore } from '../login/LoginStore';
 import { makeTemporaryPassword } from '../login/temporary-password';
 import { PhoneNumber } from '../phone-number/PhoneNumber';
 import { City } from './City';
-import { ContactDetails, TypedContactDetails } from './ContactDetails';
-import { holdsText, lengthOf } from './text-as-written';
+import { ContactDetails, UncheckedContactDetails } from './ContactDetails';
+import { holdsText, lengthOf } from './detail-text';
 import { Vendor } from './Vendor';
 import { vendorDetailRefused } from './vendor-errors';
 import { CreateVendorParams, VendorStore } from './VendorStore';
@@ -23,7 +23,7 @@ class Input {
   constructor(
     private readonly name: string | null,
     private readonly cityKey: string | null,
-    private readonly contactDetails: TypedContactDetails,
+    private readonly contactDetails: UncheckedContactDetails,
     private readonly loginPhoneNumber: string | null,
   ) {}
 
@@ -36,7 +36,7 @@ class Input {
     return this.cityKey;
   }
 
-  getContactDetails(): TypedContactDetails {
+  getContactDetails(): UncheckedContactDetails {
     return this.contactDetails;
   }
 
@@ -92,7 +92,7 @@ export class CreateVendorCommand {
     }
 
     const cityKey = input.getCityKey();
-    if (cityKey === null) return Either.left(vendorDetailRefused('city', 'missing'));
+    if (!holdsText(cityKey)) return Either.left(vendorDetailRefused('city', 'missing'));
     const city = City.withKey(cityKey);
     if (city === undefined) return Either.left(vendorDetailRefused('city', 'notInTheSet'));
 

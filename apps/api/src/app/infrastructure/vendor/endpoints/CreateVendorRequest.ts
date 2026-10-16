@@ -6,7 +6,7 @@ import { City } from '~/domain/vendor/City';
 import {
   longestAddress,
   longestOpeningHours,
-  TypedContactDetails,
+  UncheckedContactDetails,
 } from '~/domain/vendor/ContactDetails';
 import {
   CreateVendorCommandInput,
@@ -54,7 +54,7 @@ export class CreateVendorRequest {
   readonly address: string | null = null;
 
   @ApiPropertyOptional({
-    description: "Where the Vendor's shop is: a latitude and a longitude, both or neither.",
+    description: 'Where the Vendor is: a latitude and a longitude, both or neither.',
     type: MapLocationRequest,
     nullable: true,
   })
@@ -121,7 +121,7 @@ export class CreateVendorRequest {
     return new CreateVendorCommandInput(
       this.name,
       this.city,
-      new TypedContactDetails(
+      new UncheckedContactDetails(
         this.address,
         this.mapLocation?.latitude ?? null,
         this.mapLocation?.longitude ?? null,

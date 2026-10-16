@@ -204,6 +204,31 @@ describe('the Vendor endpoints', () => {
       expect(await read.json()).toEqual(vendor);
     });
 
+    it.each([
+      ['with +964', '+964 66 223 4567', '+964 770 123 4567'],
+      ['with 00964', '00964 66 223 4567', '00964 770 123 4567'],
+      ['in Arabic-Indic digits', '٠٦٦ ٢٢٣ ٤٥٦٧', '٠٧٧٠ ١٢٣ ٤٥٦٧'],
+      ['in Eastern Arabic-Indic digits', '۰۶۶ ۲۲۳ ۴۵۶۷', '۰۷۷۰ ۱۲۳ ۴۵۶۷'],
+    ])(
+      'reads a phone number and a WhatsApp number typed %s, and answers each in both forms',
+      async (_form, phoneNumber, whatsAppNumber) => {
+        const { vendor } = await createdOf(
+          await createVendor({ ...aVendor('0750 123 4567'), phoneNumber, whatsAppNumber }),
+        );
+
+        const read = (await (await readVendor(vendor.id)).json()) as VendorBody;
+
+        expect(read.phoneNumber).toEqual({
+          international: '+964662234567',
+          national: '066 223 4567',
+        });
+        expect(read.whatsAppNumber).toEqual({
+          international: '+9647701234567',
+          national: '0770 123 4567',
+        });
+      },
+    );
+
     it.each<[string, Record<string, unknown>]>([
       ['left out', {}],
       [
@@ -403,6 +428,12 @@ describe('the Vendor endpoints', () => {
       [
         'no city',
         { ...aVendor('0750 123 4567'), city: undefined },
+        notValid('city', { reason: 'missing' }),
+        '+9647501234567',
+      ],
+      [
+        'an empty city, as a form sends one not chosen',
+        { ...aVendor('0750 123 4567'), city: '' },
         notValid('city', { reason: 'missing' }),
         '+9647501234567',
       ],
