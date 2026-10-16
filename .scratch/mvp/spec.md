@@ -314,7 +314,7 @@ Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/wor
 
 `languages`, the first module, was finished on 16 October 2026; its spec and tickets are in [.scratch/languages](../languages/spec.md). The review of the Kurdish and the Arabic text, LANG-7, stays open until launch. The conventions it set are below, under **The three languages**, and in the commands, the layout and the import rules.
 
-`catalog`, the second module, was finished on 16 October 2026; its spec and tickets are in [.scratch/catalog](../catalog/spec.md). The checks on the owner's phone that its tickets list stay open until the owner has made them. The conventions it set are below, under **The catalog's conventions**, and in the commands, the settings, the layout and the import rules.
+`catalog`, the second module, was finished on 16 October 2026; its spec and tickets are in [.scratch/catalog](../catalog/spec.md). The checks on a phone that its tickets list are made at the end, once the platform's services are hosted, as the owner decided on 16 October 2026; until then their boxes stay open. The conventions it set are below, under **The catalog's conventions**, and in the commands, the settings, the layout and the import rules.
 
 **Commands**
 

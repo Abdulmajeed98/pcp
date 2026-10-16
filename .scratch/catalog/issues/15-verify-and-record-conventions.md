@@ -91,7 +91,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 
 Of the 26,240 records, 24 are left out: 20 name no manufacturer and copy a complete record's part number, 2 are on the import's list of known copies, and 2 name no manufacturer their name shows, as the owner decided on 15 October 2026.
 
-**Asked of the owner on 16 October 2026, and still to be done:**
+**Asked of the owner on 16 October 2026, and still to be done.** The owner answered the same day that the checks on a phone are made at the end, once the platform's services are hosted, and not on the development services:
 
 - The import's report makes sense, and a few well-known Parts, such as an AMD Ryzen 5 7600, are found with the right specifications. (In this session's browser the Ryzen 5 7600's page showed socket AM5, 6 cores and 12 threads, 3.8 to 5.1 GHz, 65 W and DDR5.)
 - How long the import takes on the owner's own connection. From this machine it took 14 seconds, the download included.

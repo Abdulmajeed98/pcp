@@ -24,7 +24,7 @@ It is laid out to the Shopper app's look, Fit Diagram, in `apps/shopper/DESIGN.m
   - The accessibility helper passes on the first page in each language, in light and in dark.
 - [x] Shown once and then reverted, each failing on its own line: the credit taken off the "not found" page; the always-English mark taken off the credit.
 - [x] If `languages`' check of the language files exists, the new messages pass it.
-- [ ] Checked by hand: the Kurdish and the Arabic credit are drawn clearly, in Noto Kufi Arabic, and read correctly on the owner's phone and, as ADR-0006 asks, on an Android phone from Honor, Infinix, Tecno or Xiaomi if one is at hand.
+- [ ] Checked by hand: the Kurdish and the Arabic credit are drawn clearly, in Noto Kufi Arabic, and read correctly on the owner's phone and, as ADR-0006 asks, on an Android phone from Honor, Infinix, Tecno or Xiaomi if one is at hand. *(After hosting: on 16 October 2026 the owner decided that the checks on a phone are made at the end, once the platform's services are hosted, and not on the development services.)*
 - [x] `pnpm check` passes with Docker stopped.
 - [x] The results of the fault checks and the by-hand check are recorded under Comments.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
