@@ -38,6 +38,13 @@ for (const { label, nameSetting, passwordSetting } of developmentLogins) {
     );
   }
 }
+// The API the tests start refuses to start without its client's secret, which
+// its `serve` target reads from `.env`.
+if (!settings.PCP_API_CLIENT_SECRET) {
+  exitWith(
+    `.env does not hold PCP_API_CLIENT_SECRET, the secret of the API's client. ${startHint}`,
+  );
+}
 
 // The realm's public description answers only when Keycloak is up and the
 // platform's realm is loaded.
