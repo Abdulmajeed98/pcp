@@ -15,30 +15,30 @@ The dashboard gains its first libraries, the most widely used for each job, as t
 
 **Blocked by:** 02, 06, 10, and tickets 05 and 06 of [the languages spec](../../languages/spec.md)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Before anything is written, these are read for the releases that will be installed, and the findings are recorded under Comments:
+- [x] Before anything is written, these are read for the releases that will be installed, and the findings are recorded under Comments:
   - React Router's modes, and which suits a client-rendered app whose routes are declared in the App layer;
   - TanStack Query's set-up, and how it fits `@pcp/api-client`'s calls, which never throw;
   - shadcn/ui's set-up when each app has its own set of components (ADR-0007): where the dashboard's set lives, how its command writes there with the right-to-left setting on, on Base UI in the Mira style, and how its `components.json` points at the dashboard's theme. shadcn/ui's documentation describes one set in a monorepo, so this is to be found out. Two things the set-up must not undo: the dark scheme follows the device through `prefers-color-scheme` and Tailwind's own `dark:` variant, so no `.dark` class variant is added; and a control whose border is the only sign of where it is draws it in `input`, not `border`, which is too light for WCAG's 3:1.
-- [ ] React Router, TanStack Query, lucide-react and shadcn/ui's first components are added, as the current stable releases. A new package's install script is read before it is listed.
-- [ ] The router lives in the App layer. The Catalog has an address of its own in the Admin console.
-- [ ] The Vendor portal is unchanged. A Vendor who opens the Catalog's address gets the Vendor portal.
-- [ ] `ui` gains a component that shows a Category's icon: `cpu`, `fan`, `circuit-board`, `memory-stick`, `hard-drive`, `gpu`, `pc-case` and `plug-zap`.
-- [ ] The Catalog has a search box, a choice of Category named from the shared terms in English, and the results in pages with the total found. It says so plainly when nothing is found, and shows a refusal from the API as one.
-- [ ] Its text is English, written where it is used, as `languages` decided for the Admin console.
-- [ ] It follows `apps/dashboard/DESIGN.md` and the root DESIGN.md, in light and in dark, is laid out at 360 pixels wide first, uses logical classes only, and keeps to Feature-Sliced Design's import rules. `pnpm boundaries:check` passes if the lint configuration or a layer folder changed.
-- [ ] The end-to-end tests gain a helper that runs the automated part of the chosen accessibility standard, WCAG 2.2 level AA, on a page, unless ticket 14 has already added it. It runs axe-core through `@axe-core/playwright` with the tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` and `wcag22aa`, in the light and in the dark scheme, and a planted target smaller than 24 pixels shows whether `target-size` runs.
-- [ ] `pnpm platform:check` gains these lines, and passes on every line:
+- [x] React Router, TanStack Query, lucide-react and shadcn/ui's first components are added, as the current stable releases. A new package's install script is read before it is listed.
+- [x] The router lives in the App layer. The Catalog has an address of its own in the Admin console.
+- [x] The Vendor portal is unchanged. A Vendor who opens the Catalog's address gets the Vendor portal.
+- [x] `ui` gains a component that shows a Category's icon: `cpu`, `fan`, `circuit-board`, `memory-stick`, `hard-drive`, `gpu`, `pc-case` and `plug-zap`.
+- [x] The Catalog has a search box, a choice of Category named from the shared terms in English, and the results in pages with the total found. It says so plainly when nothing is found, and shows a refusal from the API as one.
+- [x] Its text is English, written where it is used, as `languages` decided for the Admin console.
+- [x] It follows `apps/dashboard/DESIGN.md` and the root DESIGN.md, in light and in dark, is laid out at 360 pixels wide first, uses logical classes only, and keeps to Feature-Sliced Design's import rules. `pnpm boundaries:check` passes if the lint configuration or a layer folder changed.
+- [x] The end-to-end tests gain a helper that runs the automated part of the chosen accessibility standard, WCAG 2.2 level AA, on a page, unless ticket 14 has already added it. It runs axe-core through `@axe-core/playwright` with the tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` and `wcag22aa`, in the light and in the dark scheme, and a planted target smaller than 24 pixels shows whether `target-size` runs.
+- [x] `pnpm platform:check` gains these lines, and passes on every line:
   - As the development Admin, in a window 360 pixels wide: a made-up Part, created over HTTP with a name unique to the run, is found on the Catalog by a word of its name and by its part number. It shows its Category's icon.
   - Choosing another Category leaves it out.
   - The Catalog does not scroll sideways.
   - The accessibility helper passes on the Catalog, in light and in dark.
   - As the development Vendor, the Catalog's address does not show the Catalog.
-- [ ] Shown once and then reverted, each failing on its own line: the Category's choice ignored; the Vendor sent to the Admin console; a control given no accessible name.
-- [ ] `pnpm check` passes with Docker stopped.
-- [ ] The results of the fault checks are recorded under Comments.
-- [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+- [x] Shown once and then reverted, each failing on its own line: the Category's choice ignored; the Vendor sent to the Admin console; a control given no accessible name.
+- [x] `pnpm check` passes with Docker stopped.
+- [x] The results of the fault checks are recorded under Comments.
+- [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
 
@@ -73,3 +73,47 @@ The dashboard gains its first libraries, the most widely used for each job, as t
   - The outline button draws its border in `border`. The border is what shows such a button's edge, so it is drawn in `input`, which meets 3:1.
 - Two things the set-up must not undo, and does not: the CLI was given the dashboard's own stylesheet as its `tailwind.css`, and adding the components wrote no CSS, so no `.dark` class variant and no colours of shadcn/ui's own reached it. The dark scheme still follows the device through Tailwind's own `dark:`.
 - The components are added with `pnpm dlx shadcn@4.21.5 add …` from the dashboard's folder. `shadcn` and `cn` have no install script.
+
+### 16 October 2026: completed
+
+**For the owner to know.**
+
+- **The Admin console opens on the Catalog,** at `/catalog`, in place of its placeholder. It searches the whole catalog and shows 20 Parts a page, in name order, with the count found on the screen's one plate. The address holds the search, so a search survives a reload and the back button.
+- **Two choices the owner made on 16 October 2026, when asked:**
+  - A row does not yet end in an amber plate with how many needed specifications the Part lacks, as the dashboard's brief draws it. The search's answer does not hold that count, and the missing-specifications list arrives with `offers`.
+  - The top bar has no menu of sections while the Catalog is the only one. It names the console, and shows the caller's name and Log out. The menu arrives with the second section.
+- **The dashboard's shadcn/ui components** are its own, in `apps/dashboard/src/shared/ui`, added with `pnpm dlx shadcn@4.21.5 add …` from the dashboard's folder and then held to the root DESIGN.md, as the first comment says. The command reads the `@/` alias from the app's `tsconfig.json`, which held none, and the first run wrote its files into a folder named `@`. The alias is now in `tsconfig.json` as well as `tsconfig.app.json`.
+- **Two new pieces of the Shared layer** serve every later screen: `dataOf`, which turns `@pcp/api-client`'s answer into data or throws a refusal for TanStack Query, and the Plate. The Category's list and names are in a new Entities slice, `category`, which ticket 12's form will use.
+- **The Admin's login test changed.** It read the placeholder's line with the caller's roles, which the Catalog replaces. It now finds the caller's name in the top bar and the Catalog below it, the half a login with the role `admin` gets.
+- **`ui`'s Category icon** takes the Categories' own keys, and says which Category it is drawn for in `data-category`, so that a test can read it. It is hidden from screen readers, because the Category's name is always in words beside it.
+
+**The accessibility helper.**
+
+- `apps/e2e/src/accessibility.ts` runs axe-core 4.13 through `@axe-core/playwright` with the tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` and `wcag22aa`, in the light and the dark scheme.
+- **`target-size` runs with those tags alone.** Two 12-pixel buttons planted side by side in the top bar failed the helper with `target-size`, so the rule does not need turning on by name. A single small target alone passes it, as WCAG 2.5.8's spacing exception allows, so the plant used two.
+- Its first run failed `color-contrast` in the dark scheme on the Log out button and a row's name. Both change colour with a transition, and axe measured them while they were moving from the light scheme's colours. The helper now waits for every running animation and transition to finish before it scans.
+
+**The planted faults,** each made by one exact edit on a clean tree, run against `src/admin-catalog.spec.ts`, and undone by the inverse edit:
+
+| Fault | The line that failed | The others |
+|---|---|---|
+| The Category's choice left out of the API call | A search in its own Category finds it, and choosing another leaves it out | 5 passed |
+| Every login sent to the Admin console | As the development Vendor, the Catalog's address shows the Vendor portal | 5 passed |
+| Log out's text taken away, leaving a button with no name | The Catalog meets WCAG 2.2 level AA, with `button-name` | 5 passed |
+| Two 12-pixel buttons side by side | The Catalog meets WCAG 2.2 level AA, with `target-size` | 5 passed |
+
+**The checks.**
+
+- `pnpm platform:check` passed all 58 tests, the Catalog's 6 among them.
+- `pnpm check --skip-nx-cache` passed with `DOCKER_HOST` pointed at a socket that does not exist.
+- `pnpm boundaries:check` passed, after the dashboard gained its Entities layer's first folder.
+- The Catalog was captured at 360 and 1440 pixels wide, in light and in dark, with results, with none, and on every Part. That round found "Admin console" breaking onto two lines at 360 pixels, and the empty state suggesting a search of every Category when the search already was one. Both were corrected.
+
+**The commits,** each leaving `pnpm check` passing:
+
+- the research, before anything was written;
+- the libraries;
+- the dashboard's shadcn/ui components;
+- `ui`'s Category icon;
+- the end-to-end tests, written first;
+- the Catalog.
