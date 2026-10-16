@@ -6,7 +6,7 @@ import { cn } from 'cn';
 // pixels high in every size, body-size text, and a focus outline drawn in
 // `ring` at full strength. The outline variant draws its edge in `input`,
 // because that edge is what shows where the button is.
-const buttonVariants = cva(
+const buttonClasses = cva(
   "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-transparent bg-clip-padding text-base font-medium whitespace-nowrap transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
@@ -38,14 +38,21 @@ function Button({
   variant = 'default',
   size = 'default',
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props & VariantProps<typeof buttonClasses>) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={buttonVariants({ variant, size, className })}
       {...props}
     />
   );
+}
+
+// The button's classes, for a link or a label that looks like a button. The
+// variant's classes are merged over the base's, so that a variant's border
+// colour wins over the base's transparent one whichever Tailwind writes last.
+function buttonVariants(props?: Parameters<typeof buttonClasses>[0]): string {
+  return cn(buttonClasses(props));
 }
 
 export { Button, buttonVariants };
