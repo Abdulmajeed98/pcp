@@ -25,3 +25,42 @@
 - [ ] `pnpm check` passes with Docker stopped.
 - [ ] The results of the fault checks are recorded under Comments.
 - [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+
+## Comments
+
+### 16 October 2026: the owner agreed to the reset
+
+When asked in this session on 16 October 2026, the owner agreed to the reset: `pnpm services:reset` deletes the platform's database, which holds the imported catalog and test data, and Keycloak's data. It is run once, when the realm and Compose changes are ready, and followed by `pnpm services:up`, `pnpm catalog:import` and `pnpm services:check`.
+
+### 16 October 2026: what was read before anything was written
+
+Read for the installed releases: Keycloak 26.8.0's Server Administration Guide (the 26.8.0 page, whose brute-force section matches 26.8.1's word for word), Keycloak 26.8.0 tried in a throwaway container that imported the changed realm file, and Docker's Compose documentation for Docker Compose 5.5.1.
+
+- **A password policy.** The realm's `passwordPolicy` is one text of policies joined by `and`. `length(8) and notUsername` is read back exactly so.
+  - It applies to every password, a temporary one set through the administration interface among them. A create with a password of 7 characters is refused with 400 `invalidPasswordMinLengthMessage`, one equal to the Login's name with 400 `invalidPasswordNotUsernameMessage`, and neither leaves a Login. The API's temporary passwords have 12 characters and are never a phone number, so they pass.
+  - The guide says a new policy is not applied to existing Logins. The reset makes every Login afresh.
+  - On the screen that asks for a new password, a password of 3 characters is refused with "Invalid password: minimum length ٨." and the Login's name with "Invalid password: must not be equal to the username.", in the alert above the form. **Keycloak writes the 8 in Arabic-Indic digits on the Kurdish screen**, through the locale it formats the message in. That is for ticket 04, whose Kurdish text this is.
+- **The screen that asks for a new password.** A Login with a temporary password that logs in at the login screen is sent to `…/realms/pcp/login-actions/required-action?execution=UPDATE_PASSWORD&client_id=dashboard&…`. The page's form is `#kc-passwd-update-form`, with the fields `#password-new` and `#password-confirm`. Its heading is Keycloak's English "Update password" on the Kurdish screen too, until ticket 04.
+- **Brute-force detection.** The guide's modes are "Lockout permanently", "Lockout temporarily" and "Lockout permanently after temporary lockout". In the realm file they are `bruteForceProtected`, `permanentLockout` and `maxTemporaryLockouts`, with `failureFactor` (Max Login Failures), `bruteForceStrategy` (`MULTIPLE` or `LINEAR`), `waitIncrementSeconds`, `maxFailureWaitSeconds` (Max Wait), `maxDeltaTimeSeconds` (Failure Reset Time), `quickLoginCheckMilliSeconds` and `minimumQuickLoginWaitSeconds`.
+  - `MULTIPLE`, the default, grows the wait only at each multiple of Max Login Failures. `LINEAR` grows it with each failure from Max Login Failures on: the wait is Wait Increment × (1 + failures − Max Login Failures), and never more than Max Wait.
+  - A failure made while a Login is locked is not counted. A right password resets the count. The count also resets when Failure Reset Time has passed since the last failure, which the guide says must be longer than Max Wait.
+  - Two failures less than Quick Login Check Milliseconds apart lock the Login for Minimum Quick Login Wait, before Max Login Failures is reached.
+  - Brute-force detection counts failures at the token address too. A locked Login is answered "Invalid user credentials" there.
+- **What a locked Login sees.** The guide says Keycloak shows the same message as for a wrong password, so that nobody learns the Login is locked. Tried: the login screen answers a locked Login, with its right password, with the message `accountTemporarilyDisabledMessage`, whose English and Arabic text are the same as `invalidUserMessage`'s. The theme's Kurdish messages translate `invalidUserMessage` only, so the Kurdish login screen shows a wrong password in Kurdish and a locked Login in English. Ticket 04 gives it its Kurdish text.
+- **How the Compose file gives Keycloak's container a setting from `.env`.** Compose fills `${NAME}` in the Compose file from the shell's environment first, then from the `.env` file in the project's folder. `${NAME:?message}` stops Compose with the message when the setting is missing or empty, and `${NAME?message}` only when it is missing. A value written under a service's `environment` is that container's environment setting. `.env` itself never reaches a container: only what the Compose file names does. Keycloak reads `PCP_API_CLIENT_SECRET` from its environment when it imports the realm, as ticket 01 found.
+
+**The numbers chosen.** Lockout temporarily, `LINEAR`, after 5 failures in a row, with a wait that grows by 1 minute with each further failure up to 15 minutes:
+
+| Setting | Value | What it does |
+|---|---|---|
+| `failureFactor` | 5 | The 5th wrong password in a row locks the Login |
+| `bruteForceStrategy` | `LINEAR` | Each further failure makes the wait longer |
+| `waitIncrementSeconds` | 60 | 1 minute after the 5th failure, 2 after the 6th, 3 after the 7th |
+| `maxFailureWaitSeconds` | 900 | 15 minutes at most, from the 19th failure on |
+| `maxDeltaTimeSeconds` | 43200 | The count starts again 12 hours after the last failure, Keycloak's default |
+| `quickLoginCheckMilliSeconds`, `minimumQuickLoginWaitSeconds` | 1000, 60 | Keycloak's defaults: two failures within a second lock the Login for 1 minute |
+| `permanentLockout`, `maxTemporaryLockouts` | false, 0 | Never locked for good: the Admin has no screen to unlock a Login |
+
+Tried in the throwaway container with this realm file: 5 wrong passwords at 1.5-second intervals locked the Login for 60 seconds; a 6th, made after that lock had ended, locked it for 120 seconds, and its right password was refused 70 seconds later. Two wrong passwords made at once locked another Login for 60 seconds. Four wrong passwords and then the right one logged in and set the count back to 0.
+
+For ticket 04: a test that types wrong passwords faster than once a second meets the quick-login lock before the 5th failure.
