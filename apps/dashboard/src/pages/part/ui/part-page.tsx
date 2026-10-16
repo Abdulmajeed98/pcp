@@ -1,12 +1,21 @@
 import type { CategoryResponse, PartResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { useParams } from 'react-router';
+import { PencilIcon } from 'lucide-react';
+import { Link, useParams } from 'react-router';
 
 import { categoryName, useCategories } from '@/entities/category';
 import { PartPicture, usePart, valueAt } from '@/entities/part';
+import { PhotoField } from '@/features/add-photo';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
-import { Alert, AlertDescription, AlertTitle, BackLink, Plate } from '@/shared/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  BackLink,
+  buttonVariants,
+  Plate,
+} from '@/shared/ui';
 
 import { NeededNotKnown, NotKnown, SpecificationValue } from './specification-value';
 
@@ -69,6 +78,13 @@ function ThePart({ part, category }: { part: PartResponse; category: CategoryRes
               {categoryName(part.category)}
             </p>
           </div>
+        </div>
+        <div className="flex flex-wrap items-start gap-2">
+          <Link to="edit" className={buttonVariants({ variant: 'outline' })}>
+            <PencilIcon data-icon="inline-start" aria-hidden="true" />
+            Edit
+          </Link>
+          <PhotoField partId={part.id} hasPhoto={part.photoPath !== null} />
         </div>
       </div>
 

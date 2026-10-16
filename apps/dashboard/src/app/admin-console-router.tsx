@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, type DataRouter } from 'react-router';
 
 import { CatalogPage } from '@/pages/catalog';
+import { EditPartPage } from '@/pages/edit-part';
 import { ChooseCategoryPage, NewPartPage } from '@/pages/new-part';
 import { NotFoundPage } from '@/pages/not-found';
 import { PartPage } from '@/pages/part';
@@ -19,6 +20,7 @@ const routes = [
       { path: 'catalog/new', Component: ChooseCategoryPage },
       { path: 'catalog/new/:category', Component: NewPartPage },
       { path: 'catalog/parts/:partId', Component: PartPage },
+      { path: 'catalog/parts/:partId/edit', Component: EditPartPage },
       { path: '*', Component: NotFoundPage },
     ],
   },

@@ -24,7 +24,9 @@ export function ChooseCategoryPage() {
           <li key={key}>
             <Item className="relative rounded-none px-0 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2">
               <ItemMedia>
-                <PartPicture part={{ category: key }} />
+                <PartPicture
+                  part={{ category: key, name: categoryName(key), photoPath: null }}
+                />
               </ItemMedia>
               <ItemContent>
                 <ItemTitle className="text-base">
