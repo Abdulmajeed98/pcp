@@ -12,6 +12,18 @@ export {
   EmptyMedia,
   EmptyTitle,
 } from './empty';
+export {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+  FieldTitle,
+} from './field';
 export { Input } from './input';
 export {
   Item,
@@ -29,3 +41,13 @@ export { Label } from './label';
 export { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from './native-select';
 export { Plate } from './plate';
 export { Separator } from './separator';
+export {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './table';
