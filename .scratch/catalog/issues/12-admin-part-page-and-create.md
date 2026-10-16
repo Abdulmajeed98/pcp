@@ -34,3 +34,24 @@ React Hook Form arrives here, as the owner chose on 14 October 2026.
 - [ ] `pnpm check` passes with Docker stopped.
 - [ ] The results of the fault checks are recorded under Comments.
 - [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+
+## Comments
+
+### 16 October 2026: settled before anything was written
+
+**React Hook Form 7.90.0**, from its documentation of `register`, `useFieldArray` and `setError`.
+
+- **Fields not known in advance.** `register` takes any name, and a name with dots nests its value: `specifications.cores.total` gives `{ specifications: { cores: { total } } }`. Each specification is registered under `specifications.` and its path, so the form's values are already in OpenDB's field names and nesting, and a refusal's `field`, such as `specifications.cores.total`, is the name of the field it is about.
+- **Lists.** `useFieldArray` keeps a list's rows, and its rules bind the form:
+  - each entry must be an object, never a bare string, so part numbers and a list of text are held as `{ value }` and unwrapped when the form is sent;
+  - the key of each rendered row is the `id` the hook gives it, never its index;
+  - two actions are not run one after the other in one handler;
+  - `shouldUnregister: true` is not supported.
+- **Errors from the API.** `setError(name, { type, message }, { shouldFocus })` puts an error on a field, where the form shows it beside the field, and `root.` names an error that belongs to no field. An error set this way is cleared when its field is validated again. The API names the first specification it refuses, as the owner decided on 15 October 2026, so the form shows that one.
+- **Inputs give text.** A number is typed into a text field with a numeric keyboard, not a number field, so that a word typed where a number belongs reaches the API and is refused beside the field, by the same specification list the API keeps. A number field would stop the word before anyone saw why.
+
+**How the form is laid out.**
+
+- The Category is chosen first, on a screen of its own at `/catalog/new`, and the form for it is at `/catalog/new/<category>`. Choosing again means going back, so a form never holds another Category's values.
+- An empty field is a missing specification. A yes-or-no specification is a choice of "Not known", "Yes" and "No", so that "not known" can be said.
+- A list of rows, such as a motherboard's M.2 slots, can be not known, known to be empty, or a list of rows. OpenDB keeps an empty list as a value: a board with no M.2 slot has none, and a Compatibility Rule treats that otherwise than a list nobody knows. The form keeps the three apart, so that saving a Part never turns "none" into "not known".
