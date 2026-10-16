@@ -8,7 +8,7 @@ The development Vendor is retired. The tests that logged in as it make a made-up
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Before anything is written, these are found out on the installed Keycloak and recorded under Comments:
   - whether a script named in the theme's properties is loaded on `keycloak.v2`'s login screen and on its screen that asks for a new password;
