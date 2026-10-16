@@ -23,7 +23,7 @@ import {
   formValuesOf,
   partFieldsOf,
 } from '../model/form-values';
-import { fieldOf, messageOf } from '../model/refusals';
+import { fieldOf, messageOf, partFieldMessages, whyNotSaved } from '../model/refusals';
 import { describedBy, errorOf } from './field-names';
 import { SpecificationField } from './specification-field';
 import { TextListField } from './text-list-field';
@@ -67,14 +67,8 @@ export function PartForm({
   }
 
   function showWhyNot(error: unknown): void {
-    if (!(error instanceof Refusal)) {
-      setError('root.refusal', {
-        message: 'The API cannot be reached. Check the connection, and save again.',
-      });
-      return;
-    }
-
-    const onTheForm = error.errors.filter((each) => isOnTheForm(each));
+    const onTheForm =
+      error instanceof Refusal ? error.errors.filter((each) => isOnTheForm(each)) : [];
     for (const [index, each] of onTheForm.entries()) {
       setError(
         fieldOf(each) as 'name',
@@ -82,13 +76,7 @@ export function PartForm({
         { shouldFocus: index === 0 },
       );
     }
-    if (onTheForm.length === 0) {
-      setError('root.refusal', {
-        message: `The API refused the Part, with ${error.status}, ${error.code}: ${error.errors
-          .map(messageOf)
-          .join(' ')}`,
-      });
-    }
+    if (onTheForm.length === 0) setError('root.refusal', { message: whyNotSaved(error) });
   }
 
   // Whether a refusal names a field this form shows.
@@ -125,7 +113,7 @@ export function PartForm({
                 aria-invalid={nameError !== undefined}
                 aria-describedby={describedBy(nameError && 'part-name-error')}
                 {...register('name', {
-                  validate: (name) => name.trim() !== '' || 'Give the Part a name.',
+                  validate: (name) => name.trim() !== '' || partFieldMessages.name,
                 })}
               />
               <FieldError id="part-name-error">{nameError}</FieldError>
@@ -141,7 +129,7 @@ export function PartForm({
                 )}
                 {...register('manufacturer', {
                   validate: (manufacturer) =>
-                    manufacturer.trim() !== '' || 'Give the Part its manufacturer.',
+                    manufacturer.trim() !== '' || partFieldMessages.manufacturer,
                 })}
               />
               <FieldError id="part-manufacturer-error">{manufacturerError}</FieldError>

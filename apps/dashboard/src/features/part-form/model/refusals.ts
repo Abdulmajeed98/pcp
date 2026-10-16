@@ -1,4 +1,7 @@
 import type { SubErrorResponse } from '@pcp/api-client';
+import { formatNumber } from '@pcp/i18n';
+
+import { Refusal } from '@/shared/api';
 
 // What the Admin is told beside a field the API refused, by the reason the
 // API gave. The API checks every specification against its Category's list,
@@ -18,8 +21,8 @@ const reasons: Record<string, string> = {
 };
 
 // The same for the Part's own fields, which the API checks before its
-// specifications.
-const fields: Record<string, string> = {
+// specifications, and which the form checks too before it sends them.
+export const partFieldMessages: Record<string, string> = {
   name: 'Give the Part a name.',
   manufacturer: 'Give the Part its manufacturer.',
   partNumbers: 'Each part number has to be text.',
@@ -36,7 +39,20 @@ export function messageOf(error: SubErrorResponse): string {
   if (reason !== undefined && reasons[reason] !== undefined) return reasons[reason];
 
   const field = fieldOf(error);
-  if (field !== undefined && fields[field] !== undefined) return fields[field];
+  if (field !== undefined && partFieldMessages[field] !== undefined) {
+    return partFieldMessages[field];
+  }
 
   return 'The API did not accept this.';
+}
+
+// Why the Part was not saved, for a refusal that names no field the form
+// shows, or an API that cannot be reached.
+export function whyNotSaved(error: unknown): string {
+  if (!(error instanceof Refusal)) {
+    return 'The API cannot be reached. Check the connection, and save again.';
+  }
+  return `The API refused the Part, with ${formatNumber(error.status)}, ${error.code}: ${error.errors
+    .map(messageOf)
+    .join(' ')}`;
 }

@@ -17,7 +17,7 @@ function NativeSelect({ className, ...props }: React.ComponentProps<'select'>) {
     >
       <select
         data-slot="native-select"
-        className="h-control w-full min-w-0 appearance-none rounded-md border border-input bg-card ps-3 pe-9 text-base transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive"
+        className="h-control w-full min-w-0 appearance-none rounded-lg border border-input bg-card ps-3 pe-9 text-base transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive"
         {...props}
       />
       <ChevronDownIcon

@@ -1,4 +1,4 @@
-import type { SubErrorResponse } from '@pcp/api-client';
+import { formatNumber } from '@pcp/i18n';
 
 import { Refusal } from '@/shared/api';
 
@@ -17,11 +17,9 @@ export function whyNotAdded(error: Error): string {
     return 'The API cannot be reached. Check the connection, and choose the photo again.';
   }
 
-  const reason = error.errors.find(
-    (each: SubErrorResponse) => each.additionalInformation?.field === 'photo',
-  )?.additionalInformation?.reason;
+  const reason = error.reasonFor('photo');
   return (
     (reason !== undefined ? reasons[reason] : undefined) ??
-    `The API refused the photo, with ${error.status}, ${error.code}.`
+    `The API refused the photo, with ${formatNumber(error.status)}, ${error.code}.`
   );
 }

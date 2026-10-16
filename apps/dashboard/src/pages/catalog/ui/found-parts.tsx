@@ -28,7 +28,8 @@ import { PartRow } from './part-row';
 // What the search found: how many, on the Catalog's one plate, then the
 // Parts of this page as rows, then the way to the other pages. While the
 // first answer is on its way, rows are sketched in its place, and while a
-// later one is, the last answer stays, dimmed. A refusal and an API that
+// later one is, the last answer stays, at full strength, and a line beside
+// the count says that the next is on its way. A refusal and an API that
 // cannot be reached are each said in words.
 export function FoundParts({
   search,
@@ -49,13 +50,16 @@ export function FoundParts({
     <section
       aria-labelledby="parts-found"
       aria-busy={found.isPlaceholderData}
-      className="flex flex-col gap-4 transition-opacity aria-busy:opacity-60"
+      className="flex flex-col gap-4"
     >
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <Plate data-testid="parts-found-count">{formatNumber(totalElements)}</Plate>
         <span id="parts-found">
           {totalElements === 1 ? 'Part found' : 'Parts found'}
           {search.category !== undefined && ` in ${categoryName(search.category)}`}
+        </span>
+        <span aria-live="polite" className="text-sm text-muted-foreground">
+          {found.isPlaceholderData && 'Searching…'}
         </span>
       </p>
 
@@ -75,7 +79,7 @@ export function FoundParts({
       )}
 
       {totalPages > 1 && (
-        <Pages
+        <ResultPages
           pageNumber={pageNumber}
           totalPages={totalPages}
           first={first}
@@ -88,7 +92,7 @@ export function FoundParts({
 }
 
 // The way to the page before and the page after, and where this one stands.
-function Pages({
+function ResultPages({
   pageNumber,
   totalPages,
   first,
@@ -125,7 +129,7 @@ function Searching() {
       <ul aria-hidden="true" className="divide-y divide-border border-y border-border">
         {[0, 1, 2, 3].map((row) => (
           <li key={row} className="flex items-center gap-3 py-2">
-            <span className="size-10 shrink-0 rounded-md bg-secondary" />
+            <span className="size-10 shrink-0 rounded-lg bg-secondary" />
             <span className="flex flex-1 flex-col gap-2">
               <span className="h-3.5 w-3/4 rounded-sm bg-secondary" />
               <span className="h-3.5 w-1/2 rounded-sm bg-muted" />

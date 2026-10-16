@@ -6,18 +6,13 @@ import type * as React from 'react';
 // Amber is drawn here and nowhere else. The figure keeps its digits in
 // columns, and is always written in Western digits by `formatNumber`.
 //
-// A screen has at most one large plate.
-function Plate({
-  className,
-  size = 'default',
-  ...props
-}: React.ComponentProps<'span'> & { size?: 'default' | 'large' }) {
+// A screen has one plate at most.
+function Plate({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span
       data-slot="plate"
       className={cn(
-        'inline-flex items-center rounded-sm bg-plate px-2 font-mono font-bold text-plate-figure tabular-nums',
-        size === 'large' ? 'py-1 text-3xl' : 'py-0.5 text-xl',
+        'inline-flex items-center rounded-sm bg-plate px-2 py-0.5 font-mono text-xl font-bold text-plate-figure tabular-nums',
         className,
       )}
       {...props}

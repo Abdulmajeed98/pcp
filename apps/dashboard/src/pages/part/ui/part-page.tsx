@@ -57,10 +57,16 @@ export function PartPage() {
   const category = categories.data.find(({ key }) => key === part.data.category);
   if (category === undefined) return null;
 
-  return <ThePart part={part.data} category={category} />;
+  return <PartDetails part={part.data} category={category} />;
 }
 
-function ThePart({ part, category }: { part: PartResponse; category: CategoryResponse }) {
+function PartDetails({
+  part,
+  category,
+}: {
+  part: PartResponse;
+  category: CategoryResponse;
+}) {
   const missing = part.missingNeededSpecifications;
 
   return (
@@ -123,7 +129,7 @@ function ThePart({ part, category }: { part: PartResponse; category: CategoryRes
       )}
 
       <section aria-labelledby="specifications" className="flex flex-col gap-2">
-        <h2 id="specifications" className="text-lg font-semibold">
+        <h2 id="specifications" className="text-xl font-semibold">
           Specifications
         </h2>
         <dl className="divide-y divide-border border-y border-border text-sm">

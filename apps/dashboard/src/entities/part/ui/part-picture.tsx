@@ -21,7 +21,7 @@ export function PartPicture({
   return (
     <span
       className={cn(
-        'flex shrink-0 items-center justify-center overflow-hidden rounded-md bg-secondary text-secondary-foreground',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-secondary-foreground',
         size === 'row' ? 'size-10' : 'size-20',
       )}
     >

@@ -16,6 +16,13 @@ export class Refusal extends Error {
   get code(): string {
     return this.errors[0]?.code ?? 'UNKNOWN';
   }
+
+  // Why the API refused a field of the request, such as `photo`, by the
+  // reason its error about that field gives, if it gave one.
+  reasonFor(field: string): string | undefined {
+    return this.errors.find((each) => each.additionalInformation?.field === field)
+      ?.additionalInformation?.reason;
+  }
 }
 
 // The API was never asked: it could not be reached, or no token could be had
