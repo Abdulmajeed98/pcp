@@ -250,6 +250,17 @@ export type PartPageResponse = {
     content: Array<PartSummaryResponse>;
 };
 
+export type MapLocationRequest = {
+    /**
+     * The latitude, in degrees.
+     */
+    latitude: number;
+    /**
+     * The longitude, in degrees.
+     */
+    longitude: number;
+};
+
 export type CreateVendorRequest = {
     /**
      * The Vendor's name, as it writes it.
@@ -260,9 +271,44 @@ export type CreateVendorRequest = {
      */
     city: 'erbil';
     /**
+     * The Vendor's address, as it writes it, on one or more lines.
+     */
+    address: string;
+    /**
+     * Where the Vendor's shop is: a latitude and a longitude, both or neither.
+     */
+    mapLocation?: MapLocationRequest | null;
+    /**
+     * The Vendor's phone number: an Iraqi mobile number or landline, in any form a person types one, in Western or Arabic-Indic digits.
+     */
+    phoneNumber: string;
+    /**
+     * The Vendor's WhatsApp number: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.
+     */
+    whatsAppNumber?: string | null;
+    /**
+     * The Vendor's Instagram name, with or without an @ before it, or the address of its Instagram profile.
+     */
+    instagramName?: string | null;
+    /**
+     * The Vendor's opening hours, as it writes them, on one or more lines.
+     */
+    openingHours?: string | null;
+    /**
      * The phone number the Vendor's Login will be known by and logged in with: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.
      */
     loginPhoneNumber: string;
+};
+
+export type MapLocationResponse = {
+    /**
+     * The latitude, in degrees.
+     */
+    latitude: number;
+    /**
+     * The longitude, in degrees.
+     */
+    longitude: number;
 };
 
 export type PhoneNumberResponse = {
@@ -289,6 +335,30 @@ export type VendorResponse = {
      * The city the Vendor is in.
      */
     city: 'erbil';
+    /**
+     * The Vendor's address, as it writes it, on one or more lines.
+     */
+    address: string;
+    /**
+     * Where the Vendor's shop is, or null when it has not been given.
+     */
+    mapLocation: MapLocationResponse | null;
+    /**
+     * The Vendor's phone number, a mobile number or a landline.
+     */
+    phoneNumber: PhoneNumberResponse;
+    /**
+     * The Vendor's WhatsApp number, or null when it has none.
+     */
+    whatsAppNumber: PhoneNumberResponse | null;
+    /**
+     * The Vendor's Instagram name, bare and in lower case, or null when it has none.
+     */
+    instagramName: string | null;
+    /**
+     * The Vendor's opening hours, as it writes them, on one or more lines, or null when it has not given them.
+     */
+    openingHours: string | null;
     /**
      * The phone number the Vendor's Login is known by and logged in with.
      */

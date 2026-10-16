@@ -5,6 +5,8 @@ import { Either, Option } from 'effect';
 
 import { PhoneNumber } from '~/domain/phone-number/PhoneNumber';
 import { City } from '~/domain/vendor/City';
+import { ContactDetails } from '~/domain/vendor/ContactDetails';
+import { MapLocation } from '~/domain/vendor/MapLocation';
 import { Vendor } from '~/domain/vendor/Vendor';
 import { CreateVendorParams, VendorStore } from '~/domain/vendor/VendorStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
@@ -12,9 +14,55 @@ import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 
 import { vendor, VendorRow } from '../vendor.schema';
 
+// A stored phone number as the domain's, or a server error naming the Vendor
+// and the detail.
+function phoneNumberOf(
+  row: VendorRow,
+  detail: string,
+  stored: string,
+): Either.Either<PhoneNumber, StructuredError> {
+  return Either.mapLeft(PhoneNumber.read(stored), () =>
+    ServerError.of(`A Vendor has a ${detail} the API cannot read: ${row.id}`),
+  );
+}
+
+// A row's contact details as the domain's.
+function contactDetailsOf(row: VendorRow): Either.Either<ContactDetails, StructuredError> {
+  let mapLocation: MapLocation | null = null;
+  if (row.latitude !== null && row.longitude !== null) {
+    const location = MapLocation.of(row.latitude, row.longitude);
+    if (Either.isLeft(location)) {
+      return Either.left(
+        ServerError.of(`A Vendor has a map location the API cannot take: ${row.id}`),
+      );
+    }
+    mapLocation = location.right;
+  }
+  const phoneNumber = phoneNumberOf(row, 'phone number', row.phoneNumber);
+  if (Either.isLeft(phoneNumber)) return Either.left(phoneNumber.left);
+  let whatsAppNumber: PhoneNumber | null = null;
+  if (row.whatsAppNumber !== null) {
+    const read = phoneNumberOf(row, 'WhatsApp number', row.whatsAppNumber);
+    if (Either.isLeft(read)) return Either.left(read.left);
+    whatsAppNumber = read.right;
+  }
+
+  return Either.right(
+    new ContactDetails(
+      row.address,
+      mapLocation,
+      phoneNumber.right,
+      whatsAppNumber,
+      row.instagramName,
+      row.openingHours,
+    ),
+  );
+}
+
 // A row as a Vendor. The database's list of cities is made from the
-// domain's, and every phone number is checked before it is stored, so a row
-// that the domain cannot read means the two have drifted apart.
+// domain's, and every phone number and map location is checked before it is
+// stored, so a row that the domain cannot read means the two have drifted
+// apart.
 function toDomain(row: VendorRow): Either.Either<Vendor, StructuredError> {
   const city = City.withKey(row.city);
   if (city === undefined) {
@@ -22,18 +70,17 @@ function toDomain(row: VendorRow): Either.Either<Vendor, StructuredError> {
       ServerError.of(`A Vendor has a city the API does not know: ${row.city}`),
     );
   }
-  const loginPhoneNumber = PhoneNumber.read(row.loginPhoneNumber);
-  if (Either.isLeft(loginPhoneNumber)) {
-    return Either.left(
-      ServerError.of(`A Vendor has a login phone number the API cannot read: ${row.id}`),
-    );
-  }
+  const contactDetails = contactDetailsOf(row);
+  if (Either.isLeft(contactDetails)) return Either.left(contactDetails.left);
+  const loginPhoneNumber = phoneNumberOf(row, 'login phone number', row.loginPhoneNumber);
+  if (Either.isLeft(loginPhoneNumber)) return Either.left(loginPhoneNumber.left);
 
   return Either.right(
     new Vendor(
       row.id,
       row.name,
       city,
+      contactDetails.right,
       loginPhoneNumber.right,
       row.loginId,
       row.active,
@@ -41,6 +88,21 @@ function toDomain(row: VendorRow): Either.Either<Vendor, StructuredError> {
       row.updatedAt,
     ),
   );
+}
+
+// Contact details as the columns that hold them.
+function contactDetailsColumns(contactDetails: ContactDetails) {
+  const mapLocation = contactDetails.getMapLocation();
+
+  return {
+    address: contactDetails.getAddress(),
+    latitude: mapLocation?.getLatitude() ?? null,
+    longitude: mapLocation?.getLongitude() ?? null,
+    phoneNumber: contactDetails.getPhoneNumber().getInternational(),
+    whatsAppNumber: contactDetails.getWhatsAppNumber()?.getInternational() ?? null,
+    instagramName: contactDetails.getInstagramName(),
+    openingHours: contactDetails.getOpeningHours(),
+  };
 }
 
 @Injectable()
@@ -59,6 +121,7 @@ export class DatabaseVendorStore implements VendorStore {
         .values({
           name: params.getName(),
           city: params.getCity().getKey(),
+          ...contactDetailsColumns(params.getContactDetails()),
           loginPhoneNumber: params.getLoginPhoneNumber().getInternational(),
           loginId: params.getLoginId(),
         })

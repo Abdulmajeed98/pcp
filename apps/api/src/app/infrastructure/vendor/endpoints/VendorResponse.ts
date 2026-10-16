@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { City } from '~/domain/vendor/City';
 import { Vendor } from '~/domain/vendor/Vendor';
 
+import { MapLocationResponse } from './MapLocationResponse';
 import { PhoneNumberResponse } from './PhoneNumberResponse';
 
 export class VendorResponse {
@@ -26,6 +27,50 @@ export class VendorResponse {
   readonly city: string;
 
   @ApiProperty({
+    description: "The Vendor's address, as it writes it, on one or more lines.",
+    example: 'Made-up Street, Erbil',
+  })
+  readonly address: string;
+
+  @ApiProperty({
+    description: "Where the Vendor's shop is, or null when it has not been given.",
+    type: MapLocationResponse,
+    nullable: true,
+  })
+  readonly mapLocation: MapLocationResponse | null;
+
+  @ApiProperty({
+    description: "The Vendor's phone number, a mobile number or a landline.",
+    type: PhoneNumberResponse,
+  })
+  readonly phoneNumber: PhoneNumberResponse;
+
+  @ApiProperty({
+    description: "The Vendor's WhatsApp number, or null when it has none.",
+    type: PhoneNumberResponse,
+    nullable: true,
+  })
+  readonly whatsAppNumber: PhoneNumberResponse | null;
+
+  @ApiProperty({
+    description:
+      "The Vendor's Instagram name, bare and in lower case, or null when it has none.",
+    type: String,
+    nullable: true,
+    example: 'made_up.shop',
+  })
+  readonly instagramName: string | null;
+
+  @ApiProperty({
+    description:
+      "The Vendor's opening hours, as it writes them, on one or more lines, or null when it has not given them.",
+    type: String,
+    nullable: true,
+    example: 'Saturday to Thursday, 9 to 9',
+  })
+  readonly openingHours: string | null;
+
+  @ApiProperty({
     description: "The phone number the Vendor's Login is known by and logged in with.",
     type: PhoneNumberResponse,
   })
@@ -47,6 +92,16 @@ export class VendorResponse {
     this.id = vendor.getId();
     this.name = vendor.getName();
     this.city = vendor.getCity().getKey();
+    const contactDetails = vendor.getContactDetails();
+    const mapLocation = contactDetails.getMapLocation();
+    const whatsAppNumber = contactDetails.getWhatsAppNumber();
+    this.address = contactDetails.getAddress();
+    this.mapLocation = mapLocation === null ? null : MapLocationResponse.of(mapLocation);
+    this.phoneNumber = PhoneNumberResponse.of(contactDetails.getPhoneNumber());
+    this.whatsAppNumber =
+      whatsAppNumber === null ? null : PhoneNumberResponse.of(whatsAppNumber);
+    this.instagramName = contactDetails.getInstagramName();
+    this.openingHours = contactDetails.getOpeningHours();
     this.loginPhoneNumber = PhoneNumberResponse.of(vendor.getLoginPhoneNumber());
     this.active = vendor.isActive();
     this.createdAt = vendor.getCreatedAt().toISOString();

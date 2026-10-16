@@ -37,6 +37,12 @@ type VendorBody = {
   id: string;
   name: string;
   city: string;
+  address: string;
+  mapLocation: { latitude: number; longitude: number } | null;
+  phoneNumber: PhoneNumberBody;
+  whatsAppNumber: PhoneNumberBody | null;
+  instagramName: string | null;
+  openingHours: string | null;
   loginPhoneNumber: PhoneNumberBody;
   active: boolean;
   createdAt: string;
@@ -47,11 +53,26 @@ type VendorBody = {
 // password, this once.
 type CreatedVendorBody = { vendor: VendorBody; temporaryPassword: string };
 
-// Every detail a Vendor needs, with a login phone number of its own. A detail
-// set to undefined is left out of the request, as JSON leaves it out.
+// Every detail a Vendor needs, and none of those it may leave out, with a
+// login phone number of its own. A detail set to undefined is left out of
+// the request, as JSON leaves it out.
 function aVendor(loginPhoneNumber: string): Record<string, unknown> {
-  return { name: 'Made-up Computer Shop', city: 'erbil', loginPhoneNumber };
+  return {
+    name: 'Made-up Computer Shop',
+    city: 'erbil',
+    address: 'Made-up Street, Erbil',
+    phoneNumber: '066 223 4567',
+    loginPhoneNumber,
+  };
 }
+
+// An address and opening hours as a Vendor in Erbil may write them: in
+// Sorani, in the Arabic script, with Arabic-Indic digits, on several lines.
+const anAddressAsWritten = 'شەقامی ٦٠ مەتری، نزیک بازاڕی ١٠٠\nهەولێر';
+const openingHoursAsWritten = 'شەممە تا پێنجشەممە: ٩ بۆ ٩\n\nهەینی: داخراوە';
+
+// Erbil's coordinates, as Google Maps shows them.
+const erbil = { latitude: 36.1911744, longitude: 44.0094145 };
 
 // 12 lower-case letters and digits, without 0, o, 1, l and i.
 const aTemporaryPassword = /^[a-hjkmnp-z2-9]{12}$/;
@@ -146,11 +167,17 @@ describe('the Vendor endpoints', () => {
   }
 
   describe('creating a Vendor', () => {
-    it('lets the Admin create a Vendor and read it back, its login phone number in both forms', async () => {
+    it('lets the Admin create a Vendor with every detail and read it back, its phone numbers in both forms', async () => {
       const { vendor } = await createdOf(
         await createVendor({
           name: 'Made-up Computer Shop',
           city: 'erbil',
+          address: anAddressAsWritten,
+          mapLocation: erbil,
+          phoneNumber: '066 223 4567',
+          whatsAppNumber: '0770 123 4567',
+          instagramName: '@Made_Up.Shop',
+          openingHours: openingHoursAsWritten,
           loginPhoneNumber: '0750 123 4567',
         }),
       );
@@ -159,6 +186,12 @@ describe('the Vendor endpoints', () => {
         id: expect.any(String),
         name: 'Made-up Computer Shop',
         city: 'erbil',
+        address: 'شەقامی ٦٠ مەتری، نزیک بازاڕی ١٠٠\nهەولێر',
+        mapLocation: { latitude: 36.1911744, longitude: 44.0094145 },
+        phoneNumber: { international: '+964662234567', national: '066 223 4567' },
+        whatsAppNumber: { international: '+9647701234567', national: '0770 123 4567' },
+        instagramName: 'made_up.shop',
+        openingHours: 'شەممە تا پێنجشەممە: ٩ بۆ ٩\n\nهەینی: داخراوە',
         loginPhoneNumber: { international: '+9647501234567', national: '0750 123 4567' },
         active: true,
         createdAt: expect.any(String),
@@ -169,6 +202,62 @@ describe('the Vendor endpoints', () => {
 
       expect(read.status).toBe(200);
       expect(await read.json()).toEqual(vendor);
+    });
+
+    it.each<[string, Record<string, unknown>]>([
+      ['left out', {}],
+      [
+        'sent as null',
+        {
+          mapLocation: null,
+          whatsAppNumber: null,
+          instagramName: null,
+          openingHours: null,
+        },
+      ],
+      [
+        'left empty',
+        {
+          mapLocation: {},
+          whatsAppNumber: '',
+          instagramName: ' ',
+          openingHours: '\n',
+        },
+      ],
+    ])(
+      'reads back as absent the details a Vendor may leave out, %s',
+      async (_how, details) => {
+        const { vendor } = await createdOf(
+          await createVendor({ ...aVendor('0750 123 4567'), ...details }),
+        );
+
+        const read = (await (await readVendor(vendor.id)).json()) as VendorBody;
+
+        expect(read).toMatchObject({
+          mapLocation: null,
+          whatsAppNumber: null,
+          instagramName: null,
+          openingHours: null,
+        });
+      },
+    );
+
+    it.each([
+      ['with an @ before it', '@Made_Up.Shop'],
+      ["as its profile's address", 'https://www.instagram.com/Made_Up.Shop/'],
+      [
+        "as its profile's address shared from the app",
+        'https://www.instagram.com/Made_Up.Shop?igsh=MWQ1ZGUxMzBkMA==',
+      ],
+      ["as its profile's address without https or www", 'instagram.com/Made_Up.Shop'],
+    ])('keeps an Instagram name typed %s bare and in lower case', async (_form, typed) => {
+      const { vendor } = await createdOf(
+        await createVendor({ ...aVendor('0750 123 4567'), instagramName: typed }),
+      );
+
+      const read = await readVendor(vendor.id);
+
+      expect(((await read.json()) as VendorBody).instagramName).toBe('made_up.shop');
     });
 
     it.each([
@@ -333,6 +422,95 @@ describe('the Vendor endpoints', () => {
       },
     );
 
+    it.each<[string, Record<string, unknown>, ExpectedErrorResponse]>([
+      ['no address', { address: undefined }, notValid('address', { reason: 'missing' })],
+      [
+        'an address of spaces and line breaks alone',
+        { address: ' \n ' },
+        notValid('address', { reason: 'missing' }),
+      ],
+      [
+        'an address of 301 characters',
+        { address: 'م'.repeat(301) },
+        notValid('address', { reason: 'tooLong' }),
+      ],
+      [
+        'no phone number',
+        { phoneNumber: undefined },
+        notValid('phoneNumber', { reason: 'missing' }),
+      ],
+      [
+        'an empty phone number',
+        { phoneNumber: '' },
+        notValid('phoneNumber', { reason: 'missing' }),
+      ],
+      [
+        'opening hours of 301 characters',
+        { openingHours: 'م'.repeat(301) },
+        notValid('openingHours', { reason: 'tooLong' }),
+      ],
+      [
+        'a landline as the WhatsApp number',
+        { whatsAppNumber: '066 223 4567' },
+        notValid('whatsAppNumber', { reason: 'notMobile' }),
+      ],
+      [
+        'a WhatsApp number that is not Iraqi',
+        { whatsAppNumber: '+1 202 555 0123' },
+        notValid('whatsAppNumber', { reason: 'notIraqi' }),
+      ],
+      [
+        'a phone number that is not Iraqi',
+        { phoneNumber: '+1 202 555 0123' },
+        notValid('phoneNumber', { reason: 'notIraqi' }),
+      ],
+      [
+        'a location outside Iraq',
+        { mapLocation: { latitude: 41.0082, longitude: 28.9784 } },
+        notValid('mapLocation', { reason: 'outsideIraq' }),
+      ],
+      [
+        "Erbil's coordinates typed the wrong way round",
+        { mapLocation: { latitude: 44.0094145, longitude: 36.1911744 } },
+        notValid('mapLocation', { reason: 'outsideIraq' }),
+      ],
+      [
+        'a latitude without a longitude',
+        { mapLocation: { latitude: 36.1911744 } },
+        notValid('mapLocation.longitude', { reason: 'missing' }),
+      ],
+      [
+        'a longitude without a latitude',
+        { mapLocation: { latitude: null, longitude: 44.0094145 } },
+        notValid('mapLocation.latitude', { reason: 'missing' }),
+      ],
+      [
+        'an Instagram name with a space in it',
+        { instagramName: 'made up.shop' },
+        notValid('instagramName', { reason: 'notAnInstagramName' }),
+      ],
+      [
+        'an Instagram name of 31 characters',
+        { instagramName: 'a'.repeat(31) },
+        notValid('instagramName', { reason: 'tooLong' }),
+      ],
+      [
+        'the address of an Instagram post as the Instagram name',
+        { instagramName: 'https://www.instagram.com/p/C1a2B3c4D5e/' },
+        notValid('instagramName', { reason: 'notAnInstagramName' }),
+      ],
+    ])(
+      'refuses %s, naming the field and its reason, and makes no Vendor and no Login',
+      async (_what, details, error) => {
+        const response = await createVendor({ ...aVendor('0750 123 4567'), ...details });
+
+        await expectErrorResponse(response, 400, [error]);
+        expect(await loginsNamed('+9647501234567')).toEqual([]);
+        // Nothing holds its login phone number: a Vendor with it is taken.
+        expect((await createVendor(aVendor('0750 123 4567'))).status).toBe(201);
+      },
+    );
+
     it('takes a name of 100 characters, as written', async () => {
       const name = ' م'.repeat(50);
 
@@ -341,6 +519,61 @@ describe('the Vendor endpoints', () => {
       );
 
       expect(vendor.name).toBe(name);
+    });
+
+    it('takes an address and opening hours of 300 characters, as written, and an Instagram name of 30', async () => {
+      const address = ' م\n'.repeat(100);
+      const openingHours = '٩ م'.repeat(100);
+
+      const { vendor } = await createdOf(
+        await createVendor({
+          ...aVendor('0750 123 4567'),
+          address,
+          openingHours,
+          instagramName: 'a'.repeat(30),
+        }),
+      );
+
+      expect(vendor).toMatchObject({
+        address,
+        openingHours,
+        instagramName: 'a'.repeat(30),
+      });
+    });
+
+    it.each<[string, Record<string, unknown>, ExpectedErrorResponse]>([
+      ['an address that is a number', { address: 42 }, notValid('address')],
+      [
+        'a latitude in a text',
+        { mapLocation: { latitude: '36.19', longitude: 44.01 } },
+        notValid('mapLocation.latitude'),
+      ],
+      [
+        'a map location with a field of its own',
+        { mapLocation: { ...erbil, altitude: 415 } },
+        notValid('mapLocation.altitude'),
+      ],
+    ])(
+      "refuses %s with the request's own refusal, naming the field",
+      async (_what, details, error) => {
+        const response = await createVendor({ ...aVendor('0750 123 4567'), ...details });
+
+        await expectErrorResponse(response, 400, [error]);
+        expect(await loginsNamed('+9647501234567')).toEqual([]);
+      },
+    );
+
+    it('names only the first detail that does not fit, in the order the Vendor form asks for them', async () => {
+      const response = await createVendor({
+        ...aVendor('0750 123 4567'),
+        address: 'م'.repeat(301),
+        phoneNumber: '+1 202 555 0123',
+        instagramName: 'made up.shop',
+      });
+
+      await expectErrorResponse(response, 400, [
+        notValid('address', { reason: 'tooLong' }),
+      ]);
     });
 
     it('refuses a login phone number another Vendor holds, typed in another form, as taken, and Keycloak holds no second Login', async () => {

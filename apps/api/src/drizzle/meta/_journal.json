@@ -57,6 +57,13 @@
       "when": 1792159827242,
       "tag": "0007_create-vendor",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792162020874,
+      "tag": "0008_add-vendor-contact-details",
+      "breakpoints": true
     }
   ]
 }

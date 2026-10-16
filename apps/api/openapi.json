@@ -960,6 +960,22 @@
           "content"
         ]
       },
+      "MapLocationRequest": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "description": "The latitude, in degrees.",
+            "example": 36.1911744
+          },
+          "longitude": {
+            "type": "number",
+            "description": "The longitude, in degrees.",
+            "example": 44.0094145
+          }
+        },
+        "required": ["latitude", "longitude"]
+      },
       "CreateVendorRequest": {
         "type": "object",
         "properties": {
@@ -975,13 +991,69 @@
             "enum": ["erbil"],
             "example": "erbil"
           },
+          "address": {
+            "type": "string",
+            "description": "The Vendor's address, as it writes it, on one or more lines.",
+            "example": "Made-up Street, Erbil",
+            "maxLength": 300
+          },
+          "mapLocation": {
+            "description": "Where the Vendor's shop is: a latitude and a longitude, both or neither.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MapLocationRequest"
+              }
+            ]
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "The Vendor's phone number: an Iraqi mobile number or landline, in any form a person types one, in Western or Arabic-Indic digits.",
+            "example": "066 223 4567"
+          },
+          "whatsAppNumber": {
+            "type": "string",
+            "description": "The Vendor's WhatsApp number: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.",
+            "example": "0770 123 4567",
+            "nullable": true
+          },
+          "instagramName": {
+            "type": "string",
+            "description": "The Vendor's Instagram name, with or without an @ before it, or the address of its Instagram profile.",
+            "example": "@made_up.shop",
+            "nullable": true
+          },
+          "openingHours": {
+            "type": "string",
+            "description": "The Vendor's opening hours, as it writes them, on one or more lines.",
+            "example": "Saturday to Thursday, 9 to 9",
+            "nullable": true,
+            "maxLength": 300
+          },
           "loginPhoneNumber": {
             "type": "string",
             "description": "The phone number the Vendor's Login will be known by and logged in with: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.",
             "example": "0750 123 4567"
           }
         },
-        "required": ["name", "city", "loginPhoneNumber"]
+        "required": ["name", "city", "address", "phoneNumber", "loginPhoneNumber"]
+      },
+      "MapLocationResponse": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "description": "The latitude, in degrees.",
+            "example": 36.1911744
+          },
+          "longitude": {
+            "type": "number",
+            "description": "The longitude, in degrees.",
+            "example": 44.0094145
+          }
+        },
+        "required": ["latitude", "longitude"]
       },
       "PhoneNumberResponse": {
         "type": "object",
@@ -1018,6 +1090,51 @@
             "enum": ["erbil"],
             "example": "erbil"
           },
+          "address": {
+            "type": "string",
+            "description": "The Vendor's address, as it writes it, on one or more lines.",
+            "example": "Made-up Street, Erbil"
+          },
+          "mapLocation": {
+            "description": "Where the Vendor's shop is, or null when it has not been given.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MapLocationResponse"
+              }
+            ]
+          },
+          "phoneNumber": {
+            "description": "The Vendor's phone number, a mobile number or a landline.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberResponse"
+              }
+            ]
+          },
+          "whatsAppNumber": {
+            "description": "The Vendor's WhatsApp number, or null when it has none.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberResponse"
+              }
+            ]
+          },
+          "instagramName": {
+            "type": "string",
+            "description": "The Vendor's Instagram name, bare and in lower case, or null when it has none.",
+            "nullable": true,
+            "example": "made_up.shop"
+          },
+          "openingHours": {
+            "type": "string",
+            "description": "The Vendor's opening hours, as it writes them, on one or more lines, or null when it has not given them.",
+            "nullable": true,
+            "example": "Saturday to Thursday, 9 to 9"
+          },
           "loginPhoneNumber": {
             "description": "The phone number the Vendor's Login is known by and logged in with.",
             "allOf": [
@@ -1046,6 +1163,12 @@
           "id",
           "name",
           "city",
+          "address",
+          "mapLocation",
+          "phoneNumber",
+          "whatsAppNumber",
+          "instagramName",
+          "openingHours",
           "loginPhoneNumber",
           "active",
           "createdAt",

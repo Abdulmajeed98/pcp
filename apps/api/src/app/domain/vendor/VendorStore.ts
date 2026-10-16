@@ -3,12 +3,14 @@ import { Either, Option } from 'effect';
 
 import { PhoneNumber } from '../phone-number/PhoneNumber';
 import { City } from './City';
+import { ContactDetails } from './ContactDetails';
 import { Vendor } from './Vendor';
 
 export class CreateVendorParams {
   constructor(
     private readonly name: string,
     private readonly city: City,
+    private readonly contactDetails: ContactDetails,
     private readonly loginPhoneNumber: PhoneNumber,
     private readonly loginId: string,
   ) {}
@@ -19,6 +21,10 @@ export class CreateVendorParams {
 
   getCity(): City {
     return this.city;
+  }
+
+  getContactDetails(): ContactDetails {
+    return this.contactDetails;
   }
 
   getLoginPhoneNumber(): PhoneNumber {

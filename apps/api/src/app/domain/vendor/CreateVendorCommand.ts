@@ -7,6 +7,7 @@ import { CreateLoginParams, LoginStore } from '../login/LoginStore';
 import { makeTemporaryPassword } from '../login/temporary-password';
 import { PhoneNumber } from '../phone-number/PhoneNumber';
 import { City } from './City';
+import { ContactDetails, TypedContactDetails } from './ContactDetails';
 import { holdsText, lengthOf } from './text-as-written';
 import { Vendor } from './Vendor';
 import { vendorDetailRefused } from './vendor-errors';
@@ -22,6 +23,7 @@ class Input {
   constructor(
     private readonly name: string | null,
     private readonly cityKey: string | null,
+    private readonly contactDetails: TypedContactDetails,
     private readonly loginPhoneNumber: string | null,
   ) {}
 
@@ -32,6 +34,10 @@ class Input {
   // The key of the city it names.
   getCityKey(): string | null {
     return this.cityKey;
+  }
+
+  getContactDetails(): TypedContactDetails {
+    return this.contactDetails;
   }
 
   getLoginPhoneNumber(): string | null {
@@ -90,6 +96,9 @@ export class CreateVendorCommand {
     const city = City.withKey(cityKey);
     if (city === undefined) return Either.left(vendorDetailRefused('city', 'notInTheSet'));
 
+    const contactDetails = ContactDetails.check(input.getContactDetails());
+    if (Either.isLeft(contactDetails)) return Either.left(contactDetails.left);
+
     const typedLoginPhoneNumber = input.getLoginPhoneNumber();
     if (!holdsText(typedLoginPhoneNumber)) {
       return Either.left(vendorDetailRefused('loginPhoneNumber', 'missing'));
@@ -125,7 +134,13 @@ export class CreateVendorCommand {
     }
 
     const vendor = await this.vendorStore.create(
-      new CreateVendorParams(name, city, loginPhoneNumber.right, login.right),
+      new CreateVendorParams(
+        name,
+        city,
+        contactDetails.right,
+        loginPhoneNumber.right,
+        login.right,
+      ),
     );
     if (Either.isLeft(vendor)) {
       const deleted = await this.loginStore.delete(login.right);

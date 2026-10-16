@@ -1,5 +1,6 @@
 import { PhoneNumber } from '../phone-number/PhoneNumber';
 import { City } from './City';
+import { ContactDetails } from './ContactDetails';
 
 // A business that sells Parts to the public from one location and has
 // agreed to show its Offers on the platform. Its Login is kept in the
@@ -9,6 +10,7 @@ export class Vendor {
     private readonly id: string,
     private readonly name: string,
     private readonly city: City,
+    private readonly contactDetails: ContactDetails,
     private readonly loginPhoneNumber: PhoneNumber,
     private readonly loginId: string,
     private readonly active: boolean,
@@ -27,6 +29,10 @@ export class Vendor {
 
   getCity(): City {
     return this.city;
+  }
+
+  getContactDetails(): ContactDetails {
+    return this.contactDetails;
   }
 
   // The phone number the Vendor's Login is known by and logged in with,
