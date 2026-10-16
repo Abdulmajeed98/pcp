@@ -23,9 +23,10 @@ Run `pnpm check` at the root of the repository. One of its steps compares the la
 - a message of an `en.json` file is missing from the `ckb.json` or the `ar.json` beside it, or one of those holds a message the `en.json` does not;
 - a message cannot be read in its set's format, as when a brace or an angle bracket is lost;
 - a message names other placeholders than the English one: braces and angle brackets with other names inside, or a name dropped;
+- a form of a sentence that counts and stands for many counts, `few`, `many` or `other`, leaves out a value the sentence shows elsewhere, such as its count;
 - a sentence that counts lacks a plural form its language has, or, in the dashboard's files, has one its language does not;
-- a message lets its library write a number, which a Kurdish page would show in Arabic-Indic digits (see Numbers below);
-- a shared term holds anything in braces or angle brackets, or a name at the top of the shared terms is also at the top of `shopper/` or `dashboard/`.
+- a message lets its library write a number, which a Kurdish page would show in Arabic-Indic digits (see Numbers below), or holds an Arabic-Indic digit, such as ٣, typed into it;
+- a shared term holds anything in braces or angle brackets, or has a key that ends in a plural form, such as `_one`, or a name at the top of the shared terms is also at the top of `shopper/` or `dashboard/`.
 
 ## Correcting a message
 
