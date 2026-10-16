@@ -120,3 +120,38 @@ Neither fault needed a second reset.
 - `pnpm platform:check` passes 80 tests, 1 of them new.
 - Each of the six commits before this record was gated on `pnpm check`'s exit status in the working tree, holding only that commit's files, and the two that change what the API's tests read, the realm and the env files, on `pnpm integration:check` too.
 - After this record the services are stopped with `pnpm services:down`, so that no container keeps a folder of the worktree mounted. Their data stays in the volume.
+
+### 16 October 2026: the code review
+
+Two reviewers read the change, one against the repository's standards and one against this ticket and the spec. Corrected:
+
+- **The login phone number was not sure to be unique to the run.** It was 075 and eight random digits with no time in it, and made-up Vendors stay in the services between runs, so a repeat would be refused as `taken` and fail the test for a reason that has nothing to do with it. `createAMadeUpVendor` now tries another number when the create is refused as `taken` for the login phone number, up to five numbers. Shown with the spec run alone, by a script that made the first number tried always 0750 000 0001 and undid that afterwards: once to take that number, then with only one number tried, which failed at the create's answer, 400 instead of 201, and then with five, which passed.
+- **One source of randomness.** The number used Node's `randomInt` while the name used `Math.random`, and the name's word copied `catalog.ts`'s expression word for word. `apps/e2e/src/made-up.ts` now holds `aWordUniqueToTheRun` and `randomDigits`, on `Math.random` alone, and the made-up Part's helper, the made-up Part's name in `admin-part.spec.ts` and the made-up Vendor use them. The word's random part is now always three digits long.
+- **`tools/start-services.mjs`.** A rewritten comment line was 92 columns in a paragraph wrapped at 78. It is rewrapped. The log line of a first start now says that it made a new secret as well as new passwords.
+- **`tools/check-services.mjs`.** An error said "no login named"; it is "no Login named", as CONTEXT.md spells it. The API's client's password-flow check copied the dashboard's with another token request. One `passwordFlowIsRefused(requestToken)` serves both.
+- **`tools/keycloak-administrator.mjs`.** `logInAsAdministrator` and `logInAsTheApisClient` ended the same way. They share `askAs`, which also gives either refusal Keycloak's error code and description. The file's header says that it speaks as either. The changed-secret fault was run again with it: the line now fails with "The API's client could not log in (Keycloak answered 401, unauthorized_client: Invalid client or Invalid client credentials)", and nothing else fails.
+- **`apps/e2e/src/development-logins.ts`.** `logInToTheDashboard` set the fields and pressed the button itself, as `submitTheLoginScreen` does. It now calls `submitTheLoginScreen`, so the development logins' names are set in the page too.
+- **`apps/e2e/src/vendor-first-login.spec.ts`.** The Vendor's browser context is `context`, as in the other specs.
+- **The MVP spec** said that each of the API's env files holds one line. It holds two.
+
+Kept as they are, after the review asked for them to be:
+
+- The two lines about the API's client beyond the one the ticket names, the password flow and a login through a browser. The spec says the client has "no login through a browser", so they check what it asks.
+
+Left for the owner:
+
+- **The API's log of a Login it could not make**, from ticket 01, which names the Login, a login phone number, when a create fails. It prints a made-up number in a failed `pnpm platform:check`, as the red run above did.
+- **Playwright's `trace: 'retain-on-failure'`.** A failed test's trace, a file on disk, keeps the create's answer and the password set in the page, as it already does for the development logins. Nothing of it is printed.
+- **Keycloak's quick-login defaults**, which lock a Login for a minute after two failures within a second, before the five that brute-force detection counts. They were kept as Keycloak's defaults; ticket 04's test of a lock has to type slower than that, or count on it.
+- **Every future setting whose name ends in `_SECRET`** gets a random value from `pnpm services:up`, as every `_PASSWORD` does. A secret that must come from somewhere else would need an entry of its own.
+- **Commits without a scope that change only `tools/`.** They follow the owner's rule that a scope names an Nx project, which `tools/` is not, although the comment in `commitlint.config.mjs` allows `tools`.
+- **`MadeUpVendor`'s `id` and `name`**, which no test reads yet. They mirror `MadeUpPart`'s, and ticket 04's tests can use them.
+
+**Results after the review**, against the owner's services with no reset:
+
+- `pnpm check --skip-nx-cache` passes with `DOCKER_HOST` pointed at a socket that does not exist.
+- `pnpm integration:check` passes 168 tests.
+- `pnpm services:up` passes, and `pnpm services:check` passes all 40 lines.
+- `pnpm platform:check` passes 80 tests.
+- Each of the four commits was gated on `pnpm check`'s exit status in the working tree, holding only that commit's files. None changes the API.
+- The services were stopped again afterwards with `pnpm services:down`. Their data stays in the volume.
