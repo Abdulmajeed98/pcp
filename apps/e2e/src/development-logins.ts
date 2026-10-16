@@ -78,13 +78,7 @@ export async function logInToTheDashboard(
   await page.goto(address);
   await expectLoginScreen(page);
 
-  await page.locator('#username').fill(login.name);
-  // Playwright writes what `fill` types into its log, which a failed run
-  // prints. The password is therefore set in the page and never typed.
-  await page.locator('#password').evaluate((field, password) => {
-    (field as HTMLInputElement).value = password;
-  }, login.password);
-  await page.locator('#kc-login').click();
+  await submitTheLoginScreen(page, login.name, login.password);
 
   await page.waitForURL(`${dashboardUrl}/**`);
 }

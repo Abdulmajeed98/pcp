@@ -21,8 +21,8 @@ test("a made-up Vendor logs in at Keycloak's login screen with its login phone n
   const vendor = await createAMadeUpVendor(request, authorization);
 
   // A browser of its own, which knows nothing of the Admin's login.
-  const vendorsBrowser = await browser.newContext();
-  const vendorsPage = await vendorsBrowser.newPage();
+  const context = await browser.newContext();
+  const vendorsPage = await context.newPage();
   await vendorsPage.goto(dashboardUrl);
   await expectLoginScreen(vendorsPage);
   await submitTheLoginScreen(
@@ -32,5 +32,5 @@ test("a made-up Vendor logs in at Keycloak's login screen with its login phone n
   );
 
   await expectNewPasswordScreen(vendorsPage);
-  await vendorsBrowser.close();
+  await context.close();
 });
