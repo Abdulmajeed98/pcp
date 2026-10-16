@@ -51,6 +51,41 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "pcp-api",
+      "name": "API",
+      "description": "The API's own client, whose service account manages the realm's Logins. Its secret is filled in from the environment when the realm is imported.",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${PCP_API_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
     }
-  ]
+  ],
+  "users": [
+    {
+      "username": "service-account-pcp-api",
+      "enabled": true,
+      "serviceAccountClientId": "pcp-api",
+      "clientRoles": {
+        "realm-management": ["manage-users"]
+      }
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"
+          ]
+        }
+      }
+    ]
+  }
 }
