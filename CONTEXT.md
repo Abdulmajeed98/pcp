@@ -40,6 +40,14 @@ _Avoid_: Owner, moderator, superuser
 A business that sells Parts to the public from one location and has agreed to show its Offers on the platform.
 _Avoid_: Store, shop, seller, supplier, branch
 
+**Contact details**:
+A Vendor's address, map location, phone number, WhatsApp number, Instagram name and opening hours, which the Vendor may change itself.
+_Avoid_: Profile, shop info
+
+**Deactivated Vendor**:
+A Vendor the Admin has switched off, which is hidden from Shoppers and cannot log in until the Admin reactivates it.
+_Avoid_: Suspended, banned, disabled, deleted
+
 **Offer**:
 One Vendor's price and in-stock status for one Part in new condition.
 _Avoid_: Listing, stock, inventory, product
@@ -65,6 +73,18 @@ _Avoid_: User, credentials
 **Caller**:
 The Login a request to the platform's API was made with.
 _Avoid_: Current user, principal
+
+**Login phone number**:
+The phone number a Vendor's Login is known by and logged in with.
+_Avoid_: Username, user name
+
+**Temporary password**:
+A password the platform makes for a Login, which the Vendor must replace with its own at its next login.
+_Avoid_: Initial password, one-time password, OTP
+
+**Acting as a Vendor**:
+The Admin using a Vendor's portal on its behalf, with the Admin's own Login.
+_Avoid_: Impersonation, logging in as
 
 ### Prices
 
