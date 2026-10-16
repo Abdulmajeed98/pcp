@@ -70,6 +70,7 @@ test.describe('a new Part, through the form', () => {
     await expect(missingNeededMark(specificationRow(page, cpu.cores))).toHaveCount(0);
     await expect(missingNeededMark(specificationRow(page, 'series'))).toHaveCount(0);
     await expect(page.getByText('Created by the Admin')).toBeVisible();
+    await expect(page.getByTestId('category-icon')).toHaveAttribute('data-category', 'cpu');
   });
 
   test('a fixed set is offered as a choice, and nothing outside it can be chosen', async ({
@@ -122,13 +123,38 @@ test.describe('a new Part, through the form', () => {
   });
 });
 
+// The form leaves out a row with every field empty. The API numbers a refused
+// field by its row's place in what it was sent, and the form has to put the
+// refusal beside that same row.
+test("a refusal of a row's field is shown beside that row, after an empty row", async ({
+  page,
+}) => {
+  await openTheFormForANewPart(page, 'Motherboard');
+  await page.getByRole('textbox', { name: 'Name', exact: true }).fill(aMadeUpName());
+  await page
+    .getByRole('textbox', { name: 'Manufacturer', exact: true })
+    .fill('Made-up Test Parts');
+  await page.getByRole('button', { name: 'Add a row to PCIe slots' }).click();
+  await page.getByRole('button', { name: 'Add a row to PCIe slots' }).click();
+  const slotsOf = (row: number) =>
+    page
+      .getByRole('group', { name: `PCIe slots ${row}`, exact: true })
+      .getByRole('textbox', { name: 'Slots', exact: true });
+  await slotsOf(2).fill('0');
+  await page.getByRole('button', { name: 'Create the Part' }).click();
+
+  await expect(slotsOf(2)).toHaveAttribute('aria-invalid', 'true');
+  await expect(slotsOf(2)).toHaveAccessibleDescription(/0 cannot be right/);
+  await expect(slotsOf(1)).toHaveAttribute('aria-invalid', 'false');
+});
+
 test('a Part found in the Catalog opens its page', async ({ page, request }) => {
   const part = await createAMadeUpPart(request, authorization);
   await searchTheCatalog(page, { words: part.word });
 
   await rowOf(page, part.name).getByRole('link', { name: part.name }).click();
 
-  await expect(page).toHaveURL(`${catalogUrl}/parts/${part.id}`);
+  await expect(page).toHaveURL(new RegExp(`^${catalogUrl}/parts/${part.id}(\\?.*)?$`));
   await expect(page.getByRole('heading', { level: 1, name: part.name })).toBeVisible();
 });
 

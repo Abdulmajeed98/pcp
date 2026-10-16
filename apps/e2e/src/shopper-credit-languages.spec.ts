@@ -58,7 +58,23 @@ test('the first page and the "not found" screen credit BuildCores OpenDB in thei
 // each with a left-to-right direction of its own and kept apart from the
 // sentence around it, so that a Kurdish or an Arabic sentence cannot reorder
 // it.
-test("the credit's two names keep their own direction in each language, and link to OpenDB at the pinned commit and to the licence, in the browser and in what the server sends", async ({
+async function expectTheNamesKeptApartAndLinked(page: Page): Promise<void> {
+  for (const [name, address] of [
+    [openDb, openDbAtThePinnedCommit],
+    [licence, licenceAddress],
+  ]) {
+    const link = credit(page).getByRole('link', { name, exact: true });
+    await expect(link).toHaveAttribute('href', address);
+    const kept = link.locator('bdi');
+    await expect(kept).toHaveText(name);
+    expect(await layoutOf(kept), `${name} keeps its own direction`).toEqual({
+      direction: 'ltr',
+      keptApart: true,
+    });
+  }
+}
+
+test('the credit\'s two names keep their own direction in each language, and link to OpenDB at the pinned commit and to the licence, on the first page and the "not found" screen, and in what the server sends', async ({
   page,
 }) => {
   await readInEveryLanguage(page, '', async (language) => {
@@ -70,20 +86,15 @@ test("the credit's two names keep their own direction in each language, and link
       ]),
     );
 
-    for (const [name, address] of [
-      [openDb, openDbAtThePinnedCommit],
-      [licence, licenceAddress],
-    ]) {
-      const link = credit(page).getByRole('link', { name, exact: true });
-      await expect(link).toHaveAttribute('href', address);
-      const kept = link.locator('bdi');
-      await expect(kept).toHaveText(name);
-      expect(await layoutOf(kept), `${name} keeps its own direction`).toEqual({
-        direction: 'ltr',
-        keptApart: true,
-      });
-    }
+    await expectTheNamesKeptApartAndLinked(page);
   });
+
+  await readInEveryLanguage(
+    page,
+    '/no-such-page',
+    () => expectTheNamesKeptApartAndLinked(page),
+    { drawnByScript: true },
+  );
 });
 
 test('the first page, with its credit, meets the automated part of WCAG 2.2 level AA in each language, in light and in dark', async ({

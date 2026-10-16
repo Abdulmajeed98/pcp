@@ -14,16 +14,18 @@ import {
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import { aMadeUpPhoto } from './made-up-photo';
+import { apiUrl } from './platform';
 
 // The Admin works in the Vendors' shops, on a phone (LANG-8).
 test.use({ viewport: narrowWindow });
 
 let part: MadeUpPart;
+let authorization: string;
 
 // Each test creates a made-up CPU of its own over HTTP, with a socket and six
 // cores, and opens its page.
 test.beforeEach(async ({ page, request }) => {
-  const authorization = await authorizationOfTheDevelopmentAdmin(page);
+  authorization = await authorizationOfTheDevelopmentAdmin(page);
   part = await createAMadeUpPart(request, authorization, {
     socket: 'AM5',
     cores: { total: 6 },
@@ -95,6 +97,37 @@ test.describe('editing a Part, from its page', () => {
     await expectNoSidewaysScroll(page);
     await expectAccessible(page);
   });
+});
+
+// A list of rows may hold a row whose fields are all missing, a slot nobody
+// has described, and a list of text may hold an entry written with spaces
+// around it. Saving the form untouched sends the Part as it is.
+test('saving the edit form without a change leaves the Part as it was', async ({
+  page,
+  request,
+}) => {
+  const specifications = {
+    m2_slots: [{}, { key: 'M', size: '2280' }],
+    back_panel_ports: ['  USB-C  ', 'HDMI'],
+    socket: 'AM5',
+  };
+  const board = await createAMadeUpPart(
+    request,
+    authorization,
+    specifications,
+    'motherboard',
+  );
+  await page.goto(`${catalogUrl}/parts/${board.id}`);
+  await openTheEditForm(page);
+
+  await save(page);
+
+  const read = await request.get(`${apiUrl}/v1/parts/${board.id}`, {
+    headers: { authorization },
+  });
+  expect(((await read.json()) as { specifications: unknown }).specifications).toEqual(
+    specifications,
+  );
 });
 
 test.describe("a Part's photo, from its page", () => {

@@ -15,15 +15,17 @@ export interface MadeUpPart {
   partNumber: string;
 }
 
-// Creates a made-up CPU over HTTP as the Admin, with a name and a part number
-// unique to the run, and plainly test data, and any specifications given. It
-// stays in the development database, which `pnpm services:reset` empties.
-// The name does not hold the part number, so that a search for the one does
-// not find it by the other.
+// Creates a made-up Part over HTTP as the Admin, a CPU unless another
+// Category is given, with a name and a part number unique to the run, and
+// plainly test data, and any specifications given. It stays in the
+// development database, which `pnpm services:reset` empties. The name does
+// not hold the part number, so that a search for the one does not find it by
+// the other.
 export async function createAMadeUpPart(
   request: APIRequestContext,
   authorization: string,
   specifications: Record<string, unknown> = {},
+  category = 'cpu',
 ): Promise<MadeUpPart> {
   const word = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const name = `Made-up test Part ${word}`;
@@ -32,7 +34,7 @@ export async function createAMadeUpPart(
   const created = await request.post(`${apiUrl}/v1/parts`, {
     headers: { authorization },
     data: {
-      category: 'cpu',
+      category,
       name,
       manufacturer: 'Made-up Test Parts',
       partNumbers: [partNumber],
@@ -76,8 +78,11 @@ export function nothingFound(page: Page): Locator {
   return page.getByTestId('nothing-found');
 }
 
-// A Part's page, told apart by its address.
-export const partPageAddress = new RegExp(`^${dashboardUrl}/catalog/parts/[0-9a-f-]{36}$`);
+// A Part's page, told apart by its address, which keeps the Catalog's search
+// when it was opened from one.
+export const partPageAddress = new RegExp(
+  `^${dashboardUrl}/catalog/parts/[0-9a-f-]{36}(\\?.*)?$`,
+);
 
 // Opens the form for a new Part from the Catalog, the way the Admin does:
 // taps New Part, then chooses the Category by its English name.
