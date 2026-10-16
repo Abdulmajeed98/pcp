@@ -2,6 +2,9 @@
   "VendorPortal": {
     "title": "Vendor portal"
   },
+  "VendorPortalFrame": {
+    "languageSwitch": "Language"
+  },
   "LoginFailed": {
     "message": "The login could not be completed."
   },

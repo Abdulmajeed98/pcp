@@ -2,6 +2,9 @@
   "VendorPortal": {
     "title": "بوابة البائع"
   },
+  "VendorPortalFrame": {
+    "languageSwitch": "اللغة"
+  },
   "LoginFailed": {
     "message": "تعذّر إكمال تسجيل الدخول."
   },

@@ -1,6 +1,6 @@
 import type { Language } from '@pcp/i18n';
 
-import { languageOfTheBrowser, t } from '@/shared/i18n';
+import { languageOfTheBrowser, rememberedLanguage, t } from '@/shared/i18n';
 
 // The dashboard's two halves: the Admin console, for the Admin, and the
 // Vendor portal, for a Vendor.
@@ -21,16 +21,21 @@ export function halfFor(realmRoles: readonly string[]): Half {
 // tab once that language has started.
 //
 // The Admin console is in English, whatever the browser's language is, and
-// its title is written here. The Vendor portal follows the browser and falls
-// back to Kurdish, and its title is in the language files. So does what is
-// shown before anyone is known, such as a login that could not be completed.
+// its title is written here. It neither reads nor writes the language a
+// Vendor chose, so that the Admin's visit to a Vendor's browser changes
+// nothing for either.
+//
+// The Vendor portal opens in the language chosen with its switch in this
+// browser, else in the browser's own, else in Kurdish, and its title is in
+// the language files. So does what is shown before anyone is known, such as
+// a login that could not be completed.
 export const halves: Record<Half, { language: () => Language; title: () => string }> = {
   'admin-console': {
     language: () => 'en',
     title: () => 'Admin console',
   },
   'vendor-portal': {
-    language: languageOfTheBrowser,
+    language: () => rememberedLanguage() ?? languageOfTheBrowser(),
     title: () => t('VendorPortal.title'),
   },
 };

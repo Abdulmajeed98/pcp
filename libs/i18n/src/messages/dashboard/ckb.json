@@ -2,6 +2,9 @@
   "VendorPortal": {
     "title": "پۆرتاڵی فرۆشیار"
   },
+  "VendorPortalFrame": {
+    "languageSwitch": "زمان"
+  },
   "LoginFailed": {
     "message": "چوونەژوورەوە تەواو نەبوو."
   },

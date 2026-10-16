@@ -79,6 +79,7 @@ export function CallerPanel() {
         </button>
         <button
           type="button"
+          data-testid="log-out"
           className="min-h-control rounded-lg border border-input px-3"
           onClick={() => void logOut()}
         >
