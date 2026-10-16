@@ -9,8 +9,8 @@ import {
 import { openDbRepository } from '@pcp/opendb';
 
 // The API's settings. Each has the fixed development value as its default,
-// apart from the database password, which is a secret and has none. The API
-// refuses to start without it.
+// apart from the database password and the API's client's secret, which are
+// secrets and have none. The API refuses to start without either.
 export class EnvironmentVariables extends CoreEnvironmentVariables {
   @IsInt()
   @Min(1)
@@ -58,6 +58,29 @@ export class EnvironmentVariables extends CoreEnvironmentVariables {
     message: 'OPENDB_REPOSITORY_URL must use HTTPS, unless it names this machine',
   })
   OPENDB_REPOSITORY_URL = openDbRepository;
+
+  // Where Keycloak is, whose administration interface the API manages Logins
+  // through. It is apart from the issuer, so that the tests can check tokens
+  // against a stand-in while they manage Logins in a real Keycloak. The
+  // default is the development Keycloak.
+  @IsUrl({ require_tld: false, require_protocol: true, protocols: ['http', 'https'] })
+  KEYCLOAK_URL = 'http://localhost:8080';
+
+  // The realm whose Logins the API manages.
+  @IsString()
+  @IsNotEmpty()
+  KEYCLOAK_REALM = 'pcp';
+
+  // The API's own client in that realm, whose service account may manage the
+  // realm's Logins.
+  @IsString()
+  @IsNotEmpty()
+  KEYCLOAK_CLIENT_ID = 'pcp-api';
+
+  // That client's secret, which the realm was given when it was imported.
+  @IsString()
+  @IsNotEmpty()
+  KEYCLOAK_CLIENT_SECRET!: string;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

@@ -36,8 +36,8 @@ function run(what, command, args, env = {}) {
 
 // The API is TypeScript with decorators, so its own compiler settings are
 // used to run it. The application is built and never started, so it reaches
-// no database, but it refuses to be built without a database password, and
-// is given one that is never used.
+// no database and no Keycloak, but it refuses to be built without a database
+// password and its client's secret, and is given values that are never used.
 function writeDescription() {
   run(
     "write the API's description",
@@ -46,6 +46,7 @@ function writeDescription() {
     {
       SWC_NODE_PROJECT: 'apps/api/tsconfig.app.json',
       DATASOURCE_PASSWORD: 'never-used-by-the-description',
+      KEYCLOAK_CLIENT_SECRET: 'never-used-by-the-description',
     },
   );
   run("format the API's description", tool('oxfmt'), [description]);
