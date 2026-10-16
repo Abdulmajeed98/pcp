@@ -30,8 +30,8 @@ export class CreateLoginParams {
 export abstract class LoginStore {
   // Makes a Login of this name, enabled, holding this platform role and no
   // other, with the temporary password, which it has to replace at its next
-  // login. Gives its identifier. A name another Login holds fails with
-  // `LoginNameTaken`, and nothing is made.
+  // login. Gives its identifier. A name another Login holds fails with the
+  // error `isLoginNameTaken` knows, and nothing is made.
   abstract create(
     params: CreateLoginParams,
   ): Promise<Either.Either<string, StructuredError>>;

@@ -27,7 +27,7 @@ For acting as a Vendor:
 
 ## Consequences
 
-- A Vendor and its Login can disagree after two failures in a row, in two services, within one request: the Vendor is not stored, and putting the Login back fails too. The API then logs the Login's identifier and answers that the identity service is unavailable. A Login left with no Vendor holds its phone number, so a create with that number is refused as taken until the Login is deleted in Keycloak's own console.
+- A Vendor and its Login can disagree after two failures in a row, in two services, within one request: the Vendor is not stored, and putting the Login back fails too. The API then logs the Login's identifier and answers that the identity service is unavailable. They can also disagree when the API gives up waiting for Keycloak while Keycloak goes on to make the Login: the API answers that the identity service is unavailable and logs the Login's name, since it never learnt its identifier. Either way, a Login left with no Vendor holds its phone number, so a create with that number is refused as taken until the Login is deleted in Keycloak's own console.
 - The API's client of Keycloak's administration interface holds `manage-users` and no other role of `realm-management`. Its secret is not in the realm file, which names an environment setting that Keycloak fills in when it imports the realm.
 - The API starts while Keycloak cannot be reached, and answers a call that needs Keycloak's administration interface with 503 and `IDENTITY_SERVICE_UNAVAILABLE`, having changed nothing.
 - Whether a Vendor is deactivated is the database's, and the API reads it on every Vendor portal request, so a deactivated Vendor is refused at once, whatever its token says. Disabling the Login only stops the next login.

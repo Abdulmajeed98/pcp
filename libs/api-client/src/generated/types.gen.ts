@@ -252,7 +252,7 @@ export type PartPageResponse = {
 
 export type CreateVendorRequest = {
     /**
-     * The Vendor's name, as it writes it, of at most 100 characters.
+     * The Vendor's name, as it writes it.
      */
     name: string;
     /**

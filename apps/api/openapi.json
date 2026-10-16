@@ -965,8 +965,9 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The Vendor's name, as it writes it, of at most 100 characters.",
-            "example": "Made-up Computer Shop"
+            "description": "The Vendor's name, as it writes it.",
+            "example": "Made-up Computer Shop",
+            "maxLength": 100
           },
           "city": {
             "type": "string",

@@ -1,5 +1,14 @@
 import { NotFoundError, NotValidError } from '@pcp/core';
 
+import { PhoneNumberRefusal } from '../phone-number/PhoneNumber';
+
+// The details of a Vendor a refusal can name.
+type VendorField = 'name' | 'loginPhoneNumber';
+
+// Why a detail was refused: it is too long, it is a phone number of the wrong
+// kind, or another Vendor or Login holds it.
+type VendorDetailRefusal = 'tooLong' | 'taken' | PhoneNumberRefusal;
+
 // The error for a Vendor that does not exist, the same for every use case.
 export function vendorNotFound(vendorId: string): NotFoundError {
   return NotFoundError.of('VENDOR_NOT_FOUND', `There is no Vendor ${vendorId}`);
@@ -7,7 +16,10 @@ export function vendorNotFound(vendorId: string): NotFoundError {
 
 // A detail of a Vendor that does not fit, naming its field and why, so that a
 // form can say what is wrong beside the field.
-export function vendorDetailRefused(field: string, reason: string): NotValidError {
+export function vendorDetailRefused(
+  field: VendorField,
+  reason: VendorDetailRefusal,
+): NotValidError {
   return NotValidError.of('NOT_VALID', `The Vendor's ${field} was refused: ${reason}`, {
     field,
     reason,

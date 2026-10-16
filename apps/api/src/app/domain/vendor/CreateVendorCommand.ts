@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Role, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
-import { identityServiceUnavailable, LoginNameTaken } from '../login/login-errors';
+import { identityServiceUnavailable, isLoginNameTaken } from '../login/login-errors';
 import { CreateLoginParams, LoginStore } from '../login/LoginStore';
 import { makeTemporaryPassword } from '../login/temporary-password';
 import { PhoneNumber } from '../phone-number/PhoneNumber';
@@ -11,8 +11,9 @@ import { Vendor } from './Vendor';
 import { vendorDetailRefused } from './vendor-errors';
 import { CreateVendorParams, VendorStore } from './VendorStore';
 
-// The longest name a Vendor may have, in characters as a person counts them.
-const longestName = 100;
+// The longest name a Vendor may have, in characters, each Unicode code point
+// counting as one, as JSON Schema's maxLength counts them.
+export const longestVendorName = 100;
 
 class Input {
   constructor(
@@ -74,7 +75,7 @@ export class CreateVendorCommand {
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     // Every check comes before anything is made in Keycloak, and the first
     // detail that does not fit is the one named.
-    if ([...input.getName()].length > longestName) {
+    if ([...input.getName()].length > longestVendorName) {
       return Either.left(vendorDetailRefused('name', 'tooLong'));
     }
 
@@ -102,7 +103,7 @@ export class CreateVendorCommand {
       // one back failed: it stays taken until the Login is deleted in
       // Keycloak's own console.
       return Either.left(
-        login.left instanceof LoginNameTaken
+        isLoginNameTaken(login.left)
           ? vendorDetailRefused('loginPhoneNumber', 'taken')
           : login.left,
       );

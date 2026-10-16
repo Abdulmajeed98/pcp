@@ -2,7 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsString, Matches } from 'class-validator';
 
 import { City } from '~/domain/vendor/City';
-import { CreateVendorCommandInput } from '~/domain/vendor/CreateVendorCommand';
+import {
+  CreateVendorCommandInput,
+  longestVendorName,
+} from '~/domain/vendor/CreateVendorCommand';
 
 // A name is kept as it was written, and has to hold more than spaces. So
 // does a phone number, which the use case reads.
@@ -10,8 +13,9 @@ const notBlank = /\S/;
 
 export class CreateVendorRequest {
   @ApiProperty({
-    description: "The Vendor's name, as it writes it, of at most 100 characters.",
+    description: "The Vendor's name, as it writes it.",
     example: 'Made-up Computer Shop',
+    maxLength: longestVendorName,
   })
   @IsString()
   @Matches(notBlank)

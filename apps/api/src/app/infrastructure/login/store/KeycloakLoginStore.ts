@@ -1,10 +1,10 @@
 import KeycloakAdminClient, { NetworkError } from '@keycloak/keycloak-admin-client';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ServerError, StructuredError } from '@pcp/core';
+import { Role, ServerError, StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
-import { identityServiceUnavailable, LoginNameTaken } from '~/domain/login/login-errors';
+import { identityServiceUnavailable, loginNameTaken } from '~/domain/login/login-errors';
 import { CreateLoginParams, LoginStore } from '~/domain/login/LoginStore';
 import { EnvironmentVariables } from '~/infrastructure/configuration/env.validation';
 
@@ -16,12 +16,29 @@ const callTimeoutMilliseconds = 5000;
 // Keycloak answers a name another Login holds with this status.
 const conflict = 409;
 
-// Whether Keycloak could not be reached: the call could not be made, it was
-// given up on, or Keycloak answered that it cannot serve now. Any other answer
-// means that Keycloak refused the call, which is the API's fault.
+// The statuses with which Keycloak, or a proxy in front of it, says that it
+// cannot serve now.
+const unavailableStatuses = new Set([502, 503, 504]);
+
+// Whether a call got no answer: `fetch` could not connect, or the call was
+// given up on. Such an error is known by its name and not by its class,
+// because one made by Node itself is not an instance of the classes that code
+// run by Jest sees.
+function gotNoAnswer(error: unknown): boolean {
+  const { name, message } = error as { name?: unknown; message?: unknown };
+  return (
+    name === 'TimeoutError' ||
+    name === 'AbortError' ||
+    (name === 'TypeError' && message === 'fetch failed')
+  );
+}
+
+// Whether Keycloak could not be reached: the call got no answer, or Keycloak
+// answered that it cannot serve now. Any other failure means that Keycloak
+// refused the call, or that the API went wrong, and is the API's fault.
 function isUnreachable(error: unknown): boolean {
-  if (!(error instanceof NetworkError)) return true;
-  return error.response.status >= 500;
+  if (error instanceof NetworkError) return unavailableStatuses.has(error.response.status);
+  return gotNoAnswer(error);
 }
 
 function failureOf(error: unknown, message: string): StructuredError {
@@ -56,33 +73,20 @@ export class KeycloakLoginStore implements LoginStore {
       }));
     } catch (error) {
       if (error instanceof NetworkError && error.response.status === conflict) {
-        return Either.left(LoginNameTaken.of(params.getName()));
+        return Either.left(loginNameTaken(params.getName()));
       }
-      this.logger.error(error, 'A Login could not be made');
+      // A call that was given up on may have been carried out all the same,
+      // and Keycloak would then hold a Login of this name with no Vendor
+      // behind it. Its identifier is not known, so its name is logged.
+      this.logger.error(error, `A Login named ${params.getName()} could not be made`);
       return Either.left(failureOf(error, 'A Login could not be made'));
     }
 
-    try {
-      // The roles a Login may still be given. Reading a role by its name
-      // would need a wider role of the realm's administration than the API's
-      // client holds.
-      const assignable = await administration.users.listAvailableRealmRoleMappings({
-        id: loginId,
-      });
-      const role = assignable.find((each) => each.name === params.getRole().getRoleName());
-      if (role?.id === undefined || role.name === undefined) {
-        throw new Error(`The realm has no role ${params.getRole().getRoleName()} to give`);
-      }
-      await administration.users.addRealmRoleMappings({
-        id: loginId,
-        roles: [{ id: role.id, name: role.name }],
-      });
-    } catch (error) {
-      this.logger.error(error, `The Login ${loginId} could not be given its role`);
+    const given = await this.giveRole(administration, loginId, params.getRole());
+    if (Either.isLeft(given)) {
       // A Login without its role is no use to anyone, and would hold the name.
       const deleted = await this.delete(loginId);
-      if (Either.isLeft(deleted)) return Either.left(deleted.left);
-      return Either.left(failureOf(error, 'A Login could not be given its role'));
+      return Either.left(Either.isLeft(deleted) ? deleted.left : given.left);
     }
 
     return Either.right(loginId);
@@ -96,6 +100,35 @@ export class KeycloakLoginStore implements LoginStore {
     } catch (error) {
       this.logger.error(error, `The Login ${loginId} could not be deleted`);
       return Either.left(failureOf(error, `The Login ${loginId} could not be deleted`));
+    }
+  }
+
+  // Gives a Login a realm role. The role is found among the roles the Login
+  // may still be given: reading a role by its name would need a wider role of
+  // the realm's administration than the API's client holds.
+  private async giveRole(
+    administration: KeycloakAdminClient,
+    loginId: string,
+    role: Role,
+  ): Promise<Either.Either<void, StructuredError>> {
+    try {
+      const assignable = await administration.users.listAvailableRealmRoleMappings({
+        id: loginId,
+      });
+      const found = assignable.find((each) => each.name === role.getRoleName());
+      if (found?.id === undefined || found.name === undefined) {
+        this.logger.error(`The realm has no role ${role.getRoleName()} to give a Login`);
+        return Either.left(ServerError.of(`The realm has no role ${role.getRoleName()}`));
+      }
+
+      await administration.users.addRealmRoleMappings({
+        id: loginId,
+        roles: [{ id: found.id, name: found.name }],
+      });
+      return Either.right(undefined);
+    } catch (error) {
+      this.logger.error(error, `The Login ${loginId} could not be given its role`);
+      return Either.left(failureOf(error, 'A Login could not be given its role'));
     }
   }
 

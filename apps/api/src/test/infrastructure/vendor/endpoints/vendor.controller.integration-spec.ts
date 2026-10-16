@@ -237,11 +237,14 @@ describe('the Vendor endpoints', () => {
     });
 
     it('does not answer the temporary password when the Vendor is read', async () => {
-      const { vendor } = await createdOf(await createVendor(aVendor('0750 123 4567')));
+      const { vendor, temporaryPassword } = await createdOf(
+        await createVendor(aVendor('0750 123 4567')),
+      );
 
       const read = await readVendor(vendor.id);
 
-      expect(Object.keys((await read.json()) as object)).not.toContain('temporaryPassword');
+      expect(read.status).toBe(200);
+      expect(await read.text()).not.toContain(temporaryPassword);
     });
   });
 
@@ -269,6 +272,18 @@ describe('the Vendor endpoints', () => {
         'a login phone number with words around it',
         aVendor('call 0750 123 4567'),
         notValid('loginPhoneNumber', { reason: 'notIraqi' }),
+        '+9647501234567',
+      ],
+      [
+        'no name',
+        { city: 'erbil', loginPhoneNumber: '0750 123 4567' },
+        notValid('name'),
+        '+9647501234567',
+      ],
+      [
+        'an empty name',
+        { ...aVendor('0750 123 4567'), name: '' },
+        notValid('name'),
         '+9647501234567',
       ],
       [
