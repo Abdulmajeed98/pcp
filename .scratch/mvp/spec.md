@@ -319,7 +319,7 @@ All commands are run from the repository root, with Node 24 and pnpm. An install
 | Command | What it does |
 |---|---|
 | `pnpm install` | Installs everything for all nine projects. It does not download the browser that `pnpm platform:check` drives. |
-| `pnpm check` | Runs the format check, compares the frontends' written import bans with their statement, compares the language files, generates the frontends' client again and compares it with the committed one, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
+| `pnpm check` | Runs the format check, compares the frontends' written import bans with their statement, compares the language files, generates the frontends' client again and compares it with the committed one, checks that every change to the API's schema has its committed migration, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
 | `pnpm check --skip-nx-cache` | The same, with every task run again. Nx keeps its cache under the home directory, so a fresh clone on the same machine reuses old results unless the cache is skipped. |
 | `pnpm format` | Rewrites source and configuration files into the agreed format. |
 | `pnpm exec nx serve @pcp/shopper` | Starts the Shopper app on port 3000. |
