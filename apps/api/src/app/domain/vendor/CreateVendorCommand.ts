@@ -7,31 +7,34 @@ import { CreateLoginParams, LoginStore } from '../login/LoginStore';
 import { makeTemporaryPassword } from '../login/temporary-password';
 import { PhoneNumber } from '../phone-number/PhoneNumber';
 import { City } from './City';
+import { holdsText, lengthOf } from './text-as-written';
 import { Vendor } from './Vendor';
 import { vendorDetailRefused } from './vendor-errors';
 import { CreateVendorParams, VendorStore } from './VendorStore';
 
-// The longest name a Vendor may have, in characters, each Unicode code point
-// counting as one, as JSON Schema's maxLength counts them.
+// The longest name a Vendor may have, in characters as `lengthOf` counts
+// them.
 export const longestVendorName = 100;
 
+// A Vendor's details as they were typed, before they are checked. A detail
+// that was not given is null.
 class Input {
   constructor(
-    private readonly name: string,
-    private readonly city: City,
-    private readonly loginPhoneNumber: string,
+    private readonly name: string | null,
+    private readonly cityKey: string | null,
+    private readonly loginPhoneNumber: string | null,
   ) {}
 
-  getName(): string {
+  getName(): string | null {
     return this.name;
   }
 
-  getCity(): City {
-    return this.city;
+  // The key of the city it names.
+  getCityKey(): string | null {
+    return this.cityKey;
   }
 
-  // As it was typed.
-  getLoginPhoneNumber(): string {
+  getLoginPhoneNumber(): string | null {
     return this.loginPhoneNumber;
   }
 }
@@ -74,12 +77,24 @@ export class CreateVendorCommand {
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     // Every check comes before anything is made in Keycloak, and the first
-    // detail that does not fit is the one named.
-    if ([...input.getName()].length > longestVendorName) {
+    // detail that does not fit, in the order the Vendor form asks for them,
+    // is the one named.
+    const name = input.getName();
+    if (!holdsText(name)) return Either.left(vendorDetailRefused('name', 'missing'));
+    if (lengthOf(name) > longestVendorName) {
       return Either.left(vendorDetailRefused('name', 'tooLong'));
     }
 
-    const loginPhoneNumber = PhoneNumber.readMobile(input.getLoginPhoneNumber());
+    const cityKey = input.getCityKey();
+    if (cityKey === null) return Either.left(vendorDetailRefused('city', 'missing'));
+    const city = City.withKey(cityKey);
+    if (city === undefined) return Either.left(vendorDetailRefused('city', 'notInTheSet'));
+
+    const typedLoginPhoneNumber = input.getLoginPhoneNumber();
+    if (!holdsText(typedLoginPhoneNumber)) {
+      return Either.left(vendorDetailRefused('loginPhoneNumber', 'missing'));
+    }
+    const loginPhoneNumber = PhoneNumber.readMobile(typedLoginPhoneNumber);
     if (Either.isLeft(loginPhoneNumber)) {
       return Either.left(vendorDetailRefused('loginPhoneNumber', loginPhoneNumber.left));
     }
@@ -110,12 +125,7 @@ export class CreateVendorCommand {
     }
 
     const vendor = await this.vendorStore.create(
-      new CreateVendorParams(
-        input.getName(),
-        input.getCity(),
-        loginPhoneNumber.right,
-        login.right,
-      ),
+      new CreateVendorParams(name, city, loginPhoneNumber.right, login.right),
     );
     if (Either.isLeft(vendor)) {
       const deleted = await this.loginStore.delete(login.right);

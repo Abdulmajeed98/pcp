@@ -47,8 +47,9 @@ type VendorBody = {
 // password, this once.
 type CreatedVendorBody = { vendor: VendorBody; temporaryPassword: string };
 
-// Every detail a Vendor needs, with a login phone number of its own.
-function aVendor(loginPhoneNumber: string): Record<string, string> {
+// Every detail a Vendor needs, with a login phone number of its own. A detail
+// set to undefined is left out of the request, as JSON leaves it out.
+function aVendor(loginPhoneNumber: string): Record<string, unknown> {
   return { name: 'Made-up Computer Shop', city: 'erbil', loginPhoneNumber };
 }
 
@@ -249,7 +250,7 @@ describe('the Vendor endpoints', () => {
   });
 
   describe('refusing a Vendor', () => {
-    it.each<[string, Record<string, string>, ExpectedErrorResponse, string]>([
+    it.each<[string, Record<string, unknown>, ExpectedErrorResponse, string]>([
       [
         'a landline as the login phone number',
         aVendor('066 223 4567'),
@@ -275,21 +276,33 @@ describe('the Vendor endpoints', () => {
         '+9647501234567',
       ],
       [
+        'no login phone number',
+        { ...aVendor('0750 123 4567'), loginPhoneNumber: undefined },
+        notValid('loginPhoneNumber', { reason: 'missing' }),
+        '+9647501234567',
+      ],
+      [
+        'a login phone number of spaces alone',
+        aVendor('   '),
+        notValid('loginPhoneNumber', { reason: 'missing' }),
+        '+9647501234567',
+      ],
+      [
         'no name',
-        { city: 'erbil', loginPhoneNumber: '0750 123 4567' },
-        notValid('name'),
+        { ...aVendor('0750 123 4567'), name: undefined },
+        notValid('name', { reason: 'missing' }),
         '+9647501234567',
       ],
       [
         'an empty name',
         { ...aVendor('0750 123 4567'), name: '' },
-        notValid('name'),
+        notValid('name', { reason: 'missing' }),
         '+9647501234567',
       ],
       [
         'a name of spaces alone',
         { ...aVendor('0750 123 4567'), name: '   ' },
-        notValid('name'),
+        notValid('name', { reason: 'missing' }),
         '+9647501234567',
       ],
       [
@@ -299,9 +312,15 @@ describe('the Vendor endpoints', () => {
         '+9647501234567',
       ],
       [
+        'no city',
+        { ...aVendor('0750 123 4567'), city: undefined },
+        notValid('city', { reason: 'missing' }),
+        '+9647501234567',
+      ],
+      [
         'a city outside the set',
         { ...aVendor('0750 123 4567'), city: 'baghdad' },
-        notValid('city'),
+        notValid('city', { reason: 'notInTheSet' }),
         '+9647501234567',
       ],
     ])(

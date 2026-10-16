@@ -3,11 +3,17 @@ import { NotFoundError, NotValidError } from '@pcp/core';
 import { PhoneNumberRefusal } from '../phone-number/PhoneNumber';
 
 // The details of a Vendor a refusal can name.
-type VendorField = 'name' | 'loginPhoneNumber';
+type VendorField = 'name' | 'city' | 'loginPhoneNumber';
 
-// Why a detail was refused: it is too long, it is a phone number of the wrong
-// kind, or another Vendor or Login holds it.
-type VendorDetailRefusal = 'tooLong' | 'taken' | PhoneNumberRefusal;
+// Why a detail was refused: it is missing, it is too long, it is not one of a
+// fixed set, it is a phone number of the wrong kind, or another Vendor or
+// Login holds it.
+type VendorDetailRefusal =
+  | 'missing'
+  | 'tooLong'
+  | 'notInTheSet'
+  | 'taken'
+  | PhoneNumberRefusal;
 
 // The error for a Vendor that does not exist, the same for every use case.
 export function vendorNotFound(vendorId: string): NotFoundError {
