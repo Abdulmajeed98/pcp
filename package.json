@@ -5,7 +5,7 @@
   "scripts": {
     "preinstall": "node tools/require-pnpm.mjs",
     "prepare": "husky",
-    "check": "oxfmt --check && node tools/write-feature-sliced-bans.mjs --check && node tools/write-api-client.mjs --check && node tools/check-migrations.mjs && oxlint --config .oxlintrc.outside-projects.json --ignore-pattern apps --ignore-pattern libs && nx run-many --targets=lint,typecheck,test,build",
+    "check": "oxfmt --check && node tools/write-feature-sliced-bans.mjs --check && node tools/check-language-files.mjs && node tools/write-api-client.mjs --check && node tools/check-migrations.mjs && oxlint --config .oxlintrc.outside-projects.json --ignore-pattern apps --ignore-pattern libs && nx run-many --targets=lint,typecheck,test,build",
     "format": "oxfmt",
     "services:up": "node tools/start-services.mjs",
     "services:down": "node tools/stop-services.mjs",
