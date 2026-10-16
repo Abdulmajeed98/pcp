@@ -68,8 +68,8 @@ The two pages are still placeholders. Each becomes the proving ground: it shows 
 ### Text that is not translated
 
 27. As a Shopper, I want Part names, manufacturer names and specifications in English in every language, so that they match the name on the box and in the shop.
-28. As a Shopper reading Kurdish or Arabic, I want an English Part name inside a sentence to keep its own order, so that "Ryzen 5 7600" does not become "7600 5 Ryzen".
-29. As a Shopper reading Kurdish or Arabic, I want a specification such as "DDR5-6000" to keep its order, so that I can compare it with another.
+28. As a Shopper reading Kurdish or Arabic, I want an English Part name inside a sentence to keep its own order, so that "990 PRO 2TB" does not become "PRO 2TB 990". Corrected on 16 October 2026: the story first gave "Ryzen 5 7600", which ticket 04 found Chromium leaves whole; what it reorders is text that starts with a number or a sign.
+29. As a Shopper reading Kurdish or Arabic, I want a specification such as "80 mm" to keep its order, so that I can compare it with another. Corrected on 16 October 2026: the story first gave "DDR5-6000", which Chromium leaves whole; "80 mm" is drawn "mm 80" when nothing keeps it apart.
 30. As a Shopper, I want Category names in my language, so that I can find my way without knowing the English word.
 31. As a Shopper, I want what a Vendor wrote, its name, its address and its opening hours, shown exactly as written, so that it matches the sign on the shop.
 32. As a Shopper reading English, I want a Vendor's address written in Arabic to read right to left inside my left-to-right page, so that it is readable.

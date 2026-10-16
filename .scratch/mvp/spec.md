@@ -81,8 +81,8 @@ Build order: `languages`, `catalog`, `accounts` → `offers` → `pricing` → `
 - **LANG-2** Kurdish and Arabic are laid out right to left; English left to right.
 - **LANG-3** Part names, manufacturer names and specifications are shown in English in every language. Everything else in the interface, including Category names, is translated.
 - **LANG-4** Text a Vendor writes (its name, address, opening hours) is shown as written, untranslated.
-- **LANG-5** Prices and specifications use Western digits (0 to 9) in every language.
-- **LANG-6** The Shopper can switch language at any time and the choice is remembered in the browser. The first visit follows the browser's language and falls back to Kurdish.
+- **LANG-5** Prices and specifications use Western digits (0 to 9) in every language. The platform reads this widely: every number it shows is in Western digits.
+- **LANG-6** The Shopper can switch language at any time and the choice is remembered in the browser. The first visit follows the browser's language and falls back to Kurdish. The Vendor portal follows the same rule, and remembers only a use of its switch.
 - **LANG-7** Kurdish and Arabic text is drafted during development and reviewed by the owner, or someone the owner trusts, before launch.
 - **LANG-8** Every screen is usable on a phone 360 pixels wide, in both directions. Shopper pages and the Vendor portal are designed for the phone first and adapt upward to larger screens.
 
@@ -292,7 +292,8 @@ The stack and each app's architecture are decided and recorded in [ADR-0003](../
 - End-to-end tests are written with Playwright and run in Chromium.
 - Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository's code and configuration, except the two files of import bans that a script writes, the generated client, the migrations drizzle-kit writes and the import's made-up folder shaped like OpenDB, which holds a file that is not JSON on purpose. It leaves the written records alone: `docs/`, `.scratch/`, CLAUDE.md, CONTEXT.md, PRODUCT.md, every DESIGN.md and every `.impeccable` folder, which Impeccable reads in their exact format. It is still before version 1.0, so its version is pinned exactly. Oxlint's version is pinned exactly as well, because the rule between projects runs on a part of Oxlint that may change in any release.
 - Tailwind CSS with shadcn/ui for the interface.
-- next-intl for the three languages in the Next.js app.
+- next-intl for the three languages in the Next.js app, and react-i18next, with i18next, for the three languages of the Vendor portal. The two read two message formats, ICU and i18next's own ([ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md)). Both frontends match a browser's languages with `@formatjs/intl-localematcher`.
+- Tailwind CSS 4, from the themes in `ui`, with `oxlint-tailwindcss` refusing a class that names a physical side. The plugin is pinned exactly: it is young and releases often, and it runs on the part of Oxlint that Oxlint keeps outside its version policy.
 - The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one rented server with 4 GB of memory running everything, with Cloudflare in front and nightly database backups.
 - Git, with a commit after each piece of work, and a private GitHub repository later as an off-machine backup.
 
@@ -309,6 +310,8 @@ Automated checks on GitHub are added when the GitHub repository exists. Each app
 
 Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/workspace](../workspace/spec.md). Step 2 was finished on 9 October 2026; its spec and tickets are in [.scratch/dev-services](../dev-services/spec.md). Step 3 was finished on 9 October 2026; its spec and tickets are in [.scratch/boundary-checks](../boundary-checks/spec.md). Step 4 was finished on 9 October 2026; its spec and tickets are in [.scratch/connection-proof](../connection-proof/spec.md). The infrastructure is complete. The commands, services, settings, layout, import rules and code conventions the four steps produced are below.
 
+`languages`, the first module, was finished on 16 October 2026; its spec and tickets are in [.scratch/languages](../languages/spec.md). The review of the Kurdish and the Arabic text, LANG-7, stays open until launch. The conventions it set are below, under **The three languages**, and in the commands, the layout and the import rules.
+
 **Commands**
 
 All commands are run from the repository root, with Node 24 and pnpm. An install under another Node major version, or with npm or yarn, is refused. The four `services` commands and `pnpm platform:check` need Docker to be running; no other command does.
@@ -316,14 +319,14 @@ All commands are run from the repository root, with Node 24 and pnpm. An install
 | Command | What it does |
 |---|---|
 | `pnpm install` | Installs everything for all nine projects. It does not download the browser that `pnpm platform:check` drives. |
-| `pnpm check` | Runs the format check, compares the frontends' written import bans with their statement, generates the frontends' client again and compares it with the committed one, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
+| `pnpm check` | Runs the format check, compares the frontends' written import bans with their statement, compares the language files, generates the frontends' client again and compares it with the committed one, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
 | `pnpm check --skip-nx-cache` | The same, with every task run again. Nx keeps its cache under the home directory, so a fresh clone on the same machine reuses old results unless the cache is skipped. |
 | `pnpm format` | Rewrites source and configuration files into the agreed format. |
 | `pnpm exec nx serve @pcp/shopper` | Starts the Shopper app on port 3000. |
 | `pnpm exec nx serve @pcp/api` | Starts the API on port 3001. |
 | `pnpm exec nx serve @pcp/dashboard` | Starts the dashboard on port 3002. |
 | `pnpm exec nx <target> <project>` | Runs one target for one project, for example `pnpm exec nx test @pcp/core`. |
-| `pnpm services:up` | Starts PostgreSQL and Keycloak in Docker, in the background, and returns when both are healthy and the development Admin and Vendor logins exist. The first start creates `.env` with random local passwords. A value that is in `.env` is never changed, and a setting that is new is added to it. |
+| `pnpm services:up` | Starts PostgreSQL and Keycloak in Docker, in the background, and returns when both are healthy and the development Admin and the development Vendor logins exist. The first start creates `.env` with random local passwords. A value that is in `.env` is never changed, and a setting that is new is added to it. |
 | `pnpm services:down` | Stops both services and keeps their data. |
 | `pnpm services:reset` | Stops both services and deletes their data. The next start is a first start. |
 | `pnpm services:check` | Checks the running services from the outside and prints one line for each thing it checked. It exits non-zero if any line fails, and says so plainly when the services are not running. |
@@ -337,11 +340,13 @@ Every project has a `lint` and a `typecheck` target. Only the API and `core` hav
 
 `pnpm check` does not start or need the services, and it needs no browser.
 
+The step that compares the language files reads the three sets in `libs/i18n/src/messages`. For each, it fails when a message of the English file is missing from another language, or another language holds one the English file does not; when a message cannot be read in its set's format, the Shopper app's with the release of `intl-messageformat` that next-intl uses; when a message names other placeholders than the English one; when a sentence that counts lacks a plural form its language has or, in the dashboard's set, has one it does not, or a form that stands for many counts leaves out a value the sentence shows; when a message lets its library format a number, or holds an Arabic-Indic digit; when a shared term holds anything in braces or angle brackets, or counts; and when a name at the top of the shared terms is at the top of a frontend's set. Each failure names the file, the message and what is wrong.
+
 `pnpm check` does not run `pnpm boundaries:check`. Run it after a change to the lint configuration, to a project's tags or to the name of a layer folder, after an upgrade of Oxlint or Nx, and when a project is added. Run it on its own: `pnpm check` and a development server would both see the planted files while it runs.
 
 Run `pnpm api-client:write` after any change to an endpoint or to a Response class. `pnpm check` fails until it has been run: one of the API's tests compares the committed description with what the API describes, and a step of `pnpm check` generates the client again and compares it with the committed one. Neither file is edited by hand.
 
-`pnpm check` does not run `pnpm platform:check`. Run it after a change to the realm file, to the guard or an access rule, to the dashboard's login code, to either frontend's call to the API or to an app's settings, and after an upgrade of Keycloak, `keycloak-js`, `jose`, Next or Playwright. An app that is already running is used and left running. A failed run leaves a report and a trace under `apps/e2e/test-output`, which Git ignores. A trace holds what was typed into the login screen.
+`pnpm check` does not run `pnpm platform:check`. Run it after a change to the realm file, to the guard or an access rule, to the dashboard's login code, to either frontend's call to the API or to an app's settings, after a change to either frontend's language set-up or to a frame, and after an upgrade of Keycloak, `keycloak-js`, `jose`, Next, next-intl, i18next, react-i18next, Tailwind CSS or Playwright. An app that is already running is used and left running. A failed run leaves a report and a trace under `apps/e2e/test-output`, which Git ignores. A trace holds what was typed into the login screen.
 
 **Development services**
 
@@ -353,7 +358,7 @@ Both services listen on the owner's machine only, and are for development only.
 | Keycloak 26.8.0 | `http://localhost:8080` | The `pcp` realm, whose issuer is `http://localhost:8080/realms/pcp`. It has the roles `admin` and `vendor`. The realm file holds no logins, and `pnpm services:up` creates two, the development Admin and the development Vendor. The platform's one client in it is `dashboard`, whose access tokens name `pcp-api` as an audience; Keycloak adds six clients of its own to every realm. Its login screen is in Kurdish (Sorani), Arabic and English. |
 
 - **Passwords.** No password is committed. They are in `.env`, which Git ignores; `.env.example` lists the settings without their values. Keycloak's own console is at `http://localhost:8080/admin` and is opened with Keycloak's own administrator account, whose name and password are in `.env`. That account is not the platform's Admin.
-- **The development logins.** `pnpm services:up` creates two logins in the realm, each when the realm has none of that name: `development-admin`, with the `admin` role, and `development-vendor`, with the `vendor` role and no Vendor behind it. Each holds its one platform role and no other. Their passwords are generated and kept in `.env`, as `DEVELOPMENT_ADMIN_PASSWORD` and `DEVELOPMENT_VENDOR_PASSWORD`. They are the logins to open the Admin console and the Vendor portal with during development, and the ones `pnpm platform:check` logs in with. They exist in development only, and `accounts` decides what becomes of the development Vendor. Keycloak's default profile asks a login for a first name, a last name and an email address, and sends a login without them to a screen that asks for them, so each login is created with all three.
+- **The development logins.** `pnpm services:up` creates two logins in the realm, each when the realm has none of that name: `development-admin`, with the `admin` role, and `development-vendor`, with the `vendor` role and no Vendor behind it. Each holds its one platform role and no other. Their names and their generated passwords are kept in `.env`, as `DEVELOPMENT_ADMIN_NAME` and `DEVELOPMENT_ADMIN_PASSWORD`, and `DEVELOPMENT_VENDOR_NAME` and `DEVELOPMENT_VENDOR_PASSWORD`, which `.env.example` lists without their values. `pnpm platform:check` says so, and names `pnpm services:up`, when `.env` lacks them. They are the logins to open the Admin console and the Vendor portal with during development, and the ones `pnpm platform:check` logs in with. They exist in development only, and `accounts` decides what becomes of the development Vendor. Keycloak's default profile asks a login for a first name, a last name and an email address, and sends a login without them to a screen that asks for them, so each login is created with all three.
 - **The reset rule.** PostgreSQL runs its set-up script only when its data is empty, and Keycloak imports the realm only when the realm does not exist yet. A change to the database set-up script or to the realm file, which holds the realm's languages, therefore takes effect only after `pnpm services:reset` and a new start. The theme is different: in development mode Keycloak reads it afresh for every page, so a change to its text or to its language list shows on the next page load.
 - **The data and the passwords belong together.** The data is created with the passwords that are in `.env` at the first start. If `.env` is deleted while the data is kept, the next start writes new passwords that the data does not know; `pnpm services:reset` and a new start put that right. Stopping and resetting work without `.env`.
 - **Renaming the realm.** Keycloak refuses to start when the realm file's name and the realm's name differ, so the two are changed together.
@@ -383,10 +388,10 @@ Each app reads its settings from its environment. Every one has the development 
 | Path | What lives there |
 |---|---|
 | `apps/api` | The API. Its domain and infrastructure layers are under `src/app`, and its tests are under `src/test`, mirroring `src/app`. Its description of itself, `openapi.json`, is beside them. |
-| `apps/shopper` | The Shopper app. Next's `app` folder only routes; the Feature-Sliced Design layers are under `src`, with the App and Pages layers named `_app` and `_pages`. |
+| `apps/shopper` | The Shopper app. Next's `app` folder only routes, with every route under the language segment `[locale]`; the Feature-Sliced Design layers are under `src`, with the App and Pages layers named `_app` and `_pages`. Next's proxy file, `proxy.ts`, which redirects an address with no language, is beside the `app` folder. |
 | `apps/dashboard` | The dashboard. Its Feature-Sliced Design layers are under `src`. |
 | `apps/e2e` | The end-to-end tests, which `pnpm platform:check` runs. |
-| `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n` | The five shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. `@pcp/core` has a second entry, `@pcp/core/test-utils`, which holds test helpers and which only test files import. `@pcp/ui` has two stylesheet entries, `@pcp/ui/themes/shopper.css` and `@pcp/ui/themes/dashboard.css`, one for each frontend's look (ADR-0007), and each imports the library's shared `theme.css`. The client under `libs/api-client/src/generated` is generated. |
+| `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n` | The five shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. `@pcp/core` has a second entry, `@pcp/core/test-utils`, which holds test helpers and which only test files import. `@pcp/ui` has two stylesheet entries, `@pcp/ui/themes/shopper.css` and `@pcp/ui/themes/dashboard.css`, one for each frontend's look (ADR-0007), and each imports the library's shared `theme.css`. The client under `libs/api-client/src/generated` is generated. `i18n`'s language files are under `libs/i18n/src/messages`, with a README on correcting them and a word list. |
 | `services` | What the development services are set up from: PostgreSQL's set-up script, and Keycloak's realm file and theme. The Sorani text of the login screen is in the theme. |
 | `tools` | Scripts the workspace itself needs, among them the ones behind `pnpm services:up` and `pnpm services:check`, the statement of the frontends' import bans, the two scripts behind `pnpm boundaries:write` and `pnpm boundaries:check`, and the ones behind `pnpm api-client:write` and `pnpm platform:check`. |
 | The repository root | The workspace's own configuration: the package manifest and lockfile, the pnpm workspace file, and the Nx, TypeScript, Oxlint, Oxfmt and Jest settings that every project extends. Also the Compose file for the development services, `.env.example`, and the lint rules for test files, which the API and `core` extend. |
@@ -437,6 +442,7 @@ _Inside each frontend._ The layers, from the top, with what a file in each may i
 - **A relative import is written in its shortest form:** any climbing first, as `../`, and no `.` or `..` after it. The bans count the `../` an import starts with, and a longer spelling would get past the count.
 - **A layer that has slices holds no files of its own.** A file put straight into its folder may make no relative import.
 - **Next's routing folder only routes.** In the Shopper app, a file in Next's `app` folder imports a page from the Pages layer or the App layer, each through its index file, and nothing else from the project. It reaches them through the alias and never by a relative path.
+- **Next's proxy file imports the languages and nothing else.** In the Shopper app, `proxy.ts` imports next-intl's statement of the languages from the `i18n` segment of the Shared layer, through its index file and by the alias, and nothing else from the project. Next runs it before it answers every request.
 - The bans cover all six layers, although the Widgets, Features and Entities folders are created only when the first slice needs them.
 - The bans are stated once, in `tools`, and `pnpm boundaries:write` writes them into `.oxlintrc.feature-sliced.json` in each frontend's folder. That file is never edited by hand: change the statement and write it again. `pnpm check` fails when the two differ.
 - Two things the bans cannot see. A file with no imports, put straight into a layer that has slices, can still be imported as if it were a slice. A file in `src` outside the six layers is under no ban itself, though nothing in a layer or in the routing folder can import it.
@@ -468,10 +474,83 @@ Step 4 built these once, on two endpoints, for every module to copy. ADR-0004 gi
 - _The dashboard_ starts its login once, in the App layer's entry file, before React renders anything. The login is in the Shared layer's `auth` segment. The client, in the `api` segment, asks `auth` for a token that is still valid before each call. When Keycloak refuses to renew a token, the adapter sends the browser to the login screen itself. When Keycloak cannot be asked, the call is not made and the page says so.
 - A refusal from the API is shown. It is never answered by starting a login, so that an API that refuses every token cannot send the browser round Keycloak for ever.
 
+**The three languages**
+
+`languages` built these once, on the two placeholder pages, for every Shopper page and every Vendor portal screen to copy. [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md) records the two decisions that are costly to undo, and the module's tickets record what was found on the installed tools.
+
+_The languages._
+
+- The three are `ckb`, `ar` and `en`, the tags the Keycloak realm uses, listed in that order wherever the three are listed. Kurdish is the fallback wherever nothing else decides.
+- `i18n` states them once, with each one's own name in its own script ("کوردی", "العربية", "English", never translated), its direction (`rtl`, `rtl`, `ltr`) and the rule for a browser's languages: the first one the platform has, a regional form counting as its language, else Kurdish. The rule is `@formatjs/intl-localematcher` with its "best fit" method, which next-intl uses too, so the two frontends cannot disagree. It sends a browser set to Urdu to English.
+- Neither frontend asks a library for a language's direction.
+
+_The text._
+
+- Every translated text is in `i18n`, under `src/messages`, in three sets, each one JSON file for each language. A file holds nothing but text. English is the source: its messages define what the other two hold, and a key is type-checked against the English file.
+  - `shared/`: the shared terms, which both frontends show with the same wording. They are plain text, with nothing in braces or angle brackets. So far they are the eight Category names.
+  - `shopper/`: the Shopper app's text, in next-intl's format, ICU.
+  - `dashboard/`: what the Vendor portal shows, and the text of a component both halves of the dashboard show, in i18next's own format. Text that only the Admin console shows is written in English where it is used, and is not here.
+- Each frontend adds the shared terms to its own set, so a shared term is asked for by its key like any other. A name at the top of the shared terms is never at the top of a frontend's set.
+- The README beside the files says how a message is corrected, and a word list beside them, `words.md`, gives the Kurdish and the Arabic word for each term of CONTEXT.md a Shopper or a Vendor reads. A screen that shows a term for the first time takes its word from there.
+- The Kurdish and the Arabic text is a draft until the review LANG-7 asks for, and the README says so for each file.
+- A value is never written into a message by a frontend's own formatting. In the Shopper app's files it is `{name}`, and a piece of text kept apart is `<english>…</english>`, which the page fills. In the dashboard's files every value is an element the message names, such as `<name/>`, which the page fills with react-i18next's `Trans`, so that React shows it as text. Nothing is written in double braces there, and i18next's escaping is off, because React escapes what it shows.
+- A sentence that counts is worded with every plural form its language has: `one` and `other` in Kurdish and English, and `zero`, `one`, `two`, `few`, `many` and `other` in Arabic. In the Shopper app's files it is one ICU message, `{count, plural, …}`; in the dashboard's it is one key for each form, such as `partsFound_one`.
+- `pnpm check` compares the files (see Commands). A correction is checked by running it.
+
+_Numbers._
+
+- Every number the platform shows is in Western digits, 0 to 9, not only prices and specifications, grouped in thousands with a comma and with a point before decimals: 1,575,000.5.
+- `formatNumber`, in `i18n`, writes every number. Its answer is the same in all three languages, on the server and in the browser. It takes no language: Node writes a Kurdish number in Arabic-Indic digits, and Chromium, which has no number formatting for Kurdish, writes one in the language the browser itself is set to.
+- No message formats a number. A number reaches a message as text, written by `formatNumber`. A sentence that counts is given the count twice: the count picks the wording, and the text `formatNumber` wrote is what is shown, as `{countText}` in the Shopper app's files and as `<count/>` in the dashboard's. `#`, `{…, number}`, `{…, date}` and `{…, time}` are never written in the Shopper app's files, nor anything in double braces in the dashboard's, and `pnpm check` fails on each. next-intl's `format.number` and i18next's own number formatting are never used.
+- A Vendor's own digits, in what a Vendor wrote, are shown as written. The first page that shows such text decides how its test reads them.
+- Currency, rounding and the "≈" mark are `pricing`'s. Dates and times, and "3 days ago", arrive with the first screen that shows one: Node has no Sorani wording for relative time.
+
+_Direction and layout._
+
+- The document declares its language and its direction. The Shopper app's server sends every page with both, and the dashboard sets both when it starts and at every switch.
+- Every class that has a side is written in its logical form, start and end: `ps-*`, `me-*`, `text-start`, `border-s`, `rounded-e`, `inset-s-*`. Lint refuses the physical form, left and right, in both frontends and in `ui`, with `enforce-logical` from `oxlint-tailwindcss`, pinned exactly and held to left and right; top and bottom are left alone. The rule reads a class where it is written whole, in `className`, `class`, `cn()` and `clsx()`, and not one put together in a template string or written in a stylesheet. A class is therefore written where the rule reads it.
+- Tailwind reads `ui`'s classes through one `@source` line in `ui`'s shared theme.
+- An icon that points along the reading direction, such as an arrow, is mirrored on a page that runs right to left. One that does not point is left alone.
+- The first shadcn/ui component is added with shadcn/ui's right-to-left setting on, so that the command that adds a component writes logical classes. Its documentation names three components it converts by hand, and a fault in the sliding animations of pop-up parts, with a workaround.
+- Every page and screen is laid out for a phone 360 pixels wide first and adapts upward, does not scroll sideways, and puts its language switch on the end side of its frame. A word too long for the screen is broken.
+
+_Text that is not translated._
+
+- `ui` has two components for it, and a screen never writes their markup by hand. Neither kind of text is in the language files.
+  - `AlwaysEnglish` marks text that is English and left to right in every language: a Part name, a manufacturer name, a specification, and a number with its unit or its currency. Inside a Kurdish or an Arabic sentence the browser otherwise reorders such text when it starts with a number or a sign: "80 mm" is drawn "mm 80", "990 PRO 2TB" "PRO 2TB 990". A name that starts with a letter, such as "Ryzen 5 7600", happens to be left whole, and is marked all the same, because a screen cannot know which name starts with a number.
+  - `AsWritten` marks text shown as someone wrote it, such as a Vendor's name, address and opening hours. It takes its direction from its own first letter.
+- Both are `bdi` elements, HTML's own means, with no library and no styling.
+
+_The Shopper app._
+
+- next-intl gives it its languages. The language is the first part of every address, for all three: `/ckb/…`, `/ar/…`, `/en/…`. An address with no language is answered with a redirect to the same page in the remembered language, else the browser's, else Kurdish. An address with a language is shown in that language, whatever is remembered.
+- The language is remembered in next-intl's cookie, for a year from when it is written. next-intl writes it when a page in another language than the remembered one is asked for, or, when nothing is remembered, in another language than the browser's. So opening a link in another language changes what is remembered, as a use of the switch does, and a visit does not renew the year. `sharing` decides whether a shared link keeps that rule.
+- The switch is three plain links to the page the Shopper is on, one in each language, in the frame of every page. A tap asks the server for the page, and the server's answer writes the cookie, so it works with no script, and the year holds in Safari, which keeps a cookie a script writes for seven days at most. The link to the language the page is in is marked `aria-current="page"`. A query is not kept yet.
+- A page reads its text on the server, from the language files, and no language file reaches the browser. `NextIntlClientProvider` is not rendered yet, and the first component that needs text in the browser is handed only that text.
+- The tab's title comes from the language files. With each page next-intl sends the page's address in the other two languages, for search engines.
+- next-intl's statement of the languages and its request set-up are in the `i18n` segment of the Shared layer. Next's proxy file, `proxy.ts`, sits beside the routing folder and imports that segment and nothing else from the project. The route files are under the folder `[locale]`, and still only re-export.
+- An address that matches no page is answered 404 with the "not found" screen in the frame, in the visitor's language. Next sends that screen as a bare document that the browser draws, so it alone has no language in what the server sends and needs a script. `browse` decides what becomes of it, with the first page that can be "not found".
+
+_The dashboard._
+
+- react-i18next, with i18next, gives it its languages. Neither the plugin that reads ICU messages nor the one that detects a browser's language is used. All three languages' text is given to i18next at the start, and no language falls back to another.
+- **Which half.** A login that holds the `admin` role gets the Admin console, also when it holds `vendor` too. Every other login gets the Vendor portal. The rule is `halfFor`, in the App layer, applied once when the dashboard starts, to the realm roles the access token holds, which is the claim the API reads. `accounts` extends this rule and does not invent another.
+- **The Vendor portal** opens in the language chosen with its switch in this browser, else the browser's, else Kurdish. Only a use of the switch is remembered, in the browser's `localStorage`. A language that was only found from the browser is never stored. The choice lasts across a logout. It is the only thing the dashboard keeps in the browser's storage, beside an entry Keycloak's adapter keeps for the length of a login; tokens stay in memory.
+- The switch is a button for each language, named in its own language and script, in the frame of every Vendor portal screen. A tap changes the language, the direction and the tab's title in place, with no reload and no visit to Keycloak.
+- What is shown before anyone is known, such as the message for a login that could not be completed, follows the Vendor portal's rule.
+- **The Admin console** is in English and left to right, whatever the browser's language is, and has no switch. It neither reads nor writes the Vendor portal's remembered choice.
+
+_Testing a page in three languages._
+
+- The language tests are the files named `…-languages.spec.ts`. They run in Chromium in a window 360 pixels wide, with the browser set to Arabic as written in Iraq, which writes a number it formats for Kurdish in Arabic-Indic digits. A test that sets a language of its own gives that up.
+- A Shopper page's test calls `checkInEveryLanguage`, or `readInEveryLanguage` to read something in each language too, once, with the page's address. A Vendor portal screen's test opens the screen and calls `checkInEveryLanguageOfTheVendorPortal` or `readInEveryLanguageOfTheVendorPortal`, which show it in each language by the switch. Both run one loop. Each first confirms the browser shows the fault, and then, in each language, that the page declares that language and its direction, before it reads anything else; that it is in the frame; that the switch is there, inside the screen, large enough to tap and on the end side; that no Arabic-Indic digit is on it; and that it does not scroll sideways. The Shopper app's helper also reads what the server sent.
+- No test quotes a translation, because the review may change every one. A test tells the languages apart by the language the page declares and by the same piece of text differing between them, and finds an element by a test id or by a value that is the same in every language. The languages' own names, which are not translations, are written out in the tests.
+- `linesAsDrawn` reads the order a piece of text is drawn in, and `layoutOf` reads its direction and whether it is kept apart. The checks of the placeholder pages' sample are in `sample.ts`, which both frontends' tests call.
+
 **End-to-end tests**
 
 - They are the `@pcp/e2e` project, written with Playwright's test runner. They see the platform through a browser and over HTTP, and import none of its code.
-- A test that needs the Admin calls `logInToTheDashboard`, which logs the development Admin in at Keycloak's login screen. A test that needs a Vendor gives it `developmentVendor`, and it logs the development Vendor in instead. Each test starts in a fresh browser. The password is set in the page and never typed with Playwright's `fill`, which writes what it types into the log of a step that fails.
+- A test that needs the Admin calls `logInToTheDashboard`, which logs the development Admin in at Keycloak's login screen. A test that needs a Vendor gives it `developmentVendor`, and it logs the development Vendor in instead. `openTheDashboardAs` does the same and waits until the page is drawn whole, and `logOutOfTheDashboard` logs out with the page's own button. Each test starts in a fresh browser. The password is set in the page and never typed with Playwright's `fill`, which writes what it types into the log of a step that fails.
 - Keycloak's login screen is told by its address and its form, and never by its text, which is in three languages.
 
 **Worth knowing about the toolchain**

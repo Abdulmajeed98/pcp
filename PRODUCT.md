@@ -11,7 +11,7 @@ web
 Decided by the owner before this file was written, in [ADR-0003](docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](docs/adr/0004-architecture-per-app.md) and the spec's Technology section. The parts that shape interface work:
 
 - Shopper app: Next.js, rendered on the server, with next-intl.
-- Dashboard: one client-rendered React single-page application holding the Vendor portal and the Admin console.
+- Dashboard: one client-rendered React single-page application holding the Vendor portal and the Admin console, with react-i18next. The Vendor portal is in three languages, and the Admin console in English only.
 - Tailwind CSS with shadcn/ui on Base UI. Each frontend has a look and a set of components of its own ([ADR-0007](docs/adr/0007-a-look-and-components-for-each-app.md)), with downloaded fonts ([ADR-0006](docs/adr/0006-fonts-downloaded-from-our-own-server.md)). The `ui` library holds what both share and each look's theme, and `i18n` the text for all three languages.
 - Both frontends follow Feature-Sliced Design.
 - The visual design is in [DESIGN.md](DESIGN.md) for what both frontends share, [apps/shopper/DESIGN.md](apps/shopper/DESIGN.md) for the Shopper app's look and [apps/dashboard/DESIGN.md](apps/dashboard/DESIGN.md) for the dashboard's.
