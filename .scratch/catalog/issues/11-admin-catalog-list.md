@@ -117,3 +117,18 @@ The dashboard gains its first libraries, the most widely used for each job, as t
 - `ui`'s Category icon;
 - the end-to-end tests, written first;
 - the Catalog.
+
+### 16 October 2026: the code review, and the finish
+
+A review of tickets 11 to 14 on two axes, the repository's standards and the spec, ran in two agents of their own. What it found for this ticket's screens, all corrected:
+
+- **The Catalog was one column at a desk.** The dashboard's DESIGN.md gives a list a detail pane beside it on a wider screen, and the owner chose on 16 October 2026 to build it now. From 64rem wide, the list keeps a 26rem column on the start side and the Part opened from it, its edit form or a new Part shows beside it, its row marked as the open one. On a phone the opened screen takes the whole screen, and the list is not rendered, so it asks the API for nothing. Every link and return among these screens keeps the Catalog's search on its address. The pane has two tests of its own, written first.
+- **Corners of 4.8 pixels**, Mira's `rounded-md`, where the look sets 6 on controls and panels. They are `rounded-lg` now.
+- **The results dimmed to 60% while the next page arrived**, which took Note Grey under 4.5:1. They stay at full strength, and a line beside the count says "Searching…".
+- **A link drawn as a button had lost its outline,** found while capturing ticket 13, and fixed there.
+
+**Impeccable's finish,** which the dashboard's brief asks for. Its own reviewer and documenter agents are not available in this session, so both ran in this thread, from the files Impeccable ships for that.
+
+- The first viewport at 360 pixels keeps the brief's promises: the search field and the Category's choice 44 pixels high, a plate with the count, and dense rows of icon, name and manufacturer. Its two departures are the owner's choices of 16 October 2026: no menu of sections yet, and no plate at the end of a row. The type is Geist, the figures Geist Mono on the plate, the ground Warm Page, and nothing the craft floor refuses is on it.
+- Its one material finding was the missing detail pane, now built and captured at 1440 pixels in light and in dark.
+- `apps/dashboard/DESIGN.md` now records the components the Catalog, a Part's page and the form built, as its own note asked: buttons, inputs and choices, fields, rows, plates, the states and the navigation, with their tokens. The root DESIGN.md and the Shopper app's say where.

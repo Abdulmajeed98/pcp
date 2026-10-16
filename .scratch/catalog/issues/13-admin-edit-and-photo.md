@@ -61,3 +61,7 @@ The first fault is in the API, because the address of a photo is the API's to ch
 - the end-to-end tests, written first;
 - the fix to links drawn as buttons;
 - the edit form and the photo.
+
+### 16 October 2026: the code review
+
+The review of tickets 11 to 14 found that nothing checked which Category's icon a Part's page shows. Ticket 12's test now reads `data-category` on the page's icon. Its finding that an untouched save could change a Part's rows and lists is recorded and corrected under ticket 12, and the test of it, "saving the edit form without a change leaves the Part as it was", is with this ticket's tests: a motherboard with a row with every field missing and a list entry written with spaces around it is saved untouched and read back the same.

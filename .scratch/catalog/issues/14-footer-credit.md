@@ -64,3 +64,11 @@ It is laid out to the Shopper app's look, Fit Diagram, in `apps/shopper/DESIGN.m
 - the end-to-end tests, written first;
 - the footer and its credit;
 - the tests split along the ticket's lines.
+
+### 16 October 2026: the code review
+
+The review of tickets 11 to 14 found three things in the credit, each corrected:
+
+- **Its links were lines of 14-pixel text,** where the root DESIGN.md asks that anything tapped be 44 by 44 pixels, with no exception for a link inside a sentence as WCAG makes. The credit's lines are now as tall as a control, and each link is a box that high.
+- **The language files did not show the English names as English.** They now mark both with `<english>`, inside the tags that make the links, as their README asks.
+- **On the "not found" screen only the credit's text was checked.** The test of the names' direction and links now runs there too, as the browser draws it.

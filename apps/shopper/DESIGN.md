@@ -62,7 +62,7 @@ spacing:
   group: "24px"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any Shopper page exists. Re-run Impeccable's document once the first pages are built, to record their components. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any Shopper page existed. Its first component, the footer, was recorded on 16 October 2026 with ticket 14. Re-run Impeccable's document once the first pages are built, to record theirs. -->
 
 # Design System: the Shopper app, Fit Diagram
 
@@ -157,6 +157,16 @@ Flat. A manual has no shadows, and neither does this app: depth is a rule, a bor
 ## Shapes
 
 Square corners everywhere (0 pixels): buttons, inputs, menus and photos. The numbered callout is the one circle. Line drawings use 1.5-pixel strokes in Print Black, and fit lines are dashed 4 on 3 in Manual Blue. A drawing is geometry, built from the Part's Category and specifications, never a picture.
+
+## Components
+
+The Shopper app's own shadcn/ui components, in the Lyra style, arrive with its first page. What is built so far is the frame's.
+
+### The footer
+
+- **Character:** a manual's colophon: one sentence of credit at the foot of every page, the "not found" screen among them, at the foot of the window when the page is short.
+- **Style:** a Rule Grey rule above it, 48 pixels below the page and 16 above the sentence, set at the small size in Caption Grey, in the Shopper's language.
+- **Links:** OpenDB's name and the licence's, in Manual Blue, underlined, each kept in English with `AlwaysEnglish`. The sentence's lines are 44 pixels apart, so that each link is a target 44 pixels high.
 
 ## Do's and Don'ts
 

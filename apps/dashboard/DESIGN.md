@@ -55,9 +55,45 @@ spacing:
   control: "44px"
   row: "8px"
   group: "16px"
+components:
+  button-primary:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.warm-page}"
+    typography: "{typography.body}"
+    rounded: "{rounded.control}"
+    height: "44px"
+    padding: "0 16px"
+  button-outline:
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.control}"
+    height: "44px"
+    padding: "0 16px"
+  input:
+    backgroundColor: "{colors.sheet}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.control}"
+    height: "44px"
+    padding: "0 12px"
+  plate:
+    backgroundColor: "{colors.plate-graphite}"
+    textColor: "{colors.plate-amber}"
+    typography: "{typography.figure}"
+    rounded: "{rounded.plate}"
+    padding: "2px 8px"
+  part-picture:
+    backgroundColor: "{colors.shelf}"
+    rounded: "{rounded.control}"
+    size: "40px"
+  needed-mark:
+    backgroundColor: "{colors.shelf}"
+    textColor: "{colors.ink}"
+    typography: "{typography.row}"
+    rounded: "{rounded.plate}"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen exists. Re-run Impeccable's document once the Catalog is built, to record its components. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. -->
 
 # Design System: the dashboard, Rate Board
 
@@ -137,6 +173,8 @@ Kurdish and Arabic follow the root's Tall Script Rule. Figures are always Wester
 
 On a phone, one column: a quiet top bar with the sections behind a menu button, then the screen's search or filters, then rows. On a wider screen the sections move to a side bar, and a list gains a detail pane beside it. Lists are rows, not cards: what the row is, one secondary line, and its plate at the end side.
 
+From 64rem wide, the Catalog keeps its list in a column 26rem wide on the start side, and shows the Part opened from it, its edit form or a new Part beside it, past a Rule Sand rule; before a Part is opened, the pane says how to open one. On a phone the opened screen takes the whole screen. The console's content is at most 80rem wide. The top bar has no menu of sections while the Catalog is the only one, as the owner chose on 16 October 2026, and gains it with the second.
+
 Rows are 8 pixels apart inside, groups 16. Every control is 44 pixels, under a mouse as on a touchscreen, as the owner chose; density comes from rows and spacing, never from smaller controls.
 
 ## Elevation & Depth
@@ -150,6 +188,56 @@ Flat, with one exception. Surfaces are told apart by Rule Sand rules and Sheet g
 ## Shapes
 
 Small, firm corners: 6 pixels on controls and panels, about 4 on plates. Plates are always rectangles, sized to their figure.
+
+## Components
+
+The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `apps/dashboard/src/shared/ui`. Mira draws them compact; here each is held to the root DESIGN.md, so the compactness comes from rows and spacing and never from a smaller control. They were built with the Admin console's Catalog, a Part's page and the Part's form, on 16 October 2026.
+
+### Buttons
+
+- **Shape:** small, firm corners (6px, `rounded-lg`), 44 pixels high, 16 pixels of padding on each side, body-size text at weight 500.
+- **Primary:** Ink ground with Warm Page text, one in each pane, for the action the pane is for: Search, Create the Part, Save the Part. Night Ink turns it light in the dark scheme.
+- **Outline:** a Control Edge border on the page, for every other action: New Part, Edit, Log out, the photo's button, a page of results.
+- **Ghost:** no edge, for a quiet action beside an outlined one, such as making a list of rows not known again.
+- **Hover / Focus:** hover takes a Shelf ground; focus draws a 2-pixel Ink outline 2 pixels out, at full strength. A press moves the button down one pixel.
+- **A link or a label that looks like a button** takes the same classes through `buttonVariants`, merged so that the variant's edge wins.
+
+### Inputs and choices
+
+- **Style:** Sheet ground, a Control Edge border, 6px corners, 44 pixels high, body-size text, a placeholder in Note Grey.
+- **Choice:** the browser's own select, so that a phone opens its own picker, with a chevron in Note Grey on the end side.
+- **Boxes to tick:** the browser's own checkbox, 20 pixels, in two columns of rows 44 pixels high, each with its label.
+- **Focus:** the same 2-pixel Ink outline as a button.
+- **Error:** the field's edge in Action Red, and one sentence in Action Red below it that says what is wrong, which the control names as its description.
+
+### Fields
+
+- **Label:** small size, weight 500, above its control. A needed specification carries a "Needed" mark beside its label: small, weight 500, on a Shelf ground with 4-pixel corners, which the control also names as part of its description.
+- **Groups:** a field set with its legend, at body size and weight 500. Two fields to a row on a wider screen; a list, a set of boxes or a list of rows takes the whole row.
+- **Lists:** each entry a line with a 44-pixel square remove button beside it, and an outlined Add button below. A list of rows puts each row in a Rule Sand box with 6px corners.
+
+### Rows
+
+- **Character:** a list is rows, never cards. Rule Sand rules divide the rows, and close the list above and below.
+- **A row:** the Part's picture, then its name in the row type (14 pixels, weight 500) and one secondary line in Note Grey. The whole row is the link, with a Shelf ground on hover and on the row of the Part open beside the list, while the link's name is the Part's alone.
+- **The picture:** a 40-pixel square on a Shelf ground with 6px corners, holding the Category's icon at 20 pixels, or the photo filling it. A Part's page shows it at 80 pixels.
+
+### Plates
+
+- **The plate** is the look's signature: Plate Amber figures in Geist Mono at 20 pixels, weight 700, tabular, on Plate Graphite, with 3.6-pixel corners and 8 pixels of padding each side, sized to its figure. Its words follow it on the page, in body text.
+- **Where:** the count of Parts a search found, and the count of a Part's needed specifications that are not known: one in each pane.
+
+### States
+
+- **Empty:** centred on the page between two Rule Sand rules, with an icon on a 40-pixel Shelf square, a title at body size and weight 500, a sentence in Note Grey, and the action that helps, such as Create a Part.
+- **Refusal:** a Sheet panel with an Action Red border and text, its title saying what was not done and its sentence why, with the API's status and code kept in English.
+- **Loading:** rows sketched in Shelf and Muted where the first answer will be. While the next answer arrives, the last stays at full strength, and a line beside the count says "Searching…".
+- **Missing:** a specification the Part lacks reads "Not known" in Note Grey; a needed one reads "Needed, not known" in Action Red at weight 500, after a circled exclamation mark.
+
+### Navigation
+
+- **The top bar:** the page's own ground, closed by a Rule Sand rule, with the console's name at weight 600 on the start side, and the caller's name in Note Grey and Log out on the end side. It gains a menu of sections with the second section.
+- **Back:** a small Note Grey link above a screen's title, with a chevron that points back in the reading direction, underlined on hover, 44 pixels high.
 
 ## Do's and Don'ts
 

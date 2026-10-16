@@ -89,3 +89,15 @@ React Hook Form arrives here, as the owner chose on 14 October 2026.
 - the `field` and `table` components;
 - the end-to-end tests, written first;
 - the Part's page and the form.
+
+### 16 October 2026: the code review
+
+The review of tickets 11 to 14 found these in this ticket's form and page, each now corrected, the first two with a test written first that failed:
+
+- **A refusal could land beside the wrong row.** The form left out a row with every field empty, so the later rows moved up, and the API names a refused field by its row's place in what it was sent. Every row is sent now.
+- **Saving a Part untouched could change it.** A row with every field missing, which the API keeps, was left out, and each entry of a list of text was trimmed. Both are sent as they are now; only an entry left empty is dropped.
+- **A row's field set had no name.** Its legend sat in a box beside the row's remove button, where it named nothing. It is the field set's first child now, and the button sits beside it. The first test above found it.
+- **The choice of Category said nothing when the Categories could not be read.** It says so now, and draws each Category's icon itself.
+- **Smaller ones:** the numbers in a row's or an entry's name and in a refusal written by `formatNumber`; the Part's page titling its specifications at the Title size; a list's label kept as written in a remove button's name; the form's own checks and the API's refusals sharing one wording; plainer names.
+
+**The fault the spec asks for on the form,** "a control on the Part form given no accessible name", had been planted on the Catalog's Log out button in ticket 11. It is planted on the form now: a part number's remove button, its name taken away, failed only "the form does not scroll sideways, and meets the automated part of WCAG 2.2 level AA", with `button-name`.

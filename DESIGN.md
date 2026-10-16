@@ -31,7 +31,7 @@ spacing:
   control: "44px"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any component exists. Re-run Impeccable's document once the first screens are built, to record their components. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any component existed. Each app's components are recorded in its own DESIGN.md: the dashboard's from 16 October 2026, and the Shopper app's footer the same day. -->
 
 # Design System: the platform's shared foundations
 
