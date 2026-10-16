@@ -13,7 +13,7 @@ import { parseEnv } from 'node:util';
 
 import { chromium } from '@playwright/test';
 
-import { developmentLogins } from './development-logins.mjs';
+import { developmentAdmin } from './development-logins.mjs';
 import { keycloakUrl } from './keycloak-administrator.mjs';
 import { migrationNames, missingMigrations } from './platform-migrations.mjs';
 
@@ -31,12 +31,11 @@ if (!existsSync(envFile)) {
   exitWith(`There is no .env file, so the services have never been started. ${startHint}`);
 }
 const settings = parseEnv(readFileSync(envFile, 'utf8'));
-for (const { label, nameSetting, passwordSetting } of developmentLogins) {
-  if (!settings[nameSetting] || !settings[passwordSetting]) {
-    exitWith(
-      `.env does not hold the development ${label}'s name and password. ${startHint}`,
-    );
-  }
+if (
+  !settings[developmentAdmin.nameSetting] ||
+  !settings[developmentAdmin.passwordSetting]
+) {
+  exitWith(`.env does not hold the development Admin's name and password. ${startHint}`);
 }
 // The API the tests start refuses to start without its client's secret, which
 // its `serve` target reads from `.env`.

@@ -7,7 +7,7 @@ import { connect } from 'node:net';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
-import { developmentLogins } from './development-logins.mjs';
+import { developmentAdmin } from './development-logins.mjs';
 import {
   apiClient,
   findLogin,
@@ -356,8 +356,8 @@ async function defaultLanguageIsKurdish() {
   if (defaultLocale !== 'ckb') throw new Error(`the default language is ${defaultLocale}`);
 }
 
-// The development logins the start command creates. Each one's name is in
-// `.env`, beside its password.
+// The development Admin's Login, which the start command creates. Its name
+// is in `.env`, beside its password.
 async function findDevelopmentLogin({ nameSetting }) {
   const name = settings[nameSetting];
   if (!name) throw new Error(`.env does not name it. ${startHint}`);
@@ -521,21 +521,19 @@ if (keycloakAnswers) {
       loginIsRefused((query) => query.set('client_id', apiClient)),
     );
   }
-  for (const developmentLogin of developmentLogins) {
-    const found = await check(
-      `The development ${developmentLogin.label} login exists and is switched on`,
-      developmentLoginExists(developmentLogin),
+  const adminFound = await check(
+    'The development Admin login exists and is switched on',
+    developmentLoginExists(developmentAdmin),
+  );
+  if (adminFound) {
+    await check(
+      'The development Admin holds the admin role',
+      developmentLoginHolds(developmentAdmin, 'admin'),
     );
-    if (found) {
-      await check(
-        `The development ${developmentLogin.label} holds the ${developmentLogin.role} role`,
-        developmentLoginHolds(developmentLogin, developmentLogin.role),
-      );
-      await check(
-        `The development ${developmentLogin.label} does not hold the ${developmentLogin.otherRole} role`,
-        developmentLoginLacks(developmentLogin, developmentLogin.otherRole),
-      );
-    }
+    await check(
+      'The development Admin does not hold the vendor role',
+      developmentLoginLacks(developmentAdmin, 'vendor'),
+    );
   }
 } else {
   console.log(`      Keycloak cannot be reached. ${startHint}`);

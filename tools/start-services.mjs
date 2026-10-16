@@ -8,7 +8,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
-import { developmentLogins } from './development-logins.mjs';
+import { developmentAdmin } from './development-logins.mjs';
 import { findLogin, logInAsAdministrator } from './keycloak-administrator.mjs';
 
 const root = join(import.meta.dirname, '..');
@@ -70,7 +70,7 @@ async function expectStatus(response, expected, doing) {
   throw new Error(`Keycloak answered ${response.status} when asked to ${doing}`);
 }
 
-// The realm file holds no logins, so each development login is created here,
+// The realm file holds no logins, so the development Admin's is created here,
 // through Keycloak's administration interface. A login that exists is left as
 // it is, its password included.
 async function createDevelopmentLoginIfMissing({
@@ -144,14 +144,10 @@ const compose = spawnSync('docker', ['compose', 'up', '--detach', '--wait'], {
 });
 if (compose.status !== 0) process.exit(compose.status ?? 1);
 
-for (const developmentLogin of developmentLogins) {
-  try {
-    await createDevelopmentLoginIfMissing(developmentLogin);
-  } catch (error) {
-    exitWith(
-      `The development ${developmentLogin.label} login could not be created: ${error.message}.`,
-    );
-  }
+try {
+  await createDevelopmentLoginIfMissing(developmentAdmin);
+} catch (error) {
+  exitWith(`The development Admin login could not be created: ${error.message}.`);
 }
 
 // The platform's database gets the API's migrations from `pnpm db:migrate`
