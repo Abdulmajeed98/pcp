@@ -34,6 +34,38 @@ export async function expectLoginScreen(page: Page): Promise<void> {
   expect(page.url().startsWith(`${realmUrl}/`)).toBe(true);
 }
 
+// Keycloak's screen that asks a Login for a new password, before anything
+// else, after it logged in with a temporary one. It is told apart by its
+// address, which names the required action, and by its form.
+export async function expectNewPasswordScreen(page: Page): Promise<void> {
+  await expect(page.locator('#kc-passwd-update-form')).toBeVisible();
+  const address = new URL(page.url());
+  expect(`${address.origin}${address.pathname}`).toBe(
+    `${realmUrl}/login-actions/required-action`,
+  );
+  expect(address.searchParams.get('execution')).toBe('UPDATE_PASSWORD');
+}
+
+// Logs in at Keycloak's login screen, which the page shows, with a name and a
+// password that must not be printed, such as a made-up Vendor's login phone
+// number and temporary password. Playwright writes what `fill` types into its
+// log, which a failed run prints, so both are set in the page.
+export async function submitTheLoginScreen(
+  page: Page,
+  name: string,
+  password: string,
+): Promise<void> {
+  for (const [field, value] of [
+    ['#username', name],
+    ['#password', password],
+  ]) {
+    await page.locator(field).evaluate((input, text) => {
+      (input as HTMLInputElement).value = text;
+    }, value);
+  }
+  await page.locator('#kc-login').click();
+}
+
 // Opens the dashboard as someone who is not logged in, and logs in at
 // Keycloak's login screen the way a person does, as the development Admin
 // unless the test names the development Vendor. The dashboard is opened at
