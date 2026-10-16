@@ -1,10 +1,10 @@
-// Runs each project's tests against a real PostgreSQL, and prints what they
-// print. It exits non-zero when any test fails. Run it with
+// Runs each project's tests against a real PostgreSQL and a real Keycloak,
+// and prints what they print. It exits non-zero when any test fails. Run it with
 // `pnpm integration:check`.
 //
-// The tests start a database of their own in a container, so they need
-// Docker, but not the development services, and they never touch the
-// development database. `pnpm check` does not run them, so that it keeps
+// The tests start a database and a Keycloak of their own, each in a
+// container, so they need Docker, but not the development services, and they
+// never touch the development database or the development Keycloak. `pnpm check` does not run them, so that it keeps
 // passing with Docker stopped.
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -16,7 +16,7 @@ const docker = spawnSync('docker', ['info', '--format', '{{.ServerVersion}}'], {
 });
 if (docker.status !== 0) {
   console.log(
-    'Docker is not running, and these tests start their database in it. Start Docker, then run "pnpm integration:check" again.',
+    'Docker is not running, and these tests start their database and their Keycloak in it. Start Docker, then run "pnpm integration:check" again.',
   );
   process.exit(1);
 }
