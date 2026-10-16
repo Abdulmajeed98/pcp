@@ -19,6 +19,6 @@
     "description": "ئەم ناونیشانە هیچ پەڕەیەکی نییە."
   },
   "Footer": {
-    "credit": "زانیاری لە <openDbLink>{openDb}</openDbLink> لەخۆ دەگرێت، کە بەپێی <licenceLink>{licence}</licenceLink> بەردەست خراوە."
+    "credit": "زانیاری لە <openDbLink><english>{openDb}</english></openDbLink> لەخۆ دەگرێت، کە بەپێی <licenceLink><english>{licence}</english></licenceLink> بەردەست خراوە."
   }
 }

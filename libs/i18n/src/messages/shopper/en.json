@@ -19,6 +19,6 @@
     "description": "This address matches no page."
   },
   "Footer": {
-    "credit": "Contains information from <openDbLink>{openDb}</openDbLink> which is made available under the <licenceLink>{licence}</licenceLink>."
+    "credit": "Contains information from <openDbLink><english>{openDb}</english></openDbLink> which is made available under the <licenceLink><english>{licence}</english></licenceLink>."
   }
 }

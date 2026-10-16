@@ -19,6 +19,6 @@
     "description": "هذا العنوان لا يطابق أي صفحة."
   },
   "Footer": {
-    "credit": "يحتوي على معلومات من <openDbLink>{openDb}</openDbLink>، وهي متاحة بموجب <licenceLink>{licence}</licenceLink>."
+    "credit": "يحتوي على معلومات من <openDbLink><english>{openDb}</english></openDbLink>، وهي متاحة بموجب <licenceLink><english>{licence}</english></licenceLink>."
   }
 }
