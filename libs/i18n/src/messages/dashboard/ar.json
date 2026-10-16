@@ -9,7 +9,16 @@
     "message": "تعذّر إكمال تسجيل الدخول."
   },
   "VendorPortalPlaceholder": {
-    "notice": "صفحة مؤقتة لبوابة البائع."
+    "notice": "صفحة مؤقتة لبوابة البائع.",
+    "sample": "في ما يلي نموذج من كل نوع من النصوص. جميع القيم فيه غير حقيقية.",
+    "partsFound_zero": "لم يُعثر على أي قطعة",
+    "partsFound_one": "تم العثور على قطعة واحدة",
+    "partsFound_two": "تم العثور على قطعتين",
+    "partsFound_few": "تم العثور على <count/> قطع",
+    "partsFound_many": "تم العثور على <count/> قطعة",
+    "partsFound_other": "تم العثور على <count/> قطعة",
+    "readsAt": "يقرأ بسرعة تصل إلى <speed/>.",
+    "partLength": "يأتي <part/> بطول <length/>."
   },
   "Caller": {
     "asking": "جارٍ سؤال الـ API عن هوية المتصل.",

@@ -9,7 +9,12 @@
     "message": "چوونەژوورەوە تەواو نەبوو."
   },
   "VendorPortalPlaceholder": {
-    "notice": "شوێنگرەوەی پۆرتاڵی فرۆشیار."
+    "notice": "شوێنگرەوەی پۆرتاڵی فرۆشیار.",
+    "sample": "نموونەیەک لە هەر جۆرە دەقێک لە خوارەوەیە. هەموو بەهاکانی ساختەن.",
+    "partsFound_one": "<count/> پارچە دۆزرایەوە",
+    "partsFound_other": "<count/> پارچە دۆزرایەوە",
+    "readsAt": "تا <speed/> دەخوێنێتەوە.",
+    "partLength": "<part/> بە درێژیی <length/> دێت."
   },
   "Caller": {
     "asking": "لە API دەپرسرێت کە بانگکەر کێیە.",

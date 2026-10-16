@@ -25,10 +25,10 @@ What stands between `<english>` and `</english>` is text that is the same in eve
 
 In the Shopper app's files, a sentence that counts holds one wording for each plural form its language has: `one` and `other` in English and in Kurdish, and `zero`, `one`, `two`, `few`, `many` and `other` in Arabic. Each form's name stays as it is, and the wording is what follows it in braces.
 
-The dashboard's files hold no sentence that counts yet. i18next writes one as a key for each plural form, such as `parts_one` and `parts_other`, and how such a sentence is given its count is settled with the first one.
+In the dashboard's files a sentence that counts is one key for each plural form its language has, such as `partsFound_one` and `partsFound_other`: `_one` and `_other` in English and in Kurdish, and `_zero`, `_one`, `_two`, `_few`, `_many` and `_other` in Arabic. The part of the key before the form's name stays as it is, and so does the form's name. Each wording may hold `<count/>`, where the page puts the count as it is shown, or leave it out, as an Arabic wording does that says the count in a word.
 
 ## Numbers
 
-No message formats a number. A number reaches a message as text, already written in Western digits by `formatNumber`, and the message only places it. In the Shopper app's files a sentence that counts is therefore given its count twice: `{count, plural, …}` picks the wording, and `{countText}` is the count as it is shown.
+No message formats a number. A number reaches a message as text, already written in Western digits by `formatNumber`, and the message only places it. A sentence that counts is therefore given its count twice. In the Shopper app's files `{count, plural, …}` picks the wording, and `{countText}` is the count as it is shown. In the dashboard's files the count picks the key, and `<count/>` is the count as it is shown.
 
-`#` and `{…, number}` are never written in the Shopper app's files, although both are valid in that format, and neither is `{{…, number}}` in the dashboard's. Each lets the library format the number in the page's language, and a Kurdish page then shows Arabic-Indic digits (LANG-5).
+`#` and `{…, number}` are never written in the Shopper app's files, although both are valid in that format. Nothing in double braces is written in the dashboard's files: `{{count}}` would write the count with no grouping, as 1575000, and `{{count, number}}` would format it in the page's language. next-intl and i18next each format a number in the page's language, and a Kurdish page then shows Arabic-Indic digits (LANG-5).

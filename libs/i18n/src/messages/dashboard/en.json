@@ -9,7 +9,12 @@
     "message": "The login could not be completed."
   },
   "VendorPortalPlaceholder": {
-    "notice": "Vendor portal placeholder."
+    "notice": "Vendor portal placeholder.",
+    "sample": "A sample of each kind of text follows. Every value in it is made up.",
+    "partsFound_one": "<count/> Part found",
+    "partsFound_other": "<count/> Parts found",
+    "readsAt": "It reads at up to <speed/>.",
+    "partLength": "The <part/> is <length/> long."
   },
   "Caller": {
     "asking": "Asking the API who the caller is.",
