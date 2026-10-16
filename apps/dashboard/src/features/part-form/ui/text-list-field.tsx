@@ -1,3 +1,4 @@
+import { formatNumber } from '@pcp/i18n';
 import { PlusIcon, XIcon } from 'lucide-react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 
@@ -43,7 +44,7 @@ export function TextListField({
         {legend}
       </FieldLegend>
       {fields.map((field, index) => {
-        const label = `${entry} ${index + 1}`;
+        const label = `${entry} ${formatNumber(index + 1)}`;
         const entryName = `${name}.${index}.value`;
         const entryError = errorOf(formState.errors, entryName);
         return (
@@ -60,7 +61,7 @@ export function TextListField({
                 type="button"
                 variant="outline"
                 size="icon"
-                aria-label={`Remove ${label.toLowerCase()}`}
+                aria-label={`Remove ${label}`}
                 onClick={() => remove(index)}
               >
                 <XIcon />

@@ -1,4 +1,5 @@
 import type { SpecificationResponse } from '@pcp/api-client';
+import { formatNumber } from '@pcp/i18n';
 import { PlusIcon, XIcon } from 'lucide-react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 
@@ -55,21 +56,29 @@ export function RowsField({
       {!known && <FieldDescription>Not known.</FieldDescription>}
       {known && fields.length === 0 && <FieldDescription>None.</FieldDescription>}
       {fields.map((field, index) => (
-        <FieldSet key={field.id} className="gap-3 rounded-md border border-border p-3">
-          <div className="flex items-center justify-between gap-2">
-            <FieldLegend variant="label" className="mb-0">
-              {specification.label} {index + 1}
-            </FieldLegend>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-label={`Remove ${specification.label} ${index + 1}`}
-              onClick={() => remove(index)}
-            >
-              <XIcon />
-            </Button>
-          </div>
+        // The legend is the row's first child, which names the row for a
+        // screen reader, and the button that removes the row sits beside it
+        // on the end side.
+        <FieldSet
+          key={field.id}
+          className="relative gap-3 rounded-lg border border-border p-3"
+        >
+          <FieldLegend
+            variant="label"
+            className="float-start mb-0 min-h-control w-full pe-14 leading-11"
+          >
+            {specification.label} {formatNumber(index + 1)}
+          </FieldLegend>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="absolute end-3 top-3"
+            aria-label={`Remove ${specification.label} ${formatNumber(index + 1)}`}
+            onClick={() => remove(index)}
+          >
+            <XIcon />
+          </Button>
           {rowFields.map((rowField) => (
             <SpecificationField
               key={rowField.path}

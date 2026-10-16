@@ -50,7 +50,7 @@ export function formValuesOf(
   for (const specification of specifications) {
     const value =
       part === undefined ? undefined : valueAt(part.specifications, specification.path);
-    setAt(values.specifications, specification.path, typedOf(specification, value));
+    setAt(values.specifications, specification.path, formValueOf(specification, value));
     if (specification.kind === 'listOfRows') {
       setAt(values.rowsKnown, specification.path, Array.isArray(value));
     }
@@ -69,7 +69,7 @@ export function partFieldsOf(
 ): PartFields {
   const document: SpecificationDocument = {};
   for (const specification of specifications) {
-    const sent = sentOf(
+    const sent = sentValueOf(
       specification,
       valueAt(values.specifications, specification.path),
       valueAt(values.rowsKnown, specification.path) === true,
@@ -85,7 +85,7 @@ export function partFieldsOf(
   };
 }
 
-function typedOf(specification: SpecificationResponse, value: unknown): unknown {
+function formValueOf(specification: SpecificationResponse, value: unknown): unknown {
   switch (specification.kind) {
     case 'wholeNumber':
     case 'decimalNumber':
@@ -101,20 +101,20 @@ function typedOf(specification: SpecificationResponse, value: unknown): unknown 
       return Array.isArray(value) ? value.map((each) => ({ value: String(each) })) : [];
     case 'listOfRows':
       return Array.isArray(value)
-        ? value.map((row) => rowTypedOf(specification.fields ?? [], row))
+        ? value.map((row) => rowFormValueOf(specification.fields ?? [], row))
         : [];
   }
 }
 
-function rowTypedOf(fields: readonly SpecificationResponse[], row: unknown): RowEntry {
+function rowFormValueOf(fields: readonly SpecificationResponse[], row: unknown): RowEntry {
   const record =
     typeof row === 'object' && row !== null ? (row as Record<string, unknown>) : {};
   return Object.fromEntries(
-    fields.map((field) => [field.path, typedOf(field, record[field.path]) as string]),
+    fields.map((field) => [field.path, formValueOf(field, record[field.path]) as string]),
   );
 }
 
-function sentOf(
+function sentValueOf(
   specification: SpecificationResponse,
   typed: unknown,
   rowsKnown: boolean,
@@ -138,28 +138,32 @@ function sentOf(
       return ticked.length > 0 ? ticked : undefined;
     }
     case 'listOfText': {
+      // An entry is sent as written, spaces and all, so that saving a Part
+      // untouched changes nothing. Only an entry left empty is dropped.
       const texts = (Array.isArray(typed) ? (typed as TextEntry[]) : [])
-        .map(({ value }) => value.trim())
-        .filter((value) => value !== '');
+        .map(({ value }) => value)
+        .filter((value) => value.trim() !== '');
       return texts.length > 0 ? texts : undefined;
     }
     case 'listOfRows':
+      // Every row is sent, one with every field missing among them: it is a
+      // slot nobody has described, and the API keeps it. The rows also keep
+      // their places, by which the API names a field it refuses.
       if (!rowsKnown) return undefined;
-      return (Array.isArray(typed) ? (typed as RowEntry[]) : [])
-        .map((row) => rowSentOf(specification.fields ?? [], row))
-        .filter((row) => Object.keys(row).length > 0);
+      return (Array.isArray(typed) ? (typed as RowEntry[]) : []).map((row) =>
+        rowSentValueOf(specification.fields ?? [], row),
+      );
   }
 }
 
-// A row as it is sent: each field that is not missing. A row with every field
-// missing is left out.
-function rowSentOf(
+// A row as it is sent: each field that is not missing.
+function rowSentValueOf(
   fields: readonly SpecificationResponse[],
   row: RowEntry,
 ): Record<string, unknown> {
   const sent: Record<string, unknown> = {};
   for (const field of fields) {
-    const value = sentOf(field, row[field.path], false);
+    const value = sentValueOf(field, row[field.path], false);
     if (value !== undefined) sent[field.path] = value;
   }
   return sent;
