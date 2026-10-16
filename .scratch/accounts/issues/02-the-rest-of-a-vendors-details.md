@@ -81,10 +81,10 @@
 
 A detail sent as the wrong kind of JSON value, a text for a latitude or a number for an address, and a field the request does not declare, inside the map location too, are refused by the request's own check, as on every endpoint: `NOT_VALID` naming each such field, with no reason. A form never sends them.
 
-**For the owner to decide.**
+**Decided by the owner.** Both were put to the owner on 16 October 2026, who kept each as it is.
 
-- **A detail of the wrong JSON kind is refused before the others are checked, with no reason.** So a name of 101 characters sent with `address: 42` is refused naming `address`, with no reason, not `name` with `tooLong`. The spec review found this, quoting "a reason of its own for each other kind". **My recommendation:** keep it. Each detail's kind is what the description and the generated client already state, a form built on the client cannot send another, and checking kinds in the use case would mean taking every detail as `unknown`.
-- **Instagram's rules about dots are not applied.** Guides by others say a name cannot start or end with a dot or hold two together. Instagram's help pages say nothing of it, and neither does the spec, so a name such as `.made..up.` is taken. It cannot be an account's name, so nobody has one to type.
+- **A detail of the wrong JSON kind is refused before the others are checked, with no reason.** So a name of 101 characters sent with `address: 42` is refused naming `address`, with no reason, not `name` with `tooLong`. The spec review found this, quoting "a reason of its own for each other kind". **Kept**, as I recommended: each detail's kind is what the description and the generated client already state, a form built on the client cannot send another, and checking kinds in the use case would mean taking every detail as `unknown`.
+- **Instagram's rules about dots are not applied.** Guides by others say a name cannot start or end with a dot or hold two together. Instagram's help pages say nothing of it, and neither does the spec, so a name such as `.made..up.` is taken. **Kept**: such a name cannot be an account's, so nobody has one to type, and rules Instagram does not publish could refuse a real name.
 
 **Decisions this ticket left open.**
 
