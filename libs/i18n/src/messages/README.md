@@ -10,10 +10,22 @@ English is the source. `en.json` defines which messages there are, and the other
 
 ## Drafts awaiting review (LANG-7)
 
-- **Kurdish (Sorani), the `ckb.json` files: DRAFT.** Nothing here has been read by a Sorani speaker yet, so it must not reach a Shopper or a Vendor as it is.
-- **Arabic, the `ar.json` files: DRAFT.** Nothing here has been read by an Arabic speaker yet, so it must not reach a Shopper or a Vendor as it is.
+- **Kurdish (Sorani), `shared/ckb.json`, `shopper/ckb.json` and `dashboard/ckb.json`: DRAFT.** Nothing here has been read by a Sorani speaker yet, so it must not reach a Shopper or a Vendor as it is.
+- **Arabic, `shared/ar.json`, `shopper/ar.json` and `dashboard/ar.json`: DRAFT.** Nothing here has been read by an Arabic speaker yet, so it must not reach a Shopper or a Vendor as it is.
+- **The word list, [`words.md`](words.md): DRAFT.** It gives the Kurdish and the Arabic word for each of the platform's terms that a Shopper or a Vendor reads, and the files use those words. A word changed there is changed in every file that uses it.
 
-The owner, or someone the owner trusts, reviews both before launch.
+The owner, or someone the owner trusts, reviews all of them before launch.
+
+## Checking a correction
+
+Run `pnpm check` at the root of the repository. One of its steps compares the language files, and it fails, naming the file, the message and what is wrong, when:
+
+- a message of an `en.json` file is missing from the `ckb.json` or the `ar.json` beside it, or one of those holds a message the `en.json` does not;
+- a message cannot be read in its set's format, as when a brace or an angle bracket is lost;
+- a message names other placeholders than the English one: braces and angle brackets with other names inside, or a name dropped;
+- a sentence that counts lacks a plural form its language has, or, in the dashboard's files, has one its language does not;
+- a message lets its library write a number, which a Kurdish page would show in Arabic-Indic digits (see Numbers below);
+- a shared term holds anything in braces or angle brackets, or a name at the top of the shared terms is also at the top of `shopper/` or `dashboard/`.
 
 ## Correcting a message
 
@@ -31,4 +43,4 @@ In the dashboard's files a sentence that counts is one key for each plural form 
 
 No message formats a number. A number reaches a message as text, already written in Western digits by `formatNumber`, and the message only places it. A sentence that counts is therefore given its count twice. In the Shopper app's files `{count, plural, …}` picks the wording, and `{countText}` is the count as it is shown. In the dashboard's files the count picks the key, and `<count/>` is the count as it is shown.
 
-`#` and `{…, number}` are never written in the Shopper app's files, although both are valid in that format. Nothing in double braces is written in the dashboard's files: `{{count}}` would write the count with no grouping, as 1575000, and `{{count, number}}` would format it in the page's language. next-intl and i18next each format a number in the page's language, and a Kurdish page then shows Arabic-Indic digits (LANG-5).
+`#` and `{…, number}` are never written in the Shopper app's files, although both are valid in that format. Nothing in double braces is written in the dashboard's files: `{{count}}` would write the count with no grouping, as 1575000, and `{{count, number}}` would format it in the page's language. next-intl and i18next each format a number in the page's language, and a Kurdish page then shows Arabic-Indic digits (LANG-5). `pnpm check` fails on each of them, and on `{…, date}` and `{…, time}` in the Shopper app's files, which next-intl formats the same way.
