@@ -15,6 +15,7 @@ Decided by the owner before this file was written, in [ADR-0003](docs/adr/0003-t
 - Tailwind CSS with shadcn/ui on Base UI. Each frontend has a look and a set of components of its own ([ADR-0007](docs/adr/0007-a-look-and-components-for-each-app.md)), with downloaded fonts ([ADR-0006](docs/adr/0006-fonts-downloaded-from-our-own-server.md)). The `ui` library holds what both share and each look's theme, and `i18n` the text for all three languages.
 - Both frontends follow Feature-Sliced Design.
 - The visual design is in [DESIGN.md](DESIGN.md) for what both frontends share, [apps/shopper/DESIGN.md](apps/shopper/DESIGN.md) for the Shopper app's look and [apps/dashboard/DESIGN.md](apps/dashboard/DESIGN.md) for the dashboard's.
+- The dashboard's libraries, the most widely used for each job, as the owner chose on 14 October 2026: React Router for the screens' addresses, TanStack Query for calls to the API, React Hook Form for forms, and lucide's icons.
 
 Any further library is chosen when work on that app begins.
 
@@ -112,7 +113,7 @@ Orders, payment and delivery; Shopper accounts; used Parts; anything outside the
 
 ## Evidence on Hand
 
-- **Catalog data.** BuildCores OpenDB: about 26,000 Parts across the eight Categories with structured specifications, licensed under ODC-By 1.0 (ADR-0001). `pnpm catalog:import` imports 26,216 Parts from it, at the last commit released under ODC-By.
+- **Catalog data.** BuildCores OpenDB: 26,240 records across the eight Categories with structured specifications, at commit `ef7e601b78875a931a4ad9fa1ccce7000f3e5ecf` of 5 October 2026, the last released under ODC-By 1.0 (ADR-0001). OpenDB's later data is under CC BY-NC-SA 4.0 and is not used. `pnpm catalog:import` imports 26,216 Parts from that commit, leaving out 24 records that name no manufacturer or copy another.
 - **Rule coverage.** The spec's Compatibility Rules table gives, for each rule, the share of OpenDB Parts that have the fields it needs, measured on 5 October 2026. It ranges from 100% down to 16%.
 - **The currency gap.** On 1 October 2026 the Erbil market rate was about 1,575 IQD per USD against an official rate of 1,300 (ADR-0002).
 

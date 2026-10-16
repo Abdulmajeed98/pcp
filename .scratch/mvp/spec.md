@@ -89,13 +89,13 @@ Build order: `languages`, `catalog`, `accounts` → `offers` → `pricing` → `
 ### `catalog`
 
 - **CAT-1** There are exactly eight Categories: CPU, CPU cooler, motherboard, RAM, storage, GPU, case and PSU.
-- **CAT-2** The catalog is created by one import of [BuildCores OpenDB](https://github.com/buildcores/buildcores-open-db), taking its `CPU`, `CPUCooler`, `Motherboard`, `RAM`, `Storage`, `GPU`, `PCCase` and `PSU` folders (about 26,000 Parts). Each imported Part keeps its OpenDB ID, so a later feature can add new Parts without overwriting the Admin's edits.
+- **CAT-2** The catalog is created by one import of [BuildCores OpenDB](https://github.com/buildcores/buildcores-open-db) at commit `ef7e601b78875a931a4ad9fa1ccce7000f3e5ecf`, of 5 October 2026, the last released under ODC-By 1.0 ([ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md)), taking its `CPU`, `CPUCooler`, `Motherboard`, `RAM`, `Storage`, `GPU`, `PCCase` and `PSU` folders (26,240 records at that commit). Each imported Part keeps its OpenDB ID, so a later feature can add new Parts without overwriting the Admin's edits.
 - **CAT-3** A Part has a Category, a name, a manufacturer, its manufacturer part numbers, the specifications for its Category, and optionally one photo.
 - **CAT-4** Only the Admin creates or edits Parts. A wrong specification would break compatibility checking for every Vendor, so Vendors never change the catalog.
 - **CAT-5** The Admin can search the whole catalog, create a Part, edit any specification, and add or replace a Part's photo.
 - **CAT-6** A Part without a photo shows its Category's icon. OpenDB has no images, so the Admin adds a photo when a Part gets its first Offer.
 - **CAT-7** A Part is shown to Shoppers only while it has at least one visible Offer. An Offer is visible when it is not an Expired Offer and its Vendor is active. The rest of the catalog exists only for Vendors and the Admin to search.
-- **CAT-8** The Admin has a list of every Part that has an Offer and is missing a specification that a Compatibility Rule needs. The aim is to keep this list empty. A Part on the list is still shown to Shoppers.
+- **CAT-8** The Admin has a list of every Part that has an Offer and is missing a specification that a Compatibility Rule needs. The aim is to keep this list empty. A Part on the list is still shown to Shoppers. The list arrives with `offers`, because before Offers it would hold most of the catalog. `catalog` marks which specifications are needed, and shows the missing ones on a Part's page and in its form.
 - **CAT-9** Every Shopper page credits BuildCores OpenDB in its footer, as its licence requires.
 
 ### `accounts`
@@ -277,13 +277,14 @@ The stack and each app's architecture are decided and recorded in [ADR-0003](../
   - the API, built with NestJS. It is the only part that touches the database. Both frontends call it, and the Next.js app never reads the database itself.
 - Keycloak as the identity service. Vendors log in through it; the Admin console creates Vendors and resets passwords through the API, which calls Keycloak. It ships English and Arabic login screens; the Kurdish (Sorani) text is added in a custom theme.
 - PostgreSQL as the database, run in Docker during development, with Drizzle for database access and migrations.
-- One repository, managed with Nx and pnpm. Applications live in `apps/` and shared libraries in `libs/`, named `@pcp/…` inside the workspace. Each app is one Nx project, and Nx's boundary rule governs what apps and libraries may import from each other. A ninth project, `@pcp/e2e`, holds the end-to-end tests.
-- Five shared libraries:
+- One repository, managed with Nx and pnpm. Applications live in `apps/` and shared libraries in `libs/`, named `@pcp/…` inside the workspace. Each app is one Nx project, and Nx's boundary rule governs what apps and libraries may import from each other. A tenth project, `@pcp/e2e`, holds the end-to-end tests.
+- Six shared libraries:
   - `core`: the API's shared plumbing (errors, access control, database helpers, test helpers);
   - `compatibility`: the Compatibility Rules, run by both the API and the builder in the browser. It is plain TypeScript without Effect, and each rule returns one of its outcomes (CMP-3) as a plain value;
   - `api-client`: a typed client generated from the API's OpenAPI document;
-  - `ui`: shared components and the Tailwind theme;
-  - `i18n`: the text for all three languages.
+  - `ui`: the components both frontends share, which carry no look, such as `AlwaysEnglish` and `CategoryIcon`, and each frontend's theme;
+  - `i18n`: the text for all three languages;
+  - `opendb`: what the platform takes from BuildCores OpenDB, written once: the pinned commit, OpenDB's address, its name and its licence's. The API's import and the Shopper app's credit import it. It is plain TypeScript and imports nothing, like `compatibility`.
 - REST between the frontends and the API. The API describes itself with OpenAPI, through `@nestjs/swagger`, and the frontends call it only through `api-client`, which `@hey-api/openapi-ts` generates from that description. The generator is still before version 1.0, so its version is pinned exactly.
 - The API uses NestJS 11 and follows the conventions of the owner's workplace backend: two layers (`domain` and `infrastructure`), Command and Query classes for use cases, abstract Store classes as ports, and errors returned as Effect `Either` values instead of thrown. ADR-0004 lists the conventions in full.
 - Both frontends follow Feature-Sliced Design, with its import rules enforced by Oxlint.
@@ -291,7 +292,8 @@ The stack and each app's architecture are decided and recorded in [ADR-0003](../
 - The dashboard logs in with `keycloak-js`, Keycloak's own adapter, and keeps tokens in memory only. The Shopper app has no login.
 - End-to-end tests are written with Playwright and run in Chromium.
 - Oxlint lints the whole repository and is the only linter. Oxfmt formats the whole repository's code and configuration, except the two files of import bans that a script writes, the generated client, the migrations drizzle-kit writes and the import's made-up folder shaped like OpenDB, which holds a file that is not JSON on purpose. It leaves the written records alone: `docs/`, `.scratch/`, CLAUDE.md, CONTEXT.md, PRODUCT.md, every DESIGN.md and every `.impeccable` folder, which Impeccable reads in their exact format. It is still before version 1.0, so its version is pinned exactly. Oxlint's version is pinned exactly as well, because the rule between projects runs on a part of Oxlint that may change in any release.
-- Tailwind CSS with shadcn/ui for the interface.
+- Tailwind CSS with shadcn/ui for the interface, each app with its own components on Base UI ([ADR-0007](../../docs/adr/0007-a-look-and-components-for-each-app.md)).
+- The dashboard's libraries, chosen by the owner on 14 October 2026 as the most widely used for each job: React Router, TanStack Query, React Hook Form and lucide's icons. **The catalog's conventions** below say how each is used.
 - next-intl for the three languages in the Next.js app, and react-i18next, with i18next, for the three languages of the Vendor portal. The two read two message formats, ICU and i18next's own ([ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md)). Both frontends match a browser's languages with `@formatjs/intl-localematcher`.
 - Tailwind CSS 4, from the themes in `ui`, with `oxlint-tailwindcss` refusing a class that names a physical side. The plugin is pinned exactly: it is young and releases often, and it runs on the part of Oxlint that Oxlint keeps outside its version policy.
 - The platform is packaged as Docker containers so that it runs the same on the development machine and on any host. The host is chosen when the MVP is nearly finished; the default is one rented server with 4 GB of memory running everything, with Cloudflare in front and nightly database backups.
@@ -312,13 +314,15 @@ Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/wor
 
 `languages`, the first module, was finished on 16 October 2026; its spec and tickets are in [.scratch/languages](../languages/spec.md). The review of the Kurdish and the Arabic text, LANG-7, stays open until launch. The conventions it set are below, under **The three languages**, and in the commands, the layout and the import rules.
 
+`catalog`, the second module, was finished on 16 October 2026; its spec and tickets are in [.scratch/catalog](../catalog/spec.md). The checks on the owner's phone that its tickets list stay open until the owner has made them. The conventions it set are below, under **The catalog's conventions**, and in the commands, the settings, the layout and the import rules.
+
 **Commands**
 
-All commands are run from the repository root, with Node 24 and pnpm. An install under another Node major version, or with npm or yarn, is refused. The four `services` commands and `pnpm platform:check` need Docker to be running; no other command does.
+All commands are run from the repository root, with Node 24 and pnpm. An install under another Node major version, or with npm or yarn, is refused. The four `services` commands, `pnpm integration:check` and `pnpm platform:check` need Docker to be running, and `pnpm db:migrate` and `pnpm catalog:import` need the services; no other command does.
 
 | Command | What it does |
 |---|---|
-| `pnpm install` | Installs everything for all nine projects. It does not download the browser that `pnpm platform:check` drives. |
+| `pnpm install` | Installs everything for all ten projects. It does not download the browser that `pnpm platform:check` drives. |
 | `pnpm check` | Runs the format check, compares the frontends' written import bans with their statement, compares the language files, generates the frontends' client again and compares it with the committed one, checks that every change to the API's schema has its committed migration, lints the files that belong to no project, then runs lint, type-check, test and build for every project that has the target. It exits non-zero if any part fails. |
 | `pnpm check --skip-nx-cache` | The same, with every task run again. Nx keeps its cache under the home directory, so a fresh clone on the same machine reuses old results unless the cache is skipped. |
 | `pnpm format` | Rewrites source and configuration files into the agreed format. |
@@ -326,17 +330,21 @@ All commands are run from the repository root, with Node 24 and pnpm. An install
 | `pnpm exec nx serve @pcp/api` | Starts the API on port 3001. |
 | `pnpm exec nx serve @pcp/dashboard` | Starts the dashboard on port 3002. |
 | `pnpm exec nx <target> <project>` | Runs one target for one project, for example `pnpm exec nx test @pcp/core`. |
-| `pnpm services:up` | Starts PostgreSQL and Keycloak in Docker, in the background, and returns when both are healthy and the development Admin and the development Vendor logins exist. The first start creates `.env` with random local passwords. A value that is in `.env` is never changed, and a setting that is new is added to it. |
+| `pnpm services:up` | Starts PostgreSQL and Keycloak in Docker, in the background, and returns when both are healthy, the platform's database has every committed migration, applied with `pnpm db:migrate`, and the development Admin and the development Vendor logins exist. The first start creates `.env` with random local passwords. A value that is in `.env` is never changed, and a setting that is new is added to it. |
 | `pnpm services:down` | Stops both services and keeps their data. |
 | `pnpm services:reset` | Stops both services and deletes their data. The next start is a first start. |
-| `pnpm services:check` | Checks the running services from the outside and prints one line for each thing it checked. It exits non-zero if any line fails, and says so plainly when the services are not running. |
+| `pnpm services:check` | Checks the running services from the outside and prints one line for each thing it checked, the platform's database having every committed migration among them. It exits non-zero if any line fails, and says so plainly when the services are not running. |
 | `pnpm boundaries:check` | Proves the import rules. For each case it plants a temporary file holding one import where a rule applies, lints through Nx with the cache skipped, and prints one line for the case. It exits non-zero if any line fails, and it removes what it planted. |
 | `pnpm boundaries:write` | Writes the frontends' import bans, as they are stated in `tools`, into the file each frontend's lint configuration extends. |
 | `pnpm api-client:write` | Writes the API's description of itself into `apps/api/openapi.json`, and then generates the frontends' client from it into `libs/api-client/src/generated`. |
-| `pnpm platform:check` | Proves that the parts connect, in a real browser. It makes sure that the development services are running and that the browser is installed, and says so plainly when either is not. It then starts each of the three apps that is not running, runs the end-to-end tests in Chromium, prints one line for each, and stops the apps it started. It exits non-zero if any line fails, and it is never answered from Nx's cache. |
+| `pnpm db:generate <name>` | Generates the API's next migration from its schema, into `apps/api/src/drizzle`, named `NNNN_<name>.sql`. It refuses to make a name up. With `--custom` it writes an empty one, which drizzle-kit records, for SQL it cannot write from the schema. It needs no database. |
+| `pnpm db:migrate` | Applies the API's committed migrations to the development database, under an advisory lock, and says how many it applied. |
+| `pnpm catalog:import` | Imports the eight Categories from BuildCores OpenDB at the pinned commit into the development database, fetched from GitHub, or from a folder given after it. It prints a line for each Category, the totals and the commit it imported. A second run imports none. |
+| `pnpm integration:check` | Runs each project's tests against a real PostgreSQL that the tests start in a container. It needs Docker, but not the services, and says so plainly when Docker is not running. |
+| `pnpm platform:check` | Proves that the parts connect, in a real browser. It makes sure that the development services are running, that the platform's database has every migration and that the browser is installed, and says so plainly when any is not. It then starts each of the three apps that is not running, runs the end-to-end tests in Chromium, prints one line for each, and stops the apps it started. It exits non-zero if any line fails, and it is never answered from Nx's cache. |
 | `pnpm exec playwright install chromium` | Downloads the browser that `pnpm platform:check` drives. It is run once on each machine. |
 
-Every project has a `lint` and a `typecheck` target. Only the API and `core` have a `test` target, and only the three apps have a `build` target. `@pcp/e2e` has an `e2e` target, which `pnpm platform:check` runs and `pnpm check` does not.
+Every project has a `lint` and a `typecheck` target. Only the API and `core` have a `test` target, and only the three apps have a `build` target. `@pcp/e2e` has an `e2e` target, which `pnpm platform:check` runs and `pnpm check` does not. The API has an `integration` target, which `pnpm integration:check` runs for every project that has one, and `migrate` and `catalog-import`, which `pnpm db:migrate` and `pnpm catalog:import` run.
 
 `pnpm check` does not start or need the services, and it needs no browser.
 
@@ -344,9 +352,13 @@ The step that compares the language files reads the three sets in `libs/i18n/src
 
 `pnpm check` does not run `pnpm boundaries:check`. Run it after a change to the lint configuration, to a project's tags or to the name of a layer folder, after an upgrade of Oxlint or Nx, and when a project is added. Run it on its own: `pnpm check` and a development server would both see the planted files while it runs.
 
+Run `pnpm integration:check` after a change to a schema, a migration, a Store, a Command or a Query, and after an upgrade of Drizzle, `pg`, Effect or Testcontainers. `pnpm check` does not run it.
+
+Run `pnpm db:generate <name>` after any change to a schema, and commit the migration with it. `pnpm check` fails until it has been run.
+
 Run `pnpm api-client:write` after any change to an endpoint or to a Response class. `pnpm check` fails until it has been run: one of the API's tests compares the committed description with what the API describes, and a step of `pnpm check` generates the client again and compares it with the committed one. Neither file is edited by hand.
 
-`pnpm check` does not run `pnpm platform:check`. Run it after a change to the realm file, to the guard or an access rule, to the dashboard's login code, to either frontend's call to the API or to an app's settings, after a change to either frontend's language set-up or to a frame, and after an upgrade of Keycloak, `keycloak-js`, `jose`, Next, next-intl, i18next, react-i18next, Tailwind CSS or Playwright. An app that is already running is used and left running. A failed run leaves a report and a trace under `apps/e2e/test-output`, which Git ignores. A trace holds what was typed into the login screen.
+`pnpm check` does not run `pnpm platform:check`. Run it after a change to the realm file, to the guard or an access rule, to the dashboard's login code, to either frontend's call to the API or to an app's settings, after a change to either frontend's language set-up or to a frame, after a change to a screen, to a component, to `ui` or to a theme, and after an upgrade of Keycloak, `keycloak-js`, `jose`, Next, next-intl, i18next, react-i18next, Tailwind CSS, Playwright, React Router, TanStack Query, React Hook Form, Base UI or axe-core. An app that is already running is used and left running. A failed run leaves a report and a trace under `apps/e2e/test-output`, which Git ignores. A trace holds what was typed into the login screen.
 
 **Development services**
 
@@ -354,7 +366,7 @@ Both services listen on the owner's machine only, and are for development only.
 
 | Service | Address | What it holds |
 |---|---|---|
-| PostgreSQL 18.6 | `localhost:5432` | The `pcp` database, which is the platform's and is owned by the user `pcp`, and the `keycloak` database, owned by the user `keycloak`. Neither user can connect to the other's database. |
+| PostgreSQL 18.6 | `localhost:5432` | The `pcp` database, which is the platform's and is owned by the user `pcp`, and the `keycloak` database, owned by the user `keycloak`. Neither user can connect to the other's database. The platform's tables are made by the API's migrations, whose record is the table `drizzle.__drizzle_migrations`. |
 | Keycloak 26.8.0 | `http://localhost:8080` | The `pcp` realm, whose issuer is `http://localhost:8080/realms/pcp`. It has the roles `admin` and `vendor`. The realm file holds no logins, and `pnpm services:up` creates two, the development Admin and the development Vendor. The platform's one client in it is `dashboard`, whose access tokens name `pcp-api` as an audience; Keycloak adds six clients of its own to every realm. Its login screen is in Kurdish (Sorani), Arabic and English. |
 
 - **Passwords.** No password is committed. They are in `.env`, which Git ignores; `.env.example` lists the settings without their values. Keycloak's own console is at `http://localhost:8080/admin` and is opened with Keycloak's own administrator account, whose name and password are in `.env`. That account is not the platform's Admin.
@@ -365,7 +377,9 @@ Both services listen on the owner's machine only, and are for development only.
 
 **The apps' settings**
 
-Each app reads its settings from its environment. Every one has the development value as its default, so all three apps start with no environment file, and none of them is a secret. None goes into `.env`, which belongs to the development services and which no app reads.
+Each app reads its settings from its environment. Every one has the development value as its default, so all three apps start with no environment file, apart from the API's database password, `DATASOURCE_PASSWORD`, which is the first setting of any app that is a secret. It has no default, and the API refuses to start without it and names it.
+
+In development its value is the one `.env` holds for the `pcp` user, `PCP_DB_PASSWORD`. When Nx runs the API's `serve`, `migrate` or `catalog-import` target, it reads a file of the target's own, `apps/api/.serve.env`, `apps/api/.migrate.env` or `apps/api/.catalog-import.env`, which is committed and holds one line, `DATASOURCE_PASSWORD=${PCP_DB_PASSWORD}`, and Nx expands that from `.env` at the repository root. A value set in the shell wins, which is how a server will give its own. No copy of the password is written anywhere else. Each later target that reaches the database gets a file of its own the same way. No other app reads `.env`.
 
 | App | Setting | Default | What it is |
 |---|---|---|---|
@@ -373,6 +387,10 @@ Each app reads its settings from its environment. Every one has the development 
 | The API | `CORS_ALLOWED_ORIGINS` | `http://localhost:3002` | The origins it accepts browser calls from, separated by commas. |
 | The API | `KEYCLOAK_ISSUER` | `http://localhost:8080/realms/pcp` | The realm whose tokens it accepts. The API has to reach this address, to fetch the realm's keys. |
 | The API | `KEYCLOAK_AUDIENCE` | `pcp-api` | The audience a token has to name. |
+| The API | `DATASOURCE_URL` | `postgresql://localhost:5432/pcp` | Where the platform's database is: its host, its port and the database's name. A login written into it is not read. |
+| The API | `DATASOURCE_USERNAME` | `pcp` | The database user the API logs in as, which owns the platform's database. |
+| The API | `DATASOURCE_PASSWORD` | None | That user's password, a secret. In development, Nx gives it from `.env`, as above. |
+| The API | `OPENDB_REPOSITORY_URL` | `https://github.com/buildcores/buildcores-open-db` | Where the import fetches the pinned commit's archive from. Only the import reads it. It takes plain HTTP only from this machine, where the tests' stand-in for GitHub listens, because the import trusts the commit the archive names in its own header. |
 | The Shopper app | `API_URL` | `http://localhost:3001` | The API's address. It is read on the server when a page is requested, and is never sent to the browser. |
 | The dashboard | `VITE_KEYCLOAK_URL` | `http://localhost:8080` | Keycloak's address. |
 | The dashboard | `VITE_KEYCLOAK_REALM` | `pcp` | The realm. |
@@ -387,11 +405,11 @@ Each app reads its settings from its environment. Every one has the development 
 
 | Path | What lives there |
 |---|---|
-| `apps/api` | The API. Its domain and infrastructure layers are under `src/app`, and its tests are under `src/test`, mirroring `src/app`. Its description of itself, `openapi.json`, is beside them. |
+| `apps/api` | The API. Its domain and infrastructure layers are under `src/app`, and its tests are under `src/test`, mirroring `src/app`. Its migrations, which drizzle-kit writes, are under `src/drizzle`, and its other entries, `migrate.ts`, `import-catalog.ts` and `write-openapi.ts`, are beside `main.ts`. Its description of itself, `openapi.json`, is in its folder, with `drizzle.config.ts` and the three files that give a target the database password. |
 | `apps/shopper` | The Shopper app. Next's `app` folder only routes, with every route under the language segment `[locale]`; the Feature-Sliced Design layers are under `src`, with the App and Pages layers named `_app` and `_pages`. Next's proxy file, `proxy.ts`, which redirects an address with no language, is beside the `app` folder. |
-| `apps/dashboard` | The dashboard. Its Feature-Sliced Design layers are under `src`. |
+| `apps/dashboard` | The dashboard. Its Feature-Sliced Design layers are under `src`, its own shadcn/ui components in the Shared layer's `ui` segment, and `components.json`, which says where shadcn/ui's command writes them, in its folder. |
 | `apps/e2e` | The end-to-end tests, which `pnpm platform:check` runs. |
-| `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n` | The five shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. `@pcp/core` has a second entry, `@pcp/core/test-utils`, which holds test helpers and which only test files import. `@pcp/ui` has two stylesheet entries, `@pcp/ui/themes/shopper.css` and `@pcp/ui/themes/dashboard.css`, one for each frontend's look (ADR-0007), and each imports the library's shared `theme.css`. The client under `libs/api-client/src/generated` is generated. `i18n`'s language files are under `libs/i18n/src/messages`, with a README on correcting them and a word list. |
+| `libs/core`, `libs/compatibility`, `libs/api-client`, `libs/ui`, `libs/i18n`, `libs/opendb` | The six shared libraries. Each is imported by its `@pcp/…` name through its single entry file, `src/index.ts`, and is consumed as TypeScript source with no build step. `@pcp/core` has a second entry, `@pcp/core/test-utils`, which holds test helpers and which only test files import. `@pcp/ui` has two stylesheet entries, `@pcp/ui/themes/shopper.css` and `@pcp/ui/themes/dashboard.css`, one for each frontend's look (ADR-0007), and each imports the library's shared `theme.css`. The client under `libs/api-client/src/generated` is generated. `i18n`'s language files are under `libs/i18n/src/messages`, with a README on correcting them and a word list. |
 | `services` | What the development services are set up from: PostgreSQL's set-up script, and Keycloak's realm file and theme. The Sorani text of the login screen is in the theme. |
 | `tools` | Scripts the workspace itself needs, among them the ones behind `pnpm services:up` and `pnpm services:check`, the statement of the frontends' import bans, the two scripts behind `pnpm boundaries:write` and `pnpm boundaries:check`, and the ones behind `pnpm api-client:write` and `pnpm platform:check`. |
 | The repository root | The workspace's own configuration: the package manifest and lockfile, the pnpm workspace file, and the Nx, TypeScript, Oxlint, Oxfmt and Jest settings that every project extends. Also the Compose file for the development services, `.env.example`, and the lint rules for test files, which the API and `core` extend. |
@@ -402,16 +420,16 @@ Inside the API the `~/` alias means `src/app`. Inside each frontend the `@/` ali
 
 Lint refuses an import that breaks any rule below, so `pnpm check` does too, and `pnpm boundaries:check` proves that each rule still refuses a violation.
 
-_Between the nine projects._ Each project carries a scope tag and a type tag in its package manifest, and the constraints between the tags are in the root Oxlint configuration.
+_Between the ten projects._ Each project carries a scope tag and a type tag in its package manifest, and the constraints between the tags are in the root Oxlint configuration.
 
 | Project | Tags | May import |
 |---|---|---|
-| `@pcp/api` | `scope:api`, `type:app` | `@pcp/core`, `@pcp/compatibility` |
-| `@pcp/shopper` | `scope:web`, `type:app` | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n`, `@pcp/compatibility` |
-| `@pcp/dashboard` | `scope:web`, `type:app` | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n`, `@pcp/compatibility` |
+| `@pcp/api` | `scope:api`, `type:app` | `@pcp/core`, `@pcp/compatibility`, `@pcp/opendb` |
+| `@pcp/shopper` | `scope:web`, `type:app` | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n`, `@pcp/compatibility`, `@pcp/opendb` |
+| `@pcp/dashboard` | `scope:web`, `type:app` | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n`, `@pcp/compatibility`, `@pcp/opendb` |
 | `@pcp/core` | `scope:api`, `type:lib` | No other project |
 | `@pcp/api-client`, `@pcp/ui`, `@pcp/i18n` | `scope:web`, `type:lib` | No other project |
-| `@pcp/compatibility` | `scope:shared`, `type:lib` | No other project, and no npm package |
+| `@pcp/compatibility`, `@pcp/opendb` | `scope:shared`, `type:lib` | No other project, and no npm package |
 | `@pcp/e2e` | `scope:e2e`, `type:e2e` | No other project |
 
 - A project is imported by its `@pcp/…` name and never by a relative path. A library is imported through its single entry file, `@pcp/core` through its second entry as well, and each frontend's stylesheet imports its own theme from `@pcp/ui`. An import that reaches past an entry fails type-checking. The three apps export nothing, so an app cannot be imported by its name at all.
@@ -452,15 +470,16 @@ _Inside each frontend._ The layers, from the top, with what a file in each may i
 
 Step 4 built these once, on two endpoints, for every module to copy. ADR-0004 gives the reasons.
 
-- _Layout._ A feature lives in `src/app/infrastructure/<feature>/`, with its controller in `endpoints/` beside its Request and Response classes, and a NestJS module that the root module imports. A use case and its entity live in `src/app/domain/<entity>/`. No use case exists yet: Command and Query classes, Stores and Effect's `Either` arrive with the first module that has a rule to apply.
+- _Layout._ A feature lives in `src/app/infrastructure/<feature>/`, with its controller in `endpoints/` beside its Request and Response classes, its Store in `store/` beside its Drizzle schema, and a NestJS module that the root module imports. A use case and its entity live in `src/app/domain/<entity>/`. `catalog` built the first Commands, Queries and Stores, with Effect's `Either`, and **The catalog's conventions** below say how.
 - _Paths._ A controller declares no path. Each method carries its full path, which begins with a version: `@Get('v1/caller')`.
 - _Access._ One global guard, in `@pcp/core`, stands in front of every endpoint. An endpoint carries `@PreAuthorize([Role.ADMIN, Role.VENDOR])`, which lets in a caller that holds any one of the roles listed, or `@Public()`. An endpoint with neither is refused for every caller.
 - _What the guard checks._ Every token's signature against the keys the realm publishes, its expiry, its issuer and its audience. A token that states no expiry is refused. The keys are fetched on first need and kept for ten minutes at a time, so that verifying a request is not as a rule a call to Keycloak, and the API starts without it. A token that names a key the API does not have makes it fetch the keys again, though not within thirty seconds of its last fetch.
-- _Refusals._ No token, or a token that fails a check, is answered 401. A good token that lacks the role, or a good token at an endpoint with no access rule, is answered 403. While the realm's keys cannot be had, a call with a token is answered 503.
+- _Refusals._ No token, or a token that fails a check, is answered 401. A good token that lacks the role, or a good token at an endpoint with no access rule, is answered 403. While the realm's keys cannot be had, a call with a token is answered 503. While the database cannot be reached, a call that needs it is answered 503 with `DATABASE_UNAVAILABLE`, and the API listens to its pool's error event, so that a database that stops does not end it.
+- _Requests._ Every request is checked against its Request class, with class-validator's `whitelist` and `forbidNonWhitelisted`: a field the class does not declare is refused, and each refused field is named in `additionalInformation`.
 - _The caller._ A controller injects `CallerResolver` and calls `getCaller()`, which gives the login's identifier, its name and its platform roles. The guard fills it only after every check has passed. It is read in the infrastructure layer only, and a use case is handed plain values.
 - _Answers._ An endpoint's Response class has readonly fields, each with `@ApiProperty`, a private constructor and a static `of` factory. The error body is the one Response class with a public constructor, because the filter builds it.
-- _Errors._ One global filter gives every error the same body: a list named `errors`, each entry with a `code`, a `title` and a `detail`. The last two are keys for the frontends to turn into text. What an exception said is never in the body.
-- _The description._ An endpoint carries `@ApiOperation` and `@ApiOkResponse`, with no compiler plugin. An operation is named after its controller method, and that name becomes the client's function name, so method names are unique across the controllers. A public endpoint adds `security: []` to its `@ApiOperation`, because the client sends a token only where the description asks for one.
+- _Errors._ One global filter gives every error the same body: a list named `errors`, each entry with a `code`, a `title` and a `detail`, and `additionalInformation` when there is something in it. The title and the detail are keys for the frontends to turn into text, made from the code: an error a use case returns has a code of its own, such as `PART_NOT_FOUND`, which gives `PART_NOT_FOUND.title`. What an exception said is never in the body.
+- _The description._ An endpoint carries `@ApiOperation` and the success response that fits it, such as `@ApiOkResponse`, or `@ApiCreatedResponse` for a create, with no compiler plugin. An operation is named after its controller method, and that name becomes the client's function name, so method names are unique across the controllers. A public endpoint adds `security: []` to its `@ApiOperation`, because the client sends a token only where the description asks for one.
 - _Settings._ A new setting is a field of the API's `EnvironmentVariables` class, with its default and its `class-validator` checks.
 - _Set-up._ `configureApplication` sets the application up, apart from starting it. The real start and every test call it.
 - _Tests of an endpoint._ They go through the API's HTTP surface. `createTestApp` builds the real root module, sets it up with `configureApplication` and listens on a free port, and the test sends requests with `fetch`. A test that calls an endpoint as someone uses `createTestAppWithLogins`, which also starts a stand-in that publishes keys as Keycloak would, and whose `tokenOf` makes a token for a login with given roles. The stand-in, the tokens and `expectErrorResponse`, which asserts a refusal, come from `@pcp/core/test-utils`. The guard is never overridden, and nothing is mocked but the clock, in the tests that have to let time pass. A test sets a setting before it builds the application, because the settings are read when the root module is loaded.
@@ -472,6 +491,7 @@ Step 4 built these once, on two endpoints, for every module to copy. ADR-0004 gi
 - A call never throws. When the request cannot be made, it answers with no `data` and no `response`, although its types say there always is a response. The Shopper app reads any answer without data as "the API cannot be reached". The dashboard tells a refusal, which has a response, from a call that could not be made, which has none.
 - _The Shopper app_ makes its client in the Shared layer's `api` segment, with no token. A page fetches in its own slice's `api` segment, on the server, after `await connection()`, so that it is rendered when it is requested and never when the app is built.
 - _The dashboard_ starts its login once, in the App layer's entry file, before React renders anything. The login is in the Shared layer's `auth` segment. The client, in the `api` segment, asks `auth` for a token that is still valid before each call. When Keycloak refuses to renew a token, the adapter sends the browser to the login screen itself. When Keycloak cannot be asked, the call is not made and the page says so.
+- _The dashboard's screens_ call the API through TanStack Query, and every query and every change goes through `dataOf`, in the `api` segment, which gives the call's data or throws a `Refusal` or an `Unreachable`, because a query has to throw to fail. **The catalog's conventions** below say more.
 - A refusal from the API is shown. It is never answered by starting a login, so that an API that refuses every token cannot send the browser round Keycloak for ever.
 
 **The three languages**
@@ -547,11 +567,91 @@ _Testing a page in three languages._
 - No test quotes a translation, because the review may change every one. A test tells the languages apart by the language the page declares and by the same piece of text differing between them, and finds an element by a test id or by a value that is the same in every language. The languages' own names, which are not translations, are written out in the tests.
 - `linesAsDrawn` reads the order a piece of text is drawn in, and `layoutOf` reads its direction and whether it is kept apart. The checks of the placeholder pages' sample are in `sample.ts`, which both frontends' tests call.
 
+**The catalog's conventions**
+
+`catalog` built these once, for the catalog, for every later module to copy. [ADR-0005](../../docs/adr/0005-specifications-as-one-document-per-part.md), [ADR-0006](../../docs/adr/0006-fonts-downloaded-from-our-own-server.md) and [ADR-0007](../../docs/adr/0007-a-look-and-components-for-each-app.md) record the decisions that are costly to undo, and the module's tickets record what was found on the installed tools.
+
+_The database._
+
+- The API reaches PostgreSQL through Drizzle ORM 0.45 with `pg` 8, through one `DatabaseProvider` in its infrastructure layer, whose pool opens a connection only when a query needs one. Drizzle's 1.0 is a release candidate, and its online documentation describes it, so the installed package's own types are the reference.
+- Drizzle's schemas are in the infrastructure layer, one file for each table, beside the Store that uses it.
+- The API starts while PostgreSQL cannot be reached, as it starts without Keycloak, and answers a call that needs the database 503 with `DATABASE_UNAVAILABLE`. It listens to its pool's error event, so that a database that stops does not end it.
+- **Migrations** are generated from the schema by drizzle-kit 0.31 into `apps/api/src/drizzle`, which Oxfmt leaves alone. They go forward only, and each file's name says what it does: `pnpm db:generate <name>` refuses to make one up. SQL that drizzle-kit cannot write from the schema, such as creating `pg_trgm`, goes into an empty migration that `pnpm db:generate <name> --custom` records in the journal, filled in by hand.
+- Migrations are applied by a command of their own, `pnpm db:migrate`, which holds the advisory lock `pg_try_advisory_lock(hashtext('pcp-api-migrations'))` on the connection that applies them, and says so and applies none while another run holds it. The API never applies them when it starts. `pnpm services:up` runs `pnpm db:migrate` once PostgreSQL is healthy, `pnpm services:check` says whether every committed migration is applied, and `pnpm platform:check` refuses to start without them.
+- A step of `pnpm check` generates the migrations again into a copy under the API's own `tmp`, with no database, and fails unless drizzle-kit says "No schema changes" and writes no file. It shows the migration that is missing.
+
+_Use cases, Stores and errors._
+
+- A use case is a class in the domain layer, a Command when it changes data and a Query when it only reads: `CreatePartCommand`, `EditPartCommand`, `AddPartPhotoCommand`, `ImportCatalogCommand`, `SearchPartsQuery`, `ReadPartQuery`, `ReadPhotoQuery`. Each has its own Input and Output classes, beside it in the same file, exported under its own names, apart from the import, which has no Input: the source it reads is injected, as every port is.
+- An entity is a class with getters, such as `Part`. Its Store is an abstract class in the domain layer, the port, such as `PartStore`, and the infrastructure layer implements it, as `DatabasePartStore`. The abstract class is the injection token.
+- Effect 3, the major version the workplace uses: Effect 4 has no `Either`. Domain and Store code never throws. It returns `Either`, whose left side is one of `core`'s structured errors, `NotFoundError` or `NotValidError`, each with a code of its own from which its title and detail keys are made: `PART_NOT_FOUND` gives `PART_NOT_FOUND.title`. A database's failure becomes `DATABASE_UNAVAILABLE` or a database error the same way.
+- The controller turns a left side into `core`'s `ErrorStructureException`, which the global filter gives the error body every refusal has. A structured error's fixed details, such as the field it is about and why, are in the body's `additionalInformation`.
+- Every request is checked against its Request class, with class-validator's `whitelist` and `forbidNonWhitelisted`: a field the class does not declare is refused, and each refused field is named in `additionalInformation`.
+- An endpoint carries `@ApiOperation` and the success response that fits it, such as `@ApiOkResponse`, or `@ApiCreatedResponse` for a create.
+
+_Paging._
+
+- A list is asked for a page at a time, in the workplace's shape and names, with `core`'s `PagingRequest`: `page` counted from 0 and `size`, 10 unless asked, at most 100. Page numbers above 1,000,000 are refused, and a page past the end is answered empty. The answer holds `content`, `pageNumber`, `pageSize`, `totalElements`, `totalPages`, `first` and `last`, read in one snapshot so that they agree.
+
+_Specifications._
+
+- A Part's specifications are one JSON document, in OpenDB's field names and nesting, which its Category's specification list describes (ADR-0005). The lists are written by hand in the API's domain. Each entry gives a specification's path, English label, kind, unit, whether 0 means "not known", and whether it is a needed specification.
+- A specification that a Compatibility Rule compares for equality, such as a socket, is one of a fixed set, or several of one, and a new value is a change to the list in code.
+- The API answers the eight Categories with their lists, and every frontend builds its forms and its pages from that answer, holding no copy of its own.
+
+_Photos._
+
+- A Part has at most one photo, kept in PostgreSQL behind the `PhotoStore` port, one row for each Part. An object store can replace it later with no change to the domain.
+- sharp 0.35 makes every photo WebP, at most 1,200 pixels on its longer side, never enlarged, turned upright, with no metadata. A JPEG, PNG or WebP picture of up to 10 MB and 100 million pixels is taken, judged by its content, and every refusal is `NOT_VALID` with `field: 'photo'` and a `reason`: `missing`, `tooLarge`, `notAPhoto` or `tooManyPixels`.
+- A photo is served without a token at `/v1/photos/<id>`, a path on the API, which a frontend puts the API's address in front of, and may be cached for a year. A replacement is a new row at a new address, and the old one is deleted.
+
+_The import._
+
+- `pnpm catalog:import` is the API's second entry, `src/import-catalog.ts`, run by its `catalog-import` target. It fills the catalog from BuildCores OpenDB at commit `ef7e601b78875a931a4ad9fa1ccce7000f3e5ecf` of 5 October 2026, the last released under ODC-By 1.0 (ADR-0001). Later OpenDB data is under CC BY-NC-SA 4.0 and is not used without the owner's agreement.
+- The commit, OpenDB's address, its name and the licence's name and address are written once, in `@pcp/opendb`, which both the API and the Shopper app import.
+- With no folder, the import fetches the commit's archive from `OPENDB_REPOSITORY_URL`, reads it in memory and imports nothing unless the archive's own header names the pinned commit. Given a folder, it reads that, which must name the commit in a `COMMIT` file.
+- It imports the eight Categories' folders only, in one transaction, and never changes or removes a Part: a record whose OpenDB ID is already in the catalog is skipped, so a second run imports none. It prints, for each Category and in total, the Parts imported, those already there, the records left out and the values left out, and the commit.
+
+_Tests against a real database._
+
+- `pnpm integration:check` runs each project's `*.integration-spec.ts` files against PostgreSQL 18.6 in a container that Testcontainers 12 starts for the run, from `@pcp/core/test-utils`'s shared test database. Every test file shares the one container, the committed migrations are applied first, and the tables are emptied between tests. Nothing is mocked. It needs Docker but not the services, and says so plainly when Docker is not running. Testcontainers also downloads its own helper image, `testcontainers/ryuk`, which removes a container a run left behind.
+- Run it after a change to a schema, a migration, a Store, a Command or a Query, and after an upgrade of Drizzle, `pg`, Effect or Testcontainers. `pnpm check` does not run it.
+
+_The dashboard's libraries._
+
+- React Router 8, in data mode. The Admin console's routes are declared in the App layer, in `admin-console-router.tsx`, and its router is made after the login. The Vendor portal has no router yet, so every address shows it.
+- TanStack Query 5, with one `QueryClient` in the App layer for both halves. Every call goes through `@pcp/api-client`, and `dataOf`, in the Shared layer's `api` segment, turns its answer into the data or throws: a `Refusal`, with the status and the API's errors, or `Unreachable`. Only `Unreachable` is retried, once. Every query about Parts is under the key `parts`, so that a change to a Part asks every search and every Part again.
+- React Hook Form 7. A Part's form registers each specification at `specifications.` and its path, so its values are already in OpenDB's nesting, and a refusal's `field` is the name of the field it is about.
+- lucide-react for icons. `ui` has the `CategoryIcon`, which every frontend shows for a Part without a photo.
+
+_Each app's components._
+
+- Each app has its own shadcn/ui components (ADR-0007), on Base UI. The dashboard's are in its Shared layer's `ui` segment, `apps/dashboard/src/shared/ui`, imported as `@/shared/ui`, in the `base-mira` style with `rtl` on, as `apps/dashboard/components.json` says. The Shopper app's will be in its own Shared layer under a `components.json` of its own, in the Lyra style, when its first component is added.
+- A component is added with `pnpm dlx shadcn@<version> add <name>` from the app's folder, and then held to the root DESIGN.md: 44 pixels high, no text under 14 pixels, a focus outline in `ring` at full strength, a control's edge in `input`, and one component importing another by a relative path, as Feature-Sliced Design's bans require. The command reads the `@/` alias from the app's `tsconfig.json`. It may rewrite components already adapted, which are restored from Git. Its components import `cn` from shadcn's own `cn` package.
+- `buttonVariants` gives a link or a label the button's look, with its classes merged.
+
+_Design and accessibility._
+
+- [The root DESIGN.md](../../DESIGN.md) holds what both apps share, and each app's folder has a DESIGN.md of its own for its look: Fit Diagram for the Shopper app and Rate Board for the dashboard. Impeccable reads all three. Each look's tokens are a theme in `ui`, `@pcp/ui/themes/shopper.css` and `@pcp/ui/themes/dashboard.css`, which import the shared `theme.css`. The fonts are downloaded from each app's own server, through Fontsource (ADR-0006): Archivo and Noto Kufi Arabic for the Shopper app, Geist, Noto Sans Arabic and Geist Mono for the dashboard. The research behind them is in [docs/research/design-system.md](../../docs/research/design-system.md).
+- The accessibility standard is WCAG 2.2 level AA, for every screen, in both schemes. Oxlint's `jsx-a11y` plugin checks the frontends and `ui` in `pnpm check`. In `pnpm platform:check`, the end-to-end tests' `expectAccessible` runs axe-core through `@axe-core/playwright` with the tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` and `wcag22aa`, which turn on `target-size` too, in the light and in the dark scheme, once running transitions have finished. The tests of the Catalog, a Part's page, the form for a new Part, the edit form and the Shopper app's first page call it.
+- The Admin console's screens so far are the Catalog, a Part's page, the choice of Category and the form for a new Part, and the edit form, all in English and laid out at 360 pixels first.
+
+_The footer credit._
+
+- Every Shopper page's frame holds a footer crediting BuildCores OpenDB in the Shopper's language, in the words of ODC-By 1.0's example notice, with OpenDB's name and the licence's marked `AlwaysEnglish` and linked to the pinned commit and to the licence (CAT-9).
+
+_Commit messages._
+
+- Conventional Commits 1.0.0, with commitlint's conventional types (`build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`) and the Nx project's folder name as the scope, left out when a commit spans several projects. A subject and every body line are at most 72 characters. commitlint checks each message in the commit-msg hook that husky installs, as the owner decided on 15 October 2026. Earlier commits keep their own style.
+
 **End-to-end tests**
 
 - They are the `@pcp/e2e` project, written with Playwright's test runner. They see the platform through a browser and over HTTP, and import none of its code.
 - A test that needs the Admin calls `logInToTheDashboard`, which logs the development Admin in at Keycloak's login screen. A test that needs a Vendor gives it `developmentVendor`, and it logs the development Vendor in instead. `openTheDashboardAs` does the same and waits until the page is drawn whole, and `logOutOfTheDashboard` logs out with the page's own button. Each test starts in a fresh browser. The password is set in the page and never typed with Playwright's `fill`, which writes what it types into the log of a step that fails.
 - Keycloak's login screen is told by its address and its form, and never by its text, which is in three languages.
+- Every screen's test runs `expectAccessible`, the automated part of WCAG 2.2 level AA, in the light and in the dark scheme (see **The catalog's conventions**).
+- A test that needs a Part creates a made-up one over HTTP as the development Admin, with `createAMadeUpPart`, named "Made-up test Part" and a number unique to the run, and finds it by that number. These Parts stay in the development database, plainly test data, and `pnpm services:reset` clears them. A test that needs a photo makes a small PNG in memory, with `aMadeUpPhoto`, and no picture is kept in the repository.
+- The Admin console's tests run in a window 360 pixels wide, and the Catalog's detail pane is tested at 1,280.
 
 **Worth knowing about the toolchain**
 

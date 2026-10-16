@@ -1,6 +1,6 @@
 # Spec: The catalog
 
-Status: ready-for-agent
+Status: resolved
 
 This is `catalog`, the second module in the build order of [the MVP spec](../mvp/spec.md)'s capability map. It covers the requirements CAT-1 to CAT-9, apart from the list in CAT-8, which needs Offers (see [What this module is and is not](#what-this-module-is-and-is-not)). This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md) and [ADR-0004](../../docs/adr/0004-architecture-per-app.md). It corrects [ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md), whose source changed its licence after the ADR was written.
 
