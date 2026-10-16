@@ -50,6 +50,13 @@
       "when": 1791993782017,
       "tag": "0006_add-part-photo",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792159827242,
+      "tag": "0007_create-vendor",
+      "breakpoints": true
     }
   ]
 }

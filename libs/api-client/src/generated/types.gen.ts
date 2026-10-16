@@ -250,6 +250,74 @@ export type PartPageResponse = {
     content: Array<PartSummaryResponse>;
 };
 
+export type CreateVendorRequest = {
+    /**
+     * The Vendor's name, as it writes it, of at most 100 characters.
+     */
+    name: string;
+    /**
+     * The city the Vendor is in.
+     */
+    city: 'erbil';
+    /**
+     * The phone number the Vendor's Login will be known by and logged in with: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.
+     */
+    loginPhoneNumber: string;
+};
+
+export type PhoneNumberResponse = {
+    /**
+     * The form it is stored in, international and with no spaces, for links.
+     */
+    international: string;
+    /**
+     * Iraq's own form, which a person reads.
+     */
+    national: string;
+};
+
+export type VendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as it writes it.
+     */
+    name: string;
+    /**
+     * The city the Vendor is in.
+     */
+    city: 'erbil';
+    /**
+     * The phone number the Vendor's Login is known by and logged in with.
+     */
+    loginPhoneNumber: PhoneNumberResponse;
+    /**
+     * Whether the Vendor is active, or a deactivated Vendor.
+     */
+    active: boolean;
+    /**
+     * When the Vendor was created.
+     */
+    createdAt: string;
+    /**
+     * When the Vendor last changed.
+     */
+    updatedAt: string;
+};
+
+export type CreatedVendorResponse = {
+    /**
+     * The Vendor as it was created.
+     */
+    vendor: VendorResponse;
+    /**
+     * The temporary password of the Vendor's Login, which the Vendor replaces at its first login. It is answered this once and kept nowhere else.
+     */
+    temporaryPassword: string;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -477,3 +545,49 @@ export type ReadPhotoResponses = {
 };
 
 export type ReadPhotoResponse = ReadPhotoResponses[keyof ReadPhotoResponses];
+
+export type CreateVendorData = {
+    body: CreateVendorRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/vendors';
+};
+
+export type CreateVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type CreateVendorError = CreateVendorErrors[keyof CreateVendorErrors];
+
+export type CreateVendorResponses = {
+    201: CreatedVendorResponse;
+};
+
+export type CreateVendorResponse = CreateVendorResponses[keyof CreateVendorResponses];
+
+export type ReadVendorData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}';
+};
+
+export type ReadVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVendorError = ReadVendorErrors[keyof ReadVendorErrors];
+
+export type ReadVendorResponses = {
+    200: VendorResponse;
+};
+
+export type ReadVendorResponse = ReadVendorResponses[keyof ReadVendorResponses];

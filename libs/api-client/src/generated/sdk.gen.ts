@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -103,3 +103,25 @@ export const addPartPhoto = <ThrowOnError extends boolean = false>(options: Opti
  * A Part's photo
  */
 export const readPhoto = <ThrowOnError extends boolean = false>(options: Options<ReadPhotoData, ThrowOnError>): RequestResult<ReadPhotoResponses, ReadPhotoErrors, ThrowOnError> => (options.client ?? client).get<ReadPhotoResponses, ReadPhotoErrors, ThrowOnError>({ url: '/v1/photos/{photoId}', ...options });
+
+/**
+ * Create a Vendor and its Login, and answer the Login's temporary password once
+ */
+export const createVendor = <ThrowOnError extends boolean = false>(options: Options<CreateVendorData, ThrowOnError>): RequestResult<CreateVendorResponses, CreateVendorErrors, ThrowOnError> => (options.client ?? client).post<CreateVendorResponses, CreateVendorErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * One Vendor
+ */
+export const readVendor = <ThrowOnError extends boolean = false>(options: Options<ReadVendorData, ThrowOnError>): RequestResult<ReadVendorResponses, ReadVendorErrors, ThrowOnError> => (options.client ?? client).get<ReadVendorResponses, ReadVendorErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}',
+    ...options
+});

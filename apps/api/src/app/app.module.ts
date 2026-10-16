@@ -9,6 +9,7 @@ import { validate } from '~/infrastructure/configuration/env.validation';
 import { DatabaseModule } from '~/infrastructure/database/database.module';
 import { PartModule } from '~/infrastructure/part/part.module';
 import { StatusModule } from '~/infrastructure/status/status.module';
+import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { StatusModule } from '~/infrastructure/status/status.module';
     StatusModule,
     CategoryModule,
     PartModule,
+    VendorModule,
   ],
 })
 export class AppModule {}
