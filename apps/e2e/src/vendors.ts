@@ -158,6 +158,27 @@ export function temporaryLoginOf(vendor: MadeUpVendor): LoginDetails {
   return { name: vendor.loginPhoneNumber, password: vendor.temporaryPassword };
 }
 
+// Gives the page the API's answer for a Login that holds the Vendor role and
+// has no Vendor behind it, whenever the page asks for the Caller's Vendor.
+// Such a Login is one made by hand in Keycloak's console, and the tests make
+// none in the development Keycloak.
+export async function answerAsForALoginWithNoVendor(page: Page): Promise<void> {
+  await page.route(`${apiUrl}/v1/caller/vendor`, (route) =>
+    route.fulfill({
+      status: 404,
+      json: {
+        errors: [
+          {
+            code: 'VENDOR_NOT_FOUND',
+            title: 'vendor_not_found_title',
+            detail: 'vendor_not_found_details',
+          },
+        ],
+      },
+    }),
+  );
+}
+
 // The Vendor portal, which a Login that is not the Admin's gets. It is told
 // apart from the Admin console by its frame.
 export async function expectTheVendorPortal(page: Page): Promise<void> {

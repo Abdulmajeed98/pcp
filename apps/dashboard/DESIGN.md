@@ -252,7 +252,7 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 
 - **The top bar:** the page's own ground, closed by a Rule Sand rule, with the console's name at weight 600 on the start side, and the caller's name in Note Grey and Log out on the end side.
 - **The sections:** the Catalog and the Vendors, each a link 44 pixels high with 6px corners, in Note Grey, and the one the Admin is in at weight 600 on a Shelf ground. On a phone they are behind a 44-pixel menu button at the bar's start, which opens them as a column below the bar, closed by choosing one; from 64rem they sit in the bar after the console's name.
-- **The Vendor portal's top bar:** the page's own ground, closed by a Rule Sand rule, with the Vendor's name, as it writes it, at weight 600 on the start side, then the outlined Log out and the language switch, the switch last, on the end side. On a phone the name shares its row with Log out and the switch has the row below, at the end; from 40rem the three share one row. A Login with no Vendor behind it gets one plain sentence and Log out, and no bar.
+- **The Vendor portal's top bar:** the page's own ground, closed by a Rule Sand rule, with the Vendor's name, as it writes it, at weight 600 on the start side, then the outlined Log out and the language switch, the switch last, on the end side. On a phone the name shares its row with Log out and the switch has the row below, at the end; from 40rem the three share one row. A Login with no Vendor behind it gets the bar with the switch alone, then one plain sentence and Log out below it.
 - **Back:** a small Note Grey link above a screen's title, with a chevron that points back in the reading direction, underlined on hover, 44 pixels high.
 
 ## Do's and Don'ts

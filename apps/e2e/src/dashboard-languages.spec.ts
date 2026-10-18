@@ -34,6 +34,7 @@ import { expectTheSameInEveryLanguage } from './sample';
 import {
   aMadeUpMobileNumber,
   aMadeUpVendorThatHasLoggedIn,
+  answerAsForALoginWithNoVendor,
   inIraqsOwnForm,
 } from './vendors';
 
@@ -424,6 +425,23 @@ test.describe('the details screen, as a made-up Vendor', () => {
       'https://www.google.com/maps/search/?api=1&query=36.1911744%2C44.0094145',
     );
   });
+});
+
+// What a Login with no Vendor behind it sees passes the checks of every
+// screen of the Vendor portal, its switch among them, and the switch changes
+// the message's language.
+test('the message for a Login with no Vendor behind it passes the checks of every screen of the Vendor portal, and differs in each of the three languages', async ({
+  page,
+}) => {
+  await answerAsForALoginWithNoVendor(page);
+  await logInToTheDashboard(page, vendor);
+  await expect(page.getByTestId('no-vendor')).toBeVisible();
+
+  const messages = await readInEveryLanguageOfTheVendorPortal(page, () =>
+    page.getByTestId('no-vendor').innerText(),
+  );
+
+  expectADifferentTextInEachLanguage(messages);
 });
 
 // The details screen's heading, in whichever language the portal is in.

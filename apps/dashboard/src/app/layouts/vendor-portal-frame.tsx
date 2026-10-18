@@ -26,7 +26,8 @@ import { LanguageSwitch } from './language-switch';
 //
 // A Login with no Vendor behind it, such as one made by hand in Keycloak's
 // console, gets a plain message in the portal's language with the way to log
-// out, and nothing else.
+// out, and a top bar with the language switch alone, so that the message can
+// be read in another language, as the owner chose on 18 October 2026.
 export function VendorPortalFrame() {
   const { t } = useTranslation();
   const vendor = useCallersVendor();
@@ -34,10 +35,13 @@ export function VendorPortalFrame() {
   if (vendor.error instanceof Refusal && vendor.error.code === 'VENDOR_NOT_FOUND') {
     return (
       <Frame>
-        <div className="flex flex-col items-start gap-4">
+        <header className="flex justify-end border-b border-border pb-2">
+          <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
+        </header>
+        <main className="flex flex-col items-start gap-4 pt-4 sm:pt-6">
           <p data-testid="no-vendor">{t('VendorPortalFrame.noVendor')}</p>
           <LogOut />
-        </div>
+        </main>
       </Frame>
     );
   }

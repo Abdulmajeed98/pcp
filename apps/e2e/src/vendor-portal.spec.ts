@@ -14,7 +14,6 @@ import {
 } from './keycloak-screens';
 import {
   buttonFor,
-  expectADifferentTextInEachLanguage,
   expectNoSidewaysScroll,
   expectPageIn,
   type Language,
@@ -22,15 +21,16 @@ import {
   languages,
   narrowWindow,
 } from './languages';
-import { apiUrl, dashboardUrl } from './platform';
+import { dashboardUrl } from './platform';
 import {
   aMadeUpVendorThatHasLoggedIn,
+  answerAsForALoginWithNoVendor,
   createAMadeUpVendorAsTheAdmin,
   inIraqsOwnForm,
   logInForTheFirstTime,
 } from './vendors';
 
-const [kurdish, arabic, english] = languages;
+const [kurdish, , english] = languages;
 
 // A Vendor uses its portal on a phone (LANG-8).
 test.use({ viewport: narrowWindow });
@@ -133,54 +133,29 @@ test.describe('as a made-up Vendor', () => {
     await expectAccessible(page);
   });
 
-  // A Login that holds the Vendor role and has no Vendor behind it is one
-  // made by hand in Keycloak's console. The tests make no such Login in the
-  // development Keycloak, so the page is given the API's answer for one, in a
-  // browser set to each language in turn.
-  test("with no Vendor behind the Login, the frame shows a plain message in the portal's language, with the log out button and nothing else", async ({
+  // The language tests show the same message in each of the three
+  // languages, by its switch.
+  test("with no Vendor behind the Login, the frame shows a plain message in the portal's language, with the language switch and the log out button and nothing else", async ({
     browser,
   }) => {
-    const messages = new Map<Language, string>();
-    for (const { language, locale } of [
-      { language: kurdish, locale: 'ckb' },
-      { language: arabic, locale: 'ar' },
-      { language: english, locale: 'en' },
-    ]) {
-      const context = await browser.newContext({ locale, viewport: narrowWindow });
-      try {
-        const page = await context.newPage();
-        await page.route(`${apiUrl}/v1/caller/vendor`, (route) =>
-          route.fulfill({ status: 404, json: vendorNotFound }),
-        );
-        await logInToTheDashboard(page, vendor);
+    const context = await browser.newContext({ locale: 'ckb', viewport: narrowWindow });
+    try {
+      const page = await context.newPage();
+      await answerAsForALoginWithNoVendor(page);
+      await logInToTheDashboard(page, vendor);
 
-        const message = page.getByTestId('no-vendor');
-        await expect(message).toBeVisible();
-        await expectPageIn(page, language);
-        await expect(page.getByTestId('log-out')).toBeVisible();
-        await expect(page.getByRole('button')).toHaveCount(1);
-        await expect(page.getByRole('link')).toHaveCount(0);
-        await expect(page.getByRole('heading')).toHaveCount(0);
-        await expect(vendorNameInTheFrame(page)).toHaveCount(0);
-        await expectNoSidewaysScroll(page);
-        messages.set(language, await message.innerText());
-        if (language === kurdish) await expectAccessible(page);
-      } finally {
-        await context.close();
-      }
+      await expect(page.getByTestId('no-vendor')).toBeVisible();
+      await expectPageIn(page, kurdish);
+      await expect(page.getByTestId('log-out')).toBeVisible();
+      await expect(languageSwitch(page).getByRole('button')).toHaveCount(languages.length);
+      await expect(page.getByRole('button')).toHaveCount(1 + languages.length);
+      await expect(page.getByRole('link')).toHaveCount(0);
+      await expect(page.getByRole('heading')).toHaveCount(0);
+      await expect(vendorNameInTheFrame(page)).toHaveCount(0);
+      await expectNoSidewaysScroll(page);
+      await expectAccessible(page);
+    } finally {
+      await context.close();
     }
-
-    expectADifferentTextInEachLanguage(messages);
   });
 });
-
-// The API's answer for a Login with no Vendor behind it.
-const vendorNotFound = {
-  errors: [
-    {
-      code: 'VENDOR_NOT_FOUND',
-      title: 'vendor_not_found_title',
-      detail: 'vendor_not_found_details',
-    },
-  ],
-};
