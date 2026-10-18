@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router';
 
+import { EditContactDetailsPage } from '@/pages/edit-contact-details';
 import { PortalNotFoundPage } from '@/pages/portal-not-found';
 import { VendorDetailsPage } from '@/pages/vendor-details';
 
@@ -9,9 +10,10 @@ import { VendorDetailsPage } from '@/pages/vendor-details';
 // router mounts them at `/`, and the Admin console's is to mount the same
 // screens under a Vendor's page, for the Admin acting as that Vendor
 // (`accounts` ticket 09). The details screen is the portal's first address,
-// and an address that matches no screen shows a "not found" message in the
-// portal's language.
+// the form for its contact details is below it, and an address that matches
+// no screen shows a "not found" message in the portal's language.
 export const vendorPortalScreens: RouteObject[] = [
   { index: true, Component: VendorDetailsPage },
+  { path: 'contact-details', Component: EditContactDetailsPage },
   { path: '*', Component: PortalNotFoundPage },
 ];

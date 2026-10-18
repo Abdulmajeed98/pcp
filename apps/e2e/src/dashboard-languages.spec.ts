@@ -427,6 +427,32 @@ test.describe('the details screen, as a made-up Vendor', () => {
   });
 });
 
+// The form in which the Vendor changes its contact details, opened from the
+// details screen by its link. It is filled with what the Vendor wrote, which
+// the helper leaves out of its check of the digits.
+test.describe('the form for the contact details, as a made-up Vendor', () => {
+  test.beforeEach(async ({ page }) => {
+    await openTheDashboardAs(page, vendor);
+    await page.getByRole('main').locator('a[href="/contact-details"]').click();
+    await expect(page.getByRole('main').locator('form')).toBeVisible();
+  });
+
+  test('passes the checks of every screen of the Vendor portal, in all three languages, and does not scroll sideways', async ({
+    page,
+  }) => {
+    await checkInEveryLanguageOfTheVendorPortal(page);
+    await expectNoSidewaysScroll(page);
+  });
+
+  test('its text differs in each of the three languages', async ({ page }) => {
+    const texts = await readInEveryLanguageOfTheVendorPortal(page, () =>
+      page.getByRole('main').innerText(),
+    );
+
+    expectADifferentTextInEachLanguage(texts);
+  });
+});
+
 // What a Login with no Vendor behind it sees passes the checks of every
 // screen of the Vendor portal, its switch among them, and the switch changes
 // the message's language.

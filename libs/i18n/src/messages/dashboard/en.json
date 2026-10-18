@@ -21,6 +21,7 @@
     "name": "Name",
     "city": "City",
     "contactDetails": "Contact details",
+    "changeContactDetails": "Change your contact details",
     "address": "Address",
     "mapLocation": "Map location",
     "openInGoogleMaps": "Open in Google Maps",
@@ -32,6 +33,50 @@
     "loginPhoneNumber": "Login phone number",
     "none": "None",
     "inANewTab": ", in a new tab"
+  },
+  "ContactDetailsForm": {
+    "title": "Your contact details",
+    "intro": "You change these yourself, and they are saved at once.",
+    "back": "Your details",
+    "optional": "Optional",
+    "address": "Address",
+    "addressDescription": "As you write it, on as many lines as you need. At most <longest/> characters.",
+    "phoneNumber": "Phone number",
+    "phoneNumberDescription": "A mobile number or a landline, written in any way, such as <example/>.",
+    "whatsAppNumber": "WhatsApp number",
+    "whatsAppNumberDescription": "A mobile number.",
+    "instagramName": "Instagram name",
+    "instagramNameDescription": "Your name, with or without an @, or your profile’s address. At most <longest/> characters.",
+    "openingHours": "Opening hours",
+    "openingHoursDescription": "As you write them, on as many lines as you need. At most <longest/> characters.",
+    "save": "Save",
+    "notSaved": "Your contact details were not saved.",
+    "refused": {
+      "address": {
+        "missing": "Give your address.",
+        "tooLong": "The address is too long."
+      },
+      "mapLocation": {
+        "missing": "Give both the latitude and the longitude, or neither.",
+        "outsideIraq": "This place is outside Iraq. Check that the latitude comes first, before the longitude."
+      },
+      "phoneNumber": {
+        "missing": "Give your phone number.",
+        "notIraqi": "This is not an Iraqi phone number. Check its digits."
+      },
+      "whatsAppNumber": {
+        "notIraqi": "This is not an Iraqi phone number. Check its digits.",
+        "notMobile": "This is a landline. WhatsApp needs a mobile number."
+      },
+      "instagramName": {
+        "notAnInstagramName": "An Instagram name holds only the letters a to z, digits, dots and underscores.",
+        "tooLong": "This Instagram name is too long."
+      },
+      "openingHours": {
+        "tooLong": "The opening hours are too long."
+      },
+      "other": "The platform did not accept this."
+    }
   },
   "PortalNotFound": {
     "title": "Screen not found",

@@ -2,17 +2,6 @@ import type { CreateVendorRequest } from '@pcp/api-client';
 
 import { type CityKey, mapLocationIn } from '@/entities/vendor';
 
-// The longest a detail written as text may be, in characters, as the API
-// checks it. The API's description states the name's, the address's and the
-// opening hours'. An Instagram name's is Instagram's own, and is counted once
-// an @ or a profile's address is taken off it.
-export const longest = {
-  name: 100,
-  address: 300,
-  openingHours: 300,
-  instagramName: 30,
-} as const;
-
 // What the form holds while the Admin fills it in: every detail as typed,
 // the map location as its coordinates are written. An optional detail left
 // empty is not given.

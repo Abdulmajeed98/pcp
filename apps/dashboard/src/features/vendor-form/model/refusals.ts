@@ -1,9 +1,10 @@
 import type { SubErrorResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 
+import { longest } from '@/entities/vendor';
 import { Refusal } from '@/shared/api';
 
-import { longest, type VendorFormValues } from './form-values';
+import { type VendorFormValues } from './form-values';
 
 // What the Admin is told beside a required detail left empty. The form says
 // it before it sends anything, and the API says the same when it refuses a

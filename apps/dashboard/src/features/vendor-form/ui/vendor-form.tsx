@@ -3,7 +3,7 @@ import { formatNumber } from '@pcp/i18n';
 import type { ReactNode } from 'react';
 import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 
-import { cities, cityName, MapLocationField } from '@/entities/vendor';
+import { cities, cityName, longest, MapLocationField } from '@/entities/vendor';
 import { Refusal } from '@/shared/api';
 import {
   Alert,
@@ -25,7 +25,6 @@ import {
 } from '@/shared/ui';
 
 import {
-  longest,
   newVendorFormValues,
   type VendorFormValues,
   vendorRequestOf,

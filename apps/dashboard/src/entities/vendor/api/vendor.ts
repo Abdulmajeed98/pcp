@@ -8,10 +8,15 @@ import { apiClient, dataOf } from '@/shared/api';
 // again.
 export const vendorsKey = ['vendors'] as const;
 
+// The key of the query about one Vendor.
+export function vendorKey(vendorId: string) {
+  return [...vendorsKey, vendorId] as const;
+}
+
 // Every detail the platform holds about one Vendor, and whether it is active.
 export function useVendor(vendorId: string) {
   return useQuery({
-    queryKey: [...vendorsKey, vendorId],
+    queryKey: vendorKey(vendorId),
     queryFn: () => dataOf(apiClient.readVendor({ path: { vendorId } })),
   });
 }

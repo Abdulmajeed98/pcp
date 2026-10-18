@@ -1,5 +1,6 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
+import { Link } from 'react-router';
 
 import {
   cityName,
@@ -16,7 +17,13 @@ import {
 } from '@/entities/vendor';
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
-import { Alert, AlertDescription, AlertTitle, InANewTab } from '@/shared/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  buttonVariants,
+  InANewTab,
+} from '@/shared/ui';
 
 // The Vendor portal's first screen: every detail the platform holds about the
 // Vendor whose portal is shown, in the portal's language, with a sentence
@@ -31,8 +38,9 @@ import { Alert, AlertDescription, AlertTitle, InANewTab } from '@/shared/ui';
 // a new tab.
 //
 // The details are in three groups, as the Admin's Vendor form asks for
-// them: the Vendor, its contact details, which ticket 08 lets it change, and
-// its Login.
+// them: the Vendor, its contact details, which it changes itself from the
+// link beside their heading, and its Login. The link is relative to the
+// route, so that it leads to the form under either frame.
 export function VendorDetailsPage() {
   const { t } = useTranslation();
   const { vendorId } = useVendorShown();
@@ -79,9 +87,14 @@ function Details({ vendor }: { vendor: VendorResponse }) {
       </DetailList>
 
       <section aria-labelledby="contact-details" className="flex flex-col gap-2">
-        <h2 id="contact-details" className="font-medium">
-          {t('VendorDetails.contactDetails')}
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <h2 id="contact-details" className="font-medium">
+            {t('VendorDetails.contactDetails')}
+          </h2>
+          <Link to="contact-details" className={buttonVariants({ variant: 'outline' })}>
+            {t('VendorDetails.changeContactDetails')}
+          </Link>
+        </div>
         <DetailList>
           <Detail name="address" label={t('VendorDetails.address')}>
             <WrittenOnLines text={vendor.address} />

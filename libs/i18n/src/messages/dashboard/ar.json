@@ -21,6 +21,7 @@
     "name": "الاسم",
     "city": "المدينة",
     "contactDetails": "معلومات الاتصال",
+    "changeContactDetails": "غيّر معلومات الاتصال الخاصة بك",
     "address": "العنوان",
     "mapLocation": "الموقع على الخريطة",
     "openInGoogleMaps": "افتح في خرائط جوجل",
@@ -32,6 +33,50 @@
     "loginPhoneNumber": "رقم الهاتف",
     "none": "لا يوجد",
     "inANewTab": "، في علامة تبويب جديدة"
+  },
+  "ContactDetailsForm": {
+    "title": "معلومات الاتصال الخاصة بك",
+    "intro": "تغيّر هذه بنفسك، وتُحفظ فوراً.",
+    "back": "بياناتك",
+    "optional": "اختياري",
+    "address": "العنوان",
+    "addressDescription": "كما تكتبه، على عدد الأسطر الذي تحتاجه. الحد الأقصى لعدد الأحرف: <longest/>.",
+    "phoneNumber": "رقم الهاتف",
+    "phoneNumberDescription": "رقم هاتف محمول أو أرضي، مكتوب بأي طريقة، مثل <example/>.",
+    "whatsAppNumber": "رقم واتساب",
+    "whatsAppNumberDescription": "رقم هاتف محمول.",
+    "instagramName": "اسم إنستغرام",
+    "instagramNameDescription": "اسمك، مع @ أو بدونها، أو عنوان ملفك الشخصي. الحد الأقصى لعدد الأحرف: <longest/>.",
+    "openingHours": "ساعات العمل",
+    "openingHoursDescription": "كما تكتبها، على عدد الأسطر الذي تحتاجه. الحد الأقصى لعدد الأحرف: <longest/>.",
+    "save": "حفظ",
+    "notSaved": "لم تُحفظ معلومات الاتصال الخاصة بك.",
+    "refused": {
+      "address": {
+        "missing": "اكتب عنوانك.",
+        "tooLong": "العنوان طويل جداً."
+      },
+      "mapLocation": {
+        "missing": "اكتب خط العرض وخط الطول معاً، أو لا تكتب أياً منهما.",
+        "outsideIraq": "هذا المكان خارج العراق. تحقّق من أن خط العرض يأتي أولاً، قبل خط الطول."
+      },
+      "phoneNumber": {
+        "missing": "اكتب رقم هاتفك.",
+        "notIraqi": "هذا ليس رقم هاتف عراقياً. تحقّق من أرقامه."
+      },
+      "whatsAppNumber": {
+        "notIraqi": "هذا ليس رقم هاتف عراقياً. تحقّق من أرقامه.",
+        "notMobile": "هذا رقم أرضي. يحتاج واتساب إلى رقم هاتف محمول."
+      },
+      "instagramName": {
+        "notAnInstagramName": "لا يحتوي اسم إنستغرام إلا على الحروف من a إلى z والأرقام والنقاط والشرطات السفلية.",
+        "tooLong": "اسم إنستغرام هذا طويل جداً."
+      },
+      "openingHours": {
+        "tooLong": "ساعات العمل طويلة جداً."
+      },
+      "other": "لم تقبل المنصة هذا."
+    }
   },
   "PortalNotFound": {
     "title": "الشاشة غير موجودة",
