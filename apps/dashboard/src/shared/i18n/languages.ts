@@ -48,7 +48,8 @@ export interface ShownIn {
 }
 
 // The title of the browser's tab in the language shown. `startLanguage` sets
-// it, once, as i18next keeps its own state once.
+// it, as i18next keeps its own state once, and `showIn` when the Admin
+// console opens a Vendor's portal or leaves it.
 let titleOfTheTab = (): string => document.title;
 
 // Starts the dashboard's languages, once, before anything is rendered: the
@@ -79,6 +80,19 @@ export async function startLanguage(shownIn: ShownIn): Promise<void> {
   });
 
   titleOfTheTab = shownIn.title;
+  declare(language);
+}
+
+// Shows the dashboard in place in what `shownIn` gives, as the Admin console
+// does when it opens a Vendor's portal for the Admin acting as that Vendor,
+// and again when it leaves it: its language, which is not remembered, and
+// from then on the tab's title. The document declares them both, and its
+// direction. A later call wins over one still under way, so the last one
+// made is what the document is left in.
+export async function showIn(shownIn: ShownIn): Promise<void> {
+  const language = shownIn.language();
+  titleOfTheTab = shownIn.title;
+  await i18next.changeLanguage(language);
   declare(language);
 }
 

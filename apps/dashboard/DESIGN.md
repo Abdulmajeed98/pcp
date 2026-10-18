@@ -93,7 +93,7 @@ components:
     rounded: "{rounded.plate}"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module, and the Vendor's form, the map location's field and the hand-over the same day, with ticket 06. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module, and the Vendor's form, the map location's field and the hand-over the same day, with ticket 06. The band for the Admin acting as a Vendor was added on 18 October 2026, with ticket 09. -->
 
 # Design System: the dashboard, Rate Board
 
@@ -253,6 +253,7 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 - **The top bar:** the page's own ground, closed by a Rule Sand rule, with the console's name at weight 600 on the start side, and the caller's name in Note Grey and Log out on the end side.
 - **The sections:** the Catalog and the Vendors, each a link 44 pixels high with 6px corners, in Note Grey, and the one the Admin is in at weight 600 on a Shelf ground. On a phone they are behind a 44-pixel menu button at the bar's start, which opens them as a column below the bar, closed by choosing one; from 64rem they sit in the bar after the console's name.
 - **The Vendor portal's top bar:** the page's own ground, closed by a Rule Sand rule, with the Vendor's name, as it writes it, at weight 600 on the start side, then the outlined Log out and the language switch, the switch last, on the end side. On a phone the name shares its row with Log out and the switch has the row below, at the end; from 40rem the three share one row. A Login with no Vendor behind it gets the bar with the switch alone, then one plain sentence and Log out below it.
+- **The band, while the Admin acts as a Vendor:** across the whole width, above the Vendor portal's top bar, on a Shelf ground closed by a Rule Sand rule, so that it is never taken for part of the Vendor's own portal. On the start side, one sentence at small size and weight 500 that names the Vendor, as it writes it; on the end side, a small underlined link, 44 pixels high, back to the Vendor's page in the Admin console. Its content is as wide as the portal's, and the link takes the row below when the sentence fills the row. It is in the portal's language, because the Vendor may be reading over the Admin's shoulder. A Vendor's page in the Admin console opens it with an outlined button-sized link, "Open its portal", below the Vendor's name.
 - **Back:** a small Note Grey link above a screen's title, with a chevron that points back in the reading direction, underlined on hover, 44 pixels high.
 
 ## Do's and Don'ts

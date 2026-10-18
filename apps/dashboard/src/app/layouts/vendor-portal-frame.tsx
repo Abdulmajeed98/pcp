@@ -59,38 +59,51 @@ export interface VendorAskedFor {
 // name shares its row with the way to log out, and the switch has the row
 // below; on a wider screen the three share one. It hands the Vendor to the
 // screen below it, which reads the Vendor's details itself.
-export function PortalFrame({ vendor }: { vendor: VendorAskedFor }) {
+//
+// While the Admin acts as a Vendor, a band above it names the Vendor.
+export function PortalFrame({
+  vendor,
+  band,
+}: {
+  vendor: VendorAskedFor;
+  band?: ReactNode;
+}) {
   const { t } = useTranslation();
 
   return (
-    <Frame>
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border pb-2">
-        <p className="min-w-0 flex-1 font-semibold">
-          {vendor.data !== undefined && (
-            <AsWritten data-testid="vendor-name">{vendor.data.name}</AsWritten>
+    <>
+      {band}
+      <Frame>
+        <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border pb-2">
+          <p className="min-w-0 flex-1 font-semibold">
+            {vendor.data !== undefined && (
+              <AsWritten data-testid="vendor-name">{vendor.data.name}</AsWritten>
+            )}
+          </p>
+          <LogOut />
+          <div className="flex w-full justify-end sm:w-auto">
+            <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
+          </div>
+        </header>
+        <main className="pt-4 sm:pt-6">
+          {vendor.error ? (
+            <Alert variant="destructive" data-testid="refusal">
+              <AlertTitle>{t('VendorPortalFrame.notOpened')}</AlertTitle>
+              <AlertDescription>
+                <WhyNotAnsweredInThePortal error={vendor.error} />
+              </AlertDescription>
+            </Alert>
+          ) : vendor.data === undefined ? (
+            <p className="text-sm text-muted-foreground">
+              {t('VendorPortalFrame.opening')}
+            </p>
+          ) : (
+            <Outlet context={{ vendorId: vendor.data.id } satisfies VendorShown} />
           )}
-        </p>
-        <LogOut />
-        <div className="flex w-full justify-end sm:w-auto">
-          <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
-        </div>
-      </header>
-      <main className="pt-4 sm:pt-6">
-        {vendor.error ? (
-          <Alert variant="destructive" data-testid="refusal">
-            <AlertTitle>{t('VendorPortalFrame.notOpened')}</AlertTitle>
-            <AlertDescription>
-              <WhyNotAnsweredInThePortal error={vendor.error} />
-            </AlertDescription>
-          </Alert>
-        ) : vendor.data === undefined ? (
-          <p className="text-sm text-muted-foreground">{t('VendorPortalFrame.opening')}</p>
-        ) : (
-          <Outlet context={{ vendorId: vendor.data.id } satisfies VendorShown} />
-        )}
-      </main>
-      <ScrollRestoration />
-    </Frame>
+        </main>
+        <ScrollRestoration />
+      </Frame>
+    </>
   );
 }
 

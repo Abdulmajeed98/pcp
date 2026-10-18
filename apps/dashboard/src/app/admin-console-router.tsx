@@ -9,13 +9,25 @@ import { PartPage } from '@/pages/part';
 import { VendorPage } from '@/pages/vendor';
 import { VendorsPage } from '@/pages/vendors';
 
+import { ActingAsVendorFrame } from './layouts/acting-as-vendor-frame';
 import { AdminConsoleFrame } from './layouts/admin-console-frame';
+import { vendorPortalScreens } from './vendor-portal-screens';
 
 // The Admin console's screens, by their addresses. The Admin console opens on
 // the Catalog, the first of its two sections. A Part, its edit form and a new
 // Part are the Catalog's children, and a Vendor's page and a new Vendor are
 // the Vendors' children, which each shows beside its list on a wide screen.
+//
+// A Vendor's portal, for the Admin acting as that Vendor, is under the
+// Vendor's page: the Vendor portal's own screens, in the Vendor portal's
+// frame with the band, and not in the Admin console's frame. Each screen
+// learns its Vendor from the address.
 const routes = [
+  {
+    path: '/vendors/:vendorId/portal',
+    Component: ActingAsVendorFrame,
+    children: vendorPortalScreens,
+  },
   {
     path: '/',
     Component: AdminConsoleFrame,

@@ -453,6 +453,31 @@ test.describe('the form for the contact details, as a made-up Vendor', () => {
   });
 });
 
+// The made-up Vendor's portal as the development Admin opens it, acting as
+// the Vendor, under the band that names the Vendor. The band is in the
+// portal's language, because the Vendor may be reading over the Admin's
+// shoulder.
+test.describe("the Vendor's portal, as the development Admin acting as the made-up Vendor", () => {
+  test.beforeEach(async ({ page }) => {
+    await logInToTheDashboard(
+      page,
+      developmentAdmin,
+      `${dashboardUrl}/vendors/${vendor.vendorId}/portal`,
+    );
+    await expect(vendorNameInTheFrame(page)).toHaveText(vendor.vendorName);
+  });
+
+  test("passes the checks of every screen of the Vendor portal, in all three languages, and the band's text differs in each", async ({
+    page,
+  }) => {
+    const bands = await readInEveryLanguageOfTheVendorPortal(page, () =>
+      page.getByTestId('acting-band').innerText(),
+    );
+
+    expectADifferentTextInEachLanguage(bands);
+  });
+});
+
 // What a Login with no Vendor behind it sees passes the checks of every
 // screen of the Vendor portal, its switch among them, and the switch changes
 // the message's language.

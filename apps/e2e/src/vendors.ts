@@ -197,7 +197,7 @@ interface HowTheNumberIsTyped {
 // its login phone number, gives its temporary password, chooses a new
 // password made for the run on the screen that asks for one, and waits for
 // the Vendor portal. Both passwords are set in the page. It gives back what
-// the Vendor logs in with from then on, and the Vendor's name.
+// the Vendor logs in with from then on, and the Vendor's name and identifier.
 export async function logInForTheFirstTime(
   page: Page,
   vendor: MadeUpVendor,
@@ -214,14 +214,20 @@ export async function logInForTheFirstTime(
   await submitTheNewPasswordScreen(page, password);
 
   await expectTheVendorPortal(page);
-  return { name: vendor.loginPhoneNumber, password, vendorName: vendor.name };
+  return {
+    name: vendor.loginPhoneNumber,
+    password,
+    vendorName: vendor.name,
+    vendorId: vendor.id,
+  };
 }
 
 // Makes a made-up Vendor, as the development Admin, with any details the
 // test gives, and logs in as it once through its first login, each in a
 // browser of its own that is closed afterwards. It gives back what the Vendor
-// logs in with from then on, and its name, for a test that needs a Vendor
-// whose Login is set up, as a real Vendor's is after its first login.
+// logs in with from then on, and its name and identifier, for a test that
+// needs a Vendor whose Login is set up, as a real Vendor's is after its first
+// login.
 export async function aMadeUpVendorThatHasLoggedIn(
   browser: Browser,
   details: MadeUpVendorDetails = {},

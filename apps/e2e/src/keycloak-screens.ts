@@ -15,9 +15,11 @@ export interface LoginDetails {
 }
 
 // The same for a Vendor's Login, with the name of the Vendor behind it, which
-// the Vendor portal's frame shows.
+// the Vendor portal's frame shows, and its identifier, which the address of
+// its page in the Admin console holds.
 export interface VendorLoginDetails extends LoginDetails {
   vendorName: string;
+  vendorId: string;
 }
 
 // Keycloak's login screen.

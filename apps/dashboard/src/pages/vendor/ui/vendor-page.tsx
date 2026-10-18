@@ -1,6 +1,6 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 
 import {
   cityName,
@@ -17,7 +17,14 @@ import {
 } from '@/entities/vendor';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Alert, AlertDescription, AlertTitle, BackLink, InANewTab } from '@/shared/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  BackLink,
+  buttonVariants,
+  InANewTab,
+} from '@/shared/ui';
 
 // A Vendor's page: every detail the platform holds about it, and whether it
 // is deactivated. What the Vendor wrote, its name, its address and its
@@ -26,7 +33,8 @@ import { Alert, AlertDescription, AlertTitle, BackLink, InANewTab } from '@/shar
 // every language, and are kept apart from the text around them. Its map
 // location opens Google Maps' search for its coordinates, and its Instagram
 // name, written with an @ as Instagram writes a handle, opens its profile,
-// each in a new tab, so that the Admin console stays where it was.
+// each in a new tab, so that the Admin console stays where it was. A link
+// below its name opens the Vendor's portal, for the Admin to act as it.
 export function VendorPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
@@ -65,6 +73,12 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
         <h1 className="text-xl font-semibold sm:text-2xl">
           <AsWritten>{vendor.name}</AsWritten>
         </h1>
+        <Link
+          to={`/vendors/${vendor.id}/portal`}
+          className={buttonVariants({ variant: 'outline', className: 'self-start' })}
+        >
+          Open its portal
+        </Link>
       </div>
 
       <DetailList>

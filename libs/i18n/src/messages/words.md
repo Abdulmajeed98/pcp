@@ -39,10 +39,11 @@ Left out, because no Shopper or Vendor reads them: Specification list, Needed sp
 
 ## The platform's own names
 
-| Name          | Kurdish (Sorani) | Arabic        |
-| ------------- | ---------------- | ------------- |
-| Shopper app   | ئەپی کڕیار       | تطبيق المتسوّق |
-| Vendor portal | پۆرتاڵی فرۆشیار  | بوابة البائع  |
+| Name          | Kurdish (Sorani)  | Arabic            |
+| ------------- | ----------------- | ----------------- |
+| Shopper app   | ئەپی کڕیار        | تطبيق المتسوّق     |
+| Vendor portal | پۆرتاڵی فرۆشیار   | بوابة البائع      |
+| Admin console | کۆنسۆڵی بەڕێوەبەر | لوحة تحكم المسؤول |
 
 ## The eight Categories
 

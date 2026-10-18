@@ -9,6 +9,10 @@
     "notOpened": "Your portal could not be opened.",
     "noVendor": "No Vendor is behind this login, so the Vendor portal has nothing to show. Ask the Admin to check it."
   },
+  "ActingAsVendor": {
+    "actingAs": "You are acting as <name/>.",
+    "back": "Back to the Admin console"
+  },
   "NotAnswered": {
     "refused": "The platform refused, with <refusal/>.",
     "unreachable": "The platform cannot be reached. Check the connection, and try again."
