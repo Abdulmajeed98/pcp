@@ -530,7 +530,37 @@
             }
           }
         },
-        "summary": "One Vendor",
+        "summary": "One Vendor, for the Admin or for the Vendor's own Login",
+        "tags": ["Vendor"]
+      }
+    },
+    "/v1/caller/vendor": {
+      "get": {
+        "operationId": "readCallersVendor",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The Vendor whose Login the caller is",
         "tags": ["Vendor"]
       }
     }

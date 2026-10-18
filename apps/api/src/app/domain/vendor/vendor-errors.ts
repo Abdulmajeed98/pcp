@@ -1,4 +1,4 @@
-import { NotFoundError, NotValidError } from '@pcp/core';
+import { ForbiddenError, NotFoundError, NotValidError } from '@pcp/core';
 
 import { PhoneNumberRefusal } from '../phone-number/PhoneNumber';
 import { InstagramNameRefusal } from './instagram-name';
@@ -33,6 +33,15 @@ export type VendorDetailRefusal =
 // The error for a Vendor that does not exist, the same for every use case.
 export function vendorNotFound(vendorId: string): NotFoundError {
   return NotFoundError.of('VENDOR_NOT_FOUND', `There is no Vendor ${vendorId}`);
+}
+
+// The error for a Vendor's Login that names a Vendor other than its own,
+// the same whether that Vendor exists or not.
+export function vendorAccessDenied(loginId: string, vendorId: string): ForbiddenError {
+  return ForbiddenError.of(
+    'VENDOR_ACCESS_DENIED',
+    `The Login ${loginId} may not act for the Vendor ${vendorId}`,
+  );
 }
 
 // A detail of a Vendor that does not fit, naming its field and why, so that a

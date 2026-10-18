@@ -4,6 +4,7 @@ export { PageableAttributes } from './domain/paging/PageableAttributes';
 export { PageAttributes } from './domain/paging/PageAttributes';
 export {
   type ErrorType,
+  ForbiddenError,
   NotFoundError,
   NotValidError,
   ServerError,

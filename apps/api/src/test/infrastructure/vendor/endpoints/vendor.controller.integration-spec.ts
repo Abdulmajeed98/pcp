@@ -105,6 +105,16 @@ const vendorNotFound = [
   },
 ];
 
+// The refusal of a Vendor's Login that names any Vendor but its own, the
+// same whether that Vendor exists or not.
+const vendorAccessDenied = [
+  {
+    code: 'VENDOR_ACCESS_DENIED',
+    title: 'vendor_access_denied_title',
+    detail: 'vendor_access_denied_details',
+  },
+];
+
 const internalServerError = [
   {
     code: 'INTERNAL_SERVER_ERROR',
@@ -182,9 +192,30 @@ describe('the Vendor endpoints', () => {
     });
   }
 
+  function readCallersVendor(token: string): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/caller/vendor`, { headers: bearerHeader(token) });
+  }
+
   async function createdOf(response: Response): Promise<CreatedVendorBody> {
     expect(response.status).toBe(201);
     return (await response.json()) as CreatedVendorBody;
+  }
+
+  // A made-up Vendor the Admin creates, with a login phone number of its own.
+  async function aVendorWith(loginPhoneNumber: string): Promise<VendorBody> {
+    const { vendor } = await createdOf(await createVendor(aVendor(loginPhoneNumber)));
+    return vendor;
+  }
+
+  // A token of the Vendor's own Login, as Keycloak issues it: its subject is
+  // the Login's identifier, and its name the login phone number, unless the
+  // test gives another name.
+  async function tokenOfTheOwnLogin(
+    vendor: VendorBody,
+    loginName = vendor.loginPhoneNumber.international,
+  ): Promise<string> {
+    const [login] = await loginsNamed(vendor.loginPhoneNumber.international);
+    return testApp.tokenOf({ subject: login.id, loginName, roles: ['vendor'] });
   }
 
   describe('creating a Vendor', () => {
@@ -818,6 +849,91 @@ describe('the Vendor endpoints', () => {
 
       await expectErrorResponse(response, 404, vendorNotFound);
     });
+
+    it("lets the Vendor's own Login read its Vendor", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+
+      const response = await readVendor(vendor.id, await tokenOfTheOwnLogin(vendor));
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual(vendor);
+    });
+
+    it("refuses the Vendor's own Login another Vendor, with an error of its own", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+
+      const response = await readVendor(another.id, await tokenOfTheOwnLogin(vendor));
+
+      await expectErrorResponse(response, 403, vendorAccessDenied);
+    });
+
+    it.each([
+      ['an identifier no Vendor has', '0b4d6f8a-2c1e-4a3b-9d5f-7e6a8b9c0d1e'],
+      ['a text that is no identifier', 'not-a-vendor'],
+    ])(
+      "refuses the Vendor's own Login %s as it refuses another Vendor, where the Admin is answered 404",
+      async (_what, vendorId) => {
+        const vendor = await aVendorWith('0750 123 4567');
+
+        const response = await readVendor(vendorId, await tokenOfTheOwnLogin(vendor));
+
+        await expectErrorResponse(response, 403, vendorAccessDenied);
+      },
+    );
+
+    it('refuses a Login that holds the vendor role and has no Vendor behind it every Vendor', async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const loginWithNoVendor = await testApp.tokenOf({ roles: ['vendor'] });
+
+      const response = await readVendor(vendor.id, loginWithNoVendor);
+
+      await expectErrorResponse(response, 403, vendorAccessDenied);
+    });
+  });
+
+  describe("the Caller's Vendor", () => {
+    it("answers the Vendor's own Login with its Vendor", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      await aVendorWith('0750 765 4321');
+
+      const response = await readCallersVendor(await tokenOfTheOwnLogin(vendor));
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual(vendor);
+    });
+
+    // A Login's name can change, and a token issued before the change still
+    // carries the old one. Its identifier stays.
+    it("finds the Vendor by its Login's identifier, whatever name the token carries", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+
+      const response = await readCallersVendor(
+        await tokenOfTheOwnLogin(vendor, another.loginPhoneNumber.international),
+      );
+
+      expect(response.status).toBe(200);
+      expect(((await response.json()) as VendorBody).id).toBe(vendor.id);
+    });
+
+    it('answers a Login that holds the vendor role and has no Vendor behind it 404, with an error of its own', async () => {
+      await aVendorWith('0750 123 4567');
+      const loginWithNoVendor = await testApp.tokenOf({
+        loginName: '+9647501234567',
+        roles: ['vendor'],
+      });
+
+      const response = await readCallersVendor(loginWithNoVendor);
+
+      await expectErrorResponse(response, 404, vendorNotFound);
+    });
+
+    it('refuses the Admin, who has no Vendor of its own', async () => {
+      const response = await readCallersVendor(adminToken);
+
+      await expectErrorResponse(response, 403, accessDenied);
+    });
   });
 
   describe('who may call them', () => {
@@ -828,15 +944,6 @@ describe('the Vendor endpoints', () => {
 
       await expectErrorResponse(response, 403, accessDenied);
       expect(await loginsNamed('+9647501234567')).toEqual([]);
-    });
-
-    it("refuses a Vendor's Login a read", async () => {
-      const { vendor } = await createdOf(await createVendor(aVendor('0750 123 4567')));
-      const vendorToken = await testApp.tokenOf({ roles: ['vendor'] });
-
-      const response = await readVendor(vendor.id, vendorToken);
-
-      await expectErrorResponse(response, 403, accessDenied);
     });
 
     it("refuses a Vendor's own Login the list", async () => {
@@ -861,6 +968,12 @@ describe('the Vendor endpoints', () => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(aVendor('0750 123 4567')),
       });
+
+      await expectErrorResponse(response, 401, unauthorized);
+    });
+
+    it("refuses the Caller's Vendor without a token", async () => {
+      const response = await fetch(`${testApp.baseUrl}/v1/caller/vendor`);
 
       await expectErrorResponse(response, 401, unauthorized);
     });

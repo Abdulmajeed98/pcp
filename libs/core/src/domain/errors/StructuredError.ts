@@ -4,6 +4,7 @@ export type ErrorType =
   | 'SERVER_ERROR'
   | 'SERVICE_UNAVAILABLE'
   | 'NOT_FOUND'
+  | 'FORBIDDEN'
   | 'VALIDATION_ERROR';
 
 // A failure that domain and Store code returns, as the left side of an
@@ -69,6 +70,16 @@ export class ServiceUnavailableError extends StructuredError {
 export class NotFoundError extends StructuredError {
   static of(code: string, message: string): NotFoundError {
     return new NotFoundError(code, message, 'NOT_FOUND');
+  }
+}
+
+// The caller may call the endpoint, but not for what it names, such as a
+// Vendor's Login naming another Vendor. Each kind of refused access has a
+// code of its own, such as `VENDOR_ACCESS_DENIED`, which a frontend can tell
+// from a caller that lacks the role.
+export class ForbiddenError extends StructuredError {
+  static of(code: string, message: string): ForbiddenError {
+    return new ForbiddenError(code, message, 'FORBIDDEN');
   }
 }
 

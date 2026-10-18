@@ -742,3 +742,25 @@ export type ReadVendorResponses = {
 };
 
 export type ReadVendorResponse = ReadVendorResponses[keyof ReadVendorResponses];
+
+export type ReadCallersVendorData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/caller/vendor';
+};
+
+export type ReadCallersVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadCallersVendorError = ReadCallersVendorErrors[keyof ReadCallersVendorErrors];
+
+export type ReadCallersVendorResponses = {
+    200: VendorResponse;
+};
+
+export type ReadCallersVendorResponse = ReadCallersVendorResponses[keyof ReadCallersVendorResponses];

@@ -73,6 +73,11 @@ export abstract class VendorStore {
     id: string,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>>;
 
+  // The Vendor whose Login has this identifier, or none.
+  abstract readByLoginId(
+    loginId: string,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>>;
+
   // The Vendor whose login phone number this is, or none.
   abstract readByLoginPhoneNumber(
     loginPhoneNumber: PhoneNumber,

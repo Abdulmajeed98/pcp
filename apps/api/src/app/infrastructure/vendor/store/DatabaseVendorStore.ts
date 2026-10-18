@@ -180,6 +180,14 @@ export class DatabaseVendorStore implements VendorStore {
     return this.readOneWhere(eq(vendor.id, id));
   }
 
+  async readByLoginId(
+    loginId: string,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
+    if (!couldBeIdentifier(loginId)) return Either.right(Option.none());
+
+    return this.readOneWhere(eq(vendor.loginId, loginId));
+  }
+
   async readByLoginPhoneNumber(
     loginPhoneNumber: PhoneNumber,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {

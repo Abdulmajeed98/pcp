@@ -17,6 +17,7 @@ const statusesByErrorType: Record<ErrorType, number> = {
   SERVER_ERROR: HttpStatus.INTERNAL_SERVER_ERROR,
   SERVICE_UNAVAILABLE: HttpStatus.SERVICE_UNAVAILABLE,
   NOT_FOUND: HttpStatus.NOT_FOUND,
+  FORBIDDEN: HttpStatus.FORBIDDEN,
   VALIDATION_ERROR: HttpStatus.BAD_REQUEST,
 };
 

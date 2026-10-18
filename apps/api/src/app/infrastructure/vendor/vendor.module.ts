@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 
 import { CreateVendorCommand } from '~/domain/vendor/CreateVendorCommand';
 import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
+import { ReadCallersVendorQuery } from '~/domain/vendor/ReadCallersVendorQuery';
 import { ReadVendorQuery } from '~/domain/vendor/ReadVendorQuery';
+import { VendorAccessRule } from '~/domain/vendor/VendorAccessRule';
 import { VendorStore } from '~/domain/vendor/VendorStore';
 import { LoginModule } from '~/infrastructure/login/login.module';
 
@@ -18,6 +20,8 @@ import { DatabaseVendorStore } from './store/DatabaseVendorStore';
     CreateVendorCommand,
     ListVendorsQuery,
     ReadVendorQuery,
+    ReadCallersVendorQuery,
+    VendorAccessRule,
   ],
 })
 export class VendorModule {}

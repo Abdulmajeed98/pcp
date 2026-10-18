@@ -1,10 +1,14 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
-import { ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
+import { CallerResolver, ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
 import { CreateVendorCommand } from '~/domain/vendor/CreateVendorCommand';
 import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
+import {
+  ReadCallersVendorQuery,
+  ReadCallersVendorQueryInput,
+} from '~/domain/vendor/ReadCallersVendorQuery';
 import { ReadVendorQuery, ReadVendorQueryInput } from '~/domain/vendor/ReadVendorQuery';
 
 import { CreatedVendorResponse } from './CreatedVendorResponse';
@@ -19,6 +23,8 @@ export class VendorController {
     private readonly createVendorCommand: CreateVendorCommand,
     private readonly listVendorsQuery: ListVendorsQuery,
     private readonly readVendorQuery: ReadVendorQuery,
+    private readonly readCallersVendorQuery: ReadCallersVendorQuery,
+    private readonly callerResolver: CallerResolver,
   ) {}
 
   @ApiOperation({
@@ -52,12 +58,32 @@ export class VendorController {
     );
   }
 
-  @ApiOperation({ summary: 'One Vendor' })
+  @ApiOperation({
+    summary: "One Vendor, for the Admin or for the Vendor's own Login",
+  })
   @ApiOkResponse({ type: VendorResponse })
-  @PreAuthorize([Role.ADMIN])
+  @PreAuthorize([Role.ADMIN, Role.VENDOR])
   @Get('v1/vendors/:vendorId')
   async readVendor(@Param('vendorId') vendorId: string): Promise<VendorResponse> {
-    const result = await this.readVendorQuery.execute(new ReadVendorQueryInput(vendorId));
+    const caller = this.callerResolver.getCaller();
+    const result = await this.readVendorQuery.execute(
+      new ReadVendorQueryInput(caller.getId(), caller.getRoles(), vendorId),
+    );
+
+    return result.pipe(
+      Either.map((output) => VendorResponse.of(output.getVendor())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({ summary: 'The Vendor whose Login the caller is' })
+  @ApiOkResponse({ type: VendorResponse })
+  @PreAuthorize([Role.VENDOR])
+  @Get('v1/caller/vendor')
+  async readCallersVendor(): Promise<VendorResponse> {
+    const result = await this.readCallersVendorQuery.execute(
+      new ReadCallersVendorQueryInput(this.callerResolver.getCaller().getId()),
+    );
 
     return result.pipe(
       Either.map((output) => VendorResponse.of(output.getVendor())),
