@@ -1,17 +1,20 @@
-import type { PhoneNumberResponse, VendorResponse } from '@pcp/api-client';
+import type { VendorResponse } from '@pcp/api-client';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
-import { ExternalLinkIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
 import { useParams } from 'react-router';
 
 import {
   cityName,
   coordinatesOf,
   DeactivatedMark,
+  Detail,
+  DetailList,
   googleMapsSearchFor,
+  InANewTab,
   instagramHandleOf,
   instagramProfileOf,
+  PhoneNumberShown,
   useVendor,
+  WrittenOnLines,
 } from '@/entities/vendor';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
@@ -65,7 +68,7 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
         </h1>
       </div>
 
-      <dl className="divide-y divide-border border-y border-border text-sm">
+      <DetailList>
         <Detail name="state" label="State">
           {vendor.active ? 'Active' : <DeactivatedMark />}
         </Detail>
@@ -81,23 +84,29 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
           ) : (
             <span className="flex flex-col items-start gap-1">
               <AlwaysEnglish>{coordinatesOf(vendor.mapLocation)}</AlwaysEnglish>
-              <InANewTab href={googleMapsSearchFor(vendor.mapLocation)}>
+              <InANewTab
+                href={googleMapsSearchFor(vendor.mapLocation)}
+                inANewTab={inANewTab}
+              >
                 Open in Google Maps
               </InANewTab>
             </span>
           )}
         </Detail>
         <Detail name="phoneNumber" label="Phone number">
-          <PhoneNumber number={vendor.phoneNumber} />
+          <PhoneNumberShown number={vendor.phoneNumber} none={<None />} />
         </Detail>
         <Detail name="whatsAppNumber" label="WhatsApp number">
-          <PhoneNumber number={vendor.whatsAppNumber} />
+          <PhoneNumberShown number={vendor.whatsAppNumber} none={<None />} />
         </Detail>
         <Detail name="instagramName" label="Instagram name">
           {vendor.instagramName === null ? (
             <None />
           ) : (
-            <InANewTab href={instagramProfileOf(vendor.instagramName)}>
+            <InANewTab
+              href={instagramProfileOf(vendor.instagramName)}
+              inANewTab={inANewTab}
+            >
               <AlwaysEnglish>{instagramHandleOf(vendor.instagramName)}</AlwaysEnglish>
             </InANewTab>
           )}
@@ -110,63 +119,15 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
           )}
         </Detail>
         <Detail name="loginPhoneNumber" label="Login phone number">
-          <PhoneNumber number={vendor.loginPhoneNumber} />
+          <PhoneNumberShown number={vendor.loginPhoneNumber} none={<None />} />
         </Detail>
-      </dl>
+      </DetailList>
     </div>
   );
 }
 
-// One detail of the Vendor, under its English name, found by the name the
-// API gives it.
-function Detail({
-  name,
-  label,
-  children,
-}: {
-  name: string;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      data-detail={name}
-      className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4 gap-y-1 py-2.5"
-    >
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
-
-// A link that opens another site in a new tab, and says so to a screen
-// reader and by its mark.
-function InANewTab({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex min-h-control items-center gap-1 underline underline-offset-4 hover:decoration-2"
-    >
-      {children}
-      <span className="sr-only">, in a new tab</span>
-      <ExternalLinkIcon aria-hidden="true" className="size-4" />
-    </a>
-  );
-}
-
-// Text the Vendor wrote on one or more lines, kept on its lines, and laid
-// out in its own direction, so that a Kurdish address is aligned right on
-// the English page.
-function WrittenOnLines({ text }: { text: string }) {
-  return <AsWritten className="block whitespace-pre-line">{text}</AsWritten>;
-}
-
-// A phone number in Iraq's own form, or that the Vendor has none.
-function PhoneNumber({ number }: { number: PhoneNumberResponse | null }) {
-  return number === null ? <None /> : <AlwaysEnglish>{number.national}</AlwaysEnglish>;
-}
+// What a screen reader says after a link that opens another site.
+const inANewTab = ', in a new tab';
 
 // A detail the Vendor may leave out, and has.
 function None() {

@@ -4,3 +4,10 @@ export { instagramHandleOf, instagramProfileOf } from './model/instagram';
 export { coordinatesOf, googleMapsSearchFor, mapLocationIn } from './model/map-location';
 export { DeactivatedMark } from './ui/deactivated-mark';
 export { MapLocationField } from './ui/map-location-field';
+export {
+  Detail,
+  DetailList,
+  InANewTab,
+  PhoneNumberShown,
+  WrittenOnLines,
+} from './ui/vendor-details';
