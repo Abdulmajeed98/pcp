@@ -1,6 +1,6 @@
 # Spec: The three languages
 
-Status: ready-for-agent
+Status: resolved
 
 This is `languages`, the first module in the build order of [the MVP spec](../mvp/spec.md)'s capability map. It covers the requirements LANG-1 to LANG-8. The four infrastructure steps are finished, and this is the first module that builds on them. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md) and [ADR-0004](../../docs/adr/0004-architecture-per-app.md).
 
