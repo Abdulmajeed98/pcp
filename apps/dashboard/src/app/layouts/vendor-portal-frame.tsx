@@ -3,7 +3,11 @@ import { AsWritten } from '@pcp/ui';
 import type { ReactNode } from 'react';
 import { Outlet, ScrollRestoration } from 'react-router';
 
-import { useCallersVendor, type VendorShown } from '@/entities/vendor';
+import {
+  isRefusedAsDeactivated,
+  useCallersVendor,
+  type VendorShown,
+} from '@/entities/vendor';
 import { logOut } from '@/shared/auth';
 import { Refusal, WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
@@ -18,25 +22,47 @@ import { LanguageSwitch } from './language-switch';
 // console, gets a plain message in the portal's language with the way to log
 // out, and a top bar with the language switch alone, so that the message can
 // be read in another language, as the owner chose on 18 October 2026.
+//
+// A deactivated Vendor gets a plain message of its own in the same frame,
+// when the portal starts and, when the portal is already open, on its next
+// call to the API: the API refuses that call, and every other, with
+// `VENDOR_DEACTIVATED`, and the dashboard then asks for the Caller's Vendor
+// again (see `query-client.ts`).
 export function VendorPortalFrame() {
   const { t } = useTranslation();
   const vendor = useCallersVendor();
 
   if (vendor.error instanceof Refusal && vendor.error.code === 'VENDOR_NOT_FOUND') {
+    return <PlainMessage testId="no-vendor" message={t('VendorPortalFrame.noVendor')} />;
+  }
+  if (isRefusedAsDeactivated(vendor.error)) {
     return (
-      <Frame>
-        <header className="flex justify-end border-b border-border pb-2">
-          <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
-        </header>
-        <main className="flex flex-col items-start gap-4 pt-4 sm:pt-6">
-          <p data-testid="no-vendor">{t('VendorPortalFrame.noVendor')}</p>
-          <LogOut />
-        </main>
-      </Frame>
+      <PlainMessage
+        testId="vendor-deactivated"
+        message={t('VendorPortalFrame.deactivated')}
+      />
     );
   }
 
   return <PortalFrame vendor={vendor} />;
+}
+
+// A plain message in the portal's language in place of the portal, with a top
+// bar that holds the language switch alone, and the way to log out.
+function PlainMessage({ testId, message }: { testId: string; message: string }) {
+  const { t } = useTranslation();
+
+  return (
+    <Frame>
+      <header className="flex justify-end border-b border-border pb-2">
+        <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
+      </header>
+      <main className="flex flex-col items-start gap-4 pt-4 sm:pt-6">
+        <p data-testid={testId}>{message}</p>
+        <LogOut />
+      </main>
+    </Frame>
+  );
 }
 
 // The Vendor a frame shows, as far as the API has answered: the Vendor, once

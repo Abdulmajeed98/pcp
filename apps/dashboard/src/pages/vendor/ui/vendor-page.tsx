@@ -16,6 +16,7 @@ import {
   useVendor,
   WrittenOnLines,
 } from '@/entities/vendor';
+import { VendorActivation } from '@/features/vendor-activation';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
 import {
@@ -35,8 +36,9 @@ import {
 // location opens Google Maps' search for its coordinates, and its Instagram
 // name, written with an @ as Instagram writes a handle, opens its profile,
 // each in a new tab, so that the Admin console stays where it was. Links
-// below its name open its edit form, and the Vendor's portal, for the Admin
-// to act as it.
+// below its name open its edit form and the Vendor's portal, for the
+// Admin to act as it, and below them the Admin deactivates or
+// reactivates it.
 export function VendorPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
@@ -90,6 +92,8 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
             Open its portal
           </Link>
         </div>
+        {/* Its own for each Vendor, so that one Vendor's refusal is never shown on another's page. */}
+        <VendorActivation key={vendor.id} vendor={vendor} />
       </div>
 
       <DetailList>

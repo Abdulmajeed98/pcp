@@ -59,4 +59,16 @@ export abstract class LoginStore {
 
   // Deletes the Login with this identifier.
   abstract delete(loginId: string): Promise<Either.Either<void, StructuredError>>;
+
+  // Stops the Login with this identifier logging in, or lets it log in again
+  // with the password it had. Doing either when it is already done changes
+  // nothing.
+  abstract disable(loginId: string): Promise<Either.Either<void, StructuredError>>;
+
+  abstract enable(loginId: string): Promise<Either.Either<void, StructuredError>>;
+
+  // Ends every session of the Login with this identifier, so that a browser
+  // logged in as it must log in again. A token already issued is not
+  // withdrawn: it lasts until it runs out.
+  abstract endSessions(loginId: string): Promise<Either.Either<void, StructuredError>>;
 }

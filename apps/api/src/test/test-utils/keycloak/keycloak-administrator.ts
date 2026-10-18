@@ -79,6 +79,31 @@ export async function realmRolesOf(loginId: string): Promise<string[]> {
   return roles.map((role) => role.name);
 }
 
+// The Login with this identifier, as Keycloak keeps it.
+export async function loginWithId(loginId: string): Promise<LoginAsKept> {
+  const response = await asAdministrator(`/users/${loginId}`);
+  return (await response.json()) as LoginAsKept;
+}
+
+// Gives a Login a lasting password, as a Vendor's first login does when it
+// replaces its temporary one, so that it can log in and hold a session.
+export async function giveALastingPassword(
+  loginId: string,
+  password: string,
+): Promise<void> {
+  await asAdministrator(`/users/${loginId}/reset-password`, {
+    method: 'PUT',
+    body: JSON.stringify({ type: 'password', value: password, temporary: false }),
+  });
+}
+
+// The sessions a Login holds now, by their identifiers.
+export async function sessionsOf(loginId: string): Promise<string[]> {
+  const response = await asAdministrator(`/users/${loginId}/sessions`);
+  const sessions = (await response.json()) as { id: string }[];
+  return sessions.map((session) => session.id);
+}
+
 // Makes a Login by hand, as someone in Keycloak's own console would.
 export async function makeALoginByHand(name: string): Promise<void> {
   await asAdministrator('/users', {
@@ -137,18 +162,6 @@ export async function logInAt(name: string, password: string): Promise<TokenAnsw
     password,
   });
   return { status: response.status, body: (await response.json()) as TokenAnswer['body'] };
-}
-
-// Gives a Login a lasting password, as its first login does when it replaces
-// its temporary one, so that it can log in at the token address.
-export async function giveALastingPassword(
-  loginId: string,
-  password: string,
-): Promise<void> {
-  await asAdministrator(`/users/${loginId}/reset-password`, {
-    method: 'PUT',
-    body: JSON.stringify({ type: 'password', value: password, temporary: false }),
-  });
 }
 
 // What Keycloak's account interface answered.

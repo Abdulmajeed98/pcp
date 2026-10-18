@@ -857,6 +857,54 @@ export type EditContactDetailsResponses = {
 
 export type EditContactDetailsResponse = EditContactDetailsResponses[keyof EditContactDetailsResponses];
 
+export type DeactivateVendorData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/deactivate';
+};
+
+export type DeactivateVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type DeactivateVendorError = DeactivateVendorErrors[keyof DeactivateVendorErrors];
+
+export type DeactivateVendorResponses = {
+    200: VendorResponse;
+};
+
+export type DeactivateVendorResponse = DeactivateVendorResponses[keyof DeactivateVendorResponses];
+
+export type ReactivateVendorData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/reactivate';
+};
+
+export type ReactivateVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReactivateVendorError = ReactivateVendorErrors[keyof ReactivateVendorErrors];
+
+export type ReactivateVendorResponses = {
+    200: VendorResponse;
+};
+
+export type ReactivateVendorResponse = ReactivateVendorResponses[keyof ReactivateVendorResponses];
+
 export type ReadCallersVendorData = {
     body?: never;
     path?: never;

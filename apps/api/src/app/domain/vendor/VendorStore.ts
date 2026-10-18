@@ -113,6 +113,17 @@ export abstract class VendorStore {
     params: EditContactDetailsParams,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>>;
 
+  // Marks the Vendor with this identifier a deactivated Vendor, or an active
+  // one again, and gives it back as it now is, or none when there is no
+  // such Vendor.
+  abstract markDeactivated(
+    vendorId: string,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>>;
+
+  abstract markActive(
+    vendorId: string,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>>;
+
   // The Vendor with this identifier, or none when there is no such Vendor.
   abstract readById(
     id: string,
