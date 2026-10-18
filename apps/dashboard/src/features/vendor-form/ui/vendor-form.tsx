@@ -1,4 +1,4 @@
-import type { CreateVendorRequest } from '@pcp/api-client';
+import type { CreateVendorRequest, VendorResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import type { ReactNode } from 'react';
 import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hook-form';
@@ -27,6 +27,7 @@ import {
 import {
   newVendorFormValues,
   type VendorFormValues,
+  vendorFormValuesOf,
   vendorRequestOf,
 } from '../model/form-values';
 import { detailOf, messageOf, missingDetailMessages, whyNotSaved } from '../model/refusals';
@@ -40,10 +41,15 @@ import { detailOf, messageOf, missingDetailMessages, whyNotSaved } from '../mode
 // Saving sends every detail. A refusal from the API is shown beside the
 // detail it names, which takes the focus, and a refusal that names no detail
 // of the form is shown above it.
+//
+// Given a Vendor, it is the Admin's edit of that Vendor, filled with its
+// details as they are.
 export function VendorForm({
+  vendor,
   submitLabel,
   save,
 }: {
+  vendor?: VendorResponse;
   submitLabel: string;
   // Sends the Vendor. It throws a `Refusal` when the API refuses it, and an
   // `Unreachable` when the API cannot be reached.
@@ -51,9 +57,11 @@ export function VendorForm({
 }) {
   const { register, control, handleSubmit, setError, formState } =
     useForm<VendorFormValues>({
-      defaultValues: newVendorFormValues,
+      defaultValues:
+        vendor === undefined ? newVendorFormValues : vendorFormValuesOf(vendor),
     });
   const { errors } = formState;
+  const editing = vendor !== undefined;
   const refusal = errors.root?.refusal?.message;
   const required = (detail: keyof typeof missingDetailMessages) => ({
     validate: (text: string) => text.trim() !== '' || missingDetailMessages[detail],
@@ -72,14 +80,16 @@ export function VendorForm({
       const detail = detailOf(each);
       return detail === undefined ? undefined : { field: detail, message: messageOf(each) };
     });
-    if (!besideAField) setError('root.refusal', { message: whyNotSaved(error) });
+    if (!besideAField) setError('root.refusal', { message: whyNotSaved(error, editing) });
   }
 
   return (
     <form noValidate className="flex flex-col gap-8" onSubmit={handleSubmit(submit)}>
       {refusal !== undefined && (
         <Alert variant="destructive" data-testid="refusal">
-          <AlertTitle>The Vendor was not created.</AlertTitle>
+          <AlertTitle>
+            {editing ? 'The Vendor was not saved.' : 'The Vendor was not created.'}
+          </AlertTitle>
           <AlertDescription>{refusal}</AlertDescription>
         </Alert>
       )}
@@ -205,7 +215,11 @@ export function VendorForm({
             name="loginPhoneNumber"
             label="Login phone number"
             errors={errors}
-            description="A mobile number. The Vendor logs in with it, and its login details are handed over to it on WhatsApp."
+            description={
+              editing
+                ? 'A mobile number. The Vendor logs in with it. A new number changes what the Vendor logs in with, and its password stays.'
+                : 'A mobile number. The Vendor logs in with it, and its login details are handed over to it on WhatsApp.'
+            }
           >
             {(props) => (
               <PhoneInput
