@@ -201,6 +201,18 @@ export class DatabaseVendorStore implements VendorStore {
     }
   }
 
+  async markDeactivated(
+    vendorId: string,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
+    return this.markActiveOrNot(vendorId, false);
+  }
+
+  async markActive(
+    vendorId: string,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
+    return this.markActiveOrNot(vendorId, true);
+  }
+
   async readById(
     id: string,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
@@ -223,6 +235,30 @@ export class DatabaseVendorStore implements VendorStore {
     return this.readOneWhere(
       eq(vendor.loginPhoneNumber, loginPhoneNumber.getInternational()),
     );
+  }
+
+  private async markActiveOrNot(
+    vendorId: string,
+    active: boolean,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
+    if (!couldBeIdentifier(vendorId)) return Either.right(Option.none());
+
+    try {
+      const [row] = await this.databaseProvider
+        .getClient()
+        .update(vendor)
+        .set({ active })
+        .where(eq(vendor.id, vendorId))
+        .returning();
+
+      if (row === undefined) return Either.right(Option.none());
+      return Either.map(toDomain(row), Option.some);
+    } catch (error) {
+      this.logger.error(error, 'A Vendor could not be marked active or deactivated');
+      return Either.left(
+        databaseErrorOf(error, 'A Vendor could not be marked active or deactivated'),
+      );
+    }
   }
 
   private async readOneWhere(

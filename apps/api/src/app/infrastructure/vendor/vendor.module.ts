@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 
 import { CreateVendorCommand } from '~/domain/vendor/CreateVendorCommand';
+import { DeactivateVendorCommand } from '~/domain/vendor/DeactivateVendorCommand';
 import { EditContactDetailsCommand } from '~/domain/vendor/EditContactDetailsCommand';
 import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
+import { ReactivateVendorCommand } from '~/domain/vendor/ReactivateVendorCommand';
 import { ReadCallersVendorQuery } from '~/domain/vendor/ReadCallersVendorQuery';
 import { ReadVendorQuery } from '~/domain/vendor/ReadVendorQuery';
 import { VendorAccessRule } from '~/domain/vendor/VendorAccessRule';
@@ -20,6 +22,8 @@ import { DatabaseVendorStore } from './store/DatabaseVendorStore';
     { provide: VendorStore, useClass: DatabaseVendorStore },
     CreateVendorCommand,
     EditContactDetailsCommand,
+    DeactivateVendorCommand,
+    ReactivateVendorCommand,
     ListVendorsQuery,
     ReadVendorQuery,
     ReadCallersVendorQuery,

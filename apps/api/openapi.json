@@ -583,6 +583,84 @@
         "tags": ["Vendor"]
       }
     },
+    "/v1/vendors/{vendorId}/deactivate": {
+      "post": {
+        "operationId": "deactivateVendor",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Deactivate a Vendor: mark it deactivated, disable its Login and end its sessions. Doing it again finishes one that failed halfway",
+        "tags": ["Vendor"]
+      }
+    },
+    "/v1/vendors/{vendorId}/reactivate": {
+      "post": {
+        "operationId": "reactivateVendor",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reactivate a Vendor: enable its Login, with the password it had, and mark it active. Doing it again finishes one that failed halfway",
+        "tags": ["Vendor"]
+      }
+    },
     "/v1/caller/vendor": {
       "get": {
         "operationId": "readCallersVendor",

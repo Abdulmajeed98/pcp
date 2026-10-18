@@ -1,15 +1,33 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { CallerResolver, ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
 import { CreateVendorCommand } from '~/domain/vendor/CreateVendorCommand';
+import {
+  DeactivateVendorCommand,
+  DeactivateVendorCommandInput,
+} from '~/domain/vendor/DeactivateVendorCommand';
 import { EditContactDetailsCommand } from '~/domain/vendor/EditContactDetailsCommand';
 import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
 import {
   ReadCallersVendorQuery,
   ReadCallersVendorQueryInput,
 } from '~/domain/vendor/ReadCallersVendorQuery';
+import {
+  ReactivateVendorCommand,
+  ReactivateVendorCommandInput,
+} from '~/domain/vendor/ReactivateVendorCommand';
 import { ReadVendorQuery, ReadVendorQueryInput } from '~/domain/vendor/ReadVendorQuery';
 
 import { CreatedVendorResponse } from './CreatedVendorResponse';
@@ -27,6 +45,8 @@ export class VendorController {
     private readonly readVendorQuery: ReadVendorQuery,
     private readonly readCallersVendorQuery: ReadCallersVendorQuery,
     private readonly editContactDetailsCommand: EditContactDetailsCommand,
+    private readonly deactivateVendorCommand: DeactivateVendorCommand,
+    private readonly reactivateVendorCommand: ReactivateVendorCommand,
     private readonly callerResolver: CallerResolver,
   ) {}
 
@@ -93,6 +113,44 @@ export class VendorController {
     const caller = this.callerResolver.getCaller();
     const result = await this.editContactDetailsCommand.execute(
       request.toCommandInput(caller.getId(), caller.getRoles(), vendorId),
+    );
+
+    return result.pipe(
+      Either.map((output) => VendorResponse.of(output.getVendor())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Deactivate a Vendor: mark it deactivated, disable its Login and end its sessions. Doing it again finishes one that failed halfway',
+  })
+  @ApiOkResponse({ type: VendorResponse })
+  @PreAuthorize([Role.ADMIN])
+  @HttpCode(HttpStatus.OK)
+  @Post('v1/vendors/:vendorId/deactivate')
+  async deactivateVendor(@Param('vendorId') vendorId: string): Promise<VendorResponse> {
+    const result = await this.deactivateVendorCommand.execute(
+      new DeactivateVendorCommandInput(vendorId),
+    );
+
+    return result.pipe(
+      Either.map((output) => VendorResponse.of(output.getVendor())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Reactivate a Vendor: enable its Login, with the password it had, and mark it active. Doing it again finishes one that failed halfway',
+  })
+  @ApiOkResponse({ type: VendorResponse })
+  @PreAuthorize([Role.ADMIN])
+  @HttpCode(HttpStatus.OK)
+  @Post('v1/vendors/:vendorId/reactivate')
+  async reactivateVendor(@Param('vendorId') vendorId: string): Promise<VendorResponse> {
+    const result = await this.reactivateVendorCommand.execute(
+      new ReactivateVendorCommandInput(vendorId),
     );
 
     return result.pipe(
