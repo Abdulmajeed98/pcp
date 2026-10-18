@@ -1,19 +1,23 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
 import { CreateVendorCommand } from '~/domain/vendor/CreateVendorCommand';
+import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
 import { ReadVendorQuery, ReadVendorQueryInput } from '~/domain/vendor/ReadVendorQuery';
 
 import { CreatedVendorResponse } from './CreatedVendorResponse';
 import { CreateVendorRequest } from './CreateVendorRequest';
+import { ListVendorsRequest } from './ListVendorsRequest';
+import { VendorPageResponse } from './VendorPageResponse';
 import { VendorResponse } from './VendorResponse';
 
 @Controller()
 export class VendorController {
   constructor(
     private readonly createVendorCommand: CreateVendorCommand,
+    private readonly listVendorsQuery: ListVendorsQuery,
     private readonly readVendorQuery: ReadVendorQuery,
   ) {}
 
@@ -29,6 +33,21 @@ export class VendorController {
 
     return result.pipe(
       Either.map(CreatedVendorResponse.of),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary: 'One page of every Vendor, active and deactivated, in name order',
+  })
+  @ApiOkResponse({ type: VendorPageResponse })
+  @PreAuthorize([Role.ADMIN])
+  @Get('v1/vendors')
+  async listVendors(@Query() request: ListVendorsRequest): Promise<VendorPageResponse> {
+    const result = await this.listVendorsQuery.execute(request.toQueryInput());
+
+    return result.pipe(
+      Either.map((output) => VendorPageResponse.of(output.getVendorsPage())),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

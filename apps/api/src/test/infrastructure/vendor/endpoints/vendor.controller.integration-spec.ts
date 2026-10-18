@@ -49,6 +49,18 @@ type VendorBody = {
   updatedAt: string;
 };
 
+// A Vendor as the list of Vendors shows it, and a page of them.
+type VendorSummaryBody = Pick<VendorBody, 'id' | 'name' | 'loginPhoneNumber' | 'active'>;
+type VendorPageBody = {
+  content: VendorSummaryBody[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+};
+
 // What creating a Vendor answers: the Vendor, and its Login's temporary
 // password, this once.
 type CreatedVendorBody = { vendor: VendorBody; temporaryPassword: string };
@@ -157,6 +169,15 @@ describe('the Vendor endpoints', () => {
 
   function readVendor(vendorId: string, token = adminToken): Promise<Response> {
     return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}`, {
+      headers: bearerHeader(token),
+    });
+  }
+
+  function listVendors(
+    query: Record<string, string> = {},
+    token = adminToken,
+  ): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/vendors?${new URLSearchParams(query)}`, {
       headers: bearerHeader(token),
     });
   }
@@ -672,6 +693,122 @@ describe('the Vendor endpoints', () => {
     });
   });
 
+  describe('listing Vendors', () => {
+    // A made-up Vendor of this name, with a login phone number of its own.
+    async function aVendorNamed(
+      name: string,
+      loginPhoneNumber: string,
+    ): Promise<VendorBody> {
+      const { vendor } = await createdOf(
+        await createVendor({ ...aVendor(loginPhoneNumber), name }),
+      );
+      return vendor;
+    }
+
+    it('gives every Vendor once across the pages, active and deactivated, in name order, with the totals', async () => {
+      const made = new Map<string, VendorBody>();
+      for (const [letter, loginPhoneNumber] of [
+        ['E', '0750 000 0005'],
+        ['C', '0750 000 0003'],
+        ['A', '0750 000 0001'],
+        ['D', '0750 000 0004'],
+        ['B', '0750 000 0002'],
+      ]) {
+        made.set(letter, await aVendorNamed(`Made-up ${letter}`, loginPhoneNumber));
+      }
+      // No endpoint deactivates a Vendor yet (ticket 12), so the database
+      // marks one.
+      await inTheDatabase(
+        `UPDATE vendor SET active = false WHERE id = '${made.get('C')?.id}'`,
+      );
+
+      const pages = await Promise.all(
+        ['0', '1', '2'].map(async (page) => {
+          const response = await listVendors({ page, size: '2' });
+          expect(response.status).toBe(200);
+          return (await response.json()) as VendorPageBody;
+        }),
+      );
+
+      expect(pages.flatMap((page) => page.content)).toEqual(
+        ['A', 'B', 'C', 'D', 'E'].map((letter) => ({
+          id: made.get(letter)?.id,
+          name: `Made-up ${letter}`,
+          loginPhoneNumber: {
+            international: `+964750000000${'ABCDE'.indexOf(letter) + 1}`,
+            national: `0750 000 000${'ABCDE'.indexOf(letter) + 1}`,
+          },
+          active: letter !== 'C',
+        })),
+      );
+      expect(pages.map(({ content: _content, ...paging }) => paging)).toEqual([
+        {
+          pageNumber: 0,
+          pageSize: 2,
+          totalElements: 5,
+          totalPages: 3,
+          first: true,
+          last: false,
+        },
+        {
+          pageNumber: 1,
+          pageSize: 2,
+          totalElements: 5,
+          totalPages: 3,
+          first: false,
+          last: false,
+        },
+        {
+          pageNumber: 2,
+          pageSize: 2,
+          totalElements: 5,
+          totalPages: 3,
+          first: false,
+          last: true,
+        },
+      ]);
+    });
+
+    it('orders Vendors of the same name by their identifiers, so that no page repeats or skips one', async () => {
+      const ids = [];
+      for (const loginPhoneNumber of ['0750 000 0001', '0750 000 0002', '0750 000 0003']) {
+        ids.push((await aVendorNamed('Made-up twin', loginPhoneNumber)).id);
+      }
+
+      const pages = await Promise.all(
+        ['0', '1', '2'].map(async (page) => {
+          const response = await listVendors({ page, size: '1' });
+          return (await response.json()) as VendorPageBody;
+        }),
+      );
+
+      expect(pages.flatMap((page) => page.content.map((vendor) => vendor.id))).toEqual(
+        ids.sort(),
+      );
+    });
+
+    it('answers an empty first page when there is no Vendor', async () => {
+      const response = await listVendors();
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({
+        content: [],
+        pageNumber: 0,
+        pageSize: 10,
+        totalElements: 0,
+        totalPages: 0,
+        first: true,
+        last: true,
+      });
+    });
+
+    it('refuses a page size over the largest, naming it', async () => {
+      const response = await listVendors({ size: '1000' });
+
+      await expectErrorResponse(response, 400, [notValid('size')]);
+    });
+  });
+
   describe('reading a Vendor', () => {
     it.each([
       ['an identifier no Vendor has', '0b4d6f8a-2c1e-4a3b-9d5f-7e6a8b9c0d1e'],
@@ -700,6 +837,21 @@ describe('the Vendor endpoints', () => {
       const response = await readVendor(vendor.id, vendorToken);
 
       await expectErrorResponse(response, 403, accessDenied);
+    });
+
+    it("refuses a Vendor's Login the list", async () => {
+      await createdOf(await createVendor(aVendor('0750 123 4567')));
+      const vendorToken = await testApp.tokenOf({ roles: ['vendor'] });
+
+      const response = await listVendors({}, vendorToken);
+
+      await expectErrorResponse(response, 403, accessDenied);
+    });
+
+    it('refuses the list without a token', async () => {
+      const response = await fetch(`${testApp.baseUrl}/v1/vendors`);
+
+      await expectErrorResponse(response, 401, unauthorized);
     });
 
     it('refuses a create without a token', async () => {

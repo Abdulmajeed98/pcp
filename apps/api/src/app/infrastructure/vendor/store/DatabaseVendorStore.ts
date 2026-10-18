@@ -1,6 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { databaseErrorOf, ServerError, StructuredError } from '@pcp/core';
-import { eq, SQL } from 'drizzle-orm';
+import {
+  databaseErrorOf,
+  PageableAttributes,
+  PageAttributes,
+  ServerError,
+  StructuredError,
+} from '@pcp/core';
+import { asc, count, eq, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import { PhoneNumber } from '~/domain/phone-number/PhoneNumber';
@@ -8,7 +14,7 @@ import { City } from '~/domain/vendor/City';
 import { ContactDetails } from '~/domain/vendor/ContactDetails';
 import { MapLocation } from '~/domain/vendor/MapLocation';
 import { Vendor } from '~/domain/vendor/Vendor';
-import { CreateVendorParams, VendorStore } from '~/domain/vendor/VendorStore';
+import { CreateVendorParams, VendorsPage, VendorStore } from '~/domain/vendor/VendorStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 
@@ -131,6 +137,38 @@ export class DatabaseVendorStore implements VendorStore {
     } catch (error) {
       this.logger.error(error, 'A Vendor could not be created');
       return Either.left(databaseErrorOf(error, 'A Vendor could not be created'));
+    }
+  }
+
+  async list(
+    pageable: PageableAttributes,
+  ): Promise<Either.Either<VendorsPage, StructuredError>> {
+    try {
+      // One snapshot for both, so that a Vendor created between them cannot
+      // make the totals disagree with the page.
+      const [rows, [{ total }]] = await this.databaseProvider
+        .getClient()
+        .transaction(
+          (transaction) =>
+            Promise.all([
+              transaction
+                .select()
+                .from(vendor)
+                .orderBy(asc(vendor.name), asc(vendor.id))
+                .limit(pageable.getLimit())
+                .offset(pageable.getOffset()),
+              transaction.select({ total: count() }).from(vendor),
+            ]),
+          { isolationLevel: 'repeatable read', accessMode: 'read only' },
+        );
+
+      return Either.map(
+        Either.all(rows.map(toDomain)),
+        (vendors) => new VendorsPage(vendors, PageAttributes.of(pageable, total)),
+      );
+    } catch (error) {
+      this.logger.error(error, 'The Vendors could not be listed');
+      return Either.left(databaseErrorOf(error, 'The Vendors could not be listed'));
     }
   }
 

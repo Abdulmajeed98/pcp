@@ -440,6 +440,59 @@
         },
         "summary": "Create a Vendor and its Login, and answer the Login's temporary password once",
         "tags": ["Vendor"]
+      },
+      "get": {
+        "operationId": "listVendors",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "One page of every Vendor, active and deactivated, in name order",
+        "tags": ["Vendor"]
       }
     },
     "/v1/vendors/{vendorId}": {
@@ -1193,6 +1246,86 @@
           }
         },
         "required": ["vendor", "temporaryPassword"]
+      },
+      "VendorSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "5c2a9e1f-7d3b-4e8a-9f60-1b2c3d4e5f6a"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as it writes it.",
+            "example": "Made-up Computer Shop"
+          },
+          "loginPhoneNumber": {
+            "description": "The phone number the Vendor's Login is known by and logged in with.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberResponse"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the Vendor is active, or a deactivated Vendor.",
+            "example": true
+          }
+        },
+        "required": ["id", "name", "loginPhoneNumber", "active"]
+      },
+      "VendorPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Vendors, in name order.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorSummaryResponse"
+            }
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content"
+        ]
       }
     }
   },

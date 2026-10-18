@@ -388,6 +388,56 @@ export type CreatedVendorResponse = {
     temporaryPassword: string;
 };
 
+export type VendorSummaryResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as it writes it.
+     */
+    name: string;
+    /**
+     * The phone number the Vendor's Login is known by and logged in with.
+     */
+    loginPhoneNumber: PhoneNumberResponse;
+    /**
+     * Whether the Vendor is active, or a deactivated Vendor.
+     */
+    active: boolean;
+};
+
+export type VendorPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Vendors, in name order.
+     */
+    content: Array<VendorSummaryResponse>;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -615,6 +665,37 @@ export type ReadPhotoResponses = {
 };
 
 export type ReadPhotoResponse = ReadPhotoResponses[keyof ReadPhotoResponses];
+
+export type ListVendorsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+    };
+    url: '/v1/vendors';
+};
+
+export type ListVendorsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVendorsError = ListVendorsErrors[keyof ListVendorsErrors];
+
+export type ListVendorsResponses = {
+    200: VendorPageResponse;
+};
+
+export type ListVendorsResponse = ListVendorsResponses[keyof ListVendorsResponses];
 
 export type CreateVendorData = {
     body: CreateVendorRequest;

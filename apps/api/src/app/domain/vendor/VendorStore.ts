@@ -1,4 +1,4 @@
-import { StructuredError } from '@pcp/core';
+import { PageableAttributes, PageAttributes, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
 import { PhoneNumber } from '../phone-number/PhoneNumber';
@@ -36,6 +36,23 @@ export class CreateVendorParams {
   }
 }
 
+// One page of the Vendors, in name order, and where the page stands among
+// them all.
+export class VendorsPage {
+  constructor(
+    private readonly vendors: readonly Vendor[],
+    private readonly page: PageAttributes,
+  ) {}
+
+  getVendors(): readonly Vendor[] {
+    return this.vendors;
+  }
+
+  getPageAttributes(): PageAttributes {
+    return this.page;
+  }
+}
+
 // Where Vendors are kept. It is the port: the domain says what it needs, and
 // infrastructure provides it.
 export abstract class VendorStore {
@@ -44,6 +61,12 @@ export abstract class VendorStore {
   abstract create(
     params: CreateVendorParams,
   ): Promise<Either.Either<Vendor, StructuredError>>;
+
+  // Every Vendor, active and deactivated, ordered by name and then by
+  // identifier, so that moving between pages never skips or repeats one.
+  abstract list(
+    pageable: PageableAttributes,
+  ): Promise<Either.Either<VendorsPage, StructuredError>>;
 
   // The Vendor with this identifier, or none when there is no such Vendor.
   abstract readById(
