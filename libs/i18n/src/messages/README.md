@@ -4,7 +4,7 @@ The translated text of the platform's own screens is in this folder. A file hold
 
 - `shared/` is the shared terms: text that both frontends show, with the same wording. Here that is the names of the eight Categories, and of the cities a Vendor may be in, which are Erbil alone. One file for each language, and plain text only: a shared term has nothing in braces and nothing in angle brackets, because the two frontends read those differently.
 - `shopper/` is the Shopper app's text: one file for each language, in next-intl's format, which is ICU.
-- `dashboard/` is the dashboard's text: what the Vendor portal shows, and the text of a part that both halves of the dashboard share. One file for each language, in i18next's own format. Text that only the Admin console shows is in English in the code, and is not here.
+- `dashboard/` is the dashboard's text: what the Vendor portal shows, the text of a part that both halves of the dashboard share, such as the map location's field, and the hand-over's message, which the Admin console writes for a Vendor to read on WhatsApp. One file for each language, in i18next's own format. Text that only the Admin console shows is in English in the code, and is not here.
 
 English is the source. `en.json` defines which messages there are, and the other two files hold the same messages under the same keys.
 

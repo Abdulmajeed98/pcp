@@ -2,7 +2,9 @@ export { type ApiClient, type ApiClientOptions, createApiClient } from './api-cl
 export type {
   CallerResponse,
   CategoryResponse,
+  CreatedVendorResponse,
   CreatePartRequest,
+  CreateVendorRequest,
   EditPartRequest,
   ErrorResponse,
   MapLocationResponse,

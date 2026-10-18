@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, type DataRouter } from 'react-router';
 import { CatalogPage } from '@/pages/catalog';
 import { EditPartPage } from '@/pages/edit-part';
 import { ChooseCategoryPage, NewPartPage } from '@/pages/new-part';
+import { NewVendorPage } from '@/pages/new-vendor';
 import { NotFoundPage } from '@/pages/not-found';
 import { PartPage } from '@/pages/part';
 import { VendorPage } from '@/pages/vendor';
@@ -12,8 +13,8 @@ import { AdminConsoleFrame } from './layouts/admin-console-frame';
 
 // The Admin console's screens, by their addresses. The Admin console opens on
 // the Catalog, the first of its two sections. A Part, its edit form and a new
-// Part are the Catalog's children, and a Vendor's page is the Vendors'
-// child, which each shows beside its list on a wide screen.
+// Part are the Catalog's children, and a Vendor's page and a new Vendor are
+// the Vendors' children, which each shows beside its list on a wide screen.
 const routes = [
   {
     path: '/',
@@ -33,7 +34,10 @@ const routes = [
       {
         path: 'vendors',
         Component: VendorsPage,
-        children: [{ path: ':vendorId', Component: VendorPage }],
+        children: [
+          { path: 'new', Component: NewVendorPage },
+          { path: ':vendorId', Component: VendorPage },
+        ],
       },
       { path: '*', Component: NotFoundPage },
     ],

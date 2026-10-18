@@ -93,7 +93,7 @@ components:
     rounded: "{rounded.plate}"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module, and the Vendor's form, the map location's field and the hand-over the same day, with ticket 06. -->
 
 # Design System: the dashboard, Rate Board
 
@@ -150,7 +150,7 @@ The states, each also said in words or a mark, never in colour alone.
 
 **Body Font:** Geist (with Noto Sans Arabic for Kurdish and Arabic)
 **Arabic-script Font:** Noto Sans Arabic
-**Figure Font:** Geist Mono, on plates only
+**Figure Font:** Geist Mono, on plates, and for a temporary password
 
 **Character:** a quiet, precise grotesque and its monospace, beside a clear Arabic-script sans: the voice of a well-kept ledger read at a glance.
 
@@ -162,6 +162,8 @@ The states, each also said in words or a mark, never in colour alone.
 - **Row** (500, 0.875rem, 1.429): the text of a dense row, with its secondary line in Note Grey.
 - **Figure** (700, 1.25rem, tabular figures): a price or a count on a row's plate.
 - **Figure large** (700, 1.875rem, tabular figures): the one leading figure of a screen, such as the Platform Rate, at the shared scale's largest size.
+
+A temporary password, shown once after a Vendor is created, is in Geist Mono at 1.5rem, weight 700, on a Sheet panel with a Rule Sand border, never on a plate: it is not a figure, and its look keeps a and o, or 5 and s, apart for the Admin reading it out.
 
 Kurdish and Arabic follow the root's Tall Script Rule. Figures are always Western digits, so Geist Mono serves all three languages.
 
@@ -215,6 +217,10 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 - **Label:** small size, weight 500, above its control. A needed specification carries a "Needed" mark beside its label: small, weight 500, on a Shelf ground with 4-pixel corners, which the control also names as part of its description.
 - **Groups:** a field set with its legend, at body size and weight 500. Two fields to a row on a wider screen; a list, a set of boxes or a list of rows takes the whole row.
 - **Lists:** each entry a line with a 44-pixel square remove button beside it, and an outlined Add button below. A list of rows puts each row in a Rule Sand box with 6px corners.
+- **Optional:** a detail a form lets the person leave out carries an "Optional" mark beside its label, drawn as the "Needed" mark is, and named by its control as part of its description. The label itself stays the detail's name.
+- **Several lines:** an address or opening hours is a textarea styled as an input, at least 96 pixels high and growing with its text, laid out in the direction of what is typed.
+- **Description:** each length limit and each form a value may be written in is said below the control in Note Grey, before its error.
+- **The map location:** its coordinates, left to right, and below them an outlined button with a locating mark that fills them from the device's position. While it looks, a Note Grey line says so; a refused or missing position is said in Action Red in the same place, and the coordinates can still be typed.
 
 ### Rows
 
@@ -234,6 +240,12 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 - **Refusal:** a Sheet panel with an Action Red border and text, its title saying what was not done and its sentence why, with the API's status and code kept in English.
 - **Loading:** rows sketched in Shelf and Muted where the first answer will be. While the next answer arrives, the last stays at full strength, and a line beside the count says "Searching…".
 - **Missing:** a specification the Part lacks reads "Not known" in Note Grey; a needed one reads "Needed, not known" in Action Red at weight 500, after a circled exclamation mark.
+
+### The hand-over
+
+- **After a create:** the Vendor's name as the screen's title, one line that it is made, then the temporary password under its label, with a Note Grey sentence that it is shown this once.
+- **The message's language:** three choices in a row, each the browser's own radio, 20 pixels, inside a 44-pixel box with a Control Edge border and 6px corners, labelled with the language's own name in its own script; the chosen one takes a Shelf ground and weight 600, as the Vendor portal's switch marks its language.
+- **The link:** the pane's one primary button, "Open the chat in WhatsApp", with a speech-bubble mark before it and the new-tab mark after it.
 
 ### Navigation
 

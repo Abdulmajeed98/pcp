@@ -46,7 +46,7 @@ const numbersTried = 5;
 // An Iraqi mobile number, in the local form a person types: 075 and eight
 // random digits. The platform sends nothing to any number, and neither do the
 // tests.
-function aMadeUpMobileNumber(): string {
+export function aMadeUpMobileNumber(): string {
   return `075${randomDigits(8)}`;
 }
 

@@ -34,5 +34,12 @@
     "unavailable": "This phone’s position could not be found. Type the coordinates instead.",
     "noPosition": "This browser cannot give a position. Type the coordinates instead.",
     "notCoordinates": "Write two numbers, the latitude first and then the longitude, with a comma between them."
+  },
+  "HandOver": {
+    "greeting": "Hello. Here are your login details for the Vendor portal.",
+    "portalAddress": "Vendor portal:",
+    "loginPhoneNumber": "Phone number:",
+    "temporaryPassword": "Temporary password:",
+    "choosePassword": "When you first log in, you will be asked to choose your own password."
   }
 }

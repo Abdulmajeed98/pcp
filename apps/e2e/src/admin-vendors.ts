@@ -104,3 +104,17 @@ export async function openTheSection(page: Page, section: string): Promise<void>
     .getByRole('link', { name: section, exact: true })
     .click();
 }
+
+// The form for a new Vendor, at the address of its own under the Vendors.
+export const newVendorUrl = `${vendorsUrl}/new`;
+
+// The form's heading, which tells the screen apart.
+export function newVendorHeading(page: Page): Locator {
+  return page.getByRole('heading', { level: 1, name: 'New Vendor' });
+}
+
+// A control of the Vendor form, found by its label alone, so that "Phone
+// number" is not "Login phone number".
+export function vendorFormField(page: Page, label: string): Locator {
+  return page.getByLabel(label, { exact: true });
+}

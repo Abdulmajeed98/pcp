@@ -23,6 +23,7 @@ A word in _Notes_ that is marked **to choose** is one the drafter was least sure
 | Log in                | چوونەژوورەوە       | تسجيل الدخول             | Vendor portal           |                                                                                                         |
 | Log out               | چوونەدەرەوە        | تسجيل الخروج             | Vendor portal           |                                                                                                         |
 | Login phone number    | ژمارەی تەلەفۆن     | رقم الهاتف               | Vendor portal           | "Phone number": Keycloak's login screen labels its field so, and its errors name it so.                 |
+| Temporary password    | وشەی نهێنیی کاتی   | كلمة المرور المؤقتة      | Hand-over               | The WhatsApp message. "Password" is وشەی نهێنی, as Keycloak's screens in the theme say it.              |
 | Caller                | بانگکەر            | المتصل                   | Vendor portal           | On the placeholder page only.                                                                           |
 | Quoted Price          | نرخی دیاریکراو     | السعر المعلن             | Both                    |                                                                                                         |
 | Converted Price       | نرخی گۆڕدراو       | السعر المحوَّل             | Shopper app             |                                                                                                         |
