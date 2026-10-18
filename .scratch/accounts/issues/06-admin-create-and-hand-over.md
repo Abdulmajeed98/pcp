@@ -132,3 +132,14 @@ Each was taken the way the ticket or DESIGN.md pointed, and none blocks the modu
 - **The temporary password is not on a plate.** DESIGN.md kept Geist Mono for plates; the ticket asks for the mono font. It is on a Sheet panel, since a password is not a figure, and DESIGN.md now says so. **My recommendation:** keep it.
 - **The button says "Use this phone's position"**, as the Admin stands in a Vendor's place with a phone. At a desk the same button gives the computer's position. **My recommendation:** keep it; at a desk the Admin pastes coordinates.
 - **The hand-over link opens in a new tab**, so that the password stays on screen if WhatsApp's website opens in the same browser. **My recommendation:** keep it.
+
+### 18 October 2026: the owner's decisions
+
+The four decisions were put to the owner on 18 October 2026, one at a time, each rendered in the built-in browser. The screens were captured from the real app by a throwaway end-to-end test, since typing the development Admin's login into the browser pane was refused. They were shown on a local page beside the alternative, made for the comparison only.
+
+- **The message's wording.** **"Vendor portal:"**, as built and as recommended, over "Dashboard:". The owner saw the message from a real create in the three languages, drawn as WhatsApp draws a sent message, each line in its own direction. Drawing it showed a fault of mine: in Kurdish and Arabic the left-to-right mark stood before the space, so the space ran with the number and the number touched the label's colon. The mark now follows the space (`94a20e8`). Word selection joins it to that space (Unicode's word boundaries, rule WB4), so selecting the number still leaves it out.
+- **The temporary password.** **On a Sheet panel**, as built and as recommended. The owner saw it beside the same password on a plate, in light and in dark, at a phone's width. Nothing changed: DESIGN.md already says so.
+- **The location button.** **"Use my position"**, not the label recommended. It is shorter, and true at a desk as on a phone. The two sentences that go with it say "Finding your position…" and "Your position could not be found." in the three languages, the Kurdish, شوێنەکەم بەکاربهێنە, and the Arabic, استخدم موقعي, drafted for review (`37afe0f`). Where the Comments above name the button "Use this phone's position", they record what was built first.
+- **The WhatsApp link.** **In a new tab**, as built and as recommended.
+
+**Results after the decisions**, against the owner's services with no reset: `pnpm platform:check` passes 99 tests, and `pnpm check` passed before each of the two commits. The API did not change, so `pnpm integration:check` was not run.
