@@ -22,10 +22,24 @@ export async function expectAccessible(page: Page): Promise<void> {
         await page.emulateMedia({ colorScheme });
         // A control whose colours change with a transition takes a moment to
         // reach the new scheme's, and a contrast measured during it is of
-        // neither scheme.
-        await page.evaluate(() =>
-          Promise.all(document.getAnimations().map((animation) => animation.finished)),
-        );
+        // neither scheme. A transition can be cancelled meanwhile and another
+        // start in its place, as in a dialog's button, so the page is asked
+        // again until nothing with an end is still running.
+        await page.evaluate(async () => {
+          for (let round = 0; round < 10; round++) {
+            const running = document
+              .getAnimations()
+              .filter(
+                (animation) =>
+                  animation.playState === 'running' &&
+                  animation.effect?.getComputedTiming().endTime !== Infinity,
+              );
+            if (running.length === 0) return;
+            await Promise.all(
+              running.map((animation) => animation.finished.catch(() => animation)),
+            );
+          }
+        });
         const { violations } = await new AxeBuilder({ page })
           .withTags(wcag22LevelAA)
           .analyze();
