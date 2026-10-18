@@ -18,6 +18,7 @@ import {
 } from '@/entities/vendor';
 import { HandOver, TemporaryPassword } from '@/features/hand-over';
 import { ResetPassword } from '@/features/reset-password';
+import { VendorActivation } from '@/features/vendor-activation';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
 import {
@@ -39,7 +40,8 @@ import {
 // each in a new tab, so that the Admin console stays where it was. A link
 // below its name opens the Vendor's portal, for the Admin to act as it, and
 // a button below that resets the Vendor's password, after which the screen
-// shows the new temporary password, this once, and the hand-over.
+// shows the new temporary password, this once, and the hand-over. Below
+// that the Admin deactivates or reactivates it.
 export function VendorPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
@@ -94,6 +96,8 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
           vendorName={vendor.name}
           onReset={setResetPassword}
         />
+        {/* Its own for each Vendor, so that one Vendor's refusal is never shown on another's page. */}
+        <VendorActivation key={vendor.id} vendor={vendor} />
       </div>
 
       {resetPassword !== undefined && (

@@ -1,6 +1,8 @@
 export {
+  callersVendorKey,
   cities,
   type CityKey,
+  isRefusedAsDeactivated,
   useCallersVendor,
   useVendor,
   vendorKey,

@@ -19,10 +19,11 @@ import {
 } from '../../../test-utils/database/test-database';
 import {
   addThePasswordCheckClient,
-  chooseOwnPassword,
   emptyTheRealm,
+  giveALastingPassword,
   logInAt,
   loginsNamed,
+  loginWithId,
   makeALoginByHand,
   realmRolesOf,
   removeThePasswordCheckClient,
@@ -207,6 +208,20 @@ describe('the Vendor endpoints', () => {
       method: 'PUT',
       headers: { ...bearerHeader(token), 'content-type': 'application/json' },
       body: JSON.stringify(body),
+    });
+  }
+
+  function deactivateVendor(vendorId: string, token = adminToken): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/deactivate`, {
+      method: 'POST',
+      headers: bearerHeader(token),
+    });
+  }
+
+  function reactivateVendor(vendorId: string, token = adminToken): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/reactivate`, {
+      method: 'POST',
+      headers: bearerHeader(token),
     });
   }
 
@@ -761,11 +776,7 @@ describe('the Vendor endpoints', () => {
       ]) {
         made.set(letter, await aVendorNamed(`Made-up ${letter}`, loginPhoneNumber));
       }
-      // No endpoint deactivates a Vendor yet (ticket 12), so the database
-      // marks one.
-      await inTheDatabase(
-        `UPDATE vendor SET active = false WHERE id = '${made.get('C')?.id}'`,
-      );
+      expect((await deactivateVendor(made.get('C')?.id ?? '')).status).toBe(200);
 
       const pages = await Promise.all(
         ['0', '1', '2'].map(async (page) => {
@@ -1163,6 +1174,244 @@ describe('the Vendor endpoints', () => {
     );
   });
 
+  describe('deactivating and reactivating a Vendor', () => {
+    // A password the Vendor chose itself, as at its first login.
+    const ownPassword = 'made-up-own-password';
+
+    // The refusal of a deactivated Vendor's own Login, at every Vendor
+    // endpoint, whatever its token says.
+    const vendorDeactivated = [
+      {
+        code: 'VENDOR_DEACTIVATED',
+        title: 'vendor_deactivated_title',
+        detail: 'vendor_deactivated_details',
+      },
+    ];
+
+    // A made-up Vendor whose Login has chosen its own password, and the
+    // Login's identifier.
+    async function aVendorThatHasLoggedIn(): Promise<{
+      vendor: VendorBody;
+      loginId: string;
+    }> {
+      const vendor = await aVendorWith('0750 123 4567');
+      const [login] = await loginsNamed(vendor.loginPhoneNumber.international);
+      await giveALastingPassword(login.id, ownPassword);
+      return { vendor, loginId: login.id };
+    }
+
+    // The three Vendor endpoints a Vendor's own Login may call, each answered
+    // as it is now.
+    async function everyVendorEndpoint(
+      vendor: VendorBody,
+      token: string,
+    ): Promise<Response[]> {
+      return [
+        await readVendor(vendor.id, token),
+        await readCallersVendor(token),
+        await editContactDetails(
+          vendor.id,
+          { address: 'Changed by a deactivated Vendor', phoneNumber: '066 223 4567' },
+          token,
+        ),
+      ];
+    }
+
+    it("refuses the Vendor's own token, which has not run out, at every Vendor endpoint after a deactivation, and changes nothing", async () => {
+      const { vendor } = await aVendorThatHasLoggedIn();
+      const ownToken = await tokenOfTheOwnLogin(vendor);
+
+      const deactivated = await deactivateVendor(vendor.id);
+
+      expect(deactivated.status).toBe(200);
+      for (const response of await everyVendorEndpoint(vendor, ownToken)) {
+        await expectErrorResponse(response, 403, vendorDeactivated);
+      }
+      expect(((await (await readVendor(vendor.id)).json()) as VendorBody).address).toBe(
+        vendor.address,
+      );
+    });
+
+    it('disables its Login and ends a session the test opened, and the Admin still reads it, marked deactivated, on its own and on the list', async () => {
+      const { vendor, loginId } = await aVendorThatHasLoggedIn();
+      expect(
+        (await logInAt(vendor.loginPhoneNumber.international, ownPassword)).status,
+      ).toBe(200);
+      expect(await sessionsOf(loginId)).toHaveLength(1);
+
+      const deactivated = await deactivateVendor(vendor.id);
+
+      expect(deactivated.status).toBe(200);
+      expect(await deactivated.json()).toEqual({
+        ...vendor,
+        active: false,
+        updatedAt: expect.any(String),
+      });
+      const login = await loginWithId(loginId);
+      expect(login.enabled).toBe(false);
+      expect(login.username).toBe(vendor.loginPhoneNumber.international);
+      expect(await sessionsOf(loginId)).toEqual([]);
+      expect(await logInAt(vendor.loginPhoneNumber.international, ownPassword)).toEqual({
+        status: 400,
+        body: { error: 'invalid_grant', error_description: 'Account disabled' },
+      });
+      const read = await readVendor(vendor.id);
+      expect(read.status).toBe(200);
+      expect(((await read.json()) as VendorBody).active).toBe(false);
+      const listed = (await (await listVendors()).json()) as VendorPageBody;
+      expect(listed.content).toEqual([
+        expect.objectContaining({ id: vendor.id, active: false }),
+      ]);
+    });
+
+    it('lets the Admin still act for a deactivated Vendor, and change its contact details', async () => {
+      const { vendor } = await aVendorThatHasLoggedIn();
+      await deactivateVendor(vendor.id);
+
+      const edited = await editContactDetails(vendor.id, {
+        address: 'Changed by the Admin',
+        phoneNumber: '066 223 4567',
+      });
+
+      expect(edited.status).toBe(200);
+      expect(await edited.json()).toEqual(
+        expect.objectContaining({ address: 'Changed by the Admin', active: false }),
+      );
+    });
+
+    it('changes nothing and is not refused when the Vendor is deactivated again', async () => {
+      const { vendor, loginId } = await aVendorThatHasLoggedIn();
+      const first = await deactivateVendor(vendor.id);
+
+      const again = await deactivateVendor(vendor.id);
+
+      expect(again.status).toBe(200);
+      expect(await again.json()).toEqual(await first.json());
+      expect((await loginWithId(loginId)).enabled).toBe(false);
+    });
+
+    it('keeps the Vendor marked and refused when Keycloak does not answer, answering 503, and disables the Login when it is done again', async () => {
+      const { vendor, loginId } = await aVendorThatHasLoggedIn();
+      const ownToken = await tokenOfTheOwnLogin(vendor);
+
+      await whileKeycloakIsPaused(async () => {
+        const response = await deactivateVendor(vendor.id);
+
+        await expectErrorResponse(response, 503, identityServiceUnavailable);
+      });
+
+      expect(((await (await readVendor(vendor.id)).json()) as VendorBody).active).toBe(
+        false,
+      );
+      await expectErrorResponse(
+        await readVendor(vendor.id, ownToken),
+        403,
+        vendorDeactivated,
+      );
+      expect((await loginWithId(loginId)).enabled).toBe(true);
+
+      const again = await deactivateVendor(vendor.id);
+
+      expect(again.status).toBe(200);
+      expect((await loginWithId(loginId)).enabled).toBe(false);
+    });
+
+    it('answers the same token again after a reactivation, and enables the Login, whose password is the one it had', async () => {
+      const { vendor, loginId } = await aVendorThatHasLoggedIn();
+      const ownToken = await tokenOfTheOwnLogin(vendor);
+      await deactivateVendor(vendor.id);
+
+      const reactivated = await reactivateVendor(vendor.id);
+
+      expect(reactivated.status).toBe(200);
+      expect(await reactivated.json()).toEqual({
+        ...vendor,
+        updatedAt: expect.any(String),
+      });
+      const [read, callers] = await everyVendorEndpoint(vendor, ownToken);
+      expect(read.status).toBe(200);
+      expect(callers.status).toBe(200);
+      expect((await loginWithId(loginId)).enabled).toBe(true);
+      expect(
+        (await logInAt(vendor.loginPhoneNumber.international, ownPassword)).status,
+      ).toBe(200);
+    });
+
+    it('changes nothing and is not refused when an active Vendor is reactivated', async () => {
+      const { vendor, loginId } = await aVendorThatHasLoggedIn();
+
+      const reactivated = await reactivateVendor(vendor.id);
+
+      expect(reactivated.status).toBe(200);
+      expect(await reactivated.json()).toEqual(vendor);
+      expect((await loginWithId(loginId)).enabled).toBe(true);
+    });
+
+    it('keeps the Vendor deactivated and refused when Keycloak does not answer a reactivation, answering 503, and finishes it when it is done again', async () => {
+      const { vendor } = await aVendorThatHasLoggedIn();
+      const ownToken = await tokenOfTheOwnLogin(vendor);
+      await deactivateVendor(vendor.id);
+
+      await whileKeycloakIsPaused(async () => {
+        const response = await reactivateVendor(vendor.id);
+
+        await expectErrorResponse(response, 503, identityServiceUnavailable);
+      });
+
+      await expectErrorResponse(
+        await readVendor(vendor.id, ownToken),
+        403,
+        vendorDeactivated,
+      );
+
+      expect((await reactivateVendor(vendor.id)).status).toBe(200);
+      expect((await readVendor(vendor.id, ownToken)).status).toBe(200);
+    });
+
+    it.each([
+      ['a deactivation', deactivateVendor],
+      ['a reactivation', reactivateVendor],
+    ])(
+      'answers the Admin 404 with an error of its own for %s of a Vendor that does not exist',
+      async (_what, change) => {
+        const response = await change('0b4d6f8a-2c1e-4a3b-9d5f-7e6a8b9c0d1e');
+
+        await expectErrorResponse(response, 404, vendorNotFound);
+      },
+    );
+
+    it.each([
+      ['a deactivation', deactivateVendor],
+      ['a reactivation', reactivateVendor],
+    ])("refuses the Vendor's own Login %s, and changes nothing", async (_what, change) => {
+      const { vendor, loginId } = await aVendorThatHasLoggedIn();
+
+      const response = await change(vendor.id, await tokenOfTheOwnLogin(vendor));
+
+      await expectErrorResponse(response, 403, accessDenied);
+      expect(((await (await readVendor(vendor.id)).json()) as VendorBody).active).toBe(
+        true,
+      );
+      expect((await loginWithId(loginId)).enabled).toBe(true);
+    });
+
+    it.each([
+      ['a deactivation', 'deactivate'],
+      ['a reactivation', 'reactivate'],
+    ])('refuses %s without a token', async (_what, action) => {
+      const vendor = await aVendorWith('0750 123 4567');
+
+      const response = await fetch(`${testApp.baseUrl}/v1/vendors/${vendor.id}/${action}`, {
+        method: 'POST',
+      });
+
+      await expectErrorResponse(response, 401, unauthorized);
+      expect(((await (await readVendor(vendor.id)).json()) as VendorBody).active).toBe(
+        true,
+      );
+    });
+  });
+
   describe("resetting a Vendor's password", () => {
     function resetPassword(vendorId: string, token = adminToken): Promise<Response> {
       return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/password-reset`, {
@@ -1179,7 +1428,7 @@ describe('the Vendor endpoints', () => {
     }> {
       const vendor = await aVendorWith('0750 123 4567');
       const [login] = await loginsNamed('+9647501234567');
-      await chooseOwnPassword(login.id, 'the-vendors-own');
+      await giveALastingPassword(login.id, 'the-vendors-own');
       return { vendor, loginId: login.id };
     }
 

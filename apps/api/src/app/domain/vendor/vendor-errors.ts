@@ -53,6 +53,12 @@ export function vendorAccessDenied(loginId: string, vendorId: string): Forbidden
   );
 }
 
+// The error for a deactivated Vendor's own Login, at every Vendor endpoint,
+// whatever its token says. The Admin may still act for the Vendor.
+export function vendorDeactivated(vendorId: string): ForbiddenError {
+  return ForbiddenError.of('VENDOR_DEACTIVATED', `The Vendor ${vendorId} is deactivated`);
+}
+
 // A detail of a Vendor that does not fit, naming its field and why, so that a
 // form can say what is wrong beside the field.
 export function vendorDetailRefused(

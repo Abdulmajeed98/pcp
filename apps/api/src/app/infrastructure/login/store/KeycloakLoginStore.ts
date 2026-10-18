@@ -124,6 +124,14 @@ export class KeycloakLoginStore implements LoginStore {
     }
   }
 
+  async disable(loginId: string): Promise<Either.Either<void, StructuredError>> {
+    return this.setEnabled(loginId, false);
+  }
+
+  async enable(loginId: string): Promise<Either.Either<void, StructuredError>> {
+    return this.setEnabled(loginId, true);
+  }
+
   async endSessions(loginId: string): Promise<Either.Either<void, StructuredError>> {
     try {
       const administration = await this.logIn();
@@ -134,6 +142,23 @@ export class KeycloakLoginStore implements LoginStore {
       return Either.left(
         failureOf(error, `The sessions of the Login ${loginId} could not be ended`),
       );
+    }
+  }
+
+  // Keycloak changes only what an update names, so the Login keeps its name
+  // and its password.
+  private async setEnabled(
+    loginId: string,
+    enabled: boolean,
+  ): Promise<Either.Either<void, StructuredError>> {
+    const change = enabled ? 'enabled' : 'disabled';
+    try {
+      const administration = await this.logIn();
+      await administration.users.update({ id: loginId }, { enabled });
+      return Either.right(undefined);
+    } catch (error) {
+      this.logger.error(error, `The Login ${loginId} could not be ${change}`);
+      return Either.left(failureOf(error, `The Login ${loginId} could not be ${change}`));
     }
   }
 

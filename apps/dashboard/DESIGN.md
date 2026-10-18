@@ -93,7 +93,7 @@ components:
     rounded: "{rounded.plate}"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module, and the Vendor's form, the map location's field and the hand-over the same day, with ticket 06. The band for the Admin acting as a Vendor was added on 18 October 2026, with ticket 09, and the confirmation and the reset of a Vendor's password on 19 October 2026, with ticket 11. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module, and the Vendor's form, the map location's field and the hand-over the same day, with ticket 06. The band for the Admin acting as a Vendor was added on 18 October 2026, with ticket 09, and the alert dialog, deactivating a Vendor and the message for a deactivated Vendor on 19 October 2026, with ticket 12, and the reset of a Vendor's password the same day, with ticket 11. -->
 
 # Design System: the dashboard, Rate Board
 
@@ -242,6 +242,16 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 - **Loading:** rows sketched in Shelf and Muted where the first answer will be. While the next answer arrives, the last stays at full strength, and a line beside the count says "Searching…".
 - **Missing:** a specification the Part lacks reads "Not known" in Note Grey; a needed one reads "Needed, not known" in Action Red at weight 500, after a circled exclamation mark.
 
+### Dialogs
+
+- **The alert dialog** asks to confirm an action that logs a Vendor out, such as resetting its password or deactivating it. A refusal is said in it in one Action Red sentence, and it stays open to try again. It floats over a scrim that dims the page, on a Sheet ground with a Control Edge border, 6px corners and the soft shadow of what floats. On a phone it is as wide as the screen but for a 16-pixel gutter, and never wider than 28rem. Its title is at title size and weight 600, its sentence at body size in Note Grey, both on the start side; its buttons are 44 pixels high, stacked on a phone with the action on top, and in a row on the end side from 40rem, Cancel outlined before the action.
+- **The action** that cannot be taken back without another, such as Deactivate, is drawn in Action Red, the one red of the pane, because it is what needs care.
+
+### Deactivating a Vendor
+
+- **On a Vendor's page**, below "Open its portal": an outlined "Deactivate", which opens the alert dialog naming the Vendor as it writes it and saying what deactivating does; for a deactivated Vendor an outlined "Reactivate" in its place, with no dialog, as it logs nobody out. While either is on its way, its button says so and waits.
+- **A deactivation that failed halfway** shows the refusal panel below the button, saying it was not done in full and to deactivate again, and keeps "Deactivate" for a Vendor it has already marked.
+
 ### The hand-over
 
 - **After a create:** the Vendor's name as the screen's title, one line that it is made, then the temporary password under its label, with a Note Grey sentence that it is shown this once.
@@ -249,19 +259,12 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 - **The message's language:** three choices in a row, each the browser's own radio, 20 pixels, inside a 44-pixel box with a Control Edge border and 6px corners, labelled with the language's own name in its own script; the chosen one takes a Shelf ground and weight 600, as the Vendor portal's switch marks its language.
 - **The link:** the pane's one primary button, "Open the chat in WhatsApp", with a speech-bubble mark before it and the new-tab mark after it.
 
-### The confirmation
-
-- **When:** before an action that logs a Vendor out, such as resetting its password: shadcn/ui's alert dialog, which the action's own outlined button opens.
-- **Style:** a Sheet panel over the page, with a Control Edge border, 6px corners, 16 pixels of padding and the soft downward shadow of what floats, as wide as the screen less 16 pixels on each side, and at most 28rem, centred. The page behind it is darkened.
-- **Text:** a question as its title, at body size and weight 600, naming the Vendor as it writes it, then one or two sentences in Note Grey at small size that say what the action does to the Vendor. A refusal is one Action Red sentence below them, and the confirmation stays open to try again.
-- **Buttons:** Cancel, outlined, and the action, in Action Red and named as the button that opened it, on the end side of one row from 40rem, and stacked on a phone with the action on top.
-
 ### Navigation
 
 - **The top bar:** the page's own ground, closed by a Rule Sand rule, with the console's name at weight 600 on the start side, and the caller's name in Note Grey and Log out on the end side.
 - **The sections:** the Catalog and the Vendors, each a link 44 pixels high with 6px corners, in Note Grey, and the one the Admin is in at weight 600 on a Shelf ground. On a phone they are behind a 44-pixel menu button at the bar's start, which opens them as a column below the bar, closed by choosing one; from 64rem they sit in the bar after the console's name.
-- **The Vendor portal's top bar:** the page's own ground, closed by a Rule Sand rule, with the Vendor's name, as it writes it, at weight 600 on the start side, then the outlined Log out and the language switch, the switch last, on the end side. On a phone the name shares its row with Log out and the switch has the row below, at the end; from 40rem the three share one row. A Login with no Vendor behind it gets the bar with the switch alone, then one plain sentence and Log out below it.
-- **The band, while the Admin acts as a Vendor:** across the whole width, above the Vendor portal's top bar, on a Shelf ground closed by a Rule Sand rule, so that it is never taken for part of the Vendor's own portal. On the start side, one sentence at small size and weight 500 that names the Vendor, as it writes it; on the end side, a small underlined link, 44 pixels high, back to the Vendor's page in the Admin console. Its content is as wide as the portal's, and the link takes the row below when the sentence fills the row. It is in the portal's language, because the Vendor may be reading over the Admin's shoulder. A Vendor's page in the Admin console opens it with an outlined button-sized link, "Open its portal", below the Vendor's name.
+- **The Vendor portal's top bar:** the page's own ground, closed by a Rule Sand rule, with the Vendor's name, as it writes it, at weight 600 on the start side, then the outlined Log out and the language switch, the switch last, on the end side. On a phone the name shares its row with Log out and the switch has the row below, at the end; from 40rem the three share one row. A Login with no Vendor behind it, and a deactivated Vendor, each get the bar with the switch alone, then one plain sentence of its own and Log out below it.
+- **The band, while the Admin acts as a Vendor:** across the whole width, above the Vendor portal's top bar, on a Shelf ground closed by a Rule Sand rule, so that it is never taken for part of the Vendor's own portal. On the start side, one sentence at small size and weight 500 that names the Vendor, as it writes it, followed, for a deactivated Vendor, by one that says it is deactivated; on the end side, a small underlined link, 44 pixels high, back to the Vendor's page in the Admin console. Its content is as wide as the portal's, and the link takes the row below when the sentence fills the row. It is in the portal's language, because the Vendor may be reading over the Admin's shoulder. A Vendor's page in the Admin console opens it with an outlined button-sized link, "Open its portal", below the Vendor's name.
 - **Back:** a small Note Grey link above a screen's title, with a chevron that points back in the reading direction, underlined on hover, 44 pixels high.
 
 ## Do's and Don'ts
