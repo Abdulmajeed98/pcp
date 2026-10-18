@@ -5,43 +5,17 @@ import { Either, Option } from 'effect';
 import { identityServiceUnavailable, isLoginNameTaken } from '../login/login-errors';
 import { CreateLoginParams, LoginStore } from '../login/LoginStore';
 import { makeTemporaryPassword } from '../login/temporary-password';
-import { PhoneNumber } from '../phone-number/PhoneNumber';
-import { City } from './City';
-import { ContactDetails, UncheckedContactDetails } from './ContactDetails';
-import { holdsText, lengthOf } from './detail-text';
 import { Vendor } from './Vendor';
+import { UncheckedVendorDetails, VendorDetails } from './VendorDetails';
 import { vendorDetailRefused } from './vendor-errors';
 import { CreateVendorParams, VendorStore } from './VendorStore';
 
-// The longest name a Vendor may have, in characters as `lengthOf` counts
-// them.
-export const longestVendorName = 100;
-
-// A Vendor's details as they were typed, before they are checked. A detail
-// that was not given is null.
+// Every detail of the new Vendor as it was typed, before it is checked.
 class Input {
-  constructor(
-    private readonly name: string | null,
-    private readonly cityKey: string | null,
-    private readonly contactDetails: UncheckedContactDetails,
-    private readonly loginPhoneNumber: string | null,
-  ) {}
+  constructor(private readonly details: UncheckedVendorDetails) {}
 
-  getName(): string | null {
-    return this.name;
-  }
-
-  // The key of the city it names.
-  getCityKey(): string | null {
-    return this.cityKey;
-  }
-
-  getContactDetails(): UncheckedContactDetails {
-    return this.contactDetails;
-  }
-
-  getLoginPhoneNumber(): string | null {
-    return this.loginPhoneNumber;
+  getDetails(): UncheckedVendorDetails {
+    return this.details;
   }
 }
 
@@ -82,33 +56,13 @@ export class CreateVendorCommand {
   ) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
-    // Every check comes before anything is made in Keycloak, and the first
-    // detail that does not fit, in the order the Vendor form asks for them,
-    // is the one named.
-    const name = input.getName();
-    if (!holdsText(name)) return Either.left(vendorDetailRefused('name', 'missing'));
-    if (lengthOf(name) > longestVendorName) {
-      return Either.left(vendorDetailRefused('name', 'tooLong'));
-    }
+    // Every check comes before anything is made in Keycloak.
+    const checked = VendorDetails.check(input.getDetails());
+    if (Either.isLeft(checked)) return Either.left(checked.left);
+    const details = checked.right;
+    const loginPhoneNumber = details.getLoginPhoneNumber();
 
-    const cityKey = input.getCityKey();
-    if (!holdsText(cityKey)) return Either.left(vendorDetailRefused('city', 'missing'));
-    const city = City.withKey(cityKey);
-    if (city === undefined) return Either.left(vendorDetailRefused('city', 'notInTheSet'));
-
-    const contactDetails = ContactDetails.check(input.getContactDetails());
-    if (Either.isLeft(contactDetails)) return Either.left(contactDetails.left);
-
-    const typedLoginPhoneNumber = input.getLoginPhoneNumber();
-    if (!holdsText(typedLoginPhoneNumber)) {
-      return Either.left(vendorDetailRefused('loginPhoneNumber', 'missing'));
-    }
-    const loginPhoneNumber = PhoneNumber.readMobile(typedLoginPhoneNumber);
-    if (Either.isLeft(loginPhoneNumber)) {
-      return Either.left(vendorDetailRefused('loginPhoneNumber', loginPhoneNumber.left));
-    }
-
-    const holder = await this.vendorStore.readByLoginPhoneNumber(loginPhoneNumber.right);
+    const holder = await this.vendorStore.readByLoginPhoneNumber(loginPhoneNumber);
     if (Either.isLeft(holder)) return Either.left(holder.left);
     if (Option.isSome(holder.right)) {
       return Either.left(vendorDetailRefused('loginPhoneNumber', 'taken'));
@@ -117,7 +71,7 @@ export class CreateVendorCommand {
     const temporaryPassword = makeTemporaryPassword();
     const login = await this.loginStore.create(
       new CreateLoginParams(
-        loginPhoneNumber.right.getInternational(),
+        loginPhoneNumber.getInternational(),
         Role.VENDOR,
         temporaryPassword,
       ),
@@ -135,10 +89,10 @@ export class CreateVendorCommand {
 
     const vendor = await this.vendorStore.create(
       new CreateVendorParams(
-        name,
-        city,
-        contactDetails.right,
-        loginPhoneNumber.right,
+        details.getName(),
+        details.getCity(),
+        details.getContactDetails(),
+        loginPhoneNumber,
         login.right,
       ),
     );

@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -133,6 +133,19 @@ export const readVendor = <ThrowOnError extends boolean = false>(options: Option
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/vendors/{vendorId}',
     ...options
+});
+
+/**
+ * Replace every detail of a Vendor, its name, its city and its login phone number among them, renaming its Login to a new login phone number
+ */
+export const editVendor = <ThrowOnError extends boolean = false>(options: Options<EditVendorData, ThrowOnError>): RequestResult<EditVendorResponses, EditVendorErrors, ThrowOnError> => (options.client ?? client).put<EditVendorResponses, EditVendorErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
