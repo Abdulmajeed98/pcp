@@ -20,8 +20,8 @@ import { vendorPortalScreens } from './vendor-portal-screens';
 //
 // A Vendor's portal, for the Admin acting as that Vendor, is under the
 // Vendor's page: the Vendor portal's own screens, in the Vendor portal's
-// frame with the band, and not in the Admin console's frame. Each screen
-// learns its Vendor from the address.
+// frame with the band, and not in the Admin console's frame. The frame
+// learns the Vendor from the address, and gives it to each screen.
 const routes = [
   {
     path: '/vendors/:vendorId/portal',

@@ -8,9 +8,10 @@ import { VendorDetailsPage } from '@/pages/vendor-details';
 // first one. They are the children of a frame's route, which gives each the
 // Vendor it shows through its `<Outlet context>`. The Vendor portal's own
 // router mounts them at `/`, and the Admin console's mounts the same screens
-// under a Vendor's page, for the Admin acting as that Vendor. The details screen is the portal's first address,
-// the form for its contact details is below it, and an address that matches
-// no screen shows a "not found" message in the portal's language.
+// under a Vendor's page, for the Admin acting as that Vendor. The details
+// screen is the portal's first address, the form for its contact details is
+// below it, and an address that matches no screen shows a "not found"
+// message in the portal's language.
 export const vendorPortalScreens: RouteObject[] = [
   { index: true, Component: VendorDetailsPage },
   { path: 'contact-details', Component: EditContactDetailsPage },

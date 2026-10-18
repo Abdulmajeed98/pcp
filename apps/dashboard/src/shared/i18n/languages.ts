@@ -87,8 +87,10 @@ export async function startLanguage(shownIn: ShownIn): Promise<void> {
 // does when it opens a Vendor's portal for the Admin acting as that Vendor,
 // and again when it leaves it: its language, which is not remembered, and
 // from then on the tab's title. The document declares them both, and its
-// direction. A later call wins over one still under way, so the last one
-// made is what the document is left in.
+// direction. i18next keeps the language of the last call made, and with the
+// text of all three languages given to it at the start, each call ends in
+// the order it was made, so the document is left in the last one too, as
+// when React's development mode enters, leaves and enters the portal again.
 export async function showIn(shownIn: ShownIn): Promise<void> {
   const language = shownIn.language();
   titleOfTheTab = shownIn.title;

@@ -146,7 +146,11 @@ test("from a made-up Vendor's page the Admin opens its portal, which declares th
     );
   }
   for (const { address } of inThePortal) {
-    expect(address).toMatch(new RegExp(`^${apiUrl}/v1/vendors/${vendor.vendorId}(/|$)`));
+    const ofTheVendor = `${apiUrl}/v1/vendors/${vendor.vendorId}`;
+    expect(
+      address === ofTheVendor || address.startsWith(`${ofTheVendor}/`),
+      `${address} names the Vendor`,
+    ).toBe(true);
   }
 });
 
