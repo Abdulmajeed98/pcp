@@ -1,5 +1,6 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
 import {
@@ -15,6 +16,8 @@ import {
   useVendor,
   WrittenOnLines,
 } from '@/entities/vendor';
+import { HandOver, TemporaryPassword } from '@/features/hand-over';
+import { ResetPassword } from '@/features/reset-password';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
 import {
@@ -34,7 +37,9 @@ import {
 // location opens Google Maps' search for its coordinates, and its Instagram
 // name, written with an @ as Instagram writes a handle, opens its profile,
 // each in a new tab, so that the Admin console stays where it was. A link
-// below its name opens the Vendor's portal, for the Admin to act as it.
+// below its name opens the Vendor's portal, for the Admin to act as it, and
+// a button below that resets the Vendor's password, after which the screen
+// shows the new temporary password, this once, and the hand-over.
 export function VendorPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
@@ -60,11 +65,16 @@ export function VendorPage() {
     return <p className="text-sm text-muted-foreground">Reading the Vendor…</p>;
   }
 
-  return <VendorDetails vendor={vendor.data} />;
+  // Another Vendor's page is another screen: a password reset on one is not
+  // shown on the next.
+  return <VendorDetails key={vendor.data.id} vendor={vendor.data} />;
 }
 
 function VendorDetails({ vendor }: { vendor: VendorResponse }) {
   const keepingTheQuery = useAddressKeepingTheQuery();
+  // The temporary password of the last reset, held by this screen alone:
+  // leaving it loses the password, and the API answers it nowhere else.
+  const [resetPassword, setResetPassword] = useState<string>();
 
   return (
     <div className="flex flex-col gap-6">
@@ -79,7 +89,23 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
         >
           Open its portal
         </Link>
+        <ResetPassword
+          vendorId={vendor.id}
+          vendorName={vendor.name}
+          onReset={setResetPassword}
+        />
       </div>
+
+      {resetPassword !== undefined && (
+        <div className="flex flex-col gap-6">
+          <p>The password is reset, and the Vendor is logged out.</p>
+          <TemporaryPassword password={resetPassword} />
+          <HandOver
+            loginPhoneNumber={vendor.loginPhoneNumber}
+            temporaryPassword={resetPassword}
+          />
+        </div>
+      )}
 
       <DetailList>
         <Detail name="state" label="State">

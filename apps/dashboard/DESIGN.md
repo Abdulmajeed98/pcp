@@ -93,7 +93,7 @@ components:
     rounded: "{rounded.plate}"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module, and the Vendor's form, the map location's field and the hand-over the same day, with ticket 06. The band for the Admin acting as a Vendor was added on 18 October 2026, with ticket 09. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module, and the Vendor's form, the map location's field and the hand-over the same day, with ticket 06. The band for the Admin acting as a Vendor was added on 18 October 2026, with ticket 09, and the confirmation and the reset of a Vendor's password on 19 October 2026, with ticket 11. -->
 
 # Design System: the dashboard, Rate Board
 
@@ -245,8 +245,16 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 ### The hand-over
 
 - **After a create:** the Vendor's name as the screen's title, one line that it is made, then the temporary password under its label, with a Note Grey sentence that it is shown this once.
+- **After a reset:** on the Vendor's page, below its actions and above its details, one line that the password is reset and the Vendor logged out, then the temporary password and the hand-over drawn as after a create. A second reset replaces both.
 - **The message's language:** three choices in a row, each the browser's own radio, 20 pixels, inside a 44-pixel box with a Control Edge border and 6px corners, labelled with the language's own name in its own script; the chosen one takes a Shelf ground and weight 600, as the Vendor portal's switch marks its language.
 - **The link:** the pane's one primary button, "Open the chat in WhatsApp", with a speech-bubble mark before it and the new-tab mark after it.
+
+### The confirmation
+
+- **When:** before an action that logs a Vendor out, such as resetting its password: shadcn/ui's alert dialog, which the action's own outlined button opens.
+- **Style:** a Sheet panel over the page, with a Control Edge border, 6px corners, 16 pixels of padding and the soft downward shadow of what floats, as wide as the screen less 16 pixels on each side, and at most 28rem, centred. The page behind it is darkened.
+- **Text:** a question as its title, at body size and weight 600, naming the Vendor as it writes it, then one or two sentences in Note Grey at small size that say what the action does to the Vendor. A refusal is one Action Red sentence below them, and the confirmation stays open to try again.
+- **Buttons:** Cancel, outlined, and the action, in Action Red and named as the button that opened it, on the end side of one row from 40rem, and stacked on a phone with the action on top.
 
 ### Navigation
 

@@ -12,6 +12,7 @@ export type {
   PartPageResponse,
   PartResponse,
   PartSummaryResponse,
+  PasswordResetResponse,
   PhoneNumberResponse,
   SpecificationResponse,
   StatusResponse,
