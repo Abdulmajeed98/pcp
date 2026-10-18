@@ -39,7 +39,8 @@ import {
 //
 // The details are in three groups, as the Admin's Vendor form asks for
 // them: the Vendor, its contact details, which it changes itself from the
-// link beside their heading, and its Login. The link is relative to the
+// link beside their heading, and its Login. The link says "Edit", as the
+// owner chose on 18 October 2026, and the heading is its description. The link is relative to the
 // route, so that it leads to the form under either frame.
 export function VendorDetailsPage() {
   const { t } = useTranslation();
@@ -91,8 +92,12 @@ function Details({ vendor }: { vendor: VendorResponse }) {
           <h2 id="contact-details" className="font-medium">
             {t('VendorDetails.contactDetails')}
           </h2>
-          <Link to="contact-details" className={buttonVariants({ variant: 'outline' })}>
-            {t('VendorDetails.changeContactDetails')}
+          <Link
+            to="contact-details"
+            aria-describedby="contact-details"
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {t('VendorDetails.edit')}
           </Link>
         </div>
         <DetailList>

@@ -226,10 +226,16 @@ function DetailField({
   const { t } = useTranslation();
   const id = `contact-details-${name}`;
   const refusal = errors[name]?.message;
+  // A refusal of a detail that is too long says the limit, as the owner
+  // chose on 18 October 2026.
+  const limit = name in longest ? longest[name as keyof typeof longest] : undefined;
   const error =
-    refusal === undefined
-      ? undefined
-      : t(`ContactDetailsForm.refused.${refusal as RefusalMessage}`);
+    refusal === undefined ? undefined : (
+      <Trans
+        i18nKey={`ContactDetailsForm.refused.${refusal as RefusalMessage}`}
+        components={{ longest: <>{limit === undefined ? null : formatNumber(limit)}</> }}
+      />
+    );
   const describedBy = [
     optional && `${id}-optional`,
     `${id}-description`,

@@ -21,7 +21,7 @@
     "name": "Name",
     "city": "City",
     "contactDetails": "Contact details",
-    "changeContactDetails": "Change your contact details",
+    "edit": "Edit",
     "address": "Address",
     "mapLocation": "Map location",
     "openInGoogleMaps": "Open in Google Maps",
@@ -54,7 +54,7 @@
     "refused": {
       "address": {
         "missing": "Give your address.",
-        "tooLong": "The address is too long."
+        "tooLong": "The address is over <longest/> characters."
       },
       "mapLocation": {
         "missing": "Give both the latitude and the longitude, or neither.",
@@ -70,10 +70,10 @@
       },
       "instagramName": {
         "notAnInstagramName": "An Instagram name holds only the letters a to z, digits, dots and underscores.",
-        "tooLong": "This Instagram name is too long."
+        "tooLong": "An Instagram name is at most <longest/> characters."
       },
       "openingHours": {
-        "tooLong": "The opening hours are too long."
+        "tooLong": "The opening hours are over <longest/> characters."
       },
       "other": "The platform did not accept this."
     }

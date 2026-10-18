@@ -58,15 +58,20 @@ function isTheSave(request: Request): boolean {
   return request.method() === 'PUT' && request.url().endsWith('/contact-details');
 }
 
+// The link beside the contact details' heading, which opens the form.
+function theLinkToTheForm(page: Page) {
+  return page.getByRole('main').locator('a[href="/contact-details"]');
+}
+
 // Opens the portal as the Vendor, and its form from the details screen by the
-// link beside the contact details' heading.
+// link.
 async function openTheForm(page: Page): Promise<void> {
   await openTheDashboardAs(page, vendor);
-  await page.getByRole('main').locator('a[href="/contact-details"]').click();
+  await theLinkToTheForm(page).click();
   await expect(formField(page, 'address')).toBeVisible();
 }
 
-test('the Vendor changes its address, written in Arabic script with Arabic-Indic digits, and its opening hours, and the details screen shows both exactly as written; the form holds the six contact details and sends them and nothing else', async ({
+test('the link to the form is described by the heading beside it; the Vendor changes its address, written in Arabic script with Arabic-Indic digits, and its opening hours, and the details screen shows both exactly as written; the form holds the six contact details and sends them and nothing else', async ({
   page,
 }) => {
   const address = `شەقامی ٦٠ مەتری، ژمارە ${Date.now() % 1000}\nهەولێر`;
@@ -80,7 +85,14 @@ test('the Vendor changes its address, written in Arabic script with Arabic-Indic
     'whatsAppNumber',
   ];
 
-  await openTheForm(page);
+  // The link's word is short, so the heading it stands beside is its
+  // description.
+  await openTheDashboardAs(page, vendor);
+  await expect(theLinkToTheForm(page)).toHaveAccessibleDescription(
+    await page.locator('#contact-details').innerText(),
+  );
+  await theLinkToTheForm(page).click();
+  await expect(formField(page, 'address')).toBeVisible();
   const controls = await page
     .getByRole('main')
     .locator('form [name]')
@@ -140,6 +152,24 @@ test('a phone number that is not Iraqi is refused beside its field, which takes 
   await buttonFor(page, english).click();
   await expect(refusal).toHaveText(inEnglish);
   await expect(page).not.toHaveURL(`${dashboardUrl}/`);
+});
+
+test('an address over 300 characters is refused beside its field, the refusal saying the limit, in Kurdish and in English', async ({
+  page,
+}) => {
+  await openTheForm(page);
+  const refusal = refusalOf(page, 'address');
+
+  // 308 characters, in words, as a Vendor writes.
+  await formField(page, 'address').fill('شەقامی سەرەکی '.repeat(22));
+  await saveButton(page).click();
+
+  await expect(formField(page, 'address')).toHaveAttribute('aria-invalid', 'true');
+  await expect(refusal).toContainText('300');
+  const inEnglish = await refusal.innerText();
+  await buttonFor(page, kurdish).click();
+  await expect(refusal).not.toHaveText(inEnglish);
+  await expect(refusal).toContainText('300');
 });
 
 test('an address or opening hours written as one word wider than the screen do not make the form scroll sideways', async ({
