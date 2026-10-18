@@ -2,7 +2,7 @@
 
 The translated text of the platform's own screens is in this folder. A file holds nothing but text, so that it can be corrected without reading code. The one translated text kept elsewhere is that of Keycloak's screens a Vendor meets, the login screen and the screen that asks for a new password, which is with Keycloak's theme, under `services/keycloak/themes/pcp/login/messages`: the Sorani text of both screens, a draft awaiting review, and the label of the login screen's name field in Arabic, also a draft, and in English. Keycloak's own Arabic and English give the rest.
 
-- `shared/` is the shared terms: text that both frontends show, with the same wording. Here that is the names of the eight Categories. One file for each language, and plain text only: a shared term has nothing in braces and nothing in angle brackets, because the two frontends read those differently.
+- `shared/` is the shared terms: text that both frontends show, with the same wording. Here that is the names of the eight Categories, and of the cities a Vendor may be in, which are Erbil alone. One file for each language, and plain text only: a shared term has nothing in braces and nothing in angle brackets, because the two frontends read those differently.
 - `shopper/` is the Shopper app's text: one file for each language, in next-intl's format, which is ICU.
 - `dashboard/` is the dashboard's text: what the Vendor portal shows, and the text of a part that both halves of the dashboard share. One file for each language, in i18next's own format. Text that only the Admin console shows is in English in the code, and is not here.
 

@@ -8,5 +8,8 @@
     "gpu": "GPU",
     "case": "Case",
     "psu": "PSU"
+  },
+  "City": {
+    "erbil": "Erbil"
   }
 }

@@ -1,6 +1,6 @@
 // The city a Vendor is in. The set is fixed in code and holds Erbil only, so
-// a second city is a change to it. Each is named by a key, which the shared
-// terms in `i18n` will translate it by.
+// a second city is a change to it. Each is named by a key, by which the
+// shared terms in `i18n` give its name in the three languages.
 export class City {
   static readonly ERBIL = new City('erbil');
 

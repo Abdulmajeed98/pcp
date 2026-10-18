@@ -5,7 +5,7 @@ import en from './shared/en.json';
 
 // The shared terms: text that both frontends show, with the same wording, so
 // that a Shopper and a Vendor read the same word. Here that is the names of
-// the eight Categories.
+// the eight Categories and of the cities a Vendor may be in.
 //
 // A shared term is plain text, with no placeholder and no plural. next-intl
 // and i18next each write those their own way, and plain text is the one

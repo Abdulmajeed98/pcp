@@ -2,7 +2,7 @@
 
 **DRAFT, AWAITING REVIEW (LANG-7).** Nothing here has been read by a Sorani or an Arabic speaker yet.
 
-The Kurdish (Sorani) and the Arabic word for each of the platform's terms that a Shopper or a Vendor reads, so that every screen uses the same word for the same thing. The terms are those of [CONTEXT.md](../../../../CONTEXT.md), where each is defined, and the Categories are its eight. The language files use these words, and a screen that shows a term for the first time takes its word from here. When the reviewer changes a word, it is changed here and in every file that uses it.
+The Kurdish (Sorani) and the Arabic word for each of the platform's terms that a Shopper or a Vendor reads, so that every screen uses the same word for the same thing. The terms are those of [CONTEXT.md](../../../../CONTEXT.md), where each is defined, the Categories are its eight, and the cities are those a Vendor may be in. The language files use these words, and a screen that shows a term for the first time takes its word from here. When the reviewer changes a word, it is changed here and in every file that uses it.
 
 A word in _Notes_ that is marked **to choose** is one the drafter was least sure of. CONTEXT.md avoids some English words for a term, such as "seller" for a Vendor. That rule is for English, and the word here is the one a reader of the language would expect, even where it translates one of those English words.
 
@@ -57,3 +57,11 @@ The shared terms, in `shared/`, hold these.
 | GPU         | کارتی گرافیک         | بطاقة الرسومات    |
 | Case        | کەیس                 | صندوق الحاسوب     |
 | PSU         | پاوەر سەپلای          | مزوّد الطاقة       |
+
+## The cities
+
+The shared terms, in `shared/`, hold these, by the key the API names each by. A Vendor's city is one of a fixed set, which holds Erbil alone.
+
+| City  | Key     | Kurdish (Sorani) | Arabic |
+| ----- | ------- | ---------------- | ------ |
+| Erbil | `erbil` | هەولێر           | أربيل  |
