@@ -51,24 +51,27 @@ test.beforeEach(async ({ page }) => {
 });
 
 // A made-up Vendor as the Admin types it into the form, with a name and a
-// login phone number unique to the run.
+// login phone number unique to the run, and a WhatsApp number of its own,
+// as a Vendor whose shop's WhatsApp its staff answer has.
 function aMadeUpVendorToType() {
   const loginPhoneNumber = aMadeUpMobileNumber();
   return {
     name: `Made-up test Vendor ${aWordUniqueToTheRun()}`,
     address: 'Made-up Street\nErbil',
     phoneNumber: loginPhoneNumber,
+    whatsAppNumber: aMadeUpMobileNumber(),
     loginPhoneNumber,
   };
 }
 
 type VendorToType = ReturnType<typeof aMadeUpVendorToType>;
 
-// Fills in the form's required details, as the Admin types them.
+// Fills in the form's details, as the Admin types them.
 async function fillInTheForm(page: Page, vendor: VendorToType): Promise<void> {
   await vendorFormField(page, 'Name').fill(vendor.name);
   await vendorFormField(page, 'Address').fill(vendor.address);
   await vendorFormField(page, 'Phone number').fill(vendor.phoneNumber);
+  await vendorFormField(page, 'WhatsApp number').fill(vendor.whatsAppNumber);
   await vendorFormField(page, 'Login phone number').fill(vendor.loginPhoneNumber);
 }
 
