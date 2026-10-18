@@ -6,13 +6,13 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Button,
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
   ListPages,
+  PastTheLastPage,
   Plate,
 } from '@/shared/ui';
 
@@ -94,21 +94,6 @@ function Reading() {
         ))}
       </ul>
     </div>
-  );
-}
-
-// An address can ask for a page past the last, as when it was written while
-// there were more Vendors on the list.
-function PastTheLastPage({ onFirstPage }: { onFirstPage: () => void }) {
-  return (
-    <Empty className="border-y border-border">
-      <EmptyHeader>
-        <EmptyTitle>This page is past the last one.</EmptyTitle>
-      </EmptyHeader>
-      <Button variant="outline" onClick={onFirstPage}>
-        Go to the first page
-      </Button>
-    </Empty>
   );
 }
 
