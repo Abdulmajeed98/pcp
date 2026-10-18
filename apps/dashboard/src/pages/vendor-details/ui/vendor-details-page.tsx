@@ -7,7 +7,6 @@ import {
   Detail,
   DetailList,
   googleMapsSearchFor,
-  InANewTab,
   instagramHandleOf,
   instagramProfileOf,
   PhoneNumberShown,
@@ -17,7 +16,7 @@ import {
 } from '@/entities/vendor';
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui';
+import { Alert, AlertDescription, AlertTitle, InANewTab } from '@/shared/ui';
 
 // The Vendor portal's first screen: every detail the platform holds about the
 // Vendor whose portal is shown, in the portal's language, with a sentence

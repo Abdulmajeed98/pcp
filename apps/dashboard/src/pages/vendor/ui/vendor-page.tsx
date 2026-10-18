@@ -9,7 +9,6 @@ import {
   Detail,
   DetailList,
   googleMapsSearchFor,
-  InANewTab,
   instagramHandleOf,
   instagramProfileOf,
   PhoneNumberShown,
@@ -18,7 +17,7 @@ import {
 } from '@/entities/vendor';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
+import { Alert, AlertDescription, AlertTitle, BackLink, InANewTab } from '@/shared/ui';
 
 // A Vendor's page: every detail the platform holds about it, and whether it
 // is deactivated. What the Vendor wrote, its name, its address and its

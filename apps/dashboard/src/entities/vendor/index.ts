@@ -11,10 +11,4 @@ export { coordinatesOf, googleMapsSearchFor, mapLocationIn } from './model/map-l
 export { useVendorShown, type VendorShown } from './model/vendor-shown';
 export { DeactivatedMark } from './ui/deactivated-mark';
 export { MapLocationField } from './ui/map-location-field';
-export {
-  Detail,
-  DetailList,
-  InANewTab,
-  PhoneNumberShown,
-  WrittenOnLines,
-} from './ui/vendor-details';
+export { Detail, DetailList, PhoneNumberShown, WrittenOnLines } from './ui/vendor-details';

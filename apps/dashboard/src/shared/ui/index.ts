@@ -25,6 +25,7 @@ export {
   FieldSet,
   FieldTitle,
 } from './field';
+export { InANewTab } from './in-a-new-tab';
 export { Input } from './input';
 export {
   Item,
