@@ -142,6 +142,17 @@ test('a phone number that is not Iraqi is refused beside its field, which takes 
   await expect(page).not.toHaveURL(`${dashboardUrl}/`);
 });
 
+test('an address or opening hours written as one word wider than the screen do not make the form scroll sideways', async ({
+  page,
+}) => {
+  await openTheForm(page);
+
+  await formField(page, 'address').fill('ش'.repeat(120));
+  await formField(page, 'openingHours').fill('9'.repeat(120));
+
+  await expectNoSidewaysScroll(page);
+});
+
 // Its checks in the three languages are with the language tests, in
 // `dashboard-languages.spec.ts`, whose browser shows a number's fault.
 test('the form meets the automated part of WCAG 2.2 level AA in light and in dark, as opened and with a refusal and a position problem shown', async ({
