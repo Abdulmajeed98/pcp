@@ -680,6 +680,7 @@ End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a
 - `accounts`, ticket 06: the hand-over's link opening the WhatsApp app on the Admin's phone with the message written, in each language; the location button filling the coordinates from the phone's position, in a Vendor's place in Erbil, over HTTPS; the form and the hand-over used with a thumb.
 - `accounts`, ticket 07: the Vendor portal's details screen and its top bar used with a thumb, in Kurdish and in English.
 - `accounts`, ticket 08: the form for the contact details used with a thumb, in Kurdish and in English, an address typed on a Kurdish keyboard among it; its location button filling the coordinates from the phone's position, in the Vendor's place, over HTTPS.
+- `accounts`, ticket 09: acting as a Vendor in its shop on the Admin's phone, the band and its link back used with a thumb, in Kurdish and in English.
 
 A module that leaves another adds it here.
 
