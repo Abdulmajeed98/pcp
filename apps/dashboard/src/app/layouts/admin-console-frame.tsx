@@ -44,7 +44,7 @@ export function AdminConsoleFrame() {
               size="icon"
               aria-label="Sections"
               aria-expanded={menuOpen}
-              aria-controls="sections"
+              aria-controls={menuOpen ? 'sections' : undefined}
               className="-ms-2"
               onClick={() => setMenuOpen(!menuOpen)}
             >
