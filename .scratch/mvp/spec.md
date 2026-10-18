@@ -677,6 +677,7 @@ End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a
 
 - `languages`, ticket 10: the Sorani letters ڕ, ڵ, ێ, ۆ and ە in the phone's own font, and on an older Android phone if one is at hand; the frame and its language switch used with a thumb, in Kurdish and in English.
 - `catalog`, tickets 13 to 15: the Catalog, a Part's page and both forms used with a thumb; a photo from the phone's camera, an iPhone's HEIC photo among them; the footer's credit drawn clearly in Noto Kufi Arabic and read correctly in Kurdish and Arabic; the Sorani letters in both apps' fonts, on an Android phone from Honor, Infinix, Tecno or Xiaomi if one is at hand (ADR-0006).
+- `accounts`, ticket 06: the hand-over's link opening the WhatsApp app on the Admin's phone with the message written, in each language; the location button filling the coordinates from the phone's position, in a Vendor's place in Erbil, over HTTPS; the form and the hand-over used with a thumb.
 
 A module that leaves another adds it here.
 
