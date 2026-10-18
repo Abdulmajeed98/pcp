@@ -41,7 +41,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('the Vendors list', () => {
-  test('a made-up Vendor created over HTTP is found on the list, whichever page it is on, with its login phone number in Iraq’s own form', async ({
+  test('a made-up Vendor created over HTTP is found on the list, whichever page it is on, with its login phone number in Iraq’s own form, and its row opens its page', async ({
     page,
     request,
   }) => {
@@ -52,6 +52,10 @@ test.describe('the Vendors list', () => {
     const row = rowOfVendor(page, vendor.name);
     await expectShownAsWritten(row, vendor.name);
     await expectMarkedAlwaysEnglish(row, inIraqsOwnForm(vendor.loginPhoneNumber));
+
+    await row.getByRole('link', { name: vendor.name }).click();
+    await expect(page).toHaveURL(new RegExp(`^${vendorPageUrl(vendor.id)}(\\?.*)?$`));
+    await expect(page.getByRole('heading', { level: 1, name: vendor.name })).toBeVisible();
   });
 
   test('the list is in name order: of two made-up Vendors, the one whose name comes first is listed first, though it was made second', async ({

@@ -839,9 +839,10 @@ describe('the Vendor endpoints', () => {
       await expectErrorResponse(response, 403, accessDenied);
     });
 
-    it("refuses a Vendor's Login the list", async () => {
+    it("refuses a Vendor's own Login the list", async () => {
       await createdOf(await createVendor(aVendor('0750 123 4567')));
-      const vendorToken = await testApp.tokenOf({ roles: ['vendor'] });
+      const [login] = await loginsNamed('+9647501234567');
+      const vendorToken = await testApp.tokenOf({ subject: login.id, roles: ['vendor'] });
 
       const response = await listVendors({}, vendorToken);
 

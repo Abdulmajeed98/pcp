@@ -61,7 +61,7 @@ async function isRefusedAsTaken(response: APIResponse): Promise<boolean> {
 
 // Details a test may give a made-up Vendor, in place of those it is given
 // otherwise, or beside them, as the API takes them.
-export type VendorDetails = Record<string, unknown>;
+export type MadeUpVendorDetails = Record<string, unknown>;
 
 // Creates a made-up Vendor over HTTP as the Admin, with a name and a login
 // phone number unique to the run, and plainly test data, and every detail a
@@ -71,7 +71,7 @@ export type VendorDetails = Record<string, unknown>;
 export async function createAMadeUpVendor(
   request: APIRequestContext,
   authorization: string,
-  details: VendorDetails = {},
+  details: MadeUpVendorDetails = {},
 ): Promise<MadeUpVendor> {
   const name = `Made-up test Vendor ${aWordUniqueToTheRun()}`;
   const createWithANewNumber = () => {
