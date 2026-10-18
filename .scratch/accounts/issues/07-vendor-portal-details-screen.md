@@ -160,3 +160,14 @@ Each was taken the way the ticket or DESIGN.md pointed, and none blocks the modu
 - **The details in three groups**, the Vendor, "Contact details" and "Login", as the Admin's form groups them. It keeps the login phone number, labelled "Phone number" in Kurdish and Arabic as the word list says, apart from the Vendor's own phone number. **My recommendation:** keep it; ticket 08's form then edits exactly the second group.
 - **The "not found" screen has a way back**, "Open your details", which the ticket did not ask for. **My recommendation:** keep it.
 - **The top bar on a phone** puts the name and Log out on one row and the switch on the row below, at the end, rather than Log out on a row of its own. **My recommendation:** keep it.
+
+### 18 October 2026: the owner's decisions
+
+The four decisions were put to the owner on 18 October 2026, one at a time, each rendered in the built-in browser. The screens were captured from the real app, at 360 pixels wide, by a throwaway end-to-end test, deleted after. Each alternative was made by changing the page in that test, not the source, and laid beside the screen as built.
+
+- **A Login with no Vendor behind it.** **With the language switch**, not as built or as recommended. The owner saw the message in Kurdish with and without the switch. The frame now shows a top bar with the switch alone, closed by a Rule Sand rule, above the message and Log out, so that the message can be read in another language (`a22ed64`). The language tests check that screen in all three languages by its switch, with `checkInEveryLanguageOfTheVendorPortal`, and its text differs in each; the portal's own test counts the switch's three buttons and Log out, and no other control, link, heading or name. Both were run first without the switch and failed waiting for it. Where the Comments and the box above say "nothing else", they record what the ticket asked and what was built first.
+- **The details in three groups.** **Three groups**, as built and as recommended. The owner saw them beside one list without headings, in Kurdish and English, where the two phone numbers' rows carry the same Kurdish label.
+- **The "not found" screen.** **With the link** back to the details screen, as built and as recommended.
+- **The top bar on a phone.** **The name and Log out on one row, the switch below**, as built and as recommended. The owner saw it beside Log out and the switch kept together, which gives Log out a row of its own in Kurdish and not in English.
+
+**Results after the decisions**, against the owner's services with no reset: `pnpm platform:check` passes 106 tests, and `pnpm check` passed before the commit. The API did not change, so `pnpm integration:check` was not run.
