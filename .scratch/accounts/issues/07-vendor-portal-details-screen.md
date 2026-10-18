@@ -10,7 +10,7 @@ The API gains the rule for which Vendor a request acts for, written once for eve
 
 **Status:** ready-for-agent
 
-- [ ] Before anything is written, these are read for the installed release of React Router, and the findings are recorded under Comments: how one set of pages is mounted under two routers, the Vendor portal's now and the Admin console's in ticket 09, and how a page learns the Vendor it shows.
+- [x] Before anything is written, these are read for the installed release of React Router, and the findings are recorded under Comments: how one set of pages is mounted under two routers, the Vendor portal's now and the Admin console's in ticket 09, and how a page learns the Vendor it shows.
 - [ ] `core` gains a structured error for a refused access, answered 403 with a code of its own, beside `NotFoundError` and `NotValidError`.
 - [ ] **The rule**, in the API's domain, handed the Caller's identifier and roles as plain values by the controller:
   - a Caller that holds the `admin` role may act for any Vendor;
@@ -49,3 +49,23 @@ The API gains the rule for which Vendor a request acts for, written once for eve
 - [ ] `pnpm check` passes with Docker stopped.
 - [ ] The results of the fault checks are recorded under Comments.
 - [ ] The work is committed in pieces, each leaving `pnpm integration:check` and `pnpm check` passing.
+
+## Comments
+
+### 18 October 2026: what was read before anything was written
+
+The dashboard has React Router 8.4.0 installed. The package carries its own documentation, under `node_modules/react-router/docs`, and the comments of its type declarations, which are what was read, on 18 October 2026, rather than the website, which describes the newest release.
+
+**How one set of pages is mounted under two routers.**
+
+- In data mode the routes are plain objects given to `createBrowserRouter`: a `path`, a `Component` and `children` ("Routing", "Route Object"). Nothing ties an object to one router, so one array of route objects can be the `children` of a route in each of two routers.
+- "The path of the parent is automatically included in the child", and the child is rendered through the parent's `<Outlet/>` ("Routing", Nested Routes). An index route "render[s] into their parent's Outlet at their parent's URL (like a default child route)" (Index Routes).
+- So the Vendor portal's screens are one array of child routes, with paths relative to their parent. The Vendor portal's router gives them to its frame's route at `/`, where the details screen is the index route and so the first address. Ticket 09's Admin console router gives the same array to a route of its own under a Vendor's page, such as `vendors/:vendorId/portal`, with the frame and the band.
+- A link between two of those screens has to be written relative to the route, with no leading slash, so that it leads to the same screen under either parent. That is `Link`'s default: `relative="route"` "resolves the link relative to the route pattern" (the comment on `relative` in the type declarations). The details screen has no such link yet; ticket 08's form may.
+
+**How a page learns the Vendor it shows.**
+
+- `useParams` "returns an object of key/value-pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes." Under the Admin console's address the Vendor is a parameter, `:vendorId`. The Vendor portal's first address is `/`, and holds no Vendor: the portal learns its Vendor by asking the API for the Caller's Vendor.
+- `useOutletContext` "returns the parent route `<Outlet context>`", for "parent routes [that] manage state or other values you want shared with child routes", and the comment recommends that "the parent component provide a custom hook for accessing the context value", for its types.
+- So each frame learns the Vendor in its own way, and hands its identifier to the screens through `<Outlet context>`: the Vendor portal's frame from the Caller's Vendor, and ticket 09's from `useParams`. A screen reads it with one hook, and reads the Vendor itself with the Vendor endpoint, which the rule lets the Admin call for any Vendor. The same page then serves both.
+- Not chosen: a loader with `useRouteLoaderData`, which names the route that loaded the data by its identifier, so a page would need to know which of the two routers it is in; and the dashboard reads its data through TanStack Query, with no loader anywhere.
