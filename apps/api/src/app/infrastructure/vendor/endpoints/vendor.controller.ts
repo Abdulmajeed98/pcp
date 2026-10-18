@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { CallerResolver, ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
@@ -11,11 +11,16 @@ import {
   ReadCallersVendorQueryInput,
 } from '~/domain/vendor/ReadCallersVendorQuery';
 import { ReadVendorQuery, ReadVendorQueryInput } from '~/domain/vendor/ReadVendorQuery';
+import {
+  ResetVendorPasswordCommand,
+  ResetVendorPasswordCommandInput,
+} from '~/domain/vendor/ResetVendorPasswordCommand';
 
 import { CreatedVendorResponse } from './CreatedVendorResponse';
 import { CreateVendorRequest } from './CreateVendorRequest';
 import { EditContactDetailsRequest } from './EditContactDetailsRequest';
 import { ListVendorsRequest } from './ListVendorsRequest';
+import { PasswordResetResponse } from './PasswordResetResponse';
 import { VendorPageResponse } from './VendorPageResponse';
 import { VendorResponse } from './VendorResponse';
 
@@ -27,6 +32,7 @@ export class VendorController {
     private readonly readVendorQuery: ReadVendorQuery,
     private readonly readCallersVendorQuery: ReadCallersVendorQuery,
     private readonly editContactDetailsCommand: EditContactDetailsCommand,
+    private readonly resetVendorPasswordCommand: ResetVendorPasswordCommand,
     private readonly callerResolver: CallerResolver,
   ) {}
 
@@ -97,6 +103,29 @@ export class VendorController {
 
     return result.pipe(
       Either.map((output) => VendorResponse.of(output.getVendor())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      "Give a Vendor's Login a new temporary password, end its sessions, and answer the password once",
+  })
+  @ApiOkResponse({ type: PasswordResetResponse })
+  @PreAuthorize([Role.ADMIN])
+  // It answers 200, not 201: the Vendor and its Login stay, and only the
+  // Login's password is replaced.
+  @HttpCode(200)
+  @Post('v1/vendors/:vendorId/password-reset')
+  async resetVendorPassword(
+    @Param('vendorId') vendorId: string,
+  ): Promise<PasswordResetResponse> {
+    const result = await this.resetVendorPasswordCommand.execute(
+      new ResetVendorPasswordCommandInput(vendorId),
+    );
+
+    return result.pipe(
+      Either.map(PasswordResetResponse.of),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

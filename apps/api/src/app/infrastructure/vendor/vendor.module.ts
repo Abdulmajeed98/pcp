@@ -5,6 +5,7 @@ import { EditContactDetailsCommand } from '~/domain/vendor/EditContactDetailsCom
 import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
 import { ReadCallersVendorQuery } from '~/domain/vendor/ReadCallersVendorQuery';
 import { ReadVendorQuery } from '~/domain/vendor/ReadVendorQuery';
+import { ResetVendorPasswordCommand } from '~/domain/vendor/ResetVendorPasswordCommand';
 import { VendorAccessRule } from '~/domain/vendor/VendorAccessRule';
 import { VendorStore } from '~/domain/vendor/VendorStore';
 import { LoginModule } from '~/infrastructure/login/login.module';
@@ -23,6 +24,7 @@ import { DatabaseVendorStore } from './store/DatabaseVendorStore';
     ListVendorsQuery,
     ReadVendorQuery,
     ReadCallersVendorQuery,
+    ResetVendorPasswordCommand,
     VendorAccessRule,
   ],
 })

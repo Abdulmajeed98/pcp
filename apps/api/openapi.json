@@ -583,6 +583,45 @@
         "tags": ["Vendor"]
       }
     },
+    "/v1/vendors/{vendorId}/password-reset": {
+      "post": {
+        "operationId": "resetVendorPassword",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordResetResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Give a Vendor's Login a new temporary password, end its sessions, and answer the password once",
+        "tags": ["Vendor"]
+      }
+    },
     "/v1/caller/vendor": {
       "get": {
         "operationId": "readCallersVendor",
@@ -1451,6 +1490,17 @@
           }
         },
         "required": ["address", "phoneNumber"]
+      },
+      "PasswordResetResponse": {
+        "type": "object",
+        "properties": {
+          "temporaryPassword": {
+            "type": "string",
+            "description": "The new temporary password of the Vendor's Login, which the Vendor replaces at its next login. It is answered this once and kept nowhere else.",
+            "example": "k7mx2pq9rt4w"
+          }
+        },
+        "required": ["temporaryPassword"]
       }
     }
   },

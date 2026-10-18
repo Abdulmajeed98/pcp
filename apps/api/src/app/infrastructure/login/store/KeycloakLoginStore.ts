@@ -103,6 +103,40 @@ export class KeycloakLoginStore implements LoginStore {
     }
   }
 
+  async setTemporaryPassword(
+    loginId: string,
+    temporaryPassword: string,
+  ): Promise<Either.Either<void, StructuredError>> {
+    try {
+      const administration = await this.logIn();
+      // A temporary password makes Keycloak require the Login to replace it
+      // again, as when the Login was made. Keycloak leaves its sessions open.
+      await administration.users.resetPassword({
+        id: loginId,
+        credential: { type: 'password', value: temporaryPassword, temporary: true },
+      });
+      return Either.right(undefined);
+    } catch (error) {
+      this.logger.error(error, `The Login ${loginId} could not be given a new password`);
+      return Either.left(
+        failureOf(error, `The Login ${loginId} could not be given a new password`),
+      );
+    }
+  }
+
+  async endSessions(loginId: string): Promise<Either.Either<void, StructuredError>> {
+    try {
+      const administration = await this.logIn();
+      await administration.users.logout({ id: loginId });
+      return Either.right(undefined);
+    } catch (error) {
+      this.logger.error(error, `The sessions of the Login ${loginId} could not be ended`);
+      return Either.left(
+        failureOf(error, `The sessions of the Login ${loginId} could not be ended`),
+      );
+    }
+  }
+
   // Gives a Login a realm role. The role is found among the roles the Login
   // may still be given: reading a role by its name would need a wider role of
   // the realm's administration than the API's client holds.

@@ -38,4 +38,15 @@ export abstract class LoginStore {
 
   // Deletes the Login with this identifier.
   abstract delete(loginId: string): Promise<Either.Either<void, StructuredError>>;
+
+  // Replaces the password of the Login with this identifier with a temporary
+  // one, which it has to replace at its next login. Its sessions stay open.
+  abstract setTemporaryPassword(
+    loginId: string,
+    temporaryPassword: string,
+  ): Promise<Either.Either<void, StructuredError>>;
+
+  // Ends every session of the Login with this identifier, so that it has to
+  // log in again.
+  abstract endSessions(loginId: string): Promise<Either.Either<void, StructuredError>>;
 }

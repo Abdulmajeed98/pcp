@@ -19,12 +19,14 @@ import {
 } from '../../../test-utils/database/test-database';
 import {
   addThePasswordCheckClient,
+  chooseOwnPassword,
   emptyTheRealm,
   logInAt,
   loginsNamed,
   makeALoginByHand,
   realmRolesOf,
   removeThePasswordCheckClient,
+  sessionsOf,
   whileKeycloakIsPaused,
 } from '../../../test-utils/keycloak/keycloak-administrator';
 
@@ -1159,6 +1161,128 @@ describe('the Vendor endpoints', () => {
         expect(await (await readVendor(vendor.id)).json()).toEqual(vendor);
       },
     );
+  });
+
+  describe("resetting a Vendor's password", () => {
+    function resetPassword(vendorId: string, token = adminToken): Promise<Response> {
+      return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/password-reset`, {
+        method: 'POST',
+        headers: bearerHeader(token),
+      });
+    }
+
+    // A made-up Vendor whose Login has replaced its temporary password with
+    // one of its own, as after its first login.
+    async function aVendorWithItsOwnPassword(): Promise<{
+      vendor: VendorBody;
+      loginId: string;
+    }> {
+      const vendor = await aVendorWith('0750 123 4567');
+      const [login] = await loginsNamed('+9647501234567');
+      await chooseOwnPassword(login.id, 'the-vendors-own');
+      return { vendor, loginId: login.id };
+    }
+
+    it('answers a new temporary password, different from the first, which is the Login’s, while the first no longer is', async () => {
+      const { vendor, temporaryPassword: first } = await createdOf(
+        await createVendor(aVendor('0750 123 4567')),
+      );
+
+      const response = await resetPassword(vendor.id);
+
+      expect(response.status).toBe(200);
+      const { temporaryPassword } = (await response.json()) as {
+        temporaryPassword: string;
+      };
+      expect(temporaryPassword).toMatch(aTemporaryPassword);
+      expect(temporaryPassword).not.toBe(first);
+      expect(await logInAt('+9647501234567', temporaryPassword)).toEqual({
+        status: 400,
+        body: { error: 'invalid_grant', error_description: 'Account is not fully set up' },
+      });
+      expect(await logInAt('+9647501234567', first)).toEqual({
+        status: 400,
+        body: { error: 'invalid_grant', error_description: 'Invalid user credentials' },
+      });
+    });
+
+    it('takes the password the Vendor chose away, and requires the Login to update its password again', async () => {
+      const { vendor, loginId } = await aVendorWithItsOwnPassword();
+      const [chosen] = await loginsNamed('+9647501234567');
+      expect(chosen.requiredActions).toEqual([]);
+
+      expect((await resetPassword(vendor.id)).status).toBe(200);
+
+      const [login] = await loginsNamed('+9647501234567');
+      expect(login.id).toBe(loginId);
+      expect(login.requiredActions).toEqual(['UPDATE_PASSWORD']);
+      expect((await logInAt('+9647501234567', 'the-vendors-own')).body).toEqual({
+        error: 'invalid_grant',
+        error_description: 'Invalid user credentials',
+      });
+    });
+
+    it('ends a session the Login had open', async () => {
+      const { vendor, loginId } = await aVendorWithItsOwnPassword();
+      expect((await logInAt('+9647501234567', 'the-vendors-own')).status).toBe(200);
+      expect(await sessionsOf(loginId)).toHaveLength(1);
+
+      expect((await resetPassword(vendor.id)).status).toBe(200);
+
+      expect(await sessionsOf(loginId)).toEqual([]);
+    });
+
+    it('does not answer the new temporary password when the Vendor is read', async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const reset = await resetPassword(vendor.id);
+      const { temporaryPassword } = (await reset.json()) as { temporaryPassword: string };
+
+      const read = await readVendor(vendor.id);
+
+      expect(await read.text()).not.toContain(temporaryPassword);
+    });
+
+    it.each([
+      ['an identifier no Vendor has', '0b4d6f8a-2c1e-4a3b-9d5f-7e6a8b9c0d1e'],
+      ['a text that is no identifier', 'not-a-vendor'],
+    ])('answers 404 with an error of its own for %s', async (_what, vendorId) => {
+      const response = await resetPassword(vendorId);
+
+      await expectErrorResponse(response, 404, vendorNotFound);
+    });
+
+    it('answers 503 with an error of its own while Keycloak does not answer, and keeps the password the Vendor chose', async () => {
+      const { vendor } = await aVendorWithItsOwnPassword();
+
+      await whileKeycloakIsPaused(async () => {
+        const response = await resetPassword(vendor.id);
+
+        await expectErrorResponse(response, 503, identityServiceUnavailable);
+      });
+
+      expect((await logInAt('+9647501234567', 'the-vendors-own')).status).toBe(200);
+    });
+
+    it("refuses a Vendor's own Login, and keeps its password", async () => {
+      const { vendor } = await aVendorWithItsOwnPassword();
+
+      const response = await resetPassword(vendor.id, await tokenOfTheOwnLogin(vendor));
+
+      await expectErrorResponse(response, 403, accessDenied);
+      expect((await logInAt('+9647501234567', 'the-vendors-own')).status).toBe(200);
+    });
+
+    it('refuses a reset without a token, and keeps the password', async () => {
+      const { vendor } = await aVendorWithItsOwnPassword();
+
+      const response = await fetch(
+        `${testApp.baseUrl}/v1/vendors/${vendor.id}/password-reset`,
+        { method: 'POST' },
+      );
+
+      await expectErrorResponse(response, 401, unauthorized);
+      expect((await logInAt('+9647501234567', 'the-vendors-own')).status).toBe(200);
+    });
   });
 
   describe('who may call them', () => {

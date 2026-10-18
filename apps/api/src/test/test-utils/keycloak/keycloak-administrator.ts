@@ -87,6 +87,22 @@ export async function makeALoginByHand(name: string): Promise<void> {
   });
 }
 
+// Gives a Login a lasting password, as its own: what the Login holds once
+// the Vendor has replaced its temporary password at its first login.
+export async function chooseOwnPassword(loginId: string, password: string): Promise<void> {
+  await asAdministrator(`/users/${loginId}/reset-password`, {
+    method: 'PUT',
+    body: JSON.stringify({ type: 'password', value: password, temporary: false }),
+  });
+}
+
+// The Login's sessions that Keycloak still holds open, by their identifiers.
+export async function sessionsOf(loginId: string): Promise<string[]> {
+  const response = await asAdministrator(`/users/${loginId}/sessions`);
+  const sessions = (await response.json()) as { id: string }[];
+  return sessions.map((session) => session.id);
+}
+
 // Removes every Login a test made, so that the next test starts from a realm
 // with none. The service account of the API's client belongs to the realm
 // file, and is kept.

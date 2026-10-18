@@ -465,6 +465,13 @@ export type EditContactDetailsRequest = {
     openingHours?: string | null;
 };
 
+export type PasswordResetResponse = {
+    /**
+     * The new temporary password of the Vendor's Login, which the Vendor replaces at its next login. It is answered this once and kept nowhere else.
+     */
+    temporaryPassword: string;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -793,6 +800,30 @@ export type EditContactDetailsResponses = {
 };
 
 export type EditContactDetailsResponse = EditContactDetailsResponses[keyof EditContactDetailsResponses];
+
+export type ResetVendorPasswordData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/password-reset';
+};
+
+export type ResetVendorPasswordErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ResetVendorPasswordError = ResetVendorPasswordErrors[keyof ResetVendorPasswordErrors];
+
+export type ResetVendorPasswordResponses = {
+    200: PasswordResetResponse;
+};
+
+export type ResetVendorPasswordResponse = ResetVendorPasswordResponses[keyof ResetVendorPasswordResponses];
 
 export type ReadCallersVendorData = {
     body?: never;

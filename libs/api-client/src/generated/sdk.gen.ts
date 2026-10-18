@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -146,6 +146,15 @@ export const editContactDetails = <ThrowOnError extends boolean = false>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Give a Vendor's Login a new temporary password, end its sessions, and answer the password once
+ */
+export const resetVendorPassword = <ThrowOnError extends boolean = false>(options: Options<ResetVendorPasswordData, ThrowOnError>): RequestResult<ResetVendorPasswordResponses, ResetVendorPasswordErrors, ThrowOnError> => (options.client ?? client).post<ResetVendorPasswordResponses, ResetVendorPasswordErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/password-reset',
+    ...options
 });
 
 /**
