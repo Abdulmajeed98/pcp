@@ -127,3 +127,13 @@ Each was taken the way the ticket or DESIGN.md pointed, and none blocks the modu
 - **The sections on a desk's screen are in the top bar, not in a side bar.** DESIGN.md had said that on a wider screen "the sections move to a side bar"; the ticket says that the top bar gains the menu. With two sections the bar holds them after the console's name, and DESIGN.md now says so. **My recommendation:** keep the top bar until a section is added that it cannot hold.
 - **The map link opens Google Maps in a new tab.** The dashboard keeps its tokens in memory only, so leaving the tab would mean a new trip through Keycloak on the way back. The link says so to a screen reader. **My recommendation:** keep it.
 - **The Instagram name is shown bare, as stored**, `made_up.shop`, without an @ before it. **My recommendation:** keep it; `browse` decides how a Shopper reads it.
+
+### 18 October 2026: the owner's decisions
+
+The three decisions were put to the owner on 18 October 2026, one at a time, the first and the third with both options rendered from the real app in the built-in browser.
+
+- **The sections on a desk's screen.** **In the top bar**, as built and as recommended. The owner saw the Vendors and the Catalog at 1,280 pixels with the sections in the bar and, made for the comparison only and then undone, in a side bar. Nothing changed: DESIGN.md already says so.
+- **The map link.** **In a new tab**, as built and as recommended.
+- **The Instagram name.** **A link to the Vendor's profile, with an @**, not the bare name recommended. A Vendor's page shows `@made_up.shop`, marked `AlwaysEnglish`, as a link to `https://www.instagram.com/made_up.shop/`, opening in a new tab as the map link does, and saying so to a screen reader. The page line of `pnpm platform:check` now reads the handle with its @, kept apart, and the link's address. Run before the page changed, it failed on finding no `@made_up.test` in the Instagram row; afterwards the six lines passed, the page's accessibility line among them.
+
+**Results after the decisions**, against the owner's services with no reset: `pnpm platform:check` passes 93 tests, and `pnpm check` passes. The API did not change, so `pnpm integration:check` was not run again.
