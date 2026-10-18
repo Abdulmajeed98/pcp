@@ -1,5 +1,7 @@
 import type { SubErrorResponse } from '@pcp/api-client';
 
+import type { RefusalBesideAField } from '@/shared/api';
+
 import type { ContactDetailsFormValues } from './form-values';
 
 // The reasons the API gives for refusing each contact detail, as ticket 02
@@ -24,21 +26,21 @@ export type RefusalMessage =
 
 const details = Object.keys(reasons) as Detail[];
 
-// The detail of the form a refusal is about, and its message, if it names a
-// detail. A refused latitude or longitude is about the map location, which
-// the form shows as one field. The API names the first detail that does not
-// fit.
+// The detail of the form a refusal is about, and its message's key, if it
+// names a detail. A refused latitude or longitude is about the map location,
+// which the form shows as one field. The API names the first detail that
+// does not fit.
 export function refusalOf(
   error: SubErrorResponse,
-): { detail: Detail; message: RefusalMessage } | undefined {
+): RefusalBesideAField<ContactDetailsFormValues> | undefined {
   const field = error.additionalInformation?.field?.split('.')[0];
   const detail = details.find((each) => each === field);
   if (detail === undefined) return undefined;
 
   const reason = error.additionalInformation?.reason;
   const known = (reasons[detail] as readonly string[]).includes(reason ?? '');
-  return {
-    detail,
-    message: known ? (`${detail}.${reason}` as RefusalMessage) : 'other',
-  };
+  const message: RefusalMessage = known
+    ? (`${detail}.${reason}` as RefusalMessage)
+    : 'other';
+  return { field: detail, message };
 }

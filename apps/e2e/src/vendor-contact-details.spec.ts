@@ -1,15 +1,9 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Page, type Request, test } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
 import { openTheDashboardAs } from './development-logins';
 import { type VendorLoginDetails } from './keycloak-screens';
-import {
-  buttonFor,
-  expectNoSidewaysScroll,
-  type Language,
-  languages,
-  narrowWindow,
-} from './languages';
+import { buttonFor, expectNoSidewaysScroll, languages, narrowWindow } from './languages';
 import { dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -21,7 +15,9 @@ const inErbil = { latitude: 36.1911744, longitude: 44.0094145 };
 
 // A Vendor uses its portal on a phone (LANG-8), and the browser has leave to
 // give the dashboard its position. The browser is set to English, so the
-// portal opens in English.
+// portal opens in English. No test quotes the portal's text, which the
+// review of the translations may change: an element is found by its id, its
+// test id or what it is.
 test.use({
   viewport: narrowWindow,
   geolocation: inErbil,
@@ -43,36 +39,61 @@ function detailOf(page: Page, detail: string) {
   return page.locator(`[data-detail="${detail}"] dd`);
 }
 
-// A control of the form, found by its label in English.
-function formField(page: Page, label: string) {
-  return page.getByRole('main').getByLabel(label, { exact: true });
+// A control of the form, found by the name the API gives its detail.
+function formField(page: Page, detail: string) {
+  return page.locator(`#contact-details-${detail}`);
+}
+
+// The refusal shown beside a control of the form.
+function refusalOf(page: Page, detail: string) {
+  return page.locator(`#contact-details-${detail}-error`);
 }
 
 function saveButton(page: Page) {
-  return page.getByRole('main').getByRole('button', { name: 'Save', exact: true });
+  return page.getByRole('main').locator('form button[type="submit"]');
 }
 
-// Opens the portal as the Vendor, and its form from the details screen.
+// The request that sends the contact details to the API.
+function isTheSave(request: Request): boolean {
+  return request.method() === 'PUT' && request.url().endsWith('/contact-details');
+}
+
+// Opens the portal as the Vendor, and its form from the details screen by the
+// link beside the contact details' heading.
 async function openTheForm(page: Page): Promise<void> {
   await openTheDashboardAs(page, vendor);
-  await page.getByRole('link', { name: 'Change your contact details' }).click();
-  await expect(formField(page, 'Address')).toBeVisible();
+  await page.getByRole('main').locator('a[href="/contact-details"]').click();
+  await expect(formField(page, 'address')).toBeVisible();
 }
 
-test('the Vendor changes its address, written in Arabic script with Arabic-Indic digits, and its opening hours, and the details screen shows both exactly as written; the name, the city and the login phone number are not in the form', async ({
+test('the Vendor changes its address, written in Arabic script with Arabic-Indic digits, and its opening hours, and the details screen shows both exactly as written; the form holds the six contact details and sends them and nothing else', async ({
   page,
 }) => {
   const address = `شەقامی ٦٠ مەتری، ژمارە ${Date.now() % 1000}\nهەولێر`;
   const openingHours = 'شەممە تا پێنجشەممە: ٩ بۆ ٩\nهەینی: داخراوە';
+  const contactDetails = [
+    'address',
+    'instagramName',
+    'mapLocation',
+    'openingHours',
+    'phoneNumber',
+    'whatsAppNumber',
+  ];
 
   await openTheForm(page);
-  for (const label of ['Name', 'City', 'Login phone number']) {
-    await expect(formField(page, label)).toHaveCount(0);
-  }
-  await formField(page, 'Address').fill(address);
-  await formField(page, 'Opening hours').fill(openingHours);
+  const controls = await page
+    .getByRole('main')
+    .locator('form [name]')
+    .evaluateAll((elements) => elements.map((element) => element.getAttribute('name')));
+  expect([...controls].sort(), 'the form’s controls').toEqual(contactDetails);
+  await formField(page, 'address').fill(address);
+  await formField(page, 'openingHours').fill(openingHours);
+  const saved = page.waitForRequest(isTheSave);
   await saveButton(page).click();
 
+  expect(Object.keys((await saved).postDataJSON() as object).sort()).toEqual(
+    contactDetails,
+  );
   await expect(page).toHaveURL(`${dashboardUrl}/`);
   await expect(detailOf(page, 'address')).toBeVisible();
   expect(await detailOf(page, 'address').innerText()).toBe(address);
@@ -84,41 +105,40 @@ test("the browser is given a position in Erbil, and the location button fills th
   page,
 }) => {
   await openTheForm(page);
-  await formField(page, 'Map location').fill('');
+  await formField(page, 'mapLocation').fill('');
 
-  await page.getByRole('button', { name: 'Use my position' }).click();
+  await page.getByTestId('use-position').click();
 
-  await expect(formField(page, 'Map location')).toHaveValue(
+  await expect(formField(page, 'mapLocation')).toHaveValue(
     `${inErbil.latitude}, ${inErbil.longitude}`,
   );
 });
 
-test('a phone number that is not Iraqi is refused beside its field, which takes the focus, and the refusal differs between Kurdish and English', async ({
+test('a phone number that is not Iraqi is refused beside its field, which takes the focus, and the refusal follows the language switch, different in Kurdish and English', async ({
   page,
 }) => {
   await openTheForm(page);
+  const phoneNumber = formField(page, 'phoneNumber');
+  const refusal = refusalOf(page, 'phoneNumber');
 
-  const refusals = new Map<Language, string>();
-  for (const language of [english, kurdish]) {
-    await buttonFor(page, language).click();
-    // A number in London, as Ofcom keeps 020 7946 0xxx for drama.
-    const phoneNumber = page.locator('#contact-details-phoneNumber');
-    await phoneNumber.fill('+44 20 7946 0958');
-    await page.locator('form button[type="submit"]').click();
+  // A number in London, as Ofcom keeps 020 7946 0xxx for drama.
+  await phoneNumber.fill('+44 20 7946 0958');
+  await saveButton(page).click();
 
-    await expect(phoneNumber).toHaveAttribute('aria-invalid', 'true');
-    await expect(phoneNumber).toBeFocused();
-    const refusal = page.locator('#contact-details-phoneNumber-error');
-    await expect(refusal).not.toBeEmpty();
-    expect(
-      (await phoneNumber.getAttribute('aria-describedby'))?.split(' '),
-      'the refusal is part of the field’s description',
-    ).toContain('contact-details-phoneNumber-error');
-    refusals.set(language, await refusal.innerText());
-  }
+  await expect(phoneNumber).toHaveAttribute('aria-invalid', 'true');
+  await expect(phoneNumber).toBeFocused();
+  await expect(refusal).not.toBeEmpty();
+  expect(
+    (await phoneNumber.getAttribute('aria-describedby'))?.split(' '),
+    'the refusal is part of the field’s description',
+  ).toContain('contact-details-phoneNumber-error');
+  const inEnglish = await refusal.innerText();
 
-  expect(refusals.get(english)).toMatch(/not an Iraqi phone number/);
-  expect(refusals.get(kurdish)).not.toBe(refusals.get(english));
+  await buttonFor(page, kurdish).click();
+  await expect(refusal).not.toHaveText(inEnglish);
+  await expect(refusal).not.toBeEmpty();
+  await buttonFor(page, english).click();
+  await expect(refusal).toHaveText(inEnglish);
   await expect(page).not.toHaveURL(`${dashboardUrl}/`);
 });
 
@@ -132,11 +152,11 @@ test('the form meets the automated part of WCAG 2.2 level AA in light and in dar
   await expectAccessible(page);
 
   await context.setGeolocation(null);
-  await page.getByRole('button', { name: 'Use my position' }).click();
-  await expect(page.getByText('Your position could not be found.')).toBeVisible();
-  await formField(page, 'Phone number').fill('+44 20 7946 0958');
+  await page.getByTestId('use-position').click();
+  await expect(page.locator('#contact-details-mapLocation-position')).not.toBeEmpty();
+  await formField(page, 'phoneNumber').fill('+44 20 7946 0958');
   await saveButton(page).click();
-  await expect(formField(page, 'Phone number')).toHaveAttribute('aria-invalid', 'true');
+  await expect(formField(page, 'phoneNumber')).toHaveAttribute('aria-invalid', 'true');
   await expectNoSidewaysScroll(page);
   await expectAccessible(page);
 });

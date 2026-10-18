@@ -5,7 +5,7 @@ import { type ReactNode, useState } from 'react';
 import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 
 import { longest, MapLocationField } from '@/entities/vendor';
-import { Refusal, WhyNotAnsweredInThePortal } from '@/shared/api';
+import { setRefusalsBesideTheirFields, WhyNotAnsweredInThePortal } from '@/shared/api';
 import { Trans, useTranslation } from '@/shared/i18n';
 import {
   Alert,
@@ -27,7 +27,7 @@ import {
   contactDetailsFormValuesOf,
   contactDetailsRequestOf,
 } from '../model/form-values';
-import { refusalOf } from '../model/refusals';
+import { refusalOf, type RefusalMessage } from '../model/refusals';
 
 // The form in which a Vendor changes its contact details, in the Vendor
 // portal's language, filled with them as they are: its address, its map
@@ -57,11 +57,16 @@ export function ContactDetailsForm({
       defaultValues: contactDetailsFormValuesOf(vendor),
     });
   const { errors } = formState;
-  const [notSaved, setNotSaved] = useState<Error | undefined>(undefined);
+  // Why the details were not saved, when the form says it above itself.
+  const [notSaved, setNotSaved] = useState<{ why: unknown } | undefined>(undefined);
+  // A refusal is kept as its message's key and said when it is drawn, so that
+  // it follows the language switch.
   const required = (detail: 'address' | 'phoneNumber') => ({
     validate: (text: string) =>
-      text.trim() !== '' || t(`ContactDetailsForm.refused.${detail}.missing`),
+      text.trim() !== '' || (`${detail}.missing` satisfies RefusalMessage),
   });
+  const refusalText = (message: string) =>
+    t(`ContactDetailsForm.refused.${message as RefusalMessage}`);
   const upTo = (characters: number) => ({
     longest: <>{formatNumber(characters)}</>,
   });
@@ -71,21 +76,14 @@ export function ContactDetailsForm({
     try {
       await save(contactDetailsRequestOf(values));
     } catch (error) {
-      showWhyNot(error as Error);
+      showWhyNot(error);
     }
   }
 
-  function showWhyNot(error: Error): void {
-    const onTheForm =
-      error instanceof Refusal ? error.errors.flatMap((each) => refusalOf(each) ?? []) : [];
-    for (const [index, { detail, message }] of onTheForm.entries()) {
-      setError(
-        detail,
-        { message: t(`ContactDetailsForm.refused.${message}`) },
-        { shouldFocus: index === 0 },
-      );
+  function showWhyNot(error: unknown): void {
+    if (!setRefusalsBesideTheirFields(error, setError, refusalOf)) {
+      setNotSaved({ why: error });
     }
-    if (onTheForm.length === 0) setNotSaved(error);
   }
 
   return (
@@ -94,7 +92,7 @@ export function ContactDetailsForm({
         <Alert variant="destructive" data-testid="refusal">
           <AlertTitle>{t('ContactDetailsForm.notSaved')}</AlertTitle>
           <AlertDescription>
-            <WhyNotAnsweredInThePortal error={notSaved} />
+            <WhyNotAnsweredInThePortal error={notSaved.why} />
           </AlertDescription>
         </Alert>
       )}
@@ -121,6 +119,7 @@ export function ContactDetailsForm({
             control={control}
             name="mapLocation"
             id="contact-details-mapLocation"
+            refusalText={refusalText}
           />
         </div>
         <DetailField
@@ -205,8 +204,8 @@ interface ControlProps {
 }
 
 // One contact detail: its label, marked when it is optional, its control,
-// what the form says about it, and its refusal, all of which the control
-// names as its description.
+// what the form says about it, and its refusal, said in the language the
+// portal is shown in, all of which the control names as its description.
 function DetailField({
   name,
   label,
@@ -226,7 +225,11 @@ function DetailField({
 }) {
   const { t } = useTranslation();
   const id = `contact-details-${name}`;
-  const error = errors[name]?.message;
+  const refusal = errors[name]?.message;
+  const error =
+    refusal === undefined
+      ? undefined
+      : t(`ContactDetailsForm.refused.${refusal as RefusalMessage}`);
   const describedBy = [
     optional && `${id}-optional`,
     `${id}-description`,

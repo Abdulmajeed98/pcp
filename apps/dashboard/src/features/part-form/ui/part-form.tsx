@@ -1,7 +1,7 @@
 import type { CategoryResponse, PartResponse, SubErrorResponse } from '@pcp/api-client';
-import { FormProvider, useForm } from 'react-hook-form';
+import { type FieldPath, FormProvider, useForm } from 'react-hook-form';
 
-import { Refusal } from '@/shared/api';
+import { setRefusalsBesideTheirFields } from '@/shared/api';
 import {
   Alert,
   AlertDescription,
@@ -67,16 +67,12 @@ export function PartForm({
   }
 
   function showWhyNot(error: unknown): void {
-    const onTheForm =
-      error instanceof Refusal ? error.errors.filter((each) => isOnTheForm(each)) : [];
-    for (const [index, each] of onTheForm.entries()) {
-      setError(
-        fieldOf(each) as 'name',
-        { message: messageOf(each) },
-        { shouldFocus: index === 0 },
-      );
-    }
-    if (onTheForm.length === 0) setError('root.refusal', { message: whyNotSaved(error) });
+    const besideAField = setRefusalsBesideTheirFields(error, setError, (each) =>
+      isOnTheForm(each)
+        ? { field: fieldOf(each) as FieldPath<PartFormValues>, message: messageOf(each) }
+        : undefined,
+    );
+    if (!besideAField) setError('root.refusal', { message: whyNotSaved(error) });
   }
 
   // Whether a refusal names a field this form shows.

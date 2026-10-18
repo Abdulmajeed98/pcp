@@ -9,7 +9,7 @@ import { Refusal } from './answer';
 // with its status and its error's code, kept in English, or it could not be
 // reached. A screen puts it under a title of its own that says what was not
 // done, as the Admin console's `WhyNotAnswered` is put.
-export function WhyNotAnsweredInThePortal({ error }: { error: Error }) {
+export function WhyNotAnsweredInThePortal({ error }: { error: unknown }) {
   const { t } = useTranslation();
 
   return error instanceof Refusal ? (

@@ -38,29 +38,37 @@ const decimals = 7;
 // text is the dashboard's, in the language the dashboard is shown in.
 //
 // It holds the coordinates as written, and refuses text that is not two
-// numbers. `mapLocationIn` reads them when the form is sent, and a refusal
-// the API gives, such as a place outside Iraq, is set on it by the form.
+// numbers, which it says when it is drawn, in the language the dashboard is
+// shown in then. `mapLocationIn` reads them when the form is sent, and a
+// refusal the API gives, such as a place outside Iraq, is set on it by the
+// form, which may give `refusalText` to say a refusal it set as a key.
 export function MapLocationField<Values extends FieldValues>({
   control,
   name,
   id,
+  refusalText = (message) => message,
 }: {
   control: Control<Values>;
   name: FieldPath<Values>;
   id: string;
+  refusalText?: (message: string) => string;
 }) {
   const { t } = useTranslation();
   const { field, fieldState } = useController({
     control,
     name,
     rules: {
-      validate: (text: string) =>
-        mapLocationIn(text) !== undefined || t('MapLocationField.notCoordinates'),
+      validate: (text: string) => mapLocationIn(text) !== undefined,
     },
   });
   const [finding, setFinding] = useState(false);
   const [problem, setProblem] = useState<PositionProblem | undefined>(undefined);
-  const error = fieldState.error?.message;
+  const error =
+    fieldState.error === undefined
+      ? undefined
+      : fieldState.error.type === 'validate'
+        ? t('MapLocationField.notCoordinates')
+        : refusalText(fieldState.error.message ?? '');
   const optionalId = `${id}-optional`;
   const descriptionId = `${id}-description`;
   const positionId = `${id}-position`;
@@ -127,6 +135,7 @@ export function MapLocationField<Values extends FieldValues>({
         <Button
           type="button"
           variant="outline"
+          data-testid="use-position"
           disabled={finding}
           onClick={fillFromThePosition}
         >

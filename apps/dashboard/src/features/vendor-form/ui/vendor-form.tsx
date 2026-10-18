@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 
 import { cities, cityName, longest, MapLocationField } from '@/entities/vendor';
-import { Refusal } from '@/shared/api';
+import { setRefusalsBesideTheirFields } from '@/shared/api';
 import {
   Alert,
   AlertDescription,
@@ -68,17 +68,11 @@ export function VendorForm({
   }
 
   function showWhyNot(error: unknown): void {
-    const onTheForm =
-      error instanceof Refusal
-        ? error.errors.flatMap((each) => {
-            const detail = detailOf(each);
-            return detail === undefined ? [] : [{ detail, message: messageOf(each) }];
-          })
-        : [];
-    for (const [index, { detail, message }] of onTheForm.entries()) {
-      setError(detail, { message }, { shouldFocus: index === 0 });
-    }
-    if (onTheForm.length === 0) setError('root.refusal', { message: whyNotSaved(error) });
+    const besideAField = setRefusalsBesideTheirFields(error, setError, (each) => {
+      const detail = detailOf(each);
+      return detail === undefined ? undefined : { field: detail, message: messageOf(each) };
+    });
+    if (!besideAField) setError('root.refusal', { message: whyNotSaved(error) });
   }
 
   return (
