@@ -2,6 +2,19 @@
 // (ADR-0007), added with shadcn/ui's command from the dashboard's folder and
 // then held to the root DESIGN.md. `components.json` says where they go.
 export { Alert, AlertAction, AlertDescription, AlertTitle } from './alert';
+export {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
+  AlertDialogPortal,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './alert-dialog';
 export { BackLink } from './back-link';
 export { Button, buttonVariants } from './button';
 export { DirectionProvider, useDirection } from './direction';
