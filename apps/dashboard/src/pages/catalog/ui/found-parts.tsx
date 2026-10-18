@@ -1,7 +1,6 @@
-import type { PartPageResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, SearchXIcon } from 'lucide-react';
+import { PlusIcon, SearchXIcon } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { categoryName } from '@/entities/category';
@@ -19,6 +18,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
+  ListPages,
   Plate,
 } from '@/shared/ui';
 
@@ -80,7 +80,8 @@ export function FoundParts({
       )}
 
       {totalPages > 1 && (
-        <ResultPages
+        <ListPages
+          label="Pages of the results"
           pageNumber={pageNumber}
           totalPages={totalPages}
           first={first}
@@ -89,36 +90,6 @@ export function FoundParts({
         />
       )}
     </section>
-  );
-}
-
-// The way to the page before and the page after, and where this one stands.
-function ResultPages({
-  pageNumber,
-  totalPages,
-  first,
-  last,
-  onPage,
-}: Pick<PartPageResponse, 'pageNumber' | 'totalPages' | 'first' | 'last'> & {
-  onPage: (page: number) => void;
-}) {
-  return (
-    <nav
-      aria-label="Pages of the results"
-      className="flex items-center justify-between gap-2"
-    >
-      <Button variant="outline" disabled={first} onClick={() => onPage(pageNumber - 1)}>
-        <ChevronLeftIcon data-icon="inline-start" className="rtl:rotate-180" />
-        Previous
-      </Button>
-      <p className="text-sm text-muted-foreground">
-        Page {formatNumber(pageNumber + 1)} of {formatNumber(totalPages)}
-      </p>
-      <Button variant="outline" disabled={last} onClick={() => onPage(pageNumber + 1)}>
-        Next
-        <ChevronRightIcon data-icon="inline-end" className="rtl:rotate-180" />
-      </Button>
-    </nav>
   );
 }
 

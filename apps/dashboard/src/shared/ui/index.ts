@@ -39,6 +39,7 @@ export {
   ItemTitle,
 } from './item';
 export { Label } from './label';
+export { ListPages } from './list-pages';
 export { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from './native-select';
 export { Plate } from './plate';
 export { Separator } from './separator';
