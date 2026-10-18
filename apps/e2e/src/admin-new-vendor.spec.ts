@@ -208,7 +208,7 @@ test('after the create, the hand-over offers the message in Kurdish, Arabic and 
         lines.filter((line) => line.includes(value)),
         `one line of the ${language.name} message holds ${value === password ? 'the password' : value}, after its label`,
       ).toEqual([
-        expect.stringMatching(new RegExp(`\\S.* ${value.replaceAll('.', '\\.')}$`)),
+        expect.stringMatching(new RegExp(`\\S.* \u200E?${value.replaceAll('.', '\\.')}$`)),
       ]);
     }
     texts.set(language, lines.join('\n'));
@@ -225,10 +225,10 @@ test('after the create, the hand-over offers the message in Kurdish, Arabic and 
 
 // The values of the message's lines, each what follows its label's colon
 // and the space after it, in any language. A right-to-left message puts a
-// left-to-right mark between the colon and the space before a number, which
-// is not part of the value.
+// left-to-right mark between that space and a number, which is not part of
+// the value.
 function valuesOf(lines: string[]): string[] {
-  return lines.flatMap((line) => /^[^:]+:\u200E? (.+)$/.exec(line)?.[1] ?? []);
+  return lines.flatMap((line) => /^[^:]+: \u200E?(.+)$/.exec(line)?.[1] ?? []);
 }
 
 test('in a fresh browser, the Vendor logs in with the login phone number and the password as the Kurdish message, the one chosen first, gives them, is made to replace the password, and reaches the Vendor portal', async ({

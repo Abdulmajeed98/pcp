@@ -11,14 +11,16 @@ export interface LoginDetails {
   temporaryPassword: string;
 }
 
-// What stands between the phone number's label and the number. In a line
-// laid out right to left, the spaces between the number's groups would take
-// the line's direction, and "0750 123 4567" would be drawn "4567 123 0750".
-// A left-to-right mark before them makes the digits after it run left to
-// right (Unicode's bidirectional algorithm, rule W7). It is put after the
-// label's colon, and not in the value, so that a Vendor who copies the
-// number does not copy the mark, which the login screen's script would not
-// take off.
+// What stands before the phone number, after its label and the space. In a
+// line laid out right to left, the spaces between the number's groups would
+// take the line's direction, and "0750 123 4567" would be drawn "4567 123
+// 0750". A left-to-right mark before the number makes its digits run left to
+// right (Unicode's bidirectional algorithm, rule W7). It follows the space,
+// so that the space stays between the label and the number: before it, the
+// space would run with the number and leave the colon touching it. Word
+// selection joins the mark to the space before it (Unicode's word
+// boundaries, rule WB4), so a Vendor who selects the number does not copy
+// the mark, which the login screen's script would not take off.
 const numberMark = { rtl: '\u200E', ltr: '' } as const;
 
 // The message the Admin sends the Vendor, in the language the Admin chose:
@@ -31,7 +33,7 @@ export function handOverMessage(language: Language, details: LoginDetails): stri
   return [
     t('HandOver.greeting', { lng: language }),
     `${t('HandOver.portalAddress', { lng: language })} ${details.portalAddress}`,
-    `${t('HandOver.loginPhoneNumber', { lng: language })}${numberMark[directions[language]]} ${details.loginPhoneNumber}`,
+    `${t('HandOver.loginPhoneNumber', { lng: language })} ${numberMark[directions[language]]}${details.loginPhoneNumber}`,
     `${t('HandOver.temporaryPassword', { lng: language })} ${details.temporaryPassword}`,
     t('HandOver.choosePassword', { lng: language }),
   ].join('\n');
