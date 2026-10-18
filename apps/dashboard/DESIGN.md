@@ -227,6 +227,7 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 - **Character:** a list is rows, never cards. Rule Sand rules divide the rows, and close the list above and below.
 - **A row:** the Part's picture, then its name in the row type (14 pixels, weight 500) and one secondary line in Note Grey. The whole row is the link, with a Shelf ground on hover and on the row of the Part open beside the list, while the link's name is the Part's alone.
 - **A Vendor's row:** its name as it writes it, then one secondary line with its login phone number and, for a deactivated Vendor, the "Deactivated" mark, drawn as the "Needed" mark is. It has no picture.
+- **A Vendor's details:** a row each, divided and closed by Rule Sand rules, the detail's name in Note Grey on the start side and its value beside it, two fifths and three fifths of the row, at small size. What the Vendor wrote takes its own direction; a phone number, the coordinates and an Instagram name run left to right. A Vendor's page in the Admin console and the Vendor portal's details screen share them; the details screen puts them in three groups, the Vendor, its contact details and its Login, each after a heading at body size and weight 500.
 - **The picture:** a 40-pixel square on a Shelf ground with 6px corners, holding the Category's icon at 20 pixels, or the photo filling it. A Part's page shows it at 80 pixels.
 
 ### Plates
@@ -251,6 +252,7 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 
 - **The top bar:** the page's own ground, closed by a Rule Sand rule, with the console's name at weight 600 on the start side, and the caller's name in Note Grey and Log out on the end side.
 - **The sections:** the Catalog and the Vendors, each a link 44 pixels high with 6px corners, in Note Grey, and the one the Admin is in at weight 600 on a Shelf ground. On a phone they are behind a 44-pixel menu button at the bar's start, which opens them as a column below the bar, closed by choosing one; from 64rem they sit in the bar after the console's name.
+- **The Vendor portal's top bar:** the page's own ground, closed by a Rule Sand rule, with the Vendor's name, as it writes it, at weight 600 on the start side, then the outlined Log out and the language switch, the switch last, on the end side. On a phone the name shares its row with Log out and the switch has the row below, at the end; from 40rem the three share one row. A Login with no Vendor behind it gets one plain sentence and Log out, and no bar.
 - **Back:** a small Note Grey link above a screen's title, with a chevron that points back in the reading direction, underlined on hover, 44 pixels high.
 
 ## Do's and Don'ts

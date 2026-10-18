@@ -2,6 +2,7 @@ import {
   type Browser,
   type BrowserContext,
   expect,
+  type Locator,
   type Page,
   test,
 } from '@playwright/test';
@@ -11,8 +12,9 @@ import {
   logInToTheDashboard,
   logOutOfTheDashboard,
   openTheDashboardAs,
+  vendorNameInTheFrame,
 } from './development-logins';
-import { type LoginDetails } from './keycloak-screens';
+import { type LoginDetails, type VendorLoginDetails } from './keycloak-screens';
 import {
   buttonFor,
   checkInEveryLanguageOfTheVendorPortal,
@@ -22,21 +24,18 @@ import {
   type Language,
   languageSwitch,
   languages,
+  layoutOf,
+  linesAsDrawn,
   narrowWindow,
   readInEveryLanguageOfTheVendorPortal,
 } from './languages';
 import { dashboardUrl, keycloakUrl } from './platform';
+import { expectTheSameInEveryLanguage } from './sample';
 import {
-  expectDrawnAsWritten,
-  expectTheNumbers,
-  expectTheSameInEveryLanguage,
-  expectTheWholeSample,
-  partName,
-  readTheCategoryNames,
-  readTheLinesAsWritten,
-  specification,
-} from './sample';
-import { aMadeUpVendorThatHasLoggedIn } from './vendors';
+  aMadeUpMobileNumber,
+  aMadeUpVendorThatHasLoggedIn,
+  inIraqsOwnForm,
+} from './vendors';
 
 const [kurdish, arabic, english] = languages;
 
@@ -51,12 +50,28 @@ const browsersSetTo = [
 
 const directions = { rtl: 'right to left', ltr: 'left to right' };
 
-// The Vendor these tests log in as: a made-up one, made once for the file,
-// which has been through its first login, as a real Vendor has.
-let vendor: LoginDetails;
+// What the made-up Vendor these tests log in as wrote, as a Vendor in Erbil
+// may write it: its address and its opening hours in Sorani, in the Arabic
+// script, with Arabic-Indic digits, the address on two lines. Its name is in
+// Latin script, so that what it wrote runs in both directions.
+const addressAsWritten = 'شەقامی ٦٠ مەتری، نزیک بازاڕی ١٠٠\nهەولێر';
+const openingHoursAsWritten = 'شەممە تا پێنجشەممە: ٩ بۆ ٩';
+const instagramName = 'made_up.vendor';
+const whatsAppNumber = aMadeUpMobileNumber();
+
+// The Vendor these tests log in as: a made-up one, made once for the file
+// with every detail, which has been through its first login, as a real
+// Vendor has.
+let vendor: VendorLoginDetails;
 
 test.beforeAll(async ({ browser }) => {
-  vendor = await aMadeUpVendorThatHasLoggedIn(browser);
+  vendor = await aMadeUpVendorThatHasLoggedIn(browser, {
+    address: addressAsWritten,
+    openingHours: openingHoursAsWritten,
+    mapLocation: { latitude: 36.1911744, longitude: 44.0094145 },
+    whatsAppNumber,
+    instagramName,
+  });
 });
 
 // What a browser keeps for the dashboard, from one visit to the next, apart
@@ -117,23 +132,23 @@ for (const { setTo, locale, expected } of browsersSetTo) {
 test("the Vendor portal's text and its tab's title differ in each of the three languages", async ({
   browser,
 }) => {
-  const notices = new Map<Language, string>();
+  const headings = new Map<Language, string>();
   const titles = new Map<Language, string>();
   for (const { locale, expected } of browsersSetTo) {
     const {
-      found: { notice, title },
+      found: { heading, title },
     } = await openInABrowserSetTo(browser, locale, vendor, async (page) => {
       await expectPageIn(page, expected);
       return {
-        notice: await page.getByTestId('placeholder-notice').innerText(),
+        heading: await detailsHeading(page).innerText(),
         title: await page.title(),
       };
     });
-    notices.set(expected, notice);
+    headings.set(expected, heading);
     titles.set(expected, title);
   }
 
-  expectADifferentTextInEachLanguage(notices);
+  expectADifferentTextInEachLanguage(headings);
   expectADifferentTextInEachLanguage(titles);
 });
 
@@ -204,7 +219,7 @@ test("a tap on another language changes the language, the direction and the tab'
   }
 
   expectADifferentTextInEachLanguage(titles);
-  await expect(page.getByTestId('caller-name')).toHaveText(vendor.name);
+  await expect(vendorNameInTheFrame(page)).toHaveText(vendor.vendorName);
   expect(await page.evaluate(() => 'stillTheSamePage' in window)).toBe(true);
   expect(pagesLoaded).toEqual([]);
   expect(keycloakVisits).toEqual([]);
@@ -252,7 +267,7 @@ test.describe('in a browser set to English', () => {
     await expectPageIn(page, arabic);
 
     await page.reload();
-    await expect(page.getByTestId('caller-name')).toHaveText(vendor.name);
+    await expect(vendorNameInTheFrame(page)).toHaveText(vendor.vendorName);
     await expectPageIn(page, arabic);
 
     await logOutOfTheDashboard(page);
@@ -304,7 +319,7 @@ test("with a language remembered, the browser's storage still holds no token", a
 }) => {
   const answered = page.waitForResponse(
     (response) =>
-      response.url().endsWith('/v1/caller') && response.request().method() === 'GET',
+      response.url().endsWith('/v1/caller/vendor') && response.request().method() === 'GET',
   );
   await openTheDashboardAs(page, vendor);
   const token = (await answered).request().headers().authorization.replace('Bearer ', '');
@@ -324,55 +339,127 @@ test("with a language remembered, the browser's storage still holds no token", a
   );
 });
 
-// The Vendor portal's placeholder shows the sample the Shopper app's page
-// shows, with the same values, built from the same parts. The helper shows it
-// in each language by the switch, and finds an Arabic-Indic digit anywhere
-// on it. Its browser is one in which a number that i18next formats for
-// Kurdish comes out in those digits.
-test.describe("the Vendor portal's sample, as a made-up Vendor", () => {
+// The details screen holds each kind of text the placeholder's sample held,
+// but for a sentence that counts and the Category names: what the Vendor
+// wrote, shown as written, and what is in English in every language, its
+// phone numbers and its Instagram name. The helper shows it in each language
+// by the switch, and finds an Arabic-Indic digit anywhere on it but in what
+// the Vendor wrote. Its browser is one in which a number that i18next formats
+// for Kurdish comes out in those digits.
+test.describe('the details screen, as a made-up Vendor', () => {
   test.beforeEach(async ({ page }) => {
     await openTheDashboardAs(page, vendor);
+    await expect(detailsHeading(page)).toBeVisible();
   });
 
-  test('the sample number reads 1,575,000 in all three languages, and no Arabic-Indic digit is anywhere on the page in any language, the counted sentences among it', async ({
+  test('passes the checks of every screen of the Vendor portal, in all three languages', async ({
     page,
   }) => {
-    await readInEveryLanguageOfTheVendorPortal(page, () => expectTheNumbers(page));
+    await checkInEveryLanguageOfTheVendorPortal(page);
   });
 
-  test('the Part name and the specification are the same characters in all three languages, and each carries a left-to-right direction of its own', async ({
+  test("its text differs in each of the three languages, the city's name from the shared terms among it", async ({
     page,
   }) => {
-    await readInEveryLanguageOfTheVendorPortal(page, async () => {
-      await expectDrawnAsWritten(page, partName);
-      await expectDrawnAsWritten(page, specification);
+    const texts = await readInEveryLanguageOfTheVendorPortal(page, async () => ({
+      labels: (await page.locator('main dt').allInnerTexts()).join(', '),
+      sentence: await page.getByTestId('admin-changes').innerText(),
+      city: await detailOf(page, 'city').innerText(),
+    }));
+
+    for (const part of ['labels', 'sentence', 'city'] as const) {
+      expectADifferentTextInEachLanguage(
+        new Map([...texts].map(([language, read]) => [language, read[part]])),
+      );
+    }
+  });
+
+  test('the address is drawn exactly as written, Arabic-Indic digits and all, as are the name and the opening hours, each in its own direction, the same in all three languages', async ({
+    page,
+  }) => {
+    const written = await readInEveryLanguageOfTheVendorPortal(page, async () => {
+      await expectDrawnAsWritten(
+        detailOf(page, 'address').locator('bdi'),
+        addressAsWritten,
+      );
+      await expectDrawnAsWritten(
+        detailOf(page, 'openingHours').locator('bdi'),
+        openingHoursAsWritten,
+      );
+      await expectDrawnAsWritten(detailOf(page, 'name').locator('bdi'), vendor.vendorName);
+      await expectDrawnAsWritten(vendorNameInTheFrame(page), vendor.vendorName);
+      return detailOf(page, 'address').innerText();
     });
-  });
-
-  test('the two as-written lines are the same in all three languages, and each carries its own direction', async ({
-    page,
-  }) => {
-    const written = await readInEveryLanguageOfTheVendorPortal(page, () =>
-      readTheLinesAsWritten(page),
-    );
 
     expectTheSameInEveryLanguage(written);
   });
 
-  // The Category names are the shared terms, which the Shopper reads too.
-  test('the list of Category names is different in each of the three languages', async ({
+  test("the phone numbers are in Iraq's own form in Western digits, and they and the Instagram name are drawn left to right, kept apart from the text around them, in all three languages", async ({
     page,
   }) => {
-    const lists = await readInEveryLanguageOfTheVendorPortal(page, () =>
-      readTheCategoryNames(page),
-    );
-
-    expectADifferentTextInEachLanguage(lists);
+    const loginPhoneNumber = inIraqsOwnForm(vendor.name);
+    await readInEveryLanguageOfTheVendorPortal(page, async () => {
+      // A made-up Vendor's phone number is its login phone number.
+      for (const detail of ['phoneNumber', 'loginPhoneNumber']) {
+        await expectInEnglish(detailOf(page, detail).locator('bdi'), loginPhoneNumber);
+      }
+      await expectInEnglish(
+        detailOf(page, 'whatsAppNumber').locator('bdi'),
+        inIraqsOwnForm(`+964${whatsAppNumber.slice(1)}`),
+      );
+      await expectInEnglish(
+        detailOf(page, 'instagramName').locator('bdi'),
+        `@${instagramName}`,
+      );
+    });
   });
 
-  test('with the sample on it, the page still does not scroll sideways in any language', async ({
+  test("the map location is a link to Google Maps' search for its coordinates", async ({
     page,
   }) => {
-    await readInEveryLanguageOfTheVendorPortal(page, () => expectTheWholeSample(page));
+    const link = detailOf(page, 'mapLocation').getByRole('link');
+
+    await expect(link).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/search/?api=1&query=36.1911744%2C44.0094145',
+    );
   });
 });
+
+// The details screen's heading, in whichever language the portal is in.
+function detailsHeading(page: Page): Locator {
+  return page.getByRole('main').getByRole('heading', { level: 1 });
+}
+
+// What the details screen shows for one detail, found by the name the API
+// gives it.
+function detailOf(page: Page, detail: string): Locator {
+  return page.locator(`[data-detail="${detail}"] dd`);
+}
+
+// What someone wrote is shown exactly as written (LANG-4), in the direction
+// of its own first letter: right to left for Arabic script, also on the
+// English page, and left to right for Latin script, also on a Kurdish one.
+// Each line starts on its own side, its first character drawn at the far
+// right of a line that runs right to left, and kept apart from the text
+// around it.
+async function expectDrawnAsWritten(element: Locator, written: string): Promise<void> {
+  await expect(element).toHaveText(written, { useInnerText: true });
+  const ownDirection = /^\P{L}*\p{Script=Arabic}/u.test(written) ? 'rtl' : 'ltr';
+  const [firstLineDrawn] = await linesAsDrawn(element);
+
+  expect(
+    ownDirection === 'rtl' ? firstLineDrawn.at(-1) : firstLineDrawn[0],
+    `"${written}", drawn "${firstLineDrawn}", starts on its own side`,
+  ).toBe(written[0]);
+  expect(await layoutOf(element)).toEqual({ direction: ownDirection, keptApart: true });
+}
+
+// Text that is in English in every language is drawn in the order it is
+// written in, left to right, whatever the direction of the sentence around
+// it, because it is kept apart from that sentence.
+async function expectInEnglish(element: Locator, text: string): Promise<void> {
+  await expect(element).toHaveText(text);
+  expect((await linesAsDrawn(element)).join('')).toBe(text);
+  expect(await layoutOf(element)).toEqual({ direction: 'ltr', keptApart: true });
+}

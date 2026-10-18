@@ -7,8 +7,10 @@ export type Half = 'admin-console' | 'vendor-portal';
 // The one rule for which half a login gets. It is applied once, when the
 // dashboard starts, to the realm roles the login holds. A login that holds
 // the Admin role gets the Admin console, also when it holds the Vendor role
-// too, and every other login gets the Vendor portal. Role names are compared
-// without regard to case, as the API compares them.
+// too. Every other login gets the Vendor portal, which first asks the API for
+// the Caller's own Vendor, and shows a plain message to a login with no
+// Vendor behind it. Role names are compared without regard to case, as the
+// API compares them.
 export function halfFor(realmRoles: readonly string[]): Half {
   return realmRoles.some((role) => role.toLowerCase() === 'admin')
     ? 'admin-console'

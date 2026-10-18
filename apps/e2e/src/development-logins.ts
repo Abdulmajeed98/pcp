@@ -2,12 +2,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 import {
   expectLoginScreen,
   type LoginDetails,
   submitTheLoginScreen,
+  type VendorLoginDetails,
 } from './keycloak-screens';
 import { apiUrl, dashboardUrl } from './platform';
 
@@ -40,16 +41,27 @@ export async function logInToTheDashboard(
   await page.waitForURL(`${dashboardUrl}/**`);
 }
 
+// The Vendor's name, as the Vendor portal's frame shows it.
+export function vendorNameInTheFrame(page: Page): Locator {
+  return page.getByTestId('vendor-name');
+}
+
 // Logs in as a Login that has logged in before, and waits until the dashboard
-// shows who the API says the caller is. The page is then drawn whole, in
-// whichever half and language it chose.
+// shows who it is for: the Vendor portal's frame the name of the Vendor
+// behind a Vendor's Login, and the Admin console the name the API says the
+// caller has. The page is then drawn whole, in whichever half and language it
+// chose.
 export async function openTheDashboardAs(
   page: Page,
-  login: LoginDetails,
+  login: LoginDetails | VendorLoginDetails,
   address = dashboardUrl,
 ): Promise<void> {
   await logInToTheDashboard(page, login, address);
-  await expect(page.getByTestId('caller-name')).toHaveText(login.name);
+  if ('vendorName' in login) {
+    await expect(vendorNameInTheFrame(page)).toHaveText(login.vendorName);
+  } else {
+    await expect(page.getByTestId('caller-name')).toHaveText(login.name);
+  }
 }
 
 // Logs out of the dashboard with its button, and waits for Keycloak's login

@@ -1,7 +1,11 @@
 import { expect, type Response, test } from '@playwright/test';
 
 import { catalogHeading } from './catalog';
-import { developmentAdmin, logInToTheDashboard } from './development-logins';
+import {
+  developmentAdmin,
+  logInToTheDashboard,
+  vendorNameInTheFrame,
+} from './development-logins';
 import { atTheLoginScreenInABrowserOfItsOwn, expectLoginScreen } from './keycloak-screens';
 import { apiUrl, dashboardUrl, realmUrl } from './platform';
 import { createAMadeUpVendorAsTheAdmin, logInForTheFirstTime } from './vendors';
@@ -24,8 +28,9 @@ test("the Admin logs in: the dashboard sends them to Keycloak, and then opens th
 });
 
 // A made-up Vendor logs in through its first login, as a real Vendor does.
-// Its Login's name is its login phone number in the stored form.
-test('a made-up Vendor logs in: the dashboard shows the name and the role vendor that the API says the caller has', async ({
+// The Vendor portal asks the API for the Caller's Vendor, and its frame
+// shows that Vendor's name, not the Login's, which is its login phone number.
+test("a made-up Vendor logs in: the Vendor portal's frame shows the name of the Vendor the API says is the caller's", async ({
   browser,
   page,
   request,
@@ -35,10 +40,7 @@ test('a made-up Vendor logs in: the dashboard shows the name and the role vendor
   await atTheLoginScreenInABrowserOfItsOwn(browser, async (vendorsPage) => {
     await logInForTheFirstTime(vendorsPage, vendor);
 
-    await expect(vendorsPage.getByTestId('caller-name')).toHaveText(
-      vendor.loginPhoneNumber,
-    );
-    await expect(vendorsPage.getByTestId('caller-roles')).toHaveText('vendor');
+    await expect(vendorNameInTheFrame(vendorsPage)).toHaveText(vendor.name);
   });
 });
 

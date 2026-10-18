@@ -3,30 +3,43 @@
     "title": "بوابة البائع"
   },
   "VendorPortalFrame": {
-    "languageSwitch": "اللغة"
+    "languageSwitch": "اللغة",
+    "logOut": "تسجيل الخروج",
+    "opening": "جارٍ فتح بوابتك…",
+    "notOpened": "تعذّر فتح بوابتك.",
+    "noVendor": "لا يوجد بائع مرتبط بهذا الحساب، لذا ليس لدى بوابة البائع ما تعرضه. اطلب من المسؤول التحقق منه."
+  },
+  "NotAnswered": {
+    "refused": "رفضت المنصة الطلب، مع <refusal/>.",
+    "unreachable": "لا يمكن الوصول إلى المنصة. تحقّق من الاتصال، ثم حاول مرة أخرى."
+  },
+  "VendorDetails": {
+    "title": "بياناتك",
+    "adminChanges": "يغيّر المسؤول اسمك ومدينتك ورقم هاتف حسابك.",
+    "reading": "جارٍ قراءة بياناتك…",
+    "notRead": "تعذّرت قراءة بياناتك.",
+    "name": "الاسم",
+    "city": "المدينة",
+    "contactDetails": "معلومات الاتصال",
+    "address": "العنوان",
+    "mapLocation": "الموقع على الخريطة",
+    "openInGoogleMaps": "افتح في خرائط جوجل",
+    "phoneNumber": "رقم الهاتف",
+    "whatsAppNumber": "رقم واتساب",
+    "instagramName": "اسم إنستغرام",
+    "openingHours": "ساعات العمل",
+    "login": "الحساب",
+    "loginPhoneNumber": "رقم الهاتف",
+    "none": "لا يوجد",
+    "inANewTab": "، في علامة تبويب جديدة"
+  },
+  "PortalNotFound": {
+    "title": "الشاشة غير موجودة",
+    "message": "هذا العنوان لا يطابق أي شاشة في بوابة البائع.",
+    "openDetails": "افتح بياناتك"
   },
   "LoginFailed": {
     "message": "تعذّر إكمال تسجيل الدخول."
-  },
-  "VendorPortalPlaceholder": {
-    "notice": "صفحة مؤقتة لبوابة البائع.",
-    "sample": "في ما يلي نموذج من كل نوع من النصوص. جميع القيم فيه غير حقيقية.",
-    "partsFound_zero": "لم يُعثر على أي قطعة",
-    "partsFound_one": "تم العثور على قطعة واحدة",
-    "partsFound_two": "تم العثور على قطعتين",
-    "partsFound_few": "تم العثور على <count/> قطع",
-    "partsFound_many": "تم العثور على <count/> قطعة",
-    "partsFound_other": "تم العثور على <count/> قطعة",
-    "readsAt": "يقرأ بسرعة تصل إلى <speed/>.",
-    "partLength": "يأتي <part/> بطول <length/>."
-  },
-  "Caller": {
-    "asking": "جارٍ سؤال الـ API عن هوية المتصل.",
-    "answer": "يقول الـ API إن المتصل هو <name/>، بالدور <roles/>.",
-    "refused": "رفض الـ API الطلب: <refusal/>.",
-    "unreachable": "تعذّر إجراء الطلب: لا يمكن الوصول إلى الـ API أو إلى خدمة تسجيل الدخول.",
-    "askAgain": "اسأل الـ API مجدداً",
-    "logOut": "تسجيل الخروج"
   },
   "MapLocationField": {
     "label": "الموقع على الخريطة",

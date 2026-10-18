@@ -3,26 +3,43 @@
     "title": "Vendor portal"
   },
   "VendorPortalFrame": {
-    "languageSwitch": "Language"
+    "languageSwitch": "Language",
+    "logOut": "Log out",
+    "opening": "Opening your portal…",
+    "notOpened": "Your portal could not be opened.",
+    "noVendor": "No Vendor is behind this login, so the Vendor portal has nothing to show. Ask the Admin to check it."
+  },
+  "NotAnswered": {
+    "refused": "The platform refused, with <refusal/>.",
+    "unreachable": "The platform cannot be reached. Check the connection, and try again."
+  },
+  "VendorDetails": {
+    "title": "Your details",
+    "adminChanges": "The Admin changes your name, your city and your login phone number.",
+    "reading": "Reading your details…",
+    "notRead": "Your details could not be read.",
+    "name": "Name",
+    "city": "City",
+    "contactDetails": "Contact details",
+    "address": "Address",
+    "mapLocation": "Map location",
+    "openInGoogleMaps": "Open in Google Maps",
+    "phoneNumber": "Phone number",
+    "whatsAppNumber": "WhatsApp number",
+    "instagramName": "Instagram name",
+    "openingHours": "Opening hours",
+    "login": "Login",
+    "loginPhoneNumber": "Login phone number",
+    "none": "None",
+    "inANewTab": ", in a new tab"
+  },
+  "PortalNotFound": {
+    "title": "Screen not found",
+    "message": "This address matches no screen of the Vendor portal.",
+    "openDetails": "Open your details"
   },
   "LoginFailed": {
     "message": "The login could not be completed."
-  },
-  "VendorPortalPlaceholder": {
-    "notice": "Vendor portal placeholder.",
-    "sample": "A sample of each kind of text follows. Every value in it is made up.",
-    "partsFound_one": "<count/> Part found",
-    "partsFound_other": "<count/> Parts found",
-    "readsAt": "It reads at up to <speed/>.",
-    "partLength": "The <part/> is <length/> long."
-  },
-  "Caller": {
-    "asking": "Asking the API who the caller is.",
-    "answer": "The API says the caller is <name/>, with the role <roles/>.",
-    "refused": "The API refused the call: <refusal/>.",
-    "unreachable": "The call could not be made: the API or the login service cannot be reached.",
-    "askAgain": "Ask the API again",
-    "logOut": "Log out"
   },
   "MapLocationField": {
     "label": "Map location",

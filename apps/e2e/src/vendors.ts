@@ -13,6 +13,7 @@ import {
   type LoginDetails,
   submitTheLoginScreen,
   submitTheNewPasswordScreen,
+  type VendorLoginDetails,
 } from './keycloak-screens';
 import { aWordUniqueToTheRun, randomDigits } from './made-up';
 import { apiUrl, dashboardUrl } from './platform';
@@ -137,12 +138,18 @@ export function aNewPassword(): string {
 }
 
 // Logs in to the dashboard as the development Admin, in the page the test
-// gives, and creates a made-up Vendor over HTTP as that Admin.
+// gives, and creates a made-up Vendor over HTTP as that Admin, with any
+// details the test gives.
 export async function createAMadeUpVendorAsTheAdmin(
   page: Page,
   request: APIRequestContext,
+  details: MadeUpVendorDetails = {},
 ): Promise<MadeUpVendor> {
-  return createAMadeUpVendor(request, await authorizationOfTheDevelopmentAdmin(page));
+  return createAMadeUpVendor(
+    request,
+    await authorizationOfTheDevelopmentAdmin(page),
+    details,
+  );
 }
 
 // What a made-up Vendor logs in with before its first login: its login phone
@@ -169,12 +176,12 @@ interface HowTheNumberIsTyped {
 // its login phone number, gives its temporary password, chooses a new
 // password made for the run on the screen that asks for one, and waits for
 // the Vendor portal. Both passwords are set in the page. It gives back what
-// the Vendor logs in with from then on.
+// the Vendor logs in with from then on, and the Vendor's name.
 export async function logInForTheFirstTime(
   page: Page,
   vendor: MadeUpVendor,
   { loginPhoneNumberAsTyped = vendor.loginPhoneNumber }: HowTheNumberIsTyped = {},
-): Promise<LoginDetails> {
+): Promise<VendorLoginDetails> {
   await submitTheLoginScreen(
     page,
     { ...temporaryLoginOf(vendor), name: loginPhoneNumberAsTyped },
@@ -186,23 +193,25 @@ export async function logInForTheFirstTime(
   await submitTheNewPasswordScreen(page, password);
 
   await expectTheVendorPortal(page);
-  return { name: vendor.loginPhoneNumber, password };
+  return { name: vendor.loginPhoneNumber, password, vendorName: vendor.name };
 }
 
-// Makes a made-up Vendor, as the development Admin, and logs in as it once
-// through its first login, each in a browser of its own that is closed
-// afterwards. It gives back what the Vendor logs in with from then on, for a
-// test that needs a Vendor whose Login is set up, as a real Vendor's is after
-// its first login.
+// Makes a made-up Vendor, as the development Admin, with any details the
+// test gives, and logs in as it once through its first login, each in a
+// browser of its own that is closed afterwards. It gives back what the Vendor
+// logs in with from then on, and its name, for a test that needs a Vendor
+// whose Login is set up, as a real Vendor's is after its first login.
 export async function aMadeUpVendorThatHasLoggedIn(
   browser: Browser,
-): Promise<LoginDetails> {
+  details: MadeUpVendorDetails = {},
+): Promise<VendorLoginDetails> {
   const adminsContext = await browser.newContext();
   let vendor: MadeUpVendor;
   try {
     vendor = await createAMadeUpVendorAsTheAdmin(
       await adminsContext.newPage(),
       adminsContext.request,
+      details,
     );
   } finally {
     await adminsContext.close();

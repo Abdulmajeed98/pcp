@@ -48,8 +48,7 @@ let router: DataRouter | undefined;
 
 // The router of the Admin console, made the first time it is asked for. That
 // is after the login, once keycloak-js has taken the login's answer off the
-// address, so the router starts from the address the Admin asked for. The
-// Vendor portal has no router: every address shows it.
+// address, so the router starts from the address the Admin asked for.
 export function adminConsoleRouter(): DataRouter {
   router ??= createBrowserRouter(routes);
   return router;

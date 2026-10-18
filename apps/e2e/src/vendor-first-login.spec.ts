@@ -3,7 +3,11 @@ import { join } from 'node:path';
 
 import { expect, type Page, test } from '@playwright/test';
 
-import { authorizationOfTheDevelopmentAdmin, developmentAdmin } from './development-logins';
+import {
+  authorizationOfTheDevelopmentAdmin,
+  developmentAdmin,
+  vendorNameInTheFrame,
+} from './development-logins';
 import {
   atTheLoginScreenInABrowserOfItsOwn,
   chooseKeycloaksLanguage,
@@ -98,7 +102,7 @@ for (const { form, inThatForm } of [
         loginPhoneNumberAsTyped: inThatForm(vendor.loginPhoneNumber),
       });
 
-      await expect(vendorsPage.getByTestId('caller-name')).toHaveText(login.name);
+      await expect(vendorNameInTheFrame(vendorsPage)).toHaveText(login.vendorName);
     });
   });
 }

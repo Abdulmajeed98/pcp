@@ -2,10 +2,11 @@ import { expect, type Locator, type Page } from '@playwright/test';
 
 import { type Language, languages, layoutOf, linesAsDrawn } from './languages';
 
-// The sample the placeholder pages show, the Shopper app's and the Vendor
-// portal's alike: one of each kind of text a later screen will hold. Its
-// values are fixed in each page and made up, and they are the same in every
-// language and on both pages, so a test may name them.
+// The sample the Shopper app's placeholder page shows: one of each kind of
+// text a later screen will hold. Its values are fixed in the page and made
+// up, and they are the same in every language, so a test may name them. The
+// Vendor portal's placeholder showed the same sample until its details
+// screen replaced it.
 //
 // A sentence that counts is drawn once for each of these counts. Between them
 // they take every plural form Arabic has but the one for nothing.

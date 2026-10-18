@@ -16,6 +16,16 @@ export function useVendor(vendorId: string) {
   });
 }
 
+// The Vendor whose Login the caller is, which the Vendor portal asks for when
+// it starts. A Login with no Vendor behind it is refused with
+// `VENDOR_NOT_FOUND`.
+export function useCallersVendor() {
+  return useQuery({
+    queryKey: [...vendorsKey, 'caller'],
+    queryFn: () => dataOf(apiClient.readCallersVendor()),
+  });
+}
+
 // A city's key, such as `erbil`, as the API and the shared terms name it.
 export type CityKey = VendorResponse['city'];
 

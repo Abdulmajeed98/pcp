@@ -14,6 +14,12 @@ export interface LoginDetails {
   password: string;
 }
 
+// The same for a Vendor's Login, with the name of the Vendor behind it, which
+// the Vendor portal's frame shows.
+export interface VendorLoginDetails extends LoginDetails {
+  vendorName: string;
+}
+
 // Keycloak's login screen.
 export async function expectLoginScreen(page: Page): Promise<void> {
   await expect(page.locator('#kc-form-login')).toBeVisible();

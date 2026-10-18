@@ -400,10 +400,25 @@ function arabicIndicDigitsIn(text: string): string[] {
   return text.match(anArabicIndicDigit) ?? [];
 }
 
-// Nothing a Shopper reads on the page, and nothing in the tab's title, holds
-// an Arabic-Indic digit.
+// Nothing a reader reads on the page, and nothing in the tab's title, holds
+// an Arabic-Indic digit, but for what someone wrote. That is shown as they
+// wrote it, Arabic-Indic digits and all (LANG-4), and is the text marked as
+// written: the elements whose direction comes from their text. A test of a
+// screen that shows such text checks it as written itself.
 async function expectWesternDigitsOnly(page: Page): Promise<void> {
-  const read = `${await page.title()}\n${await page.locator('body').innerText()}`;
+  const shown = await page.locator('body').evaluate((body) => {
+    const texts = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+    const read: string[] = [];
+    for (let text = texts.nextNode(); text !== null; text = texts.nextNode()) {
+      const holder = text.parentElement;
+      if (holder === null || holder.closest('[dir="auto"], script, style') !== null) {
+        continue;
+      }
+      read.push(text.textContent ?? '');
+    }
+    return read.join('\n');
+  });
+  const read = `${await page.title()}\n${shown}`;
 
   expect(arabicIndicDigitsIn(read), 'the page shows no Arabic-Indic digit').toEqual([]);
 }

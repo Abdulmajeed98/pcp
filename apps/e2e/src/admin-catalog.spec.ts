@@ -3,19 +3,14 @@ import { expect, test } from '@playwright/test';
 import { expectAccessible } from './accessibility';
 import {
   catalogHeading,
-  catalogUrl,
   createAMadeUpPart,
   type MadeUpPart,
   nothingFound,
   rowOf,
   searchTheCatalog,
 } from './catalog';
-import {
-  authorizationOfTheDevelopmentAdmin,
-  openTheDashboardAs,
-} from './development-logins';
+import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
-import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
 // The Admin works in the Vendors' shops, on a phone (LANG-8).
 test.use({ viewport: narrowWindow });
@@ -74,18 +69,6 @@ test.describe('the Catalog, as the development Admin', () => {
 
     await expectAccessible(page);
   });
-});
-
-test("as a made-up Vendor, the Catalog's address shows the Vendor portal and not the Catalog", async ({
-  browser,
-  page,
-}) => {
-  const vendor = await aMadeUpVendorThatHasLoggedIn(browser);
-  await openTheDashboardAs(page, vendor, catalogUrl);
-
-  await expect(page.getByTestId('placeholder-notice')).toBeVisible();
-  await expect(catalogHeading(page)).toHaveCount(0);
-  await expect(page.getByRole('searchbox')).toHaveCount(0);
 });
 
 // On a wider screen the Catalog's list gains a detail pane beside it
