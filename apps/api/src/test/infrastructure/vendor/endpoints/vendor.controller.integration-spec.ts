@@ -196,6 +196,18 @@ describe('the Vendor endpoints', () => {
     return fetch(`${testApp.baseUrl}/v1/caller/vendor`, { headers: bearerHeader(token) });
   }
 
+  function editContactDetails(
+    vendorId: string,
+    body: unknown,
+    token = adminToken,
+  ): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/contact-details`, {
+      method: 'PUT',
+      headers: { ...bearerHeader(token), 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
   async function createdOf(response: Response): Promise<CreatedVendorBody> {
     expect(response.status).toBe(201);
     return (await response.json()) as CreatedVendorBody;
@@ -936,6 +948,219 @@ describe('the Vendor endpoints', () => {
     });
   });
 
+  describe('changing the contact details', () => {
+    // Every contact detail, each different from those `aVendor` gives.
+    const otherContactDetails = {
+      address: anAddressAsWritten,
+      mapLocation: erbil,
+      phoneNumber: '0770 765 4321',
+      whatsAppNumber: '0751 234 5678',
+      instagramName: '@Made_Up.Shop',
+      openingHours: openingHoursAsWritten,
+    };
+
+    it("lets the Vendor's own Login replace its contact details, and read them back", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const ownToken = await tokenOfTheOwnLogin(vendor);
+
+      const response = await editContactDetails(vendor.id, otherContactDetails, ownToken);
+
+      expect(response.status).toBe(200);
+      const edited = (await response.json()) as VendorBody;
+      expect(edited).toEqual({
+        ...vendor,
+        address: 'شەقامی ٦٠ مەتری، نزیک بازاڕی ١٠٠\nهەولێر',
+        mapLocation: { latitude: 36.1911744, longitude: 44.0094145 },
+        phoneNumber: { international: '+9647707654321', national: '0770 765 4321' },
+        whatsAppNumber: { international: '+9647512345678', national: '0751 234 5678' },
+        instagramName: 'made_up.shop',
+        openingHours: 'شەممە تا پێنجشەممە: ٩ بۆ ٩\n\nهەینی: داخراوە',
+        updatedAt: expect.any(String),
+      });
+      expect(new Date(edited.updatedAt) > new Date(vendor.updatedAt)).toBe(true);
+      const read = await readVendor(vendor.id, ownToken);
+      expect(await read.json()).toEqual(edited);
+    });
+
+    it.each([
+      ['a name', { name: 'Renamed by the Vendor' }, 'name'],
+      ['a city', { city: 'erbil' }, 'city'],
+      ['a login phone number', { loginPhoneNumber: '0750 765 4321' }, 'loginPhoneNumber'],
+    ])(
+      'refuses the same request with %s added, naming it, and changes nothing',
+      async (_what, added, field) => {
+        const vendor = await aVendorWith('0750 123 4567');
+
+        const response = await editContactDetails(
+          vendor.id,
+          { ...otherContactDetails, ...added },
+          await tokenOfTheOwnLogin(vendor),
+        );
+
+        await expectErrorResponse(response, 400, [notValid(field)]);
+        expect(await (await readVendor(vendor.id)).json()).toEqual(vendor);
+      },
+    );
+
+    it('lets the Admin change the contact details of any Vendor, through the same endpoint', async () => {
+      await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+
+      const response = await editContactDetails(another.id, otherContactDetails);
+
+      expect(response.status).toBe(200);
+      const read = (await (await readVendor(another.id)).json()) as VendorBody;
+      expect(read).toMatchObject({
+        name: another.name,
+        loginPhoneNumber: another.loginPhoneNumber,
+        address: anAddressAsWritten,
+        instagramName: 'made_up.shop',
+      });
+    });
+
+    it("refuses the Vendor's own Login another Vendor's contact details, with an error of its own, and changes nothing", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+
+      const response = await editContactDetails(
+        another.id,
+        otherContactDetails,
+        await tokenOfTheOwnLogin(vendor),
+      );
+
+      await expectErrorResponse(response, 403, vendorAccessDenied);
+      expect(await (await readVendor(another.id)).json()).toEqual(another);
+    });
+
+    it('refuses a Login that holds the vendor role and has no Vendor behind it', async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const loginWithNoVendor = await testApp.tokenOf({ roles: ['vendor'] });
+
+      const response = await editContactDetails(
+        vendor.id,
+        otherContactDetails,
+        loginWithNoVendor,
+      );
+
+      await expectErrorResponse(response, 403, vendorAccessDenied);
+    });
+
+    it('answers the Admin 404 with an error of its own for a Vendor that does not exist', async () => {
+      const response = await editContactDetails(
+        '0b4d6f8a-2c1e-4a3b-9d5f-7e6a8b9c0d1e',
+        otherContactDetails,
+      );
+
+      await expectErrorResponse(response, 404, vendorNotFound);
+    });
+
+    it.each<[string, Record<string, unknown>]>([
+      ['left out', {}],
+      [
+        'sent as null',
+        {
+          mapLocation: null,
+          whatsAppNumber: null,
+          instagramName: null,
+          openingHours: null,
+        },
+      ],
+      [
+        'left empty',
+        {
+          mapLocation: {},
+          whatsAppNumber: '',
+          instagramName: ' ',
+          openingHours: '\n',
+        },
+      ],
+    ])('clears the details a Vendor may leave out, %s', async (_how, optional) => {
+      const { vendor } = await createdOf(
+        await createVendor({ ...aVendor('0750 123 4567'), ...otherContactDetails }),
+      );
+
+      const response = await editContactDetails(
+        vendor.id,
+        { address: 'Made-up Street, Erbil', phoneNumber: '066 223 4567', ...optional },
+        await tokenOfTheOwnLogin(vendor),
+      );
+
+      expect(response.status).toBe(200);
+      const read = (await (await readVendor(vendor.id)).json()) as VendorBody;
+      expect(read).toMatchObject({
+        address: 'Made-up Street, Erbil',
+        mapLocation: null,
+        whatsAppNumber: null,
+        instagramName: null,
+        openingHours: null,
+      });
+    });
+
+    it.each<[string, Record<string, unknown>, ExpectedErrorResponse]>([
+      ['no address', { address: undefined }, notValid('address', { reason: 'missing' })],
+      [
+        'an address over 300 characters',
+        { address: 'ش'.repeat(301) },
+        notValid('address', { reason: 'tooLong' }),
+      ],
+      [
+        'a location outside Iraq',
+        { mapLocation: { latitude: 51.5, longitude: -0.12 } },
+        notValid('mapLocation', { reason: 'outsideIraq' }),
+      ],
+      [
+        'a latitude and a longitude typed the wrong way round',
+        { mapLocation: { latitude: 44.0094145, longitude: 36.1911744 } },
+        notValid('mapLocation', { reason: 'outsideIraq' }),
+      ],
+      [
+        'a latitude without a longitude',
+        { mapLocation: { latitude: 36.1911744 } },
+        notValid('mapLocation.longitude', { reason: 'missing' }),
+      ],
+      [
+        'no phone number',
+        { phoneNumber: undefined },
+        notValid('phoneNumber', { reason: 'missing' }),
+      ],
+      [
+        'a phone number that is not Iraqi',
+        { phoneNumber: '+44 20 7946 0958' },
+        notValid('phoneNumber', { reason: 'notIraqi' }),
+      ],
+      [
+        'a landline as the WhatsApp number',
+        { whatsAppNumber: '066 223 4567' },
+        notValid('whatsAppNumber', { reason: 'notMobile' }),
+      ],
+      [
+        'an Instagram name that breaks its rule',
+        { instagramName: 'made up shop' },
+        notValid('instagramName', { reason: 'notAnInstagramName' }),
+      ],
+      [
+        'opening hours over 300 characters',
+        { openingHours: '٩'.repeat(301) },
+        notValid('openingHours', { reason: 'tooLong' }),
+      ],
+      ['an address that is not text', { address: 7 }, notValid('address')],
+    ])(
+      'refuses %s, naming the field and the reason, and changes nothing',
+      async (_what, change, expected) => {
+        const vendor = await aVendorWith('0750 123 4567');
+
+        const response = await editContactDetails(
+          vendor.id,
+          { ...otherContactDetails, ...change },
+          await tokenOfTheOwnLogin(vendor),
+        );
+
+        await expectErrorResponse(response, 400, [expected]);
+        expect(await (await readVendor(vendor.id)).json()).toEqual(vendor);
+      },
+    );
+  });
+
   describe('who may call them', () => {
     it("refuses a Vendor's Login a create, and makes no Login", async () => {
       const vendorToken = await testApp.tokenOf({ roles: ['vendor'] });
@@ -976,6 +1201,25 @@ describe('the Vendor endpoints', () => {
       const response = await fetch(`${testApp.baseUrl}/v1/caller/vendor`);
 
       await expectErrorResponse(response, 401, unauthorized);
+    });
+
+    it('refuses a change of contact details without a token, and changes nothing', async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+
+      const response = await fetch(
+        `${testApp.baseUrl}/v1/vendors/${vendor.id}/contact-details`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            address: 'Changed without a token',
+            phoneNumber: '066 223 4567',
+          }),
+        },
+      );
+
+      await expectErrorResponse(response, 401, unauthorized);
+      expect(await (await readVendor(vendor.id)).json()).toEqual(vendor);
     });
 
     it('refuses a read without a token', async () => {

@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { CallerResolver, ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
 import { CreateVendorCommand } from '~/domain/vendor/CreateVendorCommand';
+import { EditContactDetailsCommand } from '~/domain/vendor/EditContactDetailsCommand';
 import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
 import {
   ReadCallersVendorQuery,
@@ -13,6 +14,7 @@ import { ReadVendorQuery, ReadVendorQueryInput } from '~/domain/vendor/ReadVendo
 
 import { CreatedVendorResponse } from './CreatedVendorResponse';
 import { CreateVendorRequest } from './CreateVendorRequest';
+import { EditContactDetailsRequest } from './EditContactDetailsRequest';
 import { ListVendorsRequest } from './ListVendorsRequest';
 import { VendorPageResponse } from './VendorPageResponse';
 import { VendorResponse } from './VendorResponse';
@@ -24,6 +26,7 @@ export class VendorController {
     private readonly listVendorsQuery: ListVendorsQuery,
     private readonly readVendorQuery: ReadVendorQuery,
     private readonly readCallersVendorQuery: ReadCallersVendorQuery,
+    private readonly editContactDetailsCommand: EditContactDetailsCommand,
     private readonly callerResolver: CallerResolver,
   ) {}
 
@@ -68,6 +71,28 @@ export class VendorController {
     const caller = this.callerResolver.getCaller();
     const result = await this.readVendorQuery.execute(
       new ReadVendorQueryInput(caller.getId(), caller.getRoles(), vendorId),
+    );
+
+    return result.pipe(
+      Either.map((output) => VendorResponse.of(output.getVendor())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      "Replace a Vendor's contact details, and nothing else, for the Admin or for the Vendor's own Login",
+  })
+  @ApiOkResponse({ type: VendorResponse })
+  @PreAuthorize([Role.ADMIN, Role.VENDOR])
+  @Put('v1/vendors/:vendorId/contact-details')
+  async editContactDetails(
+    @Param('vendorId') vendorId: string,
+    @Body() request: EditContactDetailsRequest,
+  ): Promise<VendorResponse> {
+    const caller = this.callerResolver.getCaller();
+    const result = await this.editContactDetailsCommand.execute(
+      request.toCommandInput(caller.getId(), caller.getRoles(), vendorId),
     );
 
     return result.pipe(

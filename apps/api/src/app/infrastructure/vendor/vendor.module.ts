@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { CreateVendorCommand } from '~/domain/vendor/CreateVendorCommand';
+import { EditContactDetailsCommand } from '~/domain/vendor/EditContactDetailsCommand';
 import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
 import { ReadCallersVendorQuery } from '~/domain/vendor/ReadCallersVendorQuery';
 import { ReadVendorQuery } from '~/domain/vendor/ReadVendorQuery';
@@ -18,6 +19,7 @@ import { DatabaseVendorStore } from './store/DatabaseVendorStore';
     // The abstract class is the token the domain asks for.
     { provide: VendorStore, useClass: DatabaseVendorStore },
     CreateVendorCommand,
+    EditContactDetailsCommand,
     ListVendorsQuery,
     ReadVendorQuery,
     ReadCallersVendorQuery,

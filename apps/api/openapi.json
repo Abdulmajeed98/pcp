@@ -534,6 +534,55 @@
         "tags": ["Vendor"]
       }
     },
+    "/v1/vendors/{vendorId}/contact-details": {
+      "put": {
+        "operationId": "editContactDetails",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditContactDetailsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Replace a Vendor's contact details, and nothing else, for the Admin or for the Vendor's own Login",
+        "tags": ["Vendor"]
+      }
+    },
     "/v1/caller/vendor": {
       "get": {
         "operationId": "readCallersVendor",
@@ -1062,18 +1111,6 @@
       "CreateVendorRequest": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "The Vendor's name, as it writes it.",
-            "example": "Made-up Computer Shop",
-            "maxLength": 100
-          },
-          "city": {
-            "type": "string",
-            "description": "The city the Vendor is in.",
-            "enum": ["erbil"],
-            "example": "erbil"
-          },
           "address": {
             "type": "string",
             "description": "The Vendor's address, as it writes it, on one or more lines.",
@@ -1114,13 +1151,25 @@
             "nullable": true,
             "maxLength": 300
           },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as it writes it.",
+            "example": "Made-up Computer Shop",
+            "maxLength": 100
+          },
+          "city": {
+            "type": "string",
+            "description": "The city the Vendor is in.",
+            "enum": ["erbil"],
+            "example": "erbil"
+          },
           "loginPhoneNumber": {
             "type": "string",
             "description": "The phone number the Vendor's Login will be known by and logged in with: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.",
             "example": "0750 123 4567"
           }
         },
-        "required": ["name", "city", "address", "phoneNumber", "loginPhoneNumber"]
+        "required": ["address", "phoneNumber", "name", "city", "loginPhoneNumber"]
       },
       "MapLocationResponse": {
         "type": "object",
@@ -1356,6 +1405,52 @@
           "last",
           "content"
         ]
+      },
+      "EditContactDetailsRequest": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "The Vendor's address, as it writes it, on one or more lines.",
+            "example": "Made-up Street, Erbil",
+            "maxLength": 300
+          },
+          "mapLocation": {
+            "description": "Where the Vendor is: a latitude and a longitude, both or neither.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MapLocationRequest"
+              }
+            ]
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "The Vendor's phone number: an Iraqi mobile number or landline, in any form a person types one, in Western or Arabic-Indic digits.",
+            "example": "066 223 4567"
+          },
+          "whatsAppNumber": {
+            "type": "string",
+            "description": "The Vendor's WhatsApp number: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.",
+            "example": "0770 123 4567",
+            "nullable": true
+          },
+          "instagramName": {
+            "type": "string",
+            "description": "The Vendor's Instagram name, with or without an @ before it, or the address of its Instagram profile.",
+            "example": "@made_up.shop",
+            "nullable": true
+          },
+          "openingHours": {
+            "type": "string",
+            "description": "The Vendor's opening hours, as it writes them, on one or more lines.",
+            "example": "Saturday to Thursday, 9 to 9",
+            "nullable": true,
+            "maxLength": 300
+          }
+        },
+        "required": ["address", "phoneNumber"]
       }
     }
   },

@@ -68,6 +68,13 @@ export abstract class VendorStore {
     pageable: PageableAttributes,
   ): Promise<Either.Either<VendorsPage, StructuredError>>;
 
+  // Replaces the contact details of the Vendor with this identifier, and
+  // gives it back as it now is, or none when there is no such Vendor.
+  abstract editContactDetails(
+    id: string,
+    contactDetails: ContactDetails,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>>;
+
   // The Vendor with this identifier, or none when there is no such Vendor.
   abstract readById(
     id: string,

@@ -263,14 +263,6 @@ export type MapLocationRequest = {
 
 export type CreateVendorRequest = {
     /**
-     * The Vendor's name, as it writes it.
-     */
-    name: string;
-    /**
-     * The city the Vendor is in.
-     */
-    city: 'erbil';
-    /**
      * The Vendor's address, as it writes it, on one or more lines.
      */
     address: string;
@@ -294,6 +286,14 @@ export type CreateVendorRequest = {
      * The Vendor's opening hours, as it writes them, on one or more lines.
      */
     openingHours?: string | null;
+    /**
+     * The Vendor's name, as it writes it.
+     */
+    name: string;
+    /**
+     * The city the Vendor is in.
+     */
+    city: 'erbil';
     /**
      * The phone number the Vendor's Login will be known by and logged in with: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.
      */
@@ -436,6 +436,33 @@ export type VendorPageResponse = {
      * The page's Vendors, in name order.
      */
     content: Array<VendorSummaryResponse>;
+};
+
+export type EditContactDetailsRequest = {
+    /**
+     * The Vendor's address, as it writes it, on one or more lines.
+     */
+    address: string;
+    /**
+     * Where the Vendor is: a latitude and a longitude, both or neither.
+     */
+    mapLocation?: MapLocationRequest | null;
+    /**
+     * The Vendor's phone number: an Iraqi mobile number or landline, in any form a person types one, in Western or Arabic-Indic digits.
+     */
+    phoneNumber: string;
+    /**
+     * The Vendor's WhatsApp number: an Iraqi mobile number, in any form a person types one, in Western or Arabic-Indic digits.
+     */
+    whatsAppNumber?: string | null;
+    /**
+     * The Vendor's Instagram name, with or without an @ before it, or the address of its Instagram profile.
+     */
+    instagramName?: string | null;
+    /**
+     * The Vendor's opening hours, as it writes them, on one or more lines.
+     */
+    openingHours?: string | null;
 };
 
 export type GetCallerData = {
@@ -742,6 +769,30 @@ export type ReadVendorResponses = {
 };
 
 export type ReadVendorResponse = ReadVendorResponses[keyof ReadVendorResponses];
+
+export type EditContactDetailsData = {
+    body: EditContactDetailsRequest;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/contact-details';
+};
+
+export type EditContactDetailsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type EditContactDetailsError = EditContactDetailsErrors[keyof EditContactDetailsErrors];
+
+export type EditContactDetailsResponses = {
+    200: VendorResponse;
+};
+
+export type EditContactDetailsResponse = EditContactDetailsResponses[keyof EditContactDetailsResponses];
 
 export type ReadCallersVendorData = {
     body?: never;

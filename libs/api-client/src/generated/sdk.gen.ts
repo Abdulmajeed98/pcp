@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -133,6 +133,19 @@ export const readVendor = <ThrowOnError extends boolean = false>(options: Option
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/vendors/{vendorId}',
     ...options
+});
+
+/**
+ * Replace a Vendor's contact details, and nothing else, for the Admin or for the Vendor's own Login
+ */
+export const editContactDetails = <ThrowOnError extends boolean = false>(options: Options<EditContactDetailsData, ThrowOnError>): RequestResult<EditContactDetailsResponses, EditContactDetailsErrors, ThrowOnError> => (options.client ?? client).put<EditContactDetailsResponses, EditContactDetailsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/contact-details',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

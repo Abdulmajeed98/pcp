@@ -172,6 +172,30 @@ export class DatabaseVendorStore implements VendorStore {
     }
   }
 
+  async editContactDetails(
+    id: string,
+    contactDetails: ContactDetails,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
+    if (!couldBeIdentifier(id)) return Either.right(Option.none());
+
+    try {
+      const [row] = await this.databaseProvider
+        .getClient()
+        .update(vendor)
+        .set(contactDetailsColumns(contactDetails))
+        .where(eq(vendor.id, id))
+        .returning();
+
+      if (row === undefined) return Either.right(Option.none());
+      return Either.map(toDomain(row), Option.some);
+    } catch (error) {
+      this.logger.error(error, "A Vendor's contact details could not be changed");
+      return Either.left(
+        databaseErrorOf(error, "A Vendor's contact details could not be changed"),
+      );
+    }
+  }
+
   async readById(
     id: string,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
