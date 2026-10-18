@@ -11,8 +11,8 @@ import { VendorStore } from './VendorStore';
 // hands it the Caller's identifier and roles as plain values.
 //
 // - A Caller that holds the `admin` role may act for any Vendor.
-// - A Caller that holds only the `vendor` role may act only for the Vendor
-//   whose Login it is.
+// - Any other Caller, which the endpoint lets in by its `vendor` role, may
+//   act only for the Vendor whose Login it is.
 // - A Vendor named that is not the Caller's own is refused with 403, whether
 //   it exists or not, so that a Vendor learns nothing about another Vendor's
 //   identifier.
@@ -29,21 +29,15 @@ export class VendorAccessRule {
     if (callerRoles.includes(Role.ADMIN)) {
       const found = await this.vendorStore.readById(vendorId);
       return Either.flatMap(found, (vendor) =>
-        Option.match(vendor, {
-          onNone: () => Either.left(vendorNotFound(vendorId)),
-          onSome: (existing) => Either.right(existing),
-        }),
+        Either.fromOption(vendor, () => vendorNotFound(vendorId)),
       );
     }
 
     const own = await this.ownVendorOf(callerId);
     return Either.flatMap(own, (vendor) =>
-      Option.match(
+      Either.fromOption(
         Option.filter(vendor, (existing) => existing.getId() === vendorId),
-        {
-          onNone: () => Either.left(vendorAccessDenied(callerId, vendorId)),
-          onSome: (existing) => Either.right(existing),
-        },
+        () => vendorAccessDenied(callerId, vendorId),
       ),
     );
   }

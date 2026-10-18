@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
 import { Vendor } from './Vendor';
 import { VendorAccessRule } from './VendorAccessRule';
-import { vendorNotFound } from './vendor-errors';
+import { callersVendorNotFound } from './vendor-errors';
 
 class Input {
   constructor(private readonly callerId: string) {}
@@ -41,11 +41,10 @@ export class ReadCallersVendorQuery {
     const own = await this.vendorAccessRule.ownVendorOf(input.getCallerId());
 
     return Either.flatMap(own, (vendor) =>
-      Option.match(vendor, {
-        onNone: () =>
-          Either.left(vendorNotFound(`behind the Login ${input.getCallerId()}`)),
-        onSome: (existing) => Either.right(Output.of(existing)),
-      }),
+      Either.map(
+        Either.fromOption(vendor, () => callersVendorNotFound(input.getCallerId())),
+        Output.of,
+      ),
     );
   }
 }

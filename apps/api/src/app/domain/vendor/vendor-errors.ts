@@ -35,6 +35,15 @@ export function vendorNotFound(vendorId: string): NotFoundError {
   return NotFoundError.of('VENDOR_NOT_FOUND', `There is no Vendor ${vendorId}`);
 }
 
+// The error for a Login with no Vendor behind it, answered as a Vendor that
+// does not exist is.
+export function callersVendorNotFound(loginId: string): NotFoundError {
+  return NotFoundError.of(
+    'VENDOR_NOT_FOUND',
+    `There is no Vendor behind the Login ${loginId}`,
+  );
+}
+
 // The error for a Vendor's Login that names a Vendor other than its own,
 // the same whether that Vendor exists or not.
 export function vendorAccessDenied(loginId: string, vendorId: string): ForbiddenError {
