@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'react-router';
 
 import { vendorsKey } from '@/entities/vendor';
-import { HandOver } from '@/features/hand-over';
+import { HandOver, TemporaryPassword } from '@/features/hand-over';
 import { VendorForm } from '@/features/vendor-form';
 import { apiClient, dataOf } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
@@ -61,23 +61,7 @@ function Created({
         <p>The Vendor and its Login are made.</p>
       </div>
 
-      <section aria-labelledby="temporary-password-label" className="flex flex-col gap-2">
-        <h2 id="temporary-password-label" className="text-sm font-medium">
-          Temporary password
-        </h2>
-        <p
-          data-testid="temporary-password"
-          lang="en"
-          dir="ltr"
-          className="self-start rounded-lg border border-border bg-card px-3 py-2 font-mono text-2xl font-bold tracking-wider"
-        >
-          {temporaryPassword}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Shown this once, and kept nowhere. Leaving this screen loses it. The Vendor
-          replaces it with its own at its first login.
-        </p>
-      </section>
+      <TemporaryPassword password={temporaryPassword} />
 
       <HandOver
         loginPhoneNumber={vendor.loginPhoneNumber}

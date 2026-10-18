@@ -19,6 +19,12 @@ import {
   narrowWindow,
 } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
+import {
+  loginOfTheMessage,
+  messageLanguage,
+  temporaryPassword,
+  theHandOver,
+} from './hand-over';
 import { dashboardUrl } from './platform';
 import {
   atTheLoginScreenInABrowserOfItsOwn,
@@ -77,11 +83,6 @@ async function fillInTheForm(page: Page, vendor: VendorToType): Promise<void> {
   await vendorFormField(page, 'Login phone number').fill(vendor.loginPhoneNumber);
 }
 
-// The temporary password, shown once after the create.
-function temporaryPassword(page: Page) {
-  return page.getByTestId('temporary-password');
-}
-
 test('the Admin opens the form from the Vendors list, with Erbil chosen as the city, fills in a made-up Vendor, fills its map location from the browser’s position in Erbil, and creates it; the page then shows the temporary password, and the Vendor holds that location', async ({
   page,
 }) => {
@@ -127,23 +128,6 @@ async function createAMadeUpVendorInTheForm(
 
   await expect(temporaryPassword(page)).toBeVisible();
   return { vendor, password: await temporaryPassword(page).innerText() };
-}
-
-// The hand-over's choice of the message's language.
-function messageLanguage(page: Page) {
-  return page.getByRole('group', { name: 'Language of the message' });
-}
-
-// The hand-over's link, and the message it writes, in the language chosen:
-// where the link goes, and the message's lines.
-async function theHandOver(page: Page, language: Language) {
-  await messageLanguage(page).getByRole('radio', { name: language.ownName }).check();
-  const link = page.getByRole('link', { name: /WhatsApp/ });
-  const address = new URL((await link.getAttribute('href')) ?? '');
-  return {
-    chat: `${address.origin}${address.pathname}`,
-    lines: (address.searchParams.get('text') ?? '').split('\n'),
-  };
 }
 
 // The groups of a phone number as a line of a right-to-left message draws
@@ -223,26 +207,13 @@ test('after the create, the hand-over offers the message in Kurdish, Arabic and 
   expectADifferentTextInEachLanguage(texts);
 });
 
-// The values of the message's lines, each what follows its label's colon
-// and the space after it, in any language. A right-to-left message puts a
-// left-to-right mark between that space and a number, which is not part of
-// the value.
-function valuesOf(lines: string[]): string[] {
-  return lines.flatMap((line) => /^[^:]+: \u200E?(.+)$/.exec(line)?.[1] ?? []);
-}
-
 test('in a fresh browser, the Vendor logs in with the login phone number and the password as the Kurdish message, the one chosen first, gives them, is made to replace the password, and reaches the Vendor portal', async ({
   browser,
   page,
 }) => {
   await createAMadeUpVendorInTheForm(page);
   const { lines } = await theHandOver(page, languages[0]);
-  const values = valuesOf(lines);
-  const login = {
-    // A mobile number in Iraq's own form, and twelve letters and digits.
-    name: values.find((value) => /^0\d{3} \d{3} \d{4}$/.test(value)) ?? '',
-    password: values.find((value) => /^[a-z0-9]{12}$/.test(value)) ?? '',
-  };
+  const login = loginOfTheMessage(lines);
   expect(login.name, 'the message gives a login phone number').not.toBe('');
   expect(login.password, 'the message gives a password').not.toBe('');
 
