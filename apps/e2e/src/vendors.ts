@@ -29,7 +29,7 @@ export interface MadeUpVendor {
 
 // What the API answers to a create, as far as the tests read it.
 interface CreatedVendor {
-  vendor: { id: string; loginPhoneNumber: { international: string } };
+  vendor: { id: string; name: string; loginPhoneNumber: { international: string } };
   temporaryPassword: string;
 }
 
@@ -59,14 +59,19 @@ async function isRefusedAsTaken(response: APIResponse): Promise<boolean> {
   );
 }
 
+// Details a test may give a made-up Vendor, in place of those it is given
+// otherwise, or beside them, as the API takes them.
+export type VendorDetails = Record<string, unknown>;
+
 // Creates a made-up Vendor over HTTP as the Admin, with a name and a login
 // phone number unique to the run, and plainly test data, and every detail a
-// Vendor must have. A number another Vendor holds already is replaced by
-// another. It and its Login stay in the development services, which
-// `pnpm services:reset` empties.
+// Vendor must have, and any other details the test gives. A number another
+// Vendor holds already is replaced by another. It and its Login stay in the
+// development services, which `pnpm services:reset` empties.
 export async function createAMadeUpVendor(
   request: APIRequestContext,
   authorization: string,
+  details: VendorDetails = {},
 ): Promise<MadeUpVendor> {
   const name = `Made-up test Vendor ${aWordUniqueToTheRun()}`;
   const createWithANewNumber = () => {
@@ -79,6 +84,7 @@ export async function createAMadeUpVendor(
         address: 'Made-up Street, Erbil',
         phoneNumber: mobileNumber,
         loginPhoneNumber: mobileNumber,
+        ...details,
       },
     });
   };
@@ -92,7 +98,7 @@ export async function createAMadeUpVendor(
 
   return {
     id: vendor.id,
-    name,
+    name: vendor.name,
     loginPhoneNumber: vendor.loginPhoneNumber.international,
     temporaryPassword,
   };
@@ -103,6 +109,12 @@ export async function createAMadeUpVendor(
 function inGroups(loginPhoneNumber: string): string[] {
   const local = `0${loginPhoneNumber.replace(/^\+964/, '')}`;
   return [local.slice(0, 4), local.slice(4, 7), local.slice(7)];
+}
+
+// The same number in Iraq's own form, which the platform shows a person:
+// 0750 123 4567.
+export function inIraqsOwnForm(loginPhoneNumber: string): string {
+  return inGroups(loginPhoneNumber).join(' ');
 }
 
 // The same number as a Kurdish or an Arabic keyboard types it, in

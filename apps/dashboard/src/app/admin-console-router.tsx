@@ -5,13 +5,15 @@ import { EditPartPage } from '@/pages/edit-part';
 import { ChooseCategoryPage, NewPartPage } from '@/pages/new-part';
 import { NotFoundPage } from '@/pages/not-found';
 import { PartPage } from '@/pages/part';
+import { VendorPage } from '@/pages/vendor';
+import { VendorsPage } from '@/pages/vendors';
 
 import { AdminConsoleFrame } from './layouts/admin-console-frame';
 
 // The Admin console's screens, by their addresses. The Admin console opens on
-// the Catalog, its only section so far. A Part, its edit form and a new Part
-// are the Catalog's children, which it shows beside its list on a wide
-// screen.
+// the Catalog, the first of its two sections. A Part, its edit form and a new
+// Part are the Catalog's children, and a Vendor's page is the Vendors'
+// child, which each shows beside its list on a wide screen.
 const routes = [
   {
     path: '/',
@@ -27,6 +29,11 @@ const routes = [
           { path: 'parts/:partId', Component: PartPage },
           { path: 'parts/:partId/edit', Component: EditPartPage },
         ],
+      },
+      {
+        path: 'vendors',
+        Component: VendorsPage,
+        children: [{ path: ':vendorId', Component: VendorPage }],
       },
       { path: '*', Component: NotFoundPage },
     ],

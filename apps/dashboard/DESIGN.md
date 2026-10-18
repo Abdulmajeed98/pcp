@@ -93,7 +93,7 @@ components:
     rounded: "{rounded.plate}"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any dashboard screen existed. Its components were recorded on 16 October 2026 from what tickets 11 to 13 built: the Admin console's Catalog, a Part's page and the Part's form. The sections' menu and the Vendors' rows were added on 18 October 2026, with ticket 05 of the accounts module. -->
 
 # Design System: the dashboard, Rate Board
 
@@ -171,9 +171,9 @@ Kurdish and Arabic follow the root's Tall Script Rule. Figures are always Wester
 
 ## Layout
 
-On a phone, one column: a quiet top bar with the sections behind a menu button, then the screen's search or filters, then rows. On a wider screen the sections move to a side bar, and a list gains a detail pane beside it. Lists are rows, not cards: what the row is, one secondary line, and its plate at the end side.
+On a phone, one column: a quiet top bar with the sections behind a menu button, then the screen's search or filters, then rows. On a wider screen the sections are in the top bar itself, and a list gains a detail pane beside it. Lists are rows, not cards: what the row is, one secondary line, and its plate at the end side.
 
-From 64rem wide, the Catalog keeps its list in a column 26rem wide on the start side, and shows the Part opened from it, its edit form or a new Part beside it, past a Rule Sand rule; before a Part is opened, the pane says how to open one. On a phone the opened screen takes the whole screen. The console's content is at most 80rem wide. The top bar has no menu of sections while the Catalog is the only one, as the owner chose on 16 October 2026, and gains it with the second.
+From 64rem wide, the Catalog keeps its list in a column 26rem wide on the start side, and shows the Part opened from it, its edit form or a new Part beside it, past a Rule Sand rule; before a Part is opened, the pane says how to open one. The Vendors list does the same with a Vendor's page. On a phone the opened screen takes the whole screen. The console's content is at most 80rem wide. The top bar had no menu of sections while the Catalog was the only one, as the owner chose on 16 October 2026, and gained it with the Vendors, the second, on 18 October 2026.
 
 Rows are 8 pixels apart inside, groups 16. Every control is 44 pixels, under a mouse as on a touchscreen, as the owner chose; density comes from rows and spacing, never from smaller controls.
 
@@ -220,12 +220,13 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 
 - **Character:** a list is rows, never cards. Rule Sand rules divide the rows, and close the list above and below.
 - **A row:** the Part's picture, then its name in the row type (14 pixels, weight 500) and one secondary line in Note Grey. The whole row is the link, with a Shelf ground on hover and on the row of the Part open beside the list, while the link's name is the Part's alone.
+- **A Vendor's row:** its name as it writes it, then one secondary line with its login phone number and, for a deactivated Vendor, the "Deactivated" mark, drawn as the "Needed" mark is. It has no picture.
 - **The picture:** a 40-pixel square on a Shelf ground with 6px corners, holding the Category's icon at 20 pixels, or the photo filling it. A Part's page shows it at 80 pixels.
 
 ### Plates
 
 - **The plate** is the look's signature: Plate Amber figures in Geist Mono at 20 pixels, weight 700, tabular, on Plate Graphite, with 3.6-pixel corners and 8 pixels of padding each side, sized to its figure. Its words follow it on the page, in body text.
-- **Where:** the count of Parts a search found, and the count of a Part's needed specifications that are not known: one in each pane.
+- **Where:** the count of Parts a search found, the count of Vendors, and the count of a Part's needed specifications that are not known: one in each pane.
 
 ### States
 
@@ -236,7 +237,8 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 
 ### Navigation
 
-- **The top bar:** the page's own ground, closed by a Rule Sand rule, with the console's name at weight 600 on the start side, and the caller's name in Note Grey and Log out on the end side. It gains a menu of sections with the second section.
+- **The top bar:** the page's own ground, closed by a Rule Sand rule, with the console's name at weight 600 on the start side, and the caller's name in Note Grey and Log out on the end side.
+- **The sections:** the Catalog and the Vendors, each a link 44 pixels high with 6px corners, in Note Grey, and the one the Admin is in at weight 600 on a Shelf ground. On a phone they are behind a 44-pixel menu button at the bar's start, which opens them as a column below the bar, closed by choosing one; from 64rem they sit in the bar after the console's name.
 - **Back:** a small Note Grey link above a screen's title, with a chevron that points back in the reading direction, underlined on hover, 44 pixels high.
 
 ## Do's and Don'ts
