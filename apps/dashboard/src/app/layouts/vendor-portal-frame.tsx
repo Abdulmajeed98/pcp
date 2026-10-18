@@ -1,3 +1,4 @@
+import type { VendorResponse } from '@pcp/api-client';
 import { AsWritten } from '@pcp/ui';
 import type { ReactNode } from 'react';
 import { Outlet, ScrollRestoration } from 'react-router';
@@ -10,19 +11,8 @@ import { Alert, AlertDescription, AlertTitle, Button } from '@/shared/ui';
 
 import { LanguageSwitch } from './language-switch';
 
-// The frame: the part every screen of the Vendor portal shares. It is laid
-// out for a phone 360 pixels wide first, and on a wider screen it gives the
-// screen more room, up to a width that still reads well. A word too long for
-// the screen is broken, so that it cannot make the page scroll sideways.
-//
-// It first asks the API for the Caller's own Vendor. Its top bar, closed by
-// a Rule Sand rule, names that Vendor, as written, on the start side, and
-// holds the way to log out and the language switch on the end side, the
-// switch last, where a Vendor finds it on every screen: the right in
-// English, and the left in Kurdish and Arabic. On a phone the name shares
-// its row with the way to log out, and the switch has the row below; on a
-// wider screen the three share one. It hands the Vendor to the screen below
-// it, which reads the Vendor's details itself.
+// The Vendor portal's frame, for a Vendor's own Login: it asks the API for
+// the Caller's own Vendor, and draws the portal's frame around it.
 //
 // A Login with no Vendor behind it, such as one made by hand in Keycloak's
 // console, gets a plain message in the portal's language with the way to log
@@ -45,6 +35,32 @@ export function VendorPortalFrame() {
       </Frame>
     );
   }
+
+  return <PortalFrame vendor={vendor} />;
+}
+
+// The Vendor a frame shows, as far as the API has answered: the Vendor, once
+// it is read, or why it could not be.
+export interface VendorAskedFor {
+  data?: VendorResponse;
+  error: Error | null;
+}
+
+// The frame: the part every screen of the Vendor portal shares, whichever
+// Vendor it shows and however it learnt which. It is laid out for a phone 360
+// pixels wide first, and on a wider screen it gives the screen more room, up
+// to a width that still reads well. A word too long for the screen is
+// broken, so that it cannot make the page scroll sideways.
+//
+// Its top bar, closed by a Rule Sand rule, names the Vendor, as written, on
+// the start side, and holds the way to log out and the language switch on
+// the end side, the switch last, where a Vendor finds it on every screen:
+// the right in English, and the left in Kurdish and Arabic. On a phone the
+// name shares its row with the way to log out, and the switch has the row
+// below; on a wider screen the three share one. It hands the Vendor to the
+// screen below it, which reads the Vendor's details itself.
+export function PortalFrame({ vendor }: { vendor: VendorAskedFor }) {
+  const { t } = useTranslation();
 
   return (
     <Frame>
