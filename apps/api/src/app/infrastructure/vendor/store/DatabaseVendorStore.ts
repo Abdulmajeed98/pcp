@@ -14,7 +14,12 @@ import { City } from '~/domain/vendor/City';
 import { ContactDetails } from '~/domain/vendor/ContactDetails';
 import { MapLocation } from '~/domain/vendor/MapLocation';
 import { Vendor } from '~/domain/vendor/Vendor';
-import { CreateVendorParams, VendorsPage, VendorStore } from '~/domain/vendor/VendorStore';
+import {
+  CreateVendorParams,
+  EditContactDetailsParams,
+  VendorsPage,
+  VendorStore,
+} from '~/domain/vendor/VendorStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 
@@ -173,16 +178,16 @@ export class DatabaseVendorStore implements VendorStore {
   }
 
   async editContactDetails(
-    id: string,
-    contactDetails: ContactDetails,
+    params: EditContactDetailsParams,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
+    const id = params.getVendorId();
     if (!couldBeIdentifier(id)) return Either.right(Option.none());
 
     try {
       const [row] = await this.databaseProvider
         .getClient()
         .update(vendor)
-        .set(contactDetailsColumns(contactDetails))
+        .set(contactDetailsColumns(params.getContactDetails()))
         .where(eq(vendor.id, id))
         .returning();
 

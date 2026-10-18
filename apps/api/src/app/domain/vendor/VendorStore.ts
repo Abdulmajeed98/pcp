@@ -36,6 +36,21 @@ export class CreateVendorParams {
   }
 }
 
+export class EditContactDetailsParams {
+  constructor(
+    private readonly vendorId: string,
+    private readonly contactDetails: ContactDetails,
+  ) {}
+
+  getVendorId(): string {
+    return this.vendorId;
+  }
+
+  getContactDetails(): ContactDetails {
+    return this.contactDetails;
+  }
+}
+
 // One page of the Vendors, in name order, and where the page stands among
 // them all.
 export class VendorsPage {
@@ -71,8 +86,7 @@ export abstract class VendorStore {
   // Replaces the contact details of the Vendor with this identifier, and
   // gives it back as it now is, or none when there is no such Vendor.
   abstract editContactDetails(
-    id: string,
-    contactDetails: ContactDetails,
+    params: EditContactDetailsParams,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>>;
 
   // The Vendor with this identifier, or none when there is no such Vendor.

@@ -6,7 +6,7 @@ import { ContactDetails, UncheckedContactDetails } from './ContactDetails';
 import { Vendor } from './Vendor';
 import { VendorAccessRule } from './VendorAccessRule';
 import { vendorNotFound } from './vendor-errors';
-import { VendorStore } from './VendorStore';
+import { EditContactDetailsParams, VendorStore } from './VendorStore';
 
 class Input {
   constructor(
@@ -64,26 +64,25 @@ export class EditContactDetailsCommand {
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     // Who may act comes first, so that a Vendor learns nothing about another
     // Vendor from the refusal of a detail.
-    const vendor = await this.vendorAccessRule.vendorActedFor(
+    const actedFor = await this.vendorAccessRule.vendorActedFor(
       input.getCallerId(),
       input.getCallerRoles(),
       input.getVendorId(),
     );
-    if (Either.isLeft(vendor)) return Either.left(vendor.left);
+    if (Either.isLeft(actedFor)) return Either.left(actedFor.left);
 
     const contactDetails = ContactDetails.check(input.getContactDetails());
     if (Either.isLeft(contactDetails)) return Either.left(contactDetails.left);
 
-    const vendorId = vendor.right.getId();
+    const vendorId = actedFor.right.getId();
     const edited = await this.vendorStore.editContactDetails(
-      vendorId,
-      contactDetails.right,
+      new EditContactDetailsParams(vendorId, contactDetails.right),
     );
 
     return Either.flatMap(edited, (editedVendor) =>
       Option.match(editedVendor, {
         onNone: () => Either.left(vendorNotFound(vendorId)),
-        onSome: (each) => Either.right(Output.of(each)),
+        onSome: (vendor) => Either.right(Output.of(vendor)),
       }),
     );
   }
