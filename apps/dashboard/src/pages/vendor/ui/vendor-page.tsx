@@ -9,6 +9,8 @@ import {
   coordinatesOf,
   DeactivatedMark,
   googleMapsSearchFor,
+  instagramHandleOf,
+  instagramProfileOf,
   useVendor,
 } from '@/entities/vendor';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
@@ -20,7 +22,9 @@ import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
 // opening hours, is shown as written, in its own direction (LANG-4). Its
 // phone numbers, in Iraq's own form, and its Instagram name are English in
 // every language, and are kept apart from the text around them. Its map
-// location opens Google Maps' search for its coordinates.
+// location opens Google Maps' search for its coordinates, and its Instagram
+// name, written with an @ as Instagram writes a handle, opens its profile,
+// each in a new tab, so that the Admin console stays where it was.
 export function VendorPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
@@ -77,16 +81,9 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
           ) : (
             <span className="flex flex-col items-start gap-1">
               <AlwaysEnglish>{coordinatesOf(vendor.mapLocation)}</AlwaysEnglish>
-              <a
-                href={googleMapsSearchFor(vendor.mapLocation)}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-h-control items-center gap-1 underline underline-offset-4 hover:decoration-2"
-              >
+              <InANewTab href={googleMapsSearchFor(vendor.mapLocation)}>
                 Open in Google Maps
-                <span className="sr-only">, in a new tab</span>
-                <ExternalLinkIcon aria-hidden="true" className="size-4" />
-              </a>
+              </InANewTab>
             </span>
           )}
         </Detail>
@@ -100,7 +97,9 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
           {vendor.instagramName === null ? (
             <None />
           ) : (
-            <AlwaysEnglish>{vendor.instagramName}</AlwaysEnglish>
+            <InANewTab href={instagramProfileOf(vendor.instagramName)}>
+              <AlwaysEnglish>{instagramHandleOf(vendor.instagramName)}</AlwaysEnglish>
+            </InANewTab>
           )}
         </Detail>
         <Detail name="openingHours" label="Opening hours">
@@ -137,6 +136,23 @@ function Detail({
       <dt className="text-muted-foreground">{label}</dt>
       <dd>{children}</dd>
     </div>
+  );
+}
+
+// A link that opens another site in a new tab, and says so to a screen
+// reader and by its mark.
+function InANewTab({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex min-h-control items-center gap-1 underline underline-offset-4 hover:decoration-2"
+    >
+      {children}
+      <span className="sr-only">, in a new tab</span>
+      <ExternalLinkIcon aria-hidden="true" className="size-4" />
+    </a>
   );
 }
 

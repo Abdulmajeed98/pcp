@@ -99,7 +99,7 @@ test.describe("a Vendor's page", () => {
     await expect(page.getByRole('heading', { level: 1, name: vendor.name })).toBeVisible();
   });
 
-  test('it shows every detail the Vendor was given, each as the platform shows it, and its map link’s address holds its coordinates', async ({
+  test('it shows every detail the Vendor was given, each as the platform shows it, its map link’s address holds its coordinates, and its Instagram link is its profile’s', async ({
     page,
   }) => {
     const heading = page.getByRole('heading', { level: 1 });
@@ -109,7 +109,12 @@ test.describe("a Vendor's page", () => {
     await expectShownAsWritten(detailRow(page, 'openingHours'), everyDetail.openingHours);
     await expectMarkedAlwaysEnglish(detailRow(page, 'phoneNumber'), '066 223 4567');
     await expectMarkedAlwaysEnglish(detailRow(page, 'whatsAppNumber'), '0770 123 4567');
-    await expectMarkedAlwaysEnglish(detailRow(page, 'instagramName'), 'made_up.test');
+    const instagram = detailRow(page, 'instagramName');
+    await expectMarkedAlwaysEnglish(instagram, '@made_up.test');
+    await expect(instagram.getByRole('link', { name: '@made_up.test' })).toHaveAttribute(
+      'href',
+      'https://www.instagram.com/made_up.test/',
+    );
     await expectMarkedAlwaysEnglish(
       detailRow(page, 'loginPhoneNumber'),
       inIraqsOwnForm(vendor.loginPhoneNumber),
