@@ -34,10 +34,12 @@ import {
 } from './vendors';
 
 // Erbil's citadel, as OpenStreetMap places it: the position the browser is
-// given, as the Admin's phone would give it standing in a shop in Erbil.
+// given, as the Admin's phone would give it standing in a Vendor's place in
+// Erbil.
 const inErbil = { latitude: 36.1911744, longitude: 44.0094145 };
 
-// The Admin creates Vendors on a phone, in their shops (LANG-8), and the
+// The Admin creates Vendors on a phone, in the Vendors' own places (LANG-8),
+// and the
 // browser has leave to give the dashboard its position.
 test.use({
   viewport: narrowWindow,
@@ -52,7 +54,7 @@ test.beforeEach(async ({ page }) => {
 
 // A made-up Vendor as the Admin types it into the form, with a name and a
 // login phone number unique to the run, and a WhatsApp number of its own,
-// as a Vendor whose shop's WhatsApp its staff answer has.
+// as a Vendor has whose WhatsApp number its staff answer.
 function aMadeUpVendorToType() {
   const loginPhoneNumber = aMadeUpMobileNumber();
   return {
@@ -144,6 +146,38 @@ async function theHandOver(page: Page, language: Language) {
   };
 }
 
+// The groups of a phone number as a line of a right-to-left message draws
+// them, from left to right, in a paragraph laid out right to left, as
+// WhatsApp lays out a Kurdish or an Arabic message. The line is drawn in the
+// page for the measure, and taken off again.
+async function groupsAsDrawn(
+  page: Page,
+  line: string,
+  groups: string[],
+): Promise<string[]> {
+  return page.evaluate(
+    ([text, wanted]) => {
+      const paragraph = document.createElement('p');
+      paragraph.dir = 'rtl';
+      paragraph.textContent = text;
+      document.body.append(paragraph);
+      const node = paragraph.firstChild as Text;
+      const from = text.lastIndexOf(wanted.join(' '));
+      let at = from;
+      const placed = wanted.map((group) => {
+        const range = document.createRange();
+        range.setStart(node, at);
+        range.setEnd(node, at + group.length);
+        at += group.length + 1;
+        return { group, left: range.getBoundingClientRect().left };
+      });
+      paragraph.remove();
+      return placed.sort((a, b) => a.left - b.left).map(({ group }) => group);
+    },
+    [line, groups] as const,
+  );
+}
+
 // The stored form's digits: +9647501234567 is 9647501234567.
 function digitsOf(loginPhoneNumber: string): string {
   return `964${loginPhoneNumber.replace(/^0/, '')}`;
@@ -178,29 +212,39 @@ test('after the create, the hand-over offers the message in Kurdish, Arabic and 
       ]);
     }
     texts.set(language, lines.join('\n'));
+    if (language.direction === 'rtl') {
+      const phoneLine = lines.find((line) => line.endsWith(values[1])) ?? '';
+      expect(
+        await groupsAsDrawn(page, phoneLine, values[1].split(' ')),
+        `the ${language.name} message's phone number is drawn in its own order`,
+      ).toEqual(values[1].split(' '));
+    }
   }
   expectADifferentTextInEachLanguage(texts);
 });
 
-// The value after a label on its line of the message, such as the login
-// phone number after "Phone number:".
-function valueAfter(lines: string[], label: string): string {
-  const line = lines.find((each) => each.startsWith(`${label} `));
-  expect(line, `the message has a line for ${label}`).toBeDefined();
-  return (line ?? '').slice(label.length + 1);
+// The values of the message's lines, each what follows its label's colon
+// and the space after it, in any language. A right-to-left message puts a
+// left-to-right mark between the colon and the space before a number, which
+// is not part of the value.
+function valuesOf(lines: string[]): string[] {
+  return lines.flatMap((line) => /^[^:]+:\u200E? (.+)$/.exec(line)?.[1] ?? []);
 }
 
-test('in a fresh browser, the Vendor logs in with the login phone number and the password as the English message gives them, is made to replace the password, and reaches the Vendor portal', async ({
+test('in a fresh browser, the Vendor logs in with the login phone number and the password as the Kurdish message, the one chosen first, gives them, is made to replace the password, and reaches the Vendor portal', async ({
   browser,
   page,
 }) => {
   await createAMadeUpVendorInTheForm(page);
-  const english = languages.find(({ tag }) => tag === 'en') ?? languages[2];
-  const { lines } = await theHandOver(page, english);
+  const { lines } = await theHandOver(page, languages[0]);
+  const values = valuesOf(lines);
   const login = {
-    name: valueAfter(lines, 'Phone number:'),
-    password: valueAfter(lines, 'Temporary password:'),
+    // A mobile number in Iraq's own form, and twelve letters and digits.
+    name: values.find((value) => /^0\d{3} \d{3} \d{4}$/.test(value)) ?? '',
+    password: values.find((value) => /^[a-z0-9]{12}$/.test(value)) ?? '',
   };
+  expect(login.name, 'the message gives a login phone number').not.toBe('');
+  expect(login.password, 'the message gives a password').not.toBe('');
 
   await atTheLoginScreenInABrowserOfItsOwn(browser, async (vendorsPage) => {
     await submitTheLoginScreen(vendorsPage, login, { typeTheName: true });

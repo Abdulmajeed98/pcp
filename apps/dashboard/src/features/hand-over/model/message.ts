@@ -1,4 +1,4 @@
-import type { Language } from '@pcp/i18n';
+import { directions, type Language } from '@pcp/i18n';
 
 import { t } from '@/shared/i18n';
 
@@ -11,6 +11,16 @@ export interface LoginDetails {
   temporaryPassword: string;
 }
 
+// What stands between the phone number's label and the number. In a line
+// laid out right to left, the spaces between the number's groups would take
+// the line's direction, and "0750 123 4567" would be drawn "4567 123 0750".
+// A left-to-right mark before them makes the digits after it run left to
+// right (Unicode's bidirectional algorithm, rule W7). It is put after the
+// label's colon, and not in the value, so that a Vendor who copies the
+// number does not copy the mark, which the login screen's script would not
+// take off.
+const numberMark = { rtl: '\u200E', ltr: '' } as const;
+
 // The message the Admin sends the Vendor, in the language the Admin chose:
 // a greeting, the dashboard's address, the login phone number and the
 // temporary password, each after its label on a line of its own, so that a
@@ -18,14 +28,12 @@ export interface LoginDetails {
 // Vendor will choose its own password. A label is a message of its own, and
 // its value is put after it here, so that no message holds a value.
 export function handOverMessage(language: Language, details: LoginDetails): string {
-  const lng = language;
-
   return [
-    t('HandOver.greeting', { lng }),
-    `${t('HandOver.portalAddress', { lng })} ${details.portalAddress}`,
-    `${t('HandOver.loginPhoneNumber', { lng })} ${details.loginPhoneNumber}`,
-    `${t('HandOver.temporaryPassword', { lng })} ${details.temporaryPassword}`,
-    t('HandOver.choosePassword', { lng }),
+    t('HandOver.greeting', { lng: language }),
+    `${t('HandOver.portalAddress', { lng: language })} ${details.portalAddress}`,
+    `${t('HandOver.loginPhoneNumber', { lng: language })}${numberMark[directions[language]]} ${details.loginPhoneNumber}`,
+    `${t('HandOver.temporaryPassword', { lng: language })} ${details.temporaryPassword}`,
+    t('HandOver.choosePassword', { lng: language }),
   ].join('\n');
 }
 
