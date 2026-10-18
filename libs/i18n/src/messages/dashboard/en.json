@@ -28,10 +28,10 @@
     "label": "Map location",
     "optional": "Optional",
     "description": "The latitude and the longitude, as Google Maps shows a place’s, such as <example/>.",
-    "usePosition": "Use this phone’s position",
-    "finding": "Finding this phone’s position…",
+    "usePosition": "Use my position",
+    "finding": "Finding your position…",
     "notAllowed": "This browser was not allowed to give its position. Type the coordinates instead.",
-    "unavailable": "This phone’s position could not be found. Type the coordinates instead.",
+    "unavailable": "Your position could not be found. Type the coordinates instead.",
     "noPosition": "This browser cannot give a position. Type the coordinates instead.",
     "notCoordinates": "Write two numbers, the latitude first and then the longitude, with a comma between them."
   },

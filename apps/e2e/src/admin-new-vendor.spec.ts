@@ -97,7 +97,7 @@ test('the Admin opens the form from the Vendors list, with Erbil chosen as the c
 
   const vendor = aMadeUpVendorToType();
   await fillInTheForm(page, vendor);
-  await page.getByRole('button', { name: 'Use this phone’s position' }).click();
+  await page.getByRole('button', { name: 'Use my position' }).click();
   await expect(vendorFormField(page, 'Map location')).toHaveValue(
     `${inErbil.latitude}, ${inErbil.longitude}`,
   );
@@ -282,8 +282,8 @@ test('the form does not scroll sideways, and meets the automated part of WCAG 2.
   await expectAccessible(page);
 
   await context.setGeolocation(null);
-  await page.getByRole('button', { name: 'Use this phone’s position' }).click();
-  await expect(page.getByText('This phone’s position could not be found.')).toBeVisible();
+  await page.getByRole('button', { name: 'Use my position' }).click();
+  await expect(page.getByText('Your position could not be found.')).toBeVisible();
   await page.getByRole('button', { name: 'Create the Vendor' }).click();
   await expect(vendorFormField(page, 'Name')).toHaveAttribute('aria-invalid', 'true');
   await expectNoSidewaysScroll(page);
