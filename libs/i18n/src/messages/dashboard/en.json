@@ -7,10 +7,12 @@
     "logOut": "Log out",
     "opening": "Opening your portal…",
     "notOpened": "Your portal could not be opened.",
-    "noVendor": "No Vendor is behind this login, so the Vendor portal has nothing to show. Ask the Admin to check it."
+    "noVendor": "No Vendor is behind this login, so the Vendor portal has nothing to show. Ask the Admin to check it.",
+    "deactivated": "This Vendor is deactivated, so its portal cannot be opened. Ask the Admin to reactivate it."
   },
   "ActingAsVendor": {
     "actingAs": "You are acting as <name/>.",
+    "deactivated": "This Vendor is deactivated: it cannot log in, and Shoppers do not see it.",
     "back": "Back to the Admin console"
   },
   "NotAnswered": {

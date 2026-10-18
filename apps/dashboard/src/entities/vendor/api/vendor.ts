@@ -1,7 +1,7 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { useQuery } from '@tanstack/react-query';
 
-import { apiClient, dataOf } from '@/shared/api';
+import { apiClient, dataOf, Refusal } from '@/shared/api';
 
 // Every query about Vendors is under this key, so that a change to any Vendor
 // makes the next page of the list and the next Vendor's page ask the API
@@ -21,14 +21,24 @@ export function useVendor(vendorId: string) {
   });
 }
 
+// The key of the query about the Caller's own Vendor.
+export const callersVendorKey = [...vendorsKey, 'caller'] as const;
+
 // The Vendor whose Login the caller is, which the Vendor portal asks for when
 // it starts. A Login with no Vendor behind it is refused with
-// `VENDOR_NOT_FOUND`.
+// `VENDOR_NOT_FOUND`, and the Login of a deactivated Vendor with
+// `VENDOR_DEACTIVATED`.
 export function useCallersVendor() {
   return useQuery({
-    queryKey: [...vendorsKey, 'caller'],
+    queryKey: callersVendorKey,
     queryFn: () => dataOf(apiClient.readCallersVendor()),
   });
+}
+
+// Whether the API refused a call because the Caller's own Vendor is
+// deactivated, which it says at every Vendor endpoint, whatever the token.
+export function isRefusedAsDeactivated(error: unknown): boolean {
+  return error instanceof Refusal && error.code === 'VENDOR_DEACTIVATED';
 }
 
 // A city's key, such as `erbil`, as the API and the shared terms name it.

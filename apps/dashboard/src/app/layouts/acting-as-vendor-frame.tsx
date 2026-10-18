@@ -34,7 +34,13 @@ export function ActingAsVendorFrame() {
   return (
     <PortalFrame
       vendor={vendor}
-      band={<ActingBand vendorId={vendorId} name={vendor.data?.name} />}
+      band={
+        <ActingBand
+          vendorId={vendorId}
+          name={vendor.data?.name}
+          deactivated={vendor.data?.active === false}
+        />
+      }
     />
   );
 }
@@ -45,8 +51,17 @@ export function ActingAsVendorFrame() {
 // because the Vendor may be reading over the Admin's shoulder. It runs the
 // whole width, on a Shelf ground closed by a Rule Sand rule, so that it is
 // never taken for part of the Vendor's own portal, and its text is laid out
-// as the frame's is.
-function ActingBand({ vendorId, name }: { vendorId: string; name: string | undefined }) {
+// as the frame's is. The Admin may act as a deactivated Vendor, and the band
+// then says so, in a second sentence.
+function ActingBand({
+  vendorId,
+  name,
+  deactivated,
+}: {
+  vendorId: string;
+  name: string | undefined;
+  deactivated: boolean;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -58,6 +73,14 @@ function ActingBand({ vendorId, name }: { vendorId: string; name: string | undef
               i18nKey="ActingAsVendor.actingAs"
               components={{ name: <AsWritten>{name}</AsWritten> }}
             />
+            {deactivated && (
+              <>
+                {' '}
+                <span data-testid="acting-band-deactivated">
+                  {t('ActingAsVendor.deactivated')}
+                </span>
+              </>
+            )}
           </p>
         )}
         <Link
