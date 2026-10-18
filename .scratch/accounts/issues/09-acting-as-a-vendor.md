@@ -84,3 +84,14 @@ Each was taken the way the ticket or DESIGN.md pointed, and none blocks the modu
 - **The band's words**: "You are acting as …" and "Back to the Admin console", with Kurdish and Arabic that say "on behalf of". **My recommendation:** keep them, and read the Kurdish and the Arabic with the rest of LANG-7's review.
 - **Log out stays in the portal's top bar** while the Admin acts, and logs the Admin out, as the frame is the portal's own. **My recommendation:** keep it; the band's link is the way back, and the Login is the Admin's own.
 - **The link on a Vendor's page**: "Open its portal", outlined, below the Vendor's name. **My recommendation:** keep it.
+
+### 18 October 2026: the owner's decisions
+
+The four decisions were put to the owner on 18 October 2026, one at a time, each rendered in the built-in browser. The screens were captured from the real app, at 360 pixels wide, by a throwaway end-to-end test, deleted after. Each alternative was made by changing the page in that test, not the source, and laid beside the screen as built, in Kurdish and English.
+
+- **The band's look.** **A Shelf ground**, as built and as recommended. The owner saw it beside an Ink ground with Warm Page text, drawn as the primary button is.
+- **The band's words.** **"You are acting as …" and "Back to the Admin console"**, as built and as recommended. The owner saw them beside "The Admin is acting for …" and "Leave the portal", in Kurdish and English.
+- **Log out while acting.** **Kept**, as built and as recommended. The owner saw the top bar with Log out hidden beside it.
+- **The link on a Vendor's page.** **"Open its portal"**, as built and as recommended. The owner saw it beside "Act as this Vendor".
+
+Nothing changed in the code, so no check was run again.
