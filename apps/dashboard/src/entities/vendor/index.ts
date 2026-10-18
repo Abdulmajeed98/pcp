@@ -1,4 +1,4 @@
-export { type CityKey, useVendor, vendorsKey } from './api/vendor';
+export { cities, type CityKey, useVendor, vendorsKey } from './api/vendor';
 export { cityName } from './model/city';
 export { instagramHandleOf, instagramProfileOf } from './model/instagram';
 export { coordinatesOf, googleMapsSearchFor, mapLocationIn } from './model/map-location';

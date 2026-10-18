@@ -18,3 +18,7 @@ export function useVendor(vendorId: string) {
 
 // A city's key, such as `erbil`, as the API and the shared terms name it.
 export type CityKey = VendorResponse['city'];
+
+// The cities a Vendor may be in, by their keys, as the API's fixed set holds
+// them: Erbil alone.
+export const cities: readonly CityKey[] = ['erbil'];

@@ -2,8 +2,9 @@ import { cn } from 'cn';
 import type * as React from 'react';
 
 // shadcn/ui's textarea, in the Mira style, held to the root DESIGN.md as the
-// input is: at least 44 pixels high and growing with what is written in it,
-// body-size text, its edge in `input`, and a focus outline at full strength.
+// input is: at least 96 pixels high, room for three lines, and growing with
+// what is written in it, body-size text, its edge in `input`, and a focus
+// outline at full strength.
 function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
   return (
     <textarea

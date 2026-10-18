@@ -11,12 +11,11 @@ import { ListedVendors } from './listed-vendors';
 // order, a page at a time. The Admin console is in English only, so its text
 // is written here.
 //
-// A screen opened from it, a Vendor's page or the form for a new Vendor,
-// is its child. On a screen as
-// wide as a desk's, the list keeps the start side and the opened screen shows
-// beside it, as the Catalog lays out its list and a Part. On a phone the
-// opened screen takes the whole screen, and the list is not rendered at all,
-// so that it asks the API for nothing.
+// A screen opened from it, a Vendor's page or the form for a new Vendor, is
+// its child. On a screen as wide as a desk's, the list keeps the start side
+// and the opened screen shows beside it, as the Catalog lays out its list and
+// a Part. On a phone the opened screen takes the whole screen, and the list
+// is not rendered at all, so that it asks the API for nothing.
 export function VendorsPage() {
   const opened = useOutlet();
   const wide = useWideScreen();

@@ -3,7 +3,7 @@ import { formatNumber } from '@pcp/i18n';
 import type { ReactNode } from 'react';
 import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 
-import { cityName, MapLocationField } from '@/entities/vendor';
+import { cities, cityName, MapLocationField } from '@/entities/vendor';
 import { Refusal } from '@/shared/api';
 import {
   Alert,
@@ -30,10 +30,7 @@ import {
   type VendorFormValues,
   vendorRequestOf,
 } from '../model/form-values';
-import { detailOf, messageOf, whyNotSaved } from '../model/refusals';
-
-// The cities a Vendor may be in, by their keys, as the API's set holds them.
-const cities = ['erbil'] as const;
+import { detailOf, messageOf, missingDetailMessages, whyNotSaved } from '../model/refusals';
 
 // A Vendor's form, in the Admin console's English: every detail of a Vendor,
 // in three groups, what the Vendor is, its contact details and its Login,
@@ -59,8 +56,8 @@ export function VendorForm({
     });
   const { errors } = formState;
   const refusal = errors.root?.refusal?.message;
-  const required = (message: string) => ({
-    validate: (text: string) => text.trim() !== '' || message,
+  const required = (detail: keyof typeof missingDetailMessages) => ({
+    validate: (text: string) => text.trim() !== '' || missingDetailMessages[detail],
   });
 
   async function submit(values: VendorFormValues): Promise<void> {
@@ -72,13 +69,15 @@ export function VendorForm({
   }
 
   function showWhyNot(error: unknown): void {
-    const onTheForm = error instanceof Refusal ? error.errors.filter(detailOf) : [];
-    for (const [index, each] of onTheForm.entries()) {
-      setError(
-        detailOf(each) ?? 'name',
-        { message: messageOf(each) },
-        { shouldFocus: index === 0 },
-      );
+    const onTheForm =
+      error instanceof Refusal
+        ? error.errors.flatMap((each) => {
+            const detail = detailOf(each);
+            return detail === undefined ? [] : [{ detail, message: messageOf(each) }];
+          })
+        : [];
+    for (const [index, { detail, message }] of onTheForm.entries()) {
+      setError(detail, { message }, { shouldFocus: index === 0 });
     }
     if (onTheForm.length === 0) setError('root.refusal', { message: whyNotSaved(error) });
   }
@@ -95,7 +94,7 @@ export function VendorForm({
       <FieldSet>
         <FieldLegend>The Vendor</FieldLegend>
         <FieldGroup className="grid sm:grid-cols-2 sm:gap-x-6">
-          <TextField
+          <DetailField
             name="name"
             label="Name"
             errors={errors}
@@ -107,11 +106,11 @@ export function VendorForm({
                 dir="auto"
                 autoComplete="off"
                 {...props}
-                {...register('name', required('Give the Vendor its name.'))}
+                {...register('name', required('name'))}
               />
             )}
-          </TextField>
-          <TextField name="city" label="City" errors={errors}>
+          </DetailField>
+          <DetailField name="city" label="City" errors={errors}>
             {(props) => (
               <NativeSelect className="w-full" {...props} {...register('city')}>
                 {cities.map((city) => (
@@ -121,7 +120,7 @@ export function VendorForm({
                 ))}
               </NativeSelect>
             )}
-          </TextField>
+          </DetailField>
         </FieldGroup>
       </FieldSet>
 
@@ -131,7 +130,7 @@ export function VendorForm({
           The Vendor may change these itself, from its portal.
         </FieldDescription>
         <FieldGroup className="grid items-start sm:grid-cols-2 sm:gap-x-6">
-          <TextField
+          <DetailField
             name="address"
             label="Address"
             errors={errors}
@@ -142,10 +141,10 @@ export function VendorForm({
               <Textarea
                 dir="auto"
                 {...props}
-                {...register('address', required('Give the Vendor’s address.'))}
+                {...register('address', required('address'))}
               />
             )}
-          </TextField>
+          </DetailField>
           <div className="sm:col-span-2">
             <MapLocationField
               control={control}
@@ -153,7 +152,7 @@ export function VendorForm({
               id="vendor-mapLocation"
             />
           </div>
-          <TextField
+          <DetailField
             name="phoneNumber"
             label="Phone number"
             errors={errors}
@@ -162,14 +161,11 @@ export function VendorForm({
             {(props) => (
               <PhoneInput
                 {...props}
-                registered={register(
-                  'phoneNumber',
-                  required('Give the Vendor’s phone number.'),
-                )}
+                registered={register('phoneNumber', required('phoneNumber'))}
               />
             )}
-          </TextField>
-          <TextField
+          </DetailField>
+          <DetailField
             name="whatsAppNumber"
             label="WhatsApp number"
             optional
@@ -177,8 +173,8 @@ export function VendorForm({
             description="A mobile number."
           >
             {(props) => <PhoneInput {...props} registered={register('whatsAppNumber')} />}
-          </TextField>
-          <TextField
+          </DetailField>
+          <DetailField
             name="instagramName"
             label="Instagram name"
             optional
@@ -195,8 +191,8 @@ export function VendorForm({
                 {...register('instagramName')}
               />
             )}
-          </TextField>
-          <TextField
+          </DetailField>
+          <DetailField
             name="openingHours"
             label="Opening hours"
             optional
@@ -205,14 +201,14 @@ export function VendorForm({
             className="sm:col-span-2"
           >
             {(props) => <Textarea dir="auto" {...props} {...register('openingHours')} />}
-          </TextField>
+          </DetailField>
         </FieldGroup>
       </FieldSet>
 
       <FieldSet>
         <FieldLegend>Its Login</FieldLegend>
         <FieldGroup className="grid sm:grid-cols-2 sm:gap-x-6">
-          <TextField
+          <DetailField
             name="loginPhoneNumber"
             label="Login phone number"
             errors={errors}
@@ -221,13 +217,10 @@ export function VendorForm({
             {(props) => (
               <PhoneInput
                 {...props}
-                registered={register(
-                  'loginPhoneNumber',
-                  required('Give the phone number the Vendor will log in with.'),
-                )}
+                registered={register('loginPhoneNumber', required('loginPhoneNumber'))}
               />
             )}
-          </TextField>
+          </DetailField>
         </FieldGroup>
       </FieldSet>
 
@@ -248,7 +241,7 @@ interface ControlProps {
 // One detail of the Vendor: its label, marked when it is optional, its
 // control, what the form says about it, and its error, all of which the
 // control names as its description.
-function TextField({
+function DetailField({
   name,
   label,
   optional = false,

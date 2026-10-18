@@ -5,20 +5,30 @@ import { Refusal } from '@/shared/api';
 
 import { longest, type VendorFormValues } from './form-values';
 
+// What the Admin is told beside a required detail left empty. The form says
+// it before it sends anything, and the API says the same when it refuses a
+// missing detail.
+export const missingDetailMessages = {
+  name: 'Give the Vendor its name.',
+  address: 'Give the Vendor’s address.',
+  phoneNumber: 'Give the Vendor’s phone number.',
+  loginPhoneNumber: 'Give the phone number the Vendor will log in with.',
+} as const;
+
 // What the Admin is told beside a detail the API refused, by the detail and
 // the reason the API gave: every reason ticket 02 of `accounts` lists. The
 // API names the first detail that does not fit.
 const reasons: Record<string, string> = {
-  'name:missing': 'Give the Vendor its name.',
+  'name:missing': missingDetailMessages.name,
   'name:tooLong': `The name is over ${formatNumber(longest.name)} characters.`,
   'city:missing': 'Choose the Vendor’s city.',
   'city:notInTheSet': 'Choose one of the listed cities.',
-  'address:missing': 'Give the Vendor’s address.',
+  'address:missing': missingDetailMessages.address,
   'address:tooLong': `The address is over ${formatNumber(longest.address)} characters.`,
   'mapLocation:missing': 'Give both the latitude and the longitude, or neither.',
   'mapLocation:outsideIraq':
     'This place is outside Iraq. Check that the latitude comes first, before the longitude.',
-  'phoneNumber:missing': 'Give the Vendor’s phone number.',
+  'phoneNumber:missing': missingDetailMessages.phoneNumber,
   'phoneNumber:notIraqi': 'This is not an Iraqi phone number. Check its digits.',
   'whatsAppNumber:notIraqi': 'This is not an Iraqi phone number. Check its digits.',
   'whatsAppNumber:notMobile': 'This is a landline. WhatsApp needs a mobile number.',
@@ -26,7 +36,7 @@ const reasons: Record<string, string> = {
     'An Instagram name holds only the letters a to z, digits, dots and underscores.',
   'instagramName:tooLong': `An Instagram name is at most ${formatNumber(longest.instagramName)} characters.`,
   'openingHours:tooLong': `The opening hours are over ${formatNumber(longest.openingHours)} characters.`,
-  'loginPhoneNumber:missing': 'Give the phone number the Vendor will log in with.',
+  'loginPhoneNumber:missing': missingDetailMessages.loginPhoneNumber,
   'loginPhoneNumber:notIraqi': 'This is not an Iraqi phone number. Check its digits.',
   'loginPhoneNumber:notMobile':
     'This is a landline. A Vendor logs in with a mobile number, which WhatsApp reaches.',
