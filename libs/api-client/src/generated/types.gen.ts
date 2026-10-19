@@ -511,6 +511,64 @@ export type PasswordResetResponse = {
     temporaryPassword: string;
 };
 
+export type CreateOfferRequest = {
+    /**
+     * The identifier of the Part offered, any Part in the catalog.
+     */
+    partId: string;
+    /**
+     * The Quoted Price in USD, as a decimal number in Western digits, with at most two decimal places, more than 0 and at most 100000.00. It or the IQD price, or both, must be given.
+     */
+    usdPrice?: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, more than 0 and at most 150000000. It or the USD price, or both, must be given.
+     */
+    iqdPrice?: number | null;
+    /**
+     * Whether the Vendor has the Part in stock now.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months from 1 to 120, or null when the Vendor states none.
+     */
+    warrantyMonths?: number | null;
+};
+
+export type OfferResponse = {
+    /**
+     * The Offer's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part offered.
+     */
+    part: PartSummaryResponse;
+    /**
+     * The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor last confirmed the Offer.
+     */
+    confirmedAt: string;
+    /**
+     * When the Offer was added.
+     */
+    createdAt: string;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -957,3 +1015,52 @@ export type ReadCallersVendorResponses = {
 };
 
 export type ReadCallersVendorResponse = ReadCallersVendorResponses[keyof ReadCallersVendorResponses];
+
+export type CreateOfferData = {
+    body: CreateOfferRequest;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/offers';
+};
+
+export type CreateOfferErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type CreateOfferError = CreateOfferErrors[keyof CreateOfferErrors];
+
+export type CreateOfferResponses = {
+    201: OfferResponse;
+};
+
+export type CreateOfferResponse = CreateOfferResponses[keyof CreateOfferResponses];
+
+export type ReadOfferData = {
+    body?: never;
+    path: {
+        vendorId: string;
+        offerId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/offers/{offerId}';
+};
+
+export type ReadOfferErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadOfferError = ReadOfferErrors[keyof ReadOfferErrors];
+
+export type ReadOfferResponses = {
+    200: OfferResponse;
+};
+
+export type ReadOfferResponse = ReadOfferResponses[keyof ReadOfferResponses];

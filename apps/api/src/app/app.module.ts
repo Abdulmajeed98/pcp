@@ -7,6 +7,7 @@ import { CallerModule } from '~/infrastructure/caller/caller.module';
 import { CategoryModule } from '~/infrastructure/category/category.module';
 import { validate } from '~/infrastructure/configuration/env.validation';
 import { DatabaseModule } from '~/infrastructure/database/database.module';
+import { OfferModule } from '~/infrastructure/offer/offer.module';
 import { PartModule } from '~/infrastructure/part/part.module';
 import { StatusModule } from '~/infrastructure/status/status.module';
 import { VendorModule } from '~/infrastructure/vendor/vendor.module';
@@ -26,6 +27,7 @@ import { VendorModule } from '~/infrastructure/vendor/vendor.module';
     CategoryModule,
     PartModule,
     VendorModule,
+    OfferModule,
   ],
 })
 export class AppModule {}

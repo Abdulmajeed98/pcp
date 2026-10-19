@@ -47,6 +47,37 @@ async function inTheDatabase(statement: string): Promise<void> {
   }
 }
 
+// A row of the Offer history, as the database holds it.
+export type OfferHistoryRow = {
+  changedAt: Date;
+  vendorId: string;
+  partId: string;
+  change: string;
+  usdPriceCents: number | null;
+  iqdPrice: number | null;
+  inStock: boolean;
+  changedBy: string;
+};
+
+// Every row of the Offer history, oldest first. Nothing in the API answers
+// the history, so this is the one thing a test reads from the database
+// rather than through the API.
+export async function offerHistoryRows(): Promise<OfferHistoryRow[]> {
+  const client = new Client(connectionOf(testDatabaseSettings()));
+  await client.connect();
+  try {
+    const { rows } = await client.query<OfferHistoryRow>(
+      `SELECT changed_at AS "changedAt", vendor_id AS "vendorId", part_id AS "partId",
+              change, usd_price_cents AS "usdPriceCents", iqd_price AS "iqdPrice",
+              in_stock AS "inStock", changed_by AS "changedBy"
+         FROM offer_history ORDER BY changed_at, id`,
+    );
+    return rows;
+  } finally {
+    await client.end();
+  }
+}
+
 // A fault planted in the database for as long as the function runs: a rule
 // that no Vendor meets, checked when a Vendor is stored and not against
 // those stored already, so that creating or editing one is refused.

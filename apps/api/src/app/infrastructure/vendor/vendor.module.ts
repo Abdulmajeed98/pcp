@@ -33,5 +33,8 @@ import { DatabaseVendorStore } from './store/DatabaseVendorStore';
     ResetVendorPasswordCommand,
     VendorAccessRule,
   ],
+  // Every Vendor portal endpoint, those of other modules among them, decides
+  // by the rule for which Vendor a request acts for.
+  exports: [VendorAccessRule],
 })
 export class VendorModule {}

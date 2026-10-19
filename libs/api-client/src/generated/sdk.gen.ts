@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -194,5 +194,27 @@ export const reactivateVendor = <ThrowOnError extends boolean = false>(options: 
 export const readCallersVendor = <ThrowOnError extends boolean = false>(options?: Options<ReadCallersVendorData, ThrowOnError>): RequestResult<ReadCallersVendorResponses, ReadCallersVendorErrors, ThrowOnError> => (options?.client ?? client).get<ReadCallersVendorResponses, ReadCallersVendorErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/caller/vendor',
+    ...options
+});
+
+/**
+ * Add a Vendor's Offer for a Part, which is its first Confirmation, for the Admin or for the Vendor's own Login
+ */
+export const createOffer = <ThrowOnError extends boolean = false>(options: Options<CreateOfferData, ThrowOnError>): RequestResult<CreateOfferResponses, CreateOfferErrors, ThrowOnError> => (options.client ?? client).post<CreateOfferResponses, CreateOfferErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/offers',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login
+ */
+export const readOffer = <ThrowOnError extends boolean = false>(options: Options<ReadOfferData, ThrowOnError>): RequestResult<ReadOfferResponses, ReadOfferErrors, ThrowOnError> => (options.client ?? client).get<ReadOfferResponses, ReadOfferErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/offers/{offerId}',
     ...options
 });

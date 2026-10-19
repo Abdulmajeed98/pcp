@@ -23,5 +23,7 @@ import { DatabasePartStore } from './store/DatabasePartStore';
     SearchPartsQuery,
     AddPartPhotoCommand,
   ],
+  // For the modules that refer to Parts, such as Offers.
+  exports: [PartStore],
 })
 export class PartModule {}
