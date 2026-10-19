@@ -9,6 +9,7 @@ import {
   CreateLoginParams,
   LoginStore,
   RenameLoginParams,
+  SetTemporaryPasswordParams,
 } from '~/domain/login/LoginStore';
 import { EnvironmentVariables } from '~/infrastructure/configuration/env.validation';
 
@@ -135,16 +136,20 @@ export class KeycloakLoginStore implements LoginStore {
   }
 
   async setTemporaryPassword(
-    loginId: string,
-    temporaryPassword: string,
+    params: SetTemporaryPasswordParams,
   ): Promise<Either.Either<void, StructuredError>> {
+    const loginId = params.getLoginId();
     try {
       const administration = await this.logIn();
       // A temporary password makes Keycloak require the Login to replace it
       // again, as when the Login was made. Keycloak leaves its sessions open.
       await administration.users.resetPassword({
         id: loginId,
-        credential: { type: 'password', value: temporaryPassword, temporary: true },
+        credential: {
+          type: 'password',
+          value: params.getTemporaryPassword(),
+          temporary: true,
+        },
       });
       return Either.right(undefined);
     } catch (error) {

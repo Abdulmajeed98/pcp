@@ -38,6 +38,22 @@ export class RenameLoginParams {
   }
 }
 
+// A new temporary password for a Login.
+export class SetTemporaryPasswordParams {
+  constructor(
+    private readonly loginId: string,
+    private readonly temporaryPassword: string,
+  ) {}
+
+  getLoginId(): string {
+    return this.loginId;
+  }
+
+  getTemporaryPassword(): string {
+    return this.temporaryPassword;
+  }
+}
+
 // Where Logins are kept: the identity service. It is the port, and
 // infrastructure provides it over Keycloak's administration interface.
 //
@@ -63,8 +79,7 @@ export abstract class LoginStore {
   // Replaces the password of the Login with this identifier with a temporary
   // one, which it has to replace at its next login. Its sessions stay open.
   abstract setTemporaryPassword(
-    loginId: string,
-    temporaryPassword: string,
+    params: SetTemporaryPasswordParams,
   ): Promise<Either.Either<void, StructuredError>>;
 
   // Stops the Login with this identifier logging in, or lets it log in again

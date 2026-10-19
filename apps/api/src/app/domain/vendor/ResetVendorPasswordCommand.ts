@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
-import { LoginStore } from '../login/LoginStore';
+import { LoginStore, SetTemporaryPasswordParams } from '../login/LoginStore';
 import { makeTemporaryPassword } from '../login/temporary-password';
 import { existingVendor } from './existing-vendor';
 import { VendorStore } from './VendorStore';
@@ -58,7 +58,9 @@ export class ResetVendorPasswordCommand {
     if (Either.isLeft(ended)) return Either.left(ended.left);
 
     const temporaryPassword = makeTemporaryPassword();
-    const given = await this.loginStore.setTemporaryPassword(loginId, temporaryPassword);
+    const given = await this.loginStore.setTemporaryPassword(
+      new SetTemporaryPasswordParams(loginId, temporaryPassword),
+    );
     if (Either.isLeft(given)) return Either.left(given.left);
 
     return Either.right(Output.of(temporaryPassword));
