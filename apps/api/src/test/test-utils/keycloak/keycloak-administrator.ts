@@ -164,6 +164,43 @@ export async function logInAt(name: string, password: string): Promise<TokenAnsw
   return { status: response.status, body: (await response.json()) as TokenAnswer['body'] };
 }
 
+// What Keycloak's account interface answered.
+export type AccountAnswer = { status: number; body: unknown };
+
+// Asks Keycloak's account interface, as the Login itself, logged in at the
+// token address with its name and its lasting password, to change the
+// Login's name, as its account pages would send the change.
+export async function renameItselfInItsAccount(
+  name: string,
+  password: string,
+  newName: string,
+): Promise<AccountAnswer> {
+  const login = await logInAt(name, password);
+  if (login.body.access_token === undefined) {
+    throw new Error(`The Login ${name} could not log in (${login.status})`);
+  }
+  const account = `${testKeycloakSettings().url}/realms/${realm}/account/`;
+  const headers = {
+    authorization: `Bearer ${login.body.access_token}`,
+    accept: 'application/json',
+    'content-type': 'application/json',
+  };
+
+  const read = await fetch(account, { headers });
+  if (!read.ok) throw new Error(`The account interface answered ${read.status}`);
+  const asKept = (await read.json()) as Record<string, unknown>;
+  const changed = await fetch(account, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ ...asKept, username: newName }),
+  });
+  const text = await changed.text();
+  return {
+    status: changed.status,
+    body: text === '' ? null : (JSON.parse(text) as unknown),
+  };
+}
+
 // The test's Keycloak container, paused while the function runs and then let
 // go again, whatever the function did. A paused Keycloak takes connections
 // and answers none, as one that has stopped responding does.

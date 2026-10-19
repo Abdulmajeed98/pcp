@@ -19,6 +19,7 @@ import {
   DeactivateVendorCommandInput,
 } from '~/domain/vendor/DeactivateVendorCommand';
 import { EditContactDetailsCommand } from '~/domain/vendor/EditContactDetailsCommand';
+import { EditVendorCommand } from '~/domain/vendor/EditVendorCommand';
 import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
 import {
   ReadCallersVendorQuery,
@@ -37,6 +38,7 @@ import {
 import { CreatedVendorResponse } from './CreatedVendorResponse';
 import { CreateVendorRequest } from './CreateVendorRequest';
 import { EditContactDetailsRequest } from './EditContactDetailsRequest';
+import { EditVendorRequest } from './EditVendorRequest';
 import { ListVendorsRequest } from './ListVendorsRequest';
 import { PasswordResetResponse } from './PasswordResetResponse';
 import { VendorPageResponse } from './VendorPageResponse';
@@ -50,6 +52,7 @@ export class VendorController {
     private readonly readVendorQuery: ReadVendorQuery,
     private readonly readCallersVendorQuery: ReadCallersVendorQuery,
     private readonly editContactDetailsCommand: EditContactDetailsCommand,
+    private readonly editVendorCommand: EditVendorCommand,
     private readonly resetVendorPasswordCommand: ResetVendorPasswordCommand,
     private readonly deactivateVendorCommand: DeactivateVendorCommand,
     private readonly reactivateVendorCommand: ReactivateVendorCommand,
@@ -98,6 +101,25 @@ export class VendorController {
     const result = await this.readVendorQuery.execute(
       new ReadVendorQueryInput(caller.getId(), caller.getRoles(), vendorId),
     );
+
+    return result.pipe(
+      Either.map((output) => VendorResponse.of(output.getVendor())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Replace every detail of a Vendor, its name, its city and its login phone number among them, renaming its Login to a new login phone number',
+  })
+  @ApiOkResponse({ type: VendorResponse })
+  @PreAuthorize([Role.ADMIN])
+  @Put('v1/vendors/:vendorId')
+  async editVendor(
+    @Param('vendorId') vendorId: string,
+    @Body() request: EditVendorRequest,
+  ): Promise<VendorResponse> {
+    const result = await this.editVendorCommand.execute(request.toCommandInput(vendorId));
 
     return result.pipe(
       Either.map((output) => VendorResponse.of(output.getVendor())),

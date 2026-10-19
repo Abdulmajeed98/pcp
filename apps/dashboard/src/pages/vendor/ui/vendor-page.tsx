@@ -1,5 +1,6 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
+import { PencilIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
@@ -37,11 +38,11 @@ import {
 // every language, and are kept apart from the text around them. Its map
 // location opens Google Maps' search for its coordinates, and its Instagram
 // name, written with an @ as Instagram writes a handle, opens its profile,
-// each in a new tab, so that the Admin console stays where it was. A link
-// below its name opens the Vendor's portal, for the Admin to act as it, and
-// a button below that resets the Vendor's password, after which the screen
-// shows the new temporary password, this once, and the hand-over. Below
-// that the Admin deactivates or reactivates it.
+// each in a new tab, so that the Admin console stays where it was. Links
+// below its name open its edit form and the Vendor's portal, for the
+// Admin to act as it, beside a button that resets the Vendor's password,
+// after which the screen shows the new temporary password, this once, and
+// the hand-over. Below them the Admin deactivates or reactivates it.
 export function VendorPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
@@ -85,17 +86,26 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
         <h1 className="text-xl font-semibold sm:text-2xl">
           <AsWritten>{vendor.name}</AsWritten>
         </h1>
-        <Link
-          to={`/vendors/${vendor.id}/portal`}
-          className={buttonVariants({ variant: 'outline', className: 'self-start' })}
-        >
-          Open its portal
-        </Link>
-        <ResetPassword
-          vendorId={vendor.id}
-          vendorName={vendor.name}
-          onReset={setResetPassword}
-        />
+        <div className="flex flex-wrap items-start gap-2">
+          <Link
+            to={keepingTheQuery(`/vendors/${vendor.id}/edit`)}
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            <PencilIcon data-icon="inline-start" aria-hidden="true" />
+            Edit
+          </Link>
+          <Link
+            to={`/vendors/${vendor.id}/portal`}
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            Open its portal
+          </Link>
+          <ResetPassword
+            vendorId={vendor.id}
+            vendorName={vendor.name}
+            onReset={setResetPassword}
+          />
+        </div>
         {/* Its own for each Vendor, so that one Vendor's refusal is never shown on another's page. */}
         <VendorActivation key={vendor.id} vendor={vendor} />
       </div>

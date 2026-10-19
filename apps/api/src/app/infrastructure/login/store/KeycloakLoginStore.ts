@@ -5,7 +5,11 @@ import { Role, ServerError, StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
 import { identityServiceUnavailable, loginNameTaken } from '~/domain/login/login-errors';
-import { CreateLoginParams, LoginStore } from '~/domain/login/LoginStore';
+import {
+  CreateLoginParams,
+  LoginStore,
+  RenameLoginParams,
+} from '~/domain/login/LoginStore';
 import { EnvironmentVariables } from '~/infrastructure/configuration/env.validation';
 
 // How long a call to Keycloak is waited for. One that does not answer, such
@@ -90,6 +94,33 @@ export class KeycloakLoginStore implements LoginStore {
     }
 
     return Either.right(loginId);
+  }
+
+  // Keycloak renames a Login only while the realm lets names be edited, and
+  // its user profile lets only `admin` edit one, which the API's client is.
+  // An update changes only what it sends, so the Login keeps its password,
+  // its roles and its required actions.
+  async rename(params: RenameLoginParams): Promise<Either.Either<void, StructuredError>> {
+    try {
+      const administration = await this.logIn();
+      await administration.users.update(
+        { id: params.getLoginId() },
+        { username: params.getName() },
+      );
+      return Either.right(undefined);
+    } catch (error) {
+      if (error instanceof NetworkError && error.response.status === conflict) {
+        return Either.left(loginNameTaken(params.getName()));
+      }
+      // A call that was given up on may have been carried out all the same.
+      this.logger.error(
+        error,
+        `The Login ${params.getLoginId()} could not be renamed ${params.getName()}`,
+      );
+      return Either.left(
+        failureOf(error, `The Login ${params.getLoginId()} could not be renamed`),
+      );
+    }
   }
 
   async delete(loginId: string): Promise<Either.Either<void, StructuredError>> {

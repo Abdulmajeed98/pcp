@@ -5,6 +5,7 @@ import { PhoneNumber } from '../phone-number/PhoneNumber';
 import { City } from './City';
 import { ContactDetails } from './ContactDetails';
 import { Vendor } from './Vendor';
+import { VendorDetails } from './VendorDetails';
 
 export class CreateVendorParams {
   constructor(
@@ -33,6 +34,21 @@ export class CreateVendorParams {
 
   getLoginId(): string {
     return this.loginId;
+  }
+}
+
+export class EditVendorParams {
+  constructor(
+    private readonly vendorId: string,
+    private readonly details: VendorDetails,
+  ) {}
+
+  getVendorId(): string {
+    return this.vendorId;
+  }
+
+  getDetails(): VendorDetails {
+    return this.details;
   }
 }
 
@@ -82,6 +98,14 @@ export abstract class VendorStore {
   abstract list(
     pageable: PageableAttributes,
   ): Promise<Either.Either<VendorsPage, StructuredError>>;
+
+  // Replaces every detail of the Vendor with this identifier, its name, its
+  // city and its login phone number among them, and gives it back as it now
+  // is, or none when there is no such Vendor. Two Vendors never share a
+  // login phone number.
+  abstract edit(
+    params: EditVendorParams,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>>;
 
   // Replaces the contact details of the Vendor with this identifier, and
   // gives it back as it now is, or none when there is no such Vendor.

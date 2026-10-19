@@ -7,6 +7,7 @@ export type {
   CreateVendorRequest,
   EditContactDetailsRequest,
   EditPartRequest,
+  EditVendorRequest,
   ErrorResponse,
   MapLocationResponse,
   PartPageResponse,

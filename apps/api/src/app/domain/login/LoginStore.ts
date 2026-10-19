@@ -22,6 +22,22 @@ export class CreateLoginParams {
   }
 }
 
+// A new name for a Login.
+export class RenameLoginParams {
+  constructor(
+    private readonly loginId: string,
+    private readonly name: string,
+  ) {}
+
+  getLoginId(): string {
+    return this.loginId;
+  }
+
+  getName(): string {
+    return this.name;
+  }
+}
+
 // Where Logins are kept: the identity service. It is the port, and
 // infrastructure provides it over Keycloak's administration interface.
 //
@@ -35,6 +51,11 @@ export abstract class LoginStore {
   abstract create(
     params: CreateLoginParams,
   ): Promise<Either.Either<string, StructuredError>>;
+
+  // Gives the Login with this identifier a new name. Its password, its roles
+  // and whether it may log in stay as they were. A name another Login holds
+  // fails with the error `isLoginNameTaken` knows, and nothing is changed.
+  abstract rename(params: RenameLoginParams): Promise<Either.Either<void, StructuredError>>;
 
   // Deletes the Login with this identifier.
   abstract delete(loginId: string): Promise<Either.Either<void, StructuredError>>;

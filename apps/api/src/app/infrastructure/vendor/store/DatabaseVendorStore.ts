@@ -17,6 +17,7 @@ import { Vendor } from '~/domain/vendor/Vendor';
 import {
   CreateVendorParams,
   EditContactDetailsParams,
+  EditVendorParams,
   VendorsPage,
   VendorStore,
 } from '~/domain/vendor/VendorStore';
@@ -174,6 +175,34 @@ export class DatabaseVendorStore implements VendorStore {
     } catch (error) {
       this.logger.error(error, 'The Vendors could not be listed');
       return Either.left(databaseErrorOf(error, 'The Vendors could not be listed'));
+    }
+  }
+
+  async edit(
+    params: EditVendorParams,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
+    const id = params.getVendorId();
+    if (!couldBeIdentifier(id)) return Either.right(Option.none());
+    const details = params.getDetails();
+
+    try {
+      const [row] = await this.databaseProvider
+        .getClient()
+        .update(vendor)
+        .set({
+          name: details.getName(),
+          city: details.getCity().getKey(),
+          ...contactDetailsColumns(details.getContactDetails()),
+          loginPhoneNumber: details.getLoginPhoneNumber().getInternational(),
+        })
+        .where(eq(vendor.id, id))
+        .returning();
+
+      if (row === undefined) return Either.right(Option.none());
+      return Either.map(toDomain(row), Option.some);
+    } catch (error) {
+      this.logger.error(error, 'A Vendor could not be edited');
+      return Either.left(databaseErrorOf(error, 'A Vendor could not be edited'));
     }
   }
 
