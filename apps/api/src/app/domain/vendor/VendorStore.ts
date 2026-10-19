@@ -2,34 +2,19 @@ import { PageableAttributes, PageAttributes, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
 import { PhoneNumber } from '../phone-number/PhoneNumber';
-import { City } from './City';
 import { ContactDetails } from './ContactDetails';
 import { Vendor } from './Vendor';
 import { VendorDetails } from './VendorDetails';
 
+// A new Vendor: every detail of it, and the identifier of its Login.
 export class CreateVendorParams {
   constructor(
-    private readonly name: string,
-    private readonly city: City,
-    private readonly contactDetails: ContactDetails,
-    private readonly loginPhoneNumber: PhoneNumber,
+    private readonly details: VendorDetails,
     private readonly loginId: string,
   ) {}
 
-  getName(): string {
-    return this.name;
-  }
-
-  getCity(): City {
-    return this.city;
-  }
-
-  getContactDetails(): ContactDetails {
-    return this.contactDetails;
-  }
-
-  getLoginPhoneNumber(): PhoneNumber {
-    return this.loginPhoneNumber;
+  getDetails(): VendorDetails {
+    return this.details;
   }
 
   getLoginId(): string {

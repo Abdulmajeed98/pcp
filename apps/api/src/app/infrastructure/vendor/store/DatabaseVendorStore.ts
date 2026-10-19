@@ -14,6 +14,7 @@ import { City } from '~/domain/vendor/City';
 import { ContactDetails } from '~/domain/vendor/ContactDetails';
 import { MapLocation } from '~/domain/vendor/MapLocation';
 import { Vendor } from '~/domain/vendor/Vendor';
+import { VendorDetails } from '~/domain/vendor/VendorDetails';
 import {
   CreateVendorParams,
   EditContactDetailsParams,
@@ -25,6 +26,9 @@ import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 
 import { vendor, VendorRow } from '../vendor.schema';
+
+// A change to a Vendor's row: the columns it sets.
+type VendorChange = Partial<typeof vendor.$inferInsert>;
 
 // A stored phone number as the domain's, or a server error naming the Vendor
 // and the detail.
@@ -117,6 +121,16 @@ function contactDetailsColumns(contactDetails: ContactDetails) {
   };
 }
 
+// Every detail of a Vendor as the columns that hold them.
+function detailsColumns(details: VendorDetails) {
+  return {
+    name: details.getName(),
+    city: details.getCity().getKey(),
+    ...contactDetailsColumns(details.getContactDetails()),
+    loginPhoneNumber: details.getLoginPhoneNumber().getInternational(),
+  };
+}
+
 @Injectable()
 export class DatabaseVendorStore implements VendorStore {
   private readonly logger = new Logger(DatabaseVendorStore.name);
@@ -130,13 +144,7 @@ export class DatabaseVendorStore implements VendorStore {
       const [row] = await this.databaseProvider
         .getClient()
         .insert(vendor)
-        .values({
-          name: params.getName(),
-          city: params.getCity().getKey(),
-          ...contactDetailsColumns(params.getContactDetails()),
-          loginPhoneNumber: params.getLoginPhoneNumber().getInternational(),
-          loginId: params.getLoginId(),
-        })
+        .values({ ...detailsColumns(params.getDetails()), loginId: params.getLoginId() })
         .returning();
 
       return toDomain(row);
@@ -183,27 +191,12 @@ export class DatabaseVendorStore implements VendorStore {
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
     const id = params.getVendorId();
     if (!couldBeIdentifier(id)) return Either.right(Option.none());
-    const details = params.getDetails();
 
-    try {
-      const [row] = await this.databaseProvider
-        .getClient()
-        .update(vendor)
-        .set({
-          name: details.getName(),
-          city: details.getCity().getKey(),
-          ...contactDetailsColumns(details.getContactDetails()),
-          loginPhoneNumber: details.getLoginPhoneNumber().getInternational(),
-        })
-        .where(eq(vendor.id, id))
-        .returning();
-
-      if (row === undefined) return Either.right(Option.none());
-      return Either.map(toDomain(row), Option.some);
-    } catch (error) {
-      this.logger.error(error, 'A Vendor could not be edited');
-      return Either.left(databaseErrorOf(error, 'A Vendor could not be edited'));
-    }
+    return this.updateOneWhere(
+      eq(vendor.id, id),
+      detailsColumns(params.getDetails()),
+      'A Vendor could not be edited',
+    );
   }
 
   async editContactDetails(
@@ -212,34 +205,23 @@ export class DatabaseVendorStore implements VendorStore {
     const id = params.getVendorId();
     if (!couldBeIdentifier(id)) return Either.right(Option.none());
 
-    try {
-      const [row] = await this.databaseProvider
-        .getClient()
-        .update(vendor)
-        .set(contactDetailsColumns(params.getContactDetails()))
-        .where(eq(vendor.id, id))
-        .returning();
-
-      if (row === undefined) return Either.right(Option.none());
-      return Either.map(toDomain(row), Option.some);
-    } catch (error) {
-      this.logger.error(error, "A Vendor's contact details could not be changed");
-      return Either.left(
-        databaseErrorOf(error, "A Vendor's contact details could not be changed"),
-      );
-    }
+    return this.updateOneWhere(
+      eq(vendor.id, id),
+      contactDetailsColumns(params.getContactDetails()),
+      "A Vendor's contact details could not be changed",
+    );
   }
 
   async markDeactivated(
     vendorId: string,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
-    return this.markActiveOrNot(vendorId, false);
+    return this.storeWhetherActive(vendorId, false);
   }
 
   async markActive(
     vendorId: string,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
-    return this.markActiveOrNot(vendorId, true);
+    return this.storeWhetherActive(vendorId, true);
   }
 
   async readById(
@@ -266,27 +248,41 @@ export class DatabaseVendorStore implements VendorStore {
     );
   }
 
-  private async markActiveOrNot(
+  // Stores whether the Vendor with this identifier is active.
+  private async storeWhetherActive(
     vendorId: string,
     active: boolean,
   ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
     if (!couldBeIdentifier(vendorId)) return Either.right(Option.none());
 
+    return this.updateOneWhere(
+      eq(vendor.id, vendorId),
+      { active },
+      'A Vendor could not be marked active or deactivated',
+    );
+  }
+
+  // Changes the one Vendor the condition finds, and gives it back as it now
+  // is, or none when there is no such Vendor. A failure is logged and
+  // answered with the message given.
+  private async updateOneWhere(
+    where: SQL,
+    change: VendorChange,
+    failure: string,
+  ): Promise<Either.Either<Option.Option<Vendor>, StructuredError>> {
     try {
       const [row] = await this.databaseProvider
         .getClient()
         .update(vendor)
-        .set({ active })
-        .where(eq(vendor.id, vendorId))
+        .set(change)
+        .where(where)
         .returning();
 
       if (row === undefined) return Either.right(Option.none());
       return Either.map(toDomain(row), Option.some);
     } catch (error) {
-      this.logger.error(error, 'A Vendor could not be marked active or deactivated');
-      return Either.left(
-        databaseErrorOf(error, 'A Vendor could not be marked active or deactivated'),
-      );
+      this.logger.error(error, failure);
+      return Either.left(databaseErrorOf(error, failure));
     }
   }
 

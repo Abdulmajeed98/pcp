@@ -88,13 +88,7 @@ export class CreateVendorCommand {
     }
 
     const vendor = await this.vendorStore.create(
-      new CreateVendorParams(
-        details.getName(),
-        details.getCity(),
-        details.getContactDetails(),
-        loginPhoneNumber,
-        login.right,
-      ),
+      new CreateVendorParams(details, login.right),
     );
     if (Either.isLeft(vendor)) {
       const deleted = await this.loginStore.delete(login.right);
