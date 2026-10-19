@@ -21,7 +21,7 @@ import {
   languages,
   narrowWindow,
 } from './languages';
-import { apiUrl, realmUrl } from './platform';
+import { apiUrl, dashboardUrl, realmUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
 const [kurdish, , english] = languages;
@@ -94,7 +94,7 @@ async function inTheVendorsOwnBrowser(
   const context = await browser.newContext({ viewport: narrowWindow });
   try {
     const page = await context.newPage();
-    await openTheDashboardAs(page, vendor);
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/details`);
     await use(page);
   } finally {
     await context.close();

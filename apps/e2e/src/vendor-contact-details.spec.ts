@@ -33,6 +33,9 @@ test.beforeAll(async ({ browser }) => {
   vendor = await aMadeUpVendorThatHasLoggedIn(browser);
 });
 
+// The details screen's address, in the portal's section of its own.
+const detailsUrl = `${dashboardUrl}/details`;
+
 // What the details screen shows for one detail, found by the name the API
 // gives it.
 function detailOf(page: Page, detail: string) {
@@ -60,13 +63,13 @@ function isTheSave(request: Request): boolean {
 
 // The link beside the contact details' heading, which opens the form.
 function theLinkToTheForm(page: Page) {
-  return page.getByRole('main').locator('a[href="/contact-details"]');
+  return page.getByRole('main').locator('a[href="/details/contact-details"]');
 }
 
 // Opens the portal as the Vendor, and its form from the details screen by the
 // link.
 async function openTheForm(page: Page): Promise<void> {
-  await openTheDashboardAs(page, vendor);
+  await openTheDashboardAs(page, vendor, detailsUrl);
   await theLinkToTheForm(page).click();
   await expect(formField(page, 'address')).toBeVisible();
 }
@@ -87,7 +90,7 @@ test('the link to the form is described by the heading beside it; the Vendor cha
 
   // The link's word is short, so the heading it stands beside is its
   // description.
-  await openTheDashboardAs(page, vendor);
+  await openTheDashboardAs(page, vendor, detailsUrl);
   await expect(theLinkToTheForm(page)).toHaveAccessibleDescription(
     await page.locator('#contact-details').innerText(),
   );
@@ -106,7 +109,7 @@ test('the link to the form is described by the heading beside it; the Vendor cha
   expect(Object.keys((await saved).postDataJSON() as object).sort()).toEqual(
     contactDetails,
   );
-  await expect(page).toHaveURL(`${dashboardUrl}/`);
+  await expect(page).toHaveURL(detailsUrl);
   await expect(detailOf(page, 'address')).toBeVisible();
   expect(await detailOf(page, 'address').innerText()).toBe(address);
   expect(await detailOf(page, 'openingHours').innerText()).toBe(openingHours);
@@ -151,7 +154,7 @@ test('a phone number that is not Iraqi is refused beside its field, which takes 
   await expect(refusal).not.toBeEmpty();
   await buttonFor(page, english).click();
   await expect(refusal).toHaveText(inEnglish);
-  await expect(page).not.toHaveURL(`${dashboardUrl}/`);
+  await expect(page).not.toHaveURL(detailsUrl);
 });
 
 test('an address over 300 characters is refused beside its field, the refusal saying the limit, in Kurdish and in English', async ({

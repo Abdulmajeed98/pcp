@@ -25,8 +25,9 @@ import {
   InANewTab,
 } from '@/shared/ui';
 
-// The Vendor portal's first screen: every detail the platform holds about the
-// Vendor whose portal is shown, in the portal's language, with a sentence
+// The Vendor portal's details screen, the second of its sections, at
+// `details`: every detail the platform holds about the Vendor whose portal is
+// shown, in the portal's language, with a sentence
 // that the Admin changes its name, its city and its login phone number.
 //
 // What the Vendor wrote, its name, its address and its opening hours, is

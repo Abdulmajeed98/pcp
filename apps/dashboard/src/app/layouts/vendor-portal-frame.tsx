@@ -1,7 +1,8 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { AsWritten } from '@pcp/ui';
+import { cn } from 'cn';
 import type { ReactNode } from 'react';
-import { Outlet, ScrollRestoration } from 'react-router';
+import { NavLink, Outlet, ScrollRestoration } from 'react-router';
 
 import {
   isRefusedAsDeactivated,
@@ -83,8 +84,9 @@ export interface VendorAskedFor {
 // the end side, the switch last, where a Vendor finds it on every screen:
 // the right in English, and the left in Kurdish and Arabic. On a phone the
 // name shares its row with the way to log out, and the switch has the row
-// below; on a wider screen the three share one. It hands the Vendor to the
-// screen below it, which reads the Vendor's details itself.
+// below; on a wider screen the three share one. Below them, on a row of its
+// own, are the portal's two sections, Offers and Details. It hands the
+// Vendor to the screen below it, which reads the Vendor's details itself.
 //
 // While the Admin acts as a Vendor, a band above it names the Vendor.
 export function PortalFrame({
@@ -110,6 +112,7 @@ export function PortalFrame({
           <div className="flex w-full justify-end sm:w-auto">
             <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
           </div>
+          {vendor.data !== undefined && <Sections />}
         </header>
         <main className="pt-4 sm:pt-6">
           {vendor.error ? (
@@ -130,6 +133,42 @@ export function PortalFrame({
         <ScrollRestoration />
       </Frame>
     </>
+  );
+}
+
+// The portal's two sections: the Offers, its first screen, and the
+// Vendor's details. Each is a link 44 pixels high, in Note Grey, and the one
+// the Vendor is in is at weight 600 on a Shelf ground, as the Admin console's
+// sections are. Their addresses are relative to the frame's route, so they
+// lead to the same screens under either frame.
+function Sections() {
+  const { t } = useTranslation();
+  const sections = [
+    { to: '.', end: true, name: t('VendorPortalFrame.offers') },
+    { to: 'details', end: false, name: t('VendorPortalFrame.details') },
+  ];
+
+  return (
+    <nav aria-label={t('VendorPortalFrame.sections')} className="w-full">
+      <ul data-testid="portal-sections" className="flex gap-1">
+        {sections.map(({ to, end, name }) => (
+          <li key={to}>
+            <NavLink
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                cn(
+                  'flex min-h-control items-center rounded-lg px-3 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2',
+                  isActive ? 'bg-secondary font-semibold' : 'text-muted-foreground',
+                )
+              }
+            >
+              {name}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 

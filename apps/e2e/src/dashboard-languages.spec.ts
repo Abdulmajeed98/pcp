@@ -8,6 +8,7 @@ import {
 } from '@playwright/test';
 
 import {
+  authorizationOfTheDevelopmentAdmin,
   developmentAdmin,
   logInToTheDashboard,
   logOutOfTheDashboard,
@@ -29,6 +30,8 @@ import {
   narrowWindow,
   readInEveryLanguageOfTheVendorPortal,
 } from './languages';
+import { createAMadeUpPart, type MadeUpPart } from './catalog';
+import { addAnOffer, answerTheOffersAsExpiring, rowOfOffer, theBanner } from './offers';
 import { dashboardUrl, keycloakUrl } from './platform';
 import { expectTheSameInEveryLanguage } from './sample';
 import {
@@ -65,6 +68,10 @@ const whatsAppNumber = aMadeUpMobileNumber();
 // Vendor has.
 let vendor: VendorLoginDetails;
 
+// The Part the Vendor offers, in an Offer added over HTTP, quoted in both
+// currencies, with prices large enough to be grouped in thousands.
+let offered: MadeUpPart;
+
 test.beforeAll(async ({ browser }) => {
   vendor = await aMadeUpVendorThatHasLoggedIn(browser, {
     address: addressAsWritten,
@@ -73,6 +80,20 @@ test.beforeAll(async ({ browser }) => {
     whatsAppNumber,
     instagramName,
   });
+  const adminsContext = await browser.newContext();
+  try {
+    const authorization = await authorizationOfTheDevelopmentAdmin(
+      await adminsContext.newPage(),
+    );
+    offered = await createAMadeUpPart(adminsContext.request, authorization);
+    await addAnOffer(adminsContext.request, authorization, vendor.vendorId, offered.id, {
+      usdPrice: '1250.5',
+      iqdPrice: 1_875_000,
+      warrantyMonths: 12,
+    });
+  } finally {
+    await adminsContext.close();
+  }
 });
 
 // What a browser keeps for the dashboard, from one visit to the next, apart
@@ -340,6 +361,66 @@ test("with a language remembered, the browser's storage still holds no token", a
   );
 });
 
+// The Offers screen, the portal's first, holds the two kinds of text the
+// details screen lacks, which `accounts` ticket 07 left for `offers`: a
+// sentence that counts, the count of Offers, and a Category name, from the
+// shared terms. Its Part names and its prices are English in every language.
+test.describe('the Offers screen, as a made-up Vendor with an Offer', () => {
+  test.beforeEach(async ({ page }) => {
+    await openTheDashboardAs(page, vendor);
+    await expect(rowOfOffer(page, offered.name)).toBeVisible();
+  });
+
+  test('passes the checks of every screen of the Vendor portal, in all three languages; its counting sentence and its Category name differ in each, and the Part name and the prices are drawn left to right, in Western digits', async ({
+    page,
+  }) => {
+    const row = rowOfOffer(page, offered.name);
+    const texts = await readInEveryLanguageOfTheVendorPortal(page, async () => {
+      await expectInEnglish(row.getByTestId('part-name'), offered.name);
+      await expectInEnglish(row.getByTestId('usd-price'), '1,250.50 $');
+      await expectInEnglish(row.getByTestId('iqd-price'), '1,875,000 IQD');
+      return {
+        counted: await page.getByTestId('offers-counted').innerText(),
+        category: await row.getByTestId('category').innerText(),
+        warranty: await row.getByTestId('warranty').innerText(),
+      };
+    });
+
+    for (const part of ['counted', 'category', 'warranty'] as const) {
+      expectADifferentTextInEachLanguage(
+        new Map([...texts].map(([language, read]) => [language, read[part]])),
+      );
+    }
+  });
+});
+
+// The banner's two counts and the result of confirm-all are sentences that
+// count. The banner is given by an answer of the test's own, and confirm-all
+// asks the real API.
+test("the banner and confirm-all's result pass the checks of every screen of the Vendor portal, and differ in each of the three languages", async ({
+  page,
+}) => {
+  await answerTheOffersAsExpiring(page, vendor.vendorId, {
+    offers: 2,
+    expired: 1,
+    aboutToExpire: 1,
+  });
+  await openTheDashboardAs(page, vendor);
+  await expect(theBanner(page)).toBeVisible();
+
+  const banners = await readInEveryLanguageOfTheVendorPortal(page, () =>
+    theBanner(page).innerText(),
+  );
+  expectADifferentTextInEachLanguage(banners);
+
+  await theBanner(page).getByRole('button').click();
+  await expect(page.getByTestId('confirmed-count')).toBeVisible();
+  const results = await readInEveryLanguageOfTheVendorPortal(page, () =>
+    page.getByTestId('confirmed').innerText(),
+  );
+  expectADifferentTextInEachLanguage(results);
+});
+
 // The details screen holds each kind of text the placeholder's sample held,
 // but for a sentence that counts and the Category names: what the Vendor
 // wrote, shown as written, and what is in English in every language, its
@@ -349,7 +430,7 @@ test("with a language remembered, the browser's storage still holds no token", a
 // for Kurdish comes out in those digits.
 test.describe('the details screen, as a made-up Vendor', () => {
   test.beforeEach(async ({ page }) => {
-    await openTheDashboardAs(page, vendor);
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/details`);
     await expect(detailsHeading(page)).toBeVisible();
   });
 
@@ -432,8 +513,8 @@ test.describe('the details screen, as a made-up Vendor', () => {
 // the helper leaves out of its check of the digits.
 test.describe('the form for the contact details, as a made-up Vendor', () => {
   test.beforeEach(async ({ page }) => {
-    await openTheDashboardAs(page, vendor);
-    await page.getByRole('main').locator('a[href="/contact-details"]').click();
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/details`);
+    await page.getByRole('main').locator('a[href="/details/contact-details"]').click();
     await expect(page.getByRole('main').locator('form')).toBeVisible();
   });
 

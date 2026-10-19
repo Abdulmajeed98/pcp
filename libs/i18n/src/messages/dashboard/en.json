@@ -8,7 +8,10 @@
     "opening": "Opening your portal…",
     "notOpened": "Your portal could not be opened.",
     "noVendor": "No Vendor is behind this login, so the Vendor portal has nothing to show. Ask the Admin to check it.",
-    "deactivated": "This Vendor is deactivated, so its portal cannot be opened. Ask the Admin to reactivate it."
+    "deactivated": "This Vendor is deactivated, so its portal cannot be opened. Ask the Admin to reactivate it.",
+    "sections": "Sections",
+    "offers": "Offers",
+    "details": "Details"
   },
   "ActingAsVendor": {
     "actingAs": "You are acting as <name/>.",
@@ -18,6 +21,59 @@
   "NotAnswered": {
     "refused": "The platform refused, with <refusal/>.",
     "unreachable": "The platform cannot be reached. Check the connection, and try again."
+  },
+  "OffersScreen": {
+    "title": "Your Offers",
+    "reading": "Reading your Offers…",
+    "notListed": "Your Offers could not be listed.",
+    "counted_one": "<count/> Offer",
+    "counted_other": "<count/> Offers",
+    "found_one": "<count/> Offer found",
+    "found_other": "<count/> Offers found",
+    "searching": "Searching…",
+    "searchLabel": "Search your Offers",
+    "searchPlaceholder": "Name, manufacturer or part number",
+    "search": "Search",
+    "listLabel": "Your Offers",
+    "none": "You have no Offers yet.",
+    "noneDescription": "Each Offer you add is listed here, with its prices and when you last confirmed it.",
+    "nothingFound": "No Offer found",
+    "nothingFoundDescription": "None of your Offers is for a Part that holds every word of “<words/>” in its name, its manufacturer or a part number.",
+    "pages": "Pages of your Offers",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page <page/> of <pages/>",
+    "pastTheLast": "This page is past the last one.",
+    "firstPage": "Go to the first page"
+  },
+  "Offer": {
+    "inStock": "In stock",
+    "outOfStock": "Out of stock",
+    "warranty_one": "<count/> month warranty",
+    "warranty_other": "<count/> months warranty",
+    "confirmedToday": "Confirmed today",
+    "confirmedDaysAgo_one": "Confirmed <count/> day ago",
+    "confirmedDaysAgo_other": "Confirmed <count/> days ago",
+    "expiresToday": "Expires today",
+    "expiresIn_one": "Expires in <count/> day",
+    "expiresIn_other": "Expires in <count/> days",
+    "expired_one": "Expired, confirmed <count/> day ago",
+    "expired_other": "Expired, confirmed <count/> days ago"
+  },
+  "ExpiryBanner": {
+    "title": "Some of your Offers need confirming",
+    "expired_one": "<count/> Offer has expired, and Shoppers no longer see it.",
+    "expired_other": "<count/> Offers have expired, and Shoppers no longer see them.",
+    "aboutToExpire_one": "<count/> Offer is about to expire.",
+    "aboutToExpire_other": "<count/> Offers are about to expire.",
+    "explanation": "Confirming says that your prices and your stock are still right today."
+  },
+  "ConfirmAllOffers": {
+    "confirmAll": "Confirm all my Offers",
+    "confirming": "Confirming…",
+    "notConfirmed": "Your Offers were not confirmed.",
+    "confirmed_one": "<count/> Offer confirmed.",
+    "confirmed_other": "All <count/> Offers confirmed."
   },
   "VendorDetails": {
     "title": "Your details",
@@ -87,7 +143,7 @@
   "PortalNotFound": {
     "title": "Screen not found",
     "message": "This address matches no screen of the Vendor portal.",
-    "openDetails": "Open your details"
+    "openOffers": "Open your Offers"
   },
   "LoginFailed": {
     "message": "The login could not be completed."
