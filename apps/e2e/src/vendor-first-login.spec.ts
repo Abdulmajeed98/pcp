@@ -65,10 +65,11 @@ test("a made-up Vendor logs in at Keycloak's login screen with its login phone n
   });
 });
 
-// A Vendor's Login is named by its login phone number, so the field is
-// called that, in each language, with the login screen's own choice of
-// language. English is the source of the wording.
-test('the login screen\'s name field is labelled "Phone number", in a different text in each of the three languages', async ({
+// A Vendor's Login is named by its login phone number and the Admin's by a
+// name, so the field asks for either, in each language, with the login
+// screen's own choice of language, and so does the refusal of a wrong one.
+// English is the source of the wording.
+test('the login screen\'s name field is labelled "Phone number or name", in a different text in each of the three languages, and a wrong one is refused in the same words', async ({
   page,
 }) => {
   await page.goto(dashboardUrl);
@@ -80,8 +81,15 @@ test('the login screen\'s name field is labelled "Phone number", in a different 
     labels.set(language, await page.locator('label[for=username]').innerText());
   }
 
-  expect(labels.get(english)).toBe('Phone number');
+  expect(labels.get(english)).toBe('Phone number or name');
   expectADifferentTextInEachLanguage(labels);
+
+  expect(
+    await expectTheLoginScreenToRefuse(page, {
+      name: 'nobody-of-this-name',
+      password: 'not-the-password',
+    }),
+  ).toBe('Invalid phone number, name or password.');
 });
 
 // The theme's script turns what is typed into the stored form before the

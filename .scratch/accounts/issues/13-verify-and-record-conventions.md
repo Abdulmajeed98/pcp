@@ -148,3 +148,5 @@ From ticket 12, under "decisions left open, for the owner, from the code review"
 ### 19 October 2026: the owner's decisions on the list above
 
 Put to the owner one at a time, each rendered in the built-in browser. Items 7 and 13, and 8 and 12, were asked as one. Twenty were kept as built. Three changed, each recorded in its ticket: **3**, the edit screen names the Vendor and saves with "Save" (ticket 10); **17**, reactivating asks to confirm (ticket 12); **20**, a Vendor page's actions in two groups (ticket 12).
+
+Later the same day the owner found that the label "Phone number" left the Admin, who logs in with a name, without a field for it, and chose to relabel it. The login screen's field now says "Phone number or name", ژمارەی تەلەفۆن یان ناو and رقم الهاتف أو الاسم, drafts under LANG-7, and the refusal of a wrong login names both. `vendor-first-login.spec.ts` reads the English label and the English refusal. It failed on the label before the change, and `pnpm platform:check` passes 132 after.

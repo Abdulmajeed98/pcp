@@ -75,7 +75,7 @@ The owner gets the groundwork every later module copies. The API manages Logins 
 ### Logging in for the first time
 
 25. As a Vendor, I want to log in with my phone number and a password (ACC-3).
-26. As a Vendor, I want the login screen to name the field "phone number" in my language, so that I know what to type.
+26. As a Vendor, I want the login screen to name the field "phone number" in my language, so that I know what to type. The field says "Phone number or name", as the Admin logs in with a name (the owner's choice of 19 October 2026).
 27. As a Vendor, I want my phone number accepted however my keyboard writes it, in Arabic-Indic or Western digits, with spaces or dashes, starting with 0 or with +964, so that I am not refused for writing my own number my way.
 28. As a Vendor, I want to be made to replace the temporary password at my first login, so that only I know my password (ACC-3).
 29. As a Vendor, I want the screen that asks for my new password in Kurdish, Arabic or English, like the login screen, so that I understand what it asks.
@@ -238,7 +238,7 @@ These change the realm file. Keycloak imports it only into a realm that does not
 - **Renaming a Login.** The realm allows a Login's name to be changed, which Keycloak refuses otherwise, and its user profile lets only `admin` change it, so that a Vendor cannot rename its own Login in Keycloak's account pages. Ticket 10 makes this change, and makes it in the owner's running realm once through the administration interface, with no reset.
 - **A password policy.** A Login's own password has at least 8 characters and is not its name. Keycloak's own messages say so on the screen that asks for a new password.
 - **Guessing is slow.** Keycloak's brute-force detection is on. After a few wrong passwords in a row a Login is locked for a time that grows with each further failure, up to 15 minutes. The exact numbers are the ticket's.
-- **The login screen.** Its name field is labelled "phone number" in the three languages, through the theme's messages. A script the theme adds turns what is typed there into the stored form before the form is sent, when it looks like a phone number: Arabic-Indic and Eastern Arabic-Indic digits become Western digits, spaces, dashes, dots and brackets go, and a leading 0, 00964 or 964 becomes +964. A name with a letter in it, such as the development Admin's, is left alone. No Keycloak template is copied into the theme.
+- **The login screen.** Its name field is labelled "Phone number or name" in the three languages, through the theme's messages, as a Vendor's Login is named by its phone number and the Admin's by a name. The refusal of a wrong one names both. The owner chose this on 19 October 2026, over "phone number" alone. A script the theme adds turns what is typed there into the stored form before the form is sent, when it looks like a phone number: Arabic-Indic and Eastern Arabic-Indic digits become Western digits, spaces, dashes, dots and brackets go, and a leading 0, 00964 or 964 becomes +964. A name with a letter in it, such as the development Admin's, is left alone. No Keycloak template is copied into the theme.
 - **Sorani text.** The theme's Kurdish messages gain everything the screens a Vendor now meets show: the screen that asks for a new password, its errors, the password policy's messages, and the messages for a disabled and for a locked Login. Keycloak ships the Arabic and the English text.
 - The `pcp-api` audience the API checks keeps its name. The API's client may take the same name.
 
@@ -512,7 +512,7 @@ Each group is seen to fail once, by a deliberate fault that is then reverted: th
   - The lengths: 100 characters for a name, 300 for an address and 300 for opening hours.
   - The city is a fixed set in code, holding Erbil.
   - A Login's own password needs at least 8 characters and must not be its name. Brute-force detection is on.
-  - The login screen's field is labelled "phone number" for everyone, the Admin included.
+  - The login screen's field is labelled "phone number" for everyone, the Admin included. On 19 October 2026 the owner overruled this: it is labelled "Phone number or name", because the Admin logs in with a name.
   - The Admin may act as a deactivated Vendor.
   - A reset ends the Vendor's sessions. Reactivating keeps the password the Vendor had.
   - A Vendor named in an address that is not the Caller's own is answered 403, not 404.
