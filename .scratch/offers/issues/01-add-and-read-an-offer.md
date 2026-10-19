@@ -61,3 +61,12 @@
 The first run of the faults, with the read before creating, failed nothing for the unique pair and nothing for its refusal: that is how the read was found to hide them.
 
 **Checks.** `pnpm integration:check` passes with 299 tests in 9 files on the final tree. `pnpm check` passes on every commit in a fresh clone with `DOCKER_HOST` pointed at a socket that does not exist and an empty `PLAYWRIGHT_BROWSERS_PATH`, and `pnpm integration:check` passes on `b3c8479` there too (`0235a9c` adds only domain code that nothing calls yet). Docker itself was left running for the owner's other work.
+
+### 20 October 2026: the owner's decisions
+
+The owner went through the decisions above one at a time and kept each as built:
+
+- `OfferStore.readByPart` stays in the port and the Store, untested until `sheet` or `part-requests` calls it.
+- The request takes the USD price as a decimal string and the IQD price and the warranty as JSON numbers, as the answer gives them.
+- The history's `change` column keeps its three values, `created`, `changed` and `removed`, for ticket 05.
+- The commit that also writes the generated client keeps no scope, as the commit convention says, rather than the `api` scope the brief named.
