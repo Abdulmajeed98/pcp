@@ -5,6 +5,7 @@ import { longest } from '@/entities/vendor';
 import { Refusal } from '@/shared/api';
 
 import { type VendorFormValues } from './form-values';
+import { type VendorFormTexts } from './texts';
 
 // What the Admin is told beside a required detail left empty. The form says
 // it before it sends anything, and the API says the same when it refuses a
@@ -74,16 +75,9 @@ export function messageOf(error: SubErrorResponse): string {
 // Why the Vendor was not created, or not saved by the Admin's edit, for a
 // refusal that names no detail of the form, Keycloak that cannot be reached,
 // or an API that cannot be.
-export function whyNotSaved(error: unknown, editing: boolean): string {
-  if (!(error instanceof Refusal)) {
-    return editing
-      ? 'The API cannot be reached. Check the connection, and save the Vendor again.'
-      : 'The API cannot be reached. Check the connection, and create the Vendor again.';
-  }
-  if (error.code === 'IDENTITY_SERVICE_UNAVAILABLE') {
-    return editing
-      ? 'The login service cannot be reached, so neither the Vendor nor its Login was changed. Save the Vendor again in a moment.'
-      : 'The login service cannot be reached, so neither the Vendor nor its Login was made. Create the Vendor again in a moment.';
-  }
+export function whyNotSaved(error: unknown, texts: VendorFormTexts): string {
+  if (!(error instanceof Refusal)) return texts.unreachable;
+  if (error.code === 'IDENTITY_SERVICE_UNAVAILABLE')
+    return texts.identityServiceUnavailable;
   return `The API refused the Vendor, with ${formatNumber(error.status)}, ${error.code}.`;
 }

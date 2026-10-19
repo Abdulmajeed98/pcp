@@ -31,6 +31,7 @@ import {
   vendorRequestOf,
 } from '../model/form-values';
 import { detailOf, messageOf, missingDetailMessages, whyNotSaved } from '../model/refusals';
+import { vendorFormTexts } from '../model/texts';
 
 // A Vendor's form, in the Admin console's English: every detail of a Vendor,
 // in three groups, what the Vendor is, its contact details and its Login,
@@ -61,7 +62,7 @@ export function VendorForm({
         vendor === undefined ? newVendorFormValues : vendorFormValuesOf(vendor),
     });
   const { errors } = formState;
-  const editing = vendor !== undefined;
+  const texts = vendorFormTexts[vendor === undefined ? 'create' : 'edit'];
   const refusal = errors.root?.refusal?.message;
   const required = (detail: keyof typeof missingDetailMessages) => ({
     validate: (text: string) => text.trim() !== '' || missingDetailMessages[detail],
@@ -80,16 +81,14 @@ export function VendorForm({
       const detail = detailOf(each);
       return detail === undefined ? undefined : { field: detail, message: messageOf(each) };
     });
-    if (!besideAField) setError('root.refusal', { message: whyNotSaved(error, editing) });
+    if (!besideAField) setError('root.refusal', { message: whyNotSaved(error, texts) });
   }
 
   return (
     <form noValidate className="flex flex-col gap-8" onSubmit={handleSubmit(submit)}>
       {refusal !== undefined && (
         <Alert variant="destructive" data-testid="refusal">
-          <AlertTitle>
-            {editing ? 'The Vendor was not saved.' : 'The Vendor was not created.'}
-          </AlertTitle>
+          <AlertTitle>{texts.notSaved}</AlertTitle>
           <AlertDescription>{refusal}</AlertDescription>
         </Alert>
       )}
@@ -215,11 +214,7 @@ export function VendorForm({
             name="loginPhoneNumber"
             label="Login phone number"
             errors={errors}
-            description={
-              editing
-                ? 'A mobile number. The Vendor logs in with it. A new number changes what the Vendor logs in with, and its password stays.'
-                : 'A mobile number. The Vendor logs in with it, and its login details are handed over to it on WhatsApp.'
-            }
+            description={texts.loginPhoneNumber}
           >
             {(props) => (
               <PhoneInput

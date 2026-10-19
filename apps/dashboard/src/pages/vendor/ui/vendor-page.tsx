@@ -68,8 +68,8 @@ export function VendorPage() {
     return <p className="text-sm text-muted-foreground">Reading the Vendor…</p>;
   }
 
-  // Another Vendor's page is another screen: a password reset on one is not
-  // shown on the next.
+  // Another Vendor's page is another screen: a password reset, or a refusal,
+  // shown on one is not shown on the next.
   return <VendorDetails key={vendor.data.id} vendor={vendor.data} />;
 }
 
@@ -106,8 +106,7 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
             onReset={setResetPassword}
           />
         </div>
-        {/* Its own for each Vendor, so that one Vendor's refusal is never shown on another's page. */}
-        <VendorActivation key={vendor.id} vendor={vendor} />
+        <VendorActivation vendor={vendor} />
       </div>
 
       {resetPassword !== undefined && (

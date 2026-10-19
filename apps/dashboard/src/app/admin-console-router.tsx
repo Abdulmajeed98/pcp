@@ -17,7 +17,8 @@ import { vendorPortalScreens } from './vendor-portal-screens';
 // The Admin console's screens, by their addresses. The Admin console opens on
 // the Catalog, the first of its two sections. A Part, its edit form and a new
 // Part are the Catalog's children, and a Vendor's page, its edit form and a
-// new Vendor are the Vendors' children, which each shows beside its list on a wide screen.
+// new Vendor are the Vendors' children, which each shows beside its list on
+// a wide screen.
 //
 // A Vendor's portal, for the Admin acting as that Vendor, is under the
 // Vendor's page: the Vendor portal's own screens, in the Vendor portal's

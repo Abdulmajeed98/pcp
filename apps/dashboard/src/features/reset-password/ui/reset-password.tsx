@@ -2,6 +2,7 @@ import { AsWritten } from '@pcp/ui';
 import { KeyRoundIcon } from 'lucide-react';
 import { useState } from 'react';
 
+import { WhyNotAnswered } from '@/shared/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +17,6 @@ import {
 } from '@/shared/ui';
 
 import { useResetPassword } from '../api/reset-password';
-import { whyNotReset } from '../model/refusals';
 
 // The way to reset a Vendor's password (ACC-5), in the Admin console's
 // English: an outlined button, which asks the Admin to confirm first,
@@ -71,7 +71,7 @@ export function ResetPassword({
         </AlertDialogHeader>
         {reset.error && (
           <p role="alert" className="text-sm text-destructive">
-            {whyNotReset(reset.error)}
+            The password was not reset. <WhyNotAnswered error={reset.error} />
           </p>
         )}
         <AlertDialogFooter>
