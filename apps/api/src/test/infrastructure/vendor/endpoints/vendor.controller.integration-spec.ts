@@ -1512,6 +1512,26 @@ describe('the Vendor endpoints', () => {
       expect((await logInAt('+9647501234567', 'the-vendors-own')).status).toBe(200);
     });
 
+    it("leaves a deactivated Vendor's Login disabled, so that the new temporary password does not log in until it is reactivated", async () => {
+      const { vendor, loginId } = await aVendorWithItsOwnPassword();
+      expect((await deactivateVendor(vendor.id)).status).toBe(200);
+
+      const response = await resetPassword(vendor.id);
+
+      expect(response.status).toBe(200);
+      const { temporaryPassword } = (await response.json()) as {
+        temporaryPassword: string;
+      };
+      expect((await loginWithId(loginId)).enabled).toBe(false);
+      expect(await logInAt('+9647501234567', temporaryPassword)).toEqual({
+        status: 400,
+        body: { error: 'invalid_grant', error_description: 'Account disabled' },
+      });
+      expect(((await (await readVendor(vendor.id)).json()) as VendorBody).active).toBe(
+        false,
+      );
+    });
+
     it("refuses a Vendor's own Login, and keeps its password", async () => {
       const { vendor } = await aVendorWithItsOwnPassword();
 

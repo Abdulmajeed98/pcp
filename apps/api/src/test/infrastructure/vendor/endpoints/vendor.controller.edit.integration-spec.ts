@@ -245,6 +245,29 @@ describe("the Admin's edit of a Vendor", () => {
       });
     });
 
+    it('leaves a deactivated Vendor deactivated, and its renamed Login disabled, when its login phone number changes', async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const loginId = await loginIdOf('+9647501234567');
+      await giveALastingPassword(loginId, itsOwnPassword);
+      const deactivated = await fetch(
+        `${testApp.baseUrl}/v1/vendors/${vendor.id}/deactivate`,
+        { method: 'POST', headers: bearerHeader(adminToken) },
+      );
+      expect(deactivated.status).toBe(200);
+
+      const response = await editVendor(vendor.id, everyDetailChanged);
+
+      expect(response.status).toBe(200);
+      expect(((await response.json()) as VendorBody).active).toBe(false);
+      expect((await read(vendor.id)).active).toBe(false);
+      const [login] = await loginsNamed('+9647507654321');
+      expect(login).toMatchObject({ id: loginId, enabled: false });
+      expect(await logInAt('+9647507654321', itsOwnPassword)).toEqual({
+        status: 400,
+        body: { error: 'invalid_grant', error_description: 'Account disabled' },
+      });
+    });
+
     it('keeps the Login as it is when the login phone number stays, typed in another form', async () => {
       const vendor = await aVendorWith('0750 123 4567');
       const loginId = await loginIdOf('+9647501234567');
