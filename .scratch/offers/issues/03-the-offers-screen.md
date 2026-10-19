@@ -8,14 +8,14 @@
 
 **Status:** ready-for-agent
 
-- [ ] **The design.** Before building, the Offers screen's layout, the row of an Offer and the banner are shown to the owner in the built-in browser. Two or three choices are drawn in the dashboard's look, Rate Board, and the owner picks one. The choice is recorded under Comments.
+- [x] **The design.** Before building, the Offers screen's layout, the row of an Offer and the banner are shown to the owner in the built-in browser. Two or three choices are drawn in the dashboard's look, Rate Board, and the owner picks one. The choice is recorded under Comments.
 - [x] **The portal's screens.** The Offers screen is the portal's first screen. The details screen moves to `details`, with the contact details form below it. The top bar gains the two sections, Offers and Details. Every link between screens stays relative to the route, so the portal's own router and the acting frame both serve them unchanged.
 - [x] **The list.** Each row shows the Part's name and manufacturer `AlwaysEnglish`, its Category as the shared term, its photo or `CategoryIcon`, the prices written by `formatNumber` with "$" or "IQD" and marked `AlwaysEnglish`, both when both were quoted, the stock, the warranty in months, and the Confirmation's state. The list is paged, shows how many Offers there are, and can be searched.
 - [x] **The banner** shows only when an Offer is expired or about to expire. It gives both counts, and its button confirms all the Offers and then says how many it confirmed. It leaves once nothing is expired or about to expire.
 - [x] **The empty screen** says that the Vendor has no Offers yet. Its link to the catalog search waits for ticket 04, and until then nothing is shown in its place.
 - [x] Every query about a Vendor's Offers is under one key, so the list, the counts and the banner are asked again after any change and after confirm-all.
 - [x] **Text.** "Confirmed today", the days ago, "expired", the days left, the banner's counts and the result of confirm-all are sentences that count. Each has every plural form of its language, with the count written by `formatNumber`. Offer, Confirmation and Expired Offer get their Kurdish and Arabic words in `words.md` if they lack them. All the text is in `i18n`'s dashboard set, in the three languages, drafted and marked for review (LANG-7).
-- [ ] It follows DESIGN.md and the dashboard's own, is laid out at 360 pixels wide first, uses logical classes only, and keeps to Feature-Sliced Design's import rules.
+- [x] It follows DESIGN.md and the dashboard's own, is laid out at 360 pixels wide first, uses logical classes only, and keeps to Feature-Sliced Design's import rules.
 - [x] `pnpm platform:check` gains these lines, and passes on every line, in a window 360 pixels wide:
   - A made-up Vendor that has logged in opens the portal on the Offers screen, with the message for a Vendor with none.
   - An Offer the test adds over HTTP shows in the list with "today", its price and its Category.
@@ -71,3 +71,14 @@ Everything but the look is built and tested. The screen is drawn as the recommen
 **Checks.** `pnpm platform:check` passes with 141 tests on `5829cfd`. `pnpm check` passes on every commit in a fresh clone with `DOCKER_HOST` pointed at a socket that does not exist and an empty `PLAYWRIGHT_BROWSERS_PATH`. No API code changed, so `pnpm integration:check` was not needed for these commits. The development database lacked ticket 02's migration `0010_index-offers-by-vendor-and-confirmation`, which `pnpm db:migrate` applied.
 
 **The design, for the owner.** Four decisions, drawn in Rate Board at 360 pixels in Kurdish and Arabic by a throwaway capture test (deleted), are laid out on one page with `#d1` to `#d4`: the screen's layout (where the banner sits), the row of an Offer (prices on plates or not), the banner, and the top bar's two sections. Recommended and built: A in each.
+
+### 20 October 2026: the owner's design choices
+
+The owner went through the four decisions on the page of choices and took A in each, the screen as built and recommended:
+
+- **The screen's layout (#d1):** the banner under the title, then the search and the list, over a banner pinned to the bottom of the screen and over the search first.
+- **The row of an Offer (#d2):** each price on its own plate, on a line under the Part, over prices in plain Geist Mono at the end side and over smaller plates stacked there.
+- **The banner (#d3):** the Sheet panel with an Action Red edge, its title, the two counts in bold, its explanation and the full-width button, over the counts on plates and over a compact Shelf panel without a title.
+- **The top bar's sections (#d4):** two links under the bar, the current one on a Shelf ground, over two tabs sharing the width.
+
+The dashboard's DESIGN.md records an Offer's row, the expiry banner, the Offers screen's layout, the prices on plates and the portal's sections.
