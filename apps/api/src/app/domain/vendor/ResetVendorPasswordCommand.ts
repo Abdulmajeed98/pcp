@@ -33,13 +33,14 @@ export { Input as ResetVendorPasswordCommandInput };
 export { Output as ResetVendorPasswordCommandOutput };
 
 // The Admin resets the password of a Vendor's Login (ACC-5), for a Vendor
-// that has forgotten its own or never got the first. The Login is given a new
-// temporary password, which it has to replace at its next login, and then its
-// sessions are ended, so that whoever knew the old password is logged out.
+// that has forgotten its own or never got the first. The Login's sessions are
+// ended, so that whoever knew the old password is logged out, and then it is
+// given a new temporary password, which it has to replace at its next login.
 // The Vendor itself does not change.
 //
-// A reset that fails after the password was given leaves the sessions open
-// and answers why. Doing it again makes another password and ends them.
+// The sessions come first, so that a reset that fails at the password leaves
+// the old password working, as it was, and answers why. Doing it again ends
+// any session opened in between and gives the password.
 @Injectable()
 export class ResetVendorPasswordCommand {
   constructor(
@@ -54,12 +55,12 @@ export class ResetVendorPasswordCommand {
     if (Option.isNone(found.right)) return Either.left(vendorNotFound(vendorId));
     const loginId = found.right.value.getLoginId();
 
+    const ended = await this.loginStore.endSessions(loginId);
+    if (Either.isLeft(ended)) return Either.left(ended.left);
+
     const temporaryPassword = makeTemporaryPassword();
     const given = await this.loginStore.setTemporaryPassword(loginId, temporaryPassword);
     if (Either.isLeft(given)) return Either.left(given.left);
-
-    const ended = await this.loginStore.endSessions(loginId);
-    if (Either.isLeft(ended)) return Either.left(ended.left);
 
     return Either.right(Output.of(temporaryPassword));
   }

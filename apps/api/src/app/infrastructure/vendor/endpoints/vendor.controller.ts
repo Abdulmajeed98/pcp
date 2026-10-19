@@ -151,7 +151,7 @@ export class VendorController {
 
   @ApiOperation({
     summary:
-      "Give a Vendor's Login a new temporary password, end its sessions, and answer the password once",
+      "End the sessions of a Vendor's Login, give it a new temporary password, and answer the password once",
   })
   @ApiOkResponse({ type: PasswordResetResponse })
   @PreAuthorize([Role.ADMIN])

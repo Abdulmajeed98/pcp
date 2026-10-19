@@ -665,7 +665,7 @@
             }
           }
         },
-        "summary": "Give a Vendor's Login a new temporary password, end its sessions, and answer the password once",
+        "summary": "End the sessions of a Vendor's Login, give it a new temporary password, and answer the password once",
         "tags": ["Vendor"]
       }
     },

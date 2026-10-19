@@ -97,6 +97,30 @@ export async function giveALastingPassword(
   });
 }
 
+// A fault planted in the realm for as long as the function runs: a password
+// policy that a temporary password of twelve characters fails, so that
+// Keycloak refuses to give a Login one and answers every other call. The
+// realm's own policy is put back, whatever the function did.
+export async function whileTheRealmRefusesTemporaryPasswords(
+  run: () => Promise<void>,
+): Promise<void> {
+  const { passwordPolicy } = (await (await asAdministrator('')).json()) as {
+    passwordPolicy: string;
+  };
+
+  await asAdministrator('', {
+    method: 'PUT',
+    body: JSON.stringify({
+      passwordPolicy: passwordPolicy.replace(/length\(\d+\)/, 'length(13)'),
+    }),
+  });
+  try {
+    await run();
+  } finally {
+    await asAdministrator('', { method: 'PUT', body: JSON.stringify({ passwordPolicy }) });
+  }
+}
+
 // The sessions a Login holds now, by their identifiers.
 export async function sessionsOf(loginId: string): Promise<string[]> {
   const response = await asAdministrator(`/users/${loginId}/sessions`);

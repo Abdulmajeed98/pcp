@@ -29,6 +29,7 @@ import {
   removeThePasswordCheckClient,
   sessionsOf,
   whileKeycloakIsPaused,
+  whileTheRealmRefusesTemporaryPasswords,
 } from '../../../test-utils/keycloak/keycloak-administrator';
 
 // A phone number as the API answers it: the form it is stored in, and Iraq's
@@ -1510,6 +1511,25 @@ describe('the Vendor endpoints', () => {
       });
 
       expect((await logInAt('+9647501234567', 'the-vendors-own')).status).toBe(200);
+    });
+
+    // A reset makes two calls to Keycloak. The sessions are ended first, so
+    // that a failure of the second, which gives the new password, leaves the
+    // old password working and nothing open for whoever knew it.
+    it('ends the sessions before it gives the new password, so that a reset whose password Keycloak refuses leaves the old one working', async () => {
+      const { vendor, loginId } = await aVendorWithItsOwnPassword();
+      expect((await logInAt('+9647501234567', 'the-vendors-own')).status).toBe(200);
+      expect(await sessionsOf(loginId)).toHaveLength(1);
+
+      await whileTheRealmRefusesTemporaryPasswords(async () => {
+        const response = await resetPassword(vendor.id);
+
+        await expectErrorResponse(response, 500, internalServerError);
+      });
+
+      expect(await sessionsOf(loginId)).toEqual([]);
+      expect((await logInAt('+9647501234567', 'the-vendors-own')).status).toBe(200);
+      expect((await loginWithId(loginId)).requiredActions).toEqual([]);
     });
 
     it("leaves a deactivated Vendor's Login disabled, so that the new temporary password does not log in until it is reactivated", async () => {

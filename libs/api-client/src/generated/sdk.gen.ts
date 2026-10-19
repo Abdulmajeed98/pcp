@@ -162,7 +162,7 @@ export const editContactDetails = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Give a Vendor's Login a new temporary password, end its sessions, and answer the password once
+ * End the sessions of a Vendor's Login, give it a new temporary password, and answer the password once
  */
 export const resetVendorPassword = <ThrowOnError extends boolean = false>(options: Options<ResetVendorPasswordData, ThrowOnError>): RequestResult<ResetVendorPasswordResponses, ResetVendorPasswordErrors, ThrowOnError> => (options.client ?? client).post<ResetVendorPasswordResponses, ResetVendorPasswordErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
