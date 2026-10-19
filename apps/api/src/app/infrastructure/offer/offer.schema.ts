@@ -52,6 +52,9 @@ export const offer = pgTable(
     // of Expired Offers and Offers about to expire, which compare the time of
     // Confirmation.
     index('offer_vendor_confirmed_index').on(table.vendorId, table.confirmedAt),
+    // A Part's visible Offers, which compare the time of Confirmation with
+    // the earliest a visible Offer can have.
+    index('offer_part_confirmed_index').on(table.partId, table.confirmedAt),
     check(
       'offer_has_a_price',
       sql`${table.usdPriceCents} IS NOT NULL OR ${table.iqdPrice} IS NOT NULL`,

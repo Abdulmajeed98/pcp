@@ -1,0 +1,1 @@
+CREATE INDEX "offer_part_confirmed_index" ON "offer" USING btree ("part_id","confirmed_at");
