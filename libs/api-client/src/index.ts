@@ -2,6 +2,7 @@ export { type ApiClient, type ApiClientOptions, createApiClient } from './api-cl
 export type {
   CallerResponse,
   CategoryResponse,
+  ConfirmedOffersResponse,
   CreatedVendorResponse,
   CreatePartRequest,
   CreateVendorRequest,
@@ -9,6 +10,7 @@ export type {
   EditPartRequest,
   EditVendorRequest,
   ErrorResponse,
+  ListedOfferResponse,
   MapLocationResponse,
   PartPageResponse,
   PartResponse,
@@ -20,5 +22,7 @@ export type {
   SubErrorResponse,
   VendorPageResponse,
   VendorResponse,
+  VendorsOfferCountsResponse,
+  VendorsOffersPageResponse,
   VendorSummaryResponse,
 } from './generated/types.gen';
