@@ -47,6 +47,26 @@ async function inTheDatabase(statement: string): Promise<void> {
   }
 }
 
+// A Part's specifications written as they are given, past the checks of its
+// Category's list, as a Part kept before its list changed holds them: a 0
+// kept before 0 meant "not known" for that specification, say. No endpoint
+// can store such a Part, so this is the one way a test makes one.
+export async function keepSpecificationsAsTheyAre(
+  partId: string,
+  specifications: Record<string, unknown>,
+): Promise<void> {
+  const client = new Client(connectionOf(testDatabaseSettings()));
+  await client.connect();
+  try {
+    await client.query('UPDATE part SET specifications = $1 WHERE id = $2', [
+      specifications,
+      partId,
+    ]);
+  } finally {
+    await client.end();
+  }
+}
+
 // A row of the Offer history, as the database holds it.
 export type OfferHistoryRow = {
   changedAt: Date;

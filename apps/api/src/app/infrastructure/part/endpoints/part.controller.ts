@@ -28,12 +28,15 @@ import {
 import { CreatePartCommand } from '~/domain/part/CreatePartCommand';
 
 import { EditPartCommand } from '~/domain/part/EditPartCommand';
+import { ListPartsMissingSpecificationsQuery } from '~/domain/part/ListPartsMissingSpecificationsQuery';
 import { ReadPartQuery, ReadPartQueryInput } from '~/domain/part/ReadPartQuery';
 import { SearchPartsQuery } from '~/domain/part/SearchPartsQuery';
 
 import { CreatePartRequest } from './CreatePartRequest';
 import { EditPartRequest } from './EditPartRequest';
+import { ListPartsMissingSpecificationsRequest } from './ListPartsMissingSpecificationsRequest';
 import { PartPageResponse } from './PartPageResponse';
+import { PartsMissingSpecificationsPageResponse } from './PartsMissingSpecificationsPageResponse';
 import { PartResponse } from './PartResponse';
 import { PictureUploadErrorsInterceptor } from './picture-upload-errors.interceptor';
 import { SearchPartsRequest } from './SearchPartsRequest';
@@ -46,6 +49,7 @@ export class PartController {
     private readonly readPartQuery: ReadPartQuery,
     private readonly searchPartsQuery: SearchPartsQuery,
     private readonly addPartPhotoCommand: AddPartPhotoCommand,
+    private readonly listPartsMissingSpecificationsQuery: ListPartsMissingSpecificationsQuery,
   ) {}
 
   @ApiOperation({ summary: 'Add a Part to the catalog' })
@@ -88,6 +92,28 @@ export class PartController {
 
     return result.pipe(
       Either.map((output) => PartPageResponse.of(output.getPartsPage())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  // Declared before reading one Part, whose address would otherwise take
+  // "missing-specifications" for a Part's identifier.
+  @ApiOperation({
+    summary:
+      'One page of the Parts that have an Offer and lack a needed specification, for the Admin',
+  })
+  @ApiOkResponse({ type: PartsMissingSpecificationsPageResponse })
+  @PreAuthorize([Role.ADMIN])
+  @Get('v1/parts/missing-specifications')
+  async listPartsMissingSpecifications(
+    @Query() request: ListPartsMissingSpecificationsRequest,
+  ): Promise<PartsMissingSpecificationsPageResponse> {
+    const result = await this.listPartsMissingSpecificationsQuery.execute(
+      request.toQueryInput(),
+    );
+
+    return result.pipe(
+      Either.map((output) => PartsMissingSpecificationsPageResponse.of(output.getPage())),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
-import { and, asc, count, eq, gte, lt, sql, SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, lt, sql, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import {
@@ -16,6 +16,8 @@ import {
   VendorsOfferCounts,
   VendorsOffersPage,
 } from '~/domain/offer/OfferStore';
+import { visibleIfConfirmedFrom } from '~/domain/offer/visibility';
+import { VisibleOffer } from '~/domain/offer/VisibleOffer';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { brokeUniqueRule } from '~/infrastructure/database/unique-rule';
@@ -23,6 +25,7 @@ import { part, PartRow } from '~/infrastructure/part/part.schema';
 import { partOf } from '~/infrastructure/part/part-of-row';
 import { holdingEveryWord } from '~/infrastructure/part/search-text';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
+import { vendor } from '~/infrastructure/vendor/vendor.schema';
 
 import { offer, offerHistory, OfferRow, oneOfferForAPart } from '../offer.schema';
 
@@ -33,6 +36,14 @@ const offerWithPart = { offer, part, photoId: partPhoto.id };
 // How many rows meet a condition, as a number.
 function countWhere(condition: SQL | undefined): SQL<number> {
   return sql<number>`count(*) filter (where ${condition})`.mapWith(Number);
+}
+
+// The rule for a visible Offer, as the database asks it, at now by the API's
+// clock: not an Expired Offer, and of an active Vendor (`visibility.ts`). A
+// query that uses it joins the Vendor. Every query of visible Offers uses it,
+// and no other.
+function visibleOffer(now: Date): SQL | undefined {
+  return and(eq(vendor.active, true), gte(offer.confirmedAt, visibleIfConfirmedFrom(now)));
 }
 
 // A row as an Offer, with its Part.
@@ -204,6 +215,45 @@ export class DatabaseOfferStore implements OfferStore {
       this.logger.error(error, "A Vendor's Offers could not be confirmed");
       return Either.left(
         databaseErrorOf(error, "A Vendor's Offers could not be confirmed"),
+      );
+    }
+  }
+
+  async listVisibleByPart(
+    partId: string,
+    now: Date,
+  ): Promise<Either.Either<readonly VisibleOffer[], StructuredError>> {
+    if (!couldBeIdentifier(partId)) return Either.right([]);
+
+    try {
+      const rows = await this.databaseProvider
+        .getClient()
+        .select({ ...offerWithPart, vendorName: vendor.name })
+        .from(offer)
+        .innerJoin(vendor, eq(vendor.id, offer.vendorId))
+        .innerJoin(part, eq(part.id, offer.partId))
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .where(and(eq(offer.partId, partId), visibleOffer(now)))
+        // In stock first (OFF-11), until `pricing` orders by price.
+        .orderBy(
+          desc(offer.inStock),
+          desc(offer.confirmedAt),
+          asc(vendor.name),
+          asc(offer.id),
+        );
+
+      return Either.all(
+        rows.map((row) =>
+          Either.map(
+            toDomain(row.offer, row.part, row.photoId),
+            (found) => new VisibleOffer(found, row.vendorName),
+          ),
+        ),
+      );
+    } catch (error) {
+      this.logger.error(error, "A Part's visible Offers could not be listed");
+      return Either.left(
+        databaseErrorOf(error, "A Part's visible Offers could not be listed"),
       );
     }
   }

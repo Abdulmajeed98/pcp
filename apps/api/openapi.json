@@ -304,6 +304,61 @@
         "tags": ["Part"]
       }
     },
+    "/v1/parts/missing-specifications": {
+      "get": {
+        "operationId": "listPartsMissingSpecifications",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartsMissingSpecificationsPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "One page of the Parts that have an Offer and lack a needed specification, for the Admin",
+        "tags": ["Part"]
+      }
+    },
     "/v1/parts/{partId}/photo": {
       "put": {
         "operationId": "addPartPhoto",
@@ -982,6 +1037,49 @@
         "summary": "One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login",
         "tags": ["Offer"]
       }
+    },
+    "/v1/parts/{partId}/offers": {
+      "get": {
+        "operationId": "listVisibleOffersOfPart",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VisibleOfferResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Part's visible Offers: not Expired Offers, of active Vendors only, in-stock first and then the most recent Confirmation first, each with how many days ago it was confirmed",
+        "tags": ["PartOffers"]
+      }
     }
   },
   "info": {
@@ -1449,6 +1547,135 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PartSummaryResponse"
+            }
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content"
+        ]
+      },
+      "MissingSpecificationResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The specification's path in a Part's specifications, as the Part's missing needed specifications name it.",
+            "example": "specifications.tdp"
+          },
+          "label": {
+            "type": "string",
+            "description": "The specification's label, in English.",
+            "example": "TDP"
+          }
+        },
+        "required": ["path", "label"]
+      },
+      "PartMissingSpecificationsResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Part's identifier on the platform.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "category": {
+            "type": "string",
+            "description": "The Part's Category.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Part's name.",
+            "example": "AMD Ryzen 5 7600"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "The Part's manufacturer.",
+            "example": "AMD"
+          },
+          "missingSpecifications": {
+            "description": "The needed specifications the Part lacks, in its Category's list's order. Never empty.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MissingSpecificationResponse"
+            }
+          },
+          "offerCount": {
+            "type": "number",
+            "description": "How many Offers the Part has, from any Vendor, Expired Offers among them.",
+            "example": 3
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "name",
+          "manufacturer",
+          "missingSpecifications",
+          "offerCount",
+          "photoPath"
+        ]
+      },
+      "PartsMissingSpecificationsPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Parts, by Category in the order of the eight, then by their count of Offers, most first, then by name.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartMissingSpecificationsResponse"
             }
           }
         },
@@ -2157,6 +2384,76 @@
           }
         },
         "required": ["confirmed"]
+      },
+      "VisibleOfferVendorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as the Vendor writes it.",
+            "example": "Made-up Computer Shop"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "VisibleOfferResponse": {
+        "type": "object",
+        "properties": {
+          "vendor": {
+            "description": "The Vendor.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisibleOfferVendorResponse"
+              }
+            ]
+          },
+          "usdPrice": {
+            "type": "string",
+            "description": "The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": "349.99"
+          },
+          "iqdPrice": {
+            "type": "number",
+            "description": "The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": 525000
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether the Vendor has the Part in stock."
+          },
+          "warrantyMonths": {
+            "type": "number",
+            "description": "The warranty, in whole months, or null when the Vendor states none.",
+            "nullable": true,
+            "example": 12
+          },
+          "confirmedAt": {
+            "type": "string",
+            "description": "When the Vendor last confirmed the Offer.",
+            "format": "date-time"
+          },
+          "daysSinceConfirmation": {
+            "type": "number",
+            "description": "The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.",
+            "example": 3
+          }
+        },
+        "required": [
+          "vendor",
+          "usdPrice",
+          "iqdPrice",
+          "inStock",
+          "warrantyMonths",
+          "confirmedAt",
+          "daysSinceConfirmation"
+        ]
       }
     }
   },

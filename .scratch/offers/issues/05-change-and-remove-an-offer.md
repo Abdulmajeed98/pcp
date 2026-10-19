@@ -29,3 +29,14 @@
 - [ ] `pnpm check` passes with Docker stopped.
 - [ ] The results of the fault checks are recorded under Comments.
 - [ ] The work is committed in pieces, each leaving `pnpm integration:check` and `pnpm check` passing.
+
+## Comments
+
+### 20 October 2026: left here by ticket 06
+
+Ticket 06 built a Part's visible Offers, `GET v1/parts/{partId}/offers`, before the edit and the removal existed, so two of its lines wait for this ticket. Add them to `part-offers.controller.integration-spec.ts`, beside its confirm-all line:
+
+- An Expired Offer saved through `PUT v1/vendors/{vendorId}/offers/{offerId}`, changed or not, is in the Part's visible Offers again at once, with the time of the moved clock as its Confirmation and 0 days since it. Ticket 06 proved it for confirm-all only.
+- A removed Offer is not in the Part's visible Offers, and is there again once the Vendor adds it again.
+
+Both should pass once the edit sets `confirmed_at` from the API's clock and the removal deletes the row, since the rule reads nothing else.

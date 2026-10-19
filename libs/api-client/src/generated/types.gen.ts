@@ -250,6 +250,79 @@ export type PartPageResponse = {
     content: Array<PartSummaryResponse>;
 };
 
+export type MissingSpecificationResponse = {
+    /**
+     * The specification's path in a Part's specifications, as the Part's missing needed specifications name it.
+     */
+    path: string;
+    /**
+     * The specification's label, in English.
+     */
+    label: string;
+};
+
+export type PartMissingSpecificationsResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The needed specifications the Part lacks, in its Category's list's order. Never empty.
+     */
+    missingSpecifications: Array<MissingSpecificationResponse>;
+    /**
+     * How many Offers the Part has, from any Vendor, Expired Offers among them.
+     */
+    offerCount: number;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+};
+
+export type PartsMissingSpecificationsPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Parts, by Category in the order of the eight, then by their count of Offers, most first, then by name.
+     */
+    content: Array<PartMissingSpecificationsResponse>;
+};
+
 export type MapLocationRequest = {
     /**
      * The latitude, in degrees.
@@ -673,6 +746,48 @@ export type ConfirmedOffersResponse = {
     confirmed: number;
 };
 
+export type VisibleOfferVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+};
+
+export type VisibleOfferResponse = {
+    /**
+     * The Vendor.
+     */
+    vendor: VisibleOfferVendorResponse;
+    /**
+     * The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor last confirmed the Offer.
+     */
+    confirmedAt: string;
+    /**
+     * The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.
+     */
+    daysSinceConfirmation: number;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -847,6 +962,37 @@ export type EditPartResponses = {
 };
 
 export type EditPartResponse = EditPartResponses[keyof EditPartResponses];
+
+export type ListPartsMissingSpecificationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+    };
+    url: '/v1/parts/missing-specifications';
+};
+
+export type ListPartsMissingSpecificationsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListPartsMissingSpecificationsError = ListPartsMissingSpecificationsErrors[keyof ListPartsMissingSpecificationsErrors];
+
+export type ListPartsMissingSpecificationsResponses = {
+    200: PartsMissingSpecificationsPageResponse;
+};
+
+export type ListPartsMissingSpecificationsResponse = ListPartsMissingSpecificationsResponses[keyof ListPartsMissingSpecificationsResponses];
 
 export type AddPartPhotoData = {
     body: {
@@ -1229,3 +1375,27 @@ export type ReadOfferResponses = {
 };
 
 export type ReadOfferResponse = ReadOfferResponses[keyof ReadOfferResponses];
+
+export type ListVisibleOffersOfPartData = {
+    body?: never;
+    path: {
+        partId: string;
+    };
+    query?: never;
+    url: '/v1/parts/{partId}/offers';
+};
+
+export type ListVisibleOffersOfPartErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVisibleOffersOfPartError = ListVisibleOffersOfPartErrors[keyof ListVisibleOffersOfPartErrors];
+
+export type ListVisibleOffersOfPartResponses = {
+    200: Array<VisibleOfferResponse>;
+};
+
+export type ListVisibleOffersOfPartResponse = ListVisibleOffersOfPartResponses[keyof ListVisibleOffersOfPartResponses];

@@ -10,7 +10,10 @@ import {
   createTestAppWithLogins,
   TestAppWithLogins,
 } from '../../../test-utils/create-test-app';
-import { emptyTheDatabase } from '../../../test-utils/database/test-database';
+import {
+  emptyTheDatabase,
+  keepSpecificationsAsTheyAre,
+} from '../../../test-utils/database/test-database';
 
 // A Part as the API answers it.
 type PartBody = {
@@ -262,6 +265,19 @@ describe('the Part endpoints', () => {
         'specifications.tdp',
         'specifications.memory.types',
       ]);
+    });
+
+    it('count a 0 kept where 0 means "not known" as missing', async () => {
+      const part = await partOf(await createPart(aCpu()));
+      // As a Part kept before 0 meant "not known" for a CPU's TDP would hold
+      // it. No endpoint stores such a 0.
+      await keepSpecificationsAsTheyAre(part.id, {
+        ...specifications,
+        specifications: { ...specifications.specifications, tdp: 0 },
+      });
+
+      const read = await partOf(await readPart(part.id, adminToken));
+      expect(read.missingNeededSpecifications).toEqual(['specifications.tdp']);
     });
 
     it('count an empty choice of several, and null, as missing', async () => {
