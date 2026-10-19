@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
+import { developmentAdmin, logInToTheDashboard } from './development-logins';
 import { layoutOf } from './languages';
 import { dashboardUrl } from './platform';
 
@@ -54,6 +55,18 @@ export async function findOnTheList(page: Page, names: string[]): Promise<string
 // A Vendor's page, at the address of its own.
 export function vendorPageUrl(vendorId: string): string {
   return `${vendorsUrl}/${vendorId}`;
+}
+
+// Logs in as the development Admin at a Vendor's page, and waits for its
+// heading, the Vendor's name.
+export async function openTheVendorsPage(
+  page: Page,
+  vendor: { vendorId: string; vendorName: string },
+): Promise<void> {
+  await logInToTheDashboard(page, developmentAdmin, vendorPageUrl(vendor.vendorId));
+  await expect(
+    page.getByRole('heading', { level: 1, name: vendor.vendorName }),
+  ).toBeVisible();
 }
 
 // The row of a Vendor's page that shows one detail, found by the detail's

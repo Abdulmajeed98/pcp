@@ -35,8 +35,8 @@ export async function theHandOver(
 // and the space after it, in any language. A right-to-left message puts a
 // left-to-right mark between that space and a number, which is not part of
 // the value.
-export function valuesOf(lines: string[]): string[] {
-  return lines.flatMap((line) => /^[^:]+: ‎?(.+)$/.exec(line)?.[1] ?? []);
+function valuesOf(lines: string[]): string[] {
+  return lines.flatMap((line) => /^[^:]+: \u200E?(.+)$/.exec(line)?.[1] ?? []);
 }
 
 // What the message gives a Vendor to log in with: its login phone number, in

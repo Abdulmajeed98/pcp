@@ -1,9 +1,8 @@
 import { type Browser, expect, type Locator, type Page, test } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
-import { detailRow, findOnTheList, rowOfVendor, vendorPageUrl } from './admin-vendors';
+import { detailRow, findOnTheList, openTheVendorsPage, rowOfVendor } from './admin-vendors';
 import {
-  developmentAdmin,
   logInToTheDashboard,
   openTheDashboardAs,
   vendorNameInTheFrame,
@@ -73,14 +72,6 @@ async function answerTheNextDeactivationAsUnavailable(page: Page): Promise<void>
   );
 }
 
-// Opens the Vendor's page as the development Admin.
-async function openTheVendorsPage(page: Page): Promise<void> {
-  await logInToTheDashboard(page, developmentAdmin, vendorPageUrl(vendor.vendorId));
-  await expect(
-    page.getByRole('heading', { level: 1, name: vendor.vendorName }),
-  ).toBeVisible();
-}
-
 // Logs in as the Vendor in a browser of its own, which knows nothing of any
 // earlier login, and hands `use` its page at the details screen.
 async function inTheVendorsOwnBrowser(
@@ -105,7 +96,7 @@ test("the Admin deactivates the Vendor, after confirming, while its portal is op
     await vendorsPage.getByRole('main').locator('a[href$="/contact-details"]').click();
     await expect(vendorsPage.locator('#contact-details-address')).toBeVisible();
 
-    await openTheVendorsPage(page);
+    await openTheVendorsPage(page, vendor);
     await page.getByRole('button', { name: 'Deactivate' }).click();
     await expect(theConfirmation(page)).toBeVisible();
     await expectAccessible(page);
@@ -191,7 +182,7 @@ test("the list and the Vendor's page mark the Vendor deactivated, and so does th
 test("the deactivated Vendor's page has a way to deactivate it again, after Reactivate, and the Vendor stays deactivated", async ({
   page,
 }) => {
-  await openTheVendorsPage(page);
+  await openTheVendorsPage(page, vendor);
   const actions = page.getByRole('button', { name: /^(Reactivate|Deactivate again)$/ });
   await expect(actions).toHaveText(['Reactivate', 'Deactivate again']);
 
@@ -209,7 +200,7 @@ test('the Admin reactivates the Vendor, and it logs in with the password it had'
   browser,
   page,
 }) => {
-  await openTheVendorsPage(page);
+  await openTheVendorsPage(page, vendor);
 
   await page.getByRole('button', { name: 'Reactivate' }).click();
 

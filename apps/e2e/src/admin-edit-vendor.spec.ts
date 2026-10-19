@@ -1,12 +1,13 @@
 import { expect, type Page, test } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
-import { detailRow, vendorFormField, vendorPageUrl } from './admin-vendors';
 import {
-  developmentAdmin,
-  logInToTheDashboard,
-  openTheDashboardAs,
-} from './development-logins';
+  detailRow,
+  openTheVendorsPage,
+  vendorFormField,
+  vendorPageUrl,
+} from './admin-vendors';
+import { openTheDashboardAs } from './development-logins';
 import {
   atTheLoginScreenInABrowserOfItsOwn,
   expectTheLoginScreenToRefuse,
@@ -45,10 +46,7 @@ function aNewNameAndNumber() {
 // As the development Admin, opens the Vendor's page, follows its Edit link to
 // the edit form, and checks that the form holds the Vendor as it is.
 async function openTheEditForm(page: Page, vendor: VendorLoginDetails): Promise<void> {
-  await logInToTheDashboard(page, developmentAdmin, vendorPageUrl(vendor.vendorId));
-  await expect(
-    page.getByRole('heading', { level: 1, name: vendor.vendorName }),
-  ).toBeVisible();
+  await openTheVendorsPage(page, vendor);
   await page.getByRole('link', { name: 'Edit', exact: true }).click();
 
   await expect(page).toHaveURL(`${vendorPageUrl(vendor.vendorId)}/edit`);

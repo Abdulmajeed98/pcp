@@ -1,8 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
-import { vendorPageUrl } from './admin-vendors';
-import { authorizationOfTheDevelopmentAdmin } from './development-logins';
+import { openTheVendorsPage } from './admin-vendors';
 import { loginOfTheMessage, temporaryPassword, theHandOver } from './hand-over';
 import {
   atTheLoginScreenInABrowserOfItsOwn,
@@ -25,11 +24,7 @@ let vendor: VendorLoginDetails;
 
 test.beforeEach(async ({ browser, page }) => {
   vendor = await aMadeUpVendorThatHasLoggedIn(browser);
-  await authorizationOfTheDevelopmentAdmin(page);
-  await page.goto(vendorPageUrl(vendor.vendorId));
-  await expect(
-    page.getByRole('heading', { level: 1, name: vendor.vendorName }),
-  ).toBeVisible();
+  await openTheVendorsPage(page, vendor);
 });
 
 // The confirmation the Vendor's page asks for before a reset.
