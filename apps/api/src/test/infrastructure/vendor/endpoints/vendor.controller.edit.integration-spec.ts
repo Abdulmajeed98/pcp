@@ -1,4 +1,3 @@
-import { connectionOf } from '@pcp/core';
 import {
   accessDenied,
   bearerHeader,
@@ -7,7 +6,6 @@ import {
   notValid,
   unauthorized,
 } from '@pcp/core/test-utils';
-import { Client } from 'pg';
 
 import {
   createTestAppWithLogins,
@@ -15,8 +13,13 @@ import {
 } from '../../../test-utils/create-test-app';
 import {
   emptyTheDatabase,
-  testDatabaseSettings,
+  whileTheDatabaseRefusesEveryVendor,
 } from '../../../test-utils/database/test-database';
+import {
+  identityServiceUnavailable,
+  internalServerError,
+  vendorNotFound,
+} from '../../../test-utils/error-bodies';
 import {
   addThePasswordCheckClient,
   emptyTheRealm,
@@ -87,55 +90,6 @@ const everyDetailChanged = {
 // The password a Vendor chose at its first login, which the test gives its
 // Login in place of that login.
 const itsOwnPassword = 'its-own-password';
-
-const identityServiceUnavailable = [
-  {
-    code: 'IDENTITY_SERVICE_UNAVAILABLE',
-    title: 'identity_service_unavailable_title',
-    detail: 'identity_service_unavailable_details',
-  },
-];
-
-const vendorNotFound = [
-  {
-    code: 'VENDOR_NOT_FOUND',
-    title: 'vendor_not_found_title',
-    detail: 'vendor_not_found_details',
-  },
-];
-
-const internalServerError = [
-  {
-    code: 'INTERNAL_SERVER_ERROR',
-    title: 'internal_server_error_title',
-    detail: 'internal_server_error_details',
-  },
-];
-
-// Runs SQL in the test database as the API's own database user.
-async function inTheDatabase(statement: string): Promise<void> {
-  const client = new Client(connectionOf(testDatabaseSettings()));
-  await client.connect();
-  try {
-    await client.query(statement);
-  } finally {
-    await client.end();
-  }
-}
-
-// A fault planted in the database for as long as the function runs: a rule
-// that no Vendor meets, checked when a Vendor is stored and not against
-// those stored already, so that storing an edit is refused.
-async function whileTheDatabaseRefusesEveryEdit(run: () => Promise<void>): Promise<void> {
-  await inTheDatabase(
-    'ALTER TABLE vendor ADD CONSTRAINT planted_refusal_of_every_edit CHECK (false) NOT VALID',
-  );
-  try {
-    await run();
-  } finally {
-    await inTheDatabase('ALTER TABLE vendor DROP CONSTRAINT planted_refusal_of_every_edit');
-  }
-}
 
 describe("the Admin's edit of a Vendor", () => {
   let testApp: TestAppWithLogins;
@@ -416,7 +370,7 @@ describe("the Admin's edit of a Vendor", () => {
       const vendor = await aVendorWith('0750 123 4567');
       const loginId = await loginIdOf('+9647501234567');
 
-      await whileTheDatabaseRefusesEveryEdit(async () => {
+      await whileTheDatabaseRefusesEveryVendor(async () => {
         const response = await editVendor(vendor.id, everyDetailChanged);
 
         await expectErrorResponse(response, 500, internalServerError);

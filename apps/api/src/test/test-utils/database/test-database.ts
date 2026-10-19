@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 
+import { connectionOf } from '@pcp/core';
 import { emptyTables, TestDatabaseSettings } from '@pcp/core/test-utils';
+import { Client } from 'pg';
 
 // The migrations as they are committed, which every test database is built
 // from.
@@ -32,4 +34,33 @@ export function useDatabase(settings: TestDatabaseSettings): void {
 // Empties every table, so that a test starts from an empty database.
 export function emptyTheDatabase(): Promise<void> {
   return emptyTables(testDatabaseSettings());
+}
+
+// Runs SQL in the test database as the API's own database user.
+async function inTheDatabase(statement: string): Promise<void> {
+  const client = new Client(connectionOf(testDatabaseSettings()));
+  await client.connect();
+  try {
+    await client.query(statement);
+  } finally {
+    await client.end();
+  }
+}
+
+// A fault planted in the database for as long as the function runs: a rule
+// that no Vendor meets, checked when a Vendor is stored and not against
+// those stored already, so that creating or editing one is refused.
+export async function whileTheDatabaseRefusesEveryVendor(
+  run: () => Promise<void>,
+): Promise<void> {
+  await inTheDatabase(
+    'ALTER TABLE vendor ADD CONSTRAINT planted_refusal_of_every_vendor CHECK (false) NOT VALID',
+  );
+  try {
+    await run();
+  } finally {
+    await inTheDatabase(
+      'ALTER TABLE vendor DROP CONSTRAINT planted_refusal_of_every_vendor',
+    );
+  }
 }
