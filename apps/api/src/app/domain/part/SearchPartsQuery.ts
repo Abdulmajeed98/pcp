@@ -4,6 +4,7 @@ import { Either } from 'effect';
 
 import { Category } from './Category';
 import { PartsPage, PartStore, SearchPartsParams } from './PartStore';
+import { searchWordsOf } from './search-words';
 
 class Input {
   constructor(
@@ -48,10 +49,7 @@ export class SearchPartsQuery {
   constructor(private readonly partStore: PartStore) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
-    const words = input
-      .getTerm()
-      .split(/\s+/)
-      .filter((word) => word !== '');
+    const words = searchWordsOf(input.getTerm());
 
     const page = await this.partStore.search(
       new SearchPartsParams(words, input.getCategory(), input.getPageable()),

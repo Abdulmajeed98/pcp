@@ -60,7 +60,7 @@ export class OfferResponse {
   @ApiProperty({ description: 'When the Offer was added.', format: 'date-time' })
   readonly createdAt: string;
 
-  private constructor(offer: Offer) {
+  protected constructor(offer: Offer) {
     this.id = offer.getId();
     this.part = PartSummaryResponse.of(offer.getPart());
     this.usdPrice = usdPriceTextOf(offer.getUsdPriceCents());

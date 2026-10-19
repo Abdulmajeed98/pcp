@@ -879,6 +879,116 @@
         },
         "summary": "Add a Vendor's Offer for a Part, which is its first Confirmation, for the Admin or for the Vendor's own Login",
         "tags": ["Offer"]
+      },
+      "get": {
+        "operationId": "listVendorsOffers",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Words an Offer's Part must hold, in any order and any case, in its name, its manufacturer or a part number, as the catalog search reads them. Left out or empty, every Offer of the Vendor is found.",
+            "schema": {
+              "example": "ryzen 7600",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorsOffersPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "One page of a Vendor's Offers, Expired Offers among them, oldest Confirmation first, with each one's expiry and the Vendor's counts, for the Admin or for the Vendor's own Login",
+        "tags": ["Offer"]
+      }
+    },
+    "/v1/vendors/{vendorId}/offers/confirm": {
+      "post": {
+        "operationId": "confirmAllOffers",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmedOffersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirm every Offer of a Vendor, Expired Offers among them, as of now, and answer how many, for the Admin or for the Vendor's own Login",
+        "tags": ["Offer"]
       }
     },
     "/v1/vendors/{vendorId}/offers/{offerId}": {
@@ -2063,6 +2173,174 @@
           "confirmedAt",
           "createdAt"
         ]
+      },
+      "ListedOfferResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Offer's identifier on the platform.",
+            "example": "8e1f2a3b-4c5d-4e6f-8a7b-9c0d1e2f3a4b"
+          },
+          "part": {
+            "description": "The Part offered.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartSummaryResponse"
+              }
+            ]
+          },
+          "usdPrice": {
+            "type": "string",
+            "description": "The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": "349.99"
+          },
+          "iqdPrice": {
+            "type": "number",
+            "description": "The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": 525000
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether the Vendor has the Part in stock."
+          },
+          "warrantyMonths": {
+            "type": "number",
+            "description": "The warranty, in whole months, or null when the Vendor states none.",
+            "nullable": true,
+            "example": 12
+          },
+          "confirmedAt": {
+            "type": "string",
+            "description": "When the Vendor last confirmed the Offer.",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the Offer was added.",
+            "format": "date-time"
+          },
+          "daysSinceConfirmation": {
+            "type": "number",
+            "description": "The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.",
+            "example": 3
+          },
+          "expired": {
+            "type": "boolean",
+            "description": "Whether the Offer is an Expired Offer: its last Confirmation is more than 14 days old, and Shoppers no longer see it."
+          },
+          "aboutToExpire": {
+            "type": "boolean",
+            "description": "Whether the Offer is about to expire: it is not expired, and will be within 3 days."
+          }
+        },
+        "required": [
+          "id",
+          "part",
+          "usdPrice",
+          "iqdPrice",
+          "inStock",
+          "warrantyMonths",
+          "confirmedAt",
+          "createdAt",
+          "daysSinceConfirmation",
+          "expired",
+          "aboutToExpire"
+        ]
+      },
+      "VendorsOfferCountsResponse": {
+        "type": "object",
+        "properties": {
+          "offers": {
+            "type": "number",
+            "description": "How many Offers the Vendor has.",
+            "example": 42
+          },
+          "expired": {
+            "type": "number",
+            "description": "How many of them are Expired Offers.",
+            "example": 2
+          },
+          "aboutToExpire": {
+            "type": "number",
+            "description": "How many of them are not expired and will be within 3 days.",
+            "example": 5
+          }
+        },
+        "required": ["offers", "expired", "aboutToExpire"]
+      },
+      "VendorsOffersPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Offers, Expired Offers among them, oldest Confirmation first, then by Part name.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListedOfferResponse"
+            }
+          },
+          "counts": {
+            "description": "The Vendor's counts of all its Offers, whatever the search.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VendorsOfferCountsResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content",
+          "counts"
+        ]
+      },
+      "ConfirmedOffersResponse": {
+        "type": "object",
+        "properties": {
+          "confirmed": {
+            "type": "number",
+            "description": "How many Offers were confirmed: every Offer of the Vendor.",
+            "example": 42
+          }
+        },
+        "required": ["confirmed"]
       }
     }
   },

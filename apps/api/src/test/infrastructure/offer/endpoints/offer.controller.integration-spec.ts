@@ -23,7 +23,9 @@ import {
   loginsNamed,
 } from '../../../test-utils/keycloak/keycloak-administrator';
 
-// Adding an Offer and reading it back (OFF-1, OFF-2, OFF-3, OFF-5, OFF-10).
+// Adding an Offer and reading it back (OFF-1, OFF-2, OFF-3, OFF-5, OFF-10), a
+// Vendor's list of its Offers with their expiry, and confirming them all
+// (OFF-5, OFF-6, OFF-7, OFF-8).
 
 // A Part as an Offer answers it.
 type OfferedPartBody = {
@@ -45,6 +47,29 @@ type OfferBody = {
   warrantyMonths: number | null;
   confirmedAt: string;
   createdAt: string;
+};
+
+// An Offer as a Vendor's list answers it, with its expiry at the time of the
+// API's clock.
+type ListedOfferBody = OfferBody & {
+  daysSinceConfirmation: number;
+  expired: boolean;
+  aboutToExpire: boolean;
+};
+
+// The Vendor's counts, of all its Offers whatever the search.
+type OfferCountsBody = { offers: number; expired: number; aboutToExpire: number };
+
+// One page of a Vendor's list of its Offers.
+type OffersPageBody = {
+  content: ListedOfferBody[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  counts: OfferCountsBody;
 };
 
 // A Vendor as the API answers it, as far as these tests read it.
@@ -72,6 +97,13 @@ const adminLoginId = randomUUID();
 // A moment for the API's clock, with milliseconds, so that a time stored
 // with less precision would show.
 const aMovedMoment = new Date('2027-03-14T09:26:53.589Z');
+
+// An hour and a day of 24 hours, and a moment some time after another.
+const anHour = 60 * 60 * 1000;
+const aDay = 24 * anHour;
+function after(moment: Date, milliseconds: number): Date {
+  return new Date(moment.getTime() + milliseconds);
+}
 
 describe("a Vendor's Offers", () => {
   let testApp: TestAppWithLogins;
@@ -130,20 +162,23 @@ describe("a Vendor's Offers", () => {
   }
 
   // A made-up Part the Admin adds to the catalog.
-  async function aPart(name = 'Made-up Ryzen 5 7600'): Promise<OfferedPartBody> {
+  async function aPart(
+    name = 'Made-up Ryzen 5 7600',
+    manufacturer = 'AMD',
+    partNumbers = ['100-100001015BOX'],
+  ): Promise<OfferedPartBody> {
     const response = await fetch(`${testApp.baseUrl}/v1/parts`, {
       method: 'POST',
       headers: { ...bearerHeader(await adminToken()), 'content-type': 'application/json' },
       body: JSON.stringify({
         category: 'cpu',
         name,
-        manufacturer: 'AMD',
-        partNumbers: ['100-100001015BOX'],
+        manufacturer,
+        partNumbers,
       }),
     });
     expect(response.status).toBe(201);
-    const { id, category, manufacturer, partNumbers, photoPath } =
-      (await response.json()) as OfferedPartBody;
+    const { id, category, photoPath } = (await response.json()) as OfferedPartBody;
     return { id, category, name, manufacturer, partNumbers, photoPath };
   }
 
@@ -180,6 +215,57 @@ describe("a Vendor's Offers", () => {
   async function readOf(response: Response): Promise<OfferBody> {
     expect(response.status).toBe(200);
     return (await response.json()) as OfferBody;
+  }
+
+  function listOffers(
+    vendorId: string,
+    query: Record<string, string | number>,
+    token: string | null,
+  ): Promise<Response> {
+    const search = new URLSearchParams(
+      Object.entries(query).map(([key, value]): [string, string] => [key, String(value)]),
+    );
+    return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/offers?${search}`, {
+      headers: token === null ? {} : bearerHeader(token),
+    });
+  }
+
+  async function pageOf(response: Response): Promise<OffersPageBody> {
+    expect(response.status).toBe(200);
+    return (await response.json()) as OffersPageBody;
+  }
+
+  // The first page of the Vendor's Offers, as the Admin reads it at the time
+  // of the clock.
+  async function theListOf(
+    vendorId: string,
+    query: Record<string, string | number> = {},
+  ): Promise<OffersPageBody> {
+    return pageOf(await listOffers(vendorId, query, await adminToken()));
+  }
+
+  function confirmAll(vendorId: string, token: string | null): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/offers/confirm`, {
+      method: 'POST',
+      headers: token === null ? {} : bearerHeader(token),
+    });
+  }
+
+  // An Offer the Admin adds for the Vendor with the clock at a moment, which
+  // is then the time of its Confirmation. The clock stays there.
+  async function anOfferConfirmedAt(
+    vendorId: string,
+    part: OfferedPartBody,
+    moment: Date,
+  ): Promise<OfferBody> {
+    moveTheClockTo(moment);
+    return createdOf(
+      await createOffer(
+        vendorId,
+        { partId: part.id, usdPrice: '349.99', inStock: true },
+        await adminToken(),
+      ),
+    );
   }
 
   // A Vendor that has logged in, with its token, and a Part to offer.
@@ -622,7 +708,7 @@ describe("a Vendor's Offers", () => {
     });
   });
 
-  describe('who may add and read an Offer', () => {
+  describe('who may add, read, list and confirm Offers', () => {
     it("refuses a Vendor's token at another Vendor's Offers with 403, whether that Vendor exists or not", async () => {
       const { vendor, part } = await aVendorAndAPart();
       const another = await aVendorWith('0750 765 4321');
@@ -650,7 +736,20 @@ describe("a Vendor's Offers", () => {
           403,
           vendorAccessDenied,
         );
+        await expectErrorResponse(
+          await listOffers(vendorId, {}, anothersToken),
+          403,
+          vendorAccessDenied,
+        );
+        await expectErrorResponse(
+          await confirmAll(vendorId, anothersToken),
+          403,
+          vendorAccessDenied,
+        );
       }
+      expect(
+        await readOf(await readOffer(vendor.id, offer.id, await adminToken())),
+      ).toEqual(offer);
     });
 
     it("answers 404 with OFFER_NOT_FOUND for another Vendor's Offer read through one's own address, and for one that does not exist", async () => {
@@ -711,6 +810,12 @@ describe("a Vendor's Offers", () => {
         403,
         vendorDeactivated,
       );
+      await expectErrorResponse(
+        await listOffers(vendor.id, {}, token),
+        403,
+        vendorDeactivated,
+      );
+      await expectErrorResponse(await confirmAll(vendor.id, token), 403, vendorDeactivated);
     });
 
     it('answers a call without a token with 401', async () => {
@@ -737,6 +842,8 @@ describe("a Vendor's Offers", () => {
         401,
         unauthorized,
       );
+      await expectErrorResponse(await listOffers(vendor.id, {}, null), 401, unauthorized);
+      await expectErrorResponse(await confirmAll(vendor.id, null), 401, unauthorized);
     });
   });
 
@@ -829,6 +936,348 @@ describe("a Vendor's Offers", () => {
       ).toBe(400);
 
       expect(await offerHistoryRows()).toHaveLength(1);
+    });
+  });
+
+  describe("a Vendor's list of its Offers", () => {
+    it("holds the Vendor's Offers only, each once across the pages, oldest Confirmation first and then by Part name", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+      const [a, b, c, d, e] = [
+        await aPart('Made-up Part A'),
+        await aPart('Made-up Part B'),
+        await aPart('Made-up Part C'),
+        await aPart('Made-up Part D'),
+        await aPart('Made-up Part E'),
+      ];
+      await anOfferConfirmedAt(vendor.id, c, after(aMovedMoment, 3 * anHour));
+      await anOfferConfirmedAt(vendor.id, b, after(aMovedMoment, anHour));
+      await anOfferConfirmedAt(vendor.id, e, after(aMovedMoment, 2 * anHour));
+      const first = await anOfferConfirmedAt(vendor.id, d, aMovedMoment);
+      await anOfferConfirmedAt(vendor.id, a, after(aMovedMoment, anHour));
+      await anOfferConfirmedAt(another.id, a, after(aMovedMoment, -anHour));
+      moveTheClockTo(after(aMovedMoment, 4 * anHour));
+      const token = await tokenOfTheOwnLogin(vendor);
+
+      const pages = [];
+      for (const page of [0, 1, 2]) {
+        pages.push(await pageOf(await listOffers(vendor.id, { page, size: 2 }, token)));
+      }
+
+      expect(pages.flatMap((each) => each.content.map((offer) => offer.part.name))).toEqual(
+        [
+          'Made-up Part D',
+          'Made-up Part A',
+          'Made-up Part B',
+          'Made-up Part E',
+          'Made-up Part C',
+        ],
+      );
+      expect(pages[0].content[0]).toEqual({
+        ...first,
+        daysSinceConfirmation: 0,
+        expired: false,
+        aboutToExpire: false,
+      });
+      expect(
+        pages.map(({ pageNumber, pageSize, totalElements, totalPages, first, last }) => ({
+          pageNumber,
+          pageSize,
+          totalElements,
+          totalPages,
+          first,
+          last,
+        })),
+      ).toEqual([
+        {
+          pageNumber: 0,
+          pageSize: 2,
+          totalElements: 5,
+          totalPages: 3,
+          first: true,
+          last: false,
+        },
+        {
+          pageNumber: 1,
+          pageSize: 2,
+          totalElements: 5,
+          totalPages: 3,
+          first: false,
+          last: false,
+        },
+        {
+          pageNumber: 2,
+          pageSize: 2,
+          totalElements: 5,
+          totalPages: 3,
+          first: false,
+          last: true,
+        },
+      ]);
+    });
+
+    it("finds an Offer by its Part's name, manufacturer or part number, in any case and any order", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+      const ryzen = await aPart('Made-up Ryzen 5 7600', 'AMD', ['100-100001015BOX']);
+      const geforce = await aPart('Made-up GeForce RTX 4070', 'NVIDIA', [
+        '900-1G141-2544-000',
+      ]);
+      const core = await aPart('Made-up Core i5-14600K', 'Intel', ['BX8071514600K']);
+      for (const part of [ryzen, geforce, core]) {
+        await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+      }
+      await anOfferConfirmedAt(another.id, ryzen, aMovedMoment);
+
+      for (const [search, found] of [
+        ['ryzen 7600', ['Made-up Ryzen 5 7600']],
+        ['7600 RYZEN', ['Made-up Ryzen 5 7600']],
+        ['nvidia', ['Made-up GeForce RTX 4070']],
+        ['bx8071514600k', ['Made-up Core i5-14600K']],
+        [
+          '  ',
+          ['Made-up Core i5-14600K', 'Made-up GeForce RTX 4070', 'Made-up Ryzen 5 7600'],
+        ],
+        ['made-up radeon', []],
+      ] as const) {
+        const page = await theListOf(vendor.id, { search });
+
+        expect(page.content.map((offer) => offer.part.name)).toEqual(found);
+        expect(page.totalElements).toBe(found.length);
+      }
+    });
+
+    it("lets the Admin list a deactivated Vendor's Offers", async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const offer = await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+      letTheClockRun();
+      const deactivation = await fetch(
+        `${testApp.baseUrl}/v1/vendors/${vendor.id}/deactivate`,
+        { method: 'POST', headers: bearerHeader(await adminToken()) },
+      );
+      expect(deactivation.status).toBe(200);
+      moveTheClockTo(aMovedMoment);
+
+      expect((await theListOf(vendor.id)).content.map(({ id }) => id)).toEqual([offer.id]);
+    });
+  });
+
+  describe("an Offer's expiry, with the clock moved", () => {
+    // The Vendor's one Offer, confirmed at the moved moment, as its list
+    // answers it with the clock moved on by some time.
+    async function theOfferListed(
+      vendorId: string,
+      later: number,
+    ): Promise<ListedOfferBody> {
+      moveTheClockTo(after(aMovedMoment, later));
+      const [listed] = (await theListOf(vendorId)).content;
+      return listed;
+    }
+
+    it('is not expired when confirmed 14 days ago to the millisecond, and is listed marked expired one millisecond later', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+
+      expect(await theOfferListed(vendor.id, 14 * aDay)).toMatchObject({
+        daysSinceConfirmation: 14,
+        expired: false,
+        aboutToExpire: true,
+      });
+      expect(await theOfferListed(vendor.id, 14 * aDay + 1)).toMatchObject({
+        daysSinceConfirmation: 14,
+        expired: true,
+        aboutToExpire: false,
+      });
+    });
+
+    it('is not about to expire when confirmed 11 days ago to the millisecond, and is one millisecond later', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+
+      expect(await theOfferListed(vendor.id, 11 * aDay)).toMatchObject({
+        daysSinceConfirmation: 11,
+        expired: false,
+        aboutToExpire: false,
+      });
+      expect(await theOfferListed(vendor.id, 11 * aDay + 1)).toMatchObject({
+        daysSinceConfirmation: 11,
+        expired: false,
+        aboutToExpire: true,
+      });
+    });
+
+    it('counts the days since Confirmation as whole days of 24 hours: 0 just before 24 hours, 1 at 24 hours, 14 at the boundary', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+
+      const days = [];
+      for (const later of [0, aDay - 1, aDay, 2 * aDay - 1, 14 * aDay, 15 * aDay]) {
+        days.push((await theOfferListed(vendor.id, later)).daysSinceConfirmation);
+      }
+
+      expect(days).toEqual([0, 0, 1, 1, 14, 15]);
+    });
+  });
+
+  describe("a Vendor's counts of its Offers", () => {
+    it('counts the Offers, the Expired Offers and those about to expire, whatever the search', async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+      const now = after(aMovedMoment, 30 * aDay);
+      const confirmed = [
+        // Current.
+        ['Made-up Ryzen 5 7600', 1],
+        ['Made-up Part 1', 11],
+        // About to expire.
+        ['Made-up Part 2', 12],
+        ['Made-up Part 3', 14],
+        // Expired.
+        ['Made-up Part 4', 15],
+        ['Made-up Part 5', 20],
+        ['Made-up Part 6', 30],
+      ] as const;
+      for (const [name, daysAgo] of confirmed) {
+        const part = await aPart(name);
+        await anOfferConfirmedAt(vendor.id, part, after(now, -daysAgo * aDay));
+        await anOfferConfirmedAt(another.id, part, after(now, -15 * aDay));
+      }
+      moveTheClockTo(now);
+
+      const all = await theListOf(vendor.id);
+      const searched = await theListOf(vendor.id, { search: 'ryzen' });
+
+      expect(all.totalElements).toBe(7);
+      expect(all.counts).toEqual({ offers: 7, expired: 3, aboutToExpire: 2 });
+      expect(searched.totalElements).toBe(1);
+      expect(searched.counts).toEqual({ offers: 7, expired: 3, aboutToExpire: 2 });
+      expect(
+        all.content.map(({ part, expired, aboutToExpire }) => [
+          part.name,
+          expired,
+          aboutToExpire,
+        ]),
+      ).toEqual([
+        ['Made-up Part 6', true, false],
+        ['Made-up Part 5', true, false],
+        ['Made-up Part 4', true, false],
+        ['Made-up Part 3', false, true],
+        ['Made-up Part 2', false, true],
+        ['Made-up Part 1', false, false],
+        ['Made-up Ryzen 5 7600', false, false],
+      ]);
+    });
+
+    it('moves an Offer from about to expire to expired at the 14-day boundary, as its list marks it', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+
+      const counts = [];
+      for (const later of [11 * aDay, 11 * aDay + 1, 14 * aDay, 14 * aDay + 1]) {
+        moveTheClockTo(after(aMovedMoment, later));
+        counts.push((await theListOf(vendor.id)).counts);
+      }
+
+      expect(counts).toEqual([
+        { offers: 1, expired: 0, aboutToExpire: 0 },
+        { offers: 1, expired: 0, aboutToExpire: 1 },
+        { offers: 1, expired: 0, aboutToExpire: 1 },
+        { offers: 1, expired: 1, aboutToExpire: 0 },
+      ]);
+    });
+
+    it('answers an empty page, with counts of 0, for a Vendor with no Offers', async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+
+      expect(await theListOf(vendor.id)).toEqual({
+        content: [],
+        pageNumber: 0,
+        pageSize: 10,
+        totalElements: 0,
+        totalPages: 0,
+        first: true,
+        last: true,
+        counts: { offers: 0, expired: 0, aboutToExpire: 0 },
+      });
+    });
+  });
+
+  describe("confirming all of a Vendor's Offers", () => {
+    it("confirms every Offer of the Vendor, Expired Offers among them, answers how many, leaves another Vendor's as they were, and adds no history row", async () => {
+      const vendor = await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+      const now = after(aMovedMoment, 30 * aDay);
+      const parts = [
+        await aPart('Made-up Part 1'),
+        await aPart('Made-up Part 2'),
+        await aPart('Made-up Part 3'),
+      ];
+      for (const [part, daysAgo] of [
+        [parts[0], 20],
+        [parts[1], 12],
+        [parts[2], 1],
+      ] as const) {
+        await anOfferConfirmedAt(vendor.id, part, after(now, -daysAgo * aDay));
+      }
+      const anothers = await anOfferConfirmedAt(
+        another.id,
+        parts[0],
+        after(now, -20 * aDay),
+      );
+      const historyBefore = await offerHistoryRows();
+      moveTheClockTo(now);
+
+      const response = await confirmAll(vendor.id, await tokenOfTheOwnLogin(vendor));
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ confirmed: 3 });
+      const listed = await theListOf(vendor.id);
+      expect(
+        listed.content.map(({ confirmedAt, daysSinceConfirmation, expired }) => ({
+          confirmedAt,
+          daysSinceConfirmation,
+          expired,
+        })),
+      ).toEqual(
+        Array.from({ length: 3 }, () => ({
+          confirmedAt: now.toISOString(),
+          daysSinceConfirmation: 0,
+          expired: false,
+        })),
+      );
+      expect(listed.counts).toEqual({ offers: 3, expired: 0, aboutToExpire: 0 });
+      const anothersListed = await theListOf(another.id);
+      expect(anothersListed.content).toEqual([
+        { ...anothers, daysSinceConfirmation: 20, expired: true, aboutToExpire: false },
+      ]);
+      expect(await offerHistoryRows()).toEqual(historyBefore);
+    });
+
+    it('answers 0 for a Vendor with no Offers', async () => {
+      const { vendor, token } = await aVendorAndAPart();
+
+      const response = await confirmAll(vendor.id, token);
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ confirmed: 0 });
+    });
+
+    it("lets the Admin confirm all of a deactivated Vendor's Offers", async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+      letTheClockRun();
+      const deactivation = await fetch(
+        `${testApp.baseUrl}/v1/vendors/${vendor.id}/deactivate`,
+        { method: 'POST', headers: bearerHeader(await adminToken()) },
+      );
+      expect(deactivation.status).toBe(200);
+      const now = after(aMovedMoment, 15 * aDay);
+      moveTheClockTo(now);
+
+      const response = await confirmAll(vendor.id, await adminToken());
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ confirmed: 1 });
+      expect((await theListOf(vendor.id)).content[0].confirmedAt).toBe(now.toISOString());
     });
   });
 });

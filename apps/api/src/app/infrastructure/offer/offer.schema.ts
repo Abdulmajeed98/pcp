@@ -48,6 +48,10 @@ export const offer = pgTable(
     // A Vendor has at most one Offer for a Part (OFF-1), even when two
     // requests to add one arrive at once.
     unique(oneOfferForAPart).on(table.vendorId, table.partId),
+    // A Vendor's list of its Offers, oldest Confirmation first, and its counts
+    // of Expired Offers and Offers about to expire, which compare the time of
+    // Confirmation.
+    index('offer_vendor_confirmed_index').on(table.vendorId, table.confirmedAt),
     check(
       'offer_has_a_price',
       sql`${table.usdPriceCents} IS NOT NULL OR ${table.iqdPrice} IS NOT NULL`,

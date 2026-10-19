@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
-import { and, asc, count, desc, eq, ilike, sql, SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, sql, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import { Category } from '~/domain/part/Category';
@@ -24,12 +24,7 @@ import { partPhoto } from '~/infrastructure/photo/photo.schema';
 import { part } from '../part.schema';
 import { columnsOf } from '../part-columns';
 import { partOf, partWithPhoto } from '../part-of-row';
-
-// A word to be found anywhere in the search text. Its `%`, `_` and `\` are
-// taken as themselves and not as parts of a pattern.
-function containing(word: string): string {
-  return `%${word.toLowerCase().replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
-}
+import { holdingEveryWord } from '../search-text';
 
 // Whether a Part's specifications lack one specification, asked of its
 // document as `Specification.isMissingIn` asks it of a value: nothing at the
@@ -124,9 +119,7 @@ export class DatabasePartStore implements PartStore {
   async search(
     params: SearchPartsParams,
   ): Promise<Either.Either<PartsPage, StructuredError>> {
-    const conditions: SQL[] = params
-      .getWords()
-      .map((word) => ilike(part.searchText, containing(word)));
+    const conditions: SQL[] = holdingEveryWord(params.getWords());
     const category = params.getCategory();
     if (category !== undefined) conditions.push(eq(part.category, category.getKey()));
     const where = conditions.length === 0 ? undefined : and(...conditions);
