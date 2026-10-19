@@ -18,16 +18,20 @@ import {
 } from '~/domain/offer/ConfirmAllOffersCommand';
 import { CreateOfferCommand } from '~/domain/offer/CreateOfferCommand';
 import { ListVendorsOffersQuery } from '~/domain/offer/ListVendorsOffersQuery';
+import { ListVendorsWithExpiringOffersQuery } from '~/domain/offer/ListVendorsWithExpiringOffersQuery';
 import { ReadOfferQuery, ReadOfferQueryInput } from '~/domain/offer/ReadOfferQuery';
 
 import { ConfirmedOffersResponse } from './ConfirmedOffersResponse';
 import { CreateOfferRequest } from './CreateOfferRequest';
 import { ListVendorsOffersRequest } from './ListVendorsOffersRequest';
+import { ListVendorsWithExpiringOffersRequest } from './ListVendorsWithExpiringOffersRequest';
 import { OfferResponse } from './OfferResponse';
 import { VendorsOffersPageResponse } from './VendorsOffersPageResponse';
+import { VendorsWithExpiringOffersPageResponse } from './VendorsWithExpiringOffersPageResponse';
 
 // A Vendor's Offers, for the Admin or for the Vendor's own Login, by the rule
-// for which Vendor a request acts for.
+// for which Vendor a request acts for; and the Admin's list of the Vendors to
+// remind.
 @Controller()
 export class OfferController {
   constructor(
@@ -35,6 +39,7 @@ export class OfferController {
     private readonly readOfferQuery: ReadOfferQuery,
     private readonly listVendorsOffersQuery: ListVendorsOffersQuery,
     private readonly confirmAllOffersCommand: ConfirmAllOffersCommand,
+    private readonly listVendorsWithExpiringOffersQuery: ListVendorsWithExpiringOffersQuery,
     private readonly callerResolver: CallerResolver,
   ) {}
 
@@ -103,6 +108,27 @@ export class OfferController {
 
     return result.pipe(
       Either.map(ConfirmedOffersResponse.of),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'One page of the active Vendors that have Expired Offers or Offers about to expire, most urgent first, each with its phone and WhatsApp numbers and its counts, for the Admin to remind them',
+  })
+  @ApiOkResponse({ type: VendorsWithExpiringOffersPageResponse })
+  // The Admin's only: a Vendor learns nothing about other Vendors.
+  @PreAuthorize([Role.ADMIN])
+  @Get('v1/offers/expiring')
+  async listVendorsWithExpiringOffers(
+    @Query() request: ListVendorsWithExpiringOffersRequest,
+  ): Promise<VendorsWithExpiringOffersPageResponse> {
+    const result = await this.listVendorsWithExpiringOffersQuery.execute(
+      request.toQueryInput(),
+    );
+
+    return result.pipe(
+      Either.map(VendorsWithExpiringOffersPageResponse.of),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }
