@@ -3,6 +3,7 @@ import { Either, Option } from 'effect';
 
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
+import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 
 // A new Offer: the Vendor and the Part, its details, the time of its first
 // Confirmation, and the Caller who adds it, whom its history records.
@@ -113,6 +114,39 @@ export class VendorsOffersPage {
   }
 }
 
+// What the Admin's list of Vendors to remind asks for: the page, and now, by
+// the API's clock, which every expiry in the list is judged by.
+export class ListVendorsWithExpiringOffersParams {
+  constructor(
+    private readonly pageable: PageableAttributes,
+    private readonly now: Date,
+  ) {}
+
+  getPageable(): PageableAttributes {
+    return this.pageable;
+  }
+
+  getNow(): Date {
+    return this.now;
+  }
+}
+
+// One page of the Vendors to remind, and where it stands among them all.
+export class VendorsWithExpiringOffersPage {
+  constructor(
+    private readonly vendors: readonly VendorWithExpiringOffers[],
+    private readonly page: PageAttributes,
+  ) {}
+
+  getVendors(): readonly VendorWithExpiringOffers[] {
+    return this.vendors;
+  }
+
+  getPageAttributes(): PageAttributes {
+    return this.page;
+  }
+}
+
 // Where Offers and their history are kept. It is the port: the domain says
 // what it needs, and infrastructure provides it.
 export abstract class OfferStore {
@@ -133,6 +167,16 @@ export abstract class OfferStore {
   abstract listByVendor(
     params: ListVendorsOffersParams,
   ): Promise<Either.Either<VendorsOffersPage, StructuredError>>;
+
+  // The active Vendors that have at least one Expired Offer or Offer about to
+  // expire, judged at the params' now by the rules in `expiry.ts`, each with
+  // its counts of all its Offers. A Vendor with an Expired Offer comes before
+  // every Vendor without one; among those without one, the Vendor whose
+  // Offer expires soonest comes first; then by name, then by identifier, so
+  // that moving between pages never skips or repeats one.
+  abstract listVendorsWithExpiringOffers(
+    params: ListVendorsWithExpiringOffersParams,
+  ): Promise<Either.Either<VendorsWithExpiringOffersPage, StructuredError>>;
 
   // Sets the time of the last Confirmation of every Offer of the Vendor,
   // Expired Offers among them, to the time given, in one statement, and

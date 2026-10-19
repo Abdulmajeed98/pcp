@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfirmAllOffersCommand } from '~/domain/offer/ConfirmAllOffersCommand';
 import { CreateOfferCommand } from '~/domain/offer/CreateOfferCommand';
 import { ListVendorsOffersQuery } from '~/domain/offer/ListVendorsOffersQuery';
+import { ListVendorsWithExpiringOffersQuery } from '~/domain/offer/ListVendorsWithExpiringOffersQuery';
 import { OfferStore } from '~/domain/offer/OfferStore';
 import { ReadOfferQuery } from '~/domain/offer/ReadOfferQuery';
 import { PartModule } from '~/infrastructure/part/part.module';
@@ -22,6 +23,7 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     ReadOfferQuery,
     ListVendorsOffersQuery,
     ConfirmAllOffersCommand,
+    ListVendorsWithExpiringOffersQuery,
   ],
 })
 export class OfferModule {}

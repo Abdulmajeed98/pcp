@@ -673,6 +673,60 @@ export type ConfirmedOffersResponse = {
     confirmed: number;
 };
 
+export type VendorWithExpiringOffersResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as it writes it.
+     */
+    name: string;
+    /**
+     * The Vendor's phone number, a mobile number or a landline, to call.
+     */
+    phoneNumber: PhoneNumberResponse;
+    /**
+     * The Vendor's WhatsApp number, to open a chat with, or null when it has none.
+     */
+    whatsAppNumber: PhoneNumberResponse | null;
+    /**
+     * The Vendor's counts of all its Offers, at the moment the list was read.
+     */
+    counts: VendorsOfferCountsResponse;
+};
+
+export type VendorsWithExpiringOffersPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Vendors: those with an Expired Offer first, by name; then those whose Offer expires soonest, then by name.
+     */
+    content: Array<VendorWithExpiringOffersResponse>;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -1204,6 +1258,37 @@ export type ConfirmAllOffersResponses = {
 };
 
 export type ConfirmAllOffersResponse = ConfirmAllOffersResponses[keyof ConfirmAllOffersResponses];
+
+export type ListVendorsWithExpiringOffersData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+    };
+    url: '/v1/offers/expiring';
+};
+
+export type ListVendorsWithExpiringOffersErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVendorsWithExpiringOffersError = ListVendorsWithExpiringOffersErrors[keyof ListVendorsWithExpiringOffersErrors];
+
+export type ListVendorsWithExpiringOffersResponses = {
+    200: VendorsWithExpiringOffersPageResponse;
+};
+
+export type ListVendorsWithExpiringOffersResponse = ListVendorsWithExpiringOffersResponses[keyof ListVendorsWithExpiringOffersResponses];
 
 export type ReadOfferData = {
     body?: never;
