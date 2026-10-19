@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
 import { LoginStore } from '../login/LoginStore';
 import { Vendor } from './Vendor';
-import { vendorNotFound } from './vendor-errors';
+import { existingVendor } from './existing-vendor';
 import { VendorStore } from './VendorStore';
 
 class Input {
@@ -46,16 +46,17 @@ export class DeactivateVendorCommand {
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const vendorId = input.getVendorId();
-    const found = await this.vendorStore.readById(vendorId);
+    const found = existingVendor(vendorId, await this.vendorStore.readById(vendorId));
     if (Either.isLeft(found)) return Either.left(found.left);
-    if (Option.isNone(found.right)) return Either.left(vendorNotFound(vendorId));
 
-    let vendor = found.right.value;
+    let vendor = found.right;
     if (vendor.isActive()) {
-      const marked = await this.vendorStore.markDeactivated(vendorId);
+      const marked = existingVendor(
+        vendorId,
+        await this.vendorStore.markDeactivated(vendorId),
+      );
       if (Either.isLeft(marked)) return Either.left(marked.left);
-      if (Option.isNone(marked.right)) return Either.left(vendorNotFound(vendorId));
-      vendor = marked.right.value;
+      vendor = marked.right;
     }
 
     const disabled = await this.loginStore.disable(vendor.getLoginId());

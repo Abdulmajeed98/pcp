@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
 import { LoginStore } from '../login/LoginStore';
 import { makeTemporaryPassword } from '../login/temporary-password';
-import { vendorNotFound } from './vendor-errors';
+import { existingVendor } from './existing-vendor';
 import { VendorStore } from './VendorStore';
 
 class Input {
@@ -50,10 +50,9 @@ export class ResetVendorPasswordCommand {
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const vendorId = input.getVendorId();
-    const found = await this.vendorStore.readById(vendorId);
+    const found = existingVendor(vendorId, await this.vendorStore.readById(vendorId));
     if (Either.isLeft(found)) return Either.left(found.left);
-    if (Option.isNone(found.right)) return Either.left(vendorNotFound(vendorId));
-    const loginId = found.right.value.getLoginId();
+    const loginId = found.right.getLoginId();
 
     const ended = await this.loginStore.endSessions(loginId);
     if (Either.isLeft(ended)) return Either.left(ended.left);

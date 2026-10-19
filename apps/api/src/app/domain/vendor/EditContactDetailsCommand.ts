@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Role, StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
 import { ContactDetails, UncheckedContactDetails } from './ContactDetails';
 import { Vendor } from './Vendor';
 import { VendorAccessRule } from './VendorAccessRule';
-import { vendorNotFound } from './vendor-errors';
+import { existingVendor } from './existing-vendor';
 import { EditContactDetailsParams, VendorStore } from './VendorStore';
 
 class Input {
@@ -79,11 +79,6 @@ export class EditContactDetailsCommand {
       new EditContactDetailsParams(vendorId, contactDetails.right),
     );
 
-    return Either.flatMap(edited, (editedVendor) =>
-      Option.match(editedVendor, {
-        onNone: () => Either.left(vendorNotFound(vendorId)),
-        onSome: (vendor) => Either.right(Output.of(vendor)),
-      }),
-    );
+    return Either.map(existingVendor(vendorId, edited), Output.of);
   }
 }

@@ -3,7 +3,8 @@ import { Role, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
 import { Vendor } from './Vendor';
-import { vendorAccessDenied, vendorDeactivated, vendorNotFound } from './vendor-errors';
+import { existingVendor } from './existing-vendor';
+import { vendorAccessDenied, vendorDeactivated } from './vendor-errors';
 import { VendorStore } from './VendorStore';
 
 // The rule for which Vendor a request acts for, written once for every
@@ -31,10 +32,7 @@ export class VendorAccessRule {
     vendorId: string,
   ): Promise<Either.Either<Vendor, StructuredError>> {
     if (callerRoles.includes(Role.ADMIN)) {
-      const found = await this.vendorStore.readById(vendorId);
-      return Either.flatMap(found, (vendor) =>
-        Either.fromOption(vendor, () => vendorNotFound(vendorId)),
-      );
+      return existingVendor(vendorId, await this.vendorStore.readById(vendorId));
     }
 
     const own = await this.ownVendorOf(callerId);

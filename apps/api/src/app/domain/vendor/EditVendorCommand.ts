@@ -6,7 +6,8 @@ import { identityServiceUnavailable, isLoginNameTaken } from '../login/login-err
 import { LoginStore, RenameLoginParams } from '../login/LoginStore';
 import { Vendor } from './Vendor';
 import { UncheckedVendorDetails, VendorDetails } from './VendorDetails';
-import { vendorDetailRefused, vendorNotFound } from './vendor-errors';
+import { existingVendor } from './existing-vendor';
+import { vendorDetailRefused } from './vendor-errors';
 import { EditVendorParams, VendorStore } from './VendorStore';
 
 class Input {
@@ -60,19 +61,19 @@ export class EditVendorCommand {
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const vendorId = input.getVendorId();
-    const read = await this.vendorStore.readById(vendorId);
-    if (Either.isLeft(read)) return Either.left(read.left);
-    if (Option.isNone(read.right)) return Either.left(vendorNotFound(vendorId));
-    const vendor = read.right.value;
+    const found = existingVendor(vendorId, await this.vendorStore.readById(vendorId));
+    if (Either.isLeft(found)) return Either.left(found.left);
+    const vendor = found.right;
 
     // Every check comes before anything is changed in Keycloak.
     const checked = VendorDetails.check(input.getDetails());
     if (Either.isLeft(checked)) return Either.left(checked.left);
     const details = checked.right;
 
-    const oldName = vendor.getLoginPhoneNumber().getInternational();
-    const newName = details.getLoginPhoneNumber().getInternational();
-    if (newName === oldName) return this.store(vendorId, details);
+    // The Login is named by the login phone number, in its stored form.
+    const oldLoginName = vendor.getLoginPhoneNumber().getInternational();
+    const newLoginName = details.getLoginPhoneNumber().getInternational();
+    if (newLoginName === oldLoginName) return this.store(vendorId, details);
 
     const holder = await this.vendorStore.readByLoginPhoneNumber(
       details.getLoginPhoneNumber(),
@@ -83,7 +84,9 @@ export class EditVendorCommand {
     }
 
     const loginId = vendor.getLoginId();
-    const renamed = await this.loginStore.rename(new RenameLoginParams(loginId, newName));
+    const renamed = await this.loginStore.rename(
+      new RenameLoginParams(loginId, newLoginName),
+    );
     if (Either.isLeft(renamed)) {
       // A Login with no Vendor behind it may hold the number, as when putting
       // one back failed.
@@ -97,7 +100,9 @@ export class EditVendorCommand {
     const stored = await this.store(vendorId, details);
     if (Either.isRight(stored)) return stored;
 
-    const putBack = await this.loginStore.rename(new RenameLoginParams(loginId, oldName));
+    const putBack = await this.loginStore.rename(
+      new RenameLoginParams(loginId, oldLoginName),
+    );
     if (Either.isLeft(putBack)) {
       // Two failures in a row: the Login is named by a number its Vendor
       // does not hold, until it is renamed in Keycloak's own console.
@@ -117,11 +122,6 @@ export class EditVendorCommand {
   ): Promise<Either.Either<Output, StructuredError>> {
     const edited = await this.vendorStore.edit(new EditVendorParams(vendorId, details));
 
-    return Either.flatMap(edited, (editedVendor) =>
-      Option.match(editedVendor, {
-        onNone: () => Either.left(vendorNotFound(vendorId)),
-        onSome: (vendor) => Either.right(Output.of(vendor)),
-      }),
-    );
+    return Either.map(existingVendor(vendorId, edited), Output.of);
   }
 }

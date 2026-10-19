@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
 import { LoginStore } from '../login/LoginStore';
 import { Vendor } from './Vendor';
-import { vendorNotFound } from './vendor-errors';
+import { existingVendor } from './existing-vendor';
 import { VendorStore } from './VendorStore';
 
 class Input {
@@ -46,21 +46,15 @@ export class ReactivateVendorCommand {
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const vendorId = input.getVendorId();
-    const found = await this.vendorStore.readById(vendorId);
+    const found = existingVendor(vendorId, await this.vendorStore.readById(vendorId));
     if (Either.isLeft(found)) return Either.left(found.left);
-    if (Option.isNone(found.right)) return Either.left(vendorNotFound(vendorId));
 
-    const vendor = found.right.value;
+    const vendor = found.right;
     const enabled = await this.loginStore.enable(vendor.getLoginId());
     if (Either.isLeft(enabled)) return Either.left(enabled.left);
     if (vendor.isActive()) return Either.right(Output.of(vendor));
 
     const marked = await this.vendorStore.markActive(vendorId);
-    return Either.flatMap(marked, (markedVendor) =>
-      Option.match(markedVendor, {
-        onNone: () => Either.left(vendorNotFound(vendorId)),
-        onSome: (active) => Either.right(Output.of(active)),
-      }),
-    );
+    return Either.map(existingVendor(vendorId, marked), Output.of);
   }
 }
