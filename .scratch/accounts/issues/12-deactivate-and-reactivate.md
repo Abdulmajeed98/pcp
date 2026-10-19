@@ -136,3 +136,21 @@ The review of `accounts/integration` since `4f0c6a5` was fixed on `accounts/revi
 - **Its words**: the button and the dialog's action "Deactivate again", the title "Deactivate this Vendor again?", and the sentence that the Vendor "is marked deactivated already. If its deactivation was not finished, it may still be able to log in: doing it again logs it out and stops it logging in. Nothing else changes." **My recommendation:** keep them.
 - **Its dialog asks to confirm**, as every deactivation does, though doing it again logs out only a Vendor that should not be logged in. **My recommendation:** keep it, so that the button beside Reactivate cannot be taken for it by a slip.
 - **DESIGN.md's rule for a refusal in the alert dialog** now reads "what was not done, then why", where it said "one Action Red sentence", since the shared words of `WhyNotAnswered` can be two sentences. **My recommendation:** keep it.
+
+### 19 October 2026: the owner's decisions
+
+The decisions were put to the owner on 19 October 2026, one at a time, each rendered in the built-in browser. The screens were captured from the real app, at 360 pixels wide, by a throwaway end-to-end test, deleted after. Each alternative was made by changing the page in that test, not the source, and laid beside the screen as built. The numbers are those of the list in ticket 13.
+
+15. **The language switch on the deactivated message**: **kept**, as built and as recommended. The owner saw it beside the message without the switch, in Kurdish and English.
+16. **The deactivated message's and the band's words**: **kept as drafts** for LANG-7's review, as recommended.
+17. **Reactivating asks for no confirmation**: **changed**, against my recommendation. Reactivate now opens the alert dialog too, "Reactivate this Vendor?", saying that the Vendor logs in again with the password it had and that Shoppers see it again. It is confirmed with the primary button, not Action Red, as it logs nobody out. A refused reactivation is said in the dialog, which stays open, as every refusal there is, in place of the refusal panel below the buttons.
+18. **The confirm button filled in Action Red**: **kept**, as built and as recommended. The owner saw it beside one outlined in red.
+19. **The deactivation dialog's sentence about Shoppers**: **kept**, as built and as recommended.
+20. **The order of a Vendor page's actions**: **changed**, as recommended. Two groups, each a row that wraps: Edit and Open its portal, then Reset the password with Deactivate, or with Reactivate and Deactivate again. The owner saw it beside the three rows as built.
+21. **Deactivate and reactivate answer 200 with the Vendor**: **kept**, as built and as recommended.
+22. **"Deactivate again" on every deactivated Vendor's page**: **kept**, as built and as recommended. The owner saw the page beside one without it.
+23. **Its words**: **kept**, as built and as recommended.
+24. **Its confirmation**: **kept**, as built and as recommended.
+25. **DESIGN.md's rule for a refusal in a dialog**: **kept**, "what was not done, then why", as recommended.
+
+**What changed for decisions 17 and 20.** `VendorActivation` draws its buttons alone, each through one `Confirmed` dialog, so that the Vendor's page places them in the row after Reset the password. DESIGN.md and the MVP spec say so. In `admin-deactivate-vendor.spec.ts` the line of Deactivate again checks the two groups, and the reactivation's line cancels a confirmation first, which changes nothing, then confirms, and calls `expectAccessible` on the dialog. Both failed before the change: the first on the groups, and the second, run on its own against the old component, not finding the dialog. All eight lines of the two changed files pass after.

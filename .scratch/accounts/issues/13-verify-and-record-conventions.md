@@ -144,3 +144,7 @@ From ticket 12, under "decisions left open, for the owner, from the code review"
 23. Its words: "Deactivate again", "Deactivate this Vendor again?" and the sentence that explains it.
 24. Its dialog asks to confirm, as every deactivation does.
 25. DESIGN.md's rule for a refusal in the alert dialog: "what was not done, then why".
+
+### 19 October 2026: the owner's decisions on the list above
+
+Put to the owner one at a time, each rendered in the built-in browser. Items 7 and 13, and 8 and 12, were asked as one. Twenty were kept as built. Three changed, each recorded in its ticket: **3**, the edit screen names the Vendor and saves with "Save" (ticket 10); **17**, reactivating asks to confirm (ticket 12); **20**, a Vendor page's actions in two groups (ticket 12).

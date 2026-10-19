@@ -134,3 +134,16 @@ The review of `accounts/integration` since `4f0c6a5` was fixed on `accounts/revi
 - **The MVP spec** names the edit form among the Admin console's screens, and among those that call `expectAccessible`, as opened and with a refusal shown.
 
 **Results on the branch's tip** are under ticket 12's heading of the same day.
+
+### 19 October 2026: the owner's decisions
+
+The decisions were put to the owner on 19 October 2026, one at a time, each rendered in the built-in browser. The screens were captured from the real app, at 360 pixels wide, by a throwaway end-to-end test, deleted after. Each alternative was made by changing the page in that test, not the source, and laid beside the screen as built. The numbers are those of the list in ticket 13.
+
+1. **The Edit link**: **"Edit"**, as built and as recommended.
+2. **The edit form on a screen of its own**: **kept**, as built and as recommended.
+3. **The edit screen's words**: **changed**, against my recommendation. The screen names the Vendor: its title is "Edit" and the Vendor's name as it writes it, its back link is the Vendor's name, and its button is "Save". "The Vendor was not saved." stays above a refusal that names no field. The name below the title is gone, as the title now holds it.
+4. **A new login phone number without a confirmation**: **kept**, as built and as recommended.
+5. **Sessions kept when a Login is renamed**: **kept**, as built and as recommended.
+6. **An edit that keeps the number while Keycloak is down**: **kept**, as built and as recommended.
+
+**What changed for decision 3.** `edit-vendor-page.tsx` names the Vendor in its title and back link, and saves with "Save". DESIGN.md says so. `admin-edit-vendor.spec.ts` finds the screen by "Edit" and the Vendor's name, checks that the back link names the Vendor and leads to its page, and saves with "Save". Its three lines failed before the change, each not finding the new title, and pass after.

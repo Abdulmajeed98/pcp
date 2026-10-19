@@ -105,3 +105,16 @@ The review of `accounts/integration` since `4f0c6a5` was fixed on `accounts/revi
 - **The order of a reset's two steps**, now the sessions first. **My recommendation:** keep it, as the spec's "nothing is changed" asks; the window above is the price.
 - **The reset's path**, `reset-password`, a verb, as the workplace backend's actions are. **My recommendation:** keep it.
 - **The refusal's words** lose "The login service cannot be reached, so the reset may not be finished. Reset the password again in a moment.", which named Keycloak in plain words, for the shared "The API refused, with 503, IDENTITY_SERVICE_UNAVAILABLE." **My recommendation:** keep the shared words, as the review asked; if plain words for that code are wanted, they belong in `WhyNotAnswered`, for every screen at once.
+
+### 19 October 2026: the owner's decisions
+
+The decisions were put to the owner on 19 October 2026, one at a time, each rendered in the built-in browser. The screens were captured from the real app, at 360 pixels wide, by a throwaway end-to-end test, deleted after. Each alternative was made by changing the page in that test, not the source, and laid beside the screen as built. The numbers are those of the list in ticket 13.
+
+7. **The reset's path** (with 13): **`reset-password`, answering 200 with `{ temporaryPassword }`**, as built after the code review and as recommended.
+8. **The order of a reset's two steps** (with 12): **the sessions first, then the password**, as built after the code review and as recommended.
+9. **A deactivated Vendor's password can be reset**: **kept**, as built and as recommended.
+10. **The reset's words**: **kept**, as built and as recommended.
+11. **"At its next login" after a create too**: **kept**, as built and as recommended.
+14. **The confirmation's refusal in the shared words**: **kept**, as built.
+
+Nothing in this ticket's code changed. The reset's button moved to the second row of a Vendor page's actions, by decision 20, recorded in ticket 12.
