@@ -22,7 +22,7 @@ import {
   languages,
   narrowWindow,
 } from './languages';
-import { realmUrl } from './platform';
+import { apiUrl, realmUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
 const [kurdish, , english] = languages;
@@ -50,6 +50,29 @@ function theDeactivatedMessage(page: Page): Locator {
   return page.getByTestId('vendor-deactivated');
 }
 
+// Gives the page the API's answer for a deactivation while Keycloak cannot be
+// reached, once, for the next deactivation it asks for. The tests cannot
+// pause the development services' Keycloak, which other tests share.
+async function answerTheNextDeactivationAsUnavailable(page: Page): Promise<void> {
+  await page.route(
+    `${apiUrl}/v1/vendors/${vendor.vendorId}/deactivate`,
+    (route) =>
+      route.fulfill({
+        status: 503,
+        json: {
+          errors: [
+            {
+              code: 'IDENTITY_SERVICE_UNAVAILABLE',
+              title: 'identity_service_unavailable_title',
+              detail: 'identity_service_unavailable_details',
+            },
+          ],
+        },
+      }),
+    { times: 1 },
+  );
+}
+
 // Opens the Vendor's page as the development Admin.
 async function openTheVendorsPage(page: Page): Promise<void> {
   await logInToTheDashboard(page, developmentAdmin, vendorPageUrl(vendor.vendorId));
@@ -74,7 +97,7 @@ async function inTheVendorsOwnBrowser(
   }
 }
 
-test("the Admin deactivates the Vendor, after confirming, while its portal is open in another browser, and the Vendor's next action there shows a plain message, different in Kurdish and English", async ({
+test("the Admin deactivates the Vendor, after confirming, while its portal is open in another browser, once more after a refusal that the confirmation says and stays open for, and the Vendor's next action there shows a plain message, different in Kurdish and English", async ({
   browser,
   page,
 }) => {
@@ -85,6 +108,12 @@ test("the Admin deactivates the Vendor, after confirming, while its portal is op
     await openTheVendorsPage(page);
     await page.getByRole('button', { name: 'Deactivate' }).click();
     await expect(theConfirmation(page)).toBeVisible();
+    await expectAccessible(page);
+    await answerTheNextDeactivationAsUnavailable(page);
+    await theConfirmation(page).getByRole('button', { name: 'Deactivate' }).click();
+    await expect(theConfirmation(page).getByRole('alert')).toContainText(
+      'IDENTITY_SERVICE_UNAVAILABLE',
+    );
     await expectAccessible(page);
     await theConfirmation(page).getByRole('button', { name: 'Deactivate' }).click();
     await expect(theConfirmation(page)).toHaveCount(0);
@@ -153,6 +182,27 @@ test("the list and the Vendor's page mark the Vendor deactivated, and so does th
   await page.getByRole('link', { name: 'Open its portal' }).click();
   await expect(vendorNameInTheFrame(page)).toHaveText(vendor.vendorName);
   await expect(page.getByTestId('acting-band-deactivated')).toBeVisible();
+});
+
+// A deactivation that failed halfway, after the Vendor was marked, is
+// finished by doing it again. The page cannot tell such a Vendor from one
+// deactivated in full, so every deactivated Vendor's page has the way to do
+// it again, after Reactivate, which is what such a page is mostly for.
+test("the deactivated Vendor's page has a way to deactivate it again, after Reactivate, and the Vendor stays deactivated", async ({
+  page,
+}) => {
+  await openTheVendorsPage(page);
+  const actions = page.getByRole('button', { name: /^(Reactivate|Deactivate again)$/ });
+  await expect(actions).toHaveText(['Reactivate', 'Deactivate again']);
+
+  await page.getByRole('button', { name: 'Deactivate again' }).click();
+  await expect(theConfirmation(page)).toBeVisible();
+  await expectAccessible(page);
+  await theConfirmation(page).getByRole('button', { name: 'Deactivate again' }).click();
+
+  await expect(theConfirmation(page)).toHaveCount(0);
+  await expect(detailRow(page, 'state')).toContainText('Deactivated');
+  await expect(actions).toHaveText(['Reactivate', 'Deactivate again']);
 });
 
 test('the Admin reactivates the Vendor, and it logs in with the password it had', async ({

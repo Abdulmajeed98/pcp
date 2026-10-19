@@ -245,13 +245,15 @@ The dashboard's own shadcn/ui components, on Base UI in the Mira style, are in `
 
 ### Dialogs
 
-- **The alert dialog** asks to confirm an action that logs a Vendor out, such as resetting its password or deactivating it. A refusal is said in it in one Action Red sentence, and it stays open to try again. It floats over a scrim that dims the page, on a Sheet ground with a Control Edge border, 6px corners and the soft shadow of what floats. On a phone it is as wide as the screen but for a 16-pixel gutter, and never wider than 28rem. Its title is at title size and weight 600, its sentence at body size in Note Grey, both on the start side; its buttons are 44 pixels high, stacked on a phone with the action on top, and in a row on the end side from 40rem, Cancel outlined before the action.
+- **The alert dialog** asks to confirm an action that logs a Vendor out, such as resetting its password or deactivating it. A refusal is said in it, in Action Red at small size above its buttons: what was not done, then why the API did not answer, as the Admin console says it everywhere. The dialog stays open to try again, and closes only when the action is done. It floats over a scrim that dims the page, on a Sheet ground with a Control Edge border, 6px corners and the soft shadow of what floats. On a phone it is as wide as the screen but for a 16-pixel gutter, and never wider than 28rem. Its title is at title size and weight 600, its sentence at body size in Note Grey, both on the start side; its buttons are 44 pixels high, stacked on a phone with the action on top, and in a row on the end side from 40rem, Cancel outlined before the action.
 - **The action** that cannot be taken back without another, such as Deactivate, is drawn in Action Red, the one red of the pane, because it is what needs care.
 
 ### Deactivating a Vendor
 
-- **On a Vendor's page**, below "Open its portal": an outlined "Deactivate", which opens the alert dialog naming the Vendor as it writes it and saying what deactivating does; for a deactivated Vendor an outlined "Reactivate" in its place, with no dialog, as it logs nobody out. While either is on its way, its button says so and waits.
-- **A deactivation that failed halfway** shows the refusal panel below the button, saying it was not done in full and to deactivate again, and keeps "Deactivate" for a Vendor it has already marked.
+- **On a Vendor's page**, below "Open its portal": an outlined "Deactivate", which opens the alert dialog naming the Vendor as it writes it and saying what deactivating does; for a deactivated Vendor an outlined "Reactivate" in its place, with no dialog, as it logs nobody out, and after it a ghost "Deactivate again", which opens the alert dialog too. While either action is on its way, its button says so and waits.
+- **A deactivation that is refused**, or that failed halfway, is said in the alert dialog, as every refusal there is: that the Vendor was not deactivated in full, and why. The dialog stays open, so that the Admin deactivates again at once.
+- **Deactivate again** finishes a deactivation that failed halfway after the Vendor was marked, and changes nothing otherwise. The page cannot tell such a Vendor from one deactivated in full, so every deactivated Vendor's page has it, quiet beside Reactivate, which is what that page is mostly for.
+- **A reactivation that is refused** shows the refusal panel below the buttons, saying the Vendor was not reactivated and is still deactivated.
 
 ### The hand-over
 
