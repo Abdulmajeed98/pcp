@@ -1,6 +1,6 @@
 # Spec: Accounts
 
-Status: ready-for-agent
+Status: resolved
 
 This is `accounts`, the third module in the build order of [the MVP spec](../mvp/spec.md)'s capability map. It covers the requirements ACC-1 to ACC-8. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0007](../../docs/adr/0007-a-look-and-components-for-each-app.md) and [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md). It builds on the conventions `languages` and `catalog` recorded in the MVP spec.
 
