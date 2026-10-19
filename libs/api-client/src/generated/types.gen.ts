@@ -569,6 +569,110 @@ export type OfferResponse = {
     createdAt: string;
 };
 
+export type ListedOfferResponse = {
+    /**
+     * The Offer's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part offered.
+     */
+    part: PartSummaryResponse;
+    /**
+     * The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor last confirmed the Offer.
+     */
+    confirmedAt: string;
+    /**
+     * When the Offer was added.
+     */
+    createdAt: string;
+    /**
+     * The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.
+     */
+    daysSinceConfirmation: number;
+    /**
+     * Whether the Offer is an Expired Offer: its last Confirmation is more than 14 days old, and Shoppers no longer see it.
+     */
+    expired: boolean;
+    /**
+     * Whether the Offer is about to expire: it is not expired, and will be within 3 days.
+     */
+    aboutToExpire: boolean;
+};
+
+export type VendorsOfferCountsResponse = {
+    /**
+     * How many Offers the Vendor has.
+     */
+    offers: number;
+    /**
+     * How many of them are Expired Offers.
+     */
+    expired: number;
+    /**
+     * How many of them are not expired and will be within 3 days.
+     */
+    aboutToExpire: number;
+};
+
+export type VendorsOffersPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Offers, Expired Offers among them, oldest Confirmation first, then by Part name.
+     */
+    content: Array<ListedOfferResponse>;
+    /**
+     * The Vendor's counts of all its Offers, whatever the search.
+     */
+    counts: VendorsOfferCountsResponse;
+};
+
+export type ConfirmedOffersResponse = {
+    /**
+     * How many Offers were confirmed: every Offer of the Vendor.
+     */
+    confirmed: number;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -1016,6 +1120,43 @@ export type ReadCallersVendorResponses = {
 
 export type ReadCallersVendorResponse = ReadCallersVendorResponses[keyof ReadCallersVendorResponses];
 
+export type ListVendorsOffersData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+        /**
+         * Words an Offer's Part must hold, in any order and any case, in its name, its manufacturer or a part number, as the catalog search reads them. Left out or empty, every Offer of the Vendor is found.
+         */
+        search?: string;
+    };
+    url: '/v1/vendors/{vendorId}/offers';
+};
+
+export type ListVendorsOffersErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVendorsOffersError = ListVendorsOffersErrors[keyof ListVendorsOffersErrors];
+
+export type ListVendorsOffersResponses = {
+    200: VendorsOffersPageResponse;
+};
+
+export type ListVendorsOffersResponse = ListVendorsOffersResponses[keyof ListVendorsOffersResponses];
+
 export type CreateOfferData = {
     body: CreateOfferRequest;
     path: {
@@ -1039,6 +1180,30 @@ export type CreateOfferResponses = {
 };
 
 export type CreateOfferResponse = CreateOfferResponses[keyof CreateOfferResponses];
+
+export type ConfirmAllOffersData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/offers/confirm';
+};
+
+export type ConfirmAllOffersErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ConfirmAllOffersError = ConfirmAllOffersErrors[keyof ConfirmAllOffersErrors];
+
+export type ConfirmAllOffersResponses = {
+    200: ConfirmedOffersResponse;
+};
+
+export type ConfirmAllOffersResponse = ConfirmAllOffersResponses[keyof ConfirmAllOffersResponses];
 
 export type ReadOfferData = {
     body?: never;

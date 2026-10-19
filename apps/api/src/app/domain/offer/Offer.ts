@@ -1,4 +1,9 @@
 import { Part } from '../part/Part';
+import {
+  aboutToExpireIfConfirmedBefore,
+  expiredIfConfirmedBefore,
+  wholeDaysSince,
+} from './expiry';
 
 // One Vendor's price and in-stock status for one Part in new condition. A
 // Vendor has at most one Offer for a Part (OFF-1).
@@ -57,5 +62,26 @@ export class Offer {
   // The time the Offer was added, which was its first Confirmation.
   getCreatedAt(): Date {
     return this.createdAt;
+  }
+
+  // The whole days of 24 hours since the last Confirmation, rounded down, at
+  // now by the API's clock (OFF-7).
+  getDaysSinceConfirmation(now: Date): number {
+    return wholeDaysSince(this.confirmedAt, now);
+  }
+
+  // Whether the Offer is an Expired Offer at now: its last Confirmation is
+  // more than 14 days old (OFF-6).
+  isExpired(now: Date): boolean {
+    return this.confirmedAt.getTime() < expiredIfConfirmedBefore(now).getTime();
+  }
+
+  // Whether the Offer is about to expire at now: it is not expired, and will
+  // be within 3 days (OFF-8).
+  isAboutToExpire(now: Date): boolean {
+    return (
+      !this.isExpired(now) &&
+      this.confirmedAt.getTime() < aboutToExpireIfConfirmedBefore(now).getTime()
+    );
   }
 }

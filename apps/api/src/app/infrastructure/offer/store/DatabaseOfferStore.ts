@@ -1,16 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { databaseErrorOf, ServerError, StructuredError } from '@pcp/core';
-import { and, eq, SQL } from 'drizzle-orm';
+import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
+import { and, asc, count, eq, gte, lt, sql, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
+import {
+  aboutToExpireIfConfirmedBefore,
+  expiredIfConfirmedBefore,
+} from '~/domain/offer/expiry';
 import { Offer } from '~/domain/offer/Offer';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
-import { CreateOfferParams, OfferStore } from '~/domain/offer/OfferStore';
+import {
+  CreateOfferParams,
+  ListVendorsOffersParams,
+  OfferStore,
+  VendorsOfferCounts,
+  VendorsOffersPage,
+} from '~/domain/offer/OfferStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { brokeUniqueRule } from '~/infrastructure/database/unique-rule';
 import { part, PartRow } from '~/infrastructure/part/part.schema';
 import { partOf } from '~/infrastructure/part/part-of-row';
+import { holdingEveryWord } from '~/infrastructure/part/search-text';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
 
 import { offer, offerHistory, OfferRow, oneOfferForAPart } from '../offer.schema';
@@ -18,6 +29,11 @@ import { offer, offerHistory, OfferRow, oneOfferForAPart } from '../offer.schema
 // An Offer's row with its Part's row and its photo's identifier, as a read
 // gives them.
 const offerWithPart = { offer, part, photoId: partPhoto.id };
+
+// How many rows meet a condition, as a number.
+function countWhere(condition: SQL | undefined): SQL<number> {
+  return sql<number>`count(*) filter (where ${condition})`.mapWith(Number);
+}
 
 // A row as an Offer, with its Part.
 function toDomain(
@@ -95,6 +111,101 @@ export class DatabaseOfferStore implements OfferStore {
         ServerError.of(`An Offer was created and could not be read back: ${offerId}`),
       ),
     );
+  }
+
+  async listByVendor(
+    params: ListVendorsOffersParams,
+  ): Promise<Either.Either<VendorsOffersPage, StructuredError>> {
+    const pageable = params.getPageable();
+    if (!couldBeIdentifier(params.getVendorId())) {
+      return Either.right(
+        new VendorsOffersPage([], PageAttributes.of(pageable, 0), VendorsOfferCounts.NONE),
+      );
+    }
+    const ofTheVendor = eq(offer.vendorId, params.getVendorId());
+    const where = and(ofTheVendor, ...holdingEveryWord(params.getWords()));
+    // The same moments as the Offer entity's rules, from the same now.
+    const expiredBefore = expiredIfConfirmedBefore(params.getNow());
+    const aboutToExpireBefore = aboutToExpireIfConfirmedBefore(params.getNow());
+
+    try {
+      // One snapshot for all, so that an Offer added or confirmed between them
+      // cannot make the totals disagree with the page.
+      const [rows, [{ total }], [counts]] = await this.databaseProvider
+        .getClient()
+        .transaction(
+          (transaction) =>
+            Promise.all([
+              transaction
+                .select(offerWithPart)
+                .from(offer)
+                .innerJoin(part, eq(part.id, offer.partId))
+                .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+                .where(where)
+                .orderBy(asc(offer.confirmedAt), asc(part.name), asc(offer.id))
+                .limit(pageable.getLimit())
+                .offset(pageable.getOffset()),
+              transaction
+                .select({ total: count() })
+                .from(offer)
+                .innerJoin(part, eq(part.id, offer.partId))
+                .where(where),
+              // Of all the Vendor's Offers, whatever the search.
+              transaction
+                .select({
+                  offers: count(),
+                  expired: countWhere(lt(offer.confirmedAt, expiredBefore)),
+                  aboutToExpire: countWhere(
+                    and(
+                      gte(offer.confirmedAt, expiredBefore),
+                      lt(offer.confirmedAt, aboutToExpireBefore),
+                    ),
+                  ),
+                })
+                .from(offer)
+                .where(ofTheVendor),
+            ]),
+          { isolationLevel: 'repeatable read', accessMode: 'read only' },
+        );
+
+      const offers = Either.all(
+        rows.map((row) => toDomain(row.offer, row.part, row.photoId)),
+      );
+      return Either.map(
+        offers,
+        (found) =>
+          new VendorsOffersPage(
+            found,
+            PageAttributes.of(pageable, total),
+            new VendorsOfferCounts(counts.offers, counts.expired, counts.aboutToExpire),
+          ),
+      );
+    } catch (error) {
+      this.logger.error(error, "A Vendor's Offers could not be listed");
+      return Either.left(databaseErrorOf(error, "A Vendor's Offers could not be listed"));
+    }
+  }
+
+  async confirmAll(
+    vendorId: string,
+    confirmedAt: Date,
+  ): Promise<Either.Either<number, StructuredError>> {
+    if (!couldBeIdentifier(vendorId)) return Either.right(0);
+
+    try {
+      const { rowCount } = await this.databaseProvider
+        .getClient()
+        .update(offer)
+        .set({ confirmedAt })
+        .where(eq(offer.vendorId, vendorId));
+
+      return Either.right(rowCount ?? 0);
+    } catch (error) {
+      this.logger.error(error, "A Vendor's Offers could not be confirmed");
+      return Either.left(
+        databaseErrorOf(error, "A Vendor's Offers could not be confirmed"),
+      );
+    }
   }
 
   async readById(
