@@ -1,9 +1,11 @@
 import { PageableAttributes, PageAttributes, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
+import { Specification } from '../specification/Specification';
 import { SpecificationDocument } from '../specification/specification-document';
 import { Category } from './Category';
 import { Part } from './Part';
+import { PartMissingSpecifications } from './PartMissingSpecifications';
 
 export class CreatePartParams {
   constructor(
@@ -106,6 +108,42 @@ export class PartsPage {
   }
 }
 
+// What the list of Parts missing specifications asks for: the needed
+// specifications of each Category, as its list in code names them, and the
+// page.
+export class ListPartsMissingSpecificationsParams {
+  constructor(
+    private readonly needed: ReadonlyMap<Category, readonly Specification[]>,
+    private readonly pageable: PageableAttributes,
+  ) {}
+
+  // The needed specifications of a Category, in its list's order.
+  getNeededOf(category: Category): readonly Specification[] {
+    return this.needed.get(category) ?? [];
+  }
+
+  getPageable(): PageableAttributes {
+    return this.pageable;
+  }
+}
+
+// One page of the Parts missing specifications, and where the page stands
+// among them all.
+export class PartsMissingSpecificationsPage {
+  constructor(
+    private readonly parts: readonly PartMissingSpecifications[],
+    private readonly page: PageAttributes,
+  ) {}
+
+  getParts(): readonly PartMissingSpecifications[] {
+    return this.parts;
+  }
+
+  getPageAttributes(): PageAttributes {
+    return this.page;
+  }
+}
+
 // Where Parts are kept. It is the port: the domain says what it needs, and
 // infrastructure provides it.
 export abstract class PartStore {
@@ -123,6 +161,17 @@ export abstract class PartStore {
   abstract search(
     params: SearchPartsParams,
   ): Promise<Either.Either<PartsPage, StructuredError>>;
+
+  // The Parts that have at least one Offer, from any Vendor, and in whose
+  // specifications at least one of their Category's needed specifications is
+  // missing, as `Specification.isMissingIn` says. The database decides which
+  // are missing, so that the page and its total agree. They are ordered by
+  // Category, in the order of the eight, then by their count of Offers, most
+  // first, then by name and identifier, so that moving between pages never
+  // skips or repeats one.
+  abstract listMissingSpecifications(
+    params: ListPartsMissingSpecificationsParams,
+  ): Promise<Either.Either<PartsMissingSpecificationsPage, StructuredError>>;
 
   // The Part with this identifier, or none when there is no such Part.
   abstract readById(

@@ -1,10 +1,13 @@
 import { MousePointerClickIcon, PlusIcon } from 'lucide-react';
 import { Link, useOutlet } from 'react-router';
 
-import { useAddressKeepingTheQuery, useWideScreen } from '@/shared/lib';
+import {
+  useAddressKeepingTheQuery,
+  usePageInTheAddress,
+  useWideScreen,
+} from '@/shared/lib';
 import { buttonVariants } from '@/shared/ui';
 
-import { usePageInTheAddress } from '../model/page';
 import { ListedVendors } from './listed-vendors';
 
 // The Admin console's Vendors: every Vendor, active and deactivated, in name

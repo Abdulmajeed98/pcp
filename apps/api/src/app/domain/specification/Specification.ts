@@ -200,6 +200,19 @@ export class Specification {
     return this.zeroMeansMissing;
   }
 
+  // Whether a Part holding this value lacks the specification: nothing, null,
+  // an empty text, an empty choice of several or list of text, and 0 where 0
+  // stands for "not known". An empty list of rows is a value. The Store's
+  // query for the Parts that lack a needed specification asks the same of
+  // each Part's document.
+  isMissingIn(value: unknown): boolean {
+    if (value === null || value === undefined || value === '') return true;
+    if (this.kind === 'severalOf' || this.kind === 'listOfText') {
+      return Array.isArray(value) && value.length === 0;
+    }
+    return value === 0 && this.zeroMeansMissing;
+  }
+
   // Checks one value against this specification. Null, an empty text and an
   // empty choice of several are missing, not refused.
   check(value: unknown): ValueCheck {
