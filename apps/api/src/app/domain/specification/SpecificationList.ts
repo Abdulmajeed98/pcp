@@ -44,13 +44,19 @@ export class SpecificationList {
     };
   }
 
+  // The specifications a Compatibility Rule reads, in the list's order.
+  getNeeded(): readonly Specification[] {
+    return this.specifications.filter((specification) => specification.isNeeded());
+  }
+
   // The needed specifications a Part's specifications do not hold, by their
   // paths, in the list's order.
   missingNeeded(document: SpecificationDocument): string[] {
-    return this.specifications
-      .filter((specification) => specification.isNeeded())
-      .map((specification) => specification.getPath())
-      .filter((path) => valueAt(document, path) === undefined);
+    return this.getNeeded()
+      .filter((specification) =>
+        specification.isMissingIn(valueAt(document, specification.getPath())),
+      )
+      .map((specification) => specification.getPath());
   }
 
   // A name no specification has, whatever its value, null included. A name
