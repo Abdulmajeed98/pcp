@@ -1,13 +1,30 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { CallerResolver, ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
+import {
+  ConfirmAllOffersCommand,
+  ConfirmAllOffersCommandInput,
+} from '~/domain/offer/ConfirmAllOffersCommand';
 import { CreateOfferCommand } from '~/domain/offer/CreateOfferCommand';
+import { ListVendorsOffersQuery } from '~/domain/offer/ListVendorsOffersQuery';
 import { ReadOfferQuery, ReadOfferQueryInput } from '~/domain/offer/ReadOfferQuery';
 
+import { ConfirmedOffersResponse } from './ConfirmedOffersResponse';
 import { CreateOfferRequest } from './CreateOfferRequest';
+import { ListVendorsOffersRequest } from './ListVendorsOffersRequest';
 import { OfferResponse } from './OfferResponse';
+import { VendorsOffersPageResponse } from './VendorsOffersPageResponse';
 
 // A Vendor's Offers, for the Admin or for the Vendor's own Login, by the rule
 // for which Vendor a request acts for.
@@ -16,6 +33,8 @@ export class OfferController {
   constructor(
     private readonly createOfferCommand: CreateOfferCommand,
     private readonly readOfferQuery: ReadOfferQuery,
+    private readonly listVendorsOffersQuery: ListVendorsOffersQuery,
+    private readonly confirmAllOffersCommand: ConfirmAllOffersCommand,
     private readonly callerResolver: CallerResolver,
   ) {}
 
@@ -37,6 +56,53 @@ export class OfferController {
 
     return result.pipe(
       Either.map((output) => OfferResponse.of(output.getOffer())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      "One page of a Vendor's Offers, Expired Offers among them, oldest Confirmation first, with each one's expiry and the Vendor's counts, for the Admin or for the Vendor's own Login",
+  })
+  @ApiOkResponse({ type: VendorsOffersPageResponse })
+  @PreAuthorize([Role.ADMIN, Role.VENDOR])
+  @Get('v1/vendors/:vendorId/offers')
+  async listVendorsOffers(
+    @Param('vendorId') vendorId: string,
+    @Query() request: ListVendorsOffersRequest,
+  ): Promise<VendorsOffersPageResponse> {
+    const caller = this.callerResolver.getCaller();
+    const result = await this.listVendorsOffersQuery.execute(
+      request.toQueryInput(caller.getId(), caller.getRoles(), vendorId),
+    );
+
+    return result.pipe(
+      Either.map(VendorsOffersPageResponse.of),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      "Confirm every Offer of a Vendor, Expired Offers among them, as of now, and answer how many, for the Admin or for the Vendor's own Login",
+  })
+  @ApiOkResponse({ type: ConfirmedOffersResponse })
+  @PreAuthorize([Role.ADMIN, Role.VENDOR])
+  // It answers 200, not 201: nothing is created, and the Offers' times of
+  // Confirmation are set. An action on a Vendor's Offers is a POST to a verb
+  // after them, as reset-password and deactivate are after a Vendor.
+  @HttpCode(HttpStatus.OK)
+  @Post('v1/vendors/:vendorId/offers/confirm')
+  async confirmAllOffers(
+    @Param('vendorId') vendorId: string,
+  ): Promise<ConfirmedOffersResponse> {
+    const caller = this.callerResolver.getCaller();
+    const result = await this.confirmAllOffersCommand.execute(
+      new ConfirmAllOffersCommandInput(caller.getId(), caller.getRoles(), vendorId),
+    );
+
+    return result.pipe(
+      Either.map(ConfirmedOffersResponse.of),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }
