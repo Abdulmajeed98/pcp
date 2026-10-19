@@ -982,6 +982,49 @@
         "summary": "One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login",
         "tags": ["Offer"]
       }
+    },
+    "/v1/parts/{partId}/offers": {
+      "get": {
+        "operationId": "listVisibleOffersOfPart",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VisibleOfferResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Part's visible Offers: not Expired Offers, of active Vendors only, in-stock first and then the most recent Confirmation first, each with how many days ago it was confirmed",
+        "tags": ["PartOffers"]
+      }
     }
   },
   "info": {
@@ -2157,6 +2200,76 @@
           }
         },
         "required": ["confirmed"]
+      },
+      "VisibleOfferVendorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as the Vendor writes it.",
+            "example": "Made-up Computer Shop"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "VisibleOfferResponse": {
+        "type": "object",
+        "properties": {
+          "vendor": {
+            "description": "The Vendor.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisibleOfferVendorResponse"
+              }
+            ]
+          },
+          "usdPrice": {
+            "type": "string",
+            "description": "The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": "349.99"
+          },
+          "iqdPrice": {
+            "type": "number",
+            "description": "The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": 525000
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether the Vendor has the Part in stock."
+          },
+          "warrantyMonths": {
+            "type": "number",
+            "description": "The warranty, in whole months, or null when the Vendor states none.",
+            "nullable": true,
+            "example": 12
+          },
+          "confirmedAt": {
+            "type": "string",
+            "description": "When the Vendor last confirmed the Offer.",
+            "format": "date-time"
+          },
+          "daysSinceConfirmation": {
+            "type": "number",
+            "description": "The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.",
+            "example": 3
+          }
+        },
+        "required": [
+          "vendor",
+          "usdPrice",
+          "iqdPrice",
+          "inStock",
+          "warrantyMonths",
+          "confirmedAt",
+          "daysSinceConfirmation"
+        ]
       }
     }
   },

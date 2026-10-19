@@ -3,6 +3,7 @@ import { Either, Option } from 'effect';
 
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
+import { VisibleOffer } from './VisibleOffer';
 
 // A new Offer: the Vendor and the Part, its details, the time of its first
 // Confirmation, and the Caller who adds it, whom its history records.
@@ -142,6 +143,16 @@ export abstract class OfferStore {
     vendorId: string,
     confirmedAt: Date,
   ): Promise<Either.Either<number, StructuredError>>;
+
+  // The Part's visible Offers at now by the API's clock, by the rule in
+  // `visibility.ts`: not Expired Offers, and of active Vendors only. In-stock
+  // Offers come first, and within each group the most recent Confirmation
+  // first, then by the Vendor's name and the Offer's identifier, so that the
+  // order is the same at every read.
+  abstract listVisibleByPart(
+    partId: string,
+    now: Date,
+  ): Promise<Either.Either<readonly VisibleOffer[], StructuredError>>;
 
   // The Vendor's Offer with this identifier, or none when there is no such
   // Offer or it is another Vendor's.
