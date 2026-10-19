@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, type DataRouter } from 'react-router';
 import { CatalogPage } from '@/pages/catalog';
 import { EditPartPage } from '@/pages/edit-part';
 import { EditVendorPage } from '@/pages/edit-vendor';
+import { MissingSpecificationsPage } from '@/pages/missing-specifications';
 import { ChooseCategoryPage, NewPartPage } from '@/pages/new-part';
 import { NewVendorPage } from '@/pages/new-vendor';
 import { NotFoundPage } from '@/pages/not-found';
@@ -15,10 +16,11 @@ import { AdminConsoleFrame } from './layouts/admin-console-frame';
 import { vendorPortalScreens } from './vendor-portal-screens';
 
 // The Admin console's screens, by their addresses. The Admin console opens on
-// the Catalog, the first of its two sections. A Part, its edit form and a new
+// the Catalog, the first of its sections. A Part, its edit form and a new
 // Part are the Catalog's children, and a Vendor's page, its edit form and a
 // new Vendor are the Vendors' children, which each shows beside its list on
-// a wide screen.
+// a wide screen. A Part's edit form is also a child of the Missing
+// specifications, which saving returns to.
 //
 // A Vendor's portal, for the Admin acting as that Vendor, is under the
 // Vendor's page: the Vendor portal's own screens, in the Vendor portal's
@@ -52,6 +54,23 @@ const routes = [
           { path: 'new', Component: NewVendorPage },
           { path: ':vendorId', Component: VendorPage },
           { path: ':vendorId/edit', Component: EditVendorPage },
+        ],
+      },
+      {
+        path: 'missing-specifications',
+        Component: MissingSpecificationsPage,
+        children: [
+          {
+            path: 'parts/:partId/edit',
+            element: (
+              <EditPartPage
+                returnTo={{
+                  address: '/missing-specifications',
+                  name: 'Missing specifications',
+                }}
+              />
+            ),
+          },
         ],
       },
       { path: '*', Component: NotFoundPage },
