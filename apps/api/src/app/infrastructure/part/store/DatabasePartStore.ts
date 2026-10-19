@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
+import { databaseErrorOf, PageAttributes, StructuredError } from '@pcp/core';
 import { and, asc, count, eq, ilike, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
-import { Category } from '~/domain/part/Category';
 import { Part } from '~/domain/part/Part';
 import {
   CreatePartParams,
@@ -16,41 +15,9 @@ import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
 
-import { part, PartRow } from '../part.schema';
+import { part } from '../part.schema';
 import { columnsOf } from '../part-columns';
-
-// A Part's row and its photo's identifier, as a read gives them.
-const partWithPhoto = { part, photoId: partPhoto.id };
-
-// A row as a Part. The database's own list of Categories is made from the
-// domain's, so a row whose Category the domain does not know means the two
-// have drifted apart.
-function toDomain(
-  row: PartRow,
-  photoId: string | null,
-): Either.Either<Part, StructuredError> {
-  const category = Category.withKey(row.category);
-  if (category === undefined) {
-    return Either.left(
-      ServerError.of(`A Part has a Category the API does not know: ${row.category}`),
-    );
-  }
-
-  return Either.right(
-    new Part(
-      row.id,
-      category,
-      row.name,
-      row.manufacturer,
-      row.partNumbers,
-      row.openDbId,
-      row.specifications,
-      row.createdAt,
-      row.updatedAt,
-      photoId,
-    ),
-  );
-}
+import { partOf, partWithPhoto } from '../part-of-row';
 
 // A word to be found anywhere in the search text. Its `%`, `_` and `\` are
 // taken as themselves and not as parts of a pattern.
@@ -73,7 +40,7 @@ export class DatabasePartStore implements PartStore {
         .returning();
 
       // A Part has no photo when it is created.
-      return toDomain(row, null);
+      return partOf(row, null);
     } catch (error) {
       this.logger.error(error, 'A Part could not be created');
       return Either.left(databaseErrorOf(error, 'A Part could not be created'));
@@ -135,7 +102,7 @@ export class DatabasePartStore implements PartStore {
           { isolationLevel: 'repeatable read', accessMode: 'read only' },
         );
 
-      const parts = Either.all(rows.map((row) => toDomain(row.part, row.photoId)));
+      const parts = Either.all(rows.map((row) => partOf(row.part, row.photoId)));
       return Either.map(
         parts,
         (found) => new PartsPage(found, PageAttributes.of(pageable, total)),
@@ -158,7 +125,7 @@ export class DatabasePartStore implements PartStore {
         .where(eq(part.id, id));
 
       if (row === undefined) return Either.right(Option.none());
-      return Either.map(toDomain(row.part, row.photoId), Option.some);
+      return Either.map(partOf(row.part, row.photoId), Option.some);
     } catch (error) {
       this.logger.error(error, 'A Part could not be read');
       return Either.left(databaseErrorOf(error, 'A Part could not be read'));
