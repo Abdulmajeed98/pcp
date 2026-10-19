@@ -13,7 +13,9 @@ import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
 // its name, its city and its login phone number among them (ACC-8). Saving
 // replaces them all, so an optional detail emptied in the form is cleared. A
 // new login phone number changes what the Vendor logs in with, and keeps its
-// password. After a save the Vendor's page shows the new values.
+// password. After a save the Vendor's page shows the new values. The screen
+// names the Vendor, as it writes it, in its title and in its link back to
+// the Vendor's page.
 export function EditVendorPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
@@ -58,16 +60,15 @@ export function EditVendorPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink to={keepingTheQuery(`/vendors/${vendorId}`)}>The Vendor</BackLink>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold sm:text-2xl">Edit the Vendor</h1>
-        <p className="text-sm text-muted-foreground">
-          <AsWritten>{vendor.data.name}</AsWritten>
-        </p>
-      </div>
+      <BackLink to={keepingTheQuery(`/vendors/${vendorId}`)}>
+        <AsWritten>{vendor.data.name}</AsWritten>
+      </BackLink>
+      <h1 className="text-xl font-semibold sm:text-2xl">
+        Edit <AsWritten>{vendor.data.name}</AsWritten>
+      </h1>
       <VendorForm
         vendor={vendor.data}
-        submitLabel="Save the Vendor"
+        submitLabel="Save"
         save={(body) => edit.mutateAsync(body)}
       />
     </div>

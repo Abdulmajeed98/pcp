@@ -26,9 +26,15 @@ import {
 // login and chosen its own password, as a real Vendor has.
 test.use({ viewport: narrowWindow });
 
-// The edit form's heading, which tells the screen apart.
-function editVendorHeading(page: Page) {
-  return page.getByRole('heading', { level: 1, name: 'Edit the Vendor' });
+// The edit form's heading, which names the Vendor and tells the screen
+// apart.
+function editVendorHeading(page: Page, vendorName: string) {
+  return page.getByRole('heading', { level: 1, name: `Edit ${vendorName}`, exact: true });
+}
+
+// The edit form's button that saves the Vendor.
+function saveButton(page: Page) {
+  return page.getByRole('button', { name: 'Save', exact: true });
 }
 
 // A new name and a new login phone number for a made-up Vendor, unique to
@@ -50,7 +56,10 @@ async function openTheEditForm(page: Page, vendor: VendorLoginDetails): Promise<
   await page.getByRole('link', { name: 'Edit', exact: true }).click();
 
   await expect(page).toHaveURL(`${vendorPageUrl(vendor.vendorId)}/edit`);
-  await expect(editVendorHeading(page)).toBeVisible();
+  await expect(editVendorHeading(page, vendor.vendorName)).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: vendor.vendorName, exact: true }),
+  ).toHaveAttribute('href', new URL(vendorPageUrl(vendor.vendorId)).pathname);
   await expect(vendorFormField(page, 'Name')).toHaveValue(vendor.vendorName);
   await expect(vendorFormField(page, 'Login phone number')).toHaveValue(
     inIraqsOwnForm(vendor.name),
@@ -65,7 +74,7 @@ async function changeTheNameAndTheNumber(
 ): Promise<void> {
   await vendorFormField(page, 'Name').fill(change.name);
   await vendorFormField(page, 'Login phone number').fill(change.loginPhoneNumber);
-  await page.getByRole('button', { name: 'Save the Vendor' }).click();
+  await saveButton(page).click();
 }
 
 test("as the development Admin, the Admin changes a made-up Vendor's name and login phone number in its edit form, filled with the Vendor as it was, and the Vendor's page then shows both", async ({
@@ -120,11 +129,11 @@ test('the edit form does not scroll sideways, and meets the automated part of WC
 
   // A number in London, as Ofcom keeps 020 7946 0xxx for drama.
   await vendorFormField(page, 'Phone number').fill('+44 20 7946 0958');
-  await page.getByRole('button', { name: 'Save the Vendor' }).click();
+  await saveButton(page).click();
   const phoneNumber = vendorFormField(page, 'Phone number');
   await expect(phoneNumber).toHaveAttribute('aria-invalid', 'true');
   await expect(phoneNumber).toHaveAccessibleDescription(/not an Iraqi phone number/);
-  await expect(editVendorHeading(page)).toBeVisible();
+  await expect(editVendorHeading(page, vendor.vendorName)).toBeVisible();
   await expectNoSidewaysScroll(page);
   await expectAccessible(page);
 });

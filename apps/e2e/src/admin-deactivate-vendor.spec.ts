@@ -72,6 +72,19 @@ async function answerTheNextDeactivationAsUnavailable(page: Page): Promise<void>
   );
 }
 
+// A Vendor's page shows its actions in two groups below its name, each on
+// rows of its own: Edit and Open its portal, then the actions that log the
+// Vendor out or let it back in, which the test names in their order.
+async function expectTheActionsInTwoGroups(page: Page, second: string[]): Promise<void> {
+  const top = async (name: string) =>
+    (await page.getByRole('main').getByText(name, { exact: true }).boundingBox())!.y;
+  const edit = await top('Edit');
+  expect(await top('Open its portal')).toBe(edit);
+  const tops = await Promise.all(second.map(top));
+  expect(new Set(tops).size).toBe(1);
+  expect(tops[0]).toBeGreaterThan(edit);
+}
+
 // Logs in as the Vendor in a browser of its own, which knows nothing of any
 // earlier login, and hands `use` its page at the details screen.
 async function inTheVendorsOwnBrowser(
@@ -185,6 +198,7 @@ test("the deactivated Vendor's page has a way to deactivate it again, after Reac
   await openTheVendorsPage(page, vendor);
   const actions = page.getByRole('button', { name: /^(Reactivate|Deactivate again)$/ });
   await expect(actions).toHaveText(['Reactivate', 'Deactivate again']);
+  await expectTheActionsInTwoGroups(page, ['Reset the password', 'Reactivate']);
 
   await page.getByRole('button', { name: 'Deactivate again' }).click();
   await expect(theConfirmation(page)).toBeVisible();
@@ -196,16 +210,27 @@ test("the deactivated Vendor's page has a way to deactivate it again, after Reac
   await expect(actions).toHaveText(['Reactivate', 'Deactivate again']);
 });
 
-test('the Admin reactivates the Vendor, and it logs in with the password it had', async ({
+test('the Admin reactivates the Vendor, after confirming, which cancelling does not, and it logs in with the password it had', async ({
   browser,
   page,
 }) => {
   await openTheVendorsPage(page, vendor);
 
   await page.getByRole('button', { name: 'Reactivate' }).click();
+  await expect(theConfirmation(page)).toBeVisible();
+  await theConfirmation(page).getByRole('button', { name: 'Cancel' }).click();
+  await expect(theConfirmation(page)).toHaveCount(0);
+  await expect(detailRow(page, 'state')).toContainText('Deactivated');
 
+  await page.getByRole('button', { name: 'Reactivate' }).click();
+  await expect(theConfirmation(page)).toBeVisible();
+  await expectAccessible(page);
+  await theConfirmation(page).getByRole('button', { name: 'Reactivate' }).click();
+
+  await expect(theConfirmation(page)).toHaveCount(0);
   await expect(detailRow(page, 'state')).toContainText('Active');
   await expect(page.getByRole('button', { name: 'Deactivate' })).toBeVisible();
+  await expectTheActionsInTwoGroups(page, ['Reset the password', 'Deactivate']);
   await inTheVendorsOwnBrowser(browser, async (vendorsPage) => {
     await expect(vendorNameInTheFrame(vendorsPage)).toHaveText(vendor.vendorName);
     await expect(theDeactivatedMessage(vendorsPage)).toHaveCount(0);

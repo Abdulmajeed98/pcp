@@ -38,11 +38,12 @@ import {
 // every language, and are kept apart from the text around them. Its map
 // location opens Google Maps' search for its coordinates, and its Instagram
 // name, written with an @ as Instagram writes a handle, opens its profile,
-// each in a new tab, so that the Admin console stays where it was. Links
-// below its name open its edit form and the Vendor's portal, for the
-// Admin to act as it, beside a button that resets the Vendor's password,
-// after which the screen shows the new temporary password, this once, and
-// the hand-over. Below them the Admin deactivates or reactivates it.
+// each in a new tab, so that the Admin console stays where it was. Below its
+// name, links open its edit form and the Vendor's portal, for the Admin to
+// act as it. Below them are the actions that log the Vendor out or let it
+// back in: a button that resets its password, after which the screen shows
+// the new temporary password, this once, and the hand-over, and the buttons
+// that deactivate or reactivate it.
 export function VendorPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
@@ -100,13 +101,15 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
           >
             Open its portal
           </Link>
+        </div>
+        <div className="flex flex-wrap items-start gap-2">
           <ResetPassword
             vendorId={vendor.id}
             vendorName={vendor.name}
             onReset={setResetPassword}
           />
+          <VendorActivation vendor={vendor} />
         </div>
-        <VendorActivation vendor={vendor} />
       </div>
 
       {resetPassword !== undefined && (
