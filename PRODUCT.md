@@ -24,7 +24,7 @@ Any further library is chosen when work on that app begins.
 Three kinds of people use the platform. Shoppers are the primary audience.
 
 - **Shopper.** A person in Erbil planning a desktop PC and finding where to buy its Parts. Shoppers have no account, and their pages are designed for a phone first, in Kurdish (Sorani), Arabic or English. Both first-time and experienced builders are served. A first-time builder knows what the PC is for and roughly what they can spend, but not which Parts fit together. An experienced builder knows Parts by model name and wants the quickest route to who has them and for how much. Where the two conflict, the first-time builder wins: the page explains instead of assuming knowledge. (Confirmed by the owner on 6 October 2026.)
-- **Vendor.** A business that sells Parts to the public from one location and has agreed to show its Offers. Each Vendor has one login, is signed up in person by the Admin, and cannot sign itself up. Who in the shop keeps the Offers current, on which device and how often, is **not known yet** (asked on 6 October 2026). It is to be learned while signing Vendors up. Until then the spec's two routes stand as equals: a phone-first portal, and an Excel sheet for bulk changes.
+- **Vendor.** A business that sells Parts to the public from one location and has agreed to show its Offers. Each Vendor has one Login, is signed up in person by the Admin, and cannot sign itself up. It logs in with its login phone number, typed however its keyboard writes it, and a password: the platform makes a temporary password, which the Admin hands over in a WhatsApp chat from the Admin's own phone, and Keycloak makes the Vendor choose its own at its first login, in its language. Who in the shop keeps the Offers current, on which device and how often, is **not known yet** (asked on 6 October 2026). It is to be learned while signing Vendors up. Until then the spec's two routes stand as equals: a phone-first portal, and an Excel sheet for bulk changes.
 - **Admin.** The platform's owner, one person, who signs up Vendors in their shops, maintains the catalog, works the Part Request queue and sets the Platform Rate. The Admin console is in English only.
 
 ## Product Purpose
@@ -51,7 +51,7 @@ A parts catalog built around another market cannot truthfully say any of these:
 - **WhatsApp is the hand-over channel.** A Shopper sends a Build to a Vendor through a WhatsApp button, a link pasted into WhatsApp must show a preview, and the Admin hands a Vendor its login details over WhatsApp. The platform itself sends no SMS, email or WhatsApp message.
 - **Instagram and Google Maps.** A Vendor page carries the Vendor's Instagram name and a map pin that opens Google Maps. No map is embedded.
 - **Two currencies.** Vendors quote in USD, IQD or both, and the Shopper switches the whole site between them. The site starts in IQD.
-- **Vendors are signed up face to face.** The Admin visits the shop, creates the account and can act as that Vendor to set it up on the spot.
+- **Vendors are signed up face to face.** The Admin visits the shop with a phone, creates the Vendor and its Login, fills its map location from the phone's position, hands over the login details on WhatsApp, and can act as that Vendor, with the Admin's own Login, to set it up on the spot.
 - **Excel.** A Vendor can download its Offers as an .xlsx file, edit it and upload it again.
 - **The purchase happens elsewhere.** A Shopper's journey on the platform ends at a Vendor's WhatsApp chat, phone number or door.
 
@@ -62,8 +62,8 @@ Requirement-level detail lives in [the MVP spec](.scratch/mvp/spec.md), vocabula
 **Surfaces**
 
 - *Shopper pages:* a page per Category with search and filters; a Part page listing every visible Offer; a Vendor page; the builder with its picker; the Build page with its Compatibility Problems, Compatibility Warnings, unchecked rules and two price views (the cheapest total across Vendors, and each Vendor's own total with the Parts it is missing); shared Build pages; and the language and currency switches.
-- *Vendor portal:* searching the catalog and adding Offers; editing and confirming them, one at a time or all at once; the expiry banner; Part Requests and their state; the sheet download and upload with its result report; the Vendor's own Referral count; and its own contact details.
-- *Admin console:* Vendors, Catalog, Missing specifications, Part Requests, Platform Rate, Expiring Offers and Referrals.
+- *Vendor portal:* searching the catalog and adding Offers; editing and confirming them, one at a time or all at once; the expiry banner; Part Requests and their state; the sheet download and upload with its result report; the Vendor's own Referral count; and its own details, of which it changes its contact details itself, without approval, while its name, city and login phone number are the Admin's to change. The Admin can open any Vendor's portal and do there what the Vendor can, under a band that names the Vendor. A deactivated Vendor's portal shows only a plain message.
+- *Admin console:* Vendors (create, with the temporary password and the WhatsApp hand-over; edit every detail; reset a password; act as a Vendor; deactivate and reactivate), Catalog, Missing specifications, Part Requests, Platform Rate, Expiring Offers and Referrals.
 
 **Fixed product facts**
 

@@ -12,7 +12,7 @@ Two decisions of the `accounts` module, which are costly to undo once Vendors, t
 
 A deactivation or a reactivation that fails halfway is finished by doing it again.
 
-**The Admin acts as a Vendor in the API, with the Admin's own Login.** Every Vendor portal endpoint names its Vendor in its address. One rule in the API's domain decides which Vendor a request may act for: a Caller holding the `admin` role may act for any Vendor, and a Caller holding only the `vendor` role only for the Vendor whose Login it is, while that Vendor is active. Keycloak's own impersonation is not used.
+**The Admin acts as a Vendor in the API, with the Admin's own Login.** Every Vendor portal endpoint names its Vendor in its address, but the one that answers a Vendor's Login with its own Vendor, which the Vendor portal asks for when it starts. One rule in the API's domain decides which Vendor a request may act for: a Caller holding the `admin` role may act for any Vendor, and a Caller holding only the `vendor` role only for the Vendor whose Login it is, while that Vendor is active. Keycloak's own impersonation is not used.
 
 ## Considered Options
 
