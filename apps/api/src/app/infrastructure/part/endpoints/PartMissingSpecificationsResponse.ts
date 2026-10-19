@@ -3,6 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Category } from '~/domain/part/Category';
 import { PartMissingSpecifications } from '~/domain/part/PartMissingSpecifications';
 
+import { photoPathOf } from '~/infrastructure/photo/endpoints/photo-path';
+
 import { MissingSpecificationResponse } from './MissingSpecificationResponse';
 
 // A Part that has an Offer and lacks a needed specification.
@@ -40,6 +42,14 @@ export class PartMissingSpecificationsResponse {
   })
   readonly offerCount: number;
 
+  @ApiProperty({
+    description: "The address of the Part's photo on this API, or null when it has none.",
+    type: String,
+    nullable: true,
+    example: '/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f',
+  })
+  readonly photoPath: string | null;
+
   private constructor(found: PartMissingSpecifications) {
     this.id = found.getPartId();
     this.category = found.getCategory().getKey();
@@ -47,6 +57,7 @@ export class PartMissingSpecificationsResponse {
     this.manufacturer = found.getManufacturer();
     this.missingSpecifications = found.getMissing().map(MissingSpecificationResponse.of);
     this.offerCount = found.getOfferCount();
+    this.photoPath = photoPathOf(found.getPhotoId());
   }
 
   static of(found: PartMissingSpecifications): PartMissingSpecificationsResponse {

@@ -1467,6 +1467,12 @@
             "type": "number",
             "description": "How many Offers the Part has, from any Vendor, Expired Offers among them.",
             "example": 3
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
           }
         },
         "required": [
@@ -1475,7 +1481,8 @@
           "name",
           "manufacturer",
           "missingSpecifications",
-          "offerCount"
+          "offerCount",
+          "photoPath"
         ]
       },
       "PartsMissingSpecificationsPageResponse": {

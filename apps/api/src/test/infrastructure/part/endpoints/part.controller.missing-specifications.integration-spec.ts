@@ -4,6 +4,7 @@ import {
   expectErrorResponse,
   unauthorized,
 } from '@pcp/core/test-utils';
+import sharp from 'sharp';
 
 import { letTheClockRun, moveTheClockTo } from '../../../test-utils/clock';
 import {
@@ -33,6 +34,7 @@ type PartMissingSpecificationsBody = {
   manufacturer: string;
   missingSpecifications: MissingSpecificationBody[];
   offerCount: number;
+  photoPath: string | null;
 };
 
 type ListBody = {
@@ -174,6 +176,7 @@ describe('the Parts missing specifications', () => {
           manufacturer: 'AMD',
           missingSpecifications: [tdp],
           offerCount: 1,
+          photoPath: null,
         },
       ],
       pageNumber: 0,
@@ -183,6 +186,33 @@ describe('the Parts missing specifications', () => {
       first: true,
       last: true,
     });
+  });
+
+  it("answers a Part's photo, as the Catalog's row shows it", async () => {
+    const vendor = await aVendor();
+    const partId = await anOfferedPart({ specifications: aCpuWithoutTdp }, [vendor.id]);
+    const form = new FormData();
+    const photo = await sharp({
+      create: { width: 400, height: 300, channels: 3, background: '#4a6a8a' },
+    })
+      .jpeg()
+      .toBuffer();
+    form.append(
+      'photo',
+      new Blob([new Uint8Array(photo)], { type: 'image/jpeg' }),
+      'p.jpg',
+    );
+    const added = await fetch(`${testApp.baseUrl}/v1/parts/${partId}/photo`, {
+      method: 'PUT',
+      headers: bearerHeader(await adminToken()),
+      body: form,
+    });
+    expect(added.status).toBe(200);
+    const { photoPath } = (await added.json()) as { photoPath: string };
+
+    const [listed] = (await theList()).content;
+    expect(listed).toMatchObject({ id: partId, photoPath });
+    expect(photoPath).toMatch(/^\/v1\/photos\/[0-9a-f-]{36}$/);
   });
 
   it('names every missing needed specification, in its list order, with its label', async () => {

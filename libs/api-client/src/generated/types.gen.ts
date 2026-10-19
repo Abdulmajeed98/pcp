@@ -286,6 +286,10 @@ export type PartMissingSpecificationsResponse = {
      * How many Offers the Part has, from any Vendor, Expired Offers among them.
      */
     offerCount: number;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
 };
 
 export type PartsMissingSpecificationsPageResponse = {

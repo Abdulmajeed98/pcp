@@ -168,8 +168,8 @@ export class DatabasePartStore implements PartStore {
     params: ListPartsMissingSpecificationsParams,
   ): Promise<Either.Either<PartsMissingSpecificationsPage, StructuredError>> {
     const client = this.databaseProvider.getClient();
-    // Every Part with an Offer, with its count of Offers and the paths of the
-    // needed specifications it lacks.
+    // Every Part with an Offer, with its photo, its count of Offers and the
+    // paths of the needed specifications it lacks.
     const offered = client.$with('offered').as(
       client
         .select({
@@ -177,12 +177,14 @@ export class DatabasePartStore implements PartStore {
           category: part.category,
           name: part.name,
           manufacturer: part.manufacturer,
+          photoId: sql<string | null>`${partPhoto.id}`.as('photo_id'),
           offerCount: sql<number>`count(${offer.id})::int`.as('offer_count'),
           missing: sql<string[]>`${missingPathsOf(params)}`.as('missing'),
         })
         .from(part)
         .innerJoin(offer, eq(offer.partId, part.id))
-        .groupBy(part.id),
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .groupBy(part.id, partPhoto.id),
     );
     const lacking = sql`cardinality(${offered.missing}) > 0`;
     const pageable = params.getPageable();
@@ -236,6 +238,7 @@ export class DatabasePartStore implements PartStore {
               row.manufacturer,
               missing,
               row.offerCount,
+              row.photoId,
             ),
           );
         }),
