@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, type DataRouter } from 'react-router';
 import { CatalogPage } from '@/pages/catalog';
 import { EditPartPage } from '@/pages/edit-part';
 import { EditVendorPage } from '@/pages/edit-vendor';
+import { ExpiringOffersPage } from '@/pages/expiring-offers';
 import { MissingSpecificationsPage } from '@/pages/missing-specifications';
 import { ChooseCategoryPage, NewPartPage } from '@/pages/new-part';
 import { NewVendorPage } from '@/pages/new-vendor';
@@ -20,7 +21,8 @@ import { vendorPortalScreens } from './vendor-portal-screens';
 // Part are the Catalog's children, and a Vendor's page, its edit form and a
 // new Vendor are the Vendors' children, which each shows beside its list on
 // a wide screen. A Part's edit form is also a child of the Missing
-// specifications, which saving returns to.
+// specifications, which saving returns to. The Expiring Offers lead to a
+// Vendor's page under the Vendors.
 //
 // A Vendor's portal, for the Admin acting as that Vendor, is under the
 // Vendor's page: the Vendor portal's own screens, in the Vendor portal's
@@ -73,6 +75,7 @@ const routes = [
           },
         ],
       },
+      { path: 'expiring-offers', Component: ExpiringOffersPage },
       { path: '*', Component: NotFoundPage },
     ],
   },

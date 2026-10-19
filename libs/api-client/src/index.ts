@@ -23,5 +23,8 @@ export type {
   SubErrorResponse,
   VendorPageResponse,
   VendorResponse,
+  VendorsOfferCountsResponse,
   VendorSummaryResponse,
+  VendorsWithExpiringOffersPageResponse,
+  VendorWithExpiringOffersResponse,
 } from './generated/types.gen';

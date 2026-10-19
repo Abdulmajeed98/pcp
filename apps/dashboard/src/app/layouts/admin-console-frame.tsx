@@ -14,6 +14,7 @@ const sections = [
   { to: '/catalog', name: 'Catalog' },
   { to: '/vendors', name: 'Vendors' },
   { to: '/missing-specifications', name: 'Missing specifications' },
+  { to: '/expiring-offers', name: 'Expiring Offers' },
 ];
 
 // The frame: the part every screen of the Admin console shares. A quiet top
