@@ -870,7 +870,7 @@ export type ResetVendorPasswordData = {
         vendorId: string;
     };
     query?: never;
-    url: '/v1/vendors/{vendorId}/password-reset';
+    url: '/v1/vendors/{vendorId}/reset-password';
 };
 
 export type ResetVendorPasswordErrors = {

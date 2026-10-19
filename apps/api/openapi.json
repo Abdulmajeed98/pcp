@@ -630,7 +630,7 @@
         "tags": ["Vendor"]
       }
     },
-    "/v1/vendors/{vendorId}/password-reset": {
+    "/v1/vendors/{vendorId}/reset-password": {
       "post": {
         "operationId": "resetVendorPassword",
         "parameters": [

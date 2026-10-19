@@ -156,9 +156,12 @@ export class VendorController {
   @ApiOkResponse({ type: PasswordResetResponse })
   @PreAuthorize([Role.ADMIN])
   // It answers 200, not 201: the Vendor and its Login stay, and only the
-  // Login's password is replaced.
+  // Login's password is replaced. An action on a Vendor is a POST to a verb
+  // after it, as reset-password, deactivate and reactivate are, and as the
+  // workplace backend's approve, reject and publish are; a part of a Vendor
+  // that is replaced whole, such as its contact details, is a noun.
   @HttpCode(HttpStatus.OK)
-  @Post('v1/vendors/:vendorId/password-reset')
+  @Post('v1/vendors/:vendorId/reset-password')
   async resetVendorPassword(
     @Param('vendorId') vendorId: string,
   ): Promise<PasswordResetResponse> {

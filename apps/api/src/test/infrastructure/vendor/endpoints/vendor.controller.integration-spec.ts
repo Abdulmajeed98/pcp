@@ -1368,7 +1368,7 @@ describe('the Vendor endpoints', () => {
 
   describe("resetting a Vendor's password", () => {
     function resetPassword(vendorId: string, token = adminToken): Promise<Response> {
-      return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/password-reset`, {
+      return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/reset-password`, {
         method: 'POST',
         headers: bearerHeader(token),
       });
@@ -1506,7 +1506,7 @@ describe('the Vendor endpoints', () => {
       const { vendor } = await aVendorThatHasLoggedIn();
 
       const response = await fetch(
-        `${testApp.baseUrl}/v1/vendors/${vendor.id}/password-reset`,
+        `${testApp.baseUrl}/v1/vendors/${vendor.id}/reset-password`,
         { method: 'POST' },
       );
 

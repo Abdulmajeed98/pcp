@@ -166,7 +166,7 @@ export const editContactDetails = <ThrowOnError extends boolean = false>(options
  */
 export const resetVendorPassword = <ThrowOnError extends boolean = false>(options: Options<ResetVendorPasswordData, ThrowOnError>): RequestResult<ResetVendorPasswordResponses, ResetVendorPasswordErrors, ThrowOnError> => (options.client ?? client).post<ResetVendorPasswordResponses, ResetVendorPasswordErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/v1/vendors/{vendorId}/password-reset',
+    url: '/v1/vendors/{vendorId}/reset-password',
     ...options
 });
 
