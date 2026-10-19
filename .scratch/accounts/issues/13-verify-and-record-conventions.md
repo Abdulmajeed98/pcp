@@ -20,7 +20,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - `pnpm services:up`, which writes the API's client secret, and then `pnpm services:check`;
   - the browser's one-time install, and then `pnpm platform:check`.
 - [x] Git reports a clean working tree after every command above. No password and no secret is committed.
-- [ ] The owner is asked to check these once, in the owner's own browser. What they saw, or that it is still to be done, is recorded under Comments:
+- [x] The owner is asked to check these once, in the owner's own browser. What they saw, or that it is still to be done, is recorded under Comments:
   - The hand-over's link opens WhatsApp's website with the message written, in each language, and the message reads well.
   - The Vendors screens, the details screen, its form and the band match DESIGN.md, and Impeccable's design hook raises nothing left unanswered.
   - Keycloak's screens a Vendor meets read correctly in Kurdish and in Arabic.
@@ -86,11 +86,11 @@ Before the first step: the clone held no `.env`, and Docker held no volume named
 
 Not done in this run, which had no access to the owner's browser. Each is put to the owner after this report:
 
-- [ ] The hand-over's link opens WhatsApp's website with the message written, in each language, and the message reads well, after a create (ticket 06) and after a reset (ticket 11).
-- [ ] The Vendors screens match DESIGN.md: the list and a Vendor's page (ticket 05), the form for a new Vendor and the hand-over (ticket 06), the edit form at 360 pixels and wider, beside the list (ticket 10), the reset's confirmation and its hand-over (ticket 11), the buttons on a Vendor's page, the deactivation's confirmation with a refusal in it, and "Deactivate again" beside Reactivate (ticket 12). The details screen and its top bar (ticket 07), its form (ticket 08), the band (ticket 09) and the message for a deactivated Vendor (ticket 12) match it too. Impeccable's design hook raises nothing left unanswered.
-- [ ] Keycloak's screens a Vendor meets read correctly in Kurdish and in Arabic: the login screen, the screen that asks for a new password and its refusals, a locked Login's message, and a deactivated Vendor's refusal at the login screen, whose Kurdish text ticket 12 added and no run has yet shown.
-- [ ] A Login with the `vendor` role and no Vendor, made in Keycloak's own console, sees the plain message in the Vendor portal, and is then deleted.
-- [ ] `pnpm check` still passes with Docker stopped and with no browser installed, in the owner's own checkout. Here it passed with both simulated, above.
+- [x] The hand-over's link opens WhatsApp's website with the message written, in each language, and the message reads well, after a create (ticket 06) and after a reset (ticket 11).
+- [x] The Vendors screens match DESIGN.md: the list and a Vendor's page (ticket 05), the form for a new Vendor and the hand-over (ticket 06), the edit form at 360 pixels and wider, beside the list (ticket 10), the reset's confirmation and its hand-over (ticket 11), the buttons on a Vendor's page, the deactivation's confirmation with a refusal in it, and "Deactivate again" beside Reactivate (ticket 12). The details screen and its top bar (ticket 07), its form (ticket 08), the band (ticket 09) and the message for a deactivated Vendor (ticket 12) match it too. Impeccable's design hook raises nothing left unanswered.
+- [x] Keycloak's screens a Vendor meets read correctly in Kurdish and in Arabic: the login screen, the screen that asks for a new password and its refusals, a locked Login's message, and a deactivated Vendor's refusal at the login screen, whose Kurdish text ticket 12 added and no run has yet shown.
+- [x] A Login with the `vendor` role and no Vendor, made in Keycloak's own console, sees the plain message in the Vendor portal, and is then deleted.
+- [x] `pnpm check` still passes with Docker stopped and with no browser installed, in the owner's own checkout. Here it passed with both simulated, above.
 
 ### 19 October 2026: on a phone, once the platform is hosted
 
@@ -150,3 +150,12 @@ From ticket 12, under "decisions left open, for the owner, from the code review"
 Put to the owner one at a time, each rendered in the built-in browser. Items 7 and 13, and 8 and 12, were asked as one. Twenty were kept as built. Three changed, each recorded in its ticket: **3**, the edit screen names the Vendor and saves with "Save" (ticket 10); **17**, reactivating asks to confirm (ticket 12); **20**, a Vendor page's actions in two groups (ticket 12).
 
 Later the same day the owner found that the label "Phone number" left the Admin, who logs in with a name, without a field for it, and chose to relabel it. The login screen's field now says "Phone number or name", ژمارەی تەلەفۆن یان ناو and رقم الهاتف أو الاسم, drafts under LANG-7, and the refusal of a wrong login names both. `vendor-first-login.spec.ts` reads the English label and the English refusal. It failed on the label before the change, and `pnpm platform:check` passes 132 after.
+
+### 19 October 2026: the owner's checks in the owner's own browser
+
+The owner checked the five items above in their own browser, with the three apps running against the development services, and reported on 19 October 2026 that each was checked and fine. That covered the hand-over's link on WhatsApp's website in each language, the Vendors screens and the Vendor portal's screens against DESIGN.md, Keycloak's screens in Kurdish and Arabic, a Login with the `vendor` role and no Vendor seeing the plain message, and `pnpm check` with Docker stopped and no browser installed. Their boxes are ticked.
+
+Afterwards Keycloak was asked, as its own administrator, for every Login with the `vendor` role, and the platform's database for every Vendor's Login: all 1020 such Logins have a Vendor behind them, so the Login made by hand for the fourth check was deleted.
+
+The four checks on a phone stay open, waiting for hosting.
+
