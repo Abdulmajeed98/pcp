@@ -71,6 +71,13 @@
       "when": 1792445640261,
       "tag": "0009_create-offer",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792448879821,
+      "tag": "0010_index-offers-by-vendor-and-confirmation",
+      "breakpoints": true
     }
   ]
 }
