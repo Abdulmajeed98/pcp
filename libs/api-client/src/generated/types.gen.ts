@@ -746,6 +746,48 @@ export type ConfirmedOffersResponse = {
     confirmed: number;
 };
 
+export type VisibleOfferVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+};
+
+export type VisibleOfferResponse = {
+    /**
+     * The Vendor.
+     */
+    vendor: VisibleOfferVendorResponse;
+    /**
+     * The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor last confirmed the Offer.
+     */
+    confirmedAt: string;
+    /**
+     * The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.
+     */
+    daysSinceConfirmation: number;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -1333,3 +1375,27 @@ export type ReadOfferResponses = {
 };
 
 export type ReadOfferResponse = ReadOfferResponses[keyof ReadOfferResponses];
+
+export type ListVisibleOffersOfPartData = {
+    body?: never;
+    path: {
+        partId: string;
+    };
+    query?: never;
+    url: '/v1/parts/{partId}/offers';
+};
+
+export type ListVisibleOffersOfPartErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVisibleOffersOfPartError = ListVisibleOffersOfPartErrors[keyof ListVisibleOffersOfPartErrors];
+
+export type ListVisibleOffersOfPartResponses = {
+    200: Array<VisibleOfferResponse>;
+};
+
+export type ListVisibleOffersOfPartResponse = ListVisibleOffersOfPartResponses[keyof ListVisibleOffersOfPartResponses];
