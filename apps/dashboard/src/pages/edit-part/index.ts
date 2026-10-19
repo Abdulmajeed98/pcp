@@ -1,1 +1,1 @@
-export { EditPartPage } from './ui/edit-part-page';
+export { EditPartPage, type ReturnTo } from './ui/edit-part-page';

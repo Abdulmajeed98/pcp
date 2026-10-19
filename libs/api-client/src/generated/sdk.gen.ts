@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -83,6 +83,15 @@ export const editPart = <ThrowOnError extends boolean = false>(options: Options<
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * One page of the Parts that have an Offer and lack a needed specification, for the Admin
+ */
+export const listPartsMissingSpecifications = <ThrowOnError extends boolean = false>(options?: Options<ListPartsMissingSpecificationsData, ThrowOnError>): RequestResult<ListPartsMissingSpecificationsResponses, ListPartsMissingSpecificationsErrors, ThrowOnError> => (options?.client ?? client).get<ListPartsMissingSpecificationsResponses, ListPartsMissingSpecificationsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/parts/missing-specifications',
+    ...options
 });
 
 /**

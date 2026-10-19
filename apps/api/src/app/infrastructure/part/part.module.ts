@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { CreatePartCommand } from '~/domain/part/CreatePartCommand';
 import { EditPartCommand } from '~/domain/part/EditPartCommand';
+import { ListPartsMissingSpecificationsQuery } from '~/domain/part/ListPartsMissingSpecificationsQuery';
 import { PartStore } from '~/domain/part/PartStore';
 import { ReadPartQuery } from '~/domain/part/ReadPartQuery';
 import { SearchPartsQuery } from '~/domain/part/SearchPartsQuery';
@@ -22,6 +23,7 @@ import { DatabasePartStore } from './store/DatabasePartStore';
     ReadPartQuery,
     SearchPartsQuery,
     AddPartPhotoCommand,
+    ListPartsMissingSpecificationsQuery,
   ],
   // For the modules that refer to Parts, such as Offers.
   exports: [PartStore],
