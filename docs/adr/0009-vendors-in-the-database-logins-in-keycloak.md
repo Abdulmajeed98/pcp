@@ -2,12 +2,13 @@
 
 Two decisions of the `accounts` module, which are costly to undo once Vendors, their Logins and every Vendor portal endpoint depend on them. The module's spec is [.scratch/accounts/spec.md](../../.scratch/accounts/spec.md), and it follows [ADR-0003](0003-three-apps-one-api-keycloak.md), which gave Logins to Keycloak.
 
-**A Vendor is kept in the platform's database, and its Login in Keycloak.** Keycloak keeps the Login: its name, its password and whether it may log in. The database keeps the Vendor: its name, its city, its contact details, whether it is active, and the identifier of its own Login, which is the token's subject and the Caller's identifier. Only two things are in both: the link between them, and the login phone number, which is a detail of the Vendor and the Login's name. Only the API changes a Vendor's Login, through its own client of Keycloak's administration interface, and only in a Command that changes the Vendor as well. Each such Command makes its two changes in the order that is safe if the second fails, and puts the first back where it can:
+**A Vendor is kept in the platform's database, and its Login in Keycloak.** Keycloak keeps the Login: its name, its password and whether it may log in. The database keeps the Vendor: its name, its city, its contact details, whether it is active, and the identifier of its own Login, which is the token's subject and the Caller's identifier. Only two things are in both: the link between them, and the login phone number, which is a detail of the Vendor and the Login's name. Only the API changes a Vendor's Login, through its own client of Keycloak's administration interface, and only in a Command about that Vendor. Most such Commands change the Vendor as well; the reset of a password changes the Login alone, and nothing in the Vendor. Each makes its two changes in the order that is safe if the second fails, and puts the first back where it can:
 
 - creating makes the Login, then the Vendor, and deletes the Login again when the Vendor cannot be stored;
 - changing the login phone number renames the Login, then the Vendor, and puts the Login's name back when the Vendor cannot be stored;
 - deactivating marks the Vendor first, so that the API refuses it at once, and then disables the Login and ends its sessions;
-- reactivating enables the Login first and marks the Vendor last, so that the API goes on refusing it until both are done.
+- reactivating enables the Login first and marks the Vendor last, so that the API goes on refusing it until both are done;
+- resetting a password ends the Login's sessions first and then gives it a temporary password, so that a reset that fails at the password leaves the old one working.
 
 A deactivation or a reactivation that fails halfway is finished by doing it again.
 

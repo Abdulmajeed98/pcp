@@ -120,3 +120,17 @@ Each was taken the way the ticket, the spec or DESIGN.md pointed, and none block
 - **The login phone number's description on the edit:** "A mobile number. The Vendor logs in with it. A new number changes what the Vendor logs in with, and its password stays." The form does not ask the Admin to confirm a new number, and nothing is handed over: the Vendor logs in with the password it had. **My recommendation:** keep it; telling the Vendor its new number is the Admin's, in the shop.
 - **Sessions after a rename.** A Login's sessions and tokens are kept when it is renamed: the API finds a Vendor by its Login's identifier, which stays, so a Vendor whose number the Admin changes stays logged in. **My recommendation:** keep it; a reset ends sessions where that is wanted.
 - **An edit that keeps the number while Keycloak cannot be reached** goes through, since it needs no Keycloak; the spec answers 503 for "a call that needs it". **My recommendation:** keep it.
+
+### 19 October 2026: the code review of tickets 10 to 12
+
+The review of `accounts/integration` since `4f0c6a5` was fixed on `accounts/review-fixes`. What belongs to this ticket:
+
+- **A test across tickets.** The edit's spec gains a line: a deactivated Vendor whose login phone number the Admin changes stays deactivated, and its renamed Login stays disabled, refused at the token address with `Account disabled`. It passed when first run, as the code already did so; a planted fault that sent `enabled: true` with the rename failed it, and nothing else (153 passed).
+- **The tests' copies.** The edit's spec had copied the error bodies `IDENTITY_SERVICE_UNAVAILABLE`, `VENDOR_NOT_FOUND` and `INTERNAL_SERVER_ERROR`, the SQL runner and the planted constraint from the Vendor endpoints' spec. They are now in `src/test/test-utils/error-bodies.ts` and `test-database.ts`, and the planted constraint, `CHECK (false) NOT VALID`, refuses a create and an edit alike.
+- **One helper for a Vendor that does not exist.** `existingVendor`, beside the Commands, turns what a store gives back into the Vendor or `VENDOR_NOT_FOUND`. The edit, the deactivation, the reactivation, the reset, the change of contact details and the rule for which Vendor a request acts for use it.
+- **Names.** In `EditVendorCommand`, `oldName` and `newName` are now `oldLoginName` and `newLoginName`, as they hold login phone numbers in the form a Login is named by.
+- **The store.** `CreateVendorParams` carries `VendorDetails` and the Login's identifier, as `EditVendorParams` carries `VendorDetails`, and both write the same columns through one `detailsColumns`. `DatabaseVendorStore`'s edit, change of contact details and mark of a Vendor active or not share `updateOneWhere`, beside `readOneWhere`; the mark's helper is now `storeWhetherActive`. The API's answers did not change: every test passed unchanged.
+- **The form's words.** `vendor-form.tsx` chose between the create's and the edit's words in four places, and passed `editing` to `whyNotSaved`. `model/texts.ts` holds both sets, and the form picks one.
+- **The MVP spec** names the edit form among the Admin console's screens, and among those that call `expectAccessible`, as opened and with a refusal shown.
+
+**Results on the branch's tip** are under ticket 12's heading of the same day.
