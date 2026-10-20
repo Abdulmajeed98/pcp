@@ -555,7 +555,9 @@ test("the banner and confirm-all's result pass the checks of every screen of the
   expectADifferentTextInEachLanguage(banners);
 
   await theBanner(page).getByRole('button').click();
-  await expect(page.getByTestId('confirmed-count')).toBeVisible();
+  // The result, not its count: Arabic says one Offer and two in words, with
+  // no count written.
+  await expect(page.getByTestId('confirmed')).toBeVisible();
   const results = await readInEveryLanguageOfTheVendorPortal(page, () =>
     page.getByTestId('confirmed').innerText(),
   );
