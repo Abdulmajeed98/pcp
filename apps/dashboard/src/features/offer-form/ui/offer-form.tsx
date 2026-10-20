@@ -1,4 +1,4 @@
-import type { CreateOfferRequest, PartSummaryResponse } from '@pcp/api-client';
+import type { EditOfferRequest, PartSummaryResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
 import { type ComponentProps, type ReactNode, useState } from 'react';
@@ -30,8 +30,8 @@ import {
 import {
   newOfferFormValues,
   numberIn,
+  offerDetailsOf,
   type OfferFormValues,
-  offerRequestOf,
 } from '../model/form-values';
 import { largestIqdPrice, largestUsdPrice, longestWarrantyMonths } from '../model/limits';
 import { refusalOf, type RefusalMessage } from '../model/refusals';
@@ -50,18 +50,29 @@ import { OfferedPart } from './offered-part';
 // language, and that detail takes the focus. A refusal that names no detail,
 // such as a second Offer for the Part, or an API that cannot be reached, is
 // said above the form.
+//
+// The same form adds an Offer, starting empty and in stock, and changes one,
+// starting with the Offer's details as they are; its button and what it says
+// when the Offer is not saved follow which it does. Whatever else the screen
+// offers, such as removing the Offer, the screen puts below it.
 export function OfferForm({
   part,
+  values = newOfferFormValues,
+  purpose = 'add',
   save,
 }: {
   part: PartSummaryResponse;
-  // Sends the Offer. It throws a `Refusal` when the API refuses it, and an
-  // `Unreachable` when the API cannot be reached.
-  save: (request: CreateOfferRequest) => Promise<unknown>;
+  // What the form starts with.
+  values?: OfferFormValues;
+  // Whether the form adds a new Offer or changes one.
+  purpose?: 'add' | 'change';
+  // Sends the Offer's details. It throws a `Refusal` when the API refuses
+  // them, and an `Unreachable` when the API cannot be reached.
+  save: (details: EditOfferRequest) => Promise<unknown>;
 }) {
   const { t } = useTranslation();
   const { register, control, handleSubmit, setError, formState } = useForm<OfferFormValues>(
-    { defaultValues: newOfferFormValues },
+    { defaultValues: values },
   );
   const { errors } = formState;
   // Why the Offer was not saved, when the form says it above itself.
@@ -73,10 +84,10 @@ export function OfferForm({
       numberIn(typed) !== undefined || (`${detail}.notANumber` satisfies RefusalMessage),
   });
 
-  async function submit(values: OfferFormValues): Promise<void> {
+  async function submit(typed: OfferFormValues): Promise<void> {
     setNotSaved(undefined);
     try {
-      await save(offerRequestOf(part.id, values));
+      await save(offerDetailsOf(typed));
     } catch (error) {
       if (!setRefusalsBesideTheirFields(error, setError, refusalOf)) {
         setNotSaved({ why: error });
@@ -93,7 +104,7 @@ export function OfferForm({
     >
       <OfferedPart part={part} />
 
-      {notSaved !== undefined && <NotSaved why={notSaved.why} />}
+      {notSaved !== undefined && <NotSaved why={notSaved.why} purpose={purpose} />}
 
       <FieldSet>
         <FieldLegend>{t('OfferForm.prices')}</FieldLegend>
@@ -193,7 +204,13 @@ export function OfferForm({
         className="w-full sm:w-auto sm:self-start"
         disabled={formState.isSubmitting}
       >
-        {formState.isSubmitting ? t('OfferForm.saving') : t('OfferForm.save')}
+        {purpose === 'add'
+          ? formState.isSubmitting
+            ? t('OfferForm.saving')
+            : t('OfferForm.save')
+          : formState.isSubmitting
+            ? t('OfferForm.savingChanges')
+            : t('OfferForm.saveChanges')}
       </Button>
     </form>
   );
@@ -202,13 +219,15 @@ export function OfferForm({
 // Why the Offer was not saved, above the form: a second Offer for the Part
 // in words of its own, and any other refusal, or an API that cannot be
 // reached, as the portal says it everywhere.
-function NotSaved({ why }: { why: unknown }) {
+function NotSaved({ why, purpose }: { why: unknown; purpose: 'add' | 'change' }) {
   const { t } = useTranslation();
   const taken = why instanceof Refusal && why.reasonFor('partId') === 'taken';
 
   return (
     <Alert variant="destructive" data-testid="refusal">
-      <AlertTitle>{t('OfferForm.notSaved')}</AlertTitle>
+      <AlertTitle>
+        {purpose === 'add' ? t('OfferForm.notSaved') : t('OfferForm.notSavedChanges')}
+      </AlertTitle>
       <AlertDescription>
         {taken ? t('OfferForm.taken') : <WhyNotAnsweredInThePortal error={why} />}
       </AlertDescription>

@@ -286,15 +286,34 @@ export async function checkInEveryLanguageOfTheVendorPortal(page: Page): Promise
 
 // The same checks, and then what the test reads from the screen in each
 // language.
+//
+// A screen checked with something open over it, such as an alert dialog,
+// which hides the switch and keeps it from a tap while it is open, gives how
+// to open it and how to close it. It is closed before each tap on the
+// switch, and opened again once the switch has been checked, so that the
+// digits, the width and what the test reads are checked with it open.
 export async function readInEveryLanguageOfTheVendorPortal<Read>(
   page: Page,
   read: (language: Language) => Promise<Read>,
+  openOver?: { open: () => Promise<void>; close: () => Promise<void> },
 ): Promise<Map<Language, Read>> {
+  let opened = false;
+
   return readInEachLanguage(
     page,
     {
-      show: (language) => buttonFor(page, language).click(),
-      expectTheSwitch: (language) => expectTheVendorPortalsSwitch(page, language),
+      show: async (language) => {
+        if (opened) await openOver?.close();
+        opened = false;
+        await buttonFor(page, language).click();
+      },
+      expectTheSwitch: async (language) => {
+        await expectTheVendorPortalsSwitch(page, language);
+        if (openOver !== undefined) {
+          await openOver.open();
+          opened = true;
+        }
+      },
     },
     read,
   );

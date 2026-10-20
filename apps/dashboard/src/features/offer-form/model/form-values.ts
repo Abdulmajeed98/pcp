@@ -1,4 +1,6 @@
-import type { CreateOfferRequest } from '@pcp/api-client';
+import type { EditOfferRequest, OfferResponse } from '@pcp/api-client';
+
+import { iqdAmountWritten, usdAmountWritten } from '@/entities/offer';
 
 import { westernNumberOf } from './western-digits';
 
@@ -20,6 +22,19 @@ export const newOfferFormValues: OfferFormValues = {
   warrantyMonths: '',
 };
 
+// The form of an Offer that is changed: its details as they are, each price
+// written as the portal shows it, in Western digits grouped in thousands,
+// which the form takes back as typed, and a detail it does not state left
+// empty.
+export function formValuesOf(offer: OfferResponse): OfferFormValues {
+  return {
+    usdPrice: offer.usdPrice === null ? '' : usdAmountWritten(offer.usdPrice),
+    iqdPrice: offer.iqdPrice === null ? '' : iqdAmountWritten(offer.iqdPrice),
+    inStock: offer.inStock,
+    warrantyMonths: offer.warrantyMonths === null ? '' : String(offer.warrantyMonths),
+  };
+}
+
 // A decimal number as the API reads one, in Western digits.
 const decimalNumber = /^-?\d+(?:\.\d+)?$/;
 
@@ -33,19 +48,16 @@ export function numberIn(typed: string): number | null | undefined {
   return decimalNumber.test(western) ? Number(western) : undefined;
 }
 
-// What the API is sent for a new Offer of the Part. The USD price is sent as
-// the text of its digits, so that its cents arrive as typed, and the API says
-// what is wrong with it; the IQD price and the warranty as numbers, which the
-// form has checked are numbers. A detail left empty is sent as null, not
-// given.
-export function offerRequestOf(
-  partId: string,
-  values: OfferFormValues,
-): CreateOfferRequest {
+// The Offer's details as the API is sent them, for a new Offer and for a
+// change to one alike. The USD price is sent as the text of its digits, so
+// that its cents arrive as typed, and the API says what is wrong with it; the
+// IQD price and the warranty as numbers, which the form has checked are
+// numbers. A detail left empty is sent as null, not given, which a change
+// takes as cleared.
+export function offerDetailsOf(values: OfferFormValues): EditOfferRequest {
   const usdPrice = westernNumberOf(values.usdPrice);
 
   return {
-    partId,
     usdPrice: usdPrice === '' ? null : usdPrice,
     iqdPrice: numberIn(values.iqdPrice) ?? null,
     inStock: values.inStock,

@@ -1,4 +1,5 @@
 export {
+  offerKey,
   type OffersSearch,
   pageSize,
   useOffer,
@@ -7,4 +8,9 @@ export {
 } from './api/offers';
 export type { AddedOffer } from './model/added-offer';
 export { type ConfirmationState, confirmationOf } from './model/confirmation';
-export { iqdPriceShown, usdPriceShown } from './model/prices';
+export {
+  iqdAmountWritten,
+  iqdPriceShown,
+  usdAmountWritten,
+  usdPriceShown,
+} from './model/prices';

@@ -45,11 +45,16 @@ export function useVendorsOffers(vendorId: string, { words, page }: OffersSearch
   });
 }
 
+// The key of one of a Vendor's Offers, under the key of them all.
+export function offerKey(vendorId: string, offerId: string) {
+  return [...vendorsOffersKey(vendorId), 'offer', offerId] as const;
+}
+
 // One of a Vendor's Offers, with its Part, under the same key as the list, so
 // that a change to it asks it again.
 export function useOffer(vendorId: string, offerId: string) {
   return useQuery({
-    queryKey: [...vendorsOffersKey(vendorId), 'offer', offerId],
+    queryKey: offerKey(vendorId, offerId),
     queryFn: () => dataOf(apiClient.readOffer({ path: { vendorId, offerId } })),
   });
 }

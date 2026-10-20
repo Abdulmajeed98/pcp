@@ -34,12 +34,15 @@ import { createAMadeUpPart, type MadeUpPart } from './catalog';
 import {
   addAnOffer,
   answerTheOffersAsExpiring,
+  offerField,
+  removeTheOffer,
   rowOfFoundPart,
   rowOfOffer,
   saveTheOffer,
   searchTheCatalogFor,
   theBanner,
   theOfferForm,
+  theRemovalDialog,
 } from './offers';
 import { dashboardUrl, keycloakUrl } from './platform';
 import { expectTheSameInEveryLanguage } from './sample';
@@ -80,6 +83,7 @@ let vendor: VendorLoginDetails;
 // The Part the Vendor offers, in an Offer added over HTTP, quoted in both
 // currencies, with prices large enough to be grouped in thousands.
 let offered: MadeUpPart;
+let offeredId: string;
 
 // A Part the Vendor does not offer, whose form for a new Offer the tests
 // open.
@@ -100,11 +104,17 @@ test.beforeAll(async ({ browser }) => {
     );
     offered = await createAMadeUpPart(adminsContext.request, authorization);
     notOffered = await createAMadeUpPart(adminsContext.request, authorization);
-    await addAnOffer(adminsContext.request, authorization, vendor.vendorId, offered.id, {
-      usdPrice: '1250.5',
-      iqdPrice: 1_875_000,
-      warrantyMonths: 12,
-    });
+    offeredId = await addAnOffer(
+      adminsContext.request,
+      authorization,
+      vendor.vendorId,
+      offered.id,
+      {
+        usdPrice: '1250.5',
+        iqdPrice: 1_875_000,
+        warrantyMonths: 12,
+      },
+    );
   } finally {
     await adminsContext.close();
   }
@@ -475,6 +485,53 @@ test.describe('the form for a new Offer, as a made-up Vendor', () => {
         new Map([...texts].map(([language, read]) => [language, read[part]])),
       );
     }
+  });
+});
+
+// The form that changes the Vendor's Offer, with the alert dialog that asks
+// to confirm its removal open over it. The dialog keeps the switch from a
+// tap while it is open, so it is closed before each tap and opened again
+// after, and every check runs with it open. Nothing is removed.
+test.describe('the form that changes an Offer, as a made-up Vendor, with the removal dialog open', () => {
+  test.beforeEach(async ({ page }) => {
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/offers/${offeredId}`);
+    await expect(theOfferForm(page)).toBeVisible();
+  });
+
+  test('passes the checks of every screen of the Vendor portal, in all three languages; the form and the dialog differ in each, and the Part name is drawn left to right', async ({
+    page,
+  }) => {
+    const texts = await readInEveryLanguageOfTheVendorPortal(
+      page,
+      async () => {
+        await expectInEnglish(
+          theRemovalDialog(page).getByTestId('part-name'),
+          offered.name,
+        );
+        return {
+          form: await theOfferForm(page).innerText(),
+          dialog: await theRemovalDialog(page).innerText(),
+        };
+      },
+      {
+        open: async () => {
+          await removeTheOffer(page).click();
+          await expect(theRemovalDialog(page)).toBeVisible();
+        },
+        close: async () => {
+          await theRemovalDialog(page).getByTestId('cancel-removal').click();
+          await expect(theRemovalDialog(page)).toHaveCount(0);
+        },
+      },
+    );
+
+    for (const part of ['form', 'dialog'] as const) {
+      expectADifferentTextInEachLanguage(
+        new Map([...texts].map(([language, read]) => [language, read[part]])),
+      );
+    }
+    await expect(offerField(page, 'usdPrice')).toHaveValue('1,250.50');
+    await expect(offerField(page, 'iqdPrice')).toHaveValue('1,875,000');
   });
 });
 

@@ -187,3 +187,33 @@ export function inStockSwitch(page: Page): Locator {
 export function saveTheOffer(page: Page): Locator {
   return theOfferForm(page).locator('button[type="submit"]');
 }
+
+// Removes a made-up Vendor's Offer over HTTP, as the Admin acting for the
+// Vendor.
+export async function removeAnOffer(
+  request: APIRequestContext,
+  authorization: string,
+  vendorId: string,
+  offerId: string,
+): Promise<void> {
+  const removed = await request.delete(
+    `${apiUrl}/v1/vendors/${vendorId}/offers/${offerId}`,
+    { headers: { authorization } },
+  );
+  expect(removed.status()).toBe(204);
+}
+
+// The screen of one of the Vendor's Offers, the form that changes it.
+export function theOfferScreen(page: Page): Locator {
+  return page.getByTestId('offer-screen');
+}
+
+// The Offer screen's button that asks to remove the Offer.
+export function removeTheOffer(page: Page): Locator {
+  return theOfferScreen(page).getByTestId('remove-offer');
+}
+
+// The alert dialog that asks the Vendor to confirm the removal.
+export function theRemovalDialog(page: Page): Locator {
+  return page.getByTestId('remove-confirmation');
+}

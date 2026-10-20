@@ -9,6 +9,7 @@ import {
   TriangleAlertIcon,
   type LucideIcon,
 } from 'lucide-react';
+import { Link } from 'react-router';
 
 import { categoryName } from '@/entities/category';
 import {
@@ -34,19 +35,32 @@ import {
 // its stock and its warranty. A Part's name, its manufacturer and the prices
 // are English in every language, and are kept apart from the text around
 // them (LANG-3, LANG-5). The Category is named in the shared terms.
+//
+// The whole row is the link to the Offer, the form that changes it, as a
+// Part the catalog search found is, while the link's name is the Part's
+// alone. The link is relative to the Offers screen's route, so that it
+// reaches the Offer under either frame.
 export function OfferRow({ offer }: { offer: ListedOfferResponse }) {
   const { t } = useTranslation();
   const { part } = offer;
 
   return (
-    <Item data-testid="offer" className="items-start rounded-none px-0">
+    <Item
+      data-testid="offer"
+      className="relative items-start rounded-none px-0 hover:bg-secondary has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2"
+    >
       <ItemMedia>
         <PartPicture part={part} />
       </ItemMedia>
       <ItemContent className="gap-2">
         <div className="flex flex-col gap-0.5">
           <ItemTitle>
-            <AlwaysEnglish data-testid="part-name">{part.name}</AlwaysEnglish>
+            <Link
+              to={`offers/${offer.id}`}
+              className="after:absolute after:inset-0 focus-visible:outline-none"
+            >
+              <AlwaysEnglish data-testid="part-name">{part.name}</AlwaysEnglish>
+            </Link>
           </ItemTitle>
           <ItemDescription>
             <AlwaysEnglish>{part.manufacturer}</AlwaysEnglish>
