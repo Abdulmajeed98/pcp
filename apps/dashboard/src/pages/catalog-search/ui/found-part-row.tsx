@@ -8,10 +8,12 @@ import { PartPicture } from '@/entities/part';
 import { useTranslation } from '@/shared/i18n';
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/shared/ui';
 
-// One Part the search found, as the Admin console's Catalog draws it: its
-// picture, its name, and one secondary line with its manufacturer, its
-// Category and its part numbers. The whole row is the link, while the
-// link's name is the Part's alone.
+// One Part the search found: its picture, its name, one secondary line with
+// its manufacturer and its Category, and its part numbers on a line of their
+// own, so that the number a Vendor matches against the box is read whole,
+// left to right, as the Offer form's head shows it; the owner chose it on 20
+// October 2026 over the Catalog's one secondary line. The whole row is the
+// link, while the link's name is the Part's alone.
 //
 // A Part the Vendor offers is marked, in Confirmed Green with a circled tick,
 // on a line of its own, and leads to the Offer, so that the Vendor does not
@@ -46,15 +48,14 @@ export function FoundPartRow({ part }: { part: FoundPartResponse }) {
           <span data-testid="category" data-category={part.category}>
             {categoryName(part.category)}
           </span>
-          {part.partNumbers.length > 0 && (
-            <>
-              {' · '}
-              <AlwaysEnglish data-testid="part-numbers">
-                {part.partNumbers.join(', ')}
-              </AlwaysEnglish>
-            </>
-          )}
         </ItemDescription>
+        {part.partNumbers.length > 0 && (
+          <ItemDescription>
+            <AlwaysEnglish data-testid="part-numbers">
+              {part.partNumbers.join(', ')}
+            </AlwaysEnglish>
+          </ItemDescription>
+        )}
         {part.offerId !== null && (
           <p
             data-testid="offered"

@@ -1,6 +1,6 @@
 import { AlwaysEnglish } from '@pcp/ui';
 import { CircleCheckIcon } from 'lucide-react';
-import { useLocation } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
 import type { AddedOffer } from '@/entities/offer';
 import { useVendorShown } from '@/entities/vendor';
@@ -18,9 +18,11 @@ import { SearchForm } from './search-form';
 // wide first. A Part the Vendor offers is marked and leads to the Offer; any
 // other opens the form for a new Offer of it.
 //
-// After a save the form returns here, with the search as it was, and a note
-// in Confirmed Green, announced when it appears, names the Part whose Offer
-// was added, until another search is shown. Its way back, `..`, is written
+// After a save the form returns here, with the search as it was, and a note,
+// announced when it appears, says the Offer was added and names its Part,
+// until another search is shown: a Sheet panel with a Confirmed Green edge,
+// its title in Confirmed Green after a circled tick, the sentence, and a link
+// to the Offers, as the owner chose on 20 October 2026. Its way back, `..`, is written
 // relative to its route, so that it reaches the Offers screen under either
 // frame.
 export function CatalogSearchPage() {
@@ -41,18 +43,28 @@ export function CatalogSearchPage() {
         className={
           added === undefined
             ? 'sr-only'
-            : 'flex items-start gap-2 text-sm font-medium text-success'
+            : 'flex flex-col gap-1 rounded-lg border border-success bg-card p-3 text-sm'
         }
       >
         {added !== undefined && (
           <>
-            <CircleCheckIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span className="flex items-center gap-2 text-base font-medium text-success">
+              <CircleCheckIcon aria-hidden="true" className="size-4 shrink-0" />
+              {t('CatalogSearch.addedTitle')}
+            </span>
             <span>
               <Trans
                 i18nKey="CatalogSearch.added"
                 components={{ name: <AlwaysEnglish>{added}</AlwaysEnglish> }}
               />
             </span>
+            <Link
+              to=".."
+              data-testid="see-offers"
+              className="flex min-h-control items-center self-start underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {t('CatalogSearch.seeOffers')}
+            </Link>
           </>
         )}
       </output>

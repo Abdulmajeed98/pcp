@@ -119,8 +119,10 @@ test.describe('a made-up Vendor with no Offer yet', () => {
     );
     await expect(page.getByTestId('offer-added')).toContainText(part.name);
     await expect(rowOfFoundPart(page, part.name)).toHaveAttribute('data-offered', 'true');
+    await expectNoSidewaysScroll(page);
 
-    await theSection(page, 'offers').click();
+    await page.getByTestId('offer-added').getByTestId('see-offers').click();
+    await expect(page).toHaveURL(`${dashboardUrl}/`);
     const offer = rowOfOffer(page, part.name);
     await expect(offer.getByTestId('confirmation')).toHaveAttribute('data-state', 'today');
     await expect(offer.getByTestId('usd-price')).toHaveText('349.99 $');
@@ -135,10 +137,11 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
   let offered: MadeUpPart;
   let offerId: string;
   let notOffered: MadeUpPart;
+  let toAdd: MadeUpPart;
 
   test.beforeAll(async ({ browser }) => {
     vendor = await aMadeUpVendorThatHasLoggedIn(browser);
-    [offered, notOffered] = await madeUpParts(browser, 2);
+    [offered, notOffered, toAdd] = await madeUpParts(browser, 3);
     offerId = await asTheAdmin(browser, (request, authorization) =>
       addAnOffer(request, authorization, vendor.vendorId, offered.id, {
         usdPrice: '349.99',
@@ -203,12 +206,14 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
     await expect(refusal).toHaveText(inEnglish);
   });
 
-  test('the search with results meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
+  test('the search with results, and the note that an Offer was added, meet the automated part of WCAG 2.2 level AA, in light and in dark', async ({
     page,
   }) => {
-    await openTheDashboardAs(page, vendor, `${dashboardUrl}/add`);
-    await searchTheCatalogFor(page, offered.partNumber);
-    await expect(rowOfFoundPart(page, offered.name).getByTestId('offered')).toBeVisible();
+    await openTheDashboardAs(page, vendor, theFormFor(toAdd));
+    await offerField(page, 'usdPrice').fill('99.50');
+    await saveTheOffer(page).click();
+    await expect(page.getByTestId('offer-added')).toBeVisible();
+    await expect(rowOfFoundPart(page, toAdd.name).getByTestId('offered')).toBeVisible();
 
     await expectAccessible(page);
   });

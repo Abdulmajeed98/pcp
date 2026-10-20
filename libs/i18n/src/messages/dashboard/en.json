@@ -103,7 +103,9 @@
     "page": "Page <page/> of <pages/>",
     "pastTheLast": "This page is past the last one.",
     "firstPage": "Go to the first page",
-    "added": "Your Offer for <name/> is added. Find the next Part to offer."
+    "addedTitle": "Offer added",
+    "added": "Your Offer for <name/> is added. Find the next Part to offer.",
+    "seeOffers": "See your Offers"
   },
   "NewOffer": {
     "back": "Back to the search",
