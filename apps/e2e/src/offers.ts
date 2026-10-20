@@ -142,3 +142,48 @@ export async function answerTheOffersAsExpiring(
         : route.fallback(),
   );
 }
+
+// The Vendor portal's search of the catalog, from which an Offer is added.
+export function theCatalogSearch(page: Page): Locator {
+  return page.getByTestId('catalog-search');
+}
+
+// The Parts the catalog search found, one row each.
+export function foundParts(page: Page): Locator {
+  return page.getByTestId('found-part');
+}
+
+// The row of the Part of this name among those the search found.
+export function rowOfFoundPart(page: Page, partName: string): Locator {
+  return foundParts(page).filter({ hasText: partName });
+}
+
+// Searches the catalog from the Vendor portal: types the words and presses
+// Enter, as a Vendor does on a phone's keyboard.
+export async function searchTheCatalogFor(page: Page, words: string): Promise<void> {
+  await theCatalogSearch(page).getByRole('searchbox').fill(words);
+  await theCatalogSearch(page).getByRole('searchbox').press('Enter');
+}
+
+// The form for an Offer.
+export function theOfferForm(page: Page): Locator {
+  return page.getByTestId('offer-form');
+}
+
+// One of the Offer form's fields, found by the detail the API names it by.
+export function offerField(
+  page: Page,
+  detail: 'usdPrice' | 'iqdPrice' | 'warrantyMonths',
+): Locator {
+  return page.locator(`#offer-form-${detail}`);
+}
+
+// The Offer form's switch for whether the Part is in stock.
+export function inStockSwitch(page: Page): Locator {
+  return theOfferForm(page).getByRole('switch');
+}
+
+// The form's button that saves the Offer, whatever language it is named in.
+export function saveTheOffer(page: Page): Locator {
+  return theOfferForm(page).locator('button[type="submit"]');
+}

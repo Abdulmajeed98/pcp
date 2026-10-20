@@ -44,3 +44,12 @@ export function useVendorsOffers(vendorId: string, { words, page }: OffersSearch
       previousQuery?.queryKey[1] === vendorId ? keepPreviousData(previous) : undefined,
   });
 }
+
+// One of a Vendor's Offers, with its Part, under the same key as the list, so
+// that a change to it asks it again.
+export function useOffer(vendorId: string, offerId: string) {
+  return useQuery({
+    queryKey: [...vendorsOffersKey(vendorId), 'offer', offerId],
+    queryFn: () => dataOf(apiClient.readOffer({ path: { vendorId, offerId } })),
+  });
+}

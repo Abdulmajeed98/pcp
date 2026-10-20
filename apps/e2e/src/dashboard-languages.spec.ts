@@ -31,7 +31,16 @@ import {
   readInEveryLanguageOfTheVendorPortal,
 } from './languages';
 import { createAMadeUpPart, type MadeUpPart } from './catalog';
-import { addAnOffer, answerTheOffersAsExpiring, rowOfOffer, theBanner } from './offers';
+import {
+  addAnOffer,
+  answerTheOffersAsExpiring,
+  rowOfFoundPart,
+  rowOfOffer,
+  saveTheOffer,
+  searchTheCatalogFor,
+  theBanner,
+  theOfferForm,
+} from './offers';
 import { dashboardUrl, keycloakUrl } from './platform';
 import { expectTheSameInEveryLanguage } from './sample';
 import {
@@ -72,6 +81,10 @@ let vendor: VendorLoginDetails;
 // currencies, with prices large enough to be grouped in thousands.
 let offered: MadeUpPart;
 
+// A Part the Vendor does not offer, whose form for a new Offer the tests
+// open.
+let notOffered: MadeUpPart;
+
 test.beforeAll(async ({ browser }) => {
   vendor = await aMadeUpVendorThatHasLoggedIn(browser, {
     address: addressAsWritten,
@@ -86,6 +99,7 @@ test.beforeAll(async ({ browser }) => {
       await adminsContext.newPage(),
     );
     offered = await createAMadeUpPart(adminsContext.request, authorization);
+    notOffered = await createAMadeUpPart(adminsContext.request, authorization);
     await addAnOffer(adminsContext.request, authorization, vendor.vendorId, offered.id, {
       usdPrice: '1250.5',
       iqdPrice: 1_875_000,
@@ -387,6 +401,76 @@ test.describe('the Offers screen, as a made-up Vendor with an Offer', () => {
     });
 
     for (const part of ['counted', 'category', 'warranty'] as const) {
+      expectADifferentTextInEachLanguage(
+        new Map([...texts].map(([language, read]) => [language, read[part]])),
+      );
+    }
+  });
+});
+
+// The catalog search, from which an Offer is added, holds a sentence that
+// counts, the Parts found, and the Category filter, whose names are the
+// shared terms. The Part's name and its part number are English in every
+// language.
+test.describe('the catalog search, as a made-up Vendor, with the Part it offers found', () => {
+  test.beforeEach(async ({ page }) => {
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/add`);
+    await searchTheCatalogFor(page, offered.partNumber);
+    await expect(rowOfFoundPart(page, offered.name).getByTestId('offered')).toBeVisible();
+  });
+
+  test('passes the checks of every screen of the Vendor portal, in all three languages; its counting sentence, the Category filter and the mark of an offered Part differ in each, and the Part name and its number are drawn left to right', async ({
+    page,
+  }) => {
+    const row = rowOfFoundPart(page, offered.name);
+    const texts = await readInEveryLanguageOfTheVendorPortal(page, async () => {
+      await expectInEnglish(row.getByTestId('part-name'), offered.name);
+      await expectInEnglish(row.getByTestId('part-numbers'), offered.partNumber);
+      return {
+        found: await page.getByTestId('parts-found').innerText(),
+        categories: (await page.locator('#catalog-category option').allInnerTexts()).join(
+          ', ',
+        ),
+        category: await row.getByTestId('category').innerText(),
+        offered: await row.getByTestId('offered').innerText(),
+      };
+    });
+
+    for (const part of ['found', 'categories', 'category', 'offered'] as const) {
+      expectADifferentTextInEachLanguage(
+        new Map([...texts].map(([language, read]) => [language, read[part]])),
+      );
+    }
+  });
+});
+
+// The form for a new Offer, opened from the search, with a refusal shown
+// beside the USD field.
+test.describe('the form for a new Offer, as a made-up Vendor', () => {
+  test.beforeEach(async ({ page }) => {
+    await openTheDashboardAs(
+      page,
+      vendor,
+      `${dashboardUrl}/add/${notOffered.id}?search=${notOffered.partNumber}`,
+    );
+    await expect(theOfferForm(page)).toBeVisible();
+  });
+
+  test('passes the checks of every screen of the Vendor portal, in all three languages, with a refusal shown, and its text differs in each', async ({
+    page,
+  }) => {
+    await saveTheOffer(page).click();
+    await expect(page.locator('#offer-form-usdPrice-error')).toBeVisible();
+
+    const texts = await readInEveryLanguageOfTheVendorPortal(page, async () => {
+      await expectInEnglish(theOfferForm(page).getByTestId('part-name'), notOffered.name);
+      return {
+        form: await page.getByRole('main').innerText(),
+        refusal: await page.locator('#offer-form-usdPrice-error').innerText(),
+      };
+    });
+
+    for (const part of ['form', 'refusal'] as const) {
       expectADifferentTextInEachLanguage(
         new Map([...texts].map(([language, read]) => [language, read[part]])),
       );

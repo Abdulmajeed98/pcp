@@ -24,6 +24,8 @@
   },
   "OffersScreen": {
     "title": "عروضك",
+    "add": "إضافة عرض",
+    "addFirst": "أضف عرضك الأول",
     "reading": "جارٍ قراءة عروضك…",
     "notListed": "تعذّر عرض قائمة عروضك.",
     "counted_zero": "<count/> عرض",
@@ -110,6 +112,93 @@
     "confirmed_few": "تم تأكيد <count/> عروض.",
     "confirmed_many": "تم تأكيد <count/> عرضًا.",
     "confirmed_other": "تم تأكيد <count/> عرض."
+  },
+  "CatalogSearch": {
+    "back": "عروضك",
+    "title": "إضافة عرض",
+    "intro": "ابحث عن القطعة في الكتالوج، ثم ضع سعرك لها.",
+    "searchLabel": "ابحث في الكتالوج",
+    "searchPlaceholder": "الاسم أو الشركة المصنّعة أو رقم القطعة",
+    "category": "الفئة",
+    "allCategories": "كل الفئات",
+    "search": "بحث",
+    "reading": "جارٍ البحث في الكتالوج…",
+    "notSearched": "تعذّر البحث في الكتالوج.",
+    "found_zero": "تم العثور على <count/> قطعة",
+    "found_one": "تم العثور على <count/> قطعة",
+    "found_two": "تم العثور على <count/> قطعتين",
+    "found_few": "تم العثور على <count/> قطع",
+    "found_many": "تم العثور على <count/> قطعة",
+    "found_other": "تم العثور على <count/> قطعة",
+    "searching": "جارٍ البحث…",
+    "listLabel": "القطع التي عُثر عليها",
+    "offered": "لديك عرض لهذه القطعة",
+    "nothingFound": "لم يُعثر على أي قطعة",
+    "nothingFoundDescription": "لا توجد قطعة يحمل اسمها أو اسم الشركة المصنّعة لها أو رقمها كل كلمات «<words/>». تحقّق من الإملاء.",
+    "nothingFoundInTheCategory": "لا توجد قطعة في <category/> يحمل اسمها أو اسم الشركة المصنّعة لها أو رقمها كل كلمات «<words/>». تحقّق من الإملاء، أو ابحث في كل الفئات.",
+    "nothingInTheCategory": "لا توجد أي قطعة في هذه الفئة بعد.",
+    "pages": "صفحات النتائج",
+    "previous": "السابق",
+    "next": "التالي",
+    "page": "الصفحة <page/> من <pages/>",
+    "pastTheLast": "هذه الصفحة بعد الصفحة الأخيرة.",
+    "firstPage": "انتقل إلى الصفحة الأولى",
+    "added": "أُضيف عرضك لـ <name/>. ابحث عن القطعة التالية التي تعرضها."
+  },
+  "NewOffer": {
+    "back": "العودة إلى البحث",
+    "title": "إضافة عرض",
+    "intro": "إضافته تؤكّده اعتباراً من اليوم.",
+    "reading": "جارٍ قراءة القطعة…",
+    "notRead": "تعذّرت قراءة القطعة."
+  },
+  "OfferForm": {
+    "prices": "سعرك",
+    "pricesDescription": "اكتبه بالدولار أو بالدينار أو بكليهما.",
+    "usdPrice": "بالدولار ($)",
+    "usdPriceDescription": "مع السنتات إن كنت تستخدمها، مثل <example/>.",
+    "iqdPrice": "بالدينار (IQD)",
+    "iqdPriceDescription": "بالدنانير الكاملة، مثل <example/>.",
+    "inStock": "متوفّر في المخزن",
+    "inStockDescription": "أوقفه إن لم يكن لديك منه شيء الآن.",
+    "warranty": "الضمان، بالأشهر",
+    "warrantyDescription": "بالأشهر الكاملة، <longest/> على الأكثر.",
+    "optional": "اختياري",
+    "save": "إضافة العرض",
+    "saving": "جارٍ الإضافة…",
+    "notSaved": "لم يُضف عرضك.",
+    "taken": "لديك عرض لهذه القطعة من قبل. عد إلى البحث، حيث تجده مُعلَّماً.",
+    "refused": {
+      "usdPrice": {
+        "missing": "اكتب سعراً بالدولار أو بالدينار أو بكليهما.",
+        "notANumber": "اكتب السعر بالأرقام فقط.",
+        "notPositive": "يجب أن يكون السعر أكثر من صفر.",
+        "tooManyDecimals": "يقبل الدولار رقمين على الأكثر بعد الفاصلة.",
+        "tooLarge": "السعر أكثر من <largestUsd/>."
+      },
+      "iqdPrice": {
+        "notANumber": "اكتب السعر بالأرقام فقط.",
+        "notPositive": "يجب أن يكون السعر أكثر من صفر.",
+        "tooManyDecimals": "الدينار عدد كامل: احذف الفاصلة وما بعدها.",
+        "tooLarge": "السعر أكثر من <largestIqd/>."
+      },
+      "inStock": {
+        "missing": "حدّد إن كان متوفّراً في المخزن."
+      },
+      "warrantyMonths": {
+        "notANumber": "اكتب الأشهر بالأرقام فقط.",
+        "notPositive": "الضمان شهر واحد على الأقل. اتركه فارغاً إن لم تقدّم ضماناً.",
+        "tooLarge": "الضمان <longest/> شهراً على الأكثر.",
+        "notWholeMonths": "الضمان بالأشهر الكاملة."
+      },
+      "other": "لم تقبل المنصة هذا."
+    }
+  },
+  "OfferScreen": {
+    "back": "عروضك",
+    "title": "عرضك",
+    "reading": "جارٍ قراءة عرضك…",
+    "notRead": "تعذّرت قراءة عرضك."
   },
   "VendorDetails": {
     "title": "بياناتك",
