@@ -97,8 +97,9 @@ test('the top bar’s menu leads to the list, which holds a made-up Part with a 
   await page.getByRole('textbox', { name: 'TDP (W)', exact: true }).fill('65');
   await page.getByRole('button', { name: 'Save the Part' }).click();
 
-  // The list returns to the page the Part was found on, which the
-  // development database's earlier made-up Parts may have made a later one.
+  // The list again, on the page the Part was found on, which is kept in the
+  // address: the development database's Parts from earlier runs can put it
+  // past the first.
   await expect(page).toHaveURL(new RegExp(`^${missingSpecificationsUrl}(\\?page=\\d+)?$`));
   await expect(heading(page)).toBeVisible();
   expect(

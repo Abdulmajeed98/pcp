@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
-import { and, asc, count, desc, eq, gte, lt, sql, SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, lt, sql, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import {
@@ -12,10 +12,14 @@ import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import {
   CreateOfferParams,
   ListVendorsOffersParams,
+  ListVendorsWithExpiringOffersParams,
   OfferStore,
   VendorsOfferCounts,
   VendorsOffersPage,
+  VendorsWithExpiringOffersPage,
 } from '~/domain/offer/OfferStore';
+import { VendorWithExpiringOffers } from '~/domain/offer/VendorWithExpiringOffers';
+import { PhoneNumber } from '~/domain/phone-number/PhoneNumber';
 import { visibleIfConfirmedFrom } from '~/domain/offer/visibility';
 import { VisibleOffer } from '~/domain/offer/VisibleOffer';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
@@ -66,6 +70,48 @@ function toDomain(
         row.confirmedAt,
         row.createdAt,
       ),
+  );
+}
+
+// A Vendor's stored phone number as the domain's, or a server error naming the
+// Vendor: every number is checked before it is stored, so one the domain
+// cannot read means the two have drifted apart.
+function phoneNumberOf(
+  vendorId: string,
+  stored: string,
+): Either.Either<PhoneNumber, StructuredError> {
+  return Either.mapLeft(PhoneNumber.read(stored), () =>
+    ServerError.of(`A Vendor has a phone number the API cannot read: ${vendorId}`),
+  );
+}
+
+// A Vendor's row on the list of whom to remind, with its counts.
+function vendorWithExpiringOffersOf(row: {
+  id: string;
+  name: string;
+  phoneNumber: string;
+  whatsAppNumber: string | null;
+  offers: number;
+  expired: number;
+  aboutToExpire: number;
+}): Either.Either<VendorWithExpiringOffers, StructuredError> {
+  const phoneNumber = phoneNumberOf(row.id, row.phoneNumber);
+  if (Either.isLeft(phoneNumber)) return Either.left(phoneNumber.left);
+  let whatsAppNumber: PhoneNumber | null = null;
+  if (row.whatsAppNumber !== null) {
+    const read = phoneNumberOf(row.id, row.whatsAppNumber);
+    if (Either.isLeft(read)) return Either.left(read.left);
+    whatsAppNumber = read.right;
+  }
+
+  return Either.right(
+    new VendorWithExpiringOffers(
+      row.id,
+      row.name,
+      phoneNumber.right,
+      whatsAppNumber,
+      new VendorsOfferCounts(row.offers, row.expired, row.aboutToExpire),
+    ),
   );
 }
 
@@ -194,6 +240,79 @@ export class DatabaseOfferStore implements OfferStore {
     } catch (error) {
       this.logger.error(error, "A Vendor's Offers could not be listed");
       return Either.left(databaseErrorOf(error, "A Vendor's Offers could not be listed"));
+    }
+  }
+
+  async listVendorsWithExpiringOffers(
+    params: ListVendorsWithExpiringOffersParams,
+  ): Promise<Either.Either<VendorsWithExpiringOffersPage, StructuredError>> {
+    const pageable = params.getPageable();
+    // The same moments as the Offer entity's rules, from the same now.
+    const expiredBefore = expiredIfConfirmedBefore(params.getNow());
+    const aboutToExpireBefore = aboutToExpireIfConfirmedBefore(params.getNow());
+    const expired = countWhere(lt(offer.confirmedAt, expiredBefore));
+    // Expired, or about to expire: confirmed before the second moment.
+    const expiredOrAboutToExpire = countWhere(lt(offer.confirmedAt, aboutToExpireBefore));
+
+    try {
+      // One snapshot for both, so that an Offer confirmed between them cannot
+      // make the total disagree with the page.
+      const [rows, [{ total }]] = await this.databaseProvider.getClient().transaction(
+        (transaction) => {
+          // Each active Vendor with at least one Offer expired or about to
+          // expire, with its counts of all its Offers.
+          const expiring = () =>
+            transaction
+              .select({
+                id: vendor.id,
+                name: vendor.name,
+                phoneNumber: vendor.phoneNumber,
+                whatsAppNumber: vendor.whatsAppNumber,
+                offers: count().as('offers'),
+                expired: expired.as('expired'),
+                aboutToExpire: countWhere(
+                  and(
+                    gte(offer.confirmedAt, expiredBefore),
+                    lt(offer.confirmedAt, aboutToExpireBefore),
+                  ),
+                ).as('about_to_expire'),
+              })
+              .from(offer)
+              .innerJoin(vendor, eq(vendor.id, offer.vendorId))
+              .where(eq(vendor.active, true))
+              .groupBy(vendor.id)
+              .having(gt(expiredOrAboutToExpire, 0));
+
+          return Promise.all([
+            expiring()
+              .orderBy(
+                // By the soonest expiry among the Vendor's Offers, which is
+                // that of the one confirmed longest ago. An Expired Offer
+                // counts as sooner than any other, and the same for every
+                // Vendor that has one, so those Vendors come first and the
+                // name decides among them.
+                sql`case when ${expired} > 0 then null else min(${offer.confirmedAt}) end asc nulls first`,
+                asc(vendor.name),
+                asc(vendor.id),
+              )
+              .limit(pageable.getLimit())
+              .offset(pageable.getOffset()),
+            transaction.select({ total: count() }).from(expiring().as('expiring')),
+          ]);
+        },
+        { isolationLevel: 'repeatable read', accessMode: 'read only' },
+      );
+
+      return Either.map(
+        Either.all(rows.map(vendorWithExpiringOffersOf)),
+        (vendors) =>
+          new VendorsWithExpiringOffersPage(vendors, PageAttributes.of(pageable, total)),
+      );
+    } catch (error) {
+      this.logger.error(error, 'The Vendors with expiring Offers could not be listed');
+      return Either.left(
+        databaseErrorOf(error, 'The Vendors with expiring Offers could not be listed'),
+      );
     }
   }
 

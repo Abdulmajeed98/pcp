@@ -991,6 +991,61 @@
         "tags": ["Offer"]
       }
     },
+    "/v1/offers/expiring": {
+      "get": {
+        "operationId": "listVendorsWithExpiringOffers",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorsWithExpiringOffersPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "One page of the active Vendors that have Expired Offers or Offers about to expire, most urgent first, each with its phone and WhatsApp numbers and its counts, for the Admin to remind them",
+        "tags": ["Offer"]
+      }
+    },
     "/v1/vendors/{vendorId}/offers/{offerId}": {
       "get": {
         "operationId": "readOffer",
@@ -2384,6 +2439,99 @@
           }
         },
         "required": ["confirmed"]
+      },
+      "VendorWithExpiringOffersResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "5c2a9e1f-7d3b-4e8a-9f60-1b2c3d4e5f6a"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as it writes it.",
+            "example": "Made-up Computer Shop"
+          },
+          "phoneNumber": {
+            "description": "The Vendor's phone number, a mobile number or a landline, to call.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberResponse"
+              }
+            ]
+          },
+          "whatsAppNumber": {
+            "description": "The Vendor's WhatsApp number, to open a chat with, or null when it has none.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberResponse"
+              }
+            ]
+          },
+          "counts": {
+            "description": "The Vendor's counts of all its Offers, at the moment the list was read.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VendorsOfferCountsResponse"
+              }
+            ]
+          }
+        },
+        "required": ["id", "name", "phoneNumber", "whatsAppNumber", "counts"]
+      },
+      "VendorsWithExpiringOffersPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Vendors: those with an Expired Offer first, by name; then those whose Offer expires soonest, then by name.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorWithExpiringOffersResponse"
+            }
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content"
+        ]
       },
       "VisibleOfferVendorResponse": {
         "type": "object",

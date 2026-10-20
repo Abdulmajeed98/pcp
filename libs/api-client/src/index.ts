@@ -28,4 +28,6 @@ export type {
   VendorsOfferCountsResponse,
   VendorsOffersPageResponse,
   VendorSummaryResponse,
+  VendorsWithExpiringOffersPageResponse,
+  VendorWithExpiringOffersResponse,
 } from './generated/types.gen';
