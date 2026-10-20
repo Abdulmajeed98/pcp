@@ -115,7 +115,7 @@ function NobodyToRemind() {
         </EmptyMedia>
         <EmptyTitle>No Vendor needs reminding</EmptyTitle>
         <EmptyDescription>
-          Every active Vendor’s Offers are current for at least 3 more days.
+          No active Vendor has an Offer expired or about to expire.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
