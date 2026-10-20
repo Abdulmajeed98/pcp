@@ -121,30 +121,33 @@ describe("a Part's visible Offers", () => {
     return ((await response.json()) as { id: string }).id;
   }
 
-  // An Offer the Admin adds for the Vendor, with the clock as it is.
+  // An Offer the Admin adds for the Vendor, with the clock as it is, and its
+  // identifier.
   async function anOffer(
     vendorId: string,
     partId: string,
     details: Record<string, unknown> = { usdPrice: '349.99', inStock: true },
-  ): Promise<void> {
+  ): Promise<string> {
     const response = await fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/offers`, {
       method: 'POST',
       headers: { ...bearerHeader(await adminToken()), 'content-type': 'application/json' },
       body: JSON.stringify({ partId, ...details }),
     });
     expect(response.status).toBe(201);
+    return ((await response.json()) as { id: string }).id;
   }
 
   // An Offer the Admin adds for the Vendor with the clock at a moment, which
-  // is then the time of its Confirmation. The clock stays there.
+  // is then the time of its Confirmation, and its identifier. The clock stays
+  // there.
   async function anOfferConfirmedAt(
     vendorId: string,
     partId: string,
     moment: Date,
     details?: Record<string, unknown>,
-  ): Promise<void> {
+  ): Promise<string> {
     moveTheClockTo(moment);
-    await anOffer(vendorId, partId, details);
+    return anOffer(vendorId, partId, details);
   }
 
   function readVisibleOffers(
@@ -374,6 +377,70 @@ describe("a Part's visible Offers", () => {
           daysSinceConfirmation: 0,
         },
       ]);
+    });
+
+    it('is visible again at once when its Vendor saves it, unchanged or changed', async () => {
+      const partId = await aPart();
+      const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
+      const offerId = await anOfferConfirmedAt(shop.id, partId, aMovedMoment);
+
+      for (const [daysLater, details] of [
+        [20, { usdPrice: '349.99', inStock: true }],
+        [40, { iqdPrice: 500000, inStock: false, warrantyMonths: 6 }],
+      ] as const) {
+        const later = after(aMovedMoment, daysLater * aDay);
+        moveTheClockTo(later);
+        expect(await theVisibleOffersOf(partId)).toEqual([]);
+
+        const saved = await fetch(
+          `${testApp.baseUrl}/v1/vendors/${shop.id}/offers/${offerId}`,
+          {
+            method: 'PUT',
+            headers: {
+              ...bearerHeader(await tokenOfTheOwnLogin(shop)),
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify(details),
+          },
+        );
+        expect(saved.status).toBe(200);
+
+        expect(await theVisibleOffersOf(partId)).toEqual([
+          {
+            vendor: { id: shop.id, name: 'Made-up Computer Shop' },
+            usdPrice: null,
+            iqdPrice: null,
+            warrantyMonths: null,
+            ...details,
+            confirmedAt: later.toISOString(),
+            daysSinceConfirmation: 0,
+          },
+        ]);
+      }
+    });
+  });
+
+  describe('a removed Offer', () => {
+    it('is left out, and is there again once its Vendor offers the Part again', async () => {
+      const partId = await aPart();
+      const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
+      const store = await aVendor('Made-up Computer Store', '0750 765 4321');
+      const offerId = await anOffer(shop.id, partId);
+      await anOffer(store.id, partId);
+
+      const removal = await fetch(
+        `${testApp.baseUrl}/v1/vendors/${shop.id}/offers/${offerId}`,
+        { method: 'DELETE', headers: bearerHeader(await tokenOfTheOwnLogin(shop)) },
+      );
+      expect(removal.status).toBe(204);
+      expect((await theVisibleOffersOf(partId)).map(({ vendor }) => vendor.id)).toEqual([
+        store.id,
+      ]);
+
+      await anOffer(shop.id, partId, { iqdPrice: 500000, inStock: true });
+      expect(
+        (await theVisibleOffersOf(partId)).map(({ vendor }) => vendor.id).sort(),
+      ).toEqual([shop.id, store.id].sort());
     });
   });
 });

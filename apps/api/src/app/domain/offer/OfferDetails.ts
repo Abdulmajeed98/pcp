@@ -153,4 +153,25 @@ export class OfferDetails {
   getWarrantyMonths(): number | null {
     return this.warrantyMonths;
   }
+
+  // Whether these details change what the Offer history records of an Offer
+  // that has `before`'s prices and stock: either Quoted Price, or whether it
+  // is in stock (OFF-10). A change to the warranty alone, or none at all, is
+  // no change the history records.
+  changePricesOrStockOf(before: PricesAndStock): boolean {
+    return (
+      this.usdPriceCents !== before.usdPriceCents ||
+      this.iqdPrice !== before.iqdPrice ||
+      this.inStock !== before.inStock
+    );
+  }
+}
+
+// An Offer's Quoted Prices, USD in whole cents and IQD in whole dinars, each
+// null when not quoted, and whether it is in stock: what the Offer history
+// records of it.
+export interface PricesAndStock {
+  readonly usdPriceCents: number | null;
+  readonly iqdPrice: number | null;
+  readonly inStock: boolean;
 }

@@ -130,6 +130,9 @@
     "saving": "Adding…",
     "notSaved": "Your Offer was not added.",
     "taken": "You already have an Offer for this Part. Go back to the search, where it is marked.",
+    "saveChanges": "Save the Offer",
+    "savingChanges": "Saving…",
+    "notSavedChanges": "Your Offer was not saved.",
     "refused": {
       "usdPrice": {
         "missing": "Give a price in dollars, in dinars or in both.",
@@ -160,7 +163,20 @@
     "back": "Your Offers",
     "title": "Your Offer",
     "reading": "Reading your Offer…",
-    "notRead": "Your Offer could not be read."
+    "notRead": "Your Offer could not be read.",
+    "intro": "Saving it confirms it, as of today, even when nothing changed.",
+    "gone": "This Offer no longer exists",
+    "goneDescription": "It was removed. Your other Offers are on your list.",
+    "openOffers": "Open your Offers"
+  },
+  "RemoveOffer": {
+    "remove": "Remove the Offer",
+    "title": "Remove this Offer?",
+    "description": "Shoppers no longer see your Offer for <name/>. You can add it again later from the catalog search.",
+    "cancel": "Cancel",
+    "confirm": "Remove",
+    "removing": "Removing…",
+    "notRemoved": "Your Offer was not removed."
   },
   "VendorDetails": {
     "title": "Your details",

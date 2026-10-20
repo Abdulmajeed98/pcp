@@ -1101,6 +1101,99 @@
         },
         "summary": "One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login",
         "tags": ["Offer"]
+      },
+      "put": {
+        "operationId": "editOffer",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditOfferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Replace the prices, the stock and the warranty of one of a Vendor's Offers, clearing what is left out, as a Confirmation, for the Admin or for the Vendor's own Login",
+        "tags": ["Offer"]
+      },
+      "delete": {
+        "operationId": "removeOffer",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The Offer is removed."
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Remove one of a Vendor's Offers, for the Admin or for the Vendor's own Login",
+        "tags": ["Offer"]
       }
     },
     "/v1/parts/{partId}/offers": {
@@ -2205,11 +2298,6 @@
       "CreateOfferRequest": {
         "type": "object",
         "properties": {
-          "partId": {
-            "type": "string",
-            "description": "The identifier of the Part offered, any Part in the catalog.",
-            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
-          },
           "usdPrice": {
             "type": "string",
             "description": "The Quoted Price in USD, as a decimal number in Western digits, with at most two decimal places, more than 0 and at most 100000.00. It or the IQD price, or both, must be given.",
@@ -2232,9 +2320,14 @@
             "description": "The warranty, in whole months from 1 to 120, or null when the Vendor states none.",
             "example": 12,
             "nullable": true
+          },
+          "partId": {
+            "type": "string",
+            "description": "The identifier of the Part offered, any Part in the catalog.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
           }
         },
-        "required": ["partId", "inStock"]
+        "required": ["inStock", "partId"]
       },
       "PartSummaryResponse": {
         "type": "object",
@@ -2606,6 +2699,35 @@
           "last",
           "content"
         ]
+      },
+      "EditOfferRequest": {
+        "type": "object",
+        "properties": {
+          "usdPrice": {
+            "type": "string",
+            "description": "The Quoted Price in USD, as a decimal number in Western digits, with at most two decimal places, more than 0 and at most 100000.00. It or the IQD price, or both, must be given.",
+            "example": "349.99",
+            "nullable": true
+          },
+          "iqdPrice": {
+            "type": "number",
+            "description": "The Quoted Price in IQD, in whole dinars, more than 0 and at most 150000000. It or the USD price, or both, must be given.",
+            "example": 525000,
+            "nullable": true
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether the Vendor has the Part in stock now.",
+            "example": true
+          },
+          "warrantyMonths": {
+            "type": "number",
+            "description": "The warranty, in whole months from 1 to 120, or null when the Vendor states none.",
+            "example": 12,
+            "nullable": true
+          }
+        },
+        "required": ["inStock"]
       },
       "VisibleOfferVendorResponse": {
         "type": "object",

@@ -164,10 +164,9 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
 
     await row.getByRole('link', { name: offered.name }).click();
     await expect(page).toHaveURL(`${dashboardUrl}/offers/${offerId}`);
-    const screen = page.getByTestId('offer-screen');
-    await expect(screen.getByTestId('part-name')).toHaveText(offered.name);
-    await expect(screen.getByTestId('usd-price')).toHaveText('349.99 $');
-    await expect(screen.getByTestId('iqd-price')).toHaveText('525,000 IQD');
+    await expect(theOfferForm(page).getByTestId('part-name')).toHaveText(offered.name);
+    await expect(offerField(page, 'usdPrice')).toHaveValue('349.99');
+    await expect(offerField(page, 'iqdPrice')).toHaveValue('525,000');
     await expectNoSidewaysScroll(page);
   });
 

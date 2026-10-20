@@ -58,7 +58,10 @@ export function NewOfferPage() {
       ) : part.data === undefined ? (
         <p className="text-sm text-muted-foreground">{t('NewOffer.reading')}</p>
       ) : (
-        <OfferForm part={part.data} save={(body) => add.mutateAsync(body)} />
+        <OfferForm
+          part={part.data}
+          save={(details) => add.mutateAsync({ partId, ...details })}
+        />
       )}
     </div>
   );
