@@ -22,7 +22,7 @@ import {
 } from '~/domain/offer/OfferStore';
 import { VendorWithExpiringOffers } from '~/domain/offer/VendorWithExpiringOffers';
 import { PhoneNumber } from '~/domain/phone-number/PhoneNumber';
-import { visibleIfConfirmedFrom } from '~/domain/offer/visibility';
+import { visibleOfferRuleAt } from '~/domain/offer/visibility';
 import { VisibleOffer } from '~/domain/offer/VisibleOffer';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
@@ -45,11 +45,28 @@ function countWhere(condition: SQL | undefined): SQL<number> {
 }
 
 // The rule for a visible Offer, as the database asks it, at now by the API's
-// clock: not an Expired Offer, and of an active Vendor (`visibility.ts`). A
+// clock: of an active Vendor, and not an Expired Offer (`visibility.ts`). A
 // query that uses it joins the Vendor. Every query of visible Offers uses it,
 // and no other.
 function visibleOffer(now: Date): SQL | undefined {
-  return and(eq(vendor.active, true), gte(offer.confirmedAt, visibleIfConfirmedFrom(now)));
+  const rule = visibleOfferRuleAt(now);
+  return and(
+    eq(vendor.active, rule.vendorActive),
+    gte(offer.confirmedAt, rule.confirmedFrom),
+  );
+}
+
+// An Expired Offer, and one about to expire, as the database asks them, at now
+// by the API's clock: the same moments as the Offer entity's rules
+// (`expiry.ts`), from the same now.
+function expiredAt(now: Date): SQL {
+  return lt(offer.confirmedAt, expiredIfConfirmedBefore(now));
+}
+function aboutToExpireAt(now: Date): SQL | undefined {
+  return and(
+    gte(offer.confirmedAt, expiredIfConfirmedBefore(now)),
+    lt(offer.confirmedAt, aboutToExpireIfConfirmedBefore(now)),
+  );
 }
 
 // The Vendor's Offer with this identifier. The Vendor is part of what is
@@ -295,11 +312,9 @@ export class DatabaseOfferStore implements OfferStore {
         new VendorsOffersPage([], PageAttributes.of(pageable, 0), VendorsOfferCounts.NONE),
       );
     }
-    const ofTheVendor = eq(offer.vendorId, params.getVendorId());
-    const where = and(ofTheVendor, ...holdingEveryWord(params.getWords()));
-    // The same moments as the Offer entity's rules, from the same now.
-    const expiredBefore = expiredIfConfirmedBefore(params.getNow());
-    const aboutToExpireBefore = aboutToExpireIfConfirmedBefore(params.getNow());
+    const theVendors = eq(offer.vendorId, params.getVendorId());
+    const where = and(theVendors, ...holdingEveryWord(params.getWords()));
+    const now = params.getNow();
 
     try {
       // One snapshot for all, so that an Offer added or confirmed between them
@@ -327,16 +342,11 @@ export class DatabaseOfferStore implements OfferStore {
               transaction
                 .select({
                   offers: count(),
-                  expired: countWhere(lt(offer.confirmedAt, expiredBefore)),
-                  aboutToExpire: countWhere(
-                    and(
-                      gte(offer.confirmedAt, expiredBefore),
-                      lt(offer.confirmedAt, aboutToExpireBefore),
-                    ),
-                  ),
+                  expired: countWhere(expiredAt(now)),
+                  aboutToExpire: countWhere(aboutToExpireAt(now)),
                 })
                 .from(offer)
-                .where(ofTheVendor),
+                .where(theVendors),
             ]),
           { isolationLevel: 'repeatable read', accessMode: 'read only' },
         );
@@ -363,12 +373,13 @@ export class DatabaseOfferStore implements OfferStore {
     params: ListVendorsWithExpiringOffersParams,
   ): Promise<Either.Either<VendorsWithExpiringOffersPage, StructuredError>> {
     const pageable = params.getPageable();
-    // The same moments as the Offer entity's rules, from the same now.
-    const expiredBefore = expiredIfConfirmedBefore(params.getNow());
-    const aboutToExpireBefore = aboutToExpireIfConfirmedBefore(params.getNow());
-    const expired = countWhere(lt(offer.confirmedAt, expiredBefore));
-    // Expired, or about to expire: confirmed before the second moment.
-    const expiredOrAboutToExpire = countWhere(lt(offer.confirmedAt, aboutToExpireBefore));
+    const now = params.getNow();
+    const expired = countWhere(expiredAt(now));
+    // Expired, or about to expire: confirmed before the moment an Offer
+    // starts to be about to expire.
+    const expiredOrAboutToExpire = countWhere(
+      lt(offer.confirmedAt, aboutToExpireIfConfirmedBefore(now)),
+    );
 
     try {
       // One snapshot for both, so that an Offer confirmed between them cannot
@@ -386,12 +397,7 @@ export class DatabaseOfferStore implements OfferStore {
                 whatsAppNumber: vendor.whatsAppNumber,
                 offers: count().as('offers'),
                 expired: expired.as('expired'),
-                aboutToExpire: countWhere(
-                  and(
-                    gte(offer.confirmedAt, expiredBefore),
-                    lt(offer.confirmedAt, aboutToExpireBefore),
-                  ),
-                ).as('about_to_expire'),
+                aboutToExpire: countWhere(aboutToExpireAt(now)).as('about_to_expire'),
               })
               .from(offer)
               .innerJoin(vendor, eq(vendor.id, offer.vendorId))
