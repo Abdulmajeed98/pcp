@@ -2,6 +2,7 @@ export { type ApiClient, type ApiClientOptions, createApiClient } from './api-cl
 export type {
   CallerResponse,
   CategoryResponse,
+  ConfirmedOffersResponse,
   CreatedVendorResponse,
   CreatePartRequest,
   CreateVendorRequest,
@@ -9,6 +10,7 @@ export type {
   EditPartRequest,
   EditVendorRequest,
   ErrorResponse,
+  ListedOfferResponse,
   MapLocationResponse,
   MissingSpecificationResponse,
   PartMissingSpecificationsResponse,
@@ -24,6 +26,7 @@ export type {
   VendorPageResponse,
   VendorResponse,
   VendorsOfferCountsResponse,
+  VendorsOffersPageResponse,
   VendorSummaryResponse,
   VendorsWithExpiringOffersPageResponse,
   VendorWithExpiringOffersResponse,

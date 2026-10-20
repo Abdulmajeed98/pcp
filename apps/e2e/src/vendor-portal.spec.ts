@@ -21,6 +21,7 @@ import {
   languages,
   narrowWindow,
 } from './languages';
+import { theOffersScreen, theSection } from './offers';
 import { dashboardUrl } from './platform';
 import {
   aMadeUpVendorThatHasLoggedIn,
@@ -46,7 +47,7 @@ function detailOf(page: Page, detail: string) {
   return page.locator(`[data-detail="${detail}"] dd`);
 }
 
-test("after its first login, a made-up Vendor's portal opens on the details screen, with the Vendor's name in the frame", async ({
+test("after its first login, a made-up Vendor's portal opens on the Offers screen, with the Vendor's name in the frame, and its details are in their own section", async ({
   browser,
   page,
   request,
@@ -58,6 +59,10 @@ test("after its first login, a made-up Vendor's portal opens on the details scre
 
     await expect(vendorNameInTheFrame(vendorsPage)).toHaveText(vendor.name);
     await expect(vendorsPage).toHaveURL(`${dashboardUrl}/`);
+    await expect(theOffersScreen(vendorsPage)).toBeVisible();
+
+    await theSection(vendorsPage, 'details').click();
+    await expect(vendorsPage).toHaveURL(`${dashboardUrl}/details`);
     await expect(detailsHeading(vendorsPage)).toBeVisible();
     await expect(detailOf(vendorsPage, 'name')).toHaveText(vendor.name);
     await expect(detailOf(vendorsPage, 'loginPhoneNumber')).toHaveText(
@@ -106,7 +111,7 @@ test.describe('as a made-up Vendor', () => {
     await expect(page.getByText('Vendor not found')).toHaveCount(0);
   });
 
-  test('an address that matches no screen shows a "not found" message in the portal\'s language, with a way to the details screen', async ({
+  test('an address that matches no screen shows a "not found" message in the portal\'s language, with a way to the Offers screen', async ({
     page,
   }) => {
     await openTheDashboardAs(page, vendor, `${dashboardUrl}/no-such-screen`);
@@ -121,13 +126,13 @@ test.describe('as a made-up Vendor', () => {
 
     await page.getByRole('main').getByRole('link').click();
     await expect(page).toHaveURL(`${dashboardUrl}/`);
-    await expect(detailOf(page, 'name')).toHaveText(vendor.vendorName);
+    await expect(theOffersScreen(page)).toBeVisible();
   });
 
   test('the details screen meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
     page,
   }) => {
-    await openTheDashboardAs(page, vendor);
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/details`);
     await expect(detailOf(page, 'name')).toHaveText(vendor.vendorName);
 
     await expectAccessible(page);

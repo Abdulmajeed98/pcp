@@ -17,7 +17,8 @@ import {
   languages,
   narrowWindow,
 } from './languages';
-import { apiUrl } from './platform';
+import { theOffersScreen, theSection } from './offers';
+import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
 const [kurdish, arabic, english] = languages;
@@ -60,7 +61,7 @@ function detailOf(page: Page, detail: string): Locator {
 
 // The link beside the contact details' heading, which opens their form.
 function theLinkToTheForm(page: Page): Locator {
-  return page.getByRole('main').locator('a[href$="/portal/contact-details"]');
+  return page.getByRole('main').locator('a[href$="/portal/details/contact-details"]');
 }
 
 // Logs in as the development Admin at the Vendor's page, and opens the
@@ -120,10 +121,15 @@ test("from a made-up Vendor's page the Admin opens its portal, which declares th
   await expectPageIn(page, arabic);
   await expect(page).not.toHaveTitle(adminConsoleTitle);
   await expectTheBand(page);
+  await expect(theOffersScreen(page)).toBeVisible();
+
+  await theSection(page, 'details').click();
+  await expect(page).toHaveURL(`${portalUrl()}/details`);
   await expect(detailOf(page, 'name')).toHaveText(vendor.vendorName);
+  await expectTheBand(page);
 
   await theLinkToTheForm(page).click();
-  await expect(page).toHaveURL(`${portalUrl()}/contact-details`);
+  await expect(page).toHaveURL(`${portalUrl()}/details/contact-details`);
   await expect(page.locator('#contact-details-address')).toBeVisible();
   await expectTheBand(page);
 
@@ -162,13 +168,14 @@ test('the Admin changes the opening hours there, and the Vendor, logged in in a 
   const vendorsContext = await browser.newContext({ viewport: narrowWindow });
   try {
     const vendorsPage = await vendorsContext.newPage();
-    await openTheDashboardAs(vendorsPage, vendor);
+    await openTheDashboardAs(vendorsPage, vendor, `${dashboardUrl}/details`);
 
     await openThePortalFromItsPage(page);
+    await theSection(page, 'details').click();
     await theLinkToTheForm(page).click();
     await page.locator('#contact-details-openingHours').fill(openingHours);
     await page.getByRole('main').locator('form button[type="submit"]').click();
-    await expect(page).toHaveURL(portalUrl());
+    await expect(page).toHaveURL(`${portalUrl()}/details`);
     await expect(detailOf(page, 'openingHours')).toBeVisible();
     expect(await detailOf(page, 'openingHours').innerText()).toBe(openingHours);
 
@@ -222,7 +229,7 @@ test('the portal with its band meets the automated part of WCAG 2.2 level AA, in
 }) => {
   await openThePortalFromItsPage(page);
   await expectTheBand(page);
-  await expect(detailOf(page, 'name')).toBeVisible();
+  await expect(theOffersScreen(page)).toBeVisible();
 
   await expectNoSidewaysScroll(page);
   await expectAccessible(page);
