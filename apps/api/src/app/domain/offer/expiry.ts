@@ -33,3 +33,12 @@ export function aboutToExpireIfConfirmedBefore(now: Date): Date {
 export function wholeDaysSince(moment: Date, now: Date): number {
   return Math.floor((now.getTime() - moment.getTime()) / A_DAY);
 }
+
+// The whole days of 24 hours left, given now, until an Offer last confirmed
+// at a moment expires, rounded down: 3 at exactly 11 days after its
+// Confirmation, 2 a millisecond later, and 0 once less than a whole day is
+// left, which a Vendor reads as "expires today", and for an Expired Offer.
+export function wholeDaysLeft(confirmedAt: Date, now: Date): number {
+  const left = confirmedAt.getTime() + DAYS_AN_OFFER_STAYS_CURRENT * A_DAY - now.getTime();
+  return Math.max(0, Math.floor(left / A_DAY));
+}

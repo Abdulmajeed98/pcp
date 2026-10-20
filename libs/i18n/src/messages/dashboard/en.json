@@ -124,7 +124,7 @@
     "inStock": "In stock",
     "inStockDescription": "Turn it off when you have none now.",
     "warranty": "Warranty, in months",
-    "warrantyDescription": "In whole months, at most <longest/>.",
+    "warrantyDescription": "In whole months.",
     "optional": "Optional",
     "save": "Add the Offer",
     "saving": "Adding…",
@@ -139,13 +139,13 @@
         "notANumber": "Write the price in digits only.",
         "notPositive": "The price has to be more than zero.",
         "tooManyDecimals": "Dollars take at most two digits after the point.",
-        "tooLarge": "The price is over <largestUsd/>."
+        "tooLarge": "The price is over the limit."
       },
       "iqdPrice": {
         "notANumber": "Write the price in digits only.",
         "notPositive": "The price has to be more than zero.",
         "tooManyDecimals": "Dinars are whole: leave out the point and what follows it.",
-        "tooLarge": "The price is over <largestIqd/>."
+        "tooLarge": "The price is over the limit."
       },
       "inStock": {
         "missing": "Say whether you have it in stock."
@@ -153,7 +153,7 @@
       "warrantyMonths": {
         "notANumber": "Write the months in digits only.",
         "notPositive": "The warranty is at least one month. Leave it empty if you give none.",
-        "tooLarge": "The warranty is at most <longest/> months.",
+        "tooLarge": "The warranty is over the limit.",
         "notWholeMonths": "The warranty is in whole months."
       },
       "other": "The platform did not accept this."

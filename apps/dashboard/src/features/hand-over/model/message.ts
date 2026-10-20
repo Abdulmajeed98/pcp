@@ -38,12 +38,3 @@ export function handOverMessage(language: Language, details: LoginDetails): stri
     t('HandOver.choosePassword', { lng: language }),
   ].join('\n');
 }
-
-// WhatsApp's click-to-chat address for a chat with a phone number, with a
-// message written in it for the Admin to send. The number is its digits in
-// the international form, with no + (WhatsApp Help Center, "How to use click
-// to chat"), and the message is URL-encoded, a line break as %0A.
-export function whatsAppChatWith(internationalNumber: string, message: string): string {
-  const digits = internationalNumber.replace(/\D/g, '');
-  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
-}

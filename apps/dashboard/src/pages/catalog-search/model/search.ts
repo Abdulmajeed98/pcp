@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 
 import type { CategoryKey } from '@/entities/category';
+import { pageIn, writePageInto } from '@/shared/lib';
 
 // A search of the catalog from the Vendor portal: the words typed, the one
 // Category it is limited to if any, and the page of the results, counted
@@ -21,20 +22,19 @@ export interface CatalogSearch {
 export function useSearchInTheAddress(): [CatalogSearch, (search: CatalogSearch) => void] {
   const [params, setParams] = useSearchParams();
 
-  const written = Number.parseInt(params.get('page') ?? '', 10);
   const search: CatalogSearch = {
     words: params.get('search') ?? '',
     // The API refuses a Category it does not have, and the screen shows the
     // refusal, so the address's Category is passed on as it is.
     category: (params.get('category') || undefined) as CategoryKey | undefined,
-    page: Number.isInteger(written) && written > 1 ? written - 1 : 0,
+    page: pageIn(params),
   };
 
   function show({ words, category, page }: CatalogSearch): void {
     const next = new URLSearchParams();
     if (words.trim() !== '') next.set('search', words.trim());
     if (category !== undefined) next.set('category', category);
-    if (page > 0) next.set('page', String(page + 1));
+    writePageInto(next, page);
     setParams(next);
   }
 

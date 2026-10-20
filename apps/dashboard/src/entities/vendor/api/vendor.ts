@@ -1,12 +1,12 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { useQuery } from '@tanstack/react-query';
 
-import { apiClient, dataOf, Refusal } from '@/shared/api';
+import { apiClient, dataOf, Refusal, vendorsKey } from '@/shared/api';
 
 // Every query about Vendors is under this key, so that a change to any Vendor
 // makes the next page of the list and the next Vendor's page ask the API
 // again.
-export const vendorsKey = ['vendors'] as const;
+export { vendorsKey };
 
 // The key of the query about one Vendor.
 export function vendorKey(vendorId: string) {

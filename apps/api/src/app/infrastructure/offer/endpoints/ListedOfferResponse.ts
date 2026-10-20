@@ -17,6 +17,13 @@ export class ListedOfferResponse extends OfferResponse {
 
   @ApiProperty({
     description:
+      'The whole days of 24 hours left until the Offer expires, rounded down: 0 when less than a whole day is left, which reads as "expires today", and for an Expired Offer.',
+    example: 2,
+  })
+  readonly daysLeft: number;
+
+  @ApiProperty({
+    description:
       'Whether the Offer is an Expired Offer: its last Confirmation is more than 14 days old, and Shoppers no longer see it.',
   })
   readonly expired: boolean;
@@ -30,6 +37,7 @@ export class ListedOfferResponse extends OfferResponse {
   private constructor(offer: Offer, now: Date) {
     super(offer);
     this.daysSinceConfirmation = offer.getDaysSinceConfirmation(now);
+    this.daysLeft = offer.getDaysLeft(now);
     this.expired = offer.isExpired(now);
     this.aboutToExpire = offer.isAboutToExpire(now);
   }

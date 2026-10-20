@@ -2,6 +2,7 @@ import { Part } from '../part/Part';
 import {
   aboutToExpireIfConfirmedBefore,
   expiredIfConfirmedBefore,
+  wholeDaysLeft,
   wholeDaysSince,
 } from './expiry';
 
@@ -68,6 +69,13 @@ export class Offer {
   // now by the API's clock (OFF-7).
   getDaysSinceConfirmation(now: Date): number {
     return wholeDaysSince(this.confirmedAt, now);
+  }
+
+  // The whole days of 24 hours left until the Offer expires, rounded down, at
+  // now by the API's clock: 0 with less than a whole day left, and for an
+  // Expired Offer.
+  getDaysLeft(now: Date): number {
+    return wholeDaysLeft(this.confirmedAt, now);
   }
 
   // Whether the Offer is an Expired Offer at now: its last Confirmation is

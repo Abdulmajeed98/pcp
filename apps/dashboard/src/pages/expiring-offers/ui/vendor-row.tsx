@@ -9,9 +9,10 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router';
 
+import { whatsAppChatWith } from '@/shared/lib';
 import { Item, ItemContent, ItemTitle } from '@/shared/ui';
 
-import { callTo, chatTo } from '../model/links';
+import { callTo } from '../model/links';
 
 // A link that is a row's own action, drawn above the link that covers the
 // whole row, 44 pixels high.
@@ -76,7 +77,7 @@ export function VendorRow({ vendor }: { vendor: VendorWithExpiringOffersResponse
             </span>
           ) : (
             <a
-              href={chatTo(vendor.whatsAppNumber.international)}
+              href={whatsAppChatWith(vendor.whatsAppNumber.international)}
               target="_blank"
               rel="noreferrer"
               data-testid="chat"

@@ -1,5 +1,4 @@
 import type { EditOfferRequest, PartSummaryResponse } from '@pcp/api-client';
-import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
 import { type ComponentProps, type ReactNode, useState } from 'react';
 import { Controller, type FieldErrors, useForm } from 'react-hook-form';
@@ -33,7 +32,6 @@ import {
   offerDetailsOf,
   type OfferFormValues,
 } from '../model/form-values';
-import { largestIqdPrice, largestUsdPrice, longestWarrantyMonths } from '../model/limits';
 import { refusalOf, type RefusalMessage } from '../model/refusals';
 import { OfferedPart } from './offered-part';
 
@@ -183,12 +181,7 @@ export function OfferForm({
         label={t('OfferForm.warranty')}
         optional
         errors={errors}
-        description={
-          <Trans
-            i18nKey="OfferForm.warrantyDescription"
-            components={{ longest: <>{formatNumber(longestWarrantyMonths)}</> }}
-          />
-        }
+        description={t('OfferForm.warrantyDescription')}
       >
         {(props) => (
           <NumberInput
@@ -235,19 +228,12 @@ function NotSaved({ why, purpose }: { why: unknown; purpose: 'add' | 'change' })
   );
 }
 
-// A refusal's sentence, in the language the portal is shown in, with the
-// limit it names written by `formatNumber`.
+// A refusal's sentence, in the language the portal is shown in. A limit is
+// not named: the API holds the limits and says only that one was passed, so
+// no copy of them is kept here to fall out of step.
 function RefusalText({ message }: { message: string }) {
-  return (
-    <Trans
-      i18nKey={`OfferForm.refused.${message as RefusalMessage}`}
-      components={{
-        largestUsd: <AlwaysEnglish>{`${formatNumber(largestUsdPrice)} $`}</AlwaysEnglish>,
-        largestIqd: <AlwaysEnglish>{`${formatNumber(largestIqdPrice)} IQD`}</AlwaysEnglish>,
-        longest: <>{formatNumber(longestWarrantyMonths)}</>,
-      }}
-    />
-  );
+  const { t } = useTranslation();
+  return <>{t(`OfferForm.refused.${message as RefusalMessage}`)}</>;
 }
 
 // What a control of the form is given to name its field and its state.

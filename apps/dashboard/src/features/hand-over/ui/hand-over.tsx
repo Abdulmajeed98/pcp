@@ -3,9 +3,10 @@ import { type Language, languageNames, languages } from '@pcp/i18n';
 import { ExternalLinkIcon, MessageCircleIcon } from 'lucide-react';
 import { useState } from 'react';
 
+import { whatsAppChatWith } from '@/shared/lib';
 import { buttonVariants, FieldLegend, FieldSet } from '@/shared/ui';
 
-import { handOverMessage, whatsAppChatWith } from '../model/message';
+import { handOverMessage } from '../model/message';
 
 // The hand-over, in the Admin console's English: the choice of the language
 // the Vendor reads the message in, each language named in its own language

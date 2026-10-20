@@ -2492,6 +2492,11 @@
             "description": "The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.",
             "example": 3
           },
+          "daysLeft": {
+            "type": "number",
+            "description": "The whole days of 24 hours left until the Offer expires, rounded down: 0 when less than a whole day is left, which reads as \"expires today\", and for an Expired Offer.",
+            "example": 2
+          },
           "expired": {
             "type": "boolean",
             "description": "Whether the Offer is an Expired Offer: its last Confirmation is more than 14 days old, and Shoppers no longer see it."
@@ -2511,6 +2516,7 @@
           "confirmedAt",
           "createdAt",
           "daysSinceConfirmation",
+          "daysLeft",
           "expired",
           "aboutToExpire"
         ]

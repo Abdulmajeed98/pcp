@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PackageXIcon } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router';
 
-import { useOffer, vendorsOffersKey } from '@/entities/offer';
+import { askAgainAfterAChangeToTheOffers, useOffer } from '@/entities/offer';
 import { useVendorShown } from '@/entities/vendor';
 import { formValuesOf, OfferForm } from '@/features/offer-form';
 import { RemoveOffer } from '@/features/remove-offer';
@@ -76,13 +76,10 @@ function ChangeTheOffer({ vendorId, offer }: { vendorId: string; offer: OfferRes
   const change = useMutation({
     mutationFn: (body: EditOfferRequest) =>
       dataOf(apiClient.editOffer({ path: { vendorId, offerId: offer.id }, body })),
-    // Every query about the Vendor's Offers is asked again before the screen
-    // is left, so that the list it returns to shows the Offer as saved.
+    // Every query a change to the Offers changes is asked again before the
+    // screen is left, so that the list it returns to shows the Offer as saved.
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: vendorsOffersKey(vendorId),
-        refetchType: 'all',
-      });
+      await askAgainAfterAChangeToTheOffers(queryClient, vendorId, { refetchType: 'all' });
       await backToTheOffers();
     },
   });

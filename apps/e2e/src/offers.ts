@@ -83,8 +83,8 @@ export interface CountsGiven {
 }
 
 // Gives the page, whenever it lists the Vendor's Offers, an answer of the
-// test's own: one Offer about to expire and one expired, and the counts the
-// test gives, as `answerAsForALoginWithNoVendor` gives an answer of its own.
+// test's own: two Offers about to expire, one of them with less than a day
+// left, and one expired, and the counts the test gives, as `answerAsForALoginWithNoVendor` gives an answer of its own.
 // Every other call reaches the real API, and once the page has asked it to
 // confirm all the Offers, so does every list after it, which then holds the
 // Vendor's own Offers, all of them confirmed.
@@ -95,7 +95,7 @@ export async function answerTheOffersAsExpiring(
 ): Promise<void> {
   const now = Date.now();
   const aDay = 24 * 60 * 60 * 1000;
-  const offer = (name: string, days: number, expired: boolean) => ({
+  const offer = (name: string, days: number, daysLeft: number, expired: boolean) => ({
     id: `00000000-0000-4000-8000-${String(days).padStart(12, '0')}`,
     part: aPartOfTheAnswer(name),
     usdPrice: '1250.00',
@@ -105,12 +105,14 @@ export async function answerTheOffersAsExpiring(
     confirmedAt: new Date(now - days * aDay).toISOString(),
     createdAt: new Date(now - 30 * aDay).toISOString(),
     daysSinceConfirmation: days,
+    daysLeft,
     expired,
     aboutToExpire: !expired && days > 11,
   });
   const content = [
-    offer('Made-up answered Part, expired', 20, true),
-    offer('Made-up answered Part, about to expire', 12, false),
+    offer('Made-up answered Part, expired', 20, 0, true),
+    offer('Made-up answered Part, expiring today', 13, 0, false),
+    offer('Made-up answered Part, about to expire', 12, 2, false),
   ];
 
   let confirmed = false;

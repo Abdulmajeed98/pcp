@@ -1,5 +1,7 @@
 import type { MapLocationResponse } from '@pcp/api-client';
 
+import { westernDigitsIn } from '@/shared/lib';
+
 // The address of Google Maps' search for a Vendor's coordinates, which is
 // Google's documented way to link to a place: on a phone with Google Maps it
 // opens the app, and elsewhere Google Maps in the browser. Its query is the
@@ -16,15 +18,6 @@ export function coordinatesOf({ latitude, longitude }: MapLocationResponse): str
   return `${latitude}, ${longitude}`;
 }
 
-// Arabic-Indic and Eastern Arabic-Indic digits, and the Arabic decimal
-// separator and comma, which a Kurdish or an Arabic keyboard types, as the
-// Western digits, point and comma Google Maps writes.
-const asWritten: Record<string, string> = { '٫': '.', '،': ',' };
-for (let digit = 0; digit <= 9; digit++) {
-  asWritten[String.fromCharCode(0x0660 + digit)] = String(digit);
-  asWritten[String.fromCharCode(0x06f0 + digit)] = String(digit);
-}
-
 // Two numbers in decimal degrees, the latitude first, with a comma between
 // them and any spaces around it, as Google Maps shows and copies a place's
 // coordinates: "36.1911744, 44.0094145" (Google Maps Help, "Search by
@@ -36,10 +29,9 @@ const decimalDegrees = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/;
 // undefined when the text is not coordinates. Whether they are in Iraq is
 // the API's to say.
 export function mapLocationIn(text: string): MapLocationResponse | null | undefined {
-  const western = text.replace(
-    /[٠-٩۰-۹٫،]/g,
-    (character) => asWritten[character] ?? character,
-  );
+  // The digits and the decimal separator a Kurdish or an Arabic keyboard
+  // types, and its comma, as the Western ones Google Maps writes.
+  const western = westernDigitsIn(text).replace(/،/g, ',');
   if (western.trim() === '') return null;
 
   const written = decimalDegrees.exec(western);

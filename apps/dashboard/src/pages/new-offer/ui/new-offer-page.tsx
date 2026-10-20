@@ -2,7 +2,7 @@ import type { CreateOfferRequest } from '@pcp/api-client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router';
 
-import { type AddedOffer, vendorsOffersKey } from '@/entities/offer';
+import { type AddedOffer, askAgainAfterAChangeToTheOffers } from '@/entities/offer';
 import { usePart } from '@/entities/part';
 import { useVendorShown } from '@/entities/vendor';
 import { OfferForm } from '@/features/offer-form';
@@ -32,7 +32,7 @@ export function NewOfferPage() {
     mutationFn: (body: CreateOfferRequest) =>
       dataOf(apiClient.createOffer({ path: { vendorId }, body })),
     onSuccess: async (added) => {
-      await queryClient.invalidateQueries({ queryKey: vendorsOffersKey(vendorId) });
+      await askAgainAfterAChangeToTheOffers(queryClient, vendorId);
       await navigate(
         { pathname: '..', search },
         { state: { added: added.part.name } satisfies AddedOffer },

@@ -1,19 +1,11 @@
-import { formatNumber } from '@pcp/i18n';
-import { CircleCheckIcon } from 'lucide-react';
-
 import { WhyNotAnswered } from '@/shared/api';
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-  ListPages,
-  PastTheLastPage,
-  Plate,
+  NothingToDo,
+  PagedList,
+  SketchedRows,
 } from '@/shared/ui';
 
 import { useVendorsWithExpiringOffers } from '../api/list-expiring-offers';
@@ -37,88 +29,43 @@ export function ListedVendors({
   const listed = useVendorsWithExpiringOffers(page);
 
   if (listed.error) return <NotListed error={listed.error} />;
-  if (listed.data === undefined) return <Reading />;
-  if (listed.data.totalElements === 0) return <NobodyToRemind />;
-
-  const { content, totalElements, pageNumber, totalPages, first, last } = listed.data;
+  if (listed.data === undefined) {
+    return (
+      <SketchedRows words="Reading the Vendors…" rowClassName="flex flex-col gap-2 py-3">
+        <span className="h-3.5 w-3/4 rounded-sm bg-secondary" />
+        <span className="h-3.5 w-1/2 rounded-sm bg-muted" />
+        <span className="h-3.5 w-2/3 rounded-sm bg-muted" />
+      </SketchedRows>
+    );
+  }
+  // The aim: no active Vendor has an Offer expired or about to expire. The
+  // sentence names no number of days, which the API's domain holds.
+  if (listed.data.totalElements === 0) {
+    return (
+      <NothingToDo
+        testId="nobody-to-remind"
+        title="No Vendor needs reminding"
+        description="No active Vendor has an Offer expired or about to expire."
+      />
+    );
+  }
 
   return (
-    <section
-      aria-labelledby="vendors-to-remind"
-      aria-busy={listed.isPlaceholderData}
-      className="flex flex-col gap-4"
-    >
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <Plate data-testid="vendors-to-remind-count">{formatNumber(totalElements)}</Plate>
-        <span id="vendors-to-remind">
-          {totalElements === 1 ? 'Vendor to remind' : 'Vendors to remind'}
-        </span>
-        <span aria-live="polite" className="text-sm text-muted-foreground">
-          {listed.isPlaceholderData && 'Reading…'}
-        </span>
-      </p>
-
-      {content.length > 0 ? (
-        <ul
-          aria-label="Vendors to remind"
-          className="divide-y divide-border border-y border-border"
-        >
-          {content.map((vendor) => (
-            <li key={vendor.id}>
-              <VendorRow vendor={vendor} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <PastTheLastPage onFirstPage={() => onPage(0)} />
-      )}
-
-      {totalPages > 1 && (
-        <ListPages
-          label="Pages of the Vendors to remind"
-          pageNumber={pageNumber}
-          totalPages={totalPages}
-          first={first}
-          last={last}
-          onPage={onPage}
-        />
-      )}
-    </section>
-  );
-}
-
-// Rows sketched where the first answer will be.
-function Reading() {
-  return (
-    <div aria-busy="true" className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">Reading the Vendors…</p>
-      <ul aria-hidden="true" className="divide-y divide-border border-y border-border">
-        {[0, 1, 2, 3].map((row) => (
-          <li key={row} className="flex flex-col gap-2 py-3">
-            <span className="h-3.5 w-3/4 rounded-sm bg-secondary" />
-            <span className="h-3.5 w-1/2 rounded-sm bg-muted" />
-            <span className="h-3.5 w-2/3 rounded-sm bg-muted" />
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-// The aim: every active Vendor's Offers are current.
-function NobodyToRemind() {
-  return (
-    <Empty data-testid="nobody-to-remind" className="border-y border-border">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <CircleCheckIcon />
-        </EmptyMedia>
-        <EmptyTitle>No Vendor needs reminding</EmptyTitle>
-        <EmptyDescription>
-          Every active Vendor’s Offers are current for at least 3 more days.
-        </EmptyDescription>
-      </EmptyHeader>
-    </Empty>
+    <PagedList
+      id="vendors-to-remind"
+      answered={listed.data}
+      reading={listed.isPlaceholderData}
+      count={{
+        testId: 'vendors-to-remind-count',
+        words: (total) => (total === 1 ? 'Vendor to remind' : 'Vendors to remind'),
+      }}
+      label="Vendors to remind"
+      pagesLabel="Pages of the Vendors to remind"
+      readingWords="Reading…"
+      keyOf={(vendor) => vendor.id}
+      row={(vendor) => <VendorRow vendor={vendor} />}
+      onPage={onPage}
+    />
   );
 }
 

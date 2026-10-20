@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 
 import type { OffersSearch } from '@/entities/offer';
+import { pageIn, writePageInto } from '@/shared/lib';
 
 // The search of the Vendor's own Offers the address holds, and a way to show
 // another. The address holds it, `?search=ryzen&page=2`, as the Catalog's
@@ -11,16 +12,15 @@ import type { OffersSearch } from '@/entities/offer';
 export function useSearchInTheAddress(): [OffersSearch, (search: OffersSearch) => void] {
   const [params, setParams] = useSearchParams();
 
-  const written = Number.parseInt(params.get('page') ?? '', 10);
   const search: OffersSearch = {
     words: params.get('search') ?? '',
-    page: Number.isInteger(written) && written > 1 ? written - 1 : 0,
+    page: pageIn(params),
   };
 
   function show({ words, page }: OffersSearch): void {
     const next = new URLSearchParams();
     if (words.trim() !== '') next.set('search', words.trim());
-    if (page > 0) next.set('page', String(page + 1));
+    writePageInto(next, page);
     setParams(next);
   }
 
