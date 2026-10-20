@@ -1,10 +1,13 @@
 export {
+  askAgainAfterAChangeToTheOffers,
+  expiringOffersKey,
+  missingSpecificationsKey,
   offerKey,
   type OffersSearch,
   pageSize,
   useOffer,
   useVendorsOffers,
-  vendorsOffersKey,
+  vendorsCatalogSearchKey,
 } from './api/offers';
 export type { AddedOffer } from './model/added-offer';
 export { type ConfirmationState, confirmationOf } from './model/confirmation';
