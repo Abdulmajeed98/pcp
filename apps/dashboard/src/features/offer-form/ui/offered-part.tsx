@@ -17,10 +17,12 @@ export function OfferedPart({ part }: { part: PartSummaryResponse }) {
       className="flex items-start gap-3 rounded-lg border border-border bg-card p-3"
     >
       <PartPicture part={part} />
+      {/* Each English text is inline in a line of its own, so that it starts
+          on the line's start side in every direction, as a row's does. */}
       <div className="flex min-w-0 flex-col gap-0.5 text-sm">
-        <AlwaysEnglish data-testid="part-name" className="font-medium">
-          {part.name}
-        </AlwaysEnglish>
+        <p className="font-medium">
+          <AlwaysEnglish data-testid="part-name">{part.name}</AlwaysEnglish>
+        </p>
         <p className="text-muted-foreground">
           <AlwaysEnglish>{part.manufacturer}</AlwaysEnglish>
           {' · '}
@@ -29,9 +31,11 @@ export function OfferedPart({ part }: { part: PartSummaryResponse }) {
           </span>
         </p>
         {part.partNumbers.length > 0 && (
-          <AlwaysEnglish data-testid="part-numbers" className="text-muted-foreground">
-            {part.partNumbers.join(', ')}
-          </AlwaysEnglish>
+          <p className="text-muted-foreground">
+            <AlwaysEnglish data-testid="part-numbers">
+              {part.partNumbers.join(', ')}
+            </AlwaysEnglish>
+          </p>
         )}
       </div>
     </div>
