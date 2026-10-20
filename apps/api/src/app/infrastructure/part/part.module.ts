@@ -8,12 +8,15 @@ import { ReadPartQuery } from '~/domain/part/ReadPartQuery';
 import { SearchPartsQuery } from '~/domain/part/SearchPartsQuery';
 import { AddPartPhotoCommand } from '~/domain/part/AddPartPhotoCommand';
 import { PhotoModule } from '~/infrastructure/photo/photo.module';
+import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
 import { PartController } from './endpoints/part.controller';
 import { DatabasePartStore } from './store/DatabasePartStore';
 
 @Module({
-  imports: [PhotoModule],
+  // The rule for which Vendor a request acts for, by which a search names a
+  // Vendor's Offers.
+  imports: [PhotoModule, VendorModule],
   controllers: [PartController],
   providers: [
     // The abstract class is the token the domain asks for.

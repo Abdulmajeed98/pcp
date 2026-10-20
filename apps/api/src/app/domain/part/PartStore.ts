@@ -70,13 +70,20 @@ export class EditPartParams {
 }
 
 // What a search asks for: the words every Part found holds, an optional
-// Category, and the page.
+// Category, the page, and the Vendor whose Offers the search names, if any.
 export class SearchPartsParams {
   constructor(
     private readonly words: readonly string[],
     private readonly category: Category | undefined,
     private readonly pageable: PageableAttributes,
+    private readonly offersOf: Option.Option<string>,
   ) {}
+
+  // The identifier of the Vendor whose Offer for each Part found the page
+  // names, or none, when it names no Vendor's.
+  getOffersOf(): Option.Option<string> {
+    return this.offersOf;
+  }
 
   getWords(): readonly string[] {
     return this.words;
@@ -92,15 +99,23 @@ export class SearchPartsParams {
 }
 
 // One page of the Parts a search found, in name order, and where the page
-// stands among them all.
+// stands among them all, with the identifier of the Offer that the Vendor the
+// search was asked for has for each Part, by the Part's identifier.
 export class PartsPage {
   constructor(
     private readonly parts: readonly Part[],
     private readonly page: PageAttributes,
+    private readonly offerIds: ReadonlyMap<string, string>,
   ) {}
 
   getParts(): readonly Part[] {
     return this.parts;
+  }
+
+  // The Vendor's Offer for the Part, or none, when the Vendor has none or the
+  // search named no Vendor.
+  getOfferIdOf(part: Part): Option.Option<string> {
+    return Option.fromNullable(this.offerIds.get(part.getId()));
   }
 
   getPageAttributes(): PageAttributes {
@@ -157,7 +172,9 @@ export abstract class PartStore {
 
   // The Parts that hold every word in their name, manufacturer or part
   // numbers, regardless of case, ordered by name and then by identifier, so
-  // that moving between pages never skips or repeats one.
+  // that moving between pages never skips or repeats one. When the params name
+  // a Vendor, the page names that Vendor's Offer for each Part it has one for,
+  // and never another Vendor's.
   abstract search(
     params: SearchPartsParams,
   ): Promise<Either.Either<PartsPage, StructuredError>>;

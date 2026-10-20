@@ -190,6 +190,16 @@
                 "psu"
               ]
             }
+          },
+          {
+            "name": "vendorId",
+            "required": false,
+            "in": "query",
+            "description": "The Vendor whose Offer for each Part the results name. The Admin may name any Vendor, and a Vendor's own Login only its own. Left out, a Vendor's own Login gets its own Offers named, and the Admin no Vendor's.",
+            "schema": {
+              "example": "7c1e9a40-2b5d-4f8e-9a63-0d4b8e2f1c75",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -214,7 +224,7 @@
             }
           }
         },
-        "summary": "One page of the Parts that match a search of the whole catalog",
+        "summary": "One page of the Parts that match a search of the whole catalog, each with a Vendor's Offer for it, for the Admin or for a Vendor's own Login",
         "tags": ["Part"]
       }
     },
@@ -1514,7 +1524,7 @@
         },
         "required": ["name", "manufacturer"]
       },
-      "PartSummaryResponse": {
+      "FoundPartResponse": {
         "type": "object",
         "properties": {
           "id": {
@@ -1560,9 +1570,23 @@
             "description": "The address of the Part's photo on this API, or null when it has none.",
             "nullable": true,
             "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          },
+          "offerId": {
+            "type": "string",
+            "description": "The identifier of the Offer for this Part of the Vendor whose Offers the search names, or null when that Vendor has none or the search names no Vendor's.",
+            "nullable": true,
+            "example": "5a7d3e21-9c4b-4f60-8e1a-2b6c0d9f4e83"
           }
         },
-        "required": ["id", "category", "name", "manufacturer", "partNumbers", "photoPath"]
+        "required": [
+          "id",
+          "category",
+          "name",
+          "manufacturer",
+          "partNumbers",
+          "photoPath",
+          "offerId"
+        ]
       },
       "PartPageResponse": {
         "type": "object",
@@ -1601,7 +1625,7 @@
             "description": "The page's Parts, in name order.",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PartSummaryResponse"
+              "$ref": "#/components/schemas/FoundPartResponse"
             }
           }
         },
@@ -2211,6 +2235,56 @@
           }
         },
         "required": ["partId", "inStock"]
+      },
+      "PartSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Part's identifier on the platform.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "category": {
+            "type": "string",
+            "description": "The Part's Category.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Part's name.",
+            "example": "AMD Ryzen 5 7600"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "The Part's manufacturer.",
+            "example": "AMD"
+          },
+          "partNumbers": {
+            "description": "The manufacturer's part numbers.",
+            "example": ["100-100001015BOX"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          }
+        },
+        "required": ["id", "category", "name", "manufacturer", "partNumbers", "photoPath"]
       },
       "OfferResponse": {
         "type": "object",
