@@ -59,6 +59,7 @@ export { OptionalMark } from './optional-mark';
 export { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from './native-select';
 export { Plate } from './plate';
 export { Separator } from './separator';
+export { Switch } from './switch';
 export {
   Table,
   TableBody,
