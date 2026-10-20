@@ -1,12 +1,15 @@
 import type { VendorsOffersPageResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { PackageIcon, SearchXIcon } from 'lucide-react';
+import { PackageIcon, PlusIcon, SearchXIcon } from 'lucide-react';
+import { Link } from 'react-router';
 
 import type { OffersSearch } from '@/entities/offer';
 import { Trans, useTranslation } from '@/shared/i18n';
 import {
+  buttonVariants,
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -137,8 +140,8 @@ function NothingFound({ words }: { words: string }) {
   );
 }
 
-// What the screen says to a Vendor with no Offer yet. The way to add one, from
-// the catalog's search, arrives with that search.
+// What the screen says to a Vendor with no Offer yet, with the way to add one
+// from the catalog search.
 export function NoOffers() {
   const { t } = useTranslation();
 
@@ -151,6 +154,16 @@ export function NoOffers() {
         <EmptyTitle>{t('OffersScreen.none')}</EmptyTitle>
         <EmptyDescription>{t('OffersScreen.noneDescription')}</EmptyDescription>
       </EmptyHeader>
+      <EmptyContent>
+        <Link
+          to="add"
+          data-testid="add-first-offer"
+          className={buttonVariants({ variant: 'outline' })}
+        >
+          <PlusIcon data-icon="inline-start" />
+          {t('OffersScreen.addFirst')}
+        </Link>
+      </EmptyContent>
     </Empty>
   );
 }

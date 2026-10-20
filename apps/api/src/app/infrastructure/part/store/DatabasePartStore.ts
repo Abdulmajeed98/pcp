@@ -124,32 +124,42 @@ export class DatabasePartStore implements PartStore {
     if (category !== undefined) conditions.push(eq(part.category, category.getKey()));
     const where = conditions.length === 0 ? undefined : and(...conditions);
     const pageable = params.getPageable();
+    // The Offer of the Vendor the search names, of which each Part has at most
+    // one, by the unique pair of Vendor and Part; no Offer when it names none.
+    const offerOfTheVendor = Option.match(params.getOffersOf(), {
+      onNone: () => sql`false`,
+      onSome: (vendorId) => and(eq(offer.partId, part.id), eq(offer.vendorId, vendorId)),
+    });
 
     try {
       // One snapshot for both, so that a Part created between them cannot make
       // the totals disagree with the page.
-      const [rows, [{ total }]] = await this.databaseProvider
-        .getClient()
-        .transaction(
-          (transaction) =>
-            Promise.all([
-              transaction
-                .select(partWithPhoto)
-                .from(part)
-                .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
-                .where(where)
-                .orderBy(asc(part.name), asc(part.id))
-                .limit(pageable.getLimit())
-                .offset(pageable.getOffset()),
-              transaction.select({ total: count() }).from(part).where(where),
-            ]),
-          { isolationLevel: 'repeatable read', accessMode: 'read only' },
-        );
+      const [rows, [{ total }]] = await this.databaseProvider.getClient().transaction(
+        (transaction) =>
+          Promise.all([
+            transaction
+              .select({ ...partWithPhoto, offerId: offer.id })
+              .from(part)
+              .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+              .leftJoin(offer, offerOfTheVendor)
+              .where(where)
+              .orderBy(asc(part.name), asc(part.id))
+              .limit(pageable.getLimit())
+              .offset(pageable.getOffset()),
+            transaction.select({ total: count() }).from(part).where(where),
+          ]),
+        { isolationLevel: 'repeatable read', accessMode: 'read only' },
+      );
 
       const parts = Either.all(rows.map((row) => partOf(row.part, row.photoId)));
+      const offerIds = new Map(
+        rows.flatMap(({ part: row, offerId }) =>
+          offerId === null ? [] : [[row.id, offerId] as const],
+        ),
+      );
       return Either.map(
         parts,
-        (found) => new PartsPage(found, PageAttributes.of(pageable, total)),
+        (found) => new PartsPage(found, PageAttributes.of(pageable, total), offerIds),
       );
     } catch (error) {
       this.logger.error(error, 'The catalog could not be searched');

@@ -41,7 +41,8 @@ export class PartSummaryResponse {
   })
   readonly photoPath: string | null;
 
-  private constructor(part: Part) {
+  // Protected, so that a search's result adds to it what the search names.
+  protected constructor(part: Part) {
     this.id = part.getId();
     this.category = part.getCategory().getKey();
     this.name = part.getName();

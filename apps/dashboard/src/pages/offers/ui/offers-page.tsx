@@ -1,9 +1,12 @@
+import { PlusIcon } from 'lucide-react';
+import { Link } from 'react-router';
+
 import { useVendorsOffers } from '@/entities/offer';
 import { useVendorShown } from '@/entities/vendor';
 import { ConfirmedAll, useConfirmAllOffers } from '@/features/confirm-all-offers';
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui';
+import { Alert, AlertDescription, AlertTitle, buttonVariants } from '@/shared/ui';
 
 import { useSearchInTheAddress } from '../model/search';
 import { ExpiryBanner } from './expiry-banner';
@@ -13,7 +16,8 @@ import { SearchForm } from './search-form';
 // The Vendor portal's first screen: the Vendor's Offers, in the portal's
 // language, laid out for a phone 360 pixels wide first.
 //
-// At its head, under its title, the banner, while any Offer is expired or
+// At its head, its title, with the way to add an Offer from the catalog
+// search beside it, `add`, relative to its route. Under the title the banner, while any Offer is expired or
 // about to expire, with the button that confirms them all, and below it,
 // once they are confirmed, how many were. Then the search of the Vendor's own
 // Offers, and the Offers it found, a page at a time. A Vendor with no Offer
@@ -29,7 +33,17 @@ export function OffersPage() {
 
   return (
     <div data-testid="offers-screen" className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold sm:text-2xl">{t('OffersScreen.title')}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold sm:text-2xl">{t('OffersScreen.title')}</h1>
+        <Link
+          to="add"
+          data-testid="add-offer"
+          className={buttonVariants({ variant: 'outline' })}
+        >
+          <PlusIcon data-icon="inline-start" />
+          {t('OffersScreen.add')}
+        </Link>
+      </div>
 
       {listed.error ? (
         <Alert variant="destructive" data-testid="refusal">

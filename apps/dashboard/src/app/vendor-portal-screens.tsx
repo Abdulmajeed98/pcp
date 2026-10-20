@@ -1,6 +1,9 @@
 import type { RouteObject } from 'react-router';
 
+import { CatalogSearchPage } from '@/pages/catalog-search';
 import { EditContactDetailsPage } from '@/pages/edit-contact-details';
+import { NewOfferPage } from '@/pages/new-offer';
+import { OfferPage } from '@/pages/offer';
 import { OffersPage } from '@/pages/offers';
 import { PortalNotFoundPage } from '@/pages/portal-not-found';
 import { VendorDetailsPage } from '@/pages/vendor-details';
@@ -16,8 +19,22 @@ import { VendorDetailsPage } from '@/pages/vendor-details';
 // own, `details`, and the form for the contact details is below it, so that
 // the form's way back, `..`, leads to it. An address that matches no screen
 // shows a "not found" message in the portal's language.
+//
+// Below the Offers screen, `add` is the catalog search from which an Offer is
+// added, with the form for a new Offer of a Part below it, `add/<partId>`,
+// so that the form's way back, and its way after a save, `..`, lead to the
+// search. One Offer has the address `offers/<offerId>`, whose way back leads
+// to the Offers screen.
 export const vendorPortalScreens: RouteObject[] = [
   { index: true, Component: OffersPage },
+  {
+    path: 'add',
+    children: [
+      { index: true, Component: CatalogSearchPage },
+      { path: ':partId', Component: NewOfferPage },
+    ],
+  },
+  { path: 'offers/:offerId', Component: OfferPage },
   {
     path: 'details',
     children: [

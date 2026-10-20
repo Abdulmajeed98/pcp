@@ -11,7 +11,9 @@ import {
 } from '../../../test-utils/create-test-app';
 import { emptyTheDatabase } from '../../../test-utils/database/test-database';
 
-// One result of a search, and a page of them, as the API answers.
+// One result of a search, and a page of them, as the API answers. The
+// Admin's search names no Vendor's Offers (see
+// `part.controller.search.offers.integration-spec.ts`).
 type FoundPart = {
   id: string;
   category: string;
@@ -19,6 +21,7 @@ type FoundPart = {
   manufacturer: string;
   partNumbers: string[];
   photoPath: string | null;
+  offerId: string | null;
 };
 
 type PageOfParts = {
@@ -61,7 +64,15 @@ describe('searching the catalog', () => {
     });
     expect(response.status).toBe(201);
     const { id } = (await response.json()) as { id: string };
-    return { id, category, name, manufacturer, partNumbers, photoPath: null };
+    return {
+      id,
+      category,
+      name,
+      manufacturer,
+      partNumbers,
+      photoPath: null,
+      offerId: null,
+    };
   }
 
   function search(query: Record<string, string>, token = adminToken): Promise<Response> {

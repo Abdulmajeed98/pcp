@@ -192,7 +192,7 @@ export type EditPartRequest = {
     };
 };
 
-export type PartSummaryResponse = {
+export type FoundPartResponse = {
     /**
      * The Part's identifier on the platform.
      */
@@ -217,6 +217,10 @@ export type PartSummaryResponse = {
      * The address of the Part's photo on this API, or null when it has none.
      */
     photoPath: string | null;
+    /**
+     * The identifier of the Offer for this Part of the Vendor whose Offers the search names, or null when that Vendor has none or the search names no Vendor's.
+     */
+    offerId: string | null;
 };
 
 export type PartPageResponse = {
@@ -247,7 +251,7 @@ export type PartPageResponse = {
     /**
      * The page's Parts, in name order.
      */
-    content: Array<PartSummaryResponse>;
+    content: Array<FoundPartResponse>;
 };
 
 export type MissingSpecificationResponse = {
@@ -607,6 +611,33 @@ export type CreateOfferRequest = {
     warrantyMonths?: number | null;
 };
 
+export type PartSummaryResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+};
+
 export type OfferResponse = {
     /**
      * The Offer's identifier on the platform.
@@ -928,6 +959,10 @@ export type SearchPartsData = {
          * The one Category to search in.
          */
         category?: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+        /**
+         * The Vendor whose Offer for each Part the results name. The Admin may name any Vendor, and a Vendor's own Login only its own. Left out, a Vendor's own Login gets its own Offers named, and the Admin no Vendor's.
+         */
+        vendorId?: string;
     };
     url: '/v1/parts';
 };

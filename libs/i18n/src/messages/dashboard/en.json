@@ -24,6 +24,8 @@
   },
   "OffersScreen": {
     "title": "Your Offers",
+    "add": "Add an Offer",
+    "addFirst": "Add your first Offer",
     "reading": "Reading your Offers…",
     "notListed": "Your Offers could not be listed.",
     "counted_one": "<count/> Offer",
@@ -74,6 +76,91 @@
     "notConfirmed": "Your Offers were not confirmed.",
     "confirmed_one": "<count/> Offer confirmed.",
     "confirmed_other": "All <count/> Offers confirmed."
+  },
+  "CatalogSearch": {
+    "back": "Your Offers",
+    "title": "Add an Offer",
+    "intro": "Find the Part in the catalog, then give your price for it.",
+    "searchLabel": "Search the catalog",
+    "searchPlaceholder": "Name, manufacturer or part number",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "search": "Search",
+    "reading": "Searching the catalog…",
+    "notSearched": "The catalog could not be searched.",
+    "found_one": "<count/> Part found",
+    "found_other": "<count/> Parts found",
+    "searching": "Searching…",
+    "listLabel": "Parts found",
+    "offered": "You offer this Part",
+    "nothingFound": "No Part found",
+    "nothingFoundDescription": "No Part holds every word of “<words/>” in its name, its manufacturer or a part number. Check the spelling.",
+    "nothingFoundInTheCategory": "No Part in <category/> holds every word of “<words/>” in its name, its manufacturer or a part number. Check the spelling, or search every Category.",
+    "nothingInTheCategory": "There is no Part in this Category yet.",
+    "pages": "Pages of the results",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page <page/> of <pages/>",
+    "pastTheLast": "This page is past the last one.",
+    "firstPage": "Go to the first page",
+    "addedTitle": "Offer added",
+    "added": "Your Offer for <name/> is added. Find the next Part to offer.",
+    "seeOffers": "See your Offers"
+  },
+  "NewOffer": {
+    "back": "Back to the search",
+    "title": "Add an Offer",
+    "intro": "Adding it confirms it, as of today.",
+    "reading": "Reading the Part…",
+    "notRead": "The Part could not be read."
+  },
+  "OfferForm": {
+    "prices": "Your price",
+    "pricesDescription": "Give it in dollars, in dinars or in both.",
+    "usdPrice": "In dollars ($)",
+    "usdPriceDescription": "With cents if you use them, such as <example/>.",
+    "iqdPrice": "In dinars (IQD)",
+    "iqdPriceDescription": "In whole dinars, such as <example/>.",
+    "inStock": "In stock",
+    "inStockDescription": "Turn it off when you have none now.",
+    "warranty": "Warranty, in months",
+    "warrantyDescription": "In whole months, at most <longest/>.",
+    "optional": "Optional",
+    "save": "Add the Offer",
+    "saving": "Adding…",
+    "notSaved": "Your Offer was not added.",
+    "taken": "You already have an Offer for this Part. Go back to the search, where it is marked.",
+    "refused": {
+      "usdPrice": {
+        "missing": "Give a price in dollars, in dinars or in both.",
+        "notANumber": "Write the price in digits only.",
+        "notPositive": "The price has to be more than zero.",
+        "tooManyDecimals": "Dollars take at most two digits after the point.",
+        "tooLarge": "The price is over <largestUsd/>."
+      },
+      "iqdPrice": {
+        "notANumber": "Write the price in digits only.",
+        "notPositive": "The price has to be more than zero.",
+        "tooManyDecimals": "Dinars are whole: leave out the point and what follows it.",
+        "tooLarge": "The price is over <largestIqd/>."
+      },
+      "inStock": {
+        "missing": "Say whether you have it in stock."
+      },
+      "warrantyMonths": {
+        "notANumber": "Write the months in digits only.",
+        "notPositive": "The warranty is at least one month. Leave it empty if you give none.",
+        "tooLarge": "The warranty is at most <longest/> months.",
+        "notWholeMonths": "The warranty is in whole months."
+      },
+      "other": "The platform did not accept this."
+    }
+  },
+  "OfferScreen": {
+    "back": "Your Offers",
+    "title": "Your Offer",
+    "reading": "Reading your Offer…",
+    "notRead": "Your Offer could not be read."
   },
   "VendorDetails": {
     "title": "Your details",

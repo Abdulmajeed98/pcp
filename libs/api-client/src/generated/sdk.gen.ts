@@ -42,7 +42,7 @@ export const readCategories = <ThrowOnError extends boolean = false>(options?: O
 });
 
 /**
- * One page of the Parts that match a search of the whole catalog
+ * One page of the Parts that match a search of the whole catalog, each with a Vendor's Offer for it, for the Admin or for a Vendor's own Login
  */
 export const searchParts = <ThrowOnError extends boolean = false>(options?: Options<SearchPartsData, ThrowOnError>): RequestResult<SearchPartsResponses, SearchPartsErrors, ThrowOnError> => (options?.client ?? client).get<SearchPartsResponses, SearchPartsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

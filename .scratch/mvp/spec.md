@@ -796,6 +796,7 @@ End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a
 - `accounts`, ticket 12: deactivating a Vendor and confirming, and reactivating it, used with a thumb; the Vendor portal's message for a deactivated Vendor, and Keycloak's refusal of its login, read on a phone in Kurdish and in English.
 - `accounts`, ticket 13, the module's own list, which overlaps the lines of its tickets above: the hand-over's link opening the WhatsApp app on the Admin's phone, with the message written; the location button filling the coordinates from the phone's position, in a Vendor's place in Erbil; a phone number typed on a Kurdish and on an Arabic keyboard logging in; the Vendors screens, Keycloak's screens and the details screen used with a thumb, in Kurdish and in English.
 - `offers`, ticket 07: the Expiring Offers' WhatsApp link opening the WhatsApp app on the Admin's phone, in a chat with the Vendor, and its phone link opening the phone's dialler; the screen used with a thumb.
+- `offers`, ticket 04: the catalog search and the Offer form used with a thumb, in Kurdish and in English; a price typed on a Kurdish and on an Arabic keyboard, saved as its value.
 
 A module that leaves another adds it here.
 

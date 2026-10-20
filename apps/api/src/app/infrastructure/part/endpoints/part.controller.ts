@@ -17,7 +17,7 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
+import { CallerResolver, ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
 import {
@@ -50,6 +50,7 @@ export class PartController {
     private readonly searchPartsQuery: SearchPartsQuery,
     private readonly addPartPhotoCommand: AddPartPhotoCommand,
     private readonly listPartsMissingSpecificationsQuery: ListPartsMissingSpecificationsQuery,
+    private readonly callerResolver: CallerResolver,
   ) {}
 
   @ApiOperation({ summary: 'Add a Part to the catalog' })
@@ -82,13 +83,17 @@ export class PartController {
   }
 
   @ApiOperation({
-    summary: 'One page of the Parts that match a search of the whole catalog',
+    summary:
+      "One page of the Parts that match a search of the whole catalog, each with a Vendor's Offer for it, for the Admin or for a Vendor's own Login",
   })
   @ApiOkResponse({ type: PartPageResponse })
   @PreAuthorize([Role.ADMIN, Role.VENDOR])
   @Get('v1/parts')
   async searchParts(@Query() request: SearchPartsRequest): Promise<PartPageResponse> {
-    const result = await this.searchPartsQuery.execute(request.toQueryInput());
+    const caller = this.callerResolver.getCaller();
+    const result = await this.searchPartsQuery.execute(
+      request.toQueryInput(caller.getId(), caller.getRoles()),
+    );
 
     return result.pipe(
       Either.map((output) => PartPageResponse.of(output.getPartsPage())),
