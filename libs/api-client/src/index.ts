@@ -8,6 +8,7 @@ export type {
   CreatePartRequest,
   CreateVendorRequest,
   EditContactDetailsRequest,
+  EditOfferRequest,
   EditPartRequest,
   EditVendorRequest,
   ErrorResponse,

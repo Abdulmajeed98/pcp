@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -247,12 +247,34 @@ export const listVendorsWithExpiringOffers = <ThrowOnError extends boolean = fal
 });
 
 /**
+ * Remove one of a Vendor's Offers, for the Admin or for the Vendor's own Login
+ */
+export const removeOffer = <ThrowOnError extends boolean = false>(options: Options<RemoveOfferData, ThrowOnError>): RequestResult<RemoveOfferResponses, RemoveOfferErrors, ThrowOnError> => (options.client ?? client).delete<RemoveOfferResponses, RemoveOfferErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/offers/{offerId}',
+    ...options
+});
+
+/**
  * One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login
  */
 export const readOffer = <ThrowOnError extends boolean = false>(options: Options<ReadOfferData, ThrowOnError>): RequestResult<ReadOfferResponses, ReadOfferErrors, ThrowOnError> => (options.client ?? client).get<ReadOfferResponses, ReadOfferErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/vendors/{vendorId}/offers/{offerId}',
     ...options
+});
+
+/**
+ * Replace the prices, the stock and the warranty of one of a Vendor's Offers, clearing what is left out, as a Confirmation, for the Admin or for the Vendor's own Login
+ */
+export const editOffer = <ThrowOnError extends boolean = false>(options: Options<EditOfferData, ThrowOnError>): RequestResult<EditOfferResponses, EditOfferErrors, ThrowOnError> => (options.client ?? client).put<EditOfferResponses, EditOfferErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/offers/{offerId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

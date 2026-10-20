@@ -40,6 +40,70 @@ export class CreateOfferParams {
   }
 }
 
+// A change to one of a Vendor's Offers: the Vendor and the Offer, its new
+// details, which replace all it had, the time of the Confirmation that
+// saving it is, and the Caller who changes it, whom its history records.
+export class EditOfferParams {
+  constructor(
+    private readonly vendorId: string,
+    private readonly offerId: string,
+    private readonly details: OfferDetails,
+    private readonly confirmedAt: Date,
+    private readonly callerId: string,
+  ) {}
+
+  getVendorId(): string {
+    return this.vendorId;
+  }
+
+  getOfferId(): string {
+    return this.offerId;
+  }
+
+  getDetails(): OfferDetails {
+    return this.details;
+  }
+
+  getConfirmedAt(): Date {
+    return this.confirmedAt;
+  }
+
+  // The identifier of the Login the request was made with: the Vendor's own,
+  // or the Admin's.
+  getCallerId(): string {
+    return this.callerId;
+  }
+}
+
+// The removal of one of a Vendor's Offers: the Vendor and the Offer, the time
+// of the removal, and the Caller who removes it, whom its history records.
+export class RemoveOfferParams {
+  constructor(
+    private readonly vendorId: string,
+    private readonly offerId: string,
+    private readonly removedAt: Date,
+    private readonly callerId: string,
+  ) {}
+
+  getVendorId(): string {
+    return this.vendorId;
+  }
+
+  getOfferId(): string {
+    return this.offerId;
+  }
+
+  getRemovedAt(): Date {
+    return this.removedAt;
+  }
+
+  // The identifier of the Login the request was made with: the Vendor's own,
+  // or the Admin's.
+  getCallerId(): string {
+    return this.callerId;
+  }
+}
+
 // What a Vendor's list of its Offers asks for: the Vendor, the words every
 // Offer's Part holds, the page, and now, by the API's clock, which every
 // expiry in the list is judged by.
@@ -159,6 +223,24 @@ export abstract class OfferStore {
   abstract create(
     params: CreateOfferParams,
   ): Promise<Either.Either<Offer, StructuredError>>;
+
+  // Replaces the prices, the stock and the warranty of the Vendor's Offer, and
+  // sets the time of its last Confirmation, and, when the prices or the stock
+  // change, adds a row to its history with the values after the change, the
+  // same time and the Caller, in the same transaction (OFF-10). It answers
+  // the Offer as changed, or none when there is no such Offer or it is
+  // another Vendor's.
+  abstract edit(
+    params: EditOfferParams,
+  ): Promise<Either.Either<Option.Option<Offer>, StructuredError>>;
+
+  // Removes the Vendor's Offer and adds a row to its history that marks the
+  // removal, with the time, the Caller and the prices and stock it had, in the
+  // same transaction. The history's earlier rows stay. It answers whether
+  // there was such an Offer of the Vendor's to remove.
+  abstract remove(
+    params: RemoveOfferParams,
+  ): Promise<Either.Either<boolean, StructuredError>>;
 
   // The Vendor's Offers whose Parts hold every word, Expired Offers among
   // them, oldest Confirmation first, then by Part name, then by identifier,

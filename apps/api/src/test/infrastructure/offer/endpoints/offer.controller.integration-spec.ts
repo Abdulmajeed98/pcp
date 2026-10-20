@@ -251,6 +251,33 @@ describe("a Vendor's Offers", () => {
     });
   }
 
+  function editOffer(
+    vendorId: string,
+    offerId: string,
+    body: unknown,
+    token: string | null,
+  ): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/offers/${offerId}`, {
+      method: 'PUT',
+      headers: {
+        ...(token === null ? {} : bearerHeader(token)),
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
+  function removeOffer(
+    vendorId: string,
+    offerId: string,
+    token: string | null,
+  ): Promise<Response> {
+    return fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/offers/${offerId}`, {
+      method: 'DELETE',
+      headers: token === null ? {} : bearerHeader(token),
+    });
+  }
+
   // An Offer the Admin adds for the Vendor with the clock at a moment, which
   // is then the time of its Confirmation. The clock stays there.
   async function anOfferConfirmedAt(
@@ -708,7 +735,7 @@ describe("a Vendor's Offers", () => {
     });
   });
 
-  describe('who may add, read, list and confirm Offers', () => {
+  describe('who may add, read, list, confirm, change and remove Offers', () => {
     it("refuses a Vendor's token at another Vendor's Offers with 403, whether that Vendor exists or not", async () => {
       const { vendor, part } = await aVendorAndAPart();
       const another = await aVendorWith('0750 765 4321');
@@ -746,10 +773,62 @@ describe("a Vendor's Offers", () => {
           403,
           vendorAccessDenied,
         );
+        await expectErrorResponse(
+          await editOffer(
+            vendorId,
+            offer.id,
+            { usdPrice: '1.00', inStock: false },
+            anothersToken,
+          ),
+          403,
+          vendorAccessDenied,
+        );
+        await expectErrorResponse(
+          await removeOffer(vendorId, offer.id, anothersToken),
+          403,
+          vendorAccessDenied,
+        );
       }
       expect(
         await readOf(await readOffer(vendor.id, offer.id, await adminToken())),
       ).toEqual(offer);
+    });
+
+    it("answers 404 with OFFER_NOT_FOUND for another Vendor's Offer changed or removed through one's own address, and for one that does not exist, leaving the other Vendor's Offer as it was", async () => {
+      const { vendor, token, part } = await aVendorAndAPart();
+      const another = await aVendorWith('0750 765 4321');
+      const anothersOffer = await createdOf(
+        await createOffer(
+          another.id,
+          { partId: part.id, usdPrice: '349.99', inStock: true },
+          await tokenOfTheOwnLogin(another),
+        ),
+      );
+      const historyBefore = await offerHistoryRows();
+
+      for (const offerId of [anothersOffer.id, randomUUID(), 'not-an-offer']) {
+        for (const caller of [token, await adminToken()]) {
+          await expectErrorResponse(
+            await editOffer(
+              vendor.id,
+              offerId,
+              { usdPrice: '1.00', inStock: false },
+              caller,
+            ),
+            404,
+            offerNotFound,
+          );
+          await expectErrorResponse(
+            await removeOffer(vendor.id, offerId, caller),
+            404,
+            offerNotFound,
+          );
+        }
+      }
+      expect(
+        await readOf(await readOffer(another.id, anothersOffer.id, await adminToken())),
+      ).toEqual(anothersOffer);
+      expect(await offerHistoryRows()).toEqual(historyBefore);
     });
 
     it("answers 404 with OFFER_NOT_FOUND for another Vendor's Offer read through one's own address, and for one that does not exist", async () => {
@@ -816,6 +895,19 @@ describe("a Vendor's Offers", () => {
         vendorDeactivated,
       );
       await expectErrorResponse(await confirmAll(vendor.id, token), 403, vendorDeactivated);
+      await expectErrorResponse(
+        await editOffer(vendor.id, offer.id, { usdPrice: '1.00', inStock: false }, token),
+        403,
+        vendorDeactivated,
+      );
+      await expectErrorResponse(
+        await removeOffer(vendor.id, offer.id, token),
+        403,
+        vendorDeactivated,
+      );
+      expect(
+        await readOf(await readOffer(vendor.id, offer.id, await adminToken())),
+      ).toEqual(offer);
     });
 
     it('answers a call without a token with 401', async () => {
@@ -844,6 +936,16 @@ describe("a Vendor's Offers", () => {
       );
       await expectErrorResponse(await listOffers(vendor.id, {}, null), 401, unauthorized);
       await expectErrorResponse(await confirmAll(vendor.id, null), 401, unauthorized);
+      await expectErrorResponse(
+        await editOffer(vendor.id, offer.id, { usdPrice: '1.00', inStock: false }, null),
+        401,
+        unauthorized,
+      );
+      await expectErrorResponse(
+        await removeOffer(vendor.id, offer.id, null),
+        401,
+        unauthorized,
+      );
     });
   });
 
@@ -1278,6 +1380,407 @@ describe("a Vendor's Offers", () => {
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual({ confirmed: 1 });
       expect((await theListOf(vendor.id)).content[0].confirmedAt).toBe(now.toISOString());
+    });
+  });
+
+  describe('changing an Offer', () => {
+    it('replaces the prices, the stock and the warranty, clears a warranty left out, and confirms the Offer, answering it', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      moveTheClockTo(aMovedMoment);
+      const created = await createdOf(
+        await createOffer(
+          vendor.id,
+          { partId: part.id, usdPrice: '349.99', inStock: true, warrantyMonths: 36 },
+          await tokenOfTheOwnLogin(vendor),
+        ),
+      );
+      const later = after(aMovedMoment, 3 * aDay + anHour);
+      moveTheClockTo(later);
+
+      const response = await editOffer(
+        vendor.id,
+        created.id,
+        { iqdPrice: 530000, inStock: false },
+        await tokenOfTheOwnLogin(vendor),
+      );
+
+      expect(response.status).toBe(200);
+      const changed = (await response.json()) as OfferBody;
+      expect(changed).toEqual({
+        id: created.id,
+        part,
+        usdPrice: null,
+        iqdPrice: 530000,
+        inStock: false,
+        warrantyMonths: null,
+        confirmedAt: later.toISOString(),
+        createdAt: created.createdAt,
+      });
+      expect(
+        await readOf(await readOffer(vendor.id, created.id, await adminToken())),
+      ).toEqual(changed);
+    });
+
+    it('confirms an Expired Offer saved unchanged, which is current again', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const created = await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+      const later = after(aMovedMoment, 20 * aDay);
+      moveTheClockTo(later);
+      expect((await theListOf(vendor.id)).content[0].expired).toBe(true);
+
+      const response = await editOffer(
+        vendor.id,
+        created.id,
+        { usdPrice: created.usdPrice, inStock: created.inStock },
+        await tokenOfTheOwnLogin(vendor),
+      );
+
+      expect(response.status).toBe(200);
+      const listed = await theListOf(vendor.id);
+      expect(listed.content).toEqual([
+        {
+          ...created,
+          confirmedAt: later.toISOString(),
+          daysSinceConfirmation: 0,
+          expired: false,
+          aboutToExpire: false,
+        },
+      ]);
+      expect(listed.counts).toEqual({ offers: 1, expired: 0, aboutToExpire: 0 });
+    });
+
+    it('refuses a detail that does not fit, naming it, and leaves the Offer as it was', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const created = await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+      moveTheClockTo(after(aMovedMoment, aDay));
+      const ownToken = await tokenOfTheOwnLogin(vendor);
+
+      for (const [details, field, reason] of [
+        [{ inStock: true }, 'usdPrice', 'missing'],
+        [{ usdPrice: '1.999', inStock: true }, 'usdPrice', 'tooManyDecimals'],
+        [{ iqdPrice: 0, inStock: true }, 'iqdPrice', 'notPositive'],
+        [{ usdPrice: '1.00' }, 'inStock', 'missing'],
+        [
+          { usdPrice: '1.00', inStock: true, warrantyMonths: 121 },
+          'warrantyMonths',
+          'tooLarge',
+        ],
+      ] as const) {
+        await expectErrorResponse(
+          await editOffer(vendor.id, created.id, details, ownToken),
+          400,
+          refused(field, reason),
+        );
+      }
+      expect(await readOf(await readOffer(vendor.id, created.id, ownToken))).toEqual(
+        created,
+      );
+    });
+
+    it("refuses to change the Offer's Part", async () => {
+      const { vendor, token, part } = await aVendorAndAPart();
+      const another = await aPart('Made-up Ryzen 7 7700');
+      const created = await createdOf(
+        await createOffer(
+          vendor.id,
+          { partId: part.id, usdPrice: '349.99', inStock: true },
+          token,
+        ),
+      );
+
+      const response = await editOffer(
+        vendor.id,
+        created.id,
+        { partId: another.id, usdPrice: '349.99', inStock: true },
+        token,
+      );
+
+      expect(response.status).toBe(400);
+      expect((await readOf(await readOffer(vendor.id, created.id, token))).part).toEqual(
+        part,
+      );
+    });
+
+    it("lets the Admin change a deactivated Vendor's Offer", async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const created = await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+      letTheClockRun();
+      const deactivation = await fetch(
+        `${testApp.baseUrl}/v1/vendors/${vendor.id}/deactivate`,
+        { method: 'POST', headers: bearerHeader(await adminToken()) },
+      );
+      expect(deactivation.status).toBe(200);
+
+      const response = await editOffer(
+        vendor.id,
+        created.id,
+        { usdPrice: '300', inStock: true },
+        await adminToken(),
+      );
+
+      expect(response.status).toBe(200);
+      expect(((await response.json()) as OfferBody).usdPrice).toBe('300.00');
+    });
+  });
+
+  describe("the history of an Offer's changes", () => {
+    it('records a change to a price, and a change to the stock, each once, with the time of the moved clock and the Caller, the Admin as the Admin', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const vendorsLogin = await loginIdOf(vendor);
+      moveTheClockTo(aMovedMoment);
+      const created = await createdOf(
+        await createOffer(
+          vendor.id,
+          { partId: part.id, usdPrice: '349.99', inStock: true, warrantyMonths: 12 },
+          await tokenOfTheOwnLogin(vendor),
+        ),
+      );
+      const [first, second, third] = [1, 2, 3].map((days) =>
+        after(aMovedMoment, days * aDay),
+      );
+      async function changedAt(
+        moment: Date,
+        details: Record<string, unknown>,
+        token: () => Promise<string>,
+      ): Promise<void> {
+        moveTheClockTo(moment);
+        const response = await editOffer(vendor.id, created.id, details, await token());
+        expect(response.status).toBe(200);
+      }
+
+      // The IQD price added, by the Vendor.
+      await changedAt(
+        first,
+        { usdPrice: '349.99', iqdPrice: 525000, inStock: true, warrantyMonths: 12 },
+        () => tokenOfTheOwnLogin(vendor),
+      );
+      // The stock alone, by the Admin acting for the Vendor.
+      await changedAt(
+        second,
+        { usdPrice: '349.99', iqdPrice: 525000, inStock: false, warrantyMonths: 12 },
+        adminToken,
+      );
+      // The USD price, which the Vendor no longer quotes, by the Vendor.
+      await changedAt(third, { iqdPrice: 525000, inStock: false, warrantyMonths: 12 }, () =>
+        tokenOfTheOwnLogin(vendor),
+      );
+
+      const ofTheOffer = { vendorId: vendor.id, partId: part.id };
+      expect(await offerHistoryRows()).toEqual([
+        {
+          ...ofTheOffer,
+          changedAt: aMovedMoment,
+          change: 'created',
+          usdPriceCents: 34999,
+          iqdPrice: null,
+          inStock: true,
+          changedBy: vendorsLogin,
+        },
+        {
+          ...ofTheOffer,
+          changedAt: first,
+          change: 'changed',
+          usdPriceCents: 34999,
+          iqdPrice: 525000,
+          inStock: true,
+          changedBy: vendorsLogin,
+        },
+        {
+          ...ofTheOffer,
+          changedAt: second,
+          change: 'changed',
+          usdPriceCents: 34999,
+          iqdPrice: 525000,
+          inStock: false,
+          changedBy: adminLoginId,
+        },
+        {
+          ...ofTheOffer,
+          changedAt: third,
+          change: 'changed',
+          usdPriceCents: null,
+          iqdPrice: 525000,
+          inStock: false,
+          changedBy: vendorsLogin,
+        },
+      ]);
+    });
+
+    it('records nothing for a save that changes nothing, for one that changes the warranty alone, or for one refused', async () => {
+      const { vendor, token, part } = await aVendorAndAPart();
+      const created = await createdOf(
+        await createOffer(
+          vendor.id,
+          { partId: part.id, usdPrice: '349.99', iqdPrice: 525000, inStock: true },
+          token,
+        ),
+      );
+      const historyBefore = await offerHistoryRows();
+
+      for (const details of [
+        { usdPrice: '349.99', iqdPrice: 525000, inStock: true },
+        // The same price, written with a leading zero.
+        { usdPrice: '0349.99', iqdPrice: 525000, inStock: true },
+        { usdPrice: '349.99', iqdPrice: 525000, inStock: true, warrantyMonths: 24 },
+        { usdPrice: '349.99', iqdPrice: 525000, inStock: true, warrantyMonths: null },
+      ]) {
+        expect((await editOffer(vendor.id, created.id, details, token)).status).toBe(200);
+      }
+      expect(
+        (
+          await editOffer(
+            vendor.id,
+            created.id,
+            { usdPrice: '0', iqdPrice: 1, inStock: false },
+            token,
+          )
+        ).status,
+      ).toBe(400);
+
+      expect(await offerHistoryRows()).toEqual(historyBefore);
+    });
+  });
+
+  describe('removing an Offer', () => {
+    it("answers 204, after which the Offer is 404 for its Vendor and gone from the Vendor's list", async () => {
+      const { vendor, token, part } = await aVendorAndAPart();
+      const kept = await aPart('Made-up Ryzen 7 7700');
+      const removed = await createdOf(
+        await createOffer(
+          vendor.id,
+          { partId: part.id, usdPrice: '349.99', inStock: true },
+          token,
+        ),
+      );
+      await createdOf(
+        await createOffer(
+          vendor.id,
+          { partId: kept.id, usdPrice: '449.99', inStock: true },
+          token,
+        ),
+      );
+
+      const response = await removeOffer(vendor.id, removed.id, token);
+
+      expect(response.status).toBe(204);
+      expect(await response.text()).toBe('');
+      await expectErrorResponse(
+        await readOffer(vendor.id, removed.id, token),
+        404,
+        offerNotFound,
+      );
+      await expectErrorResponse(
+        await removeOffer(vendor.id, removed.id, token),
+        404,
+        offerNotFound,
+      );
+      await expectErrorResponse(
+        await editOffer(vendor.id, removed.id, { usdPrice: '1.00', inStock: true }, token),
+        404,
+        offerNotFound,
+      );
+      const listed = await theListOf(vendor.id);
+      expect(listed.content.map(({ part }) => part.id)).toEqual([kept.id]);
+      expect(listed.counts.offers).toBe(1);
+    });
+
+    it('records the removal after the earlier rows, which stay, and lets the Vendor offer the Part again, whose next row follows them', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const vendorsLogin = await loginIdOf(vendor);
+      const [changed, removedAt, offeredAgain] = [1, 2, 3].map((days) =>
+        after(aMovedMoment, days * aDay),
+      );
+      const created = await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+      moveTheClockTo(changed);
+      expect(
+        (
+          await editOffer(
+            vendor.id,
+            created.id,
+            { usdPrice: '329.99', inStock: false },
+            await tokenOfTheOwnLogin(vendor),
+          )
+        ).status,
+      ).toBe(200);
+      moveTheClockTo(removedAt);
+      expect(
+        (await removeOffer(vendor.id, created.id, await tokenOfTheOwnLogin(vendor))).status,
+      ).toBe(204);
+
+      moveTheClockTo(offeredAgain);
+      const again = await createdOf(
+        await createOffer(
+          vendor.id,
+          { partId: part.id, iqdPrice: 500000, inStock: true },
+          await tokenOfTheOwnLogin(vendor),
+        ),
+      );
+
+      expect(again.id).not.toBe(created.id);
+      const ofTheOffer = { vendorId: vendor.id, partId: part.id };
+      expect(await offerHistoryRows()).toEqual([
+        {
+          ...ofTheOffer,
+          changedAt: aMovedMoment,
+          change: 'created',
+          usdPriceCents: 34999,
+          iqdPrice: null,
+          inStock: true,
+          changedBy: adminLoginId,
+        },
+        {
+          ...ofTheOffer,
+          changedAt: changed,
+          change: 'changed',
+          usdPriceCents: 32999,
+          iqdPrice: null,
+          inStock: false,
+          changedBy: vendorsLogin,
+        },
+        {
+          ...ofTheOffer,
+          changedAt: removedAt,
+          change: 'removed',
+          usdPriceCents: 32999,
+          iqdPrice: null,
+          inStock: false,
+          changedBy: vendorsLogin,
+        },
+        {
+          ...ofTheOffer,
+          changedAt: offeredAgain,
+          change: 'created',
+          usdPriceCents: null,
+          iqdPrice: 500000,
+          inStock: true,
+          changedBy: vendorsLogin,
+        },
+      ]);
+    });
+
+    it("lets the Admin remove a deactivated Vendor's Offer, recorded as the Admin", async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const created = await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+      letTheClockRun();
+      const deactivation = await fetch(
+        `${testApp.baseUrl}/v1/vendors/${vendor.id}/deactivate`,
+        { method: 'POST', headers: bearerHeader(await adminToken()) },
+      );
+      expect(deactivation.status).toBe(200);
+      const removedAt = after(aMovedMoment, aDay);
+      moveTheClockTo(removedAt);
+
+      expect((await removeOffer(vendor.id, created.id, await adminToken())).status).toBe(
+        204,
+      );
+
+      const rows = await offerHistoryRows();
+      expect(
+        rows.map(({ change, changedAt, changedBy }) => ({ change, changedAt, changedBy })),
+      ).toEqual([
+        { change: 'created', changedAt: aMovedMoment, changedBy: adminLoginId },
+        { change: 'removed', changedAt: removedAt, changedBy: adminLoginId },
+      ]);
     });
   });
 });

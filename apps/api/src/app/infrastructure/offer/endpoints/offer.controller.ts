@@ -1,14 +1,21 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { CallerResolver, ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
@@ -17,12 +24,18 @@ import {
   ConfirmAllOffersCommandInput,
 } from '~/domain/offer/ConfirmAllOffersCommand';
 import { CreateOfferCommand } from '~/domain/offer/CreateOfferCommand';
+import { EditOfferCommand } from '~/domain/offer/EditOfferCommand';
 import { ListVendorsOffersQuery } from '~/domain/offer/ListVendorsOffersQuery';
 import { ListVendorsWithExpiringOffersQuery } from '~/domain/offer/ListVendorsWithExpiringOffersQuery';
 import { ReadOfferQuery, ReadOfferQueryInput } from '~/domain/offer/ReadOfferQuery';
+import {
+  RemoveOfferCommand,
+  RemoveOfferCommandInput,
+} from '~/domain/offer/RemoveOfferCommand';
 
 import { ConfirmedOffersResponse } from './ConfirmedOffersResponse';
 import { CreateOfferRequest } from './CreateOfferRequest';
+import { EditOfferRequest } from './EditOfferRequest';
 import { ListVendorsOffersRequest } from './ListVendorsOffersRequest';
 import { ListVendorsWithExpiringOffersRequest } from './ListVendorsWithExpiringOffersRequest';
 import { OfferResponse } from './OfferResponse';
@@ -40,6 +53,8 @@ export class OfferController {
     private readonly listVendorsOffersQuery: ListVendorsOffersQuery,
     private readonly confirmAllOffersCommand: ConfirmAllOffersCommand,
     private readonly listVendorsWithExpiringOffersQuery: ListVendorsWithExpiringOffersQuery,
+    private readonly editOfferCommand: EditOfferCommand,
+    private readonly removeOfferCommand: RemoveOfferCommand,
     private readonly callerResolver: CallerResolver,
   ) {}
 
@@ -153,5 +168,47 @@ export class OfferController {
       Either.map((output) => OfferResponse.of(output.getOffer())),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
+  }
+
+  @ApiOperation({
+    summary:
+      "Replace the prices, the stock and the warranty of one of a Vendor's Offers, clearing what is left out, as a Confirmation, for the Admin or for the Vendor's own Login",
+  })
+  @ApiOkResponse({ type: OfferResponse })
+  @PreAuthorize([Role.ADMIN, Role.VENDOR])
+  @Put('v1/vendors/:vendorId/offers/:offerId')
+  async editOffer(
+    @Param('vendorId') vendorId: string,
+    @Param('offerId') offerId: string,
+    @Body() request: EditOfferRequest,
+  ): Promise<OfferResponse> {
+    const caller = this.callerResolver.getCaller();
+    const result = await this.editOfferCommand.execute(
+      request.toCommandInput(caller.getId(), caller.getRoles(), vendorId, offerId),
+    );
+
+    return result.pipe(
+      Either.map((output) => OfferResponse.of(output.getOffer())),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary: "Remove one of a Vendor's Offers, for the Admin or for the Vendor's own Login",
+  })
+  @ApiNoContentResponse({ description: 'The Offer is removed.' })
+  @PreAuthorize([Role.ADMIN, Role.VENDOR])
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete('v1/vendors/:vendorId/offers/:offerId')
+  async removeOffer(
+    @Param('vendorId') vendorId: string,
+    @Param('offerId') offerId: string,
+  ): Promise<void> {
+    const caller = this.callerResolver.getCaller();
+    const result = await this.removeOfferCommand.execute(
+      new RemoveOfferCommandInput(caller.getId(), caller.getRoles(), vendorId, offerId),
+    );
+
+    Either.getOrThrowWith(result, ErrorStructureException.of);
   }
 }

@@ -590,10 +590,6 @@ export type PasswordResetResponse = {
 
 export type CreateOfferRequest = {
     /**
-     * The identifier of the Part offered, any Part in the catalog.
-     */
-    partId: string;
-    /**
      * The Quoted Price in USD, as a decimal number in Western digits, with at most two decimal places, more than 0 and at most 100000.00. It or the IQD price, or both, must be given.
      */
     usdPrice?: string | null;
@@ -609,6 +605,10 @@ export type CreateOfferRequest = {
      * The warranty, in whole months from 1 to 120, or null when the Vendor states none.
      */
     warrantyMonths?: number | null;
+    /**
+     * The identifier of the Part offered, any Part in the catalog.
+     */
+    partId: string;
 };
 
 export type PartSummaryResponse = {
@@ -829,6 +829,25 @@ export type VendorsWithExpiringOffersPageResponse = {
      * The page's Vendors: those with an Expired Offer first, by name; then those whose Offer expires soonest, then by name.
      */
     content: Array<VendorWithExpiringOffersResponse>;
+};
+
+export type EditOfferRequest = {
+    /**
+     * The Quoted Price in USD, as a decimal number in Western digits, with at most two decimal places, more than 0 and at most 100000.00. It or the IQD price, or both, must be given.
+     */
+    usdPrice?: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, more than 0 and at most 150000000. It or the USD price, or both, must be given.
+     */
+    iqdPrice?: number | null;
+    /**
+     * Whether the Vendor has the Part in stock now.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months from 1 to 120, or null when the Vendor states none.
+     */
+    warrantyMonths?: number | null;
 };
 
 export type VisibleOfferVendorResponse = {
@@ -1471,6 +1490,34 @@ export type ListVendorsWithExpiringOffersResponses = {
 
 export type ListVendorsWithExpiringOffersResponse = ListVendorsWithExpiringOffersResponses[keyof ListVendorsWithExpiringOffersResponses];
 
+export type RemoveOfferData = {
+    body?: never;
+    path: {
+        vendorId: string;
+        offerId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/offers/{offerId}';
+};
+
+export type RemoveOfferErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type RemoveOfferError = RemoveOfferErrors[keyof RemoveOfferErrors];
+
+export type RemoveOfferResponses = {
+    /**
+     * The Offer is removed.
+     */
+    204: void;
+};
+
+export type RemoveOfferResponse = RemoveOfferResponses[keyof RemoveOfferResponses];
+
 export type ReadOfferData = {
     body?: never;
     path: {
@@ -1495,6 +1542,31 @@ export type ReadOfferResponses = {
 };
 
 export type ReadOfferResponse = ReadOfferResponses[keyof ReadOfferResponses];
+
+export type EditOfferData = {
+    body: EditOfferRequest;
+    path: {
+        vendorId: string;
+        offerId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/offers/{offerId}';
+};
+
+export type EditOfferErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type EditOfferError = EditOfferErrors[keyof EditOfferErrors];
+
+export type EditOfferResponses = {
+    200: OfferResponse;
+};
+
+export type EditOfferResponse = EditOfferResponses[keyof EditOfferResponses];
 
 export type ListVisibleOffersOfPartData = {
     body?: never;

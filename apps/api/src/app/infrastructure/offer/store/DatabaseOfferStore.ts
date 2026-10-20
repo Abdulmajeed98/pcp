@@ -11,9 +11,11 @@ import { Offer } from '~/domain/offer/Offer';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import {
   CreateOfferParams,
+  EditOfferParams,
   ListVendorsOffersParams,
   ListVendorsWithExpiringOffersParams,
   OfferStore,
+  RemoveOfferParams,
   VendorsOfferCounts,
   VendorsOffersPage,
   VendorsWithExpiringOffersPage,
@@ -48,6 +50,13 @@ function countWhere(condition: SQL | undefined): SQL<number> {
 // and no other.
 function visibleOffer(now: Date): SQL | undefined {
   return and(eq(vendor.active, true), gte(offer.confirmedAt, visibleIfConfirmedFrom(now)));
+}
+
+// The Vendor's Offer with this identifier. The Vendor is part of what is
+// asked, so that another Vendor's Offer is not found, read, changed or
+// removed.
+function ofTheVendor(vendorId: string, offerId: string): SQL | undefined {
+  return and(eq(offer.vendorId, vendorId), eq(offer.id, offerId));
 }
 
 // A row as an Offer, with its Part.
@@ -168,6 +177,113 @@ export class DatabaseOfferStore implements OfferStore {
         ServerError.of(`An Offer was created and could not be read back: ${offerId}`),
       ),
     );
+  }
+
+  async edit(
+    params: EditOfferParams,
+  ): Promise<Either.Either<Option.Option<Offer>, StructuredError>> {
+    const vendorId = params.getVendorId();
+    const offerId = params.getOfferId();
+    if (!couldBeIdentifier(vendorId) || !couldBeIdentifier(offerId)) {
+      return Either.right(Option.none());
+    }
+    const details = params.getDetails();
+    const pricesAndStock = {
+      usdPriceCents: details.getUsdPriceCents(),
+      iqdPrice: details.getIqdPrice(),
+      inStock: details.isInStock(),
+    };
+
+    let found: boolean;
+    try {
+      found = await this.databaseProvider.getClient().transaction(async (transaction) => {
+        // The Offer as it stands, held until the transaction ends, so that a
+        // change made at the same time waits and is compared with this one's.
+        const [before] = await transaction
+          .select({
+            partId: offer.partId,
+            usdPriceCents: offer.usdPriceCents,
+            iqdPrice: offer.iqdPrice,
+            inStock: offer.inStock,
+          })
+          .from(offer)
+          .where(ofTheVendor(vendorId, offerId))
+          .for('update');
+        if (before === undefined) return false;
+
+        await transaction
+          .update(offer)
+          .set({
+            ...pricesAndStock,
+            warrantyMonths: details.getWarrantyMonths(),
+            confirmedAt: params.getConfirmedAt(),
+          })
+          .where(eq(offer.id, offerId));
+        if (details.changePricesOrStockOf(before)) {
+          await transaction.insert(offerHistory).values({
+            vendorId,
+            partId: before.partId,
+            ...pricesAndStock,
+            changedAt: params.getConfirmedAt(),
+            change: 'changed',
+            changedBy: params.getCallerId(),
+          });
+        }
+
+        return true;
+      });
+    } catch (error) {
+      this.logger.error(error, 'An Offer could not be changed');
+      return Either.left(databaseErrorOf(error, 'An Offer could not be changed'));
+    }
+    if (!found) return Either.right(Option.none());
+
+    // Read again, as every read is, with its Part.
+    return this.readById(vendorId, offerId);
+  }
+
+  async remove(
+    params: RemoveOfferParams,
+  ): Promise<Either.Either<boolean, StructuredError>> {
+    const vendorId = params.getVendorId();
+    const offerId = params.getOfferId();
+    if (!couldBeIdentifier(vendorId) || !couldBeIdentifier(offerId)) {
+      return Either.right(false);
+    }
+
+    try {
+      const removed = await this.databaseProvider
+        .getClient()
+        .transaction(async (transaction) => {
+          const [row] = await transaction
+            .delete(offer)
+            .where(ofTheVendor(vendorId, offerId))
+            .returning({
+              partId: offer.partId,
+              usdPriceCents: offer.usdPriceCents,
+              iqdPrice: offer.iqdPrice,
+              inStock: offer.inStock,
+            });
+          if (row === undefined) return false;
+
+          // The history's rows are keyed by the Vendor and the Part, not by
+          // the Offer, so they stay; this one marks the removal, with the
+          // prices and the stock the Offer had.
+          await transaction.insert(offerHistory).values({
+            vendorId,
+            ...row,
+            changedAt: params.getRemovedAt(),
+            change: 'removed',
+            changedBy: params.getCallerId(),
+          });
+          return true;
+        });
+
+      return Either.right(removed);
+    } catch (error) {
+      this.logger.error(error, 'An Offer could not be removed');
+      return Either.left(databaseErrorOf(error, 'An Offer could not be removed'));
+    }
   }
 
   async listByVendor(
@@ -385,9 +501,7 @@ export class DatabaseOfferStore implements OfferStore {
       return Either.right(Option.none());
     }
 
-    // The Vendor is part of what is asked, so that another Vendor's Offer is
-    // not found.
-    return this.readOneWhere(and(eq(offer.vendorId, vendorId), eq(offer.id, offerId)));
+    return this.readOneWhere(ofTheVendor(vendorId, offerId));
   }
 
   async readByPart(
