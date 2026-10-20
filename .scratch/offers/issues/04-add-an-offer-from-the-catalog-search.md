@@ -8,7 +8,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] **The design.** Before building, the search's results and the Offer form are shown to the owner in the built-in browser, in two or three choices in the dashboard's look. The owner picks one, and the choice is recorded under Comments.
+- [x] **The design.** Before building, the search's results and the Offer form are shown to the owner in the built-in browser, in two or three choices in the dashboard's look. The owner picks one, and the choice is recorded under Comments.
 - [x] **The catalog search's answer.** `GET v1/parts` gains, for a Vendor's own Login, and for the Admin when a `vendorId` is given, the identifier of that Vendor's Offer for each Part when there is one. It never gives another Vendor's. `pnpm api-client:write` is run, and the description and the client are committed.
 - [x] **The search screen** in the portal, below the Offers screen, with a field, a Category filter by the shared terms, and paged results. Each shows the Part's name, manufacturer and key part numbers `AlwaysEnglish`, its Category and its photo or `CategoryIcon`. A Part the Vendor offers is marked and leads to its Offer. When nothing matches, the screen says so. The Offers screen's add button and its empty message lead here.
 - [x] **The Offer form**, built with React Hook Form, holds the Part at its head, the USD and IQD fields, the in-stock switch, which starts on, and the warranty field. Before sending, it turns Arabic-Indic and Eastern Arabic-Indic digits into Western digits and drops thousands separators, spaces and the Arabic thousands separator. Every reason the API gives has a message in the three languages, shown beside its field.
@@ -71,3 +71,15 @@ Everything but the look is built and tested. The screens are drawn as the recomm
 2. **The Offer form:** A, the Part on a Sheet panel, each price on its own row, the switch, the warranty, a full-width button (built, recommended); B, the two prices side by side with the currency inside the field; C, the Part between rules and the button pinned to the bottom.
 3. **The note after a save:** A, one Confirmed Green line with a tick (built, recommended); B, a panel with a Confirmed Green edge, a title and a link to the Offers.
 4. **Where an offered Part leads:** A, a screen of the Offer, which ticket 05 makes the form (built, recommended); B, the Offers screen searched for the Part's number.
+
+### 20 October 2026: the owner's design choices
+
+The owner went through the four decisions on the page of choices:
+
+- **A Part the search found (#d1): C**, the part numbers on a line of their own, as recommended, over the Catalog's one secondary line as built and over an outlined Add or Open at the row's end.
+- **The Offer form (#d2): A**, as built and recommended: the Part on a Sheet panel, each price on its own row, the switch, the warranty and a full-width button, over the prices side by side with the currency inside the field and over the button pinned to the bottom of the screen.
+- **The note after a save (#d3): B**, a Sheet panel with a Confirmed Green edge, its title "Offer added", the sentence that names the Part and a link to the Offers, **against the recommendation** of one Confirmed Green line with a tick.
+- **Where an offered Part leads (#d4): A**, the Offer's own screen, as built and recommended, over the Offers screen searched for the Part's number.
+
+The row and the note were changed to the choices; the note's title and its link, "See your Offers", are new text in the three languages, drafted and marked for review. The platform's line that adds an Offer now leaves the search by the note's link, and the accessibility line of the search now checks it with the note shown, the Part just offered marked. The dashboard's DESIGN.md records the portal's catalog search and its layout, a Part it found, the Offer form, the switch, the note after an Offer is added, an Offer's screen and where their plates are.
+
