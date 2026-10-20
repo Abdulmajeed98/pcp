@@ -83,3 +83,5 @@ The owner went through the four decisions on the page of choices:
 
 The row and the note were changed to the choices; the note's title and its link, "See your Offers", are new text in the three languages, drafted and marked for review. The platform's line that adds an Offer now leaves the search by the note's link, and the accessibility line of the search now checks it with the note shown, the Part just offered marked. The dashboard's DESIGN.md records the portal's catalog search and its layout, a Part it found, the Offer form, the switch, the note after an Offer is added, an Offer's screen and where their plates are.
 
+
+On `1020848`, with the integration branch's tip `db07b43` already in the branch (the merge had nothing to bring), `pnpm integration:check` passes with 354 tests, `pnpm check` passes, and `pnpm platform:check` passes with 156 tests.
