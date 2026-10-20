@@ -6,7 +6,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The endpoint.** `GET v1/parts/missing-specifications`, for the `admin` role only, through `ListPartsMissingSpecificationsQuery` and `core`'s `PagingRequest`. It answers one page of Parts that have at least one Offer, from any Vendor, expired or not, and lack at least one needed specification. Each Part has its identifier, Category, name and manufacturer, the path and English label of each missing needed specification, and how many Offers it has. The Parts are ordered by Category in the catalog's order, then by Offers, most first, then by name. The needed specifications are read from each Category's specification list in code, and what counts as missing is what the Part's page already marks as missing, "0 means not known" among it. So a change to the list in code changes the answer at once.
 - [x] `pnpm api-client:write` is run, and the description and the client are committed.

@@ -1,6 +1,6 @@
 # Spec: Offers
 
-Status: ready-for-agent
+Status: resolved
 
 This is `offers`, the fourth module in the build order of [the MVP spec](../mvp/spec.md)'s capability map. It covers the requirements OFF-1 to OFF-11, and the list of CAT-8, which `catalog` left for this module. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0005](../../docs/adr/0005-specifications-as-one-document-per-part.md), [ADR-0007](../../docs/adr/0007-a-look-and-components-for-each-app.md), [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md) and [ADR-0009](../../docs/adr/0009-vendors-in-the-database-logins-in-keycloak.md). It builds on the conventions that `languages`, `catalog` and `accounts` recorded in the MVP spec.
 

@@ -10,7 +10,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 
 **Blocked by:** 03, 04, 05, 06, 07, 08
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] In a fresh clone in a new directory, with no `.env` and no Docker volumes left from earlier runs, these all pass, with none of the three apps started by hand:
   - one install;
@@ -20,7 +20,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - `pnpm services:up`, and then `pnpm services:check`;
   - the browser's one-time install, and then `pnpm platform:check`.
 - [x] Git reports a clean working tree after every command above. No password and no secret is committed.
-- [ ] The owner is asked to check these once, in the owner's own browser. What they saw, or that it is still to be done, is recorded under Comments:
+- [x] The owner is asked to check these once, in the owner's own browser. What they saw, or that it is still to be done, is recorded under Comments:
   - A Vendor, made in the Admin console and logged in, adds a few real Parts' Offers from the catalog search, changes one, removes one and confirms all, in Kurdish and in English.
   - The Admin, acting as a Vendor, adds an Offer under the band.
   - The Offers screen, the search, the form, Expiring Offers and Missing specifications match DESIGN.md, and Impeccable's design hook raises nothing left unanswered.
@@ -32,9 +32,9 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - [ ] The confirm-all button reached in the banner with a thumb.
   - [ ] Expiring Offers' WhatsApp link opens the WhatsApp app on the Admin's phone.
 - [x] **Recorded in the MVP spec.** The Technology section gains `offers`' place in the order of work and a part of its own, **The offers module's conventions**: the API as the source of time and how a test moves it; the rule for a visible Offer, written once; how prices are stored and answered; the 14-day and 3-day constants and the days since Confirmation; the Offer history and what it records; the endpoints; the portal's screens and their addresses; and the two Admin lists. The Admin console's list of screens and the accessibility tests' list are brought up to date. CAT-8 says its list exists.
-- [ ] Whether an ADR is needed for storing USD in cents, or for keeping the history apart from the Offer, is decided with the owner, and the answer is recorded under Comments.
-- [ ] The spec's Status becomes `resolved`, and each ticket's too.
-- [ ] The work is committed, leaving `pnpm check` passing.
+- [x] Whether an ADR is needed for storing USD in cents, or for keeping the history apart from the Offer, is decided with the owner, and the answer is recorded under Comments.
+- [x] The spec's Status becomes `resolved`, and each ticket's too.
+- [x] The work is committed, leaving `pnpm check` passing.
 
 ## Comments
 
@@ -91,3 +91,29 @@ Not done in this run, which has no access to the owner's browser. Each is put to
 ### 20 October 2026: the ADR question, for the owner
 
 Whether an ADR is needed for storing USD in cents, or for keeping the history apart from the Offer. Neither was challenged during the work, which the spec named as the reason to write one; both are now recorded among the conventions in the MVP spec. The recommendation put to the owner: none for the cents, since a later change to a decimal column is a migration that loses nothing; one short ADR for the history, since it is the one decision whose undoing would lose what cannot be reconstructed (OFF-10), and a later tidy-up that gave `offer_history` a foreign key to `offer`, with a cascade, would delete an Offer's history with each removal.
+
+### 20 October 2026: the owner's answers
+
+- **The history apart from the Offer: an ADR.** [ADR-0010](../../../docs/adr/0010-offer-history-kept-apart-from-the-offer.md) records it, with the options it was chosen over and what a foreign key to `offer` would cost, and the MVP spec's offers conventions and its Order of work link to it.
+- **USD in cents: no ADR.** A later change to a decimal column is a migration that loses nothing (cents divided by 100), nothing during the work challenged it, which the spec named as the reason to write one, and the MVP spec's conventions record the rule and why: no frontend meets a binary fraction, and the check of at most two decimals is a check of whole cents.
+- **The five checks in the owner's browser** stay to be done, as the ticket allows, their boxes open above, with the steps below.
+- **The Arabic counting sentences** say one and two in words, with no number, as the owner chose. Below.
+
+### 20 October 2026: the Arabic forms for one and two
+
+Every Arabic counting sentence of this module now writes its `one` and `two` forms without the count: "تم التأكيد قبل يوم" and "قبل يومين", "ينتهي خلال يوم" and "خلال يومين", "منتهي الصلاحية، تم التأكيد قبل يوم", "ضمان شهر" and "شهرين", "عرض واحد" and "عرضان" for the count of Offers and the banner's counts, "تم العثور على عرض واحد" and "قطعة واحدة", "تم تأكيد عرض واحد." and "عرضين.". A count of a thing alone takes واحد, so that "عرض" is not read as the word on a label; a length of time does not. "Expires in" now says خلال in every form, as the owner's example did, where it said بعد. The `zero` forms and the forms for 3 and more are as they were. They are still drafts under LANG-7.
+
+- **The check.** The language check lets a form for none, one or two say its count in a word, and asks every value only of the forms for many counts, so `pnpm check` passes with no change to it.
+- **A test changed with it.** The language line of the banner and confirm-all waited for the count's own element, `confirmed-count`, after confirming all. The line's Vendor has one Offer and its browser opens the portal in Arabic, where the result now writes no count, so it waits for the result itself, `confirmed`.
+- **The language lines** of `dashboard-languages.spec.ts` pass, all 31, under the e2e lock (`pnpm exec nx e2e @pcp/e2e --skip-nx-cache -- src/dashboard-languages.spec.ts`).
+
+### 20 October 2026: the steps for the checks in the owner's browser
+
+- **Starting the apps.** Until `offers/integration` is merged into `main`, from the integration worktree, `.claude/worktrees/offers-integration`, whose `.env` is the owner's: `NX_DAEMON=false pnpm exec nx serve @pcp/api` (port 3001) and `NX_DAEMON=false pnpm exec nx serve @pcp/dashboard` (port 3002), then http://localhost:3002. The owner's services are running and their database has every migration.
+- **Logins.** The Admin console with the development Admin, `DEVELOPMENT_ADMIN_NAME` and `DEVELOPMENT_ADMIN_PASSWORD` in `.env`. A Vendor is made in the Admin console, under Vendors, and its temporary password is shown with the hand-over; it logs in, in a private window since a browser holds one login, with its login phone number, and chooses its own password. Real Parts are found by name, such as "Ryzen 5 7600". The Admin acts as it with "Open its portal" on its page.
+- **The counting sentences** for 0, 1, 2, 3, 11 and 100 are drawn, in the three languages with each one's plural form, on a page outside the repository, `counting-sentences/index.html` in the session's notes for this ticket, by i18next from the committed files.
+- **Expiring Offers' WhatsApp link** needs a Vendor listed, which needs an Offer confirmed more than 11 days ago. One of the check's Vendor's Offers is moved back by hand in the development database: `docker exec pc-part-pickers-postgres-1 psql -U pcp -d pcp -c "update offer set confirmed_at = confirmed_at - interval '12 days' where id = (select o.id from offer o join vendor v on v.id = o.vendor_id where v.name = '<the Vendor's name>' order by o.confirmed_at limit 1)"`. The Vendor's banner and "Expires in 2 days" show too, and confirm-all brings the Offer back.
+
+### 20 October 2026: closed
+
+The spec's status is resolved, as is every ticket of the module. The checks in the owner's browser and on a phone stay open, as recorded above.

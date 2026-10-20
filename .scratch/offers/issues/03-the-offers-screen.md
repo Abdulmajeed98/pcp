@@ -6,7 +6,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The design.** Before building, the Offers screen's layout, the row of an Offer and the banner are shown to the owner in the built-in browser. Two or three choices are drawn in the dashboard's look, Rate Board, and the owner picks one. The choice is recorded under Comments.
 - [x] **The portal's screens.** The Offers screen is the portal's first screen. The details screen moves to `details`, with the contact details form below it. The top bar gains the two sections, Offers and Details. Every link between screens stays relative to the route, so the portal's own router and the acting frame both serve them unchanged.

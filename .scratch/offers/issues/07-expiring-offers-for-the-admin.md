@@ -6,7 +6,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The endpoint.** `GET v1/offers/expiring`, for the `admin` role only, through `ListVendorsWithExpiringOffersQuery` and `core`'s `PagingRequest`. It answers one page of active Vendors that have at least one Expired Offer or Offer about to expire. Each Vendor has its identifier, its name, its phone number and WhatsApp number as `{ international, national }`, and the two counts. Vendors are ordered by the soonest expiry among their Offers, an Expired Offer counting as sooner than any other, then by name. Deactivated Vendors are left out.
 - [x] `pnpm api-client:write` is run, and the description and the client are committed.

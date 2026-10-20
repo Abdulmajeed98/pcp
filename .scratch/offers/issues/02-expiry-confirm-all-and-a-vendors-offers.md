@@ -6,7 +6,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The rules, once.** The 14 days and the 3 days are constants in the API's domain, the same for every Vendor. An Offer is an Expired Offer when now is more than 14 days of 24 hours after its last Confirmation; at exactly 14 days it is not yet. It is about to expire when it is not expired and its last Confirmation is more than 11 days ago. The days since Confirmation are the whole days of 24 hours elapsed, rounded down. The `Offer` entity answers all three, given now, and the Store's queries use the same constants, with now passed in from the API's clock.
 - [x] **The list.** `GET v1/vendors/{vendorId}/offers`, through `ListVendorsOffersQuery` and `core`'s `PagingRequest`, answers the Vendor's Offers, Expired Offers among them. Each has its Part's name, manufacturer, Category and photo, its prices, stock and warranty, the time of its Confirmation, the days since it, `expired` and `aboutToExpire`. It can be searched by the Part's name, manufacturer or part number, as the catalog search reads them. It is ordered by last Confirmation, oldest first, then by Part name. The answer also holds the three counts, for all the Vendor's Offers whatever the search.

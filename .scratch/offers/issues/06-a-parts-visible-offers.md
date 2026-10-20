@@ -6,7 +6,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The rule, once.** A visible Offer is not an Expired Offer and its Vendor is active. It is written in the API's domain, with its query in the Offer Store, using ticket 02's constants and now from the API's clock.
 - [x] **The endpoint.** `GET v1/parts/{partId}/offers`, public, through `ListVisibleOffersOfPartQuery`. It adds `security: []` to its `@ApiOperation`. Each Offer has the Vendor's identifier and name, the USD price as a decimal string and the IQD price as a whole number, each as entered or null, the stock, the warranty, the time of Confirmation and the days since it. In-stock Offers come first, then out-of-stock ones, and within each group the most recent Confirmation comes first, until `pricing` orders them by price. A Part that does not exist is answered 404 with `PART_NOT_FOUND`. A Part with no visible Offer is answered with an empty list.
