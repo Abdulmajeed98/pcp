@@ -6,7 +6,7 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The API.** `PUT v1/vendors/{vendorId}/offers/{offerId}`, through `EditOfferCommand`, replaces the prices, the stock and the warranty, checks them with `OfferDetails.check`, clears what it leaves out, and sets the Confirmation to now. `DELETE v1/vendors/{vendorId}/offers/{offerId}`, through `RemoveOfferCommand`, removes the Offer and answers 204. Both use `VendorAccessRule` and answer an Offer that is another Vendor's, or does not exist, with 404 and `OFFER_NOT_FOUND`.
 - [x] **The history.** An edit that changes the USD price, the IQD price or the stock adds one row, in the same transaction, with the values after the change, the time of the API's clock and the Caller's Login identifier. An edit that changes neither, or changes the warranty alone, adds none. A removal adds a row marking it. The rows stay when the Offer is removed.

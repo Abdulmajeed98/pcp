@@ -6,7 +6,7 @@
 
 **Blocked by:** 01, 03
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The design.** Before building, the search's results and the Offer form are shown to the owner in the built-in browser, in two or three choices in the dashboard's look. The owner picks one, and the choice is recorded under Comments.
 - [x] **The catalog search's answer.** `GET v1/parts` gains, for a Vendor's own Login, and for the Admin when a `vendorId` is given, the identifier of that Vendor's Offer for each Part when there is one. It never gives another Vendor's. `pnpm api-client:write` is run, and the description and the client are committed.
