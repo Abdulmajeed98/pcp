@@ -318,7 +318,7 @@ Step 1 was finished on 7 October 2026; its spec and tickets are in [.scratch/wor
 
 `accounts`, the third module, was finished on 19 October 2026; its spec and tickets are in [.scratch/accounts](../accounts/spec.md), and [ADR-0009](../../docs/adr/0009-vendors-in-the-database-logins-in-keycloak.md) records its two decisions that are costly to undo. The checks by hand in the owner's browser that its ticket 13 lists are recorded there, and its checks on a phone wait for hosting (see **Checks on a phone wait for hosting**). The conventions it set are below, under **The accounts module's conventions**, and in the commands, the development services, the settings and the end-to-end tests.
 
-`offers`, the fourth module, was finished on 20 October 2026; its spec and tickets are in [.scratch/offers](../offers/spec.md), and its code review's fixes in [review-fixes.md](../offers/review-fixes.md). The checks by hand in the owner's browser that its ticket 09 lists are recorded there, and its checks on a phone wait for hosting (see **Checks on a phone wait for hosting**). The conventions it set are below, under **The offers module's conventions**, and in the Admin console's screens, the accessibility tests and the end-to-end tests.
+`offers`, the fourth module, was finished on 20 October 2026; its spec and tickets are in [.scratch/offers](../offers/spec.md), and its code review's fixes in [review-fixes.md](../offers/review-fixes.md), and [ADR-0010](../../docs/adr/0010-offer-history-kept-apart-from-the-offer.md) records its decision that is costly to undo. The checks by hand in the owner's browser that its ticket 09 lists are still to be done, with their steps recorded there, and its checks on a phone wait for hosting (see **Checks on a phone wait for hosting**). The conventions it set are below, under **The offers module's conventions**, and in the Admin console's screens, the accessibility tests and the end-to-end tests.
 
 **Commands**
 
@@ -758,7 +758,7 @@ _Versions._
 
 **The offers module's conventions**
 
-`offers` built these once, for Offers, for `pricing` and every later module to copy. The module's tickets and its code review's fixes record what was found and why.
+`offers` built these once, for Offers, for `pricing` and every later module to copy. [ADR-0010](../../docs/adr/0010-offer-history-kept-apart-from-the-offer.md) records the one decision that is costly to undo, the Offer history kept apart from the Offer; storing USD in cents has no ADR, as the owner decided, since a later change of column loses nothing. The module's tickets and its code review's fixes record what was found and why.
 
 _The API as the source of time._
 
@@ -792,7 +792,7 @@ _The rule for a visible Offer._
 _The Offer history._
 
 - The table `offer_history` gets one row for every change to an Offer's USD price, IQD price or in-stock status (OFF-10): its `change` (`created`, `changed` or `removed`), the time from the API's clock, the Vendor, the Part, the values after the change (a removal's row holds the values the Offer had), and `changed_by`, the Caller's Login identifier, the Admin's when the Admin acts as a Vendor. It is written in the same transaction as the change.
-- It is keyed by Vendor and Part and references neither the Offer nor cascades from it, so it survives a removal and continues when the Part is offered again.
+- It is keyed by Vendor and Part and references neither the Offer nor cascades from it, so it survives a removal and continues when the Part is offered again (ADR-0010). A foreign key to `offer` would delete history at each removal.
 - A Confirmation that changes neither price nor stock adds no row, and neither does a change to the warranty alone or confirming all. An edit holds the Offer's row `FOR UPDATE` and compares by `OfferDetails.changePricesOrStockOf`, prices in whole cents, so that two edits at once each add the row their own change needs.
 - Nothing reads it back and no endpoint answers it. The integration tests read it from the database, with `offerHistoryRows()`, as the one exception to reading the platform from outside.
 
@@ -833,7 +833,7 @@ _The Vendor portal's screens and their addresses._
 - The Offers screen and the catalog search keep their search and page in the address, `?search=…&page=…`, through `pageIn` and `writePageInto` in the dashboard's `shared/lib/page-in-the-address.ts`, which `usePageInTheAddress` and the Catalog use too.
 - The Offer form is React Hook Form's, the feature `offer-form`, for a new Offer and for a change; its in-stock switch is shadcn/ui's, held to the root DESIGN.md. Removing is the feature `remove-offer`, in shadcn/ui's alert dialog, which says a refusal and stays open until the removal is done. An Offer that no longer exists, opened by an old link, shows the portal's empty state, "This Offer no longer exists".
 - **The query keys.** Every query about a Vendor's Offers is under `['offers', vendorId]` (`vendorsOffersKey`): its list, its counts and the banner, and one Offer. The portal's catalog search is a query about Parts, under `['parts', 'offered-by', vendorId, …]`, so that an Admin's change to a Part asks it again; Missing specifications is under `['parts', 'missing-specifications', …]`; Expiring Offers under `['vendors', 'expiring-offers', …]`. Every change to a Vendor's Offers (adding, saving, removing, confirming all) goes through one function, `askAgainAfterAChangeToTheOffers` in the `offer` entity, which asks all four again, also while the Admin acts as the Vendor. Saving and removing ask the Vendor's Offers again with `refetchType: 'all'` before leaving, and a removal leaves the removed Offer's own query out. `partsKey` and `vendorsKey` are in the dashboard's `shared/api/query-keys.ts`, so that a slice can name them without importing another (the code review's fixes, finding 2, both keys as the owner chose).
-- The portal's text is in `i18n`'s dashboard set, the Kurdish and Arabic drafts under LANG-7. The Offers screen's counting sentences and Category names are what `accounts` ticket 07 left waiting, and its language test now reads them.
+- The portal's text is in `i18n`'s dashboard set, the Kurdish and Arabic drafts under LANG-7. The Arabic forms for one and two say the count in words and write no number, "قبل يوم", "خلال يومين", "عرض واحد", as the owner chose on 20 October 2026 and as the language check allows a form for none, one or two; so a test never waits for a count's own element in every language. The Offers screen's counting sentences and Category names are what `accounts` ticket 07 left waiting, and its language test now reads them.
 
 _Testing Offers._
 
