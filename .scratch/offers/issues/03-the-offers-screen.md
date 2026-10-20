@@ -82,3 +82,7 @@ The owner went through the four decisions on the page of choices and took A in e
 - **The top bar's sections (#d4):** two links under the bar, the current one on a Shelf ground, over two tabs sharing the width.
 
 The dashboard's DESIGN.md records an Offer's row, the expiry banner, the Offers screen's layout, the prices on plates and the portal's sections.
+
+### 20 October 2026: merged with `offers/integration`
+
+`0c4d31e` merges the integration branch's tip, which holds tickets 06 and 08 (`d7ec2dc`, `3df9515`). The one conflict was the dashboard's DESIGN.md, where ticket 08's Missing specifications and this ticket's Offers screen each added lines beside the same ones; both are kept. The first `pnpm platform:check` after it failed one line of ticket 08's, which expected the bare `/missing-specifications` after a save, while the list returned to `?page=2`: the development database's made-up Parts with gaps, which this ticket's tests give Offers, now fill more than a page. `80a3c8b` lets that line accept the list's page. Then `pnpm integration:check` passes with 334 tests in 11 files, `pnpm check` passes, and `pnpm platform:check` passes with 143 tests.
