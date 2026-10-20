@@ -152,6 +152,9 @@ test.describe('a made-up Vendor with two Offers, added over HTTP', () => {
     await expect(
       listedOffers(page).locator('[data-testid="confirmation"][data-state="expiresIn"]'),
     ).toHaveCount(1);
+    await expect(
+      listedOffers(page).locator('[data-testid="confirmation"][data-state="expiresToday"]'),
+    ).toHaveCount(1);
 
     const answered = page.waitForResponse(
       (response) =>
@@ -171,13 +174,13 @@ test.describe('a made-up Vendor with two Offers, added over HTTP', () => {
     page,
   }) => {
     await answerTheOffersAsExpiring(page, vendor.vendorId, {
-      offers: 2,
+      offers: 3,
       expired: 1,
-      aboutToExpire: 1,
+      aboutToExpire: 2,
     });
     await openTheDashboardAs(page, vendor);
     await expect(theBanner(page)).toBeVisible();
-    await expect(listedOffers(page)).toHaveCount(2);
+    await expect(listedOffers(page)).toHaveCount(3);
 
     await expectAccessible(page);
   });

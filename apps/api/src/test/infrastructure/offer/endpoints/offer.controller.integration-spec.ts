@@ -53,6 +53,7 @@ type OfferBody = {
 // API's clock.
 type ListedOfferBody = OfferBody & {
   daysSinceConfirmation: number;
+  daysLeft: number;
   expired: boolean;
   aboutToExpire: boolean;
 };
@@ -1078,6 +1079,7 @@ describe("a Vendor's Offers", () => {
       expect(pages[0].content[0]).toEqual({
         ...first,
         daysSinceConfirmation: 0,
+        daysLeft: 13,
         expired: false,
         aboutToExpire: false,
       });
@@ -1219,6 +1221,45 @@ describe("a Vendor's Offers", () => {
 
       expect(days).toEqual([0, 0, 1, 1, 14, 15]);
     });
+
+    it('counts the days left as whole days of 24 hours until it expires, rounded down: 3 at the 11-day mark, 2 just after, 0 ("expires today") with less than a day left, and 0 once expired', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+
+      const listed = [];
+      for (const later of [
+        0,
+        aDay - 1,
+        aDay,
+        11 * aDay,
+        11 * aDay + 1,
+        12 * aDay,
+        13 * aDay,
+        13 * aDay + 1,
+        14 * aDay - 1,
+        14 * aDay,
+        14 * aDay + 1,
+        20 * aDay,
+      ]) {
+        const { daysLeft, aboutToExpire, expired } = await theOfferListed(vendor.id, later);
+        listed.push({ later, daysLeft, aboutToExpire, expired });
+      }
+
+      expect(listed).toEqual([
+        { later: 0, daysLeft: 14, aboutToExpire: false, expired: false },
+        { later: aDay - 1, daysLeft: 13, aboutToExpire: false, expired: false },
+        { later: aDay, daysLeft: 13, aboutToExpire: false, expired: false },
+        { later: 11 * aDay, daysLeft: 3, aboutToExpire: false, expired: false },
+        { later: 11 * aDay + 1, daysLeft: 2, aboutToExpire: true, expired: false },
+        { later: 12 * aDay, daysLeft: 2, aboutToExpire: true, expired: false },
+        { later: 13 * aDay, daysLeft: 1, aboutToExpire: true, expired: false },
+        { later: 13 * aDay + 1, daysLeft: 0, aboutToExpire: true, expired: false },
+        { later: 14 * aDay - 1, daysLeft: 0, aboutToExpire: true, expired: false },
+        { later: 14 * aDay, daysLeft: 0, aboutToExpire: true, expired: false },
+        { later: 14 * aDay + 1, daysLeft: 0, aboutToExpire: false, expired: true },
+        { later: 20 * aDay, daysLeft: 0, aboutToExpire: false, expired: true },
+      ]);
+    });
   });
 
   describe("a Vendor's counts of its Offers", () => {
@@ -1349,7 +1390,13 @@ describe("a Vendor's Offers", () => {
       expect(listed.counts).toEqual({ offers: 3, expired: 0, aboutToExpire: 0 });
       const anothersListed = await theListOf(another.id);
       expect(anothersListed.content).toEqual([
-        { ...anothers, daysSinceConfirmation: 20, expired: true, aboutToExpire: false },
+        {
+          ...anothers,
+          daysSinceConfirmation: 20,
+          daysLeft: 0,
+          expired: true,
+          aboutToExpire: false,
+        },
       ]);
       expect(await offerHistoryRows()).toEqual(historyBefore);
     });
@@ -1442,6 +1489,7 @@ describe("a Vendor's Offers", () => {
           ...created,
           confirmedAt: later.toISOString(),
           daysSinceConfirmation: 0,
+          daysLeft: 14,
           expired: false,
           aboutToExpire: false,
         },

@@ -711,6 +711,10 @@ export type ListedOfferResponse = {
      */
     daysSinceConfirmation: number;
     /**
+     * The whole days of 24 hours left until the Offer expires, rounded down: 0 when less than a whole day is left, which reads as "expires today", and for an Expired Offer.
+     */
+    daysLeft: number;
+    /**
      * Whether the Offer is an Expired Offer: its last Confirmation is more than 14 days old, and Shoppers no longer see it.
      */
     expired: boolean;

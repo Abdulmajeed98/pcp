@@ -542,9 +542,9 @@ test("the banner and confirm-all's result pass the checks of every screen of the
   page,
 }) => {
   await answerTheOffersAsExpiring(page, vendor.vendorId, {
-    offers: 2,
+    offers: 3,
     expired: 1,
-    aboutToExpire: 1,
+    aboutToExpire: 2,
   });
   await openTheDashboardAs(page, vendor);
   await expect(theBanner(page)).toBeVisible();
