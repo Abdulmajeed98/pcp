@@ -34,7 +34,7 @@ export function OffersPage() {
   return (
     <div data-testid="offers-screen" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold sm:text-2xl">{t('OffersScreen.title')}</h1>
+        <h1 className="screen-title">{t('OffersScreen.title')}</h1>
         <Link
           to="add"
           data-testid="add-offer"

@@ -141,7 +141,7 @@ test.describe("a Part's photo, from its page", () => {
     return (await photo.getAttribute('src')) ?? '';
   }
 
-  test('the Admin adds a photo, which the page and the Catalog show in place of the icon, and a second replaces it at a new address', async ({
+  test('the Admin adds a photo, which the page shows in place of the icon, also when opened from the Catalog, and a second replaces it at a new address', async ({
     page,
   }) => {
     await page.getByLabel('Add a photo').setInputFiles(aMadeUpPhoto([200, 40, 40]));
@@ -157,9 +157,16 @@ test.describe("a Part's photo, from its page", () => {
 
     await page.getByRole('link', { name: 'Catalog' }).click();
     await searchTheCatalog(page, { words: part.word });
+    // The Catalog's rows show no picture (redesign ticket 07); the Part's
+    // page, opened from its row, shows the second photo.
     const row = rowOf(page, part.name);
-    await expect(row.locator('img')).toHaveAttribute('src', second);
-    await expect(row.getByTestId('category-icon')).toHaveCount(0);
+    await expect(row.locator('img, [data-testid="category-icon"]')).toHaveCount(0);
+    await row.getByRole('link', { name: part.name }).click();
+    await expect(page.getByRole('img', { name: `Photo of ${part.name}` })).toHaveAttribute(
+      'src',
+      second,
+    );
+    await expect(page.getByTestId('category-icon')).toHaveCount(0);
   });
 
   test('a file that is not a picture is refused in plain words', async ({ page }) => {

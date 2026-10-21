@@ -4,6 +4,17 @@
     <meta charset="utf-8" />
     <title>Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      // The colour scheme chosen with the scheme switch, set before the first
+      // paint so that no screen flashes the other scheme (DESIGN.md). The key
+      // is the one src/shared/lib/scheme.ts keeps it under.
+      try {
+        var scheme = localStorage.getItem('scheme');
+        if (scheme === 'light' || scheme === 'dark') {
+          document.documentElement.dataset.scheme = scheme;
+        }
+      } catch (refused) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

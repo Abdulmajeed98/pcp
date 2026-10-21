@@ -1,9 +1,11 @@
 import { cn } from 'cn';
 import type * as React from 'react';
 
-// shadcn/ui's table, in the Mira style, with its text at the small size: the
-// root DESIGN.md sets no text under 14 pixels. A table wider than the screen
-// scrolls inside its own box, so that the page never scrolls sideways.
+// shadcn/ui's table, in the Mira style, held to the dashboard's DESIGN.md:
+// its text at the small size, never under 14 pixels; a header of Note Grey
+// labels in sentence case, with no fill and no rule; rows 48 pixels high for
+// one line, divided by Rule lines. A table wider than the screen scrolls
+// inside its own box, so that the page never scrolls sideways.
 
 function Table({ className, ...props }: React.ComponentProps<'table'>) {
   return (
@@ -21,7 +23,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
   return (
     <thead
       data-slot="table-header"
-      className={cn('[&_tr]:border-b', className)}
+      className={cn('[&_tr]:border-b-0', className)}
       {...props}
     />
   );
@@ -48,7 +50,13 @@ function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
 }
 
 function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
-  return <tr data-slot="table-row" className={cn('border-b', className)} {...props} />;
+  return (
+    <tr
+      data-slot="table-row"
+      className={cn('border-b border-rule', className)}
+      {...props}
+    />
+  );
 }
 
 function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
@@ -56,7 +64,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
     <th
       data-slot="table-head"
       className={cn(
-        'h-9 px-2 text-start align-middle font-medium whitespace-nowrap text-muted-foreground first:ps-0',
+        'h-9 px-2 text-start align-middle font-normal whitespace-nowrap text-muted-foreground first:ps-0',
         className,
       )}
       {...props}
@@ -68,7 +76,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
   return (
     <td
       data-slot="table-cell"
-      className={cn('px-2 py-1.5 align-middle first:ps-0', className)}
+      className={cn('h-12 px-2 py-1.5 align-middle first:ps-0', className)}
       {...props}
     />
   );

@@ -35,7 +35,7 @@ export function CatalogSearchPage() {
     <div data-testid="catalog-search" className="flex flex-col gap-4">
       <BackLink to="..">{t('CatalogSearch.back')}</BackLink>
       <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold sm:text-2xl">{t('CatalogSearch.title')}</h1>
+        <h1 className="screen-title">{t('CatalogSearch.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('CatalogSearch.intro')}</p>
       </div>
       <output

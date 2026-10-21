@@ -17,7 +17,7 @@ export function ExpiringOffersPage() {
 
   return (
     <div className="flex max-w-2xl min-w-0 flex-col gap-4">
-      <h1 className="text-xl font-semibold sm:text-2xl">Expiring Offers</h1>
+      <h1 className="screen-title">Expiring Offers</h1>
       <p className="text-sm text-muted-foreground">
         Active Vendors with Offers expired or about to expire, most urgent first, to remind.
         The platform sends them nothing itself.

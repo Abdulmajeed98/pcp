@@ -12,7 +12,7 @@ export function PortalNotFoundPage() {
 
   return (
     <div className="flex flex-col items-start gap-4">
-      <h1 className="text-xl font-semibold sm:text-2xl">{t('PortalNotFound.title')}</h1>
+      <h1 className="screen-title">{t('PortalNotFound.title')}</h1>
       <p>{t('PortalNotFound.message')}</p>
       <Link to=".." className={buttonVariants({ variant: 'outline' })}>
         {t('PortalNotFound.openOffers')}

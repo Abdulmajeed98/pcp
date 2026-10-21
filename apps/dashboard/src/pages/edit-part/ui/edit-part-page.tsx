@@ -75,7 +75,7 @@ export function EditPartPage({ returnTo }: { returnTo?: ReturnTo }) {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery(back.address)}>{back.name}</BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">Edit the Part</h1>
+      <h1 className="screen-title">Edit the Part</h1>
       <p>
         Category: <span data-testid="category">{categoryName(category.key)}</span>. A Part's
         Category cannot be changed.

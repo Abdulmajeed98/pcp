@@ -60,7 +60,32 @@ export async function openTheDashboardAs(
   if ('vendorName' in login) {
     await expect(vendorNameInTheFrame(page)).toHaveText(login.vendorName);
   } else {
-    await expect(page.getByTestId('caller-name')).toHaveText(login.name);
+    await withTheMenuOpenOnAPhone(page, async () => {
+      await expect(page.getByTestId('caller-name')).toHaveText(login.name);
+    });
+  }
+}
+
+// Does what a test asks with the Admin console's menu sheet open, on a phone,
+// where the frame keeps the caller's name and Log out in it, and closes the
+// sheet again unless what was done left the page. On a wider screen, and in
+// the Vendor portal, both are in the frame's top bar and the sheet is not
+// opened.
+async function withTheMenuOpenOnAPhone(
+  page: Page,
+  then: () => Promise<void>,
+): Promise<void> {
+  await page.getByRole('banner').first().waitFor();
+  const menuButton = page.getByRole('button', { name: 'Sections' });
+  const onAPhone = await menuButton.isVisible();
+  if (onAPhone) await menuButton.click();
+  await then();
+  // While the sheet is open, what is behind it is hidden from the
+  // accessibility tree, the menu button with it, so the sheet itself is
+  // asked for.
+  if (onAPhone && (await page.getByRole('dialog').isVisible())) {
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 }
 
@@ -68,7 +93,7 @@ export async function openTheDashboardAs(
 // screen. The button's text is in the page's language, so it is found by
 // what it is and not by what it says.
 export async function logOutOfTheDashboard(page: Page): Promise<void> {
-  await page.getByTestId('log-out').click();
+  await withTheMenuOpenOnAPhone(page, () => page.getByTestId('log-out').click());
   await expectLoginScreen(page);
 }
 

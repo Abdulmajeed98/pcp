@@ -63,7 +63,7 @@ export function EditVendorPage() {
       <BackLink to={keepingTheQuery(`/vendors/${vendorId}`)}>
         <AsWritten>{vendor.data.name}</AsWritten>
       </BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">
+      <h1 className="screen-title">
         Edit <AsWritten>{vendor.data.name}</AsWritten>
       </h1>
       <VendorForm

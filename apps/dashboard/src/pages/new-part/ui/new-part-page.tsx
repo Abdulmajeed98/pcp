@@ -42,7 +42,7 @@ export function NewPartPage() {
     return (
       <div className="flex flex-col gap-4">
         <BackLink to={keepingTheQuery('/catalog/new')}>Choose a Category</BackLink>
-        <h1 className="text-xl font-semibold sm:text-2xl">Category not found</h1>
+        <h1 className="screen-title">Category not found</h1>
         <p>The catalog has no Category of that name.</p>
       </div>
     );
@@ -51,9 +51,7 @@ export function NewPartPage() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/catalog/new')}>Choose another Category</BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">
-        New {categoryName(category.key)}
-      </h1>
+      <h1 className="screen-title">New {categoryName(category.key)}</h1>
       <PartForm
         category={category}
         submitLabel="Create the Part"

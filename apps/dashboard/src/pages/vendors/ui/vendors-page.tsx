@@ -42,7 +42,7 @@ function TheList() {
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold sm:text-2xl">Vendors</h1>
+        <h1 className="screen-title">Vendors</h1>
         <Link
           to={keepingTheQuery('/vendors/new')}
           className={buttonVariants({ variant: 'outline' })}

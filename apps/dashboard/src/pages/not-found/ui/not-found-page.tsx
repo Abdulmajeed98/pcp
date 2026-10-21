@@ -7,7 +7,7 @@ import { buttonVariants } from '@/shared/ui';
 export function NotFoundPage() {
   return (
     <div className="flex flex-col items-start gap-4">
-      <h1 className="text-xl font-semibold sm:text-2xl">Screen not found</h1>
+      <h1 className="screen-title">Screen not found</h1>
       <p>This address matches no screen of the Admin console.</p>
       <Link to="/catalog" className={buttonVariants({ variant: 'outline' })}>
         Open the Catalog

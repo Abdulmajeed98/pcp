@@ -37,7 +37,7 @@ function TheList() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <h1 className="text-xl font-semibold sm:text-2xl">Missing specifications</h1>
+      <h1 className="screen-title">Missing specifications</h1>
       <p className="text-sm text-muted-foreground">
         Parts with an Offer that lack a specification a Compatibility Rule reads. They are
         still shown to Shoppers.
