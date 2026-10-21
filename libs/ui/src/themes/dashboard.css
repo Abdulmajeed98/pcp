@@ -390,3 +390,40 @@
     }
   }
 }
+
+/*
+ * 8. Something leaves a list: a row the list drops while the user is on it,
+ * marked `data-leaving` (and inert) on itself or on its table row. First its
+ * opacity to 0, 150 ms; then its space closes, `grid-template-rows` from
+ * `1fr` to `0fr`, 200 ms on the in-out curve, so that the rows below rise
+ * into place rather than jump. What it holds is its one child, which holds
+ * the row's padding, so that the space closes whole. A row that comes back
+ * takes the same transitions back from where it is. With reduced motion it
+ * fades, then its space closes at once.
+ */
+@utility leaves {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    opacity 150ms var(--ease-out),
+    grid-template-rows 200ms var(--ease-in-out) 150ms;
+
+  & > * {
+    min-height: 0;
+  }
+
+  &:where([data-leaving], [data-leaving] *) {
+    opacity: 0;
+    grid-template-rows: 0fr;
+  }
+
+  &:where([data-leaving], [data-leaving] *) > * {
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition:
+      opacity 150ms var(--ease-out),
+      grid-template-rows 0s 150ms;
+  }
+}
