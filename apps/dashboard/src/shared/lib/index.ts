@@ -6,4 +6,3 @@ export { chooseScheme, type Scheme, schemes, useScheme } from './scheme';
 export { westernDigitsIn } from './western-digits';
 export { whatsAppChatWith } from './whatsapp';
 export { useWideScreen } from './wide-screen';
-export { type Shown, useWithTheLeaving } from './with-the-leaving';

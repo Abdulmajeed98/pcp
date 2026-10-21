@@ -1,11 +1,13 @@
+import type { ListedOfferResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
 import { PackageIcon, PlusIcon, SearchXIcon } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
 import type { OffersSearch, VendorsOffersAnswered } from '@/entities/offer';
 import { Trans, useTranslation } from '@/shared/i18n';
-import { useWideScreen, useWithTheLeaving } from '@/shared/lib';
+import { useLeavingRows, useWideScreen } from '@/shared/lib';
 import {
   buttonVariants,
   Empty,
@@ -25,9 +27,8 @@ import { OffersList, OffersTable } from './offer-rows';
 // Offers of this page, oldest Confirmation first, a table from 64rem and
 // two-line rows on a phone, then the way to the other pages. While a later
 // answer is on its way, the last one stays, at full strength, and a line
-// beside the count says that the next is on its way. A row the list drops
-// while the Vendor is on it, as the Need confirming tab does after Confirm
-// all, leaves as Motion 8 says.
+// beside the count says that the next is on its way. A search that finds
+// nothing says so in the empty state.
 export function ListedOffers({
   listed,
   searching,
@@ -43,20 +44,10 @@ export function ListedOffers({
   onSearch: (search: OffersSearch) => void;
 }) {
   const { t } = useTranslation();
-  const wide = useWideScreen();
-  const { content, totalElements, pageNumber, totalPages, first, last, asked } = listed;
-  const [shown, left] = useWithTheLeaving(content, (offer) => offer.id, asked);
+  const { totalElements, pageNumber, totalPages, first, last, asked } = listed;
   const searched = search.words.trim() !== '';
 
-  if (shown.length === 0 && totalElements === 0) {
-    return searched ? (
-      <NothingFound words={search.words.trim()} />
-    ) : (
-      <NoneInTheState search={search} />
-    );
-  }
-
-  const Rows = wide ? OffersTable : OffersList;
+  if (totalElements === 0 && searched) return <NothingFound words={search.words.trim()} />;
 
   return (
     <section
@@ -67,31 +58,31 @@ export function ListedOffers({
       <p className="flex min-h-control flex-wrap items-center justify-end gap-x-3 text-sm text-muted-foreground">
         <span aria-live="polite">{searching && t('OffersScreen.searching')}</span>
         <span id="offers-listed" data-testid="offers-counted">
-          <Trans
-            i18nKey={searched ? 'OffersScreen.found' : 'OffersScreen.counted'}
-            count={totalElements}
-            components={{
-              count: (
-                <span data-testid="offers-count" className="tabular-nums">
-                  {formatNumber(totalElements)}
-                </span>
-              ),
-            }}
-          />
+          {totalElements > 0 && (
+            <Trans
+              i18nKey={searched ? 'OffersScreen.found' : 'OffersScreen.counted'}
+              count={totalElements}
+              components={{
+                count: (
+                  <span data-testid="offers-count" className="tabular-nums">
+                    {formatNumber(totalElements)}
+                  </span>
+                ),
+              }}
+            />
+          )}
         </span>
       </p>
 
-      {shown.length > 0 ? (
-        <Rows shown={shown} settling={settling} onLeft={left} />
-      ) : (
-        <PastTheLastPage
-          onFirstPage={() => onSearch({ ...search, page: 0 })}
-          words={{
-            title: t('OffersScreen.pastTheLast'),
-            firstPage: t('OffersScreen.firstPage'),
-          }}
-        />
-      )}
+      {/* The rows of one answer to one search, tab and page: another is drawn
+          afresh, as changing what is listed is still (Motion 9). */}
+      <TheRows
+        key={asked}
+        listed={listed}
+        settling={settling}
+        search={search}
+        onSearch={onSearch}
+      />
 
       {totalPages > 1 && (
         <ListPages
@@ -120,20 +111,76 @@ export function ListedOffers({
   );
 }
 
+// The rows, with those the same answer, asked again, no longer holds left in
+// their places until they have left, and those new to it arriving, as Motion
+// 8 says (`useLeavingRows`), as the Need confirming tab drops its rows after
+// Confirm all. A tab with nothing in its state says so in one line, which
+// arrives in step as its last rows leave.
+function TheRows({
+  listed,
+  settling,
+  search,
+  onSearch,
+}: {
+  listed: VendorsOffersAnswered;
+  settling: boolean;
+  search: OffersSearch;
+  onSearch: (search: OffersSearch) => void;
+}) {
+  const { t } = useTranslation();
+  const wide = useWideScreen();
+  const shown = useLeavingRows<ListedOfferResponse>(
+    listed.content,
+    (offer) => offer.id,
+    listed.pageNumber,
+  );
+  // Whether this answer's rows were ever drawn, so that the line of a tab
+  // left with nothing arrives, rather than stands as it does on a tab that
+  // had nothing to begin with.
+  const [hadRows, setHadRows] = useState(listed.content.length > 0);
+  if (!hadRows && listed.content.length > 0) setHadRows(true);
+  const Rows = wide ? OffersTable : OffersList;
+
+  return (
+    <>
+      {shown.length > 0 && <Rows shown={shown} settling={settling} />}
+      {listed.totalElements === 0 ? (
+        <NoneInTheState search={search} arriving={hadRows} />
+      ) : (
+        listed.content.length === 0 && (
+          <PastTheLastPage
+            onFirstPage={() => onSearch({ ...search, page: 0 })}
+            words={{
+              title: t('OffersScreen.pastTheLast'),
+              firstPage: t('OffersScreen.firstPage'),
+            }}
+          />
+        )
+      )}
+    </>
+  );
+}
+
 // A tab with no Offer in its state says so in one Note Grey line, between
-// Rule lines, and arrives as Motion 6 says when its last row has left.
-function NoneInTheState({ search }: { search: OffersSearch }) {
+// Rule lines. When its last rows have just left, it arrives as a row does:
+// its space opens in step with theirs closing, and then it fades in.
+function NoneInTheState({ search, arriving }: { search: OffersSearch; arriving: boolean }) {
   const { t } = useTranslation();
 
   return (
-    <p
+    <div
       data-testid="no-offer-in-state"
-      className="arrives flex min-h-control items-center border-y border-rule text-sm text-muted-foreground"
+      data-arriving={arriving || undefined}
+      className="leaves"
     >
-      {search.state === 'out-of-stock'
-        ? t('OffersScreen.noneOutOfStock')
-        : t('OffersScreen.noneNeedsConfirming')}
-    </p>
+      <div>
+        <p className="flex min-h-control items-center border-y border-rule text-sm text-muted-foreground">
+          {search.state === 'out-of-stock'
+            ? t('OffersScreen.noneOutOfStock')
+            : t('OffersScreen.noneNeedsConfirming')}
+        </p>
+      </div>
+    </div>
   );
 }
 

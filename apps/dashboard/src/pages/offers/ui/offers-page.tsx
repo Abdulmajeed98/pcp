@@ -1,3 +1,4 @@
+import { cn } from 'cn';
 import { PlusIcon } from 'lucide-react';
 import { Link } from 'react-router';
 
@@ -50,10 +51,10 @@ export function OffersPage() {
     counts !== undefined && counts.expired + counts.aboutToExpire > 0 ? counts : null;
 
   return (
-    <div
-      data-testid="offers-screen"
-      className="flex min-w-0 flex-col gap-4 [--leaves-gap:1rem] lg:gap-6 lg:[--leaves-gap:1.5rem]"
-    >
+    // The blocks below the title row hold the space above them, so that one
+    // that leaves or arrives takes its gap with it (Motion 8, the No Snap
+    // Rule): a gap of the column's own would be taken out in one frame.
+    <div data-testid="offers-screen" className="flex min-w-0 flex-col">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="screen-title">{t('OffersScreen.title')}</h1>
         {wide ? (
@@ -85,24 +86,34 @@ export function OffersPage() {
       </div>
 
       {listed.error ? (
-        <Alert variant="destructive" data-testid="refusal">
-          <AlertTitle>{t('OffersScreen.notListed')}</AlertTitle>
-          <AlertDescription>
-            <WhyNotAnsweredInThePortal error={listed.error} />
-          </AlertDescription>
-        </Alert>
+        <div className={gapAbove}>
+          <Alert variant="destructive" data-testid="refusal">
+            <AlertTitle>{t('OffersScreen.notListed')}</AlertTitle>
+            <AlertDescription>
+              <WhyNotAnsweredInThePortal error={listed.error} />
+            </AlertDescription>
+          </Alert>
+        </div>
       ) : listed.data === undefined ? (
-        <Reading />
+        <div className={gapAbove}>
+          <Reading />
+        </div>
       ) : (
         <>
           <Leaving value={needingConfirmation}>
-            {(needing) => <ExpiryBanner counts={needing} confirming={confirming} />}
+            {(needing) => (
+              <div className={gapAbove}>
+                <ExpiryBanner counts={needing} confirming={confirming} />
+              </div>
+            )}
           </Leaving>
-          <ConfirmedAll confirming={confirming} />
+          <ConfirmedAll confirming={confirming} gapAbove={gapAbove} />
           {listed.data.counts.offers === 0 ? (
-            <NoOffers />
+            <div className={gapAbove}>
+              <NoOffers />
+            </div>
           ) : (
-            <div className="flex min-w-0 flex-col gap-4">
+            <div className={cn('flex min-w-0 flex-col gap-4', gapAbove)}>
               <StateTabs search={search} counts={listed.data.counts} />
               <SearchForm search={search} onSearch={show} />
               <ListedOffers
@@ -119,6 +130,10 @@ export function OffersPage() {
     </div>
   );
 }
+
+// The gap above each block below the title row: 16 pixels on a phone, 24
+// from 64rem.
+const gapAbove = 'pt-4 lg:pt-6';
 
 // Rows sketched in Raised Stone where the first answer will be, in the shape
 // of the rows to come, still: they do not shimmer.
