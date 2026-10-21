@@ -1,4 +1,4 @@
-import { MousePointerClickIcon } from 'lucide-react';
+import { cn } from 'cn';
 import { useOutlet } from 'react-router';
 
 import { usePageInTheAddress, useWideScreen } from '@/shared/lib';
@@ -12,49 +12,44 @@ import { ListedParts } from './listed-parts';
 // The Admin console is in English only, so its text is written here.
 //
 // A Part's edit form, opened from a row, is its child, and saving returns to
-// the list. On a screen as wide as a desk's, the list keeps the start side
-// and the form shows beside it, as the Catalog lays out its list and a Part.
-// On a phone the form takes the whole screen, and the list is not rendered at
+// the list. On a screen as wide as a desk's, the list takes the sheet's whole
+// width until a Part is opened; then the list keeps seven twelfths on the
+// start side and the form takes five, past an Edge line, as the Catalog lays
+// out its list and a Part (redesign ticket 10). The list stays drawn through
+// both, so that the Part whose gaps were just filled is seen leaving it. On a
+// phone the form takes the whole screen, and the list is not rendered at
 // all, so that it asks the API for nothing.
 export function MissingSpecificationsPage() {
   const opened = useOutlet();
   const wide = useWideScreen();
 
-  if (!wide) return opened ?? <TheList />;
+  if (!wide) return opened ?? <TheList wide={false} />;
 
   return (
-    <div className="grid grid-cols-[minmax(0,26rem)_minmax(0,1fr)] gap-8">
-      <TheList />
-      <div className="min-w-0 border-s border-border ps-8">
-        {opened ?? <NothingOpened />}
+    <div className={cn('grid gap-6', opened !== null && 'grid-cols-12')}>
+      <div className={cn('min-w-0', opened !== null && 'col-span-7')}>
+        <TheList wide />
       </div>
+      {opened !== null && (
+        <div className="col-span-5 min-w-0 border-s border-border ps-6">{opened}</div>
+      )}
     </div>
   );
 }
 
-function TheList() {
+function TheList({ wide }: { wide: boolean }) {
   const [page, show] = usePageInTheAddress();
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <h1 className="screen-title">Missing specifications</h1>
-      <p className="text-sm text-muted-foreground">
-        Parts with an Offer that lack a specification a Compatibility Rule reads. They are
-        still shown to Shoppers.
-      </p>
-      <ListedParts page={page} onPage={show} />
-    </div>
-  );
-}
-
-// The pane beside the list, before a Part is opened.
-function NothingOpened() {
-  return (
-    <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground">
-      <span className="flex size-10 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
-        <MousePointerClickIcon aria-hidden="true" className="size-5" />
-      </span>
-      <p>Open a Part from the list to fill in what it lacks.</p>
+      <div className="flex flex-col gap-1">
+        <h1 className="screen-title">Missing specifications</h1>
+        <p className="text-sm text-muted-foreground">
+          Parts with an Offer that lack a specification a Compatibility Rule reads. They are
+          still shown to Shoppers.
+        </p>
+      </div>
+      <ListedParts page={page} onPage={show} wide={wide} />
     </div>
   );
 }

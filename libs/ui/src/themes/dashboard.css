@@ -392,6 +392,98 @@
 }
 
 /*
+ * 8. Something leaves a list, and the row that takes its place arrives: a
+ * row the list drops while the user is on it is marked `data-leaving` (and
+ * inert), on itself or on its table row, and a row new to the same page
+ * `data-arriving`. A leaving row's opacity goes to 0 in 150 ms; then its
+ * space closes, `grid-template-rows` from `1fr` to `0fr`, and its rule with
+ * it, 200 ms on the in-out curve, so that the rows below rise into place
+ * rather than jump. An arriving row's space opens in step with that, after
+ * the same 150 ms, and then it fades in, 200 ms; a leaving row that comes
+ * back does the same from wherever it is. What the row holds is its one
+ * child, which holds the row's padding, so that the space closes whole and
+ * nothing is left to be taken out in one frame. With reduced motion nothing
+ * jumps either: the fades stay, and the space closes or opens over 150 ms
+ * on the out curve.
+ */
+@utility leaves {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 200ms var(--ease-in-out) 150ms,
+    border-bottom-width 200ms var(--ease-in-out) 150ms,
+    opacity 200ms var(--ease-out) 350ms;
+
+  & > * {
+    min-height: 0;
+  }
+
+  &:is([data-arriving], [data-arriving] *) {
+    @starting-style {
+      opacity: 0;
+      grid-template-rows: 0fr;
+      border-bottom-width: 0;
+    }
+  }
+
+  &:is([data-leaving], [data-leaving] *) {
+    opacity: 0;
+    grid-template-rows: 0fr;
+    border-bottom-width: 0;
+    transition:
+      opacity 150ms var(--ease-out),
+      grid-template-rows 200ms var(--ease-in-out) 150ms,
+      border-bottom-width 200ms var(--ease-in-out) 150ms;
+  }
+
+  &:is([data-leaving], [data-leaving] *) > * {
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition:
+      grid-template-rows 150ms var(--ease-out) 150ms,
+      border-bottom-width 150ms var(--ease-out) 150ms,
+      opacity 150ms var(--ease-out) 300ms;
+
+    &:is([data-leaving], [data-leaving] *) {
+      transition:
+        opacity 150ms var(--ease-out),
+        grid-template-rows 150ms var(--ease-out) 150ms,
+        border-bottom-width 150ms var(--ease-out) 150ms;
+    }
+  }
+}
+
+/*
+ * A table's row cannot be a grid, so each of its cells' content takes
+ * `leaves`, and the row itself takes this: its rule closes with its space,
+ * or opens with it as it arrives. It keeps the colour under the pointer of
+ * `hover-colour` (Motion 2), which it replaces on the row.
+ */
+@utility leaves-rule {
+  transition:
+    border-bottom-width 200ms var(--ease-in-out) 150ms,
+    background-color 100ms ease;
+
+  &[data-arriving] {
+    @starting-style {
+      border-bottom-width: 0;
+    }
+  }
+
+  &[data-leaving] {
+    border-bottom-width: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition:
+      border-bottom-width 150ms var(--ease-out) 150ms,
+      background-color 100ms ease;
+  }
+}
+
+/*
  * 7. Confirm all's result: each changed row's Confirmation fades in at its
  * new state, 200 ms, each row 30 ms after the one above it, by its place in
  * `--settle-order`, the first ten rows only. With reduced motion every row
@@ -407,40 +499,5 @@
 
   @media (prefers-reduced-motion: reduce) {
     transition-delay: 0ms;
-  }
-}
-
-/*
- * 8. Something leaves a list, or the screen: a row, the expiry banner. It
- * wraps what leaves, which first fades, 150 ms, and then its space closes,
- * `grid-template-rows` from `1fr` to `0fr`, 200 ms, taking with it the gap
- * below it, `--leaves-gap`. What leaves is clipped only while it leaves, so
- * that a focus outline is never cut. With reduced motion it fades, and then
- * its space closes at once.
- */
-@utility leaves {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition:
-    grid-template-rows 200ms var(--ease-in-out) 150ms,
-    margin-block-end 200ms var(--ease-in-out) 150ms;
-
-  & > * {
-    min-height: 0;
-    transition: opacity 150ms var(--ease-out);
-  }
-
-  &[data-leaving] {
-    grid-template-rows: 0fr;
-    margin-block-end: calc(-1 * var(--leaves-gap, 0px));
-  }
-
-  &[data-leaving] > * {
-    opacity: 0;
-    overflow: hidden;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition-duration: 1ms;
   }
 }
