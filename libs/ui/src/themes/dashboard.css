@@ -224,6 +224,28 @@
 }
 
 /*
+ * A row that scrolls sideways, such as a list's tabs on a phone, fades over
+ * its last 32 pixels on its end side while more of it lies beyond, so that
+ * it is seen to go on; the row names that state in `data-more-beyond`. The
+ * fade is mirrored in right to left, and leaves while a control in the row
+ * has the keyboard's focus, so that neither the control nor its outline is
+ * faded. What it fades is the overflow, never text read in place.
+ */
+@utility fade-end {
+  &[data-more-beyond] {
+    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+  }
+
+  &:where([dir='rtl'], [dir='rtl'] *)[data-more-beyond] {
+    mask-image: linear-gradient(to left, #000 calc(100% - 2rem), transparent);
+  }
+
+  &:has(:focus-visible) {
+    mask-image: none;
+  }
+}
+
+/*
  * The movements of DESIGN.md's Motion, each a CSS transition on `scale`,
  * `translate` and `opacity`, so that it runs off the main thread and a second
  * action takes it from where it is. Every one has its reduced-motion

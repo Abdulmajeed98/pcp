@@ -2,6 +2,7 @@ import { formatNumber } from '@pcp/i18n';
 import { Link, useLocation } from 'react-router';
 
 import { type CategoryKey, categoryName, useCategories } from '@/entities/category';
+import { useMoreBeyondTheEnd } from '@/shared/lib';
 
 import { useCountsByCategory } from '../api/search-parts';
 import { type CatalogSearch, addressOf } from '../model/search';
@@ -12,13 +13,16 @@ import { type CatalogSearch, addressOf } from '../model/search';
 // the results are before choosing. They stand on a full-width Edge rule; the
 // current one is in Ink at weight 600 with a 2-pixel Bazaar Teal line as wide
 // as its label. Each is a link to the same search in that Category, from its
-// first page, so a reload or the back button keeps it. On a phone they scroll
-// sideways in their own row. The line moves to the chosen tab at once.
+// first page, so a reload or the back button keeps it. On a phone, and
+// beside an opened Part, they scroll sideways in their own row, which fades
+// at its end side while more tabs lie beyond it. The line moves to the
+// chosen tab at once.
 export function CategoryTabs({ search }: { search: CatalogSearch }) {
   const categories = useCategories();
   const keys = categories.data?.map(({ key }) => key) ?? [];
   const counts = useCountsByCategory(search.words, keys);
   const { pathname } = useLocation();
+  const [row, moreBeyond] = useMoreBeyondTheEnd<HTMLElement>();
 
   const tabs: { category: CategoryKey | undefined; name: string }[] = [
     { category: undefined, name: 'All Categories' },
@@ -27,8 +31,10 @@ export function CategoryTabs({ search }: { search: CatalogSearch }) {
 
   return (
     <nav
+      ref={row}
       aria-label="Categories"
-      className="-mx-4 overflow-x-auto overscroll-x-contain px-4 lg:mx-0 lg:px-0"
+      data-more-beyond={moreBeyond ? '' : undefined}
+      className="fade-end -mx-4 overflow-x-auto overscroll-x-contain px-4 lg:mx-0 lg:px-0"
     >
       <ul className="flex min-w-max gap-5 border-b border-border">
         {tabs.map(({ category, name }) => {

@@ -70,6 +70,28 @@ test.describe('the Catalog, as the development Admin', () => {
     await expect(rowOf(page, part.name)).toHaveCount(0);
   });
 
+  // The tab row scrolls sideways in its own row on a phone; while more tabs
+  // lie beyond its end side, that end fades, and once it is scrolled to its
+  // end, or a tab in it has the keyboard's focus, it does not (the owner's
+  // choice in redesign ticket 07).
+  test('the Category tabs fade at their end side while more lie beyond it, and not at the end or with focus', async ({
+    page,
+  }) => {
+    const tabs = page.getByRole('navigation', { name: 'Categories' });
+    await expect(categoryTab(page, 'PSU')).toBeAttached();
+    const fade = () => tabs.evaluate((row) => getComputedStyle(row).maskImage);
+
+    await expect.poll(fade).toContain('linear-gradient');
+
+    await tabs.evaluate((row) => row.scrollTo({ left: row.scrollWidth }));
+    await expect.poll(fade).toBe('none');
+
+    await tabs.evaluate((row) => row.scrollTo({ left: 0 }));
+    await expect.poll(fade).toContain('linear-gradient');
+    await categoryTab(page, 'All Categories').focus();
+    await expect.poll(fade).toBe('none');
+  });
+
   test('the Catalog does not scroll sideways', async ({ page }) => {
     await searchTheCatalog(page, { words: part.word });
     await expect(rowOf(page, part.name)).toBeVisible();
