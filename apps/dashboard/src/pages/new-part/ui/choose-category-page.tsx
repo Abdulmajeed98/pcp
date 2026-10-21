@@ -41,13 +41,8 @@ export function ChooseCategoryPage() {
         </Alert>
       )}
       {categories.isPending && (
-        <SketchedRows
-          words="Reading the Categories…"
-          rowClassName="flex min-h-18 flex-col justify-center gap-2 py-3"
-        >
-          <span className="h-3.5 w-1/4 rounded-sm bg-secondary" />
-          <span className="h-3.5 w-1/2 rounded-sm bg-muted" />
-        </SketchedRows>
+        // Two-line rows, as the Categories are on every screen.
+        <SketchedRows words="Reading the Categories…" wide={false} />
       )}
       {categories.data !== undefined && (
         <ul
