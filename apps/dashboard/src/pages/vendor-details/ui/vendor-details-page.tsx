@@ -1,6 +1,6 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
-import type { ReactNode } from 'react';
+import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 
 import {
@@ -50,9 +50,9 @@ import {
 // While the Vendor is being read, the screen is already drawn: its title, the
 // groups' headings and each detail's name, with each value sketched in Raised
 // Stone, still, and a sentence for a screen reader that says it is reading.
-// The values then take the sketches' places in one frame, with nothing
-// moving (DESIGN.md's Motion, 9). A Vendor that could not be read is said
-// below the title, in the refusal panel.
+// Each value then arrives in its sketch's place, growing to its own height as
+// it fades in (`ArrivesInPlace`, below). A Vendor that could not be read is
+// said below the title, in the refusal panel.
 export function VendorDetailsPage() {
   const { t } = useTranslation();
   const { vendorId } = useVendorShown();
@@ -84,9 +84,18 @@ function Details({ vendor }: { vendor: VendorResponse | undefined }) {
   const { t } = useTranslation();
   const none = <span className="text-muted-foreground">{t('VendorDetails.none')}</span>;
   const inANewTab = t('VendorDetails.inANewTab');
+  // Whether the screen opened before the Vendor was read, and so drew its
+  // sketches: only then do the values arrive in their places.
+  const [sketched] = useState(vendor === undefined);
   // A detail's value once the Vendor is read, and its sketch until then.
   const shown = (value: (read: VendorResponse) => ReactNode) =>
-    vendor === undefined ? <Sketched /> : value(vendor);
+    vendor === undefined ? (
+      <Sketched />
+    ) : sketched ? (
+      <ArrivesInPlace>{value(vendor)}</ArrivesInPlace>
+    ) : (
+      value(vendor)
+    );
 
   return (
     <div aria-busy={vendor === undefined || undefined} className="flex flex-col gap-8">
@@ -245,5 +254,45 @@ function Sketched() {
       aria-hidden="true"
       className="block h-5 w-2/3 max-w-60 rounded-plate bg-secondary"
     />
+  );
+}
+
+// A sketch's height, one line of the small size, in pixels.
+const sketchHeight = 20;
+
+// A value that arrives where its sketch was. The owner on motion, 22 October
+// 2026: no rigid snaps, and with reduced motion nothing jumps a layout in
+// one frame. So the value grows from the sketch's height to its own while
+// it fades in, 200 ms on the ease-out curve (DESIGN.md's Motion, 6), and
+// with reduced motion in 150 ms, still growing rather than jumping, and the
+// rows below follow it down. It is the Web Animations API, since a height
+// set by its content cannot be a CSS transition.
+function ArrivesInPlace({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (element === null) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    element.style.overflow = 'hidden';
+    const arriving = element.animate(
+      [
+        { height: `${sketchHeight}px`, opacity: 0 },
+        { height: `${element.offsetHeight}px`, opacity: 1 },
+      ],
+      { duration: reduced ? 150 : 200, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' },
+    );
+    const settled = () => {
+      element.style.overflow = '';
+    };
+    arriving.addEventListener('finish', settled);
+    arriving.addEventListener('cancel', settled);
+    return () => arriving.cancel();
+  }, []);
+
+  return (
+    <span ref={ref} className="block">
+      {children}
+    </span>
   );
 }

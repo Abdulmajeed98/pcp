@@ -138,7 +138,7 @@ test('on a phone, Save is as wide as the form; while the details are on their wa
   await saveButton(page).click();
 
   await expect(saveButton(page)).toBeDisabled();
-  await expect(saveButton(page)).not.toHaveText(idleText);
+  await expect(saveButton(page)).not.toHaveText(idleText, { useInnerText: true });
   expect((await saveButton(page).boundingBox())?.width).toBeCloseTo(idleWidth, 0);
   answer();
   await expect(page).toHaveURL(detailsUrl);
@@ -163,6 +163,30 @@ test.describe("on a screen as wide as a desk's", () => {
       ((await form.boundingBox())?.width ?? 0) / 2,
     );
     await expectAccessible(page);
+  });
+
+  // The owner on motion (22 October 2026): no rigid snaps. Save keeps its
+  // width while it says it is saving, so the change of its words moves
+  // nothing.
+  test('while the details are on their way, Save says so and keeps its width', async ({
+    page,
+  }) => {
+    await openTheForm(page);
+    const idleText = await saveButton(page).innerText();
+    const idleWidth = (await saveButton(page).boundingBox())?.width ?? 0;
+
+    let answer = () => {};
+    const answered = new Promise<void>((resolve) => (answer = resolve));
+    await page.route('**/contact-details', async (route) => {
+      if (isTheSave(route.request())) await answered;
+      await route.continue();
+    });
+    await saveButton(page).click();
+
+    await expect(saveButton(page)).not.toHaveText(idleText, { useInnerText: true });
+    expect((await saveButton(page).boundingBox())?.width).toBeCloseTo(idleWidth, 0);
+    answer();
+    await expect(page).toHaveURL(detailsUrl);
   });
 });
 

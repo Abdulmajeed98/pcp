@@ -1,6 +1,7 @@
 import type { EditContactDetailsRequest, VendorResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 import { type ReactNode, useState } from 'react';
 import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 
@@ -201,9 +202,23 @@ export function ContactDetailsForm({
         className="w-full sm:w-auto sm:self-start"
         disabled={formState.isSubmitting}
       >
-        {formState.isSubmitting
-          ? t('ContactDetailsForm.saving')
-          : t('ContactDetailsForm.save')}
+        {/* Both words hold the button's width, the one not said hidden, so
+            that it keeps its width while it says it is saving and nothing
+            moves (the owner on motion, 22 October 2026). */}
+        <span className="grid">
+          {[
+            { words: t('ContactDetailsForm.save'), said: !formState.isSubmitting },
+            { words: t('ContactDetailsForm.saving'), said: formState.isSubmitting },
+          ].map(({ words, said }) => (
+            <span
+              key={words}
+              aria-hidden={!said || undefined}
+              className={cn('col-start-1 row-start-1', !said && 'invisible')}
+            >
+              {words}
+            </span>
+          ))}
+        </span>
       </Button>
     </form>
   );

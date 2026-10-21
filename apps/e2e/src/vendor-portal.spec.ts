@@ -190,6 +190,68 @@ test.describe('as a made-up Vendor', () => {
     await expect(main.locator('[aria-busy="true"]')).toHaveCount(0);
   });
 
+  // The owner on motion (22 October 2026): no rigid snaps, and with reduced
+  // motion nothing jumps a layout in one frame. The address takes two lines
+  // where its sketch took one, so each value grows from its sketch's height
+  // to its own as it fades in, 200 ms on the ease-out curve, and 150 ms with
+  // reduced motion, still growing rather than jumping.
+  for (const { motion, duration } of [
+    { motion: 'no-preference', duration: 200 },
+    { motion: 'reduce', duration: 150 },
+  ] as const) {
+    test(`as the Vendor's details arrive, each value grows from its sketch's height to its own and fades in, in ${duration} ms, with ${motion === 'reduce' ? 'reduced motion' : 'full motion'}`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion: motion });
+      // Each animation the page starts with the Web Animations API, with
+      // the detail it is in, its keyframes and its timing.
+      await page.addInitScript(() => {
+        const started: unknown[] = [];
+        (window as unknown as { started: unknown[] }).started = started;
+        const animate = Element.prototype.animate;
+        Element.prototype.animate = function (keyframes, options) {
+          started.push({
+            detail: this.closest('[data-detail]')?.getAttribute('data-detail'),
+            keyframes,
+            options,
+          });
+          return animate.call(this, keyframes, options);
+        };
+      });
+      let answer = () => {};
+      const answered = new Promise<void>((resolve) => (answer = resolve));
+      await page.route(`${apiUrl}/v1/vendors/${vendor.vendorId}`, async (route) => {
+        await answered;
+        await route.continue();
+      });
+      await openTheDashboardAs(page, vendor, `${dashboardUrl}/details`);
+      await expect(page.getByRole('main').locator('[aria-busy="true"]')).toHaveCount(1);
+
+      answer();
+      await expect(detailOf(page, 'address')).not.toHaveText('');
+      const started = (await page.evaluate(
+        () => (window as unknown as { started: unknown[] }).started,
+      )) as {
+        detail?: string;
+        keyframes: { height?: string; opacity?: number }[];
+        options: { duration: number; easing: string };
+      }[];
+      const address = started.find(({ detail }) => detail === 'address');
+
+      expect(address, 'the address arrives with a movement').toBeDefined();
+      expect(address?.options).toMatchObject({
+        duration,
+        easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
+      });
+      const [from, to] = address?.keyframes ?? [];
+      expect(from).toMatchObject({ height: '20px', opacity: 0 });
+      expect(to?.opacity).toBe(1);
+      expect(parseFloat(to?.height ?? '0'), 'it grows to its two lines').toBeGreaterThan(
+        20,
+      );
+    });
+  }
+
   // Emil Kowalski's break-ui on the details screen: the longest name and
   // address the API takes, the address as a Vendor might paste it, with a
   // link to its place and no space in it, and every optional detail left
