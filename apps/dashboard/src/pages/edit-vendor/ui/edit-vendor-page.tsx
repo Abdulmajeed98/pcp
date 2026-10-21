@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useVendor, vendorKey, vendorsKey } from '@/entities/vendor';
 import { VendorForm } from '@/features/vendor-form';
 import { apiClient, dataOf, Refusal, WhyNotAnswered } from '@/shared/api';
-import { useAddressKeepingTheQuery } from '@/shared/lib';
+import { useAddressKeepingTheQuery, useWideScreen } from '@/shared/lib';
 import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
 
 // The Admin's form for editing a Vendor, filled with every detail as it is,
@@ -17,6 +17,10 @@ import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
 // names the Vendor, as it writes it, in its title and in its link back to
 // the Vendor's page.
 export function EditVendorPage() {
+  // One h1 to a page (the owner's "h2 on a desk", redesign ticket 08):
+  // from 64rem this screen is beside the Vendors' list, whose title is the
+  // h1, so its own is an h2; on a phone it stands alone, an h1.
+  const Title = useWideScreen() ? 'h2' : 'h1';
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { vendorId = '' } = useParams();
   const vendor = useVendor(vendorId);
@@ -63,9 +67,9 @@ export function EditVendorPage() {
       <BackLink to={keepingTheQuery(`/vendors/${vendorId}`)}>
         <AsWritten>{vendor.data.name}</AsWritten>
       </BackLink>
-      <h1 className="screen-title">
+      <Title className="screen-title">
         Edit <AsWritten>{vendor.data.name}</AsWritten>
-      </h1>
+      </Title>
       <VendorForm
         vendor={vendor.data}
         submitLabel="Save"

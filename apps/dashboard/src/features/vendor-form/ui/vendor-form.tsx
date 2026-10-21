@@ -9,6 +9,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  BusyLabel,
   Button,
   Field,
   FieldDescription,
@@ -238,7 +239,11 @@ export function VendorForm({
       </FieldSet>
 
       <Button type="submit" className="self-start" disabled={formState.isSubmitting}>
-        {formState.isSubmitting ? busyLabel : submitLabel}
+        <BusyLabel
+          busy={formState.isSubmitting}
+          label={submitLabel}
+          busyLabel={busyLabel}
+        />
       </Button>
     </form>
   );

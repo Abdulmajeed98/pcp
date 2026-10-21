@@ -21,7 +21,7 @@ import { HandOver, TemporaryPassword } from '@/features/hand-over';
 import { ResetPassword } from '@/features/reset-password';
 import { VendorActivation } from '@/features/vendor-activation';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
-import { useAddressKeepingTheQuery } from '@/shared/lib';
+import { useAddressKeepingTheQuery, useWideScreen } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -75,18 +75,22 @@ export function VendorPage() {
 }
 
 function VendorDetails({ vendor }: { vendor: VendorResponse }) {
+  // One h1 to a page (the owner's "h2 on a desk", redesign ticket 08):
+  // from 64rem this screen is beside the Vendors' list, whose title is the
+  // h1, so its own is an h2; on a phone it stands alone, an h1.
+  const Title = useWideScreen() ? 'h2' : 'h1';
   const keepingTheQuery = useAddressKeepingTheQuery();
   // The temporary password of the last reset, held by this screen alone:
   // leaving it loses the password, and the API answers it nowhere else.
   const [resetPassword, setResetPassword] = useState<string>();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-3 pb-6">
         <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-        <h1 className="screen-title">
+        <Title className="screen-title">
           <AsWritten>{vendor.name}</AsWritten>
-        </h1>
+        </Title>
         <div className="flex flex-wrap items-start gap-2">
           <Link
             to={keepingTheQuery(`/vendors/${vendor.id}/edit`)}
@@ -113,16 +117,21 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
       </div>
 
       {/* The reset's result arrives below the actions and above the details
-          (DESIGN.md's Motion 6), rising and fading in; a second reset
+          as a row arrives in a list (DESIGN.md's Motion 8, the No Snap
+          Rule): its space opens, so that the details below slide down rather
+          than jump, and then it fades in. The space between it and the
+          details is its own padding, inside what opens. A second reset
           replaces it in place. */}
       {resetPassword !== undefined && (
-        <div data-testid="password-reset" className="arrives flex flex-col gap-6">
-          <p>The password is reset, and the Vendor is logged out.</p>
-          <TemporaryPassword password={resetPassword} />
-          <HandOver
-            loginPhoneNumber={vendor.loginPhoneNumber}
-            temporaryPassword={resetPassword}
-          />
+        <div data-testid="password-reset" data-arriving="" className="leaves">
+          <div className="flex flex-col gap-6 pb-6">
+            <p>The password is reset, and the Vendor is logged out.</p>
+            <TemporaryPassword password={resetPassword} />
+            <HandOver
+              loginPhoneNumber={vendor.loginPhoneNumber}
+              temporaryPassword={resetPassword}
+            />
+          </div>
         </div>
       )}
 
@@ -193,11 +202,15 @@ function None() {
 }
 
 function VendorNotFound() {
+  // One h1 to a page (the owner's "h2 on a desk", redesign ticket 08):
+  // from 64rem this screen is beside the Vendors' list, whose title is the
+  // h1, so its own is an h2; on a phone it stands alone, an h1.
+  const Title = useWideScreen() ? 'h2' : 'h1';
   const keepingTheQuery = useAddressKeepingTheQuery();
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-      <h1 className="screen-title">Vendor not found</h1>
+      <Title className="screen-title">Vendor not found</Title>
       <p>The platform holds no Vendor at this address. It may never have existed.</p>
     </div>
   );

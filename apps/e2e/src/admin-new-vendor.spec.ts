@@ -270,8 +270,11 @@ test.describe('on a screen as wide as a desk', () => {
     await page.goto(vendorsUrl);
     await expect(vendorsHeading(page)).toBeVisible();
     await page.getByRole('link', { name: 'New Vendor' }).click();
-    await expect(newVendorHeading(page)).toBeVisible();
+    // One h1 to a page: beside the list, the form titles itself h2 (the
+    // owner's "h2 on a desk", redesign ticket 08).
+    await expect(page.getByRole('heading', { level: 2, name: 'New Vendor' })).toBeVisible();
     await expect(vendorsHeading(page)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
 
     const phone = await vendorFormField(page, 'Phone number').boundingBox();
     const whatsApp = await vendorFormField(page, 'WhatsApp number').boundingBox();
@@ -288,9 +291,14 @@ test.describe('on a screen as wide as a desk', () => {
       await route.continue();
     });
     await fillInTheForm(page, aMadeUpVendorToType());
+    const idle = await page
+      .getByRole('button', { name: 'Create the Vendor' })
+      .boundingBox();
     await page.getByRole('button', { name: 'Create the Vendor' }).click();
     const busy = page.getByRole('button', { name: 'Creating the Vendor…' });
     await expect(busy).toBeDisabled();
+    // It keeps its width, so that nothing beside it moves (the No Snap Rule).
+    expect((await busy.boundingBox())?.width).toBe(idle?.width);
     answer();
     await expect(temporaryPassword(page)).toBeVisible();
   });

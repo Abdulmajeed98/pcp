@@ -139,8 +139,11 @@ test.describe('on a screen as wide as a desk', () => {
 
     await rowOfVendor(page, vendor.name).getByRole('link', { name: vendor.name }).click();
 
-    await expect(page.getByRole('heading', { level: 1, name: vendor.name })).toBeVisible();
+    // One h1 to a page: beside the list, the Vendor's page titles itself
+    // h2 (the owner's "h2 on a desk", redesign ticket 08).
+    await expect(page.getByRole('heading', { level: 2, name: vendor.name })).toBeVisible();
     await expect(vendorsHeading(page)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     const row = rowOfVendor(page, vendor.name);
     await expect(row.getByRole('link', { name: vendor.name })).toHaveAttribute(
       'aria-current',
@@ -161,6 +164,12 @@ test.describe('on a screen as wide as a desk', () => {
     expect(share).toBeLessThan(0.62);
     await expectNoSidewaysScroll(page);
     await expectAccessible(page);
+
+    await page.getByRole('link', { name: 'Edit', exact: true }).click();
+    await expect(
+      page.getByRole('heading', { level: 2, name: `Edit ${vendor.name}` }),
+    ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   });
 });
 
