@@ -227,6 +227,35 @@ test.describe("a Part's page", () => {
   });
 });
 
+// The first step of a new Part: its Category. Each says what its form will
+// ask, so that the Admin knows the work before choosing.
+test.describe('choosing a Category', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.getByRole('link', { name: 'New Part' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'New Part' })).toBeVisible();
+  });
+
+  test('lists each Category with how many specifications its form asks for, and how many are needed', async ({
+    page,
+  }) => {
+    const categories = page.getByRole('list', { name: 'Categories' }).getByRole('listitem');
+    await expect(categories).toHaveCount(8);
+    await expect(categories.filter({ hasText: 'CPU cooler' })).toContainText(
+      '13 specifications, 2 needed',
+    );
+    await expect(
+      categories.filter({ has: page.getByRole('link', { name: 'CPU', exact: true }) }),
+    ).toContainText('29 specifications, 3 needed');
+  });
+
+  test('does not scroll sideways, and meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
+    page,
+  }) => {
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+});
+
 // A Part the API does not give is a screen with its own title, saying what
 // was not done and why, and a way to try again (redesign ticket 08's
 // break-ui: on a phone it had no title at all).
