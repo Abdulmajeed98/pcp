@@ -18,8 +18,9 @@ import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
 import { createAMadeUpVendor, inIraqsOwnForm, type MadeUpVendor } from './vendors';
 
-// The Admin works in the Vendors' shops, on a phone (LANG-8).
+// The Admin works in the Vendors' shops, on a phone (LANG-8), and at a desk.
 test.use({ viewport: narrowWindow });
+const deskWindow = { width: 1280, height: 800 };
 
 // What a Vendor in Erbil may write, in Sorani, in the Arabic script, with
 // Arabic-Indic digits, on more than one line, and the rest of its details,
@@ -86,6 +87,73 @@ test.describe('the Vendors list', () => {
     await expectNoSidewaysScroll(page);
     await page.getByRole('button', { name: 'Sections' }).click();
     await expect(page.getByRole('navigation', { name: 'Sections' })).toBeVisible();
+    await expectAccessible(page);
+  });
+});
+
+test.describe('on a screen as wide as a desk', () => {
+  test.use({ viewport: deskWindow });
+
+  test('the list is a table across the sheet, its count in words and on no plate, and meets WCAG 2.2 level AA in light and in dark', async ({
+    page,
+    request,
+  }) => {
+    const vendor = await createAMadeUpVendor(request, authorization);
+    await findOnTheList(page, [vendor.name]);
+
+    const table = page.getByRole('table', { name: 'Vendors' });
+    await expect(table.getByRole('columnheader')).toHaveText([
+      'Vendor',
+      'Login phone number',
+      'State',
+    ]);
+    await expect(rowOfVendor(page, vendor.name).getByRole('cell')).toHaveText([
+      vendor.name,
+      inIraqsOwnForm(vendor.loginPhoneNumber),
+      'Active',
+    ]);
+    await expect(page.getByTestId('vendors-count')).toHaveText(/^[\d,]+ Vendors?$/);
+    await expect(page.locator('[data-slot="plate"]')).toHaveCount(0);
+    const sheet = await page.getByRole('main').boundingBox();
+    const list = await table.boundingBox();
+    // The sheet's 24 pixels of padding on each side, and the rows' 8 pixels
+    // of bleed past the text on each side.
+    expect(list?.width).toBeGreaterThanOrEqual((sheet?.width ?? 0) - 48 - 2);
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+
+  test("a Vendor's page opens beside the list, which keeps seven twelfths and marks the Vendor's row as open, on Active Stone", async ({
+    page,
+    request,
+  }) => {
+    const vendor = await createAMadeUpVendor(request, authorization, everyDetail);
+    await findOnTheList(page, [vendor.name]);
+    const before = await page.getByRole('table', { name: 'Vendors' }).boundingBox();
+
+    await rowOfVendor(page, vendor.name).getByRole('link', { name: vendor.name }).click();
+
+    await expect(page.getByRole('heading', { level: 1, name: vendor.name })).toBeVisible();
+    await expect(vendorsHeading(page)).toBeVisible();
+    const row = rowOfVendor(page, vendor.name);
+    await expect(row.getByRole('link', { name: vendor.name })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    const activeStone = await page.evaluate(() => {
+      const probe = document.createElement('div');
+      probe.className = 'bg-accent';
+      document.body.append(probe);
+      const colour = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return colour;
+    });
+    await expect(row).toHaveCSS('background-color', activeStone);
+    const after = await page.getByRole('table', { name: 'Vendors' }).boundingBox();
+    const share = (after?.width ?? 0) / (before?.width ?? 1);
+    expect(share).toBeGreaterThan(0.5);
+    expect(share).toBeLessThan(0.62);
+    await expectNoSidewaysScroll(page);
     await expectAccessible(page);
   });
 });
