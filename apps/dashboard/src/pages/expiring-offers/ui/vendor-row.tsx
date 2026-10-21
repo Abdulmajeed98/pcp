@@ -125,19 +125,23 @@ export function VendorRow({ vendor }: { vendor: VendorWithExpiringOffersResponse
   );
 }
 
-// A table cell's content, at the row's top, as high as a control for its
-// first line, so that a row of one line is 48 pixels under a mouse. It holds
-// the cell's padding inside the theme's `leaves`, so that a leaving row's
-// space closes whole.
-function Cell({ className, children }: { className?: string; children: ReactNode }) {
+// A table cell's content, at the row's top. A cell of words sets its first
+// line level with the middle of the numbers' links, which are as high as a
+// control, 6 pixels below the row's top: half a control less half a line of
+// 20 pixels, under a mouse or a finger. A row of one line is then 48 pixels
+// under a mouse (redesign ticket 10's break-ui). It holds the cell's padding
+// inside the theme's `leaves`, so that a leaving row's space closes whole.
+function Cell({ links = false, children }: { links?: boolean; children: ReactNode }) {
   return (
     <TableCell className="h-auto p-0 align-top">
       <div className="leaves">
         <div>
           <div
             className={cn(
-              'flex min-h-control flex-col justify-center px-2 py-1.5',
-              className,
+              'px-2',
+              links
+                ? 'flex flex-col items-start py-1.5'
+                : 'pt-[calc(var(--spacing-control)/2_-_0.25rem)] pb-3.5',
             )}
           >
             {children}
@@ -161,7 +165,7 @@ export function VendorsTable({
       <Table aria-label="Vendors to remind">
         <TableHeader>
           <TableRow className="border-b-0">
-            <TableHead className="w-2/5 ps-2">Vendor</TableHead>
+            <TableHead className="w-2/5 first:ps-2">Vendor</TableHead>
             <TableHead>Offers</TableHead>
             <TableHead>Phone</TableHead>
             <TableHead className="pe-2">WhatsApp</TableHead>
@@ -183,10 +187,10 @@ export function VendorsTable({
               <Cell>
                 <WhyToRemind vendor={vendor} />
               </Cell>
-              <Cell className="items-start">
+              <Cell links>
                 <CallLink vendor={vendor} />
               </Cell>
-              <Cell className="items-start">
+              <Cell links>
                 <ChatLink vendor={vendor} />
               </Cell>
             </TableRow>

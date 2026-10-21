@@ -103,13 +103,15 @@ export function PartRow({ part }: { part: PartMissingSpecificationsResponse }) {
 // A table cell's content, which starts at the row's top, so that a Part
 // whose name takes two lines keeps the rest level with its first line. It
 // holds the cell's padding inside the theme's `leaves`, so that a leaving
-// row's space closes whole.
-function Cell({ className, children }: { className?: string; children: ReactNode }) {
+// row's space closes whole. A figure is end aligned, its cell with it.
+function Cell({ figure = false, children }: { figure?: boolean; children: ReactNode }) {
   return (
-    <TableCell className="h-auto p-0 align-top">
+    <TableCell className={cn('h-auto p-0 align-top', figure && 'text-end')}>
       <div className="leaves">
         <div>
-          <div className={cn('px-2 py-3.5', className)}>{children}</div>
+          <div className={cn('px-2 py-3.5', figure && 'text-end tabular-nums')}>
+            {children}
+          </div>
         </div>
       </div>
     </TableCell>
@@ -130,7 +132,7 @@ export function PartsTable({
       <Table aria-label="Parts missing specifications">
         <TableHeader>
           <TableRow className="border-b-0">
-            <TableHead className="w-1/2 ps-2">Part</TableHead>
+            <TableHead className="w-1/2 first:ps-2">Part</TableHead>
             <TableHead className="text-end">Offers</TableHead>
             <TableHead className="w-2/5 pe-2">Lacks</TableHead>
           </TableRow>
@@ -170,7 +172,7 @@ function PartTableRow({
           {categoryName(part.category)}
         </p>
       </Cell>
-      <Cell className="text-end tabular-nums">
+      <Cell figure>
         <span data-testid="offer-count">{formatNumber(part.offerCount)}</span>
       </Cell>
       <Cell>

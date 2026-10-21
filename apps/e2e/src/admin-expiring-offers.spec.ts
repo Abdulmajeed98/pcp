@@ -258,6 +258,27 @@ test.describe('at a desk’s width', () => {
         .filter({ hasText: 'Made-up Second' })
         .getByText('No WhatsApp', { exact: true }),
     ).toBeVisible();
+    // A heading starts where its column's text does, and a row's name and
+    // why stand level with the middle of its numbers' links (redesign
+    // ticket 10's break-ui).
+    const vendorHeading = await table
+      .getByRole('columnheader', { name: 'Vendor' })
+      .evaluate(
+        (heading) =>
+          heading.getBoundingClientRect().left +
+          parseFloat(getComputedStyle(heading).paddingInlineStart),
+      );
+    const name = await row
+      .getByRole('link', { name: vendor.name, exact: true })
+      .boundingBox();
+    expect(Math.abs((name?.x ?? 0) - vendorHeading)).toBeLessThan(1);
+    const middle = (box: { y: number; height: number } | null) =>
+      (box?.y ?? 0) + (box?.height ?? 0) / 2;
+    const call = middle(await row.getByTestId('call').boundingBox());
+    expect(Math.abs(middle(name) - call)).toBeLessThan(2);
+    expect(
+      Math.abs(middle(await row.getByTestId('why-to-remind').boundingBox()) - call),
+    ).toBeLessThan(2);
     await expect(page.getByTestId('vendors-to-remind-count')).toHaveText('2');
     await expect(page.locator('[data-slot="plate"]')).toHaveCount(0);
 

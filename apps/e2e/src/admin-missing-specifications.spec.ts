@@ -147,6 +147,19 @@ test.describe('at a desk’s width', () => {
     await expect(found.getByTestId('offer-count')).toHaveText('1');
     await expect(found).toContainText('CPU');
     await expect(found.locator('img, [data-testid="category-icon"]')).toHaveCount(0);
+    // A heading starts where its column's text does, and the Offers, a
+    // count, are end aligned, their cell with them (redesign ticket 10's
+    // break-ui and Taste's inspector).
+    const partHeading = await table
+      .getByRole('columnheader', { name: 'Part' })
+      .evaluate(
+        (heading) =>
+          heading.getBoundingClientRect().left +
+          parseFloat(getComputedStyle(heading).paddingInlineStart),
+      );
+    const name = await found.getByRole('link', { name: part.name }).boundingBox();
+    expect(Math.abs((name?.x ?? 0) - partHeading)).toBeLessThan(1);
+    await expect(found.getByRole('cell').nth(1)).toHaveCSS('text-align', 'end');
     // The count in words, on the end side, never on a plate.
     await expect(page.getByTestId('missing-specifications-count')).toHaveText(/^[\d,]+$/);
     await expect(page.locator('[data-slot="plate"]')).toHaveCount(0);
