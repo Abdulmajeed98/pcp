@@ -6,15 +6,15 @@ import { Button } from './button';
 
 // shadcn/ui's alert dialog, in the Mira style, held to the root DESIGN.md and
 // the dashboard's: it asks to confirm an action before it is taken. It
-// floats over the page, so it has a Control Edge border and a soft shadow
-// that falls downward, on a Sheet ground, over a scrim that dims the page.
-// On a phone it is as wide as the screen but for a 16-pixel gutter. Its
-// title is at title size and its sentence at body size, never under 14
-// pixels, both aligned to the start side, and its buttons are 44 pixels
-// high: stacked on a phone with the action on top, and in a row at the end
-// side from 40rem. Its size variants and its media slot are left out, as no
-// screen uses them. The animations it came with need a plugin the theme does
-// not load, and are left out too.
+// floats over the page, so it has an Edge border, 8-pixel corners and the
+// shadow of what floats, on a Sheet ground, over a scrim that dims the page
+// to 40% black. On a phone it is as wide as the screen but for a 16-pixel
+// gutter, and never wider than 28rem. Its title is in the Section type and
+// its sentence in Note Grey, both aligned to the start side, and its buttons
+// are as high as a control: stacked on a phone with the action on top, and
+// in a row at the end side from 40rem. It arrives from its centre and leaves
+// faster than it came, as Motion 3 says. Its size variants and its media
+// slot are left out, as no screen uses them.
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
@@ -31,7 +31,7 @@ function AlertDialogOverlay({ className, ...props }: AlertDialogPrimitive.Backdr
   return (
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
-      className={cn('fixed inset-0 isolate z-50 bg-black/50', className)}
+      className={cn('scrim-motion fixed inset-0 isolate z-50 bg-black/40', className)}
       {...props}
     />
   );
@@ -44,7 +44,7 @@ function AlertDialogContent({ className, ...props }: AlertDialogPrimitive.Popup.
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
         className={cn(
-          'fixed start-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-lg border border-input bg-popover p-4 wrap-break-word text-popover-foreground shadow-[0_8px_24px_oklch(0_0_0/0.16)] outline-none sm:p-6 rtl:translate-x-1/2',
+          'dialog-motion fixed start-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[28rem] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-card border border-border bg-popover p-6 wrap-break-word text-popover-foreground shadow-floating outline-none rtl:translate-x-1/2',
           className,
         )}
         {...props}
@@ -80,7 +80,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn('text-xl font-semibold', className)}
+      className={cn('text-base font-semibold', className)}
       {...props}
     />
   );

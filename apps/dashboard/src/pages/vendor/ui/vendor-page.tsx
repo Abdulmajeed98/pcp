@@ -84,7 +84,7 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
         <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-        <h1 className="text-xl font-semibold sm:text-2xl">
+        <h1 className="screen-title">
           <AsWritten>{vendor.name}</AsWritten>
         </h1>
         <div className="flex flex-wrap items-start gap-2">
@@ -194,7 +194,7 @@ function VendorNotFound() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">Vendor not found</h1>
+      <h1 className="screen-title">Vendor not found</h1>
       <p>The platform holds no Vendor at this address. It may never have existed.</p>
     </div>
   );

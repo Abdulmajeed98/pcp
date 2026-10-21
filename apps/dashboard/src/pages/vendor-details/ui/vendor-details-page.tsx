@@ -73,7 +73,7 @@ function Details({ vendor }: { vendor: VendorResponse }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold sm:text-2xl">{t('VendorDetails.title')}</h1>
+        <h1 className="screen-title">{t('VendorDetails.title')}</h1>
         <p data-testid="admin-changes" className="text-sm text-muted-foreground">
           {t('VendorDetails.adminChanges')}
         </p>

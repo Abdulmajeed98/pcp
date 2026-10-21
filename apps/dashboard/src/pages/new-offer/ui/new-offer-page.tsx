@@ -45,7 +45,7 @@ export function NewOfferPage() {
     <div data-testid="new-offer" className="flex flex-col gap-4">
       <BackLink to={backToTheSearch}>{t('NewOffer.back')}</BackLink>
       <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold sm:text-2xl">{t('NewOffer.title')}</h1>
+        <h1 className="screen-title">{t('NewOffer.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('NewOffer.intro')}</p>
       </div>
       {part.error ? (

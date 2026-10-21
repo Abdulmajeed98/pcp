@@ -27,7 +27,7 @@ export function ChooseCategoryPage() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">New Part</h1>
+      <h1 className="screen-title">New Part</h1>
       <p>
         Choose its Category first. The form then asks for that Category's specifications,
         and the Category cannot be changed once the Part exists.

@@ -5,7 +5,6 @@ import type { ReactNode } from 'react';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from './empty';
 import { ListPages } from './list-pages';
 import { PastTheLastPage } from './past-the-last-page';
-import { Plate } from './plate';
 
 // A page of a list as the API answers one, as far as the list reads it.
 interface AnsweredPage<Item> {
@@ -17,8 +16,8 @@ interface AnsweredPage<Item> {
   last: boolean;
 }
 
-// A list the Admin console answers in pages: how many there are, on the
-// list's one plate, then this page's rows, then the way to the other pages.
+// A list the Admin console answers in pages: how many there are, in words,
+// never on a plate (the dashboard's DESIGN.md), then this page's rows, then the way to the other pages.
 // While a later page is on its way, the last answer stays, at full strength,
 // and a line beside the count says that the next is on its way. A page past
 // the last says so, with the way to the first.
@@ -40,8 +39,8 @@ function PagedList<Item>({
   // Whether the answer shown is the last one, kept while the next is on its
   // way.
   reading: boolean;
-  // The plate's test identifier, and the words after the count, which differ
-  // for one.
+  // The count's test identifier, and the words after it, which differ for
+  // one.
   count: { testId: string; words: (total: number) => string };
   // What the rows and the pages' navigation are named.
   label: string;
@@ -57,15 +56,19 @@ function PagedList<Item>({
   return (
     <section aria-labelledby={id} aria-busy={reading} className="flex flex-col gap-4">
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <Plate data-testid={count.testId}>{formatNumber(totalElements)}</Plate>
-        <span id={id}>{count.words(totalElements)}</span>
+        <span id={id}>
+          <span data-testid={count.testId} className="font-semibold tabular-nums">
+            {formatNumber(totalElements)}
+          </span>{' '}
+          {count.words(totalElements)}
+        </span>
         <span aria-live="polite" className="text-sm text-muted-foreground">
           {reading && readingWords}
         </span>
       </p>
 
       {content.length > 0 ? (
-        <ul aria-label={label} className="divide-y divide-border border-y border-border">
+        <ul aria-label={label} className="divide-y divide-rule border-y border-rule">
           {content.map((item) => (
             <li key={keyOf(item)}>{row(item)}</li>
           ))}
@@ -103,7 +106,7 @@ function SketchedRows({
   return (
     <div aria-busy="true" className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">{words}</p>
-      <ul aria-hidden="true" className="divide-y divide-border border-y border-border">
+      <ul aria-hidden="true" className="divide-y divide-rule border-y border-rule">
         {[0, 1, 2, 3].map((sketched) => (
           <li key={sketched} className={rowClassName}>
             {children}
@@ -126,7 +129,7 @@ function NothingToDo({
   description: string;
 }) {
   return (
-    <Empty data-testid={testId} className="border-y border-border">
+    <Empty data-testid={testId} className="border-y border-rule">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <CircleCheckIcon />

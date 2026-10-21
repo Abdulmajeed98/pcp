@@ -33,7 +33,7 @@ function NewVendor() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">New Vendor</h1>
+      <h1 className="screen-title">New Vendor</h1>
       <VendorForm
         submitLabel="Create the Vendor"
         save={(body) => create.mutateAsync(body)}
@@ -55,7 +55,7 @@ function Created({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
         <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-        <h1 className="text-xl font-semibold sm:text-2xl">
+        <h1 className="screen-title">
           <AsWritten>{vendor.name}</AsWritten>
         </h1>
         <p>The Vendor and its Login are made.</p>

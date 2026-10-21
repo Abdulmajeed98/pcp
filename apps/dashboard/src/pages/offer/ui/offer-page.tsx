@@ -46,7 +46,7 @@ export function OfferPage() {
     <div data-testid="offer-screen" className="flex flex-col gap-4">
       <BackLink to="..">{t('OfferScreen.back')}</BackLink>
       <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold sm:text-2xl">{t('OfferScreen.title')}</h1>
+        <h1 className="screen-title">{t('OfferScreen.title')}</h1>
         {!gone && <p className="text-sm text-muted-foreground">{t('OfferScreen.intro')}</p>}
       </div>
       {gone ? (

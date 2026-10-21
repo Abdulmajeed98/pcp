@@ -14,7 +14,7 @@ function PastTheLastPage({
   words?: { title: string; firstPage: string };
 }) {
   return (
-    <Empty className="border-y border-border">
+    <Empty className="border-y border-rule">
       <EmptyHeader>
         <EmptyTitle>{words?.title ?? 'This page is past the last one.'}</EmptyTitle>
       </EmptyHeader>

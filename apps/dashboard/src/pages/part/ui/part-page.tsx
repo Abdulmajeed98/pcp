@@ -79,7 +79,7 @@ function PartDetails({
         <div className="flex items-start gap-4">
           <PartPicture part={part} size="page" />
           <div className="flex min-w-0 flex-col gap-1">
-            <h1 className="text-xl font-semibold sm:text-2xl">
+            <h1 className="text-xl font-[650]">
               <AlwaysEnglish>{part.name}</AlwaysEnglish>
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -172,7 +172,7 @@ function PartNotFound() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">Part not found</h1>
+      <h1 className="text-xl font-[650]">Part not found</h1>
       <p>The catalog holds no Part at this address. It may never have existed.</p>
     </div>
   );

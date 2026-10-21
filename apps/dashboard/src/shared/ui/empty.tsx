@@ -3,8 +3,10 @@ import { cn } from 'cn';
 import type * as React from 'react';
 
 // shadcn/ui's empty state, in the Mira style: what a screen shows where a
-// list found nothing. It sits on the page with no card around it, and its
-// text is at the body and small sizes, as the root DESIGN.md asks.
+// list found nothing. It sits on the sheet with no card around it, centred,
+// with the screen's icon at 32 pixels in Note Grey, plain, a title in the
+// Section type, a sentence in Note Grey, and the action that helps, as the
+// dashboard's DESIGN.md asks.
 
 function Empty({ className, ...props }: React.ComponentProps<'div'>) {
   return (
@@ -35,7 +37,7 @@ const emptyMediaVariants = cva(
     variants: {
       variant: {
         default: 'bg-transparent',
-        icon: "flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground [&_svg:not([class*='size-'])]:size-5",
+        icon: "flex shrink-0 items-center justify-center text-muted-foreground [&_svg:not([class*='size-'])]:size-8",
       },
     },
     defaultVariants: {
@@ -63,7 +65,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="empty-title"
-      className={cn('text-base font-medium', className)}
+      className={cn('text-base font-semibold', className)}
       {...props}
     />
   );
