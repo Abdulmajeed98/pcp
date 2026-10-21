@@ -112,7 +112,7 @@ function OnAPhone({ callerName }: { callerName: string | undefined }) {
           <div className="mt-auto flex flex-col items-start gap-3">
             <CallerName name={callerName} />
             <SchemeSwitch />
-            <LogOut />
+            <LogOut className="-ms-3.5" />
           </div>
         </MenuSheet>
         <p className="min-w-0 flex-1 truncate text-center font-semibold">{surface}</p>
@@ -170,10 +170,17 @@ function CallerName({ name, className }: { name: string | undefined; className?:
   );
 }
 
-// The way to log out, a quiet ghost button, last in the top bar.
-function LogOut() {
+// The way to log out, a quiet ghost button, last in the top bar. In the
+// menu sheet its words start on the sheet's edge, as the caller's name and
+// the switch do.
+function LogOut({ className }: { className?: string }) {
   return (
-    <Button variant="ghost" data-testid="log-out" onClick={() => void logOut()}>
+    <Button
+      variant="ghost"
+      data-testid="log-out"
+      className={className}
+      onClick={() => void logOut()}
+    >
       Log out
     </Button>
   );
