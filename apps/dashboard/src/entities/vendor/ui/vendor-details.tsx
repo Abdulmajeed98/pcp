@@ -30,16 +30,29 @@ export function Detail({
       className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4 gap-y-1 py-2.5"
     >
       <dt className="text-muted-foreground">{label}</dt>
-      <dd>{children}</dd>
+      {/* A long Instagram name has no space to break at: it wraps where it
+          must rather than pushing the page sideways (redesign ticket 09's
+          break-ui). */}
+      <dd className="min-w-0 wrap-anywhere">{children}</dd>
     </div>
   );
 }
 
 // Text the Vendor wrote on one or more lines, kept on its lines, and laid
 // out in its own direction, so that a Kurdish address is aligned right on an
-// English page (LANG-4).
+// English page (LANG-4). Each line takes its own direction too, as a phone's
+// messages do, so that an English line of a Kurdish address, such as a
+// landmark's name, starts on the left (redesign ticket 09's break-ui).
+//
+// The text stays one isolated piece, in the direction of its first letter;
+// inside it, `unicode-bidi: plaintext` gives each line, a paragraph of its
+// own, its own direction and aligns it to its own start.
 export function WrittenOnLines({ text }: { text: string }) {
-  return <AsWritten className="block whitespace-pre-line">{text}</AsWritten>;
+  return (
+    <AsWritten className="block whitespace-pre-line">
+      <span className="block [unicode-bidi:plaintext]">{text}</span>
+    </AsWritten>
+  );
 }
 
 // A phone number in Iraq's own form, which is English in every language

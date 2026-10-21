@@ -42,7 +42,10 @@ function useVendorLink(vendor: VendorSummaryResponse): { opened: boolean; to: To
 const cellAtTop = 'align-top py-3.5';
 
 // From 64rem: a table of three columns, the Vendor's name given the most
-// width. The rows bleed 8 pixels past the text on each side.
+// width, then its state, then its login phone number, end-aligned in
+// tabular figures so that the numbers' digits line up down the column, as
+// Taste's inspector asks of figures in a table. The rows bleed 8 pixels past
+// the text on each side.
 export function VendorsTable({ vendors }: { vendors: readonly VendorSummaryResponse[] }) {
   return (
     <div className="-mx-2">
@@ -50,8 +53,8 @@ export function VendorsTable({ vendors }: { vendors: readonly VendorSummaryRespo
         <TableHeader>
           <TableRow className="border-b-0">
             <TableHead className="w-1/2 ps-2">Vendor</TableHead>
-            <TableHead>Login phone number</TableHead>
-            <TableHead className="pe-2">State</TableHead>
+            <TableHead>State</TableHead>
+            <TableHead className="pe-2 text-end">Login phone number</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="border-t border-rule">
@@ -74,15 +77,20 @@ function VendorTableRow({ vendor }: { vendor: VendorSummaryResponse }) {
           <AsWritten>{vendor.name}</AsWritten>
         </Link>
       </TableCell>
-      <TableCell className={cn(cellAtTop, 'whitespace-nowrap text-muted-foreground')}>
-        <AlwaysEnglish>{vendor.loginPhoneNumber.national}</AlwaysEnglish>
-      </TableCell>
-      <TableCell className={cn(cellAtTop, 'pe-2 whitespace-nowrap')}>
+      <TableCell className={cn(cellAtTop, 'whitespace-nowrap')}>
         {vendor.active ? (
           <span className="text-muted-foreground">Active</span>
         ) : (
           <DeactivatedMark />
         )}
+      </TableCell>
+      <TableCell
+        className={cn(
+          cellAtTop,
+          'pe-2 text-end whitespace-nowrap text-muted-foreground tabular-nums',
+        )}
+      >
+        <AlwaysEnglish>{vendor.loginPhoneNumber.national}</AlwaysEnglish>
       </TableCell>
     </TableRow>
   );
@@ -120,7 +128,9 @@ function VendorListRow({ vendor }: { vendor: VendorSummaryResponse }) {
         <AsWritten>{vendor.name}</AsWritten>
       </Link>
       <p className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
-        <AlwaysEnglish>{vendor.loginPhoneNumber.national}</AlwaysEnglish>
+        <AlwaysEnglish className="tabular-nums">
+          {vendor.loginPhoneNumber.national}
+        </AlwaysEnglish>
         {!vendor.active && <DeactivatedMark />}
       </p>
     </div>

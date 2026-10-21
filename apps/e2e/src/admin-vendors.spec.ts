@@ -104,14 +104,20 @@ test.describe('on a screen as wide as a desk', () => {
     const table = page.getByRole('table', { name: 'Vendors' });
     await expect(table.getByRole('columnheader')).toHaveText([
       'Vendor',
-      'Login phone number',
       'State',
+      'Login phone number',
     ]);
-    await expect(rowOfVendor(page, vendor.name).getByRole('cell')).toHaveText([
+    const cells = rowOfVendor(page, vendor.name).getByRole('cell');
+    await expect(cells).toHaveText([
       vendor.name,
-      inIraqsOwnForm(vendor.loginPhoneNumber),
       'Active',
+      inIraqsOwnForm(vendor.loginPhoneNumber),
     ]);
+    // The phone numbers end-aligned in tabular figures, so that their digits
+    // line up down the column, its heading with them.
+    await expect(cells.last()).toHaveCSS('text-align', 'end');
+    await expect(cells.last()).toHaveCSS('font-variant-numeric', 'tabular-nums');
+    await expect(table.getByRole('columnheader').last()).toHaveCSS('text-align', 'end');
     await expect(page.getByTestId('vendors-count')).toHaveText(/^[\d,]+ Vendors?$/);
     await expect(page.locator('[data-slot="plate"]')).toHaveCount(0);
     const sheet = await page.getByRole('main').boundingBox();
@@ -208,6 +214,44 @@ test.describe("a Vendor's page", () => {
     await expectNoSidewaysScroll(page);
     await expectAccessible(page);
   });
+});
+
+test("a Vendor's page holds its longest details at 360 pixels: an Instagram name of 30 characters wraps rather than scrolling sideways, and each line of an address takes its own direction", async ({
+  page,
+  request,
+}) => {
+  const englishLine = 'Made-up Complex, Shop 247, opposite the made-up bank';
+  const vendor = await createAMadeUpVendor(request, authorization, {
+    address: `شەقامی ٦٠ مەتری، نزیک بازاڕی ١٠٠\n${englishLine}`,
+    instagramName: 'made_up_computer_hardware_erbl',
+  });
+  await page.goto(vendorPageUrl(vendor.id));
+  await expect(page.getByRole('heading', { level: 1, name: vendor.name })).toBeVisible();
+
+  await expect(
+    detailRow(page, 'instagramName').getByRole('link', {
+      name: '@made_up_computer_hardware_erbl',
+    }),
+  ).toBeVisible();
+  await expectNoSidewaysScroll(page);
+  // The English line's words start on the left of the value, as English is
+  // read, though the address is Kurdish and laid out right to left.
+  const englishLineStartsOnTheLeft = await detailRow(page, 'address')
+    .locator('dd')
+    .evaluate((value, line) => {
+      const walker = document.createTreeWalker(value, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+        const at = (node as Text).data.indexOf(line);
+        if (at === -1) continue;
+        const words = document.createRange();
+        words.setStart(node, at);
+        words.setEnd(node, at + line.length);
+        const left = value.getBoundingClientRect().left;
+        return Math.abs(words.getClientRects()[0].left - left) < 2;
+      }
+      return false;
+    }, englishLine);
+  expect(englishLineStartsOnTheLeft).toBe(true);
 });
 
 test('the menu leads from the Vendors to the Catalog and back, and marks the section the Admin is in', async ({
