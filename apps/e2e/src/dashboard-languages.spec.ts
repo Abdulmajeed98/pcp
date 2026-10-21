@@ -651,6 +651,26 @@ test.describe('the details screen, as a made-up Vendor', () => {
   });
 });
 
+// The portal's "not found" screen, at an address that matches none of its
+// screens, which the redesign draws as the dashboard's empty state.
+test('the portal\'s "not found" screen passes the checks of every screen of the Vendor portal, and its title and its link differ in each of the three languages', async ({
+  page,
+}) => {
+  await openTheDashboardAs(page, vendor, `${dashboardUrl}/no-such-screen`);
+  await expect(detailsHeading(page)).toBeVisible();
+
+  const texts = await readInEveryLanguageOfTheVendorPortal(page, async () => ({
+    title: await detailsHeading(page).innerText(),
+    link: await page.getByRole('main').getByRole('link').innerText(),
+  }));
+
+  for (const part of ['title', 'link'] as const) {
+    expectADifferentTextInEachLanguage(
+      new Map([...texts].map(([language, read]) => [language, read[part]])),
+    );
+  }
+});
+
 // The form in which the Vendor changes its contact details, opened from the
 // details screen by its link. It is filled with what the Vendor wrote, which
 // the helper leaves out of its check of the digits.
