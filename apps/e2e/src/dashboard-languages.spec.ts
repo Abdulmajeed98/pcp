@@ -592,11 +592,12 @@ test.describe('the details screen, as a made-up Vendor', () => {
   }) => {
     const texts = await readInEveryLanguageOfTheVendorPortal(page, async () => ({
       labels: (await page.locator('main dt').allInnerTexts()).join(', '),
+      headings: (await page.locator('main h2').allInnerTexts()).join(', '),
       sentence: await page.getByTestId('admin-changes').innerText(),
       city: await detailOf(page, 'city').innerText(),
     }));
 
-    for (const part of ['labels', 'sentence', 'city'] as const) {
+    for (const part of ['labels', 'headings', 'sentence', 'city'] as const) {
       expectADifferentTextInEachLanguage(
         new Map([...texts].map(([language, read]) => [language, read[part]])),
       );

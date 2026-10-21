@@ -183,6 +183,7 @@
     "adminChanges": "The Admin changes your name, your city and your login phone number.",
     "reading": "Reading your details…",
     "notRead": "Your details could not be read.",
+    "vendor": "Vendor",
     "name": "Name",
     "city": "City",
     "contactDetails": "Contact details",
