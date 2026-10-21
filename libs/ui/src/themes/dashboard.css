@@ -390,3 +390,57 @@
     }
   }
 }
+
+/*
+ * 7. Confirm all's result: each changed row's Confirmation fades in at its
+ * new state, 200 ms, each row 30 ms after the one above it, by its place in
+ * `--settle-order`, the first ten rows only. With reduced motion every row
+ * fades at once.
+ */
+@utility settles {
+  transition: opacity 200ms var(--ease-out);
+  transition-delay: calc(var(--settle-order, 0) * 30ms);
+
+  @starting-style {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-delay: 0ms;
+  }
+}
+
+/*
+ * 8. Something leaves a list, or the screen: a row, the expiry banner. It
+ * wraps what leaves, which first fades, 150 ms, and then its space closes,
+ * `grid-template-rows` from `1fr` to `0fr`, 200 ms, taking with it the gap
+ * below it, `--leaves-gap`. What leaves is clipped only while it leaves, so
+ * that a focus outline is never cut. With reduced motion it fades, and then
+ * its space closes at once.
+ */
+@utility leaves {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 200ms var(--ease-in-out) 150ms,
+    margin-block-end 200ms var(--ease-in-out) 150ms;
+
+  & > * {
+    min-height: 0;
+    transition: opacity 150ms var(--ease-out);
+  }
+
+  &[data-leaving] {
+    grid-template-rows: 0fr;
+    margin-block-end: calc(-1 * var(--leaves-gap, 0px));
+  }
+
+  &[data-leaving] > * {
+    opacity: 0;
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 1ms;
+  }
+}

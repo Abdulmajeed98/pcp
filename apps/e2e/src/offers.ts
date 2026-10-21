@@ -55,6 +55,20 @@ export function theBanner(page: Page): Locator {
   return page.getByTestId('expiry-banner');
 }
 
+// The Offers screen's tab for a state of the Offers, whatever language it is
+// named in.
+export function theTab(
+  page: Page,
+  state: 'all' | 'needs-confirming' | 'out-of-stock',
+): Locator {
+  return page.getByTestId('offer-states').locator(`a[data-state="${state}"]`);
+}
+
+// What a tab says when no Offer is in its state.
+export function noOfferInTheState(page: Page): Locator {
+  return page.getByTestId('no-offer-in-state');
+}
+
 // One of the portal's two sections, found by where it leads, whatever
 // language it is named in. They are in the frame's sidebar from 64rem, and in
 // the menu sheet on a phone.
@@ -98,11 +112,13 @@ function aPartOfTheAnswer(name: string) {
   };
 }
 
-// The counts a test gives the screen in place of the Vendor's own.
+// The counts a test gives the screen in place of the Vendor's own. None is
+// out of stock unless the test says so.
 export interface CountsGiven {
   offers: number;
   expired: number;
   aboutToExpire: number;
+  outOfStock?: number;
 }
 
 // Gives the page, whenever it lists the Vendor's Offers, an answer of the
@@ -161,7 +177,7 @@ export async function answerTheOffersAsExpiring(
               first: true,
               last: true,
               content,
-              counts,
+              counts: { outOfStock: 0, ...counts },
             },
           })
         : route.fallback(),

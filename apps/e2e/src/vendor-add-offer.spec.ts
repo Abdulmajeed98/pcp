@@ -155,11 +155,12 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
     );
   });
 
-  test("the Offers screen's button leads to the search, which marks the Part the Vendor offers and leads to its Offer", async ({
+  test("the Offers screen's button, in the frame's bar on a phone, leads to the search, which marks the Part the Vendor offers and leads to its Offer", async ({
     page,
   }) => {
     await openTheDashboardAs(page, vendor);
-    await theOffersScreen(page).getByTestId('add-offer').click();
+    await expect(theOffersScreen(page)).toBeVisible();
+    await page.getByRole('banner').getByTestId('add-offer').click();
     await expect(page).toHaveURL(`${dashboardUrl}/add`);
 
     await searchTheCatalogFor(page, offered.partNumber);

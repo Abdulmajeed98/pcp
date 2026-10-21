@@ -24,9 +24,11 @@ import {
   goToTheSection,
   listedOffers,
   noOffers,
+  noOfferInTheState,
   rowOfOffer,
   theBanner,
   theOffersScreen,
+  theTab,
 } from './offers';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
@@ -120,6 +122,58 @@ test.describe('a made-up Vendor with two Offers, added over HTTP', () => {
     await expectNoSidewaysScroll(page);
   });
 
+  test('the tabs count the Offers in each state; Out of stock lists only the Offer out of stock, kept in the address across a reload, and Need confirming says that none needs confirming', async ({
+    page,
+  }) => {
+    await openTheDashboardAs(page, vendor);
+    await expect(listedOffers(page)).toHaveCount(2);
+    await expect(theTab(page, 'all')).toHaveAttribute('aria-current', 'page');
+    await expect(theTab(page, 'all').getByTestId('state-count')).toHaveText('2');
+    await expect(theTab(page, 'needs-confirming').getByTestId('state-count')).toHaveText(
+      '0',
+    );
+    await expect(theTab(page, 'out-of-stock').getByTestId('state-count')).toHaveText('1');
+
+    await theTab(page, 'out-of-stock').click();
+    await expect(page).toHaveURL(`${dashboardUrl}/?tab=out-of-stock`);
+    await expect(listedOffers(page)).toHaveCount(1);
+    await expect(rowOfOffer(page, quotedInBoth.name)).toBeVisible();
+    await expect(page.getByTestId('offers-count')).toHaveText('1');
+
+    await page.reload();
+    await expect(theTab(page, 'out-of-stock')).toHaveAttribute('aria-current', 'page');
+    await expect(listedOffers(page)).toHaveCount(1);
+
+    await theTab(page, 'needs-confirming').click();
+    await expect(noOfferInTheState(page)).toBeVisible();
+    await expect(listedOffers(page)).toHaveCount(0);
+    await expectNoSidewaysScroll(page);
+  });
+
+  test('from 64rem the Offers are a table, the search is in the top bar, and an Offer out of stock has its plate muted', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openTheDashboardAs(page, vendor);
+
+    const table = page.getByRole('table');
+    await expect(table.getByRole('columnheader')).toHaveCount(5);
+    await expect(page.getByRole('banner').getByRole('searchbox')).toBeVisible();
+    await expect(listedOffers(page)).toHaveCount(2);
+
+    const inBoth = rowOfOffer(page, quotedInBoth.name);
+    const plate = inBoth.locator('[data-slot="plate"]');
+    await expect(plate).toHaveCount(1);
+    await expect(plate.getByTestId('usd-price')).toHaveText('1,250.50 $');
+    await expect(plate.getByTestId('iqd-price')).toHaveText('1,875,000 IQD');
+    await expect(plate).toHaveAttribute('data-muted', '');
+    await expect(
+      rowOfOffer(page, quotedInUsd.name).locator('[data-slot="plate"]'),
+    ).not.toHaveAttribute('data-muted', '');
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+
   test('the Vendor searches its own Offers by a part number, and only that Offer is listed', async ({
     page,
   }) => {
@@ -169,6 +223,65 @@ test.describe('a made-up Vendor with two Offers, added over HTTP', () => {
     await expect(page.getByTestId('confirmed-count')).toHaveText(String(confirmed));
     await expect(theBanner(page)).toHaveCount(0);
     await expect(listedOffers(page)).toHaveCount(2);
+  });
+
+  // How each changed row's Confirmation and the leaving banner move, read
+  // the moment confirm-all's answer arrives.
+  async function movementsAfterConfirmAll(page: Page): Promise<{
+    settling: string[];
+    banner: { property: string; duration: string; delay: string };
+  }> {
+    await answerTheOffersAsExpiring(page, vendor.vendorId, {
+      offers: 3,
+      expired: 1,
+      aboutToExpire: 2,
+    });
+    await openTheDashboardAs(page, vendor);
+    await expect(theBanner(page)).toBeVisible();
+    const leaves = theBanner(page).locator('xpath=../..');
+    const banner = await leaves.evaluate((wrapper) => {
+      const style = getComputedStyle(wrapper);
+      return {
+        property: style.transitionProperty,
+        duration: style.transitionDuration,
+        delay: style.transitionDelay,
+      };
+    });
+    await theBanner(page).getByRole('button').click();
+    await expect(page.getByTestId('confirmed-count')).toBeVisible();
+    await expect(
+      listedOffers(page).locator('[data-testid="confirmation"].settles'),
+    ).toHaveCount(2);
+    const settling = await listedOffers(page)
+      .locator('[data-testid="confirmation"].settles')
+      .evaluateAll((confirmations) =>
+        confirmations.map((confirmation) => getComputedStyle(confirmation).transitionDelay),
+      );
+    await expect(theBanner(page)).toHaveCount(0);
+    return { settling, banner };
+  }
+
+  test("after confirm-all, the changed rows' Confirmations settle in turn, 30 ms apart, and the banner fades and then closes its space", async ({
+    page,
+  }) => {
+    const moving = await movementsAfterConfirmAll(page);
+
+    expect(moving.settling).toEqual(['0s', '0.03s']);
+    expect(moving.banner.property).toContain('grid-template-rows');
+    expect(moving.banner.duration).toContain('0.2s');
+    expect(moving.banner.delay).toContain('0.15s');
+  });
+
+  test("with reduced motion, the changed rows' Confirmations settle at once, and the banner's space closes at once after its fade", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+
+    const still = await movementsAfterConfirmAll(page);
+
+    expect(still.settling).toEqual(['0s', '0s']);
+    expect(still.banner.duration).toContain('0.001s');
+    expect(still.banner.delay).toContain('0.15s');
   });
 
   test('the Offers screen with the banner meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({

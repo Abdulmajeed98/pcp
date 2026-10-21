@@ -20,6 +20,7 @@ import {
   AlertTitle,
   Button,
   MenuSheet,
+  ScreenActionPlaceProvider,
   ScreenSearchPlaceProvider,
 } from '@/shared/ui';
 
@@ -122,8 +123,9 @@ export function PortalFrame({
 // and the bottom in Kurdish and Arabic.
 //
 // Below 64rem the sheet is the screen: one bar on the Stone Frame holds the
-// menu button and the Vendor's name, and the menu sheet holds the sections,
-// the language switch, the scheme switch and Log out.
+// menu button, the Vendor's name and, on the end side, the screen's one
+// action if it gives one, such as Add an Offer; the menu sheet holds the
+// sections, the language switch, the scheme switch and Log out.
 //
 // A word too long for the screen is broken, so that it cannot make the page
 // scroll sideways. A new address starts at the top of its screen, and the
@@ -195,6 +197,8 @@ function OnADesk({ name, sections, children }: LayoutProps) {
 function OnAPhone({ name, sections, children }: LayoutProps) {
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Where the screen's one action goes, on the bar's end side.
+  const [actionPlace, setActionPlace] = useState<HTMLElement | null>(null);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -212,28 +216,40 @@ function OnAPhone({ name, sections, children }: LayoutProps) {
             <LogOut className="-ms-3.5" />
           </div>
         </MenuSheet>
-        <p className="min-w-0 flex-1 truncate text-center font-semibold">
-          {name !== undefined && <AsWritten data-testid="vendor-name">{name}</AsWritten>}
+        {/* The name is cut at its own end, in its own direction, so that a
+            long name keeps its start (redesign ticket 11's break-ui). */}
+        <p className="min-w-0 flex-1 text-center font-semibold">
+          {name !== undefined && (
+            <AsWritten data-testid="vendor-name" className="block truncate">
+              {name}
+            </AsWritten>
+          )}
         </p>
-        <span aria-hidden="true" className="size-control shrink-0" />
+        <div ref={setActionPlace} className="flex size-control shrink-0 justify-end" />
       </header>
-      <main className="flex-1 bg-background p-4">{children}</main>
+      <main className="flex-1 bg-background p-4">
+        <ScreenActionPlaceProvider place={actionPlace}>
+          {children}
+        </ScreenActionPlaceProvider>
+      </main>
     </div>
   );
 }
 
 // The surface's name at the sidebar's head: the Vendor's name as it writes
 // it, and "Vendor portal" below it in Note Grey. No logo is decided
-// (PRODUCT.md's Brand Commitments).
+// (PRODUCT.md's Brand Commitments). The name keeps its own direction inside
+// a line of the portal's, so that it stands on the start side in every
+// language (redesign ticket 11's break-ui).
 function Scope({ name }: { name: string | undefined }) {
   const { t } = useTranslation();
 
   return (
     <div className="flex min-h-control flex-col justify-center px-3">
       {name !== undefined && (
-        <AsWritten data-testid="vendor-name" className="font-semibold">
-          {name}
-        </AsWritten>
+        <span className="font-semibold">
+          <AsWritten data-testid="vendor-name">{name}</AsWritten>
+        </span>
       )}
       <span className="text-sm text-muted-foreground">{t('VendorPortal.title')}</span>
     </div>
@@ -246,7 +262,11 @@ function ScopeInTheMenu({ name }: { name: string | undefined }) {
 
   return (
     <span className="flex flex-col">
-      {name !== undefined && <AsWritten>{name}</AsWritten>}
+      {name !== undefined && (
+        <span>
+          <AsWritten>{name}</AsWritten>
+        </span>
+      )}
       <span className="text-sm font-normal text-muted-foreground">
         {t('VendorPortal.title')}
       </span>

@@ -12,17 +12,18 @@ import type { useConfirmAllOffers } from '../api/confirm-all';
 type Confirming = ReturnType<typeof useConfirmAllOffers>;
 
 // The button that confirms all the Vendor's Offers at once, the pane's one
-// primary button. While the API is asked, it says so and waits. A refusal
-// is said below it, in the portal's language: what was not done, and why.
+// primary button, as wide as its panel on a phone. While the API is asked,
+// it says so and waits, keeping its width. A refusal is said below it, in
+// the portal's language: what was not done, and why.
 export function ConfirmAllButton({ confirming }: { confirming: Confirming }) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col items-start gap-2">
+    <div className="flex shrink-0 flex-col items-stretch gap-2 lg:items-end">
       <Button
         disabled={confirming.isPending}
         onClick={() => confirming.mutate()}
-        className="w-full sm:w-auto"
+        className="w-full lg:w-auto"
       >
         <CheckCheckIcon data-icon="inline-start" />
         {confirming.isPending
@@ -30,7 +31,7 @@ export function ConfirmAllButton({ confirming }: { confirming: Confirming }) {
           : t('ConfirmAllOffers.confirmAll')}
       </Button>
       {confirming.error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="arrives text-sm text-destructive">
           {t('ConfirmAllOffers.notConfirmed')}{' '}
           <WhyNotAnsweredInThePortal error={confirming.error} />
         </p>
@@ -40,7 +41,8 @@ export function ConfirmAllButton({ confirming }: { confirming: Confirming }) {
 }
 
 // What confirm-all did, once the API has answered: how many Offers it
-// confirmed, a sentence that counts. It is announced when it appears, and it
+// confirmed, a sentence that counts, in Confirmed Green at weight 500 after a
+// double tick. It is announced when it appears, arrives as Motion 6 says, and
 // stays after the banner has left, until the screen is left.
 export function ConfirmedAll({ confirming }: { confirming: Confirming }) {
   const confirmed = confirming.data?.confirmed;
@@ -51,7 +53,7 @@ export function ConfirmedAll({ confirming }: { confirming: Confirming }) {
       className={
         confirmed === undefined
           ? 'sr-only'
-          : 'flex items-center gap-2 text-sm font-medium text-success'
+          : 'arrives flex items-center gap-2 text-sm font-medium text-success'
       }
     >
       {confirmed !== undefined && (
