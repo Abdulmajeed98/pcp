@@ -53,20 +53,35 @@ export function catalogHeading(page: Page): Locator {
   return page.getByRole('heading', { level: 1, name: 'Catalog' });
 }
 
-// Searches the Catalog the way the Admin does: types the words, chooses a
-// Category by its English name, or every Category, and taps Search.
+// Searches the Catalog the way the Admin does: types the words and presses
+// Enter, as the search has no button of its own, then chooses the
+// Category's tab by its English name, or All Categories. The search is in
+// the address before the tab is chosen, as each tab's address keeps it.
 export async function searchTheCatalog(
   page: Page,
   { words, category = 'All Categories' }: { words: string; category?: string },
 ): Promise<void> {
   await page.getByRole('searchbox', { name: 'Search the catalog' }).fill(words);
-  await page.getByRole('combobox', { name: 'Category' }).selectOption({ label: category });
-  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await page.getByRole('searchbox', { name: 'Search the catalog' }).press('Enter');
+  await page.waitForURL((url) => (url.searchParams.get('search') ?? '') === words.trim());
+  await categoryTab(page, category).click();
 }
 
-// The rows the Catalog found.
+// The Catalog's tab for a Category, by its English name, or All
+// Categories. Its name is the Category's followed by its count.
+export function categoryTab(page: Page, category: string): Locator {
+  return page
+    .getByRole('navigation', { name: 'Categories' })
+    .getByRole('link', { name: new RegExp(`^${category}( [\\d,]+)?$`) });
+}
+
+// The rows the Catalog found: a list's items on a phone, and a table's rows
+// on a screen as wide as a desk's.
 export function foundParts(page: Page): Locator {
-  return page.getByRole('list', { name: 'Parts found' }).getByRole('listitem');
+  return page
+    .getByRole('list', { name: 'Parts found' })
+    .getByRole('listitem')
+    .or(page.getByRole('table', { name: 'Parts found' }).getByRole('row'));
 }
 
 // The row of a Part, found by its name.

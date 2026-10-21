@@ -27,13 +27,24 @@ export function useSearchInTheAddress(): [CatalogSearch, (search: CatalogSearch)
     page: pageIn(params),
   };
 
-  function show({ words, category, page }: CatalogSearch): void {
-    const next = new URLSearchParams();
-    if (words.trim() !== '') next.set('search', words.trim());
-    if (category !== undefined) next.set('category', category);
-    writePageInto(next, page);
-    setParams(next);
+  function show(next: CatalogSearch): void {
+    setParams(paramsOf(next));
   }
 
   return [search, show];
+}
+
+// The query of the address that holds a search, such as
+// `?search=ryzen&category=cpu`, for a link to it, as a Category's tab is.
+export function addressOf(search: CatalogSearch): string {
+  const query = paramsOf(search).toString();
+  return query === '' ? '' : `?${query}`;
+}
+
+function paramsOf({ words, category, page }: CatalogSearch): URLSearchParams {
+  const params = new URLSearchParams();
+  if (words.trim() !== '') params.set('search', words.trim());
+  if (category !== undefined) params.set('category', category);
+  writePageInto(params, page);
+  return params;
 }
