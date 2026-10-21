@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc/app",
+    "tsBuildInfoFile": "out-tsc/app/tsconfig.app.tsbuildinfo",
+    "rootDir": "src",
+    "types": ["node"],
+    // Node runs the command's files as they are, stripping their types, so
+    // a relative import names the `.ts` file and no syntax may need compiling.
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "exclude": ["out-tsc", "src/test/**/*.ts"],
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../../libs/api-client/tsconfig.lib.json"
+    }
+  ]
+}

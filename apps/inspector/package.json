@@ -1,0 +1,15 @@
+{
+  "name": "@pcp/inspector",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@pcp/api-client": "workspace:*"
+  },
+  "nx": {
+    "tags": [
+      "scope:web",
+      "type:app"
+    ]
+  }
+}

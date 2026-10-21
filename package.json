@@ -18,7 +18,8 @@
     "db:generate": "node tools/generate-migration.mjs",
     "catalog:import": "nx run @pcp/api:catalog-import",
     "platform:check": "node tools/check-platform.mjs",
-    "integration:check": "node tools/check-integration.mjs"
+    "integration:check": "node tools/check-integration.mjs",
+    "dashboard:inspect": "node apps/inspector/src/main.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
