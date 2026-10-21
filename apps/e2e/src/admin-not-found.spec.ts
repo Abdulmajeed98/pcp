@@ -3,7 +3,7 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 import { expectAccessible } from './accessibility';
 import { catalogHeading, catalogUrl } from './catalog';
 import { logInToTheDashboard } from './development-logins';
-import { expectTheEmptyState } from './empty-state';
+import { expectCentredInTheWindow, expectTheEmptyState } from './empty-state';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import { dashboardUrl } from './platform';
 
@@ -33,6 +33,7 @@ for (const { width, viewport } of [
 
       await expect(title(page)).toHaveText('Screen not found');
       await expectTheEmptyState(page.getByRole('main'), title(page));
+      await expectCentredInTheWindow(page.getByRole('main'), title(page));
       await expect(
         page
           .getByRole('main')

@@ -8,7 +8,7 @@ import {
   openTheDashboardAs,
   vendorNameInTheFrame,
 } from './development-logins';
-import { expectTheEmptyState } from './empty-state';
+import { expectCentredInTheWindow, expectTheEmptyState } from './empty-state';
 import {
   atTheLoginScreenInABrowserOfItsOwn,
   type VendorLoginDetails,
@@ -124,6 +124,7 @@ test.describe('as a made-up Vendor', () => {
     }
     expect(messages.get(kurdish)).not.toBe(messages.get(english));
     await expectTheEmptyState(page.getByRole('main'), detailsHeading(page));
+    await expectCentredInTheWindow(page.getByRole('main'), detailsHeading(page));
     await expectNoSidewaysScroll(page);
 
     await page.getByRole('main').getByRole('link').click();

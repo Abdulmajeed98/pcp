@@ -26,3 +26,34 @@ export async function expectTheEmptyState(where: Locator, title: Locator): Promi
     'the icon is drawn plain, with no tinted square',
   ).toBe('rgba(0, 0, 0, 0)');
 }
+
+// An empty state that is the whole screen, such as a "not found" screen, is
+// centred in the window's height, within the sheet, as the owner chose in
+// redesign ticket 13: from the top of its icon to the foot of its last
+// control, it stands within a few pixels of the window's middle, and the
+// page does not scroll to show it.
+export async function expectCentredInTheWindow(
+  where: Locator,
+  title: Locator,
+): Promise<void> {
+  const page = where.page();
+  const icon = where.locator('svg[aria-hidden="true"]').first();
+  const last = where.getByRole('link').or(where.getByRole('button')).last();
+  await expect(title).toBeVisible();
+
+  const [top, foot, shown] = await Promise.all([
+    icon.boundingBox(),
+    last.boundingBox(),
+    page.evaluate(() => ({
+      height: window.innerHeight,
+      scrolls: document.documentElement.scrollHeight > window.innerHeight,
+    })),
+  ]);
+  expect(top !== null && foot !== null).toBe(true);
+  const middle = ((top?.y ?? 0) + (foot?.y ?? 0) + (foot?.height ?? 0)) / 2;
+  expect(
+    Math.abs(middle - shown.height / 2),
+    `the state's middle, ${middle}, is the window's, ${shown.height / 2}`,
+  ).toBeLessThanOrEqual(8);
+  expect(shown.scrolls, 'the page does not scroll').toBe(false);
+}
