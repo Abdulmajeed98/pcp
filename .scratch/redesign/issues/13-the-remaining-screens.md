@@ -98,6 +98,36 @@ Choices to confirm or change, each as built and its alternative:
 6. **"None" for a detail left out**, in words; or a Note Grey dash, as Taste's chapter draws a missing value.
 7. **The Instagram name on a row of its own** in the contact form from 40rem; or at half width beside an empty half, as before.
 
+### 22 October 2026: the owner's answers
+
+The owner saw `.taste-skill/redesign-13/index.html` in the built-in browser and answered the seven choices:
+
+| Choice | The owner's word | Result |
+|---|---|---|
+| 1. Both "not found" screens as the empty state at the sheet's head | "Centred in window" | **Changed**, below |
+| 2. Try again on the failed login | "Keep Try again" | Kept as built |
+| 3. The failed login on the Sheet with no frame | "Plain screen" | Kept as built |
+| 4. "Vendor" as the heading of the details' first group | "\"Vendor\" (as built)" | Kept as built |
+| 5. The details screen drawn while it is read, values sketched | "Placeholder bars" | Kept as built, and its values now arrive without a jump, below |
+| 6. "None" for a detail left out | "\"None\"" | Kept as built |
+| 7. The Instagram name on a row of its own | "Own row" | Kept as built |
+
+**Centred in the window**, test-first. A new check in `empty-state.ts`, `expectCentredInTheWindow` (the state's middle, from the top of its icon to the foot of its link, within 8 pixels of the window's middle, and the page not scrolling), added to the Admin console's "not found" test at 360 and 1280 and to the portal's at 360, failed first on all three (the state's middle at 183, 170 and 296 pixels against the window's 370, 400 and 370), then passed. The empty state stays on the sheet, inside its frame; a hook of `shared/lib`, `useCentredInTheWindow`, reaches it down to the window's foot, less what the frame keeps below it, and pads its foot by as much as the frame takes above it, so that its content stands at the window's middle in either frame, measured before the first paint and again when the page changes size (the frame's height can change with the language). As the whole screen, it lost its two Rule lines, which set an empty state apart from a screen's other parts. A first version measured inside the ResizeObserver's own turn and made Vite report "ResizeObserver loop completed with undelivered notifications"; it now measures in the next frame and sets only what changed. DESIGN.md's "A screen not found" says so.
+
+**The owner on motion** (the brief's note of 22 October: no rigid snaps; watch every movement slowed; with reduced motion nothing jumps a layout in one frame), applied to what moves on these screens:
+
+- **The placeholder bars giving way to the values.** The address and the opening hours take two lines where their bars took one, so the rows below jumped down in one frame. Each value that takes a bar's place now grows from the bar's height to its own while it fades in, 200 ms on the ease-out curve, with the Web Animations API (a height set by its content cannot be a CSS transition), and with reduced motion in 150 ms, still growing; a value read before the screen opened is there at once. Test-first: a new line for each motion setting, which records the page's animations and finds the address's, failed first ("the address arrives with a movement", none), then passed.
+- **Save's words.** At a desk's width "Save" became "Saving…" and the button widened by 21 pixels in one frame. Both words now hold the button's width, the one not said hidden, so it keeps its width; a new line at 1280 pixels failed first (62 against 83 pixels), then passed.
+- **Slowed four times.** A throwaway spec (deleted after) slowed the page's animations to a quarter through the DevTools protocol and recorded where the Login group's heading stood in each frame while the details arrived at 360 pixels, with the address, the map location and the opening hours each taller than its bar. With full motion it travelled its 112 pixels over 43 frames, at most 10 pixels in a frame, the first; with reduced motion over 32 frames, at most 13.3. Before this change the same 112 pixels were one frame. Eight frames of each, a tenth of a second apart, are in `.taste-skill/redesign-13/motion/` in the owner's checkout; looked at, the values fade in as their rows open, with nothing jumping.
+- **Still, as before**: both "not found" screens and the failed login open still (a route change, Motion 9); the presses are the shared buttons'.
+- **Found, not changed here**: a field's refusal in the contact form (`FieldError`) and the refusal panel above it appear in one frame and push what is below them down. Both are shared components of `shared/ui`, used by every form of tickets 08, 09 and 12, so the change belongs with them or with the coordinator, not this screen.
+
+**Tests added for the answers**, none losing an assertion: `expectCentredInTheWindow` in the two "not found" tests; in `vendor-portal.spec.ts` the values' arrival, once with full and once with reduced motion; in `vendor-contact-details.spec.ts` Save keeping its width at 1280 pixels while it says it is saving, and both of Save's tests now compare its words as drawn (`useInnerText`), since the word not said is in the button, hidden.
+
+**The checks after the answers**, on `1828a4e`: `pnpm check` before each of the two commits (`e1762f2`, the centring, and `1828a4e`, the movements); the four touched spec files and the language tests, 59 passed, then the "not found" and portal specs again after the ResizeObserver fix, 16 passed. Taste's inspector again on every screen, light and dark, English and Kurdish (in `.taste-skill/redesign-13/inspect-2/`): 0 FAIL throughout; the details screen and the contact form 0 WARN; both "not found" screens still 2 WARN, now `hero-void` at 1440 for the 40% of the first screen below the centred state (the band above it is the same size) with, in the Admin console, `panel-void` for it, and on the portal's at 360 `blank-gap` above the state under the old frame. The owner chose the centred state with that space around it; the space is the screen's, not a hole in it, so both stay as defended WARNs. The review page's captures of both "not found" screens were taken again.
+
+**Still waiting on ticket 11**: as before, the plain messages, the inspector on the portal's screens in the new frame, the table of routes and `pnpm platform:check` after the merge. The first, second, fourth, fifth and seventh boxes stay open until then; the seventh because the plain messages have not yet been shown to the owner in their own look.
+
 ### Every route, and the ticket that rebuilt it
 
 From `app/admin-console-router.tsx`, `app/vendor-portal-router.tsx` and `app/vendor-portal-screens.tsx`, and the one screen drawn outside both routers. A draft until ticket 11's frame is merged: the frames' rows name 11 as their owner.
