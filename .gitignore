@@ -35,6 +35,9 @@ pnpm-debug.log
 # Machine-local Claude Code settings
 .claude/settings.local.json
 
+# Working files of the Taste design skill: dealt directions, screenshots, found pictures
+.taste-skill
+
 # Next.js
 .next
 out
