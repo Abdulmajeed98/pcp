@@ -25,7 +25,7 @@
 From the repository root, with the development services, the API (3001) and the dashboard (3002) running:
 
 ```bash
-pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [inspect.mjs's own options]
+pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [inspect.mjs's own options]
 
 # The Catalog, logged in as the development Admin, at the three widths
 pnpm dashboard:inspect http://localhost:3002/catalog --app --widths 1440,768,360 --out .taste-skill/<folder>
@@ -34,7 +34,8 @@ pnpm dashboard:inspect http://localhost:3002/catalog --app --widths 1440,768,360
 pnpm dashboard:inspect http://localhost:3002/vendors/00000000-0000-4000-8000-000000000001/portal --language ckb --app --widths 1440,768,360 --out .taste-skill/<folder>
 ```
 
-- Every argument except `--language` goes to Taste's `inspect.mjs` as it is (`--widths`, `--out`, `--app`, `--allow`, `--json`, `--film`). The exit status is the inspector's own (0 with no FAIL, 1 with some), or 3 when the command could not start, before anything is inspected or written.
+- **The colour scheme** (added with redesign ticket 02, 21 October 2026, as the owner asked). Without `--scheme`, the inspector's Chrome follows the computer's appearance, which on the owner's Mac is dark. `--scheme light` or `--scheme dark` shows every tab the inspector opens in that scheme, through the DevTools protocol's `Emulation.setEmulatedMedia`, sent with `page.send`, one of the seven methods the owner accepted; Taste's own tab for reduced motion keeps its reduced motion. For example `pnpm dashboard:inspect http://localhost:3002/catalog --scheme light --app --widths 1440,768,360 --out .taste-skill/<folder>`.
+- Every argument except `--language` and `--scheme` goes to Taste's `inspect.mjs` as it is (`--widths`, `--out`, `--app`, `--allow`, `--json`, `--film`). The exit status is the inspector's own (0 with no FAIL, 1 with some), or 3 when the command could not start, before anything is inspected or written.
 - **The portal's language is not in its address.** The ticket says it is (ADR-0008), but that ADR gives the Shopper app a language in each address and says the Vendor portal has none: it shows the language chosen with its switch, which it keeps in the browser's storage. `--language` writes that choice in the inspector's Chrome right after the login, so every tab opens the portal in it. The Admin console is in English whatever it is given (LANG-1).
 - The shop's Vendor is `00000000-0000-4000-8000-000000000001`. The portal's other screens are under `/vendors/00000000-0000-4000-8000-000000000001/portal/`: `offers/<offer id>` (the Offers are `00000000-0000-4000-8000-000000000101` to `…113`), `details`, `add`, `add/<part id>`. The Vendors list, a Vendor's page and the Expiring Offers show the shop alone.
 - Taste is found at `~/.claude/skills/design-taste-frontend`, or at `TASTE_SKILL_DIR`. The API's address is `http://localhost:3001` unless `VITE_API_URL` says otherwise.

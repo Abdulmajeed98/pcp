@@ -8,7 +8,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Each of the five screens is photographed at 1440, 768 and 360 pixels with ticket 01's command and `--app`. The Part is a real one with a photo and a missing specification; the Offers screen shows the fixture's Offers and the expiry banner.
+- [x] Each of the five screens is photographed at 1440, 768 and 360 pixels with ticket 01's command and `--app`. The Part is a real one with a photo and a missing specification; the Offers screen shows the fixture's Offers and the expiry banner.
 - [x] **Taste:** its redesign audit and `inspect.mjs --app`'s findings for each screen, as its `SKILL.md` and its chapter on app screens describe them.
 - [ ] **Emil:** `emil-design-eng` asked a concrete question of each screen, and `review-animations` on what moves (the dashboard has little motion, so the review says where motion is missing as well as where it is wrong).
 - [x] **Impeccable:** its `critique` of each screen, adding UX and copy.
@@ -37,7 +37,7 @@ All with ticket 01's command, `pnpm dashboard:inspect <address> [--language en|c
 - **The Part's photo.** No real Part has a photo: the development database's 47 photos all belong to end-to-end tests' made-up Parts ("Made-up test Part …"), each a 64-byte test image. Writing one is out of scope, so the Part screen is a real Part with its Category icon, as every real Part is today, and the photo case is captured on one made-up Part. The first box is left open for the owner (below).
 - **The open point from ticket 01, the Offer form.** The portal's catalog search sends `GET /v1/parts?vendorId=00000000-…-0001`, and the API answers 404 `VENDOR_NOT_FOUND`; the screen shows "The catalog could not be searched. The platform refused, with 404, VENDOR_NOT_FOUND." (`catalog-search-en`). So the form cannot be reached through the search. It was opened at its own address, `…/portal/add/<Part id>`, which only reads: the Part from the API, the Vendor from the fixture. Saving would send a POST, which ticket 01's command refuses with 405 inside Chrome; nothing was saved.
 - **Nothing written.** Vendors 1,657, Offers 193, Offer history 233, Parts 27,399 and photos 47, counted read-only before the first run and after the last, the same.
-- **The scheme.** The inspector's Chrome follows the Mac's appearance, which is dark, and Taste's inspector has no option for it, so every capture is in the dark scheme; the light scheme is not photographed.
+- **The scheme.** The inspector's Chrome follows the Mac's appearance, which is dark, so these first captures are in the dark scheme. The light ones followed on the owner's word (see "the light captures" below).
 - **Taste's inspector**, every run: 0 FAIL. WARNs: `palette-cream` on every screen at every width (the warm Night Ink text, #ebe9e3); `icon-tiles` on the Catalog (21), a Part (20) and the Offers (13); `hero-void` on the Catalog (42%) and the Vendors (67%); `unused-canvas` on the Catalog (206 px) and a Part (251 px, 381 on the photo case); `many-h1` on a Part. 0 moving elements anywhere. Taste's lint (`lint.mjs --app apps/dashboard/src libs/ui/src`): 0 FAIL, 6 WARN, monospace on the plates and the temporary password, the alert dialog's shadow.
 
 ### 21 October 2026: how each skill was run
@@ -71,7 +71,9 @@ All with ticket 01's command, `pnpm dashboard:inspect <address> [--language en|c
 - **Execution, undated** (Impeccable). The DESIGN.md's Do puts the date beside each plate; the dates are on another line in another colour.
 - **Execution, units as loud as figures** (Taste). "$" and "IQD" are bold amber mono inside the plate; Taste sets units as a smaller grey suffix.
 - **Execution, the mono comma** (Taste, Emil). Geist Mono gives the comma a whole cell: "27 , 399", "266 , 000 IQD".
-- **Execution, graphite on night** (Taste). In the dark scheme the plate sits one step above the Night Page and reads as a grey chip; the dark plate on a warm page exists only in the light scheme.
+- **Execution, graphite on night** (Taste). In the dark scheme the plate sits one step above the Night Page and reads as a grey chip. The light captures show the board's image holding there, a dark plate on a warm page, so the idea survives the light scheme and its execution fails in the dark one.
+- **Execution, the warm page** (Taste, light scheme). The inspector flags the Warm Page itself, #f6f4ef, as a yellow-cream ground on every screen; its fix keeps the warmth in a low-chroma stone or bone.
+- **Execution, heavier in light** (Taste). On the Offers screen the 20 plates become near-black blocks on the warm page, the darkest masses on the screen.
 - **Execution, out of stock** (Impeccable). An Offer no one can buy keeps full-strength plates.
 
 ### 21 October 2026: for the owner
@@ -79,3 +81,20 @@ All with ticket 01's command, `pnpm dashboard:inspect <address> [--language en|c
 - **Open the page.** `.taste-skill/redesign-02/index.html` in your checkout, one screen per anchor; the orchestrator serves it. That box is left for the orchestrator.
 - **`/review-animations`.** It cannot be started by an agent. Run `/review-animations` on `apps/dashboard/src` yourself, or accept the motion review on the page (`#motion`, from `find-animation-opportunities` and `emil-design-eng`) in its place. The Emil box stays open until then.
 - **The Part's photo.** No real Part has a photo, and nothing may be written to the development database. Accept the real Part without a photo beside the made-up Part with its test photo, or add a photo to a real Part yourself in the dashboard and ask for that screen again. The first box stays open until then.
+
+### 21 October 2026: the owner's answers
+
+- **The Part's photo.** "Accept as captured": the real Part without a photo, and the photo case on a made-up Part. The first box is ticked.
+- **The light scheme.** "Add light captures". Done below.
+- **`review-animations`.** "I'll run it": the owner runs `/review-animations` and adds the review. The Emil box stays open, and the page's `#motion` section is marked as a stand-in until then.
+
+### 21 October 2026: the light captures
+
+- **The option.** `pnpm dashboard:inspect` takes `--scheme light|dark` (`feat(inspector)`, `apps/inspector/src/colour-scheme.ts`), recorded in ticket 01's how-to-run note. Every tab the inspector opens is asked for the scheme through the DevTools protocol's `Emulation.setEmulatedMedia`, sent with `page.send`, one of the seven methods the owner accepted; no new method of Taste's. Taste's own tab for reduced motion is asked for reduced motion again in the same call, since a call replaces every feature an earlier one set. Built test-first: the seams are `takeTheScheme` (the option off the command line, refused unless light or dark, 4 tests) and `emulatedMedia` (the call's parameters, 2 tests), chosen by me while the owner was not answering; the Chrome side is proved by the runs. A planted fault, dropping the reduced motion from the call, failed "keeps the reduced motion Taste asked the tab for", and was undone by the inverse edit.
+- **The runs.** The same eight addresses with `--scheme light`, into `<folder>-light` (`catalog-light`, `part-light`, `part-photo-light`, `vendors-light`, `offers-en-light`, `offers-ckb-light`, `offer-form-en-light`, `offer-form-ckb-light`), under the e2e lock, every run exit 0 with 0 FAIL. The database's counts were the same after them (Vendors 1,657, Offers 193, Offer history 233, Parts 27,399, photos 47). The page shows each light capture under its dark one.
+- **What the light scheme changes.** `palette-cream` is flagged on the Warm Page ground itself (#f6f4ef) on every screen, where in dark it was the warm Night Ink text; the boxed icons are read as `icon-chips` (icons in tinted squares) rather than `icon-tiles`; the plates read as true dark plates on a warm page, the board's own image, and on the Offers screen as the darkest, loudest masses. Everything else (the empty panes, the missing face, the Part's gap four screens down, the Offers' chrome on a phone, the form's missing "≈") is the same in both schemes. Also seen in both, and added to the page: Confirm all my Offers and Search are two filled primaries in one pane.
+
+### 21 October 2026: still open
+
+- The page is opened for the owner by the orchestrator (that box).
+- The owner's `/review-animations` (the Emil box).
