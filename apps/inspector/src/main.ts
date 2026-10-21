@@ -5,6 +5,7 @@ import type { PartPageResponse } from '@pcp/api-client';
 
 import { partsOfTheCatalog } from './catalog-parts.ts';
 import { answerFromTheShopIn, CannotInspect, logIn } from './chrome.ts';
+import { BadScheme, emulatedMedia, type Scheme, takeTheScheme } from './colour-scheme.ts';
 import { madeUpShop } from './made-up-shop.ts';
 import { runTheInspector, tastesBrowser } from './taste.ts';
 
@@ -12,15 +13,16 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 // Admin sees it, with the calls about Vendors and Offers answered from a
 // made-up shop. Run it from the repository root:
 //
-//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [the inspector's options]
+//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [the inspector's options]
 //
 // It launches the inspector's Chrome, logs in once as the development Admin
 // before the first tab, so that Keycloak's cookie carries to every width,
 // reads the shop's Parts from the catalog, and then runs Taste's
-// `inspect.mjs` unchanged, with every option but `--language` passed through
-// (`--widths`, `--out`, `--app` and the rest). The Vendor portal's screens
-// are the Admin acting as the shop's Vendor, under
-// `/vendors/00000000-0000-4000-8000-000000000001/portal`.
+// `inspect.mjs` unchanged, with every option but `--language` and `--scheme`
+// passed through (`--widths`, `--out`, `--app` and the rest). `--scheme` shows
+// every tab in the light or the dark scheme; without it Chrome follows the
+// computer's appearance. The Vendor portal's screens are the Admin acting as
+// the shop's Vendor, under `/vendors/00000000-0000-4000-8000-000000000001/portal`.
 //
 // It exits with the inspector's own status, 0 with no FAIL findings and 1
 // with some, or with 3, before anything is inspected or written, when it
@@ -28,7 +30,7 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 // all.
 
 const usage =
-  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--widths 1440,768,360] [--out DIR] [--app] [other options of inspect.mjs]';
+  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--widths 1440,768,360] [--out DIR] [--app] [other options of inspect.mjs]';
 
 // Where the API is during development, as the dashboard's settings have it.
 const apiUrl = process.env.VITE_API_URL ?? 'http://localhost:3001';
@@ -43,7 +45,14 @@ function stop(message: string): never {
 }
 
 function commandLine(args: readonly string[]) {
-  const passed = [...args];
+  let scheme: Scheme | undefined;
+  let passed: string[];
+  try {
+    ({ scheme, rest: passed } = takeTheScheme(args));
+  } catch (error) {
+    if (error instanceof BadScheme) stop(usage);
+    throw error;
+  }
   let language: string | undefined;
   const at = passed.indexOf('--language');
   if (at !== -1) {
@@ -53,7 +62,7 @@ function commandLine(args: readonly string[]) {
   }
   const address = passed[0];
   if (address === undefined || !/^https?:\/\//.test(address)) stop(usage);
-  return { address, language, inspectorArgs: passed };
+  return { address, language, scheme, inspectorArgs: passed };
 }
 
 // The development Admin's name and password, from `.env`, as
@@ -75,7 +84,7 @@ function developmentAdmin() {
   return { name, password };
 }
 
-const { address, language, inspectorArgs } = commandLine(process.argv.slice(2));
+const { address, language, scheme, inspectorArgs } = commandLine(process.argv.slice(2));
 const login = developmentAdmin();
 const Browser = await tastesBrowser();
 const browser = await Browser.launch();
@@ -102,6 +111,9 @@ try {
   browser.newPage = async (options) => {
     const page = await newPage(options);
     await answerFromTheShopIn(browser, page, shop, apiUrl);
+    if (scheme !== undefined) {
+      await page.send('Emulation.setEmulatedMedia', emulatedMedia(scheme, options ?? {}));
+    }
     return page;
   };
   Browser.launch = async () => browser;
