@@ -11,6 +11,7 @@
 - [ ] Impeccable rewrites `apps/shopper/DESIGN.md` from ticket 14's direction, its fonts unchanged (ADR-0006), with the hard rules as ticket 03 left them.
 - [ ] **Motion**, led by `emil-design-eng` and `animate`: what moves and what stays still, the easing and durations, its direction in right-to-left, and what reduced motion does.
 - [ ] An ADR records the Shopper app's new look and the options it was chosen over, and replaces the parts of [ADR-0007](../../../docs/adr/0007-a-look-and-components-for-each-app.md) it changes; ADR-0007 says which of its parts are replaced.
+- [ ] The Shopper app has the scheme switch of ticket 03, light, dark or the device's, beside its language switch, remembered in the browser.
 - [ ] The Shopper's page, its "not found" screen and its footer with the BuildCores OpenDB credit (CAT-9) follow the new DESIGN.md, in the three languages and both directions, laid out at 360 pixels first.
 - [ ] They pass `inspect.mjs` at 1440, 768 and 360 pixels, in Kurdish and in English; the Shopper app needs no login, so the inspector runs on it directly.
 - [ ] `expectAccessible` passes on them in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.

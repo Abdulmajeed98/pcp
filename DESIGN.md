@@ -48,8 +48,8 @@ The research behind every rule is in [docs/research/design-system.md](docs/resea
 - WCAG 2.2 level AA on every screen of all three surfaces.
 - Designed at 360 pixels wide first, and never scrolling sideways at 320.
 - Kurdish and Arabic right to left, laid out with logical properties only.
-- A light and a dark scheme, following the device.
-- Controls at least 44 by 44 pixels on a touchscreen.
+- A light and a dark scheme, following the device unless the user chooses one.
+- Controls at least 44 by 44 pixels on a touchscreen, and at least 36 pixels under a mouse.
 
 ## Typography
 
@@ -72,7 +72,8 @@ Each look chooses its own faces. The sizes are shared, in `rem`, so that the bro
 
 - **Width.** Every screen is designed at 360 pixels wide first and adapts upward. At 320 pixels it still never scrolls sideways (WCAG 1.4.10). A word too long for the screen is broken.
 - **Spacing.** Tailwind's 4-pixel steps, keeping to 4, 8, 12, 16, 24, 32 and 48 pixels for the rhythm of a page. More space above a heading than below it.
-- **Controls.** Anything tapped is at least 44 by 44 pixels (`size-control`, `h-control`, `min-h-control`), which meets WCAG 2.2's level AAA target size and Apple's default. Inputs and buttons are 44 pixels high.
+- **Controls.** Anything tapped on a touchscreen is at least 44 by 44 pixels (`size-control`, `h-control`, `min-h-control`), which meets WCAG 2.2's level AAA target size and Apple's default. Under a mouse, a fine pointer, an app may make its controls smaller, never under 36 pixels, still well above level AA's 24. On a phone, a screen that feels heavy with controls takes fewer rows of them, not smaller ones. The owner chose this on 21 October 2026, in the redesign's review of the hard rules.
+- **Scheme.** Each app follows the device's light or dark scheme until the user chooses one with a switch beside the language switch, light, dark or the device's, remembered in the browser as the Vendor portal's language is. The owner added the switch on 21 October 2026.
 - **Direction.** Layout is written with logical properties only (`ms-`, `pe-`, `start-`, `text-start`), so that a Kurdish or an Arabic page mirrors by itself. The language and the direction are set on the document by the server.
 
 ## Do's and Don'ts
@@ -91,6 +92,6 @@ Each look chooses its own faces. The sizes are shared, in `rem`, so that the bro
 
 - **Don't** mirror numbers, prices or part numbers, the Category icons, a Part's photo, the checkmark or any other universal mark, or a control that means an actual side of the screen.
 - **Don't** use Arabic-Indic digits: prices and specifications are in Western digits in every language.
-- **Don't** set text under 14 pixels, or a control under 44 by 44 pixels on a touchscreen.
+- **Don't** set text under 14 pixels, or a control under 44 by 44 pixels on a touchscreen or under 36 pixels under a mouse.
 - **Don't** use a font that cannot draw every letter of Sorani: ڕ, ڵ, ێ, ۆ, ە and ھ among them. ADR-0006 and the research list which can.
 - **Don't** use physical properties (`ml-`, `pr-`, `left-`, `text-left`) in a frontend or in `ui`; the lint refuses them.

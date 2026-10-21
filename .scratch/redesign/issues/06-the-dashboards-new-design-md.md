@@ -11,6 +11,7 @@
 - [ ] Impeccable rewrites `apps/dashboard/DESIGN.md` from ticket 05's direction: its tokens, Overview, Colors, Typography, Layout, Elevation & Depth, Shapes, Components, and Do's and Don'ts. The fonts are unchanged (ADR-0006).
 - [ ] Every component the current DESIGN.md describes has its place in the new one, or is listed as dropped: buttons, inputs and fields, rows, plates, states, dialogs, removing an Offer, deactivating a Vendor, the hand-over, the expiry banner, navigation and the portal's sections.
 - [ ] Choices the owner made in earlier tickets (such as the Offers screen's four in `offers` ticket 03) are kept unless the direction replaces them, and each one replaced is listed under Comments.
+- [ ] The controls' size follows ticket 03: 44 pixels on a touchscreen and 36 under a mouse, replacing the dashboard's earlier 44 under a mouse too; and the scheme switch, light, dark or the device's, beside the language switch, has its place among the components.
 - [ ] **Motion**, led by `emil-design-eng` and `animate`: what moves and what stays still, the easing and durations, how a movement is interrupted, its direction in right-to-left, and what reduced motion does.
 - [ ] The hard rules of the root DESIGN.md, as ticket 03 left them, hold throughout.
 - [ ] A new ADR records the dashboard's new look and the options it was chosen over, and replaces the parts of [ADR-0007](../../../docs/adr/0007-a-look-and-components-for-each-app.md) it changes; ADR-0007 says which of its parts are replaced.

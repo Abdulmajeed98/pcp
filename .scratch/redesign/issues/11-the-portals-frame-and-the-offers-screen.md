@@ -8,7 +8,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] The portal's frame, its sections, the language switch and the band of the Admin acting as a Vendor follow the new DESIGN.md.
+- [ ] The portal's frame, its sections, the language switch and the band of the Admin acting as a Vendor follow the new DESIGN.md, and the frame has the scheme switch of ticket 03 beside the language switch, as the Admin console has.
 - [ ] The Offers screen, an Offer's row, the expiry banner, confirm-all and its result, the search and the empty screen follow it, and move as its Motion section says, mirrored in right-to-left, with reduced motion respected.
 - [ ] The Offers screen passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command, acting as the fixture's Vendor, in Kurdish and in English, with every state of an Offer on it.
 - [ ] Emil's `break-ui` and `mobile-native` are run on the Offers screen: long Part names, a price in the millions of dinars, a dozen expired Offers, none at all; and how it takes a thumb at 360 pixels. What broke is fixed.

@@ -10,7 +10,7 @@
 
 - [ ] The tokens of the light and the dark scheme follow the new DESIGN.md.
 - [ ] Every shared component of the dashboard follows it: buttons, inputs, fields, choices, rows, plates or what replaced them, tables, alerts, dialogs, the empty state and the list's pages.
-- [ ] The Admin console's frame and its navigation follow it.
+- [ ] The Admin console's frame and its navigation follow it, with the scheme switch of ticket 03: light, dark or the device's, beside the language, remembered in the browser. Controls are 36 pixels under a mouse and 44 on a touchscreen.
 - [ ] The Catalog is rebuilt to it, and moves as the Motion section says, with reduced motion respected.
 - [ ] Every other screen still works and passes its tests, with the new base until its own ticket lays it out.
 - [ ] The Catalog passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command, with the direction's allowances restored from ticket 05.

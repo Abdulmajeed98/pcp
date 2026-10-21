@@ -24,7 +24,7 @@ The skill that leads an area decides it. The others contribute only inside that 
 | Variants of one piece of UI side by side | Emil (`prototype`) | none |
 | Accessibility, right-to-left, the hard rules, UX copy | Impeccable (`audit`, `clarify`, `harden`) | none |
 
-The hard rules are in the root [DESIGN.md](../../DESIGN.md) and in [PRODUCT.md](../../PRODUCT.md)'s Accessibility & Inclusion: WCAG 2.2 AA in both schemes, 44-pixel controls, 14-pixel text, 360 pixels wide, right-to-left, self-hosted fonts that draw all of Sorani. They hold against every skill. When a skill's rule pulls against one, put the conflict to the owner rather than choosing.
+The hard rules are in the root [DESIGN.md](../../DESIGN.md) and in [PRODUCT.md](../../PRODUCT.md)'s Accessibility & Inclusion: WCAG 2.2 AA in both schemes, with a switch between them, 44-pixel controls on a touchscreen and 36 under a mouse, 14-pixel text, 360 pixels wide, right-to-left, self-hosted fonts that draw all of Sorani. They hold against every skill. When a skill's rule pulls against one, put the conflict to the owner rather than choosing.
 
 Emil's `apple-design` is a reference for springs, gestures and materials inside Emil's lead, and `animation-vocabulary` names an effect. `pick-ui-library` applies only when a need falls outside shadcn/ui on Base UI, and the library is then the owner's choice. `animate-expo`, `write-swift` and `ask-sonner` apply only if Expo, Swift or Sonner join the stack.
 
