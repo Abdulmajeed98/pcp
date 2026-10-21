@@ -6,9 +6,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The command takes a dashboard address and passes the inspector's own options through (`--widths`, `--out`, `--app`). It uses only Taste's `Browser.launch`, `newPage`, `goto` and `eval`, and edits none of Taste's files, so `npx skills update -g` cannot undo it.
+- [x] The command takes a dashboard address and passes the inspector's own options through (`--widths`, `--out`, `--app`). It uses Taste's `Browser.launch`, `newPage`, `goto` and `eval`, and, as the owner accepted on 21 October 2026, `page.send` (for the DevTools protocol's Fetch domain), `browser.on` and `page.close`; it edits none of Taste's files, so `npx skills update -g` cannot undo it.
 - [x] It logs in with `DEVELOPMENT_ADMIN_NAME` and `DEVELOPMENT_ADMIN_PASSWORD` from `.env`, and prints neither.
 - [x] **The fixture** is one made-up Vendor, plainly fictional by its name and numbers, with about a dozen Offers: confirmed today, confirmed some days ago, about to expire, expired, out of stock, and with no warranty stated, at least one of each. Its Offers name real Parts of the catalog (ADR-0001); no Part is invented. It is typed by the generated API client's types, so that a change to the API's answers fails the type-check.
 - [x] Only the calls for Vendors and Offers are answered from the fixture; Catalog Parts still come from the API. Nothing is written to the development database, which is checked by counting its Vendors and Offers before and after a run.
@@ -66,3 +66,13 @@ All with the API and the dashboard started from this worktree, and the developme
 The first box is left open. The ticket asks that the command use only Taste's `Browser.launch`, `newPage`, `goto` and `eval`. Those four log in, but they cannot answer the dashboard's calls inside Chrome: an answer must be in place before the page's own scripts run, and `eval` only reaches a page once it is loaded, and is gone at its next load. So the command also uses three more methods of the same two classes of Taste's `cdp.mjs`: `page.send` (for the DevTools protocol's `Fetch.enable`, `Fetch.fulfillRequest` and `Fetch.continueRequest`; `inspect.mjs` itself calls `page.send`), `browser.on` (to hear each paused request) and `page.close` (to close the login's tab). None of Taste's files is edited, so `npx skills update -g` still cannot undo it; a release of Taste that renamed one of the seven would stop the command, and `apps/inspector/src/taste.ts` lists them in one place. The alternative that keeps to the four is a proxy outside Chrome, given to it through `Browser.launch`'s Chrome arguments, which answers outside the browser rather than inside it. Accept the seven, or ask for the proxy.
 
 Also open for ticket 02: the portal's "Add an Offer" search asks the API for Parts with `vendorId` set to the shop's made-up identifier, which the API does not know. It was not part of this ticket's proof, and ticket 02's capture of the Offer form will show how the API answers it.
+
+### 21 October 2026: the owner's answer
+
+Asked whether to keep the wrapper as built (`Browser.launch`, `newPage`, `goto` and `eval`, with `page.send` for the DevTools protocol's Fetch domain, `browser.on` and `page.close`, and no Taste file edited) or to rebuild it as a proxy outside Chrome that keeps to the four, the owner chose "Accept seven". The first box now says so, and is ticked.
+
+The ticket's "the language is in the address (ADR-0008)" does not hold for the Vendor portal: ADR-0008 gives each Shopper address a language and says the portal has none, keeping the language chosen with its switch in the browser's storage. That is why the command takes `--language`, which writes the choice in the inspector's Chrome after the login (see "how to run the command" above). Ticket 02 and later pass `--language ckb` or `--language en` for the portal's screens.
+
+### 21 October 2026: closed
+
+Every box is ticked. Still open for ticket 02: how the API answers the portal's "Add an Offer" search with the shop's made-up `vendorId`.
