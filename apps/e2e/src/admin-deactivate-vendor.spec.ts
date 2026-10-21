@@ -15,7 +15,7 @@ import {
   type VendorLoginDetails,
 } from './keycloak-screens';
 import {
-  buttonFor,
+  chooseInThePortal,
   expectNoSidewaysScroll,
   type Language,
   languages,
@@ -134,7 +134,7 @@ test("the Admin deactivates the Vendor, after confirming, while its portal is op
     await expect(vendorsPage.getByRole('link')).toHaveCount(0);
     const messages = new Map<Language, string>();
     for (const language of [kurdish, english]) {
-      await buttonFor(vendorsPage, language).click();
+      await chooseInThePortal(vendorsPage, language);
       messages.set(language, await theDeactivatedMessage(vendorsPage).innerText());
     }
     expect(messages.get(kurdish)).not.toBe(messages.get(english));

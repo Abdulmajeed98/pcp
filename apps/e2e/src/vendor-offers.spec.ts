@@ -20,12 +20,13 @@ import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import {
   addAnOffer,
   answerTheOffersAsExpiring,
+  expectTheCurrentSection,
+  goToTheSection,
   listedOffers,
   noOffers,
   rowOfOffer,
   theBanner,
   theOffersScreen,
-  theSection,
 } from './offers';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
@@ -216,10 +217,10 @@ test.describe('the sections of the top bar, as a made-up Vendor', () => {
     await openTheDashboardAs(page, vendor);
     await expect(theOffersScreen(page)).toBeVisible();
 
-    await theSection(page, 'details').click();
+    await goToTheSection(page, 'details');
     await expect(page).toHaveURL(`${dashboardUrl}/details`);
     await expect(detailOf(page, 'name')).toHaveText(vendor.vendorName);
-    await expect(theSection(page, 'details')).toHaveAttribute('aria-current', 'page');
+    await expectTheCurrentSection(page, 'details');
 
     await page.getByRole('main').locator('a[href="/details/contact-details"]').click();
     await page.locator('#contact-details-openingHours').fill(openingHours);
@@ -227,10 +228,10 @@ test.describe('the sections of the top bar, as a made-up Vendor', () => {
     await expect(page).toHaveURL(`${dashboardUrl}/details`);
     await expect(detailOf(page, 'openingHours')).toHaveText(openingHours);
 
-    await theSection(page, 'offers').click();
+    await goToTheSection(page, 'offers');
     await expect(page).toHaveURL(`${dashboardUrl}/`);
     await expect(theOffersScreen(page)).toBeVisible();
-    await expect(theSection(page, 'offers')).toHaveAttribute('aria-current', 'page');
+    await expectTheCurrentSection(page, 'offers');
   });
 });
 

@@ -1,5 +1,6 @@
 import { type APIRequestContext, expect, type Locator, type Page } from '@playwright/test';
 
+import { closeTheMenu, openTheMenuOnAPhone } from './menu-sheet';
 import { apiUrl } from './platform';
 
 // What a test gives an Offer it adds, as the API takes it. A price left out
@@ -54,13 +55,35 @@ export function theBanner(page: Page): Locator {
   return page.getByTestId('expiry-banner');
 }
 
-// One of the portal's two sections in its top bar, found by where it leads,
-// whatever language it is named in.
+// One of the portal's two sections, found by where it leads, whatever
+// language it is named in. They are in the frame's sidebar from 64rem, and in
+// the menu sheet on a phone.
 export function theSection(page: Page, section: 'offers' | 'details'): Locator {
   const sections = page.getByTestId('portal-sections');
   return section === 'details'
     ? sections.locator('a[href$="/details"]')
     : sections.locator('a').first();
+}
+
+// Goes to one of the portal's sections, as a Vendor does: on a phone it opens
+// the menu sheet, which choosing a section closes.
+export async function goToTheSection(
+  page: Page,
+  section: 'offers' | 'details',
+): Promise<void> {
+  await openTheMenuOnAPhone(page);
+  await theSection(page, section).click();
+}
+
+// The section the Vendor is in is marked as the current one, read in the
+// menu sheet on a phone.
+export async function expectTheCurrentSection(
+  page: Page,
+  section: 'offers' | 'details',
+): Promise<void> {
+  const opened = await openTheMenuOnAPhone(page);
+  await expect(theSection(page, section)).toHaveAttribute('aria-current', 'page');
+  if (opened) await closeTheMenu(page);
 }
 
 // A Part as the Offers list answers it, made up for an answer the test gives.

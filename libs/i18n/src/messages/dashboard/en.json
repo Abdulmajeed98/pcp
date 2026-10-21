@@ -11,7 +11,12 @@
     "deactivated": "This Vendor is deactivated, so its portal cannot be opened. Ask the Admin to reactivate it.",
     "sections": "Sections",
     "offers": "Offers",
-    "details": "Details"
+    "details": "Details",
+    "menu": "Menu",
+    "scheme": "Colour scheme",
+    "light": "Light",
+    "dark": "Dark",
+    "device": "Device"
   },
   "ActingAsVendor": {
     "actingAs": "You are acting as <name/>.",
@@ -46,7 +51,19 @@
     "next": "Next",
     "page": "Page <page/> of <pages/>",
     "pastTheLast": "This page is past the last one.",
-    "firstPage": "Go to the first page"
+    "firstPage": "Go to the first page",
+    "states": "Your Offers by state",
+    "all": "All",
+    "needsConfirming": "Need confirming",
+    "outOfStock": "Out of stock",
+    "noneNeedsConfirming": "No Offer needs confirming.",
+    "noneOutOfStock": "No Offer is out of stock.",
+    "part": "Part",
+    "price": "Price",
+    "lastConfirmed": "Last confirmed",
+    "stock": "Stock",
+    "warranty": "Warranty",
+    "noWarranty": "No warranty stated"
   },
   "Offer": {
     "inStock": "In stock",
@@ -60,7 +77,10 @@
     "expiresIn_one": "Expires in <count/> day",
     "expiresIn_other": "Expires in <count/> days",
     "expired_one": "Expired, confirmed <count/> day ago",
-    "expired_other": "Expired, confirmed <count/> days ago"
+    "expired_other": "Expired, confirmed <count/> days ago",
+    "plateBoth": "<usd/> dollars, <iqd/> dinars",
+    "plateUsd": "<usd/> dollars",
+    "plateIqd": "<iqd/> dinars"
   },
   "ExpiryBanner": {
     "title": "Some of your Offers need confirming",

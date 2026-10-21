@@ -48,11 +48,13 @@ export function ActingAsVendorFrame() {
 // The band above every screen while the Admin acts as a Vendor: a sentence
 // that names the Vendor, as written, once it is read, and a link back to the
 // Vendor's page in the Admin console. It is in the portal's language,
-// because the Vendor may be reading over the Admin's shoulder. It runs the
-// whole width, on a Shelf ground closed by a Rule Sand rule, so that it is
-// never taken for part of the Vendor's own portal, and its text is laid out
-// as the frame's is. The Admin may act as a deactivated Vendor, and the band
-// then says so, in a second sentence.
+// because the Vendor may be reading over the Admin's shoulder. It runs across
+// the whole window, above the frame, on Active Stone with an Edge line
+// below, so that it is never taken for part of the Vendor's own portal: the
+// sentence at small size and weight 500 on the start side, and the link,
+// underlined and as high as a control, on the end side, which takes the row
+// below when the sentence fills the row. The Admin may act as a deactivated
+// Vendor, and the band then says so, in a second sentence.
 function ActingBand({
   vendorId,
   name,
@@ -65,10 +67,10 @@ function ActingBand({
   const { t } = useTranslation();
 
   return (
-    <div data-testid="acting-band" className="border-b border-border bg-secondary">
-      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-4 px-4 wrap-break-word sm:px-6">
+    <div data-testid="acting-band" className="border-b border-border bg-accent">
+      <div className="flex w-full flex-wrap items-center justify-between gap-x-4 px-4 wrap-break-word">
         {name !== undefined && (
-          <p className="min-w-0 py-2 text-sm font-medium">
+          <p className="min-w-0 py-2.5 text-sm font-medium">
             <Trans
               i18nKey="ActingAsVendor.actingAs"
               components={{ name: <AsWritten>{name}</AsWritten> }}
@@ -85,7 +87,7 @@ function ActingBand({
         )}
         <Link
           to={`/vendors/${vendorId}`}
-          className="ms-auto flex min-h-control items-center text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="hover-colour ms-auto flex min-h-control items-center text-sm underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           {t('ActingAsVendor.back')}
         </Link>

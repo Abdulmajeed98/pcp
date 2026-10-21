@@ -15,10 +15,16 @@ import {
   openTheDashboardAs,
 } from './development-logins';
 import { type VendorLoginDetails } from './keycloak-screens';
-import { buttonFor, expectNoSidewaysScroll, languages, narrowWindow } from './languages';
+import {
+  chooseInThePortal,
+  expectNoSidewaysScroll,
+  languages,
+  narrowWindow,
+} from './languages';
 import {
   addAnOffer,
   foundParts,
+  goToTheSection,
   inStockSwitch,
   noOffers,
   offerField,
@@ -29,7 +35,6 @@ import {
   theCatalogSearch,
   theOfferForm,
   theOffersScreen,
-  theSection,
 } from './offers';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
@@ -197,11 +202,11 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
     await expect(page).toHaveURL(theFormFor(notOffered));
 
     const inEnglish = await refusal.innerText();
-    await buttonFor(page, kurdish).click();
+    await chooseInThePortal(page, kurdish);
     await expect(refusal).not.toHaveText(inEnglish);
     const inKurdish = await refusal.innerText();
     expect(inKurdish).not.toBe('');
-    await buttonFor(page, english).click();
+    await chooseInThePortal(page, english);
     await expect(refusal).toHaveText(inEnglish);
   });
 
@@ -262,7 +267,7 @@ test.describe('a made-up Vendor adding an Offer typed as a Kurdish or an Arabic 
     });
     await expect(page.getByTestId('offer-added')).toBeVisible();
 
-    await theSection(page, 'offers').click();
+    await goToTheSection(page, 'offers');
     const offer = rowOfOffer(page, part.name);
     await expect(offer.getByTestId('usd-price')).toHaveText('1,250.50 $');
     await expect(offer.getByTestId('iqd-price')).toHaveText('1,875,000 IQD');

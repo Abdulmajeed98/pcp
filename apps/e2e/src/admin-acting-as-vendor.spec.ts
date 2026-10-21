@@ -11,13 +11,13 @@ import {
 import { type VendorLoginDetails } from './keycloak-screens';
 import {
   arabicOfIraq,
-  buttonFor,
+  chooseInThePortal,
   expectNoSidewaysScroll,
   expectPageIn,
   languages,
   narrowWindow,
 } from './languages';
-import { theOffersScreen, theSection } from './offers';
+import { goToTheSection, theOffersScreen } from './offers';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -123,7 +123,7 @@ test("from a made-up Vendor's page the Admin opens its portal, which declares th
   await expectTheBand(page);
   await expect(theOffersScreen(page)).toBeVisible();
 
-  await theSection(page, 'details').click();
+  await goToTheSection(page, 'details');
   await expect(page).toHaveURL(`${portalUrl()}/details`);
   await expect(detailOf(page, 'name')).toHaveText(vendor.vendorName);
   await expectTheBand(page);
@@ -171,7 +171,7 @@ test('the Admin changes the opening hours there, and the Vendor, logged in in a 
     await openTheDashboardAs(vendorsPage, vendor, `${dashboardUrl}/details`);
 
     await openThePortalFromItsPage(page);
-    await theSection(page, 'details').click();
+    await goToTheSection(page, 'details');
     await theLinkToTheForm(page).click();
     await page.locator('#contact-details-openingHours').fill(openingHours);
     await page.getByRole('main').locator('form button[type="submit"]').click();
@@ -193,10 +193,10 @@ test("the portal's switch changes the language there, the band staying, and the 
 }) => {
   await openThePortalFromItsPage(page);
 
-  await buttonFor(page, kurdish).click();
+  await chooseInThePortal(page, kurdish);
   await expectPageIn(page, kurdish);
   await expectTheBand(page);
-  await buttonFor(page, english).click();
+  await chooseInThePortal(page, english);
   await expectPageIn(page, english);
   await expect(page).not.toHaveTitle(adminConsoleTitle);
   await expectTheBand(page);
