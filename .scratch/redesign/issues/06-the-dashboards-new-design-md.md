@@ -6,7 +6,7 @@
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Impeccable rewrites `apps/dashboard/DESIGN.md` from ticket 05's direction: its tokens, Overview, Colors, Typography, Layout, Elevation & Depth, Shapes, Components, and Do's and Don'ts. The fonts are unchanged (ADR-0006).
 - [x] Every component the current DESIGN.md describes has its place in the new one, or is listed as dropped: buttons, inputs and fields, rows, plates, states, dialogs, removing an Offer, deactivating a Vendor, the hand-over, the expiry banner, navigation and the portal's sections.
@@ -15,7 +15,7 @@
 - [x] **Motion**, led by `emil-design-eng` and `animate`: what moves and what stays still, the easing and durations, how a movement is interrupted, its direction in right-to-left, and what reduced motion does.
 - [x] The hard rules of the root DESIGN.md, as ticket 03 left them, hold throughout.
 - [x] A new ADR records the dashboard's new look and the options it was chosen over, and replaces the parts of [ADR-0007](../../../docs/adr/0007-a-look-and-components-for-each-app.md) it changes; ADR-0007 says which of its parts are replaced.
-- [ ] The owner reads the new DESIGN.md, with the Motion section's movements shown in the built-in browser, and every remark is answered before the ticket closes. The remarks and answers are recorded under Comments.
+- [x] The owner reads the new DESIGN.md, with the Motion section's movements shown in the built-in browser, and every remark is answered before the ticket closes. The remarks and answers are recorded under Comments.
 - [x] `pnpm check` passes, and the work is committed.
 
 ## Comments
@@ -59,7 +59,7 @@
 | The hand-over | Kept |
 | The expiry banner | Kept, under the title, now above the tabs |
 | Navigation (the top bar, the Admin's sections, the portal's top bar and sections, the band, back) | Moved into the frame: the sidebar from 64rem and the menu sheet on a phone; the band spans the window above the frame on Active Stone. **Dropped:** the top bar closed by a rule, the sections in the top bar, the portal's two section links under its bar |
-| (new) Tabs, the leading plate, the menu sheet, the scheme switch, a photograph of Erbil in the sidebar | Added |
+| (new) Tabs, the leading plate, the menu sheet, the scheme switch | Added (a photograph of Erbil in the sidebar was proposed and left out at the owner's word, below) |
 | (dropped) Warning Brown | Never used on any screen |
 | (dropped) The Catalog's Search button and its Category select | The search sits in the top bar and searches on Enter; the Categories are the Catalog's tabs, as ticket 05 drew them |
 
@@ -87,7 +87,7 @@ Kept unchanged: the Offer form (20 October), the expiry banner and its place und
 
 Two of the sheet's values were held to the root DESIGN.md's shared scale rather than taken as dealt, since the root holds where the two disagree: a screen's title is 24 pixels from 64rem and 20 on a phone (the sheet says 22), and inputs and buttons keep the body size, 16 (the renderings set buttons at 14).
 
-**For later tickets.** The Offers screen's tabs (All, Need confirming, Out of stock) filter the list by state; whether the API's list of a Vendor's Offers can filter so is for ticket 11 to check before building them. The photographs in the sidebar are shipped by the app with their credits (CC BY-SA), from ticket 05's `credits.json`.
+**For later tickets.** The Offers screen's tabs (All, Need confirming, Out of stock) filter the list by state; whether the API's list of a Vendor's Offers can filter so is for ticket 11 to check before building them.
 
 ### 21 October 2026: the review page
 
@@ -107,3 +107,24 @@ Read `design.html` and the movements on `index.html`, then confirm or change:
 8. **The two values held to the root's scale**: a 24-pixel title (not 22) and 16-pixel buttons (not 14).
 
 The box for the owner's reading stays open, and the Status stays, until the remarks are answered here.
+
+### 21 October 2026: the owner's answers
+
+The orchestrator opened `.taste-skill/redesign-06/index.html` for the owner in the built-in browser with the full motion shown (the page's reduced-motion switch unticked), and `design.html` beside it. The owner answered the eight points:
+
+| Point | The owner's word | Result |
+|---|---|---|
+| 1. "The Framed Board" and the colours' names | "Keep" | Kept |
+| 2. The leading plate on an Offer's own screen and the Platform Rate only | "Keep" | Kept |
+| 3. The Motion section as drawn | "Keep" | Kept |
+| 4. The Vendor portal's sections in the menu sheet on a phone, replacing offers ticket 03's `#d4` | "Accept" | Kept; `#d4` is replaced |
+| 5. The Catalog's list at the whole width until a Part is opened | "Keep" | Kept |
+| 6. No picture on a row | "Keep" | Kept |
+| 7. A photograph of Erbil at the foot of the sidebar | "Leave it out" | **Removed** from DESIGN.md's Navigation, from the surface brief and from ADR-0011's consequences; a Don't now keeps photographs out of the frame, the sidebar and from behind text. The credited pictures of ticket 05 stay out of the dashboard's chrome |
+| 8. A 24-pixel title and 16-pixel buttons, held to the root's scale, or Taste's 22 and 14 | "Take Taste's" | **Changed**: a screen's title is 22 pixels (1.375rem) at every width, the Screen title type; the text in buttons and links drawn as buttons is 14 pixels (0.875rem) at weight 500, the Button type, 15 in Kurdish and Arabic by the Tall Script Rule. Inputs stay at 16 pixels (17 in Kurdish and Arabic), because a phone's browser zooms into a focused input whose text is smaller, and DESIGN.md says so |
+
+**The root DESIGN.md changed for point 8.** Its Typography said the sizes are shared and that Body is the text "in every input and button", and its scale has no 22. It now says a look may set two sizes of its own, a screen's title and the text in its buttons, in `rem`, within the hard rules (no text under 14 pixels, one pixel more in Kurdish and Arabic), and that an input's text is never under 16 pixels, for the zoom. Why: the owner chose Taste's sizes for the dashboard over the shared scale, and the root holds where the two disagree, so the root had to allow it rather than the dashboard break it. ADR-0011's consequences say the same.
+
+**The two replacements already recorded stand**: Control Edge `#858480` (from held-rules' `#8c8b87`, which is 2.99:1 on the Stone Frame), and one plate per Offer holding both prices (replacing offers ticket 03's `#d2`). The owner saw both on the page and raised nothing.
+
+The note on the Offers screen's tabs, which need the API's list of a Vendor's Offers to filter by state, is also written under ticket 11's Comments. `design.html` on the review page was rebuilt from the corrected DESIGN.md. Every box is ticked.

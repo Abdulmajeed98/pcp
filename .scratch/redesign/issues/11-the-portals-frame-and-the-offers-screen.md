@@ -17,3 +17,10 @@
 - [ ] Tests that had to change are listed under Comments with why; no test loses an assertion.
 - [ ] The screen is shown to the owner in the built-in browser before the ticket closes, in Kurdish and in English, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building it taught something.
 - [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+
+## Comments
+
+### 21 October 2026: a note from ticket 06
+
+The new DESIGN.md gives the Offers screen underline tabs for the list's states, All, Need confirming and Out of stock, each with its count, kept in the screen's address as the search and the page are. Ticket 06 did not check whether the API's list of a Vendor's Offers (`GET` of a Vendor's Offers, with its `counts`) can filter by state, nor whether it counts the out-of-stock Offers. Check it before building the tabs; if the API lacks either, that is API work to agree with the owner first, as the MVP spec's boundaries ask.
+
