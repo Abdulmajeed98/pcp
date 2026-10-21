@@ -87,7 +87,11 @@ export function ContactDetailsForm({
   }
 
   return (
-    <form noValidate className="flex flex-col gap-8" onSubmit={handleSubmit(submit)}>
+    <form
+      noValidate
+      className="flex max-w-[40rem] flex-col gap-8"
+      onSubmit={handleSubmit(submit)}
+    >
       {notSaved !== undefined && (
         <Alert variant="destructive" data-testid="refusal">
           <AlertTitle>{t('ContactDetailsForm.notSaved')}</AlertTitle>
@@ -97,6 +101,8 @@ export function ContactDetailsForm({
         </Alert>
       )}
 
+      {/* From 40rem the two phone numbers share a row; every other detail
+          takes a row of its own, so that none stands beside an empty half. */}
       <FieldGroup className="grid items-start sm:grid-cols-2 sm:gap-x-6">
         <DetailField
           name="address"
@@ -160,6 +166,7 @@ export function ContactDetailsForm({
               components={upTo(longest.instagramName)}
             />
           }
+          className="sm:col-span-2"
         >
           {(props) => (
             <Input
@@ -189,8 +196,14 @@ export function ContactDetailsForm({
         </DetailField>
       </FieldGroup>
 
-      <Button type="submit" className="self-start" disabled={formState.isSubmitting}>
-        {t('ContactDetailsForm.save')}
+      <Button
+        type="submit"
+        className="w-full sm:w-auto sm:self-start"
+        disabled={formState.isSubmitting}
+      >
+        {formState.isSubmitting
+          ? t('ContactDetailsForm.saving')
+          : t('ContactDetailsForm.save')}
       </Button>
     </form>
   );
@@ -244,7 +257,9 @@ function DetailField({
 
   return (
     <Field className={className}>
-      <div className="flex flex-wrap items-center gap-2">
+      {/* As high as a label with its mark, so that two details side by side
+          start their controls on one line, marked or not. */}
+      <div className="flex min-h-5 flex-wrap items-center gap-2">
         <FieldLabel htmlFor={id}>{label}</FieldLabel>
         {optional && (
           <OptionalMark id={`${id}-optional`}>

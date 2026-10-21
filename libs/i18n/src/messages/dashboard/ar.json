@@ -256,6 +256,7 @@
     "openingHours": "ساعات العمل",
     "openingHoursDescription": "كما تكتبها، على عدد الأسطر الذي تحتاجه. الحد الأقصى لعدد الأحرف: <longest/>.",
     "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
     "notSaved": "لم تُحفظ معلومات الاتصال الخاصة بك.",
     "refused": {
       "address": {

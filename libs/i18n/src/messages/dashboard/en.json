@@ -216,6 +216,7 @@
     "openingHours": "Opening hours",
     "openingHoursDescription": "As you write them, on as many lines as you need. At most <longest/> characters.",
     "save": "Save",
+    "saving": "Saving…",
     "notSaved": "Your contact details were not saved.",
     "refused": {
       "address": {
