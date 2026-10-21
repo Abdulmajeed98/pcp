@@ -287,7 +287,22 @@ function counts(offers: readonly ListedOfferResponse[]): VendorsOfferCountsRespo
     offers: offers.length,
     expired: offers.filter((offer) => offer.expired).length,
     aboutToExpire: offers.filter((offer) => offer.aboutToExpire).length,
+    outOfStock: offers.filter((offer) => !offer.inStock).length,
   };
+}
+
+// Whether an Offer is in the state a call asks for, as the API's list of a
+// Vendor's Offers keeps them: every one, those that need confirming, or
+// those out of stock.
+function isInState(offer: ListedOfferResponse, state: string | null): boolean {
+  switch (state) {
+    case 'needs-confirming':
+      return offer.expired || offer.aboutToExpire;
+    case 'out-of-stock':
+      return !offer.inStock;
+    default:
+      return true;
+  }
 }
 
 // The paging of a list the API answers a page at a time: its page and size
@@ -377,7 +392,10 @@ export function answerFromTheMadeUpShop(
     .toLowerCase()
     .split(/\s+/)
     .filter((word) => word !== '');
-  const found = listedOffers.filter((offer) => holdsEveryWord(offer.part, words));
+  const state = address.searchParams.get('state');
+  const found = listedOffers.filter(
+    (offer) => isInState(offer, state) && holdsEveryWord(offer.part, words),
+  );
   const body: VendorsOffersPageResponse = {
     ...paged(address, found),
     counts: counts(listedOffers),
