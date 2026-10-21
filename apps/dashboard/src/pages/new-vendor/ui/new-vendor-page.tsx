@@ -36,6 +36,7 @@ function NewVendor() {
       <h1 className="screen-title">New Vendor</h1>
       <VendorForm
         submitLabel="Create the Vendor"
+        busyLabel="Creating the Vendor…"
         save={(body) => create.mutateAsync(body)}
       />
     </div>

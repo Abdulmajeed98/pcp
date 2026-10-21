@@ -112,8 +112,11 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
         </div>
       </div>
 
+      {/* The reset's result arrives below the actions and above the details
+          (DESIGN.md's Motion 6), rising and fading in; a second reset
+          replaces it in place. */}
       {resetPassword !== undefined && (
-        <div className="flex flex-col gap-6">
+        <div data-testid="password-reset" className="arrives flex flex-col gap-6">
           <p>The password is reset, and the Vendor is logged out.</p>
           <TemporaryPassword password={resetPassword} />
           <HandOver

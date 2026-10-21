@@ -69,6 +69,7 @@ export function EditVendorPage() {
       <VendorForm
         vendor={vendor.data}
         submitLabel="Save"
+        busyLabel="Saving…"
         save={(body) => edit.mutateAsync(body)}
       />
     </div>

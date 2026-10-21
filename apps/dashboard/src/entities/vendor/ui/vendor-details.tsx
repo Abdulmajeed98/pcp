@@ -8,11 +8,9 @@ import type { ReactNode } from 'react';
 // words by the screen.
 
 // A list of a Vendor's details, a row each, divided and closed above and
-// below by Rule Sand rules.
+// below by Rule lines, lighter than Edge (DESIGN.md's Rows).
 export function DetailList({ children }: { children: ReactNode }) {
-  return (
-    <dl className="divide-y divide-border border-y border-border text-sm">{children}</dl>
-  );
+  return <dl className="divide-y divide-rule border-y border-rule text-sm">{children}</dl>;
 }
 
 // One detail of the Vendor, under its name, found by the name the API gives
