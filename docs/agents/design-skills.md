@@ -44,7 +44,7 @@ Taste writes its working files to `.taste-skill/` at the repository root, which 
 
 ## Kept out on purpose
 
-- **Anthropic's `frontend-design` plugin** is turned off for this project in `.claude/settings.local.json`, so it does not add a fourth voice on art direction. That file is machine-local: on another machine, turn it off the same way.
+- **Anthropic's `frontend-design` plugin** is turned off in the user settings, `~/.claude/settings.json`, so it does not add a fourth voice on art direction. On another machine, turn it off the same way.
 - **Taste's older and image skills** moved to [taste-skill-classics](https://github.com/Leonxlnx/taste-skill-classics) and [imagegen-skills](https://github.com/Leonxlnx/imagegen-skills) and are not installed: v2's own library replaces the classic styles, and the image skills need an image-generation tool this setup lacks.
 
 ## Updating
