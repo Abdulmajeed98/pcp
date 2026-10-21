@@ -39,7 +39,7 @@ spacing:
 
 **Creative North Star: "Two looks, one floor"**
 
-The platform has two looks, each in its own app's folder: [Fit Diagram](apps/shopper/DESIGN.md) for the Shopper app, and [Rate Board](apps/dashboard/DESIGN.md) for the dashboard, which holds the Admin console and the Vendor portal (ADR-0007). This file is the floor under both. Everything here comes from the accessibility standard, WCAG 2.2 level AA, from the three languages, and from the phones the platform is read on, not from either look. A page is built to its own app's DESIGN.md and to this one, and where the two seem to disagree, this one holds.
+The platform has two looks, each in its own app's folder: [Fit Diagram](apps/shopper/DESIGN.md) for the Shopper app, and [Framed sheet](apps/dashboard/DESIGN.md) for the dashboard, which holds the Admin console and the Vendor portal (ADR-0007, ADR-0011). This file is the floor under both. Everything here comes from the accessibility standard, WCAG 2.2 level AA, from the three languages, and from the phones the platform is read on, not from either look. A page is built to its own app's DESIGN.md and to this one, and where the two seem to disagree, this one holds.
 
 The research behind every rule is in [docs/research/design-system.md](docs/research/design-system.md).
 
@@ -53,13 +53,13 @@ The research behind every rule is in [docs/research/design-system.md](docs/resea
 
 ## Typography
 
-Each look chooses its own faces. The sizes are shared, in `rem`, so that the browser's text size setting scales every one of them (WCAG 1.4.4).
+Each look chooses its own faces. The sizes are shared, in `rem`, so that the browser's text size setting scales every one of them (WCAG 1.4.4). A look may set two sizes of its own, in `rem` too: a screen's title, and the text in its buttons. It does so within the hard rules: no text under 14 pixels, and one pixel more in Kurdish and Arabic by the Tall Script Rule, so a button's text at 14 is 15 there. The owner allowed this on 21 October 2026, when the dashboard took a 22-pixel title and 14-pixel button text from its Taste sheet.
 
 - **Heading large** (1.875rem, 30 pixels): one per page at most.
 - **Heading** (1.5rem): a page's title on a wider screen.
 - **Title** (1.25rem): a page's title on a phone, and a section's.
 - **Body large** (1.125rem): a Part's name where it leads.
-- **Body** (1rem, 16 pixels): reading text, and the text in every input and button.
+- **Body** (1rem, 16 pixels): reading text, the text in every input, and the text in every button unless the look sets its own. An input's text is never under 16 pixels, because a phone's browser zooms into a focused input whose text is smaller.
 - **Small** (0.875rem, 14 pixels): secondary lines, such as how many days ago an Offer was confirmed.
 
 **The Fourteen Pixel Rule.** No text is smaller than 14 pixels. The theme takes Tailwind's 12-pixel `text-xs` away.
