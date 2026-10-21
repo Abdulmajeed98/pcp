@@ -6,15 +6,15 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Each of the five screens is photographed at 1440, 768 and 360 pixels with ticket 01's command and `--app`. The Part is a real one with a photo and a missing specification; the Offers screen shows the fixture's Offers and the expiry banner.
 - [x] **Taste:** its redesign audit and `inspect.mjs --app`'s findings for each screen, as its `SKILL.md` and its chapter on app screens describe them.
-- [ ] **Emil:** `emil-design-eng` asked a concrete question of each screen, and `review-animations` on what moves (the dashboard has little motion, so the review says where motion is missing as well as where it is wrong).
+- [x] **Emil:** `emil-design-eng` asked a concrete question of each screen, and `review-animations` on what moves (the dashboard has little motion, so the review says where motion is missing as well as where it is wrong).
 - [x] **Impeccable:** its `critique` of each screen, adding UX and copy.
 - [x] Every finding names its source skill. A short summary per screen says where the skills agree and where they pull apart.
 - [x] Findings that trace back to a hard rule of the root DESIGN.md or PRODUCT.md's Accessibility & Inclusion are marked, for ticket 03. Findings on the Rate Board's plates, graphite, amber and figures are marked as against the idea or against its execution, for ticket 04.
-- [ ] The page is served from a folder that outlasts this session (`.taste-skill/`, which Git ignores), one screen per anchor, two columns at most, and opened in the built-in browser for the owner.
+- [x] The page is served from a folder that outlasts this session (`.taste-skill/`, which Git ignores), one screen per anchor, two columns at most, and opened in the built-in browser for the owner.
 - [x] The summaries and the marked findings are recorded under Comments, so tickets 03 and 04 can read them without the page.
 - [x] No source file of the app changes.
 
@@ -94,7 +94,21 @@ All with ticket 01's command, `pnpm dashboard:inspect <address> [--language en|c
 - **The runs.** The same eight addresses with `--scheme light`, into `<folder>-light` (`catalog-light`, `part-light`, `part-photo-light`, `vendors-light`, `offers-en-light`, `offers-ckb-light`, `offer-form-en-light`, `offer-form-ckb-light`), under the e2e lock, every run exit 0 with 0 FAIL. The database's counts were the same after them (Vendors 1,657, Offers 193, Offer history 233, Parts 27,399, photos 47). The page shows each light capture under its dark one.
 - **What the light scheme changes.** `palette-cream` is flagged on the Warm Page ground itself (#f6f4ef) on every screen, where in dark it was the warm Night Ink text; the boxed icons are read as `icon-chips` (icons in tinted squares) rather than `icon-tiles`; the plates read as true dark plates on a warm page, the board's own image, and on the Offers screen as the darkest, loudest masses. Everything else (the empty panes, the missing face, the Part's gap four screens down, the Offers' chrome on a phone, the form's missing "≈") is the same in both schemes. Also seen in both, and added to the page: Confirm all my Offers and Search are two filled primaries in one pane.
 
-### 21 October 2026: still open
+### 21 October 2026: the owner's `review-animations`
 
-- The page is opened for the owner by the orchestrator (that box).
-- The owner's `/review-animations` (the Emil box).
+The owner ran `/review-animations` on `apps/dashboard/src` on 21 October 2026. It now leads the page's `#motion` section; the earlier findings of `find-animation-opportunities` and `emil-design-eng` are kept below it, each labelled Emil. Its findings, each Emil's:
+
+- **The alert dialog** (`shared/ui/alert-dialog.tsx:33,44`) and its scrim appear and vanish in one frame, the shadcn animations having been dropped with `tw-animate-css`. Base UI's `data-starting-style` and `data-ending-style`: the popup from `opacity-0 scale-[0.96]`, 200 ms on `cubic-bezier(0.23,1,0.32,1)`, the scrim's opacity 150 ms, the exit 150 ms, the origin at the centre.
+- **The press** (`shared/ui/button.tsx:10`), `active:translate-y-px` with the transform not transitioned: `active:scale-[0.97]`, 150 ms on the same curve.
+- **The switch's thumb** (`shared/ui/switch.tsx:21`) on Tailwind's default curve: the same 150 ms on `cubic-bezier(0.23,1,0.32,1)`, with `motion-reduce:transition-none`.
+- **No motion tokens**: `--ease-out`, `--ease-in-out` and two or three durations in the dashboard's theme, named in DESIGN.md's Motion section (ticket 06).
+- **Hover timing mixed**: rows fade over 100 ms (`item.tsx:37`) while the frames' navigation links and `back-link.tsx:11` snap; pick one.
+- **No reduced-motion handling**: `motion-reduce:` on every movement, keeping opacity and colour.
+- **Where motion is missing**, for ticket 06: the dialog's entrance and exit; Confirm all's result (an opacity and colour settle on the changed cells); an Offer removed from the list (a height-free exit that keeps the Vendor's place); the note after an Offer is added (a 150 to 200 ms fade with a 4 to 8 px rise). **Left alone**: route changes, the Catalog's paging, search as you type, the language switch.
+- **A correction**: Tailwind v4 already gates `hover:` behind `(hover: hover)`, so the stand-in's and Emil's Catalog finding about hover on touch was wrong; the page says so.
+
+**Its verdict**: no feel-breaking regressions, nothing to delete, performance and interruptibility clean; origin, physicality and cohesion fall short (the dialog from nothing, the unseated press, weak curves, mixed hover timing, no tokens); no reduced-motion handling, harmless today. **Decision: Block, for the redesign, not as a regression.** Ticket 06's Motion section should fix the dialog and the press, and carry the tokens, the reduced-motion rule and the four missing moments.
+
+### 21 October 2026: closed
+
+The orchestrator opened the page for the owner in the built-in browser on 21 October 2026, served from `.taste-skill` on port 4110. With the owner's `review-animations` in place, every box is ticked.
