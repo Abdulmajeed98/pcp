@@ -159,6 +159,102 @@ test('a Part found in the Catalog opens its page', async ({ page, request }) => 
   await expect(page.getByRole('heading', { level: 1, name: part.name })).toBeVisible();
 });
 
+// A Part's page as the dashboard's DESIGN.md lays it out (redesign ticket
+// 08): what the Part lacks is said in words, as the Missing specifications
+// say it, and never on a plate, since plates are for prices.
+test.describe("a Part's page", () => {
+  test('says in words which needed specifications the Part lacks, on no plate', async ({
+    page,
+    request,
+  }) => {
+    const part = await createAMadeUpPart(request, authorization, { cores: { total: 6 } });
+    await page.goto(`${catalogUrl}/parts/${part.id}`);
+
+    await expect(page.getByTestId('lacks')).toHaveText('Lacks Socket, TDP, Memory types');
+    await expect(page.locator('[data-slot="plate"]')).toHaveCount(0);
+  });
+
+  test('says when the Part lacks none of them', async ({ page, request }) => {
+    const part = await createAMadeUpPart(request, authorization, {
+      socket: 'AM5',
+      specifications: { tdp: 65, memory: { types: ['DDR5'] } },
+    });
+    await page.goto(`${catalogUrl}/parts/${part.id}`);
+
+    await expect(page.getByTestId('lacks')).toHaveCount(0);
+    await expect(page.getByText('Every needed specification is known')).toBeVisible();
+  });
+
+  // A Part with no photo shows its Category's icon at 32 pixels, plain, with
+  // no tinted square behind it (CAT-6, DESIGN.md's picture of a Part).
+  test("draws its Category's icon plain when it has no photo", async ({
+    page,
+    request,
+  }) => {
+    const part = await createAMadeUpPart(request, authorization);
+    await page.goto(`${catalogUrl}/parts/${part.id}`);
+
+    const icon = page.getByTestId('category-icon');
+    await expect(icon).toHaveAttribute('data-category', 'cpu');
+    expect((await icon.boundingBox())?.width).toBe(32);
+    expect(
+      await icon.evaluate((svg) => getComputedStyle(svg.parentElement!).backgroundColor),
+    ).toBe('rgba(0, 0, 0, 0)');
+  });
+
+  test.describe('beside the list, on a screen as wide as a desk', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    test("sets each specification's label beside its value, and meets WCAG 2.2 level AA in light and in dark", async ({
+      page,
+      request,
+    }) => {
+      const part = await createAMadeUpPart(request, authorization, {
+        cores: { total: 6 },
+      });
+      await searchTheCatalog(page, { words: part.word });
+      await rowOf(page, part.name).getByRole('link', { name: part.name }).click();
+      await expect(page.getByRole('heading', { level: 1, name: part.name })).toBeVisible();
+
+      const cores = specificationRow(page, 'cores.total');
+      const label = await cores.getByRole('term').boundingBox();
+      const value = await cores.getByRole('definition').boundingBox();
+      expect(value?.y).toBe(label?.y);
+      expect(value?.x).toBeGreaterThan((label?.x ?? 0) + (label?.width ?? 0));
+      await expectNoSidewaysScroll(page);
+      await expectAccessible(page);
+    });
+  });
+});
+
+// A Part the API does not give is a screen with its own title, saying what
+// was not done and why, and a way to try again (redesign ticket 08's
+// break-ui: on a phone it had no title at all).
+test('a Part the API does not give has a title, the reason and a way to try again', async ({
+  page,
+}) => {
+  let refuse = true;
+  await page.route(`${apiUrl}/v1/parts/*`, (route) =>
+    refuse && route.request().method() === 'GET'
+      ? route.fulfill({
+          status: 500,
+          json: { statusCode: 500, code: 'internalError', errors: [] },
+        })
+      : route.continue(),
+  );
+  const part = await createAMadeUpPart(page.request, authorization);
+  await page.goto(`${catalogUrl}/parts/${part.id}`);
+
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'The Part could not be read' }),
+  ).toBeVisible();
+  await expect(page.getByTestId('refusal')).toContainText('500');
+  await expectAccessible(page);
+  refuse = false;
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: part.name })).toBeVisible();
+});
+
 test('a Part that does not exist is said not to exist', async ({ page }) => {
   await page.goto(`${catalogUrl}/parts/${randomUUID()}`);
 
