@@ -249,7 +249,8 @@
     "openOffers": "Open your Offers"
   },
   "LoginFailed": {
-    "message": "The login could not be completed."
+    "message": "The login could not be completed.",
+    "tryAgain": "Try again"
   },
   "MapLocationField": {
     "label": "Map location",

@@ -340,7 +340,7 @@ test.describe('in a browser set to English', () => {
   // The login could not be completed when Keycloak's answer to the
   // dashboard's last step of it never arrives. Nobody is known then, so the
   // message follows the Vendor portal's rule, the remembered choice first.
-  test('the message for a login that could not be completed follows the remembered choice', async ({
+  test('the message for a login that could not be completed, and its Try again, follow the remembered choice', async ({
     page,
   }) => {
     await openTheDashboardAs(page, vendor);
@@ -355,6 +355,10 @@ test.describe('in a browser set to English', () => {
 
     await expect(page.getByTestId('login-failed')).toBeVisible();
     await expectPageIn(page, arabic);
+    const tryAgain = page.getByRole('main').getByRole('button');
+    await expect(tryAgain).toBeVisible();
+    await expect(tryAgain).not.toHaveText('Try again');
+    await expectNoSidewaysScroll(page);
   });
 });
 

@@ -289,7 +289,8 @@
     "openOffers": "افتح عروضك"
   },
   "LoginFailed": {
-    "message": "تعذّر إكمال تسجيل الدخول."
+    "message": "تعذّر إكمال تسجيل الدخول.",
+    "tryAgain": "حاول مرة أخرى"
   },
   "MapLocationField": {
     "label": "الموقع على الخريطة",
