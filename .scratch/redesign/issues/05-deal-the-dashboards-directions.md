@@ -9,7 +9,7 @@
 **Status:** ready-for-human
 
 - [x] The directions are dealt by `node ~/.claude/skills/design-taste-frontend/scripts/draw.mjs --app --keep type --options 3`, run from the repository root, with a one-line brief that carries ticket 04's line and the hard rules as ticket 03 left them. The fonts stay (ADR-0006).
-- [ ] Pictures of Erbil's bazaar, its money changers' boards and its shop signs are found with Taste's `assets.mjs`, each with its credit recorded.
+- [x] Pictures of Erbil's bazaar, its money changers' boards and its shop signs are found with Taste's `assets.mjs`, each with its credit recorded.
 - [x] Each direction is rendered as the portal's Offers screen, in Kurdish and in English, and the Catalog, at 360 and 1440 pixels, filled with ticket 01's fixture: no empty or placeholder screen.
 - [x] Every option keeps the hard rules as ticket 03 left them; an option that breaks one says so on its page.
 - [ ] The options are shown in the built-in browser on one page, one option per anchor, two columns at most, before the owner is asked to choose. If the owner takes none, the script deals again.
@@ -36,3 +36,19 @@ Everything below is in the owner's checkout at `.taste-skill/redesign-05/` (Git 
 
 - **Choose by eye** on `.taste-skill/redesign-05/index.html`: 1 Framed sheet (`#o1`), 2 Achromatic ledger (`#o2`), or ask for a new deal. `#o3` explains why there is no third: the kind `commerce` holds only two styles; a third needs another kind, which is the owner's call (`analytics`, `devtools` or `creator` deal three; `markets`, the nearest to a money changer's board, deals two dark ones).
 - The boxes for the owner's choice, the chosen sheet committed into the repository and its note, and the page shown in the built-in browser, are left open until then, and the Status stays. The box for the pictures is left open too: the bazaar and its signs were found with their credits, but no money changer's board in Erbil; accept the pictures as found, or name a source.
+
+### 21 October 2026: the owner's answers, and two more directions
+
+The owner looked at the page and answered:
+
+- **The directions.** "deal 2 more besides the Take 1 and Take 2 to see more options and creativity". Asked which kind to deal from, the owner chose "creator".
+- **The pictures.** "Accept as found": the bazaar, the Citadel and the trilingual road sign as found, with no money changer's board. That box is ticked.
+
+**The second deal**, from the root of the owner's checkout, with the same brief: `node ~/.claude/skills/design-taste-frontend/scripts/draw.mjs --app --keep type --options 2 --kind creator --brief "<the same line>"` (its output in `dealt-creator.md`). It dealt, in this order, `accent-ladder` and `true-black-flat`; neither repeats o1 or o2. Each full sheet was dealt with `--style <id>` into `o3` and `o4`:
+
+- **o3 Accent ladder**, seed 1380793601, light, shell "ruled T-frame" (a sidebar and a 64-pixel top bar on one ground, divided by 1-pixel rules). One raspberry (#b8336a) at full strength on small marks only (the one filled button, the chosen tab, the active section's icon), its pale tints on areas (the active section's row). Its face: the raspberry kept, with the plates' figures in its palest tint; the ground is ticket 04's stone (#f4f3f1) in place of the sheet's #f9fafb.
+- **o4 True-black flat**, seed 1875170293, dark, the same shell. Elevation by lightness alone, no borders or shadows on cards (20-pixel corners), the active section only brighter, the primary an inverted white pill, every control a pill. Its face: a warm near-black ground (#0e0d0c); the dealt lime on the plates' figures, and as "in stock".
+
+Both are rendered exactly as o1 and o2, by the same generator (`build/build.mjs`) with a third shell for the T-frame; o1's and o2's pages come out the same as before. As dealt, o3 breaks the 36-pixel floor with 32-pixel controls, uses a 12-pixel small size and control edges under 3:1, and has a light scheme only; o4 uses a 12-pixel small size and control edges under 3:1, and has a dark scheme only. Each is held in the drawing and marked on its page: o3's dark and o4's light come from the chapter's shared defaults on the stone; o4's lime, which fails as text on white, says "in stock" in a dark green in the light scheme; o3's 32-pixel title is held to 24 on a phone, the chapter's phone size. The `creator` kind has no list pattern in Taste's library, so both sheets leave the list screen to the chapter's rules, and it is built as in o1 and o2. Taste's inspector, on each page in each scheme at 1440 and 360: 0 FAIL throughout, and 1 WARN on each Catalog at 360 (the tab row that scrolls sideways). The page's note where `#o3` said "no third direction" now says that o3 and o4 were dealt from `creator` at the owner's word, and the page has four anchors, `#o1` to `#o4`.
+
+Still for the owner: the choice among the four (or another deal), then the chosen sheet committed with its note.
