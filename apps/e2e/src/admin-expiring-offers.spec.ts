@@ -5,7 +5,7 @@ import { openTheSection, vendorPageUrl } from './admin-vendors';
 import { catalogHeading } from './catalog';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
-import { leavingRowsOf, watchForLeavingRows } from './leaving-rows';
+import { filmTheList, jumpsIn, leavingRowsOf, watchForLeavingRows } from './leaving-rows';
 import { apiUrl, dashboardUrl } from './platform';
 import { createAMadeUpVendor, type MadeUpVendor } from './vendors';
 
@@ -162,7 +162,7 @@ async function comeBackToTheWindow(page: Page): Promise<void> {
   await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')));
 }
 
-test('a Vendor the list drops while the Admin is on it fades, then its space closes, and with reduced motion it only fades', async ({
+test('a Vendor the list drops while the Admin is on it fades, then its space closes, and with reduced motion it fades, then its space closes faster', async ({
   page,
 }) => {
   const staying = { ...theVendorListed(), id: 'staying', name: 'Made-up Stays' };
@@ -191,7 +191,9 @@ test('a Vendor the list drops while the Admin is on it fades, then its space clo
     delay: '0.15s',
   });
 
-  // With reduced motion: the fade, then the space closes at once.
+  // With reduced motion: the fade, then the space closes over a short
+  // time on the out curve, never in one frame (the owner's word, redesign
+  // ticket 10).
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.unrouteAll();
   await answerTheList(page, aPageOf([staying, theVendorListed()]));
@@ -211,14 +213,83 @@ test('a Vendor the list drops while the Admin is on it fades, then its space clo
   });
   expect(faded?.transitions).toContainEqual({
     property: 'grid-template-rows',
-    duration: '0s',
+    duration: '0.15s',
     delay: '0.15s',
   });
 });
 
+// The owner's word on the leaving motion (redesign ticket 10): "smooth, not
+// a rigid snaps". The second of four Vendors leaves while the next page's
+// first arrives at the end, watched four times slower, frame by frame: no
+// row, no column and not the pages' navigation may jump in one frame, and no
+// row may appear or be taken out while it can be seen. With reduced motion
+// the space still closes over a short time, never in one frame.
+async function watchOneLeaveAndOneArrive(
+  page: Page,
+  reducedMotion: 'no-preference' | 'reduce',
+): Promise<void> {
+  await page.emulateMedia({ reducedMotion });
+  const [first, second, third, fourth, fifth] = [
+    'Made-up First',
+    'Made-up Second',
+    'Made-up Third',
+    'Made-up Fourth',
+    'Made-up Fifth',
+  ].map((name, index) => ({ ...theVendorListed(), id: `made-up-${index}`, name }));
+  const ofThree = (content: unknown[]) => ({
+    ...aPageOf(content),
+    totalElements: 47,
+    totalPages: 3,
+    last: false,
+  });
+  await answerTheList(page, ofThree([first, second, third, fourth]));
+  await page.goto(expiringOffersUrl);
+  await expect(listedVendors(page)).toHaveCount(4);
+
+  await page.unrouteAll();
+  await answerTheList(page, ofThree([first, third, fourth, fifth]));
+  const frames = await filmTheList(
+    page,
+    'Vendors to remind',
+    () => comeBackToTheWindow(page),
+    { slowedBy: 4, forMs: 3500 },
+  );
+
+  await expect(listedVendors(page)).toHaveCount(4);
+  await expect(listedVendors(page).nth(3)).toContainText('Made-up Fifth');
+  // Every row has its rule below it, the last too, so that a rule comes and
+  // goes only with its own row.
+  await expect(listedVendors(page).last()).toHaveCSS('border-bottom-width', '1px');
+  expect(jumpsIn(frames, { step: 16, fade: 0.35 })).toEqual([]);
+  // It was watched slowed: the leaving row took over a second to go.
+  const leaving = (frame: (typeof frames)[number]) =>
+    frame.rows.find((row) => row.key.startsWith('Made-up Second'));
+  const fading = frames.findIndex((frame) => (leaving(frame)?.opacity ?? 1) < 1);
+  const gone = frames.findIndex((frame, index) => index > fading && !leaving(frame));
+  expect(fading).toBeGreaterThan(-1);
+  expect(gone).toBeGreaterThan(fading);
+  expect(frames[gone].at - frames[fading].at).toBeGreaterThan(900);
+}
+
+for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+  test(`a Vendor leaving and the next arriving, watched four times slower, jump in no frame, ${reducedMotion} motion`, async ({
+    page,
+  }) => {
+    await watchOneLeaveAndOneArrive(page, reducedMotion);
+  });
+}
+
 // From 64rem the list is a table (redesign ticket 10).
 test.describe('at a desk’s width', () => {
   test.use({ viewport: { width: 1280, height: 800 } });
+
+  for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+    test(`a Vendor leaving and the next arriving, watched four times slower, jump in no frame and move no column, ${reducedMotion} motion`, async ({
+      page,
+    }) => {
+      await watchOneLeaveAndOneArrive(page, reducedMotion);
+    });
+  }
 
   test('the list is a table across the sheet, its Vendor, Offers, Phone and WhatsApp, whose links still call and chat, and meets WCAG 2.2 level AA in light and in dark', async ({
     page,

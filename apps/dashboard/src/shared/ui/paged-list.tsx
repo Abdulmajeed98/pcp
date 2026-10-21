@@ -2,7 +2,7 @@ import { formatNumber } from '@pcp/i18n';
 import { CircleCheckIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { type ShownRow, useLeavingRows } from '@/shared/lib';
+import { type ShownRow, useLeavingRows, whenTheSpaceHasClosed } from '@/shared/lib';
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from './empty';
 import { ListPages } from './list-pages';
@@ -24,13 +24,15 @@ interface AnsweredPage<Item> {
 // later page is on its way, the last answer stays, at full strength, and a
 // line beside the count says that the next is on its way. A page past the
 // last says so, with the way to the first. A row the list drops while the
-// user is on it leaves as the Motion section says; paging and the count stay
-// still.
+// user is on it leaves as the Motion section says, and a row new to the page
+// arrives in step with it; paging and the count stay still.
 //
 // The rows are two-line rows in a list, each drawn by `row`, unless `rows`
 // draws them otherwise, as a table from 64rem (redesign ticket 10). Either
-// way a leaving row is marked `data-leaving` and inert, and its space is
-// closed by the theme's `leaves`.
+// way a leaving row is marked `data-leaving` and inert, an arriving one
+// `data-arriving`, their space is closed or opened by the theme's `leaves`,
+// each row's rule with it, and a leaving row is taken out once its space has
+// closed, so that nothing is ever taken out or put in while it can be seen.
 function PagedList<Item>({
   id,
   answered,
@@ -84,15 +86,17 @@ function PagedList<Item>({
       ) : rows !== undefined ? (
         rows(shown)
       ) : (
-        <ul aria-label={label} className="-mx-2 divide-y divide-rule border-y border-rule">
-          {shown.map(({ item, key, leaving }) => (
+        <ul aria-label={label} className="-mx-2 border-t border-rule">
+          {shown.map((each) => (
             <li
-              key={key}
-              className="leaves"
-              data-leaving={leaving || undefined}
-              inert={leaving}
+              key={each.key}
+              className="leaves border-b border-rule"
+              data-leaving={each.leaving || undefined}
+              data-arriving={each.arriving || undefined}
+              inert={each.leaving}
+              onTransitionEnd={whenTheSpaceHasClosed(each)}
             >
-              <div>{row(item)}</div>
+              <div>{row(each.item)}</div>
             </li>
           ))}
         </ul>

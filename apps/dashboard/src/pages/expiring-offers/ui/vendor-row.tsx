@@ -11,7 +11,7 @@ import {
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
-import { type ShownRow, whatsAppChatWith } from '@/shared/lib';
+import { type ShownRow, whatsAppChatWith, whenTheSpaceHasClosed } from '@/shared/lib';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 
 import { callTo } from '../model/links';
@@ -154,7 +154,11 @@ function Cell({ links = false, children }: { links?: boolean; children: ReactNod
 
 // From 64rem: a table of four columns, the Vendor given the most width, then
 // why it is on the list, its phone number and its WhatsApp number. The rows
-// bleed 8 pixels past the text on each side.
+// bleed 8 pixels past the text on each side. The columns' widths are fixed
+// by their headings, the numbers' as wide as a number with its marks, so
+// that no column moves when a row leaves or arrives, and every row has its
+// rule below it, the last too, so that a rule comes and goes only with its
+// row.
 export function VendorsTable({
   shown,
 }: {
@@ -162,36 +166,38 @@ export function VendorsTable({
 }) {
   return (
     <div className="-mx-2">
-      <Table aria-label="Vendors to remind">
+      <Table aria-label="Vendors to remind" className="table-fixed">
         <TableHeader>
           <TableRow className="border-b-0">
             <TableHead className="w-2/5 first:ps-2">Vendor</TableHead>
             <TableHead>Offers</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead className="pe-2">WhatsApp</TableHead>
+            <TableHead className="w-40">Phone</TableHead>
+            <TableHead className="w-44 pe-2">WhatsApp</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="border-t border-rule">
-          {shown.map(({ item: vendor, key, leaving }) => (
+        <TableBody className="border-t border-rule [&_tr:last-child]:border-b">
+          {shown.map((row) => (
             <TableRow
-              key={key}
-              className="hover-colour relative hover:bg-secondary"
-              data-leaving={leaving || undefined}
-              inert={leaving}
+              key={row.key}
+              className="leaves-rule relative hover:bg-secondary"
+              data-leaving={row.leaving || undefined}
+              data-arriving={row.arriving || undefined}
+              inert={row.leaving}
+              onTransitionEnd={whenTheSpaceHasClosed(row)}
             >
               <Cell>
                 <span>
-                  <VendorLink vendor={vendor} />
+                  <VendorLink vendor={row.item} />
                 </span>
               </Cell>
               <Cell>
-                <WhyToRemind vendor={vendor} />
+                <WhyToRemind vendor={row.item} />
               </Cell>
               <Cell links>
-                <CallLink vendor={vendor} />
+                <CallLink vendor={row.item} />
               </Cell>
               <Cell links>
-                <ChatLink vendor={vendor} />
+                <ChatLink vendor={row.item} />
               </Cell>
             </TableRow>
           ))}

@@ -7,7 +7,11 @@ import type { ReactNode } from 'react';
 import { Link, type To, useMatch } from 'react-router';
 
 import { categoryName } from '@/entities/category';
-import { type ShownRow, useAddressKeepingTheQuery } from '@/shared/lib';
+import {
+  type ShownRow,
+  useAddressKeepingTheQuery,
+  whenTheSpaceHasClosed,
+} from '@/shared/lib';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 
 // A Part on the list, as the dashboard's DESIGN.md lays out a Part missing
@@ -29,7 +33,7 @@ const linkOverRow =
 // The ground of a row: Raised Stone under the pointer, Active Stone when its
 // Part is open beside the list.
 function rowGround(opened: boolean): string {
-  return cn('hover-colour relative', opened ? 'bg-accent' : 'hover:bg-secondary');
+  return cn('relative', opened ? 'bg-accent' : 'hover:bg-secondary');
 }
 
 // Whether this Part is the one open beside the list, and the address of its
@@ -81,7 +85,7 @@ export function PartRow({ part }: { part: PartMissingSpecificationsResponse }) {
   return (
     <div
       className={cn(
-        'flex min-h-18 flex-col justify-center gap-0.5 px-2 py-3 text-sm',
+        'hover-colour flex min-h-18 flex-col justify-center gap-0.5 px-2 py-3 text-sm',
         rowGround(opened),
       )}
     >
@@ -121,7 +125,10 @@ function Cell({ figure = false, children }: { figure?: boolean; children: ReactN
 // From 64rem: a table of three columns, the Part with its manufacturer and
 // Category below its name given half the width, its Offers, a count end
 // aligned in tabular figures, and what it lacks. The rows bleed 8 pixels past
-// the text on each side.
+// the text on each side. The columns' widths are fixed by their headings, so
+// that no column moves when a row leaves or arrives, and every row has its
+// rule below it, the last too, so that a rule comes and goes only with its
+// row.
 export function PartsTable({
   shown,
 }: {
@@ -129,17 +136,17 @@ export function PartsTable({
 }) {
   return (
     <div className="-mx-2">
-      <Table aria-label="Parts missing specifications">
+      <Table aria-label="Parts missing specifications" className="table-fixed">
         <TableHeader>
           <TableRow className="border-b-0">
             <TableHead className="w-1/2 first:ps-2">Part</TableHead>
-            <TableHead className="text-end">Offers</TableHead>
-            <TableHead className="w-2/5 pe-2">Lacks</TableHead>
+            <TableHead className="w-24 text-end">Offers</TableHead>
+            <TableHead className="pe-2">Lacks</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="border-t border-rule">
-          {shown.map(({ item, key, leaving }) => (
-            <PartTableRow key={key} part={item} leaving={leaving} />
+        <TableBody className="border-t border-rule [&_tr:last-child]:border-b">
+          {shown.map((row) => (
+            <PartTableRow key={row.key} row={row} />
           ))}
         </TableBody>
       </Table>
@@ -147,20 +154,17 @@ export function PartsTable({
   );
 }
 
-function PartTableRow({
-  part,
-  leaving,
-}: {
-  part: PartMissingSpecificationsResponse;
-  leaving: boolean;
-}) {
+function PartTableRow({ row }: { row: ShownRow<PartMissingSpecificationsResponse> }) {
+  const { item: part, leaving, arriving } = row;
   const { opened } = usePartLink(part);
 
   return (
     <TableRow
-      className={rowGround(opened)}
+      className={cn('leaves-rule', rowGround(opened))}
       data-leaving={leaving || undefined}
+      data-arriving={arriving || undefined}
       inert={leaving}
+      onTransitionEnd={whenTheSpaceHasClosed(row)}
     >
       <Cell>
         <span className="font-[550]">
