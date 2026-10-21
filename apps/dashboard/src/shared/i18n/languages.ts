@@ -22,8 +22,9 @@ export function languageOfTheBrowser(): Language {
 }
 
 // Where the Vendor portal keeps the language a Vendor chose with the switch,
-// in the browser's storage. It is the one thing the dashboard keeps there:
-// the tokens stay in memory. A language that was only found from the
+// in the browser's storage. It and the colour scheme chosen with the scheme
+// switch are all the dashboard keeps there: the tokens stay in memory. A
+// language that was only found from the
 // browser's own is never kept, so that the Vendor portal follows the
 // browser until the switch is used.
 const rememberedKey = 'language';
