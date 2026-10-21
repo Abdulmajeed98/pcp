@@ -296,7 +296,7 @@ Kurdish and Arabic follow the root's Tall Script Rule (15, 17 and 19 pixels, loo
 
 **Lists from 64rem: a table with tabs and a filter bar.** Underline tabs for the list's states or Categories on a full-width rule; the filter bar below them, with the count in words on the end side; then the table, on the sheet with no card around it. Its header is a row of Small Note Grey labels in sentence case, with no fill and no rule. Rows are 48 pixels for one line and 72 for two, divided by Rule lines, the name's column given the most width, figures end-aligned in tabular figures. A column that would be empty in every row is left out.
 
-**Lists on a phone: two-line rows.** Line one, what the row is; line two, its secondary line in Note Grey; then, on a line of its own, the plate if it has one; then one Small line with the states. The tabs scroll sideways in their own row.
+**Lists on a phone: two-line rows.** Line one, what the row is; line two, its secondary line in Note Grey; then, on a line of its own, the plate if it has one; then one Small line with the states. The tabs scroll sideways in their own row, which fades at its end side while more lie beyond it.
 
 **The Catalog and the Vendors** keep their list on the start side. Until a Part or a Vendor is opened, the list takes the sheet's whole width; once one is opened, from 64rem, the list keeps seven twelfths and the opened Part, its edit form or a new Part takes five, past an Edge line, and the open row is on Active Stone. On a phone the opened screen takes the whole screen. The Catalog's Categories are its tabs, each with its count in Note Grey, "CPU 791", All Categories first. A tab's count is of what the search finds in that Category, asked for again with each search, so that the Admin sees where the results are before choosing one (built in redesign ticket 07: Taste's counts follow the view).
 
@@ -356,7 +356,7 @@ The dashboard's own shadcn/ui components, on Base UI, are in `apps/dashboard/src
 
 ### Tabs
 
-- **Underline tabs** on a full-width 1-pixel Edge rule: each a link 44 pixels high (36 under a mouse), 20 pixels apart, its label in Note Grey and its count after it in Note Grey at weight 400; the current one in Ink at weight 600 with a 2-pixel Bazaar Teal line as wide as its label, `aria-current="page"`. Each tab is in the screen's address, as the search and the page are, so a reload or the back button keeps it.
+- **Underline tabs** on a full-width 1-pixel Edge rule: each a link 44 pixels high (36 under a mouse), 20 pixels apart, its label in Note Grey and its count after it in Note Grey at weight 400; the current one in Ink at weight 600 with a 2-pixel Bazaar Teal line as wide as its label, `aria-current="page"`. Each tab is in the screen's address, as the search and the page are, so a reload or the back button keeps it. Where the tabs do not fit, on a phone or beside an opened Part, they scroll sideways in their own row, and the row fades over its last 32 pixels on its end side while more tabs lie beyond it (mirrored in Kurdish and Arabic), and not once it is scrolled to its end or while a tab has the keyboard's focus; the owner chose the fade over the tab cut at the edge in redesign ticket 07. It is the theme's `fade-end`. Taste's inspector still measures the cut tab's box and warns of it (`edge-text`), as it does not see a fade.
 - **Where:** the Catalog's Categories; the Vendor portal's Offers, All, Need confirming and Out of stock. A list with no states has no tabs.
 
 ### Rows and tables

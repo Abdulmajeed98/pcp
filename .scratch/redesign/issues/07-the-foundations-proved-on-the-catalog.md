@@ -6,7 +6,7 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The tokens of the light and the dark scheme follow the new DESIGN.md.
 - [x] Every shared component of the dashboard follows it: buttons, inputs, fields, choices, rows, plates or what replaced them, tables, alerts, dialogs, the empty state and the list's pages.
@@ -18,7 +18,7 @@
 - [x] `expectAccessible` passes on the Catalog in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
 - [x] It is laid out at 360 pixels wide first, uses logical classes only, and keeps to Feature-Sliced Design's import rules.
 - [x] Tests that had to change are listed under Comments with why; no test loses an assertion.
-- [ ] The Catalog is shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building it taught something.
+- [x] The Catalog is shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building it taught something.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
@@ -98,3 +98,31 @@ Choices to confirm or change:
 7. **The top bar's search** centred in the bar where the window allows, and moved toward the start side on a narrower desk (1280) rather than under the caller and the switches.
 
 The box for showing the Catalog to the owner and recording the remarks stays open, and the Status stays, until the owner has looked and answered.
+
+### 21 October 2026: the owner's answers
+
+The orchestrator opened `.taste-skill/redesign-07/index.html` for the owner in the built-in browser, and the owner answered the seven choices:
+
+| Choice | The owner's word | Result |
+|---|---|---|
+| 1. The Category tabs count what the search finds in each Category | "Follow search" | Kept as built |
+| 2. No Category on a row, even under All Categories | "No column (as built)" | Kept as built |
+| 3. A long name and a run of part numbers wrap in full | "Wrap in full" | Kept as built |
+| 4. The caller's name in the menu sheet on a phone | "Keep" | Kept as built |
+| 5. The tab row cut at the edge where it scrolls, or a fade | "Fade the end" | **Built**, below |
+| 6. 768 pixels takes the phone layout | "Phone layout (as built)" | Kept as built |
+| 7. The top bar's search, centred where it can be | "Keep" | Kept as built |
+
+Asked for other remarks, the owner said "No, close it".
+
+**The fade**, test-first: a new line in `admin-catalog.spec.ts` (at 360 pixels, the Category row's computed `mask-image` is a gradient while more tabs lie beyond its end, `none` once it is scrolled to its end, a gradient again back at its start, and `none` while a tab has the keyboard's focus) failed first on `none` where the gradient was expected, then passed with the Catalog's other eight. The row fades over its last 32 pixels on its end side (`fade-end` in the dashboard's theme, mirrored in right to left), while `useMoreBeyondTheEnd` (`shared/lib`) says more lies beyond, measured on scroll and on resize, the row's position taken as its size so that it holds in right to left. The fade leaves while a tab has the keyboard's focus (`:has(:focus-visible)`), so that neither a tab nor its focus outline is ever faded, and it only fades the row's overflow, so no text read in place loses its contrast. At 1440, where the tabs fit, there is no fade. DESIGN.md's Tabs and phone lists now say so.
+
+**Taste's inspector after the fade**, on the Catalog at 1440, 768 and 360, light and dark (in `.taste-skill/redesign-07/inspect-fade/`): still 0 FAIL, and the `edge-text` WARN at 360 does **not** clear ("CPU cooler" 16 pixels from the edge): the inspector measures the cut tab's box, not what the fade draws. The fade is the owner's answer to that warning, so it stays as the one defended WARN. The search ("ryzen x3d" in CPU) has 0 WARN in both schemes.
+
+**The checks on the tip:**
+
+- `pnpm check` passed before each commit: the fade's, and this record's.
+- `pnpm platform:check` on the fade's commit, `3fae0f3`, under the scratchpad's e2e lock: **170 passed**, none failed or flaky (5.3 minutes).
+- `redesign/integration` had not moved since this branch was cut (`9206354`), so there was nothing to merge.
+
+Every box is ticked, and the ticket is resolved.
