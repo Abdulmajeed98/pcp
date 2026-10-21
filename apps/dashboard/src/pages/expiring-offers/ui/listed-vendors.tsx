@@ -30,13 +30,7 @@ export function ListedVendors({
 
   if (listed.error) return <NotListed error={listed.error} />;
   if (listed.data === undefined) {
-    return (
-      <SketchedRows words="Reading the Vendors…" rowClassName="flex flex-col gap-2 py-3">
-        <span className="h-3.5 w-3/4 rounded-sm bg-secondary" />
-        <span className="h-3.5 w-1/2 rounded-sm bg-muted" />
-        <span className="h-3.5 w-2/3 rounded-sm bg-muted" />
-      </SketchedRows>
-    );
+    return <SketchedRows words="Reading the Vendors…" wide={false} />;
   }
   // The aim: no active Vendor has an Offer expired or about to expire. The
   // sentence names no number of days, which the API's domain holds.
