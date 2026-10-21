@@ -448,7 +448,7 @@ In `@pcp/ui/themes/dashboard.css`'s `@theme`, so that Tailwind's `ease-out`, `ea
 | `duration-150` | 150 ms | a press, the switch's thumb, every exit |
 | `duration-200` | 200 ms | every arrival, and a space closing |
 
-Nothing lasts longer than 200 milliseconds, but Confirm all's settle, whose rows follow one another 30 milliseconds apart. An exit is faster than its arrival. `ease-in` is never used, nor Tailwind's built-in curves.
+Nothing lasts longer than 200 milliseconds, but Confirm all's settle, whose rows follow one another 30 milliseconds apart, and the steps of a row leaving or arriving, each of which keeps to it. An exit is faster than its arrival. Nothing snaps: no movement jumps a layout, or anything seen, in one frame (the No Snap Rule, below). `ease-in` is never used, nor Tailwind's built-in curves.
 
 ### What moves
 
@@ -459,7 +459,7 @@ Nothing lasts longer than 200 milliseconds, but Confirm all's settle, whose rows
 5. **The menu sheet on a phone** (`#m5`). It slides in from the start side, `translateX(-100%)` to `0`, 200 ms on `--ease-drawer`, with the scrim's opacity; it leaves back the same way in 150 ms on `--ease-out`. The screen beneath does not move.
 6. **Something arrives** (`#m6`): the note after an Offer is added, a refusal panel, Confirm all's result line. From `@starting-style`, `opacity: 0` and `translateY(6px)`, 200 ms on `--ease-out`. Its live region announces it at once, whatever the motion.
 7. **Confirm all's result** (`#m7`). The rarest and most consequential press on the portal, so the one place with a stagger. When the API answers, each changed row's Confirmation fades to its new state, "Confirmed today", 200 ms on `--ease-out`, each row 30 ms after the one above it, the first ten rows of the screen only; then the banner leaves as 8 says, and the result line arrives as 6 says. The plates do not move.
-8. **Something leaves a list** (`#m8`): rows leaving the Need confirming tab after Confirm all, the expiry banner, any row a list drops while the user is on it, such as a Part whose gaps were just filled leaving Missing specifications beside its edit form, or a Vendor leaving Expiring Offers once its Offers are confirmed. First its `opacity` to 0 in 150 ms on `--ease-out`; then its space closes, `grid-template-rows` from `1fr` to `0fr`, 200 ms on `--ease-in-out`, so the rows below rise into place rather than jump. A leaving row is inert. It is the theme's `leaves`, on a list's row or on each cell of a table's row, marked `data-leaving` on the row; the cell's padding lies inside it, so that the space closes whole. A row leaves only when the same page of the list is answered again without it (`useLeavingRows`); a new page, and the count, change at once. A row that comes back while it leaves returns from where it is. A removed Offer is not seen leaving: it is removed on its own screen, and the Offers come back without it.
+8. **Something leaves a list** (`#m8`): rows leaving the Need confirming tab after Confirm all, the expiry banner, any row a list drops while the user is on it, such as a Part whose gaps were just filled leaving Missing specifications beside its edit form, or a Vendor leaving Expiring Offers once its Offers are confirmed. First its `opacity` to 0 in 150 ms on `--ease-out`; then its space closes, `grid-template-rows` from `1fr` to `0fr`, and its rule with it, 200 ms on `--ease-in-out`, so the rows below rise into place rather than jump. A leaving row is inert, and it is taken out only once its space has closed (at the end of that transition, whatever its speed), never while it can be seen or takes room. A row new to the same page, such as the next page's first taking the place a leaving row gave up, arrives in step: its space opens over the same 200 ms after the same 150, from no room and no rule, and then it fades in, 200 ms on `--ease-out`; a row that comes back while it leaves does the same from where it is. A table's columns keep their widths, set by their headings, while rows come and go, and every row keeps its rule below it, the last too, so that a rule comes and goes only with its row. It is the theme's `leaves`, on a list's row or on each cell of a table's row, with `leaves-rule` on the table's row, marked `data-leaving` or `data-arriving` on the row; the cell's padding lies inside it, so that the space closes whole. A row leaves only when the same page of the list is answered again without it (`useLeavingRows`); a new page, and the count, change at once. Watched four times slower, frame by frame, nothing in the list moves more than a few pixels a frame, and nothing moves at all in the frame a row is taken out (the owner's word, redesign ticket 10: "smooth, not a rigid snaps"). A removed Offer is not seen leaving: it is removed on its own screen, and the Offers come back without it.
 
 ### What stays still
 
@@ -475,23 +475,26 @@ Only the menu sheet and the switch's thumb travel sideways, and both follow the 
 
 ### Reduced motion
 
-`prefers-reduced-motion: reduce` keeps the fades and the colour changes that tell what happened, and drops every movement in space, through Tailwind's `motion-reduce:` variants on each movement:
+`prefers-reduced-motion: reduce` keeps the fades and the colour changes that tell what happened, shortens what must still change place, and drops every other movement in space, through Tailwind's `motion-reduce:` variants on each movement. It never makes a movement a jump: where the full motion travels, reduced motion fades, or travels shorter and faster on `--ease-out`, but nothing that takes room appears, leaves or moves in one frame.
 
 | Movement | With reduced motion |
 |---|---|
 | The press | no scale; the pressed control takes its hover ground |
 | The dialog | a fade only, 200 ms in and 150 out |
-| The switch's thumb | jumps; the track's colour still changes over 150 ms |
+| The switch's thumb | travels in 100 ms on `--ease-out` rather than 150, within its own track, as the track's colour changes; it does not jump (the switch is built so in its own ticket, 12) |
 | The menu sheet | a fade in place, no slide |
 | Something arrives | a fade only, no rise |
 | Confirm all's result | one fade on every changed row at once, no stagger |
-| Something leaves | the fade, then the space closes at once |
+| Something leaves | the fade, 150 ms, then the space closes over 150 ms on `--ease-out`, never in one frame |
+| Something arrives in a list | the space opens over 150 ms on `--ease-out`, then the fade, 150 ms |
 
 ### Named Rules
 
 **The Data Holds Still Rule.** Nothing the user reads or decides on moves for style: no plate, figure, row or table animates its content.
 
 **The Exit Is Faster Rule.** Whatever arrives in 200 ms leaves in 150.
+
+**The No Snap Rule.** No movement jumps: reduced motion shortens and drops movement, it never jumps a layout in one frame. Nothing that takes room is put in or taken out while it takes room or can be seen, a table's columns keep their widths while its rows change, and every step of a movement runs on one of the three curves. The owner asked for it on 22 October 2026, seeing redesign ticket 10's rows leave: "smooth, not a rigid snaps that hurt eyes".
 
 ## Do's and Don'ts
 
