@@ -80,7 +80,13 @@ async function withTheMenuOpenOnAPhone(
   const onAPhone = await menuButton.isVisible();
   if (onAPhone) await menuButton.click();
   await then();
-  if (onAPhone && (await menuButton.isVisible())) await page.keyboard.press('Escape');
+  // While the sheet is open, what is behind it is hidden from the
+  // accessibility tree, the menu button with it, so the sheet itself is
+  // asked for.
+  if (onAPhone && (await page.getByRole('dialog').isVisible())) {
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
 }
 
 // Logs out of the dashboard with its button, and waits for Keycloak's login
