@@ -5,6 +5,7 @@ import { openTheSection, vendorPageUrl } from './admin-vendors';
 import { catalogHeading } from './catalog';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
+import { leavingRowsOf, watchForLeavingRows } from './leaving-rows';
 import { apiUrl, dashboardUrl } from './platform';
 import { createAMadeUpVendor, type MadeUpVendor } from './vendors';
 
@@ -21,8 +22,18 @@ function heading(page: Page): Locator {
   return page.getByRole('heading', { level: 1, name: 'Expiring Offers' });
 }
 
+// The Vendors on the list: rows on a phone, and a table's rows from 64rem
+// (redesign ticket 10).
 function listedVendors(page: Page): Locator {
-  return page.getByRole('list', { name: 'Vendors to remind' }).getByRole('listitem');
+  return page
+    .getByRole('list', { name: 'Vendors to remind' })
+    .getByRole('listitem')
+    .or(
+      page
+        .getByRole('table', { name: 'Vendors to remind' })
+        .getByRole('row')
+        .filter({ has: page.getByRole('cell') }),
+    );
 }
 
 // The page of the list the API answers, as the test gives it.
@@ -143,4 +154,120 @@ test('the list meets the automated part of WCAG 2.2 level AA, in light and in da
   await expect(listedVendors(page)).toHaveCount(2);
 
   await expectAccessible(page);
+});
+
+// Asks the list again, as TanStack Query does when the Admin comes back to
+// the window.
+async function comeBackToTheWindow(page: Page): Promise<void> {
+  await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')));
+}
+
+test('a Vendor the list drops while the Admin is on it fades, then its space closes, and with reduced motion it only fades', async ({
+  page,
+}) => {
+  const staying = { ...theVendorListed(), id: 'staying', name: 'Made-up Stays' };
+  await answerTheList(page, aPageOf([theVendorListed(), staying]));
+  await page.goto(expiringOffersUrl);
+  await expect(listedVendors(page)).toHaveCount(2);
+
+  await watchForLeavingRows(page);
+  await page.unrouteAll();
+  await answerTheList(page, aPageOf([staying]));
+  await comeBackToTheWindow(page);
+  await expect(listedVendors(page)).toHaveCount(1);
+  await expect(listedVendors(page)).toContainText('Made-up Stays');
+  await expect(page.getByTestId('vendors-to-remind-count')).toHaveText('1');
+  const [left] = await leavingRowsOf(page);
+  expect(left?.text).toContain(vendor.name);
+  expect(left?.inert, 'a leaving row takes no tap').toBe(true);
+  expect(left?.transitions).toContainEqual({
+    property: 'opacity',
+    duration: '0.15s',
+    delay: '0s',
+  });
+  expect(left?.transitions).toContainEqual({
+    property: 'grid-template-rows',
+    duration: '0.2s',
+    delay: '0.15s',
+  });
+
+  // With reduced motion: the fade, then the space closes at once.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.unrouteAll();
+  await answerTheList(page, aPageOf([staying, theVendorListed()]));
+  await comeBackToTheWindow(page);
+  await expect(listedVendors(page)).toHaveCount(2);
+  await watchForLeavingRows(page);
+  await page.unrouteAll();
+  await answerTheList(page, aPageOf([theVendorListed()]));
+  await comeBackToTheWindow(page);
+  await expect(listedVendors(page)).toHaveCount(1);
+  const [faded] = await leavingRowsOf(page);
+  expect(faded?.text).toContain('Made-up Stays');
+  expect(faded?.transitions).toContainEqual({
+    property: 'opacity',
+    duration: '0.15s',
+    delay: '0s',
+  });
+  expect(faded?.transitions).toContainEqual({
+    property: 'grid-template-rows',
+    duration: '0s',
+    delay: '0.15s',
+  });
+});
+
+// From 64rem the list is a table (redesign ticket 10).
+test.describe('at a desk’s width', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('the list is a table across the sheet, its Vendor, Offers, Phone and WhatsApp, whose links still call and chat, and meets WCAG 2.2 level AA in light and in dark', async ({
+    page,
+  }) => {
+    await answerTheList(
+      page,
+      aPageOf([
+        theVendorListed(),
+        {
+          ...theVendorListed(),
+          id: 'another',
+          name: 'Made-up Second',
+          whatsAppNumber: null,
+        },
+      ]),
+    );
+    await page.goto(expiringOffersUrl);
+
+    const table = page.getByRole('table', { name: 'Vendors to remind' });
+    await expect(table.getByRole('columnheader')).toHaveText([
+      'Vendor',
+      'Offers',
+      'Phone',
+      'WhatsApp',
+    ]);
+    const row = listedVendors(page).filter({ hasText: vendor.name });
+    await expect(row.getByTestId('why-to-remind')).toHaveText(
+      '1 Expired Offer · 2 about to expire',
+    );
+    await expect(row.getByTestId('call')).toHaveAttribute('href', 'tel:+964662234567');
+    await expect(row.getByTestId('chat')).toHaveAttribute(
+      'href',
+      'https://wa.me/9647701234567',
+    );
+    await expect(
+      listedVendors(page)
+        .filter({ hasText: 'Made-up Second' })
+        .getByText('No WhatsApp', { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByTestId('vendors-to-remind-count')).toHaveText('2');
+    await expect(page.locator('[data-slot="plate"]')).toHaveCount(0);
+
+    const sheet = await page.getByRole('main').boundingBox();
+    const list = await table.boundingBox();
+    expect(list?.width).toBeGreaterThanOrEqual((sheet?.width ?? 0) - 48 - 2);
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+
+    await row.getByRole('link', { name: vendor.name, exact: true }).click();
+    await expect(page).toHaveURL(vendorPageUrl(vendor.id));
+  });
 });

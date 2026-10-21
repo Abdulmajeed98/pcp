@@ -1,23 +1,41 @@
 import type { VendorWithExpiringOffersResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
+import { cn } from 'cn';
 import {
   CircleAlertIcon,
   ExternalLinkIcon,
   MessageCircleIcon,
   PhoneIcon,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
-import { whatsAppChatWith } from '@/shared/lib';
-import { Item, ItemContent, ItemTitle } from '@/shared/ui';
+import { type ShownRow, whatsAppChatWith } from '@/shared/lib';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 
 import { callTo } from '../model/links';
 
+// A Vendor to remind, as the dashboard's DESIGN.md lays it out (redesign
+// ticket 10): its name as it writes it, why it is on the list, in Action Red
+// after a circled exclamation mark, and its two numbers in Iraq's own form,
+// which is English in every language, each a link of its own: the phone
+// number calls it, and the WhatsApp number opens a chat with it from the
+// Admin's own WhatsApp, in a new tab. A Vendor with no WhatsApp number says
+// so. A table from 64rem and rows on a phone, never cards. The whole row
+// leads to the Vendor's page, while the link's name is the Vendor's alone,
+// and takes a Raised Stone ground under the pointer. The owner chose the
+// numbers as underlined links on 20 October 2026, over outlined buttons.
+
+// What makes the whole row the link: the link's box covers the row, and
+// draws the focus outline inside the row's edges.
+const linkOverRow =
+  'after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring';
+
 // A link that is a row's own action, drawn above the link that covers the
-// whole row, 44 pixels high.
+// whole row, as high as a control.
 const numberLink =
-  'relative z-10 inline-flex min-h-control items-center gap-1.5 underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2';
+  'hover-colour relative z-10 inline-flex min-h-control items-center gap-1.5 underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2';
 
 // Why the Vendor is on the list, in plain words: how many of its Offers have
 // expired and how many are about to, leaving out a count of none.
@@ -34,64 +52,147 @@ function whyToRemind({ counts }: VendorWithExpiringOffersResponse): string {
   return reasons.join(' · ');
 }
 
-// One Vendor to remind: its name as it writes it, then one line in Action Red
-// after a circled exclamation mark that says why, and then its two numbers in
-// Iraq's own form, which is English in every language, each a link of its
-// own: the phone number calls it, and the WhatsApp number opens a chat with
-// it from the Admin's own WhatsApp, in a new tab. A Vendor with no WhatsApp
-// number says so. The whole row leads to the Vendor's page, while the link's
-// name is the Vendor's alone. The owner chose this row on 20 October 2026
-// over the numbers as outlined buttons.
+function VendorLink({ vendor }: { vendor: VendorWithExpiringOffersResponse }) {
+  return (
+    <Link to={`/vendors/${vendor.id}`} className={cn('font-[550]', linkOverRow)}>
+      <AsWritten>{vendor.name}</AsWritten>
+    </Link>
+  );
+}
+
+function WhyToRemind({ vendor }: { vendor: VendorWithExpiringOffersResponse }) {
+  return (
+    <p className="flex items-start gap-1.5 font-medium text-destructive">
+      <CircleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+      <span data-testid="why-to-remind">{whyToRemind(vendor)}</span>
+    </p>
+  );
+}
+
+function CallLink({ vendor }: { vendor: VendorWithExpiringOffersResponse }) {
+  return (
+    <a
+      href={callTo(vendor.phoneNumber.international)}
+      data-testid="call"
+      className={numberLink}
+    >
+      <PhoneIcon aria-hidden="true" className="size-4 shrink-0" />
+      <span className="sr-only">Call </span>
+      <AlwaysEnglish>{vendor.phoneNumber.national}</AlwaysEnglish>
+    </a>
+  );
+}
+
+function ChatLink({ vendor }: { vendor: VendorWithExpiringOffersResponse }) {
+  if (vendor.whatsAppNumber === null) {
+    return (
+      <span className="inline-flex min-h-control items-center text-muted-foreground">
+        No WhatsApp
+      </span>
+    );
+  }
+  return (
+    <a
+      href={whatsAppChatWith(vendor.whatsAppNumber.international)}
+      target="_blank"
+      rel="noreferrer"
+      data-testid="chat"
+      className={numberLink}
+    >
+      <MessageCircleIcon aria-hidden="true" className="size-4 shrink-0" />
+      <span className="sr-only">Chat in WhatsApp with </span>
+      <AlwaysEnglish>{vendor.whatsAppNumber.national}</AlwaysEnglish>
+      <span className="sr-only">, in a new tab</span>
+      <ExternalLinkIcon aria-hidden="true" className="size-4 shrink-0" />
+    </a>
+  );
+}
+
+// On a phone: the Vendor's name, why it is on the list, and its two numbers
+// on one line, which wraps when they do not fit.
 export function VendorRow({ vendor }: { vendor: VendorWithExpiringOffersResponse }) {
   return (
-    <Item className="relative rounded-none px-0 hover:bg-secondary">
-      <ItemContent>
-        <ItemTitle>
-          <Link
-            to={`/vendors/${vendor.id}`}
-            className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"
+    <div className="hover-colour relative flex flex-col gap-0.5 px-2 pt-3 pb-1 text-sm hover:bg-secondary">
+      <span>
+        <VendorLink vendor={vendor} />
+      </span>
+      <WhyToRemind vendor={vendor} />
+      <p className="flex flex-wrap items-center gap-x-4">
+        <CallLink vendor={vendor} />
+        <ChatLink vendor={vendor} />
+      </p>
+    </div>
+  );
+}
+
+// A table cell's content, at the row's top, as high as a control for its
+// first line, so that a row of one line is 48 pixels under a mouse. It holds
+// the cell's padding inside the theme's `leaves`, so that a leaving row's
+// space closes whole.
+function Cell({ className, children }: { className?: string; children: ReactNode }) {
+  return (
+    <TableCell className="h-auto p-0 align-top">
+      <div className="leaves">
+        <div>
+          <div
+            className={cn(
+              'flex min-h-control flex-col justify-center px-2 py-1.5',
+              className,
+            )}
           >
-            <AsWritten>{vendor.name}</AsWritten>
-          </Link>
-        </ItemTitle>
-        <p
-          data-testid="why-to-remind"
-          className="flex items-start gap-1.5 text-sm font-medium text-destructive"
-        >
-          <CircleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          <span>{whyToRemind(vendor)}</span>
-        </p>
-        <p className="flex flex-wrap items-center gap-x-4 text-sm">
-          <a
-            href={callTo(vendor.phoneNumber.international)}
-            data-testid="call"
-            className={numberLink}
-          >
-            <PhoneIcon aria-hidden="true" className="size-4" />
-            <span className="sr-only">Call </span>
-            <AlwaysEnglish>{vendor.phoneNumber.national}</AlwaysEnglish>
-          </a>
-          {vendor.whatsAppNumber === null ? (
-            <span className="inline-flex min-h-control items-center text-muted-foreground">
-              No WhatsApp
-            </span>
-          ) : (
-            <a
-              href={whatsAppChatWith(vendor.whatsAppNumber.international)}
-              target="_blank"
-              rel="noreferrer"
-              data-testid="chat"
-              className={numberLink}
+            {children}
+          </div>
+        </div>
+      </div>
+    </TableCell>
+  );
+}
+
+// From 64rem: a table of four columns, the Vendor given the most width, then
+// why it is on the list, its phone number and its WhatsApp number. The rows
+// bleed 8 pixels past the text on each side.
+export function VendorsTable({
+  shown,
+}: {
+  shown: ShownRow<VendorWithExpiringOffersResponse>[];
+}) {
+  return (
+    <div className="-mx-2">
+      <Table aria-label="Vendors to remind">
+        <TableHeader>
+          <TableRow className="border-b-0">
+            <TableHead className="w-2/5 ps-2">Vendor</TableHead>
+            <TableHead>Offers</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead className="pe-2">WhatsApp</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className="border-t border-rule">
+          {shown.map(({ item: vendor, key, leaving }) => (
+            <TableRow
+              key={key}
+              className="hover-colour relative hover:bg-secondary"
+              data-leaving={leaving || undefined}
+              inert={leaving}
             >
-              <MessageCircleIcon aria-hidden="true" className="size-4" />
-              <span className="sr-only">Chat in WhatsApp with </span>
-              <AlwaysEnglish>{vendor.whatsAppNumber.national}</AlwaysEnglish>
-              <span className="sr-only">, in a new tab</span>
-              <ExternalLinkIcon aria-hidden="true" className="size-4" />
-            </a>
-          )}
-        </p>
-      </ItemContent>
-    </Item>
+              <Cell>
+                <span>
+                  <VendorLink vendor={vendor} />
+                </span>
+              </Cell>
+              <Cell>
+                <WhyToRemind vendor={vendor} />
+              </Cell>
+              <Cell className="items-start">
+                <CallLink vendor={vendor} />
+              </Cell>
+              <Cell className="items-start">
+                <ChatLink vendor={vendor} />
+              </Cell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
