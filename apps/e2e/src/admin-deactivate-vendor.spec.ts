@@ -21,6 +21,7 @@ import {
   languages,
   narrowWindow,
 } from './languages';
+import { withTheMenuOpenOnAPhone } from './menu-sheet';
 import { apiUrl, dashboardUrl, realmUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -130,8 +131,11 @@ test("the Admin deactivates the Vendor, after confirming, while its portal is op
     await expect(theDeactivatedMessage(vendorsPage)).toBeVisible();
     await expect(vendorsPage.getByRole('main').locator('form')).toHaveCount(0);
     await expect(vendorNameInTheFrame(vendorsPage)).toHaveCount(0);
-    await expect(vendorsPage.getByTestId('log-out')).toBeVisible();
     await expect(vendorsPage.getByRole('link')).toHaveCount(0);
+    await withTheMenuOpenOnAPhone(vendorsPage, async () => {
+      await expect(vendorsPage.getByTestId('log-out')).toBeVisible();
+      await expect(vendorsPage.getByRole('dialog').getByRole('link')).toHaveCount(0);
+    });
     const messages = new Map<Language, string>();
     for (const language of [kurdish, english]) {
       await chooseInThePortal(vendorsPage, language);
