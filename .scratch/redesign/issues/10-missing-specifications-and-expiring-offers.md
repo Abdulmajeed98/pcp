@@ -6,14 +6,14 @@
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Missing specifications and Expiring Offers follow the new DESIGN.md and move as its Motion section says. The Part's edit form under Missing specifications is ticket 08's and is not laid out here.
 - [x] Each passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command, Expiring Offers with the fixture's Offers about to expire.
 - [x] Emil's `break-ui` is run on both lists: a long name, many gaps, an empty list. What broke is fixed.
 - [x] `expectAccessible` passes on both, in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
 - [x] Tests that had to change are listed under Comments with why; no test loses an assertion.
-- [ ] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
+- [x] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
@@ -90,3 +90,63 @@ Choices to confirm or change:
 7. **A row seen leaving moves as Motion 8** (a fade, then its space closes; with reduced motion the fade, then the space closes at once), only when the same page is answered again without it.
 
 The box for showing the screens to the owner and recording the remarks stays open, and the Status stays, until the owner has looked and answered.
+
+### 22 October 2026: the owner's answers
+
+The orchestrator opened `.taste-skill/redesign-10/index.html` for the owner in the built-in browser, and the owner answered the seven choices:
+
+| Choice | The owner's word | Result |
+|---|---|---|
+| 1. Missing specifications at the whole width until a Part is opened | "As built" | Kept as built |
+| 2. The table's three columns | "Three columns" | Kept as built |
+| 3. A long name and long labels wrap in full | "Wrap in full" | Kept as built |
+| 4. Expiring Offers as a table across the sheet | "Table" | Kept as built |
+| 5. The count alone on the end side above the table | "As built" | Kept as built |
+| 6. A short queue leaves the sheet's lower part white | "Keep full sheet" | Kept; the inspector's two WARNs on Expiring Offers stay defended |
+| 7. A row seen leaving moves as Motion 8 | "as recommended, but just make sure that motions are smooth, not a rigid snaps that hurt eyes." | **Built**, below |
+
+**Watching the leaving motion frame by frame.** I slowed the motion four times with DevTools' own playback rate (`Animation.setPlaybackRate`) and recorded the list at every frame the page drew (`filmTheList` in `apps/e2e/src/leaving-rows.ts`). In each frame it took every row's place, height and drawn opacity, where the pages' navigation was, and where the column headings started. I watched it at 360 and 1280, with full and reduced motion. The scene: four made-up Vendors; the second leaves while the next page's first arrives at the end. Three snaps were found:
+
+1. The leaving row was taken out by a 400 ms timer. At full speed its space had closed by then; at a quarter speed it was taken out while still 105 pixels high (49 at 1280), and the rows below and the pages jumped up by that much in one frame.
+2. The next page's first row, filling the place, appeared whole and opaque at the end in one frame, and pushed the pages' navigation down 105 pixels.
+3. With reduced motion the space closed "at once", in one frame.
+
+These are the tests' red runs. Two more risks were removed before they could be seen. In a table laid out by its content, a column could move once a row with a wide cell left. And a row's rule belonged to the row below or to none (the last row had none), so a rule could appear or vanish by one pixel when a row became or stopped being the last.
+
+**What changed** (`2745258`, `fix:` as it spans the `ui` theme, the dashboard and the end-to-end tests):
+
+- A leaving row is taken out only once its space has closed: at the end of its `grid-template-rows` transition, whatever its speed, with a fallback after 3 seconds (`useLeavingRows`, `whenTheSpaceHasClosed`).
+- A row new to the same page arrives in step with the one leaving. Its space opens over the same 200 ms on `--ease-in-out`, after the same 150 ms, from no room and no rule; then it fades in over 200 ms on `--ease-out`. The pages' navigation and the rows below stay put when one row leaves and one arrives. A leaving row that comes back does the same from where it is.
+- Every row keeps its own rule below it, the last too, and the rule closes or opens with its row: the theme's `leaves` on a list's row, and the new `leaves-rule` on a table's row, which also keeps Motion 2's colour under the pointer.
+- Both tables are `table-fixed`, their widths set by their headings (Part half, Offers 6rem, Lacks the rest; Vendor two fifths, Phone 10rem, WhatsApp 11rem, Offers the rest), so no column moves while rows come and go.
+- With reduced motion the fades stay, and the space closes or opens over 150 ms on `--ease-out` (Emil's "gentler, not zero"), never in one frame.
+
+**Tested first.** Four new tests film the scene four times slower at 360 and 1280, with full and reduced motion. They fail if, in any frame:
+- a row, the pages' navigation or a row's height moves by more than 16 pixels;
+- anything moves by more than a pixel in the frame a row is taken out or put in;
+- a row's opacity changes by more than 0.35;
+- a row is taken out or put in while it can be seen or takes more than a pixel (a table's collapsed rule lends a closed row half a pixel, which no one sees);
+- a column heading moves.
+
+They also check that the leave lasted over 900 ms, so it really was slowed, and that the last row keeps its rule. They failed first on the three snaps above (`appeared 104px high at 1`, `was taken out 105px high`, `the pages moved 105px`), and then passed. The reduced-motion line of the earlier leaving test now expects `grid-template-rows` over 0.15 s after 0.15 s, where it expected 0 s: the owner's answer changed the behaviour. It keeps every assertion.
+
+**Watched by eye too**, on the review page: films at full speed in light and four times slower in dark, plus four times slower read right to left, at 1440 and 360 with full and reduced motion (`#r6`). Also two strips of stills at 1440, taken one after another while the motion ran four times slower: 65 with full motion and 66 with reduced motion (`#r6s`). The rows rise into place and the pages stay where they are in every still. Right to left changes nothing, as nothing travels sideways. The schemes change nothing either, as no colour moves.
+
+**DESIGN.md** (`05c22f1`) now has the **No Snap Rule** among the Motion section's named rules: "No movement jumps: reduced motion shortens and drops movement, it never jumps a layout in one frame". It also covers the rest:
+- what is taken out or put in, and when;
+- a table's columns and rules while its rows change;
+- Motion 8's arriving row, and its taking out once its space has closed;
+- the reduced-motion table's rows for leaving and arriving.
+
+The reduced-motion paragraph now says that reduced motion fades, or travels shorter and faster, but never jumps.
+
+**For other tickets.** The rule made one more line of DESIGN.md wrong: under reduced motion the switch's thumb "jumps" (`shared/ui/switch.tsx`, `motion-reduce:transition-none`). DESIGN.md now says that it travels in 100 ms on `--ease-out` within its own track. The switch is used only in the Offer form, ticket 12's screen, so ticket 12 builds and tests it there; this ticket did not touch the switch. Two places stay still on purpose under Motion 9 and were not changed: the scheme switch changing every colour in one frame, and a screen changing at once, such as Missing specifications widening when the edit form closes after a save, before the saved Part's row leaves.
+
+**The checks on the tip:**
+
+- `pnpm check` passed before each commit.
+- `pnpm platform:check` on the code's tip, `2745258`, under the scratchpad's e2e lock: **178 passed**, none failed or flaky (6.2 minutes).
+- Taste's inspector after the change, at 1440, 768 and 360 in light and dark: Missing specifications 0 FAIL, 0 WARN; Expiring Offers 0 FAIL and the two defended WARNs. Nothing scrolls sideways in any capture.
+- `redesign/integration` had not moved (`c106b49`), so there was nothing to merge.
+
+Every box is ticked, and the ticket is resolved.
