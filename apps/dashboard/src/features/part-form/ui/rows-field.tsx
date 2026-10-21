@@ -1,11 +1,13 @@
 import type { SpecificationResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { PlusIcon, XIcon } from 'lucide-react';
+import { useRef } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 
 import { Button, FieldDescription, FieldError, FieldLegend, FieldSet } from '@/shared/ui';
 
 import type { PartFormValues, RowEntry } from '../model/form-values';
+import { Entry, useEntriesMotion } from './entries-motion';
 import { describedBy, errorOf, idOf } from './field-names';
 import { SpecificationField } from './specification-field';
 
@@ -13,6 +15,10 @@ import { SpecificationField } from './specification-field';
 // its own. It is not known until a row is added. Once known, it may be
 // empty, which says that the Part has none, and it can be made not known
 // again.
+//
+// A row added takes the focus in its first field and arrives; a row removed
+// hands the focus to the first field of the row that takes its place, or of
+// the row before it, or to the Add button, and leaves (redesign ticket 08).
 export function RowsField({
   specification,
   name,
@@ -24,11 +30,13 @@ export function RowsField({
   legend: React.ReactNode;
   descriptionId?: string;
 }) {
-  const { control, setValue, formState } = useFormContext<PartFormValues>();
+  const { control, setValue, setFocus, formState } = useFormContext<PartFormValues>();
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: name as 'partNumbers',
   });
+  const { leave, staying, entryProps } = useEntriesMotion(fields, remove);
+  const addButton = useRef<HTMLButtonElement>(null);
   const knownName = name.replace(/^specifications\./, 'rowsKnown.') as 'name';
   const known = useWatch({ control, name: knownName }) as unknown as boolean;
   const error = errorOf(formState.errors, name);
@@ -45,51 +53,70 @@ export function RowsField({
     replace([]);
   }
 
+  function removeRow(id: string): void {
+    const at = staying.findIndex((field) => field.id === id);
+    const next = staying[at + 1] ?? staying[at - 1];
+    const first = rowFields[0];
+    if (next === undefined || first === undefined) addButton.current?.focus();
+    else setFocus(`${name}.${fields.indexOf(next)}.${first.path}` as 'name');
+    leave(id);
+  }
+
   return (
     <FieldSet
-      className="gap-2 sm:col-span-2"
+      className="col-span-full gap-2"
       aria-describedby={describedBy(descriptionId, error && errorId)}
     >
       <FieldLegend variant="label" className="mb-1">
         {legend}
       </FieldLegend>
       {!known && <FieldDescription>Not known.</FieldDescription>}
-      {known && fields.length === 0 && <FieldDescription>None.</FieldDescription>}
-      {fields.map((field, index) => (
-        // The legend is the row's first child, which names the row for a
-        // screen reader, and the button that removes the row sits beside it
-        // on the end side.
-        <FieldSet
-          key={field.id}
-          className="relative gap-3 rounded-lg border border-border p-3"
-        >
-          <FieldLegend
-            variant="label"
-            className="float-start mb-0 min-h-control w-full pe-14 leading-11"
-          >
-            {specification.label} {formatNumber(index + 1)}
-          </FieldLegend>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="absolute end-3 top-3"
-            aria-label={`Remove ${specification.label} ${formatNumber(index + 1)}`}
-            onClick={() => remove(index)}
-          >
-            <XIcon />
-          </Button>
-          {rowFields.map((rowField) => (
-            <SpecificationField
-              key={rowField.path}
-              specification={rowField}
-              name={`${name}.${index}.${rowField.path}`}
-            />
-          ))}
-        </FieldSet>
-      ))}
+      {known && staying.length === 0 && <FieldDescription>None.</FieldDescription>}
+      {fields.map((field, index) => {
+        // A row on its way out keeps its place in the form's values until it
+        // has left, so the rows that stay are counted without it.
+        const shown = staying.indexOf(field);
+        const number = formatNumber((shown === -1 ? index : shown) + 1);
+        return (
+          // The legend is the row's first child, which names the row for a
+          // screen reader, and the button that removes the row sits beside
+          // it on the end side.
+          <Entry key={field.id} {...entryProps(field.id)}>
+            <FieldSet className="relative gap-3 rounded-lg border border-border p-3">
+              <FieldLegend
+                variant="label"
+                className="float-start mb-0 min-h-control w-full pe-14 leading-11"
+              >
+                {specification.label} {number}
+              </FieldLegend>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="absolute end-3 top-3"
+                aria-label={`Remove ${specification.label} ${number}`}
+                onClick={() => removeRow(field.id)}
+              >
+                <XIcon />
+              </Button>
+              {/* A row's fields side by side where the form is 40rem wide, so
+                  that fifteen M.2 slots are not forty-five rows (break-ui). */}
+              <div className="grid items-start gap-3 @min-[40rem]/part-form:auto-cols-fr @min-[40rem]/part-form:grid-flow-col">
+                {rowFields.map((rowField) => (
+                  <SpecificationField
+                    key={rowField.path}
+                    specification={rowField}
+                    name={`${name}.${index}.${rowField.path}`}
+                  />
+                ))}
+              </div>
+            </FieldSet>
+          </Entry>
+        );
+      })}
       <div className="flex flex-wrap gap-2">
         <Button
+          ref={addButton}
           type="button"
           variant="outline"
           aria-label={`Add a row to ${specification.label}`}

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
 import {
@@ -102,8 +102,75 @@ test.describe('a new Part, through the form', () => {
     await page.getByRole('button', { name: 'Create the Part' }).click();
 
     await expect(cores).toHaveAttribute('aria-invalid', 'true');
-    await expect(cores).toHaveAccessibleDescription(/number/i);
+    // Cores are a whole number, so the example is one (redesign ticket 08's
+    // break-ui: it was "such as 3.8").
+    await expect(cores).toHaveAccessibleDescription('Enter a whole number, such as 6.');
     await expect(page).not.toHaveURL(partPageAddress);
+  });
+
+  // While the Part is on its way, the button says so and waits (DESIGN.md's
+  // busy button).
+  test('while the Part is on its way, its button says so and waits', async ({ page }) => {
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route(`${apiUrl}/v1/parts`, async (route) => {
+      await held;
+      await route.continue();
+    });
+    await page.getByRole('button', { name: 'Create the Part' }).click();
+
+    const busy = page.getByRole('button', { name: 'Creating the Part…' });
+    await expect(busy).toBeVisible();
+    await expect(busy).toBeDisabled();
+    release();
+    await expect(page).toHaveURL(partPageAddress);
+  });
+
+  // A refusal that names no field of the form is said where the Admin is,
+  // beside the button just pressed, not at the head of a long form scrolled
+  // out of sight (redesign ticket 08's break-ui).
+  test('a refusal that names no field is said beside the button, in sight', async ({
+    page,
+  }) => {
+    await page.route(`${apiUrl}/v1/parts`, (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, code: 'internalError', errors: [] }),
+      }),
+    );
+    await page.getByRole('button', { name: 'Create the Part' }).click();
+
+    const refusal = page.getByTestId('refusal');
+    await expect(refusal).toContainText('The Part was not saved.');
+    // A refusal that names no reason ends its sentence there.
+    await expect(refusal).toContainText(/with 500, \w+\.$/);
+    await expect(refusal).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Create the Part' })).toBeInViewport();
+    await expect(page).not.toHaveURL(partPageAddress);
+  });
+
+  // An entry added to a list takes the focus, so the Admin types at once;
+  // an entry removed hands the focus to the one that took its place.
+  test('an added part number takes the focus, and a removed one hands it on', async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Add another part number' }).click();
+    const second = page.getByRole('textbox', { name: 'Part number 2', exact: true });
+    await expect(second).toBeFocused();
+    await second.fill('TEST-second');
+
+    await page.getByRole('button', { name: 'Remove Part number 1' }).click();
+    await expect(page.getByRole('textbox', { name: /^Part number \d$/ })).toHaveCount(1);
+    await expect(
+      page.getByRole('textbox', { name: 'Part number 1', exact: true }),
+    ).toHaveValue('TEST-second');
+    await expect(
+      page.getByRole('textbox', { name: 'Part number 1', exact: true }),
+    ).toBeFocused();
+
+    await page.getByRole('button', { name: 'Remove Part number 1' }).click();
+    await expect(page.getByRole('button', { name: 'Add a part number' })).toBeFocused();
   });
 
   test('the form does not scroll sideways, and meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
@@ -121,6 +188,46 @@ test.describe('a new Part, through the form', () => {
 
     await expectNoSidewaysScroll(page);
     await expectAccessible(page);
+  });
+});
+
+// The form's fields go two to a row only where the form itself is 40rem
+// wide: beside the list on a desk they would be squeezed, so they go one to
+// a row there, and two to a row on a tablet, where the form has the sheet.
+test.describe("the form's columns follow the form's own width", () => {
+  async function socketAndSeries(page: Page) {
+    await openTheFormForANewPart(page, 'CPU');
+    const socket = await page
+      .getByRole('combobox', { name: 'Socket', exact: true })
+      .boundingBox();
+    const series = await page
+      .getByRole('textbox', { name: 'Series', exact: true })
+      .boundingBox();
+    return { socket, series };
+  }
+
+  test.describe('beside the list, on a desk', () => {
+    test.use({ viewport: { width: 1280, height: 800 } });
+
+    test('one field to a row, and WCAG 2.2 level AA in light and in dark', async ({
+      page,
+    }) => {
+      const { socket, series } = await socketAndSeries(page);
+      expect(series?.x).toBe(socket?.x);
+      expect(series?.y).toBeGreaterThan((socket?.y ?? 0) + (socket?.height ?? 0));
+      await expectNoSidewaysScroll(page);
+      await expectAccessible(page);
+    });
+  });
+
+  test.describe('on a tablet', () => {
+    test.use({ viewport: { width: 768, height: 1024 } });
+
+    test('two fields to a row', async ({ page }) => {
+      const { socket, series } = await socketAndSeries(page);
+      expect(series?.y).toBe(socket?.y);
+      expect(series?.x).toBeGreaterThan((socket?.x ?? 0) + (socket?.width ?? 0));
+    });
   });
 });
 

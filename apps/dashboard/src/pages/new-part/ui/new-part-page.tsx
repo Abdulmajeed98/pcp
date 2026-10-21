@@ -55,6 +55,7 @@ export function NewPartPage() {
       <PartForm
         category={category}
         submitLabel="Create the Part"
+        busyLabel="Creating the Part…"
         save={(fields) => create.mutateAsync({ ...fields, category: category.key })}
       />
     </div>

@@ -89,6 +89,24 @@ test.describe('editing a Part, from its page', () => {
     await expect(specificationRow(page, 'cores.total')).toContainText('6');
   });
 
+  test('while the Part is on its way, its button says so and waits', async ({ page }) => {
+    await openTheEditForm(page);
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route(`${apiUrl}/v1/parts/${part.id}`, async (route) => {
+      if (route.request().method() !== 'PUT') return route.continue();
+      await held;
+      await route.continue();
+    });
+    await page.getByRole('button', { name: 'Save the Part' }).click();
+
+    const busy = page.getByRole('button', { name: 'Saving the Part…' });
+    await expect(busy).toBeVisible();
+    await expect(busy).toBeDisabled();
+    release();
+    await expect(page).toHaveURL(partPageAddress);
+  });
+
   test('the edit form does not scroll sideways, and meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
     page,
   }) => {
