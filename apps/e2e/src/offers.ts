@@ -346,22 +346,26 @@ export async function filmTheOffersScreen(
 // and the empty line's heights, and where the tabs stand are each followed
 // through the film; each run of frames in which one of them moves is a
 // movement, and a movement of more than a few pixels whose largest step is
-// over half of it, or over `most` pixels, is a snap. A step is judged
+// over half of it, or which is faster than `fastest` pixels a millisecond
+// between two drawn frames, is a snap. A step is judged
 // against its own movement, since a 300-pixel banner closing smoothly over
 // a slowed 800 ms still takes larger steps than a 20-pixel line snapping.
 // Also a snap: the banner taken out, or the empty line put in, while it
 // takes room or can be seen. Empty when nothing snaps.
-export function snapsIn(frames: ScreenFrame[], { most }: { most: number }): string[] {
+export function snapsIn(frames: ScreenFrame[], { fastest }: { fastest: number }): string[] {
   const snaps: string[] = [];
   const follow = (name: string, values: (number | null)[]) => {
-    let run: number[] = [];
+    let run: { step: number; speed: number }[] = [];
     const judge = () => {
-      const whole = run.reduce((sum, step) => sum + Math.abs(step), 0);
-      const largest = Math.max(0, ...run.map(Math.abs));
-      if (whole > 4 && (largest > whole / 2 || largest > most)) {
+      const whole = run.reduce((sum, { step }) => sum + Math.abs(step), 0);
+      const largest = Math.max(0, ...run.map(({ step }) => Math.abs(step)));
+      const quickest = Math.max(0, ...run.map(({ speed }) => speed));
+      if (whole > 4 && largest > whole / 2) {
         snaps.push(
           `${name} moved ${Math.round(largest)}px of its ${Math.round(whole)}px in one frame`,
         );
+      } else if (whole > 4 && quickest > fastest) {
+        snaps.push(`${name} moved at ${quickest.toFixed(2)}px a millisecond`);
       }
       run = [];
     };
@@ -370,7 +374,10 @@ export function snapsIn(frames: ScreenFrame[], { most }: { most: number }): stri
       if (value === null || before === null) return judge();
       const step = value - before;
       if (Math.abs(step) < 0.5) return judge();
-      run.push(step);
+      // How fast, by the time between the two frames drawn, which a frame
+      // the page dropped while it was busy lengthens.
+      const elapsed = Math.max(1, frames[index + 1].list.at - frames[index].list.at);
+      run.push({ step, speed: Math.abs(step) / elapsed });
     });
     judge();
   };

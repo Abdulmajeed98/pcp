@@ -317,7 +317,7 @@ test.describe('a made-up Vendor with two Offers, added over HTTP', () => {
       // makes most of its movement in one frame.
       expect([
         ...jumpsIn(watched.list, { step: Infinity, fade: 0.35 }),
-        ...snapsIn(watched.screen, { most: 48 }),
+        ...snapsIn(watched.screen, { fastest: 6 }),
       ]).toEqual([]);
       expect(watched.slowed).toBeGreaterThan(30);
     });
@@ -340,7 +340,7 @@ test.describe('a made-up Vendor with two Offers, added over HTTP', () => {
       // makes most of its movement in one frame.
       expect([
         ...jumpsIn(watched.list, { step: Infinity, fade: 0.35 }),
-        ...snapsIn(watched.screen, { most: 48 }),
+        ...snapsIn(watched.screen, { fastest: 6 }),
       ]).toEqual([]);
       expect(watched.slowed).toBeGreaterThan(30);
     });
