@@ -39,7 +39,7 @@ spacing:
 
 **Creative North Star: "Two looks, one floor"**
 
-The platform has two looks, each in its own app's folder: [Fit Diagram](apps/shopper/DESIGN.md) for the Shopper app, and [Rate Board](apps/dashboard/DESIGN.md) for the dashboard, which holds the Admin console and the Vendor portal (ADR-0007). This file is the floor under both. Everything here comes from the accessibility standard, WCAG 2.2 level AA, from the three languages, and from the phones the platform is read on, not from either look. A page is built to its own app's DESIGN.md and to this one, and where the two seem to disagree, this one holds.
+The platform has two looks, each in its own app's folder: [Fit Diagram](apps/shopper/DESIGN.md) for the Shopper app, and [Framed sheet](apps/dashboard/DESIGN.md) for the dashboard, which holds the Admin console and the Vendor portal (ADR-0007, ADR-0011). This file is the floor under both. Everything here comes from the accessibility standard, WCAG 2.2 level AA, from the three languages, and from the phones the platform is read on, not from either look. A page is built to its own app's DESIGN.md and to this one, and where the two seem to disagree, this one holds.
 
 The research behind every rule is in [docs/research/design-system.md](docs/research/design-system.md).
 
