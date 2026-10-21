@@ -6,16 +6,16 @@
 
 **Blocked by:** 03, 04
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] The directions are dealt by `node ~/.claude/skills/design-taste-frontend/scripts/draw.mjs --app --keep type --options 3`, run from the repository root, with a one-line brief that carries ticket 04's line and the hard rules as ticket 03 left them. The fonts stay (ADR-0006).
 - [x] Pictures of Erbil's bazaar, its money changers' boards and its shop signs are found with Taste's `assets.mjs`, each with its credit recorded.
 - [x] Each direction is rendered as the portal's Offers screen, in Kurdish and in English, and the Catalog, at 360 and 1440 pixels, filled with ticket 01's fixture: no empty or placeholder screen.
 - [x] Every option keeps the hard rules as ticket 03 left them; an option that breaks one says so on its page.
-- [ ] The options are shown in the built-in browser on one page, one option per anchor, two columns at most, before the owner is asked to choose. If the owner takes none, the script deals again.
-- [ ] The owner's choice is recorded under Comments with the owner's word.
-- [ ] The chosen direction's sheet (its tokens and the inspector's allowances) is committed into the repository, since Git ignores `.taste-skill/`, with a note under Comments of how to restore it there for the inspector.
-- [ ] `pnpm check` passes, and the work is committed.
+- [x] The options are shown in the built-in browser on one page, one option per anchor, two columns at most, before the owner is asked to choose. If the owner takes none, the script deals again.
+- [x] The owner's choice is recorded under Comments with the owner's word.
+- [x] The chosen direction's sheet (its tokens and the inspector's allowances) is committed into the repository, since Git ignores `.taste-skill/`, with a note under Comments of how to restore it there for the inspector.
+- [x] `pnpm check` passes, and the work is committed.
 
 ## Comments
 
@@ -52,3 +52,19 @@ The owner looked at the page and answered:
 Both are rendered exactly as o1 and o2, by the same generator (`build/build.mjs`) with a third shell for the T-frame; o1's and o2's pages come out the same as before. As dealt, o3 breaks the 36-pixel floor with 32-pixel controls, uses a 12-pixel small size and control edges under 3:1, and has a light scheme only; o4 uses a 12-pixel small size and control edges under 3:1, and has a dark scheme only. Each is held in the drawing and marked on its page: o3's dark and o4's light come from the chapter's shared defaults on the stone; o4's lime, which fails as text on white, says "in stock" in a dark green in the light scheme; o3's 32-pixel title is held to 24 on a phone, the chapter's phone size. The `creator` kind has no list pattern in Taste's library, so both sheets leave the list screen to the chapter's rules, and it is built as in o1 and o2. Taste's inspector, on each page in each scheme at 1440 and 360: 0 FAIL throughout, and 1 WARN on each Catalog at 360 (the tab row that scrolls sideways). The page's note where `#o3` said "no third direction" now says that o3 and o4 were dealt from `creator` at the owner's word, and the page has four anchors, `#o1` to `#o4`.
 
 Still for the owner: the choice among the four (or another deal), then the chosen sheet committed with its note.
+
+### 21 October 2026: the owner's choice
+
+The orchestrator opened the page in the built-in browser with all four options, `#o1` to `#o4`, before the owner was asked. The owner chose **"1, Framed sheet"**.
+
+**The chosen sheet, dealt in full.** From the root of the owner's checkout, the same command as the first deal with the chosen style and the seed the deal gave it: `node ~/.claude/skills/design-taste-frontend/scripts/draw.mjs --app --keep type --kind commerce --style framed-sheet --seed 616443693 --brief "<the same line>"`. It wrote `.taste-skill/direction.json` there, the very sheet the renderings were drawn from (equal to `redesign-05/o1/direction.json` but for the moment it was dealt). `~/.taste-skill/history.json` records it.
+
+**Kept in the repository** at `apps/dashboard/design/taste/`, beside the app it styles, for tickets 06 and 07:
+
+- `direction.json`, the sheet as Taste's scripts read it, formatted by the repository's formatter (the same JSON);
+- `sheet.md`, the same sheet printed (`draw.mjs --show`): the style, its move, its face, its tokens, the shell and the screens;
+- `held-rules.md`, what the renderings did with it: what the dealt sheet breaks and how the dashboard keeps each hard rule (36 under a mouse, 14 pixels, 3:1 control edges, a dark scheme and the switch), the face chosen inside it (the cool stone frame), the Rate Board as ticket 04 decided, the tokens as rendered in both schemes, and the inspector's allowances, which are none.
+
+**To restore it for the inspector**, from the repository root: `mkdir -p .taste-skill && cp apps/dashboard/design/taste/direction.json .taste-skill/direction.json`. Taste's `inspect.mjs` and `lint.mjs` then switch to the app rules by themselves, and `node ~/.claude/skills/design-taste-frontend/scripts/draw.mjs --show` reprints the sheet. The renderings, the four sheets and the generator stay in the owner's `.taste-skill/redesign-05/`.
+
+Every box is ticked.
