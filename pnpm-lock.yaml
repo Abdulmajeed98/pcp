@@ -562,6 +562,12 @@ importers:
         specifier: ^1.64.0
         version: 1.64.0
 
+  apps/inspector:
+    dependencies:
+      '@pcp/api-client':
+        specifier: workspace:*
+        version: link:../../libs/api-client
+
   apps/shopper:
     dependencies:
       '@pcp/api-client':

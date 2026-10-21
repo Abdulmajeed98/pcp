@@ -1,0 +1,219 @@
+import { describe, expect, it } from '@jest/globals';
+import type { VendorsOffersPageResponse } from '@pcp/api-client';
+
+import { answerFromTheMadeUpShop } from '../made-up-shop.ts';
+import { aShopFromTheCatalog, now } from './catalog-stand-in.ts';
+
+const shop = aShopFromTheCatalog();
+const vendorId = shop.vendor.id;
+
+const aDay = 24 * 60 * 60 * 1000;
+
+function offersPage(
+  { search = '', at = now, page = 0, size = 50 } = {} as {
+    search?: string;
+    at?: Date;
+    page?: number;
+    size?: number;
+  },
+): VendorsOffersPageResponse {
+  const query = search === '' ? '' : `&search=${encodeURIComponent(search)}`;
+  const answer = answerFromTheMadeUpShop(shop, at, {
+    method: 'GET',
+    path: `/v1/vendors/${vendorId}/offers?page=${page}&size=${size}${query}`,
+  });
+  expect(answer?.status).toBe(200);
+  return answer?.body as VendorsOffersPageResponse;
+}
+
+// The Offer confirmed last, as the list shows it at a moment that long after
+// its Confirmation.
+function lastConfirmedOfferAfter(milliseconds: number) {
+  const latest = shop.offers.reduce((a, b) => (a.confirmedAt > b.confirmedAt ? a : b));
+  const at = new Date(new Date(latest.confirmedAt).getTime() + milliseconds);
+  return offersPage({ at }).content.find((offer) => offer.id === latest.id);
+}
+
+describe("the made-up shop's Offers", () => {
+  it('hold at least one Offer in each state a Vendor can see', () => {
+    const offers = offersPage().content;
+    const confirmedToday = offers.filter((offer) => offer.daysSinceConfirmation === 0);
+    const olderAndCurrent = offers.filter(
+      (offer) => offer.daysSinceConfirmation > 0 && !offer.expired && !offer.aboutToExpire,
+    );
+
+    expect(confirmedToday.length).toBeGreaterThan(0);
+    expect(olderAndCurrent.length).toBeGreaterThan(0);
+    expect(offers.some((offer) => offer.aboutToExpire)).toBe(true);
+    expect(offers.some((offer) => offer.expired)).toBe(true);
+    expect(offers.some((offer) => !offer.inStock)).toBe(true);
+    expect(offers.some((offer) => offer.warrantyMonths === null)).toBe(true);
+    expect(offers.length).toBeGreaterThanOrEqual(10);
+    expect(offers.length).toBeLessThanOrEqual(14);
+  });
+
+  it("show an Offer's age and expiry by the API's rules of 14 days and 3 of warning", () => {
+    expect(lastConfirmedOfferAfter(11 * aDay)).toMatchObject({
+      daysSinceConfirmation: 11,
+      daysLeft: 3,
+      aboutToExpire: false,
+      expired: false,
+    });
+    expect(lastConfirmedOfferAfter(11 * aDay + 1)).toMatchObject({
+      daysLeft: 2,
+      aboutToExpire: true,
+      expired: false,
+    });
+    expect(lastConfirmedOfferAfter(14 * aDay)).toMatchObject({
+      daysSinceConfirmation: 14,
+      daysLeft: 0,
+      aboutToExpire: true,
+      expired: false,
+    });
+    expect(lastConfirmedOfferAfter(14 * aDay + 1)).toMatchObject({
+      daysLeft: 0,
+      aboutToExpire: false,
+      expired: true,
+    });
+  });
+
+  it('are counted whatever the search, which keeps the Offers whose Part holds every word', () => {
+    const page = offersPage({ search: 'rtx super' });
+
+    expect(page.content.map((offer) => offer.part.name).sort()).toEqual([
+      'NVIDIA GeForce RTX 4070 SUPER 12GB GDDR6X Founders Edition',
+      'Palit Dual OC GeForce RTX 4070 SUPER 12GB GDDR6X Black',
+    ]);
+    expect(page.totalElements).toBe(2);
+    expect(page.counts).toEqual(offersPage().counts);
+  });
+
+  it('come a page at a time, oldest Confirmation first', () => {
+    const first = offersPage({ size: 5 });
+    const all = offersPage().content;
+    const lastPage = offersPage({ size: 5, page: first.totalPages - 1 });
+
+    expect(first).toMatchObject({ pageNumber: 0, pageSize: 5, first: true, last: false });
+    expect(first.totalPages).toBe(Math.ceil(all.length / 5));
+    expect(first.content.map((offer) => offer.id)).toEqual(
+      all.slice(0, 5).map((offer) => offer.id),
+    );
+    expect(lastPage).toMatchObject({ first: false, last: true });
+    expect(lastPage.content.length).toBe(all.length - (first.totalPages - 1) * 5);
+    const ages = all.map((offer) => offer.daysSinceConfirmation);
+    expect(ages).toEqual([...ages].sort((a, b) => b - a));
+  });
+});
+
+function answerTo(method: string, path: string) {
+  return answerFromTheMadeUpShop(shop, now, { method, path });
+}
+
+describe("the made-up shop's Vendor", () => {
+  it('is the one Vendor listed, and is read by its identifier', () => {
+    const list = answerTo('GET', '/v1/vendors?page=0&size=20');
+    const one = answerTo('GET', `/v1/vendors/${vendorId}`);
+
+    expect(list).toEqual({
+      status: 200,
+      body: {
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 1,
+        totalPages: 1,
+        first: true,
+        last: true,
+        content: [
+          {
+            id: vendorId,
+            name: shop.vendor.name,
+            loginPhoneNumber: shop.vendor.loginPhoneNumber,
+            active: true,
+          },
+        ],
+      },
+    });
+    expect(one).toEqual({ status: 200, body: shop.vendor });
+  });
+
+  it("is the Caller's own Vendor", () => {
+    expect(answerTo('GET', '/v1/caller/vendor')).toEqual({
+      status: 200,
+      body: shop.vendor,
+    });
+  });
+
+  it('is the only Vendor there is: any other is not found, nor are its Offers', () => {
+    const other = '11111111-1111-4111-8111-111111111111';
+
+    expect(answerTo('GET', `/v1/vendors/${other}`)?.status).toBe(404);
+    expect(answerTo('GET', `/v1/vendors/${other}/offers?page=0&size=20`)?.status).toBe(404);
+  });
+});
+
+describe("the made-up shop's other answers", () => {
+  it('give one Offer by its identifier as the shop holds it', () => {
+    const offer = shop.offers[0];
+
+    expect(answerTo('GET', `/v1/vendors/${vendorId}/offers/${offer.id}`)).toEqual({
+      status: 200,
+      body: offer,
+    });
+    expect(
+      answerTo('GET', `/v1/vendors/${vendorId}/offers/11111111-1111-4111-8111-111111111111`)
+        ?.status,
+    ).toBe(404);
+  });
+
+  it("list the shop among the Vendors with expiring Offers, with the list's counts", () => {
+    const answer = answerTo('GET', '/v1/offers/expiring?page=0&size=20');
+
+    expect(answer).toEqual({
+      status: 200,
+      body: {
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 1,
+        totalPages: 1,
+        first: true,
+        last: true,
+        content: [
+          {
+            id: vendorId,
+            name: shop.vendor.name,
+            phoneNumber: shop.vendor.phoneNumber,
+            whatsAppNumber: shop.vendor.whatsAppNumber,
+            counts: offersPage().counts,
+          },
+        ],
+      },
+    });
+  });
+
+  it.each([
+    ['POST', '/v1/vendors'],
+    ['PUT', `/v1/vendors/${vendorId}`],
+    ['PUT', `/v1/vendors/${vendorId}/contact-details`],
+    ['POST', `/v1/vendors/${vendorId}/reset-password`],
+    ['POST', `/v1/vendors/${vendorId}/deactivate`],
+    ['POST', `/v1/vendors/${vendorId}/offers`],
+    ['POST', `/v1/vendors/${vendorId}/offers/confirm`],
+    ['PUT', `/v1/vendors/${vendorId}/offers/${shop.offers[0].id}`],
+    ['DELETE', `/v1/vendors/${vendorId}/offers/${shop.offers[0].id}`],
+  ])('refuse a change, %s %s, which never reaches the API', (method, path) => {
+    const answer = answerTo(method, path);
+
+    expect(answer?.status).toBe(405);
+    expect(answer?.body).toMatchObject({ errors: [{ code: 'MADE_UP_SHOP_IS_READ_ONLY' }] });
+  });
+
+  it.each([
+    ['GET', '/v1/caller'],
+    ['GET', '/v1/categories'],
+    ['GET', '/v1/parts?page=0&size=20&search=ryzen'],
+    ['GET', '/v1/parts/11111111-1111-4111-8111-111111111111'],
+    ['PUT', '/v1/parts/11111111-1111-4111-8111-111111111111'],
+  ])('leave %s %s to the API', (method, path) => {
+    expect(answerTo(method, path)).toBeUndefined();
+  });
+});
