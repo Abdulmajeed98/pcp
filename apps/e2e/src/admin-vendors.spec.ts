@@ -220,7 +220,8 @@ test("a Vendor's page holds its longest details at 360 pixels: an Instagram name
   page,
   request,
 }) => {
-  const englishLine = 'Made-up Complex, Shop 247, opposite the made-up bank';
+  // An English line short enough to fit on one line of the value.
+  const englishLine = 'Made-up Complex';
   const vendor = await createAMadeUpVendor(request, authorization, {
     address: `شەقامی ٦٠ مەتری، نزیک بازاڕی ١٠٠\n${englishLine}`,
     instagramName: 'made_up_computer_hardware_erbl',

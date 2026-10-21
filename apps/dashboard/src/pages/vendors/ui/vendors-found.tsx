@@ -81,7 +81,7 @@ function VendorTableRow({ vendor }: { vendor: VendorSummaryResponse }) {
         {vendor.active ? (
           <span className="text-muted-foreground">Active</span>
         ) : (
-          <DeactivatedMark />
+          <DeactivatedMark className="-ms-1.5" />
         )}
       </TableCell>
       <TableCell
