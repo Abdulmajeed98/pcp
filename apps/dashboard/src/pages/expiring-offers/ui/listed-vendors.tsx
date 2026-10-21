@@ -1,4 +1,5 @@
 import { WhyNotAnswered } from '@/shared/api';
+import { useWideScreen } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -9,16 +10,17 @@ import {
 } from '@/shared/ui';
 
 import { useVendorsWithExpiringOffers } from '../api/list-expiring-offers';
-import { VendorRow } from './vendor-row';
+import { VendorRow, VendorsTable } from './vendor-row';
 
-// The Vendors to remind: how many, on the list's one plate, then the Vendors
-// of this page as rows, those with an Expired Offer first, then the one whose
-// Offer expires soonest, then the way to the other pages. While the first
-// answer is on its way, rows are sketched in its place, and while a later one
-// is, the last answer stays, at full strength, and a line beside the count
-// says that the next is on its way. An empty list says that no Vendor needs
-// reminding, which is what the list is for. A refusal and an API that cannot
-// be reached are each said in words.
+// The Vendors to remind: how many, in words, then the Vendors of this page, a
+// table from 64rem and rows on a phone, those with an Expired Offer first,
+// then the one whose Offer expires soonest, then the way to the other pages.
+// While the first answer is on its way, rows are sketched in its place, and
+// while a later one is, the last answer stays, at full strength, and a line
+// beside the count says that the next is on its way. A Vendor whose Offers
+// were confirmed leaves the list as the Motion section says. An empty list
+// says that no Vendor needs reminding, which is what the list is for. A
+// refusal and an API that cannot be reached are each said in words.
 export function ListedVendors({
   page,
   onPage,
@@ -27,16 +29,11 @@ export function ListedVendors({
   onPage: (page: number) => void;
 }) {
   const listed = useVendorsWithExpiringOffers(page);
+  const wide = useWideScreen();
 
   if (listed.error) return <NotListed error={listed.error} />;
   if (listed.data === undefined) {
-    return (
-      <SketchedRows words="Reading the Vendors…" rowClassName="flex flex-col gap-2 py-3">
-        <span className="h-3.5 w-3/4 rounded-sm bg-secondary" />
-        <span className="h-3.5 w-1/2 rounded-sm bg-muted" />
-        <span className="h-3.5 w-2/3 rounded-sm bg-muted" />
-      </SketchedRows>
-    );
+    return <SketchedRows words="Reading the Vendors…" wide={wide} />;
   }
   // The aim: no active Vendor has an Offer expired or about to expire. The
   // sentence names no number of days, which the API's domain holds.
@@ -64,6 +61,7 @@ export function ListedVendors({
       readingWords="Reading…"
       keyOf={(vendor) => vendor.id}
       row={(vendor) => <VendorRow vendor={vendor} />}
+      rows={wide ? (shown) => <VendorsTable shown={shown} /> : undefined}
       onPage={onPage}
     />
   );
