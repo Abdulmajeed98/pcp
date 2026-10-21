@@ -23,7 +23,7 @@ related_targets: []
 
 THESIS: The work lies on a white sheet set into a cool stone frame, as the bazaar's walls hold its shops, and only prices and the Platform Rate hang on a money changer's graphite plates in amber, each dated. It refuses the grey, cold admin console, a template's cards and gradients, and the dashboard of decorative charts.
 
-OWN-WORLD: A Stone Frame (#f1f0ed) L-shaped around a white sheet with a 1-pixel edge and 16-pixel corners, no shadow; Ink and Note Grey; Bazaar Teal only as the chosen tab's 2-pixel line; Plate Graphite with Plate Amber figures in Geist Mono and quiet Geist units; Action Red only where something needs doing; Geist and Noto Sans Arabic; a photograph of Erbil at the foot of the sidebar.
+OWN-WORLD: A Stone Frame (#f1f0ed) L-shaped around a white sheet with a 1-pixel edge and 16-pixel corners, no shadow; Ink and Note Grey; Bazaar Teal only as the chosen tab's 2-pixel line; Plate Graphite with Plate Amber figures in Geist Mono and quiet Geist units; Action Red only where something needs doing; Geist and Noto Sans Arabic; no photograph in the chrome.
 
 STORY: The Admin sees what needs action first and acts in a tap; a Vendor sees each Offer's price on its plate with how fresh it is, confirms them all at once, and watches the rows settle into "Confirmed today".
 

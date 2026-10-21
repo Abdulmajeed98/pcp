@@ -24,5 +24,6 @@ Each was rendered as the portal's Offers in Kurdish and English and the Admin co
 - An Offer's two prices share one plate, replacing the owner's choice of 20 October 2026 of a plate for each price. The Vendor portal's sections move from two links under its top bar into the sidebar, and on a phone into the menu sheet, replacing the owner's choice of the same day.
 - Controls are 36 pixels under a mouse and 44 on a touchscreen, replacing the dashboard's own rule of 44 under a mouse too.
 - Every movement is a CSS transition on transform and opacity with a reduced-motion variant; no animation library is added.
-- The sidebar carries a photograph of Erbil under a Creative Commons licence, credited in its caption, and downloaded only by a screen wide enough to show it.
+- A screen's title is 22 pixels and a button's text 14 (15 in Kurdish and Arabic), from Taste's sheet, and the root DESIGN.md now lets a look set these two sizes for itself within the hard rules; inputs stay at 16 pixels, so that a phone does not zoom into them.
+- The pictures of Erbil that ticket 05's renderings put in the sidebar are left out: no photograph is part of the dashboard's chrome.
 - Taste's sheet breaks four hard rules as dealt (32-pixel controls, a 12-pixel size, control edges under 3:1, and a light scheme only); the dashboard holds each rule, as `design/taste/held-rules.md` records, and Taste's own inspector checks the rest.

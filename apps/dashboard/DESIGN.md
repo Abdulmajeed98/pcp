@@ -37,11 +37,11 @@ colors:
   night-muted-plate: "#232323"
   night-on-primary: "#111111"
 typography:
-  heading:
+  screen-title:
     fontFamily: "Geist Variable, Noto Sans Arabic Variable, sans-serif"
-    fontSize: "1.5rem"
+    fontSize: "1.375rem"
     fontWeight: 650
-    lineHeight: 1.333
+    lineHeight: 1.364
   title:
     fontFamily: "Geist Variable, Noto Sans Arabic Variable, sans-serif"
     fontSize: "1.25rem"
@@ -57,6 +57,11 @@ typography:
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.5
+  button:
+    fontFamily: "Geist Variable, Noto Sans Arabic Variable, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 500
+    lineHeight: 1.429
   row:
     fontFamily: "Geist Variable, Noto Sans Arabic Variable, sans-serif"
     fontSize: "0.875rem"
@@ -106,7 +111,7 @@ components:
   button-primary:
     backgroundColor: "{colors.ink}"
     textColor: "{colors.sheet}"
-    typography: "{typography.body}"
+    typography: "{typography.button}"
     rounded: "{rounded.control}"
     height: "44px"
     padding: "0 14px"
@@ -115,13 +120,13 @@ components:
   button-outline:
     backgroundColor: "{colors.sheet}"
     textColor: "{colors.ink}"
-    typography: "{typography.body}"
+    typography: "{typography.button}"
     rounded: "{rounded.control}"
     height: "44px"
     padding: "0 14px"
   button-ghost:
     textColor: "{colors.ink}"
-    typography: "{typography.body}"
+    typography: "{typography.button}"
     rounded: "{rounded.control}"
     height: "44px"
     padding: "0 14px"
@@ -256,12 +261,13 @@ The dashboard has no warning colour: nothing on it is a warning that needs no ac
 
 ### Hierarchy
 
-The sizes are the root DESIGN.md's shared scale, in `rem`.
+The sizes are the root DESIGN.md's shared scale, in `rem`, but for the two the root lets a look set for itself: the screen's title and the text in buttons, both taken from Taste's sheet, as the owner chose on 21 October 2026.
 
-- **Heading** (650, 1.5rem, 1.333): a screen's title from 64rem.
-- **Title** (650, 1.25rem, 1.4): a screen's title on a phone, and a Part's name at the head of its page.
+- **Screen title** (650, 1.375rem, 1.364): a screen's title, 22 pixels at every width, from Taste's sheet.
+- **Title** (650, 1.25rem, 1.4): a Part's name at the head of its page.
 - **Section** (600, 1rem, 1.5): a section's heading inside the sheet, the banner's and a note's title, a dialog's title.
-- **Body** (400, 1rem, 1.5): sentences, and the text in every input and button.
+- **Body** (400, 1rem, 1.5): sentences, and the text in every input. An input keeps 16 pixels (17 in Kurdish and Arabic) at every width, because a phone's browser zooms into a focused input whose text is smaller.
+- **Button** (500, 0.875rem, 1.429): the text in every button and every link drawn as one, 14 pixels from Taste's sheet, and 15 in Kurdish and Arabic by the Tall Script Rule.
 - **Row** (550, 0.875rem, 1.429): the name in a row of a table or list.
 - **Small** (400, 0.875rem, 1.429): a row's secondary line, column headings, states, descriptions below a field.
 - **Figure** (600, 1.125rem, tabular figures): a price on a row's plate.
@@ -284,7 +290,7 @@ Kurdish and Arabic follow the root's Tall Script Rule (15, 17 and 19 pixels, loo
 
 **Below 64rem, the sheet is the screen.** The frame disappears. One bar, 56 pixels high on the Stone Frame, holds the menu button on the start side, the screen's scope in the middle (the Vendor's name as it writes it, or "Admin console"), and at most one action on the end side, such as Add an Offer. The sections, the language and scheme switches and Log out are in the menu sheet. The sheet below has 16 pixels of padding and a 16-pixel gap. A screen that feels heavy with controls on a phone takes fewer rows of them, not smaller ones.
 
-**Controls.** Every control is 44 pixels high on a touchscreen. Under a mouse, a fine pointer, from 64rem, it is 36 (`@media (pointer: fine) and (min-width: 64rem)`), never lower. Inputs keep the body size at every width, so that a phone does not zoom into them.
+**Controls.** Every control is 44 pixels high on a touchscreen. Under a mouse, a fine pointer, from 64rem, it is 36 (`@media (pointer: fine) and (min-width: 64rem)`), never lower. Inputs keep the body size, 16 pixels, at every width, so that a phone does not zoom into them; buttons take the Button type, 14.
 
 **A screen.** Its title row first: the title on the start side, and on the end side at most one outlined secondary and the screen's one primary. Then what needs action (the expiry banner), then the list's tabs, the filter bar and the list. A screen's own search sits in the top bar's centre from 64rem, 548 pixels wide, on the Sheet ground; on a phone it is the first row of the sheet below the tabs, as wide as the sheet. It searches when Enter or the keyboard's search key is pressed; it has no Search button of its own.
 
@@ -318,7 +324,7 @@ The dashboard's own shadcn/ui components, on Base UI, are in `apps/dashboard/src
 
 ### Buttons
 
-- **Shape:** 6-pixel corners, 44 pixels high on a touchscreen and 36 under a mouse, 14 pixels of padding on each side, body text at weight 500, a 16-pixel icon before the words where one helps.
+- **Shape:** 6-pixel corners, 44 pixels high on a touchscreen and 36 under a mouse, 14 pixels of padding on each side, the Button type, 14 pixels at weight 500 (15 in Kurdish and Arabic), a 16-pixel icon before the words where one helps.
 - **Primary:** Ink ground with On Primary text, one in each pane, for the action the pane is for: Confirm all my Offers, Save the Offer, Create the Part. It turns light in the dark scheme.
 - **Outline:** a Control Edge border on the Sheet, for every other action: Add an Offer, New Part, Edit, a page of results.
 - **Ghost:** no edge, for a quiet action: Log out, the menu button, Deactivate again.
@@ -417,14 +423,13 @@ The dashboard's own shadcn/ui components, on Base UI, are in `apps/dashboard/src
 
 ### Navigation and the frame
 
-- **The sidebar** (from 64rem), on the Stone Frame: the surface's name at its head, with no logo, since none is decided (PRODUCT.md's Brand Commitments): the Vendor's name as it writes it and "Vendor portal" below it in Note Grey, or "Admin console"; then the sections, 20 pixels below, each a link as high as a control with 6-pixel corners, its icon and its name in Note Grey, and the one the user is in on Active Stone, in Ink at weight 600, `aria-current="page"`. At its foot, a photograph of Erbil (below).
+- **The sidebar** (from 64rem), on the Stone Frame: the surface's name at its head, with no logo, since none is decided (PRODUCT.md's Brand Commitments): the Vendor's name as it writes it and "Vendor portal" below it in Note Grey, or "Admin console"; then the sections, 20 pixels below, each a link as high as a control with 6-pixel corners, its icon and its name in Note Grey, and the one the user is in on Active Stone, in Ink at weight 600, `aria-current="page"`.
 - **The Admin console's sections:** the Catalog, the Vendors, the Missing specifications and the Expiring Offers, and the Part Requests, the Platform Rate and the Referrals as they are built.
 - **The Vendor portal's sections:** Offers, its first screen, and Details, and the portal's later screens as they are built. The plain messages for a Login with no Vendor and for a deactivated Vendor have no sections: they get the frame's top bar with its switches and Log out, and one plain sentence of their own on the sheet.
 - **The top bar** (from 64rem), on the Stone Frame with no rule: the screen's search in its centre, if it has one; on the end side, the caller's name in Note Grey (the Admin console), the language switch (the Vendor portal), the scheme switch, and a ghost Log out, last.
 - **On a phone,** the 56-pixel bar holds the menu button, the scope and one action. The menu button opens the **menu sheet** from the start side: a panel on the Stone Frame as tall as the screen and at most 20rem wide, over the scrim, with the surface's name at its head, the sections as in the sidebar, then the language switch, the scheme switch and Log out at its foot. Choosing a section, tapping the scrim, the menu button again or Escape closes it, and focus returns to the menu button.
 - **The band, while the Admin acts as a Vendor:** across the whole window, above the frame, on Active Stone with an Edge line below, so that it is never taken for part of the Vendor's own portal. On the start side, one sentence at small size and weight 500 that names the Vendor as it writes it, followed, for a deactivated Vendor, by one that says it is deactivated; on the end side, an underlined link as high as a control back to the Vendor's page in the Admin console. The link takes the row below when the sentence fills the row. It is in the portal's language, because the Vendor may be reading over the Admin's shoulder.
 - **Back:** a small Note Grey link above a screen's title, with a chevron that points back in the reading direction, underlined under the pointer, as high as a control.
-- **A photograph of Erbil** at the foot of the sidebar, the face of each surface: the Qaysari Bazaar for the Vendor portal and the Citadel seen from the bazaar for the Admin console, 120 pixels high with 8-pixel corners, its caption in Small Note Grey below it and its author and licence (CC BY-SA, from `design/taste/` and redesign ticket 05's credits) named in the caption's link. It is only in the sidebar, so a phone never downloads it (`<picture>` with a source for 64rem and up, and an empty image below). It is decoration with a caption, never a background behind text.
 
 ## Motion
 
@@ -506,6 +511,7 @@ Only the menu sheet and the switch's thumb travel sideways, and both follow the 
 - **Don't** put a count on a plate, or add a second large plate to a screen.
 - **Don't** put a shadow under the sheet, a card or a row, or a border between the sidebar and the top bar, or nest a fourth level inside frame, sheet and panel.
 - **Don't** use cards for lists, icons in tinted squares, pills, gradients, glass or blur.
+- **Don't** put a photograph in the frame, the sidebar or behind text: the owner left the pictures of Erbil out of the dashboard's chrome.
 - **Don't** set text under 14 pixels (15 in Kurdish and Arabic), even where Taste's sheet says 12.
 - **Don't** animate a figure, a plate, a route change, a tab's line, the language or the scheme, or anything the keyboard repeats.
 - **Don't** use `ease-in`, Tailwind's built-in curves, `transition: all`, or a duration over 200 milliseconds.
