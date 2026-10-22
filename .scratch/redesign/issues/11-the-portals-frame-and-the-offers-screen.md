@@ -6,16 +6,16 @@
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The portal's frame, its sections, the language switch and the band of the Admin acting as a Vendor follow the new DESIGN.md, and the frame has the scheme switch of ticket 03 beside the language switch, as the Admin console has.
 - [x] The Offers screen, an Offer's row, the expiry banner, confirm-all and its result, the search and the empty screen follow it, and move as its Motion section says, mirrored in right-to-left, with reduced motion respected.
 - [x] The Offers screen passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command, acting as the fixture's Vendor, in Kurdish and in English, with every state of an Offer on it.
-- [ ] Emil's `break-ui` and `mobile-native` are run on the Offers screen: long Part names, a price in the millions of dinars, a dozen expired Offers, none at all; and how it takes a thumb at 360 pixels. What broke is fixed.
+- [x] Emil's `break-ui` and `mobile-native` are run on the Offers screen: long Part names, a price in the millions of dinars, a dozen expired Offers, none at all; and how it takes a thumb at 360 pixels. What broke is fixed.
 - [x] It passes `checkInEveryLanguageOfTheVendorPortal`; prices and Part names are still drawn left to right with no Arabic-Indic digit.
 - [x] `expectAccessible` passes on the screen with the banner, in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
 - [x] Tests that had to change are listed under Comments with why; no test loses an assertion.
-- [ ] The screen is shown to the owner in the built-in browser before the ticket closes, in Kurdish and in English, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building it taught something.
+- [x] The screen is shown to the owner in the built-in browser before the ticket closes, in Kurdish and in English, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building it taught something.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
@@ -120,3 +120,45 @@ Choices to confirm or change:
 8. **Left for hosting**: the thumb on a real phone, the notch's safe areas (the page stays letterboxed), pull-to-refresh left on. Recorded in the MVP spec's list.
 
 The boxes for break-ui and mobile-native (its by-hand check on a phone waits for hosting), for showing the screen to the owner, and the Status, stay as they are until the owner has looked and answered.
+
+### 22 October 2026: the owner's answers
+
+The orchestrator opened `.taste-skill/redesign-11/index.html` for the owner in the built-in browser, in Kurdish and in English, and the owner answered the eight choices, all as built:
+
+| Choice | The owner's word | Result |
+|---|---|---|
+| 1. The API lists a Vendor's Offers by state and counts those out of stock | "Keep it" | Kept as built |
+| 2. The tabs count all the Vendor's Offers, whatever the search | "Whole counts" | Kept as built |
+| 3. On a phone the language switch is in the menu sheet | "In the menu" | Kept as built |
+| 4. On a phone Add an Offer is a named plus on the bar's end side | "Plus on the bar" | Kept as built |
+| 5. A plate too wide for a phone puts its dinars on a second line | "Second line" | Kept as built |
+| 6. The plain messages' switches and Log out behind the menu on a phone | "Behind the menu" | Kept as built |
+| 7. The banner's Action Red edge and the plates' lit edge in the dark | "Keep" | Kept as built |
+| 8. The thumb on a real phone, the notch's safe areas and pull-to-refresh wait for hosting | "Accept" | Recorded in the MVP spec's list of checks on a phone, which the hosting work makes |
+
+The owner also said, on 22 October 2026, for every ticket: "make sure that motions are smooth, not a rigid snaps that hurt eyes". Redesign ticket 10 wrote it into DESIGN.md's Motion as the No Snap Rule.
+
+### 22 October 2026: the No Snap Rule on the Offers screen
+
+**Merged first.** `redesign/integration` moved to `392ed4c` with ticket 10, which built its own `leaves` and `leaves-rule` utilities and `useLeavingRows` for the same Motion 8, and the No Snap Rule. The merge (`68d6f70`) takes ticket 10's theme and Motion text, keeps this branch's `settles`, and adds the Offers screen to Motion 7 and 8. This branch's own `leaves` and `useWithTheLeaving` are gone: the Offers rows now use ticket 10's, as one rule for every list.
+
+**Watched**, test first, four times slower (DevTools' playback rate), frame by frame, on a phone: Confirm all on the All tab (the rows stay and settle, the banner leaves, the result line arrives) and on the Need confirming tab (its rows leave, its empty line arrives), with full and with reduced motion, in English and in Kurdish. The film follows every row's place and height (each by its Offer), the banner's, the result line's and the empty line's heights, and the tabs' place. The menu sheet was not filmed again: it floats over the screen, moves nothing beneath it, and slides from the start side or, with reduced motion, fades in place, which ticket 07's frame test checks.
+
+**What snapped** (the red runs): Confirm all's result line was put in whole, 19 pixels in one frame, and pushed the tabs and the list down 36 pixels in that frame (its height and the gap above it); on Need confirming, the empty line "No Offer needs confirming" was put in 44 pixels high in one frame. Two red runs on the way failed for a wrong reason, which taught the test: the film told rows apart by their first 24 characters, and both made-up Parts start "Made-up test Part 179262…"; it now keys a row by its Offer. And a fixed 16-pixel step per frame, which ticket 10 uses for its rows, cannot tell a smooth from a snapped movement of a 300-pixel banner: closing smoothly over a slowed 800 ms it still moves up to 30 pixels a frame. The check is relative instead: each run of frames in which something moves is one movement, and a movement of more than 4 pixels whose largest step is over half of it snaps, as does one faster than 6 pixels a millisecond between two drawn frames (a guard against a whole block jumping inside a longer movement); ticket 10's own check still fails a row put in or taken out while it takes room or can be seen. A first cap of 48 pixels a frame failed once under `pnpm platform:check`'s load, on a row that moved smoothly 49 pixels of its 412 (a reduced-motion close on the out curve peaks near 3 pixels a millisecond, slowed fourfold); the speed, which a dropped frame does not inflate, replaced it (commit `f9ffee3`).
+
+**Fixed** (commit `6bf4286`):
+
+- The result line arrives as a row does (the theme's `leaves`, `data-arriving`): its space, with the gap above it, opens over 200 ms after 150, then it fades in (150 and 150 ms on the out curve with reduced motion).
+- The empty line of a tab left with nothing arrives the same way, in step as its last rows leave; a tab that had nothing to begin with shows it at once, as changing tabs is still.
+- Every block below the title row holds the gap above it, so that a gap closes or opens with its block, never in one frame: the banner's leaving takes the gap above it with it.
+- The rows leave and arrive through `useLeavingRows`, every row with its rule below it, the table's rows with `leaves-rule` and each cell's content in `leaves`.
+- After Confirm all, a changed Confirmation's old words, laid over the new, fade out in the same turn as the new fade in (the theme's new `unsettles`), so that no words vanish in one frame; and a row whose words take another height follows them over 200 ms on the in-out curve (150 ms on the out curve with reduced motion), and the rows below move with it.
+- With reduced motion nothing is put in, taken out or moved in one frame: the banner's space closes over 150 ms after its fade (before ticket 10's rule this branch closed it in 1 ms, which is gone), and the settle has no stagger.
+
+**A fault, shown and reverted by the inverse edit** (a script that refuses a dirty tree, on the committed `6bf4286`): with the result line put in whole again, all four All-tab films failed, each naming the result line, the tabs and every row moving 36 pixels (40 in Kurdish) of their 36 in one frame; with the row heights no longer followed, no film failed, because at 360 these two rows keep their height when their words change. A film at 1024 pixels in Kurdish, asserting that some row's height did change, found none either (the made-up Part's name sets the row's height), so it was not kept: the height-following is built and in DESIGN.md, but no realistic row in the tests changes its height, and no test proves it.
+
+**Tests:** in `vendor-offers.spec.ts` the two lines of Motion 7 and 8 became eight: Confirm all on All and on Need confirming, full and reduced, in English and in Kurdish. Every assertion of the two stands (the changed Confirmations settle 30 ms apart, or at once with reduced motion; the banner's space closes on `grid-template-rows` 200 ms after 150), but the one that reduced motion closes the banner's space in 1 ms, which the No Snap Rule forbids: it now closes over 150 ms. They run on the Vendor's own two Offers, answered as needing confirmation until Confirm all asks the real API (`answerTheOwnOffersAsNeedingConfirmation`), so that the same rows change state, as a Vendor sees them. New in `offers.ts`: `filmTheOffersScreen` and `snapsIn`; ticket 10's `jumpsIn` is used for its put-in and taken-out checks.
+
+**The checks on the tip.** `pnpm check` passed before each commit. After the merge, `pnpm platform:check` on `f9ffee3`, under the scratchpad's e2e lock: **192 passed**, none failed or flaky (7.9 minutes), ticket 10's lists and this ticket's eight films among them. The run before it, on `6bf4286`, had 191 passed and the one failure above. `redesign/integration` is at `392ed4c`, which this branch holds.
+
+Every box is ticked: break-ui and mobile-native were run and what broke is fixed, and their check by hand on a real phone waits for hosting, as the owner accepted (choice 8), in the MVP spec's list. The ticket is resolved.
