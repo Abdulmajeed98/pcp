@@ -17,19 +17,20 @@ import {
 } from './development-logins';
 import { type LoginDetails, type VendorLoginDetails } from './keycloak-screens';
 import {
-  buttonFor,
   checkInEveryLanguageOfTheVendorPortal,
+  chooseInThePortal,
   expectADifferentTextInEachLanguage,
   expectNoSidewaysScroll,
   expectPageIn,
   type Language,
-  languageSwitch,
   languages,
+  languageSwitch,
   layoutOf,
   linesAsDrawn,
   narrowWindow,
   readInEveryLanguageOfTheVendorPortal,
 } from './languages';
+import { withTheMenuOpenOnAPhone } from './menu-sheet';
 import { createAMadeUpPart, type MadeUpPart } from './catalog';
 import {
   addAnOffer,
@@ -220,7 +221,9 @@ test('a made-up Vendor gets the page with the language switch, and the developme
 }) => {
   await openInABrowserSetTo(browser, 'ar', vendor, async (page) => {
     await expectPageIn(page, arabic);
-    await expect(languageSwitch(page).getByRole('button')).toHaveCount(languages.length);
+    await withTheMenuOpenOnAPhone(page, () =>
+      expect(languageSwitch(page).getByRole('button')).toHaveCount(languages.length),
+    );
   });
   await openInABrowserSetTo(browser, 'ar', developmentAdmin, async (page) => {
     await expectPageIn(page, english);
@@ -258,7 +261,7 @@ test("a tap on another language changes the language, the direction and the tab'
   });
 
   for (const next of [english, kurdish]) {
-    await buttonFor(page, next).click();
+    await chooseInThePortal(page, next);
 
     await expectPageIn(page, next);
     titles.set(next, await page.title());
@@ -287,7 +290,7 @@ test('a language the Vendor portal only found from the browser is not remembered
     vendor,
     async (page) => {
       await expectPageIn(page, english);
-      await buttonFor(page, kurdish).click();
+      await chooseInThePortal(page, kurdish);
       await expectPageIn(page, kurdish);
     },
     inArabic.kept,
@@ -309,7 +312,7 @@ test.describe('in a browser set to English', () => {
   }) => {
     await openTheDashboardAs(page, vendor);
     await expectPageIn(page, english);
-    await buttonFor(page, arabic).click();
+    await chooseInThePortal(page, arabic);
     await expectPageIn(page, arabic);
 
     await page.reload();
@@ -325,7 +328,7 @@ test.describe('in a browser set to English', () => {
     page,
   }) => {
     await openTheDashboardAs(page, vendor);
-    await buttonFor(page, arabic).click();
+    await chooseInThePortal(page, arabic);
     await expectPageIn(page, arabic);
     await logOutOfTheDashboard(page);
 
@@ -344,7 +347,7 @@ test.describe('in a browser set to English', () => {
     page,
   }) => {
     await openTheDashboardAs(page, vendor);
-    await buttonFor(page, arabic).click();
+    await chooseInThePortal(page, arabic);
     await expectPageIn(page, arabic);
     await logOutOfTheDashboard(page);
 
@@ -373,7 +376,7 @@ test("with a language remembered, the browser's storage still holds no token", a
   );
   await openTheDashboardAs(page, vendor);
   const token = (await answered).request().headers().authorization.replace('Bearer ', '');
-  await buttonFor(page, english).click();
+  await chooseInThePortal(page, english);
   await expectPageIn(page, english);
 
   await page.reload();

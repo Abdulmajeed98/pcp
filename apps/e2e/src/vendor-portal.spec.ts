@@ -14,15 +14,16 @@ import {
   type VendorLoginDetails,
 } from './keycloak-screens';
 import {
-  buttonFor,
+  chooseInThePortal,
   expectNoSidewaysScroll,
   expectPageIn,
   type Language,
-  languageSwitch,
   languages,
+  languageSwitch,
   narrowWindow,
 } from './languages';
-import { theOffersScreen, theSection } from './offers';
+import { openTheMenuOnAPhone, theMenuSheet, withTheMenuOpenOnAPhone } from './menu-sheet';
+import { goToTheSection, theOffersScreen } from './offers';
 import { apiUrl, dashboardUrl } from './platform';
 import {
   aMadeUpVendorThatHasLoggedIn,
@@ -62,7 +63,7 @@ test("after its first login, a made-up Vendor's portal opens on the Offers scree
     await expect(vendorsPage).toHaveURL(`${dashboardUrl}/`);
     await expect(theOffersScreen(vendorsPage)).toBeVisible();
 
-    await theSection(vendorsPage, 'details').click();
+    await goToTheSection(vendorsPage, 'details');
     await expect(vendorsPage).toHaveURL(`${dashboardUrl}/details`);
     await expect(detailsHeading(vendorsPage)).toBeVisible();
     await expect(detailOf(vendorsPage, 'name')).toHaveText(vendor.name);
@@ -93,7 +94,7 @@ test.describe('as a made-up Vendor', () => {
     }) => {
       await openTheDashboardAs(page, vendor, address);
 
-      await expect(languageSwitch(page)).toBeVisible();
+      await withTheMenuOpenOnAPhone(page, () => expect(languageSwitch(page)).toBeVisible());
       await expect(heading(page)).toHaveCount(0);
       await expect(page.getByRole('searchbox')).toHaveCount(0);
     });
@@ -108,7 +109,7 @@ test.describe('as a made-up Vendor', () => {
       vendorPageUrl('0b4d6f8a-2c1e-4a3b-9d5f-7e6a8b9c0d1e'),
     );
 
-    await expect(languageSwitch(page)).toBeVisible();
+    await withTheMenuOpenOnAPhone(page, () => expect(languageSwitch(page)).toBeVisible());
     await expect(page.getByText('Vendor not found')).toHaveCount(0);
   });
 
@@ -119,7 +120,7 @@ test.describe('as a made-up Vendor', () => {
 
     const messages = new Map<Language, string>();
     for (const language of [kurdish, english]) {
-      await buttonFor(page, language).click();
+      await chooseInThePortal(page, language);
       messages.set(language, await detailsHeading(page).innerText());
     }
     expect(messages.get(kurdish)).not.toBe(messages.get(english));
@@ -308,7 +309,7 @@ test.describe('as a made-up Vendor', () => {
 
   // The language tests show the same message in each of the three
   // languages, by its switch.
-  test("with no Vendor behind the Login, the frame shows a plain message in the portal's language, with the language switch and the log out button and nothing else", async ({
+  test("with no Vendor behind the Login, the frame shows a plain message in the portal's language, with the menu sheet's language switch, scheme switch and log out button and nothing else", async ({
     browser,
   }) => {
     const context = await browser.newContext({ locale: 'ckb', viewport: narrowWindow });
@@ -319,14 +320,21 @@ test.describe('as a made-up Vendor', () => {
 
       await expect(page.getByTestId('no-vendor')).toBeVisible();
       await expectPageIn(page, kurdish);
-      await expect(page.getByTestId('log-out')).toBeVisible();
-      await expect(languageSwitch(page).getByRole('button')).toHaveCount(languages.length);
-      await expect(page.getByRole('button')).toHaveCount(1 + languages.length);
+      await expect(page.getByRole('button')).toHaveCount(1);
       await expect(page.getByRole('link')).toHaveCount(0);
       await expect(page.getByRole('heading')).toHaveCount(0);
       await expect(vendorNameInTheFrame(page)).toHaveCount(0);
       await expectNoSidewaysScroll(page);
       await expectAccessible(page);
+
+      // The menu sheet holds the two switches and Log out, and no section.
+      await openTheMenuOnAPhone(page);
+      const menu = theMenuSheet(page);
+      await expect(menu.getByTestId('log-out')).toBeVisible();
+      await expect(languageSwitch(page).getByRole('button')).toHaveCount(languages.length);
+      await expect(menu.getByRole('button')).toHaveCount(1 + languages.length + 3);
+      await expect(menu.getByRole('link')).toHaveCount(0);
+      await expect(menu.getByTestId('portal-sections')).toHaveCount(0);
     } finally {
       await context.close();
     }

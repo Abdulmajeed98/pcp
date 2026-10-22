@@ -934,6 +934,17 @@
               "example": "ryzen 7600",
               "type": "string"
             }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "description": "Which Offers are found: every one; those that need confirming, Expired Offers and those about to expire; or those out of stock. Left out, every Offer is found.",
+            "schema": {
+              "example": "needs-confirming",
+              "type": "string",
+              "enum": ["all", "needs-confirming", "out-of-stock"]
+            }
           }
         ],
         "responses": {
@@ -2538,9 +2549,14 @@
             "type": "number",
             "description": "How many of them are not expired and will be within 3 days.",
             "example": 5
+          },
+          "outOfStock": {
+            "type": "number",
+            "description": "How many of them are out of stock.",
+            "example": 3
           }
         },
-        "required": ["offers", "expired", "aboutToExpire"]
+        "required": ["offers", "expired", "aboutToExpire", "outOfStock"]
       },
       "VendorsOffersPageResponse": {
         "type": "object",
