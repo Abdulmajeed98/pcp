@@ -1,7 +1,6 @@
 import type { CategoryResponse, PartResponse } from '@pcp/api-client';
 import { AlwaysEnglish } from '@pcp/ui';
-import { CircleAlertIcon, CircleCheckIcon, PencilIcon } from 'lucide-react';
-import { useState } from 'react';
+import { CircleAlertIcon, PencilIcon } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { categoryName, useCategories } from '@/entities/category';
@@ -9,7 +8,14 @@ import { PartPicture, usePart, valueAt } from '@/entities/part';
 import { PhotoField } from '@/features/add-photo';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Alert, AlertDescription, BackLink, Button, buttonVariants } from '@/shared/ui';
+import {
+  Alert,
+  AlertDescription,
+  BackLink,
+  Button,
+  buttonVariants,
+  ScreenTitle,
+} from '@/shared/ui';
 
 import { DetailRow, DetailRows, PartNumbers } from './detail-rows';
 import { NeededNotKnown, NotKnown, SpecificationValue } from './specification-value';
@@ -44,7 +50,9 @@ export function PartPage() {
     return (
       <div className="flex flex-col gap-4">
         <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
-        <h1 className="text-xl/snug font-[650]">The Part could not be read</h1>
+        <ScreenTitle className="text-xl/snug font-[650]">
+          The Part could not be read
+        </ScreenTitle>
         <Alert variant="destructive" data-testid="refusal">
           <AlertDescription>
             <WhyNotAnswered error={error} />
@@ -82,21 +90,20 @@ function PartDetails({
 }) {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const missing = part.missingNeededSpecifications;
-  // The photo the page opened with. A photo added while the page is open
-  // fades in where the icon or the old photo was (Motion 6, in place); the
-  // page itself never fades in.
-  const [openedWith] = useState(part.photoPath);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
         <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
         <div className="flex items-start gap-4">
-          <PartPicture part={part} size="page" arriving={part.photoPath !== openedWith} />
+          {/* A photo added while the page is open comes in smoothly, and
+              the page itself never fades in; another Part is another
+              picture. */}
+          <PartPicture key={part.id} part={part} size="page" />
           <div className="flex min-w-0 flex-col gap-1">
-            <h1 className="text-xl/snug font-[650] wrap-break-word">
+            <ScreenTitle className="text-xl/snug font-[650] wrap-break-word">
               <AlwaysEnglish>{part.name}</AlwaysEnglish>
-            </h1>
+            </ScreenTitle>
             <p className="text-sm text-muted-foreground">
               <AlwaysEnglish>{part.manufacturer}</AlwaysEnglish> ·{' '}
               {categoryName(part.category)}
@@ -172,17 +179,11 @@ function PartDetails({
 
 // Which needed specifications the Part lacks, by their labels, in Action Red
 // after a circled exclamation mark, as a Part missing specifications says it;
-// or, when it lacks none, one quiet line that says so.
+// and nothing when it lacks none (the owner's word on 22 October 2026, "Say
+// nothing").
 function Lacks({ part, category }: { part: PartResponse; category: CategoryResponse }) {
   const missing = part.missingNeededSpecifications;
-  if (missing.length === 0) {
-    return (
-      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <CircleCheckIcon aria-hidden="true" className="size-4 shrink-0" />
-        Every needed specification is known
-      </p>
-    );
-  }
+  if (missing.length === 0) return null;
 
   const labels = category.specifications
     .filter(({ path }) => missing.includes(path))
@@ -200,7 +201,7 @@ function PartNotFound() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
-      <h1 className="text-xl/snug font-[650]">Part not found</h1>
+      <ScreenTitle className="text-xl/snug font-[650]">Part not found</ScreenTitle>
       <p>The catalog holds no Part at this address. It may never have existed.</p>
     </div>
   );

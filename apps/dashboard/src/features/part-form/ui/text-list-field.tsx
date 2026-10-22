@@ -6,7 +6,7 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Button, FieldError, FieldLegend, FieldSet, Input } from '@/shared/ui';
 
 import type { PartFormValues } from '../model/form-values';
-import { Entry, useEntriesMotion } from './entries-motion';
+import { Entries, Entry, useEntriesMotion } from './entries-motion';
 import { describedBy, errorOf, idOf } from './field-names';
 
 // A list of text, such as a Part's part numbers or a case's front panel
@@ -60,39 +60,41 @@ export function TextListField({
       <FieldLegend variant="label" className="mb-1">
         {legend}
       </FieldLegend>
-      {fields.map((field, index) => {
-        // An entry on its way out keeps its place in the form's values until
-        // it has left, so the entries that stay are counted without it.
-        const shown = staying.indexOf(field);
-        const label = `${entry} ${formatNumber((shown === -1 ? index : shown) + 1)}`;
-        const entryName = entryNameAt(index);
-        const entryError = errorOf(formState.errors, entryName);
-        return (
-          <Entry key={field.id} {...entryProps(field.id)}>
-            <div className="flex flex-col gap-1">
-              <div className="flex gap-2">
-                <Input
-                  aria-label={label}
-                  aria-invalid={entryError !== undefined}
-                  aria-describedby={describedBy(entryError && `${idOf(entryName)}-error`)}
-                  autoComplete="off"
-                  {...register(entryName as 'partNumbers.0.value')}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  aria-label={`Remove ${label}`}
-                  onClick={() => removeEntry(field.id)}
-                >
-                  <XIcon />
-                </Button>
+      <Entries>
+        {fields.map((field, index) => {
+          // An entry on its way out keeps its place in the form's values until
+          // it has left, so the entries that stay are counted without it.
+          const shown = staying.indexOf(field);
+          const label = `${entry} ${formatNumber((shown === -1 ? index : shown) + 1)}`;
+          const entryName = entryNameAt(index);
+          const entryError = errorOf(formState.errors, entryName);
+          return (
+            <Entry key={field.id} {...entryProps(field.id)}>
+              <div className="flex flex-col gap-1">
+                <div className="flex gap-2">
+                  <Input
+                    aria-label={label}
+                    aria-invalid={entryError !== undefined}
+                    aria-describedby={describedBy(entryError && `${idOf(entryName)}-error`)}
+                    autoComplete="off"
+                    {...register(entryName as 'partNumbers.0.value')}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label={`Remove ${label}`}
+                    onClick={() => removeEntry(field.id)}
+                  >
+                    <XIcon />
+                  </Button>
+                </div>
+                <FieldError id={`${idOf(entryName)}-error`}>{entryError}</FieldError>
               </div>
-              <FieldError id={`${idOf(entryName)}-error`}>{entryError}</FieldError>
-            </div>
-          </Entry>
-        );
-      })}
+            </Entry>
+          );
+        })}
+      </Entries>
       <Button
         ref={addButton}
         type="button"

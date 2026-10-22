@@ -1,6 +1,6 @@
 import type { CategoryResponse, PartResponse, SubErrorResponse } from '@pcp/api-client';
 import { cn } from 'cn';
-import { useEffect, useRef } from 'react';
+import { type TransitionEvent, useRef } from 'react';
 import { type FieldPath, FormProvider, useForm } from 'react-hook-form';
 
 import { setRefusalsBesideTheirFields } from '@/shared/api';
@@ -17,6 +17,7 @@ import {
   FieldLegend,
   FieldSet,
   Input,
+  OpeningSpace,
 } from '@/shared/ui';
 
 import {
@@ -27,6 +28,7 @@ import {
 } from '../model/form-values';
 import { fieldOf, messageOf, partFieldMessages, whyNotSaved } from '../model/refusals';
 import { describedBy, errorOf } from './field-names';
+import { NameField } from './name-field';
 import { SpecificationField } from './specification-field';
 import { TextListField } from './text-list-field';
 
@@ -73,10 +75,13 @@ export function PartForm({
   const busy = formState.isSubmitting;
   const end = useRef<HTMLDivElement>(null);
 
-  // A refusal that arrives beside the button is kept in sight with it.
-  useEffect(() => {
-    if (refusal !== undefined) end.current?.scrollIntoView({ block: 'nearest' });
-  }, [refusal]);
+  // A refusal that arrives beside the button is kept in sight with it, once
+  // its space has opened, by a scroll as smooth as the opening (the No Snap
+  // Rule).
+  function keepInSight(event: TransitionEvent<HTMLDivElement>): void {
+    if (refusal === undefined || event.propertyName !== 'grid-template-rows') return;
+    end.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
 
   async function submit(values: PartFormValues): Promise<void> {
     try {
@@ -143,9 +148,8 @@ export function PartForm({
           <FieldGroup className="grid @min-[40rem]/part-form:grid-cols-2 @min-[40rem]/part-form:gap-x-6">
             <Field className="col-span-full">
               <FieldLabel htmlFor="part-name">Name</FieldLabel>
-              <Input
+              <NameField
                 id="part-name"
-                autoComplete="off"
                 aria-invalid={nameError !== undefined}
                 aria-describedby={describedBy(nameError && 'part-name-error')}
                 {...register('name', {
@@ -194,13 +198,20 @@ export function PartForm({
           </FieldGroup>
         </FieldSet>
 
-        <div ref={end} className="flex scroll-my-4 flex-col gap-4">
-          {refusal !== undefined && (
-            <Alert variant="destructive" data-testid="refusal">
-              <AlertTitle>The Part was not saved.</AlertTitle>
-              <AlertDescription>{refusal}</AlertDescription>
-            </Alert>
-          )}
+        <div
+          ref={end}
+          className="flex scroll-my-4 flex-col gap-4"
+          onTransitionEnd={keepInSight}
+        >
+          {/* Its space opens and closes smoothly (the No Snap Rule). */}
+          <OpeningSpace>
+            {refusal !== undefined && (
+              <Alert variant="destructive" data-testid="refusal">
+                <AlertTitle>The Part was not saved.</AlertTitle>
+                <AlertDescription>{refusal}</AlertDescription>
+              </Alert>
+            )}
+          </OpeningSpace>
           <Button
             type="submit"
             className={cn(

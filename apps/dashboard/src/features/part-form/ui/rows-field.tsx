@@ -1,13 +1,21 @@
+import { cn } from 'cn';
 import type { SpecificationResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { PlusIcon, XIcon } from 'lucide-react';
 import { useRef } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 
-import { Button, FieldDescription, FieldError, FieldLegend, FieldSet } from '@/shared/ui';
+import {
+  Button,
+  FieldDescription,
+  FieldError,
+  FieldLegend,
+  FieldSet,
+  OpeningSpace,
+} from '@/shared/ui';
 
 import type { PartFormValues, RowEntry } from '../model/form-values';
-import { Entry, useEntriesMotion } from './entries-motion';
+import { Entries, Entry, useEntriesMotion } from './entries-motion';
 import { describedBy, errorOf, idOf } from './field-names';
 import { SpecificationField } from './specification-field';
 
@@ -31,7 +39,7 @@ export function RowsField({
   descriptionId?: string;
 }) {
   const { control, setValue, setFocus, formState } = useFormContext<PartFormValues>();
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: name as 'partNumbers',
   });
@@ -48,9 +56,12 @@ export function RowsField({
     append(emptyRow(rowFields) as never);
   }
 
+  // Every row leaves as a removed one does, never all at once in one frame
+  // (the No Snap Rule), and the focus goes to the way to add a row.
   function makeNotKnown(): void {
     setValue(knownName, false as never);
-    replace([]);
+    for (const field of staying) leave(field.id);
+    addButton.current?.focus();
   }
 
   function removeRow(id: string): void {
@@ -70,50 +81,57 @@ export function RowsField({
       <FieldLegend variant="label" className="mb-1">
         {legend}
       </FieldLegend>
-      {!known && <FieldDescription>Not known.</FieldDescription>}
-      {known && staying.length === 0 && <FieldDescription>None.</FieldDescription>}
-      {fields.map((field, index) => {
-        // A row on its way out keeps its place in the form's values until it
-        // has left, so the rows that stay are counted without it.
-        const shown = staying.indexOf(field);
-        const number = formatNumber((shown === -1 ? index : shown) + 1);
-        return (
-          // The legend is the row's first child, which names the row for a
-          // screen reader, and the button that removes the row sits beside
-          // it on the end side.
-          <Entry key={field.id} {...entryProps(field.id)}>
-            <FieldSet className="relative gap-3 rounded-lg border border-border p-3">
-              <FieldLegend
-                variant="label"
-                className="float-start mb-0 min-h-control w-full pe-14 leading-11"
-              >
-                {specification.label} {number}
-              </FieldLegend>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="absolute end-3 top-3"
-                aria-label={`Remove ${specification.label} ${number}`}
-                onClick={() => removeRow(field.id)}
-              >
-                <XIcon />
-              </Button>
-              {/* A row's fields side by side where the form is 40rem wide, so
+      {/* Each comes and goes smoothly, as an entry does (the No Snap Rule). */}
+      <OpeningSpace>
+        {!known && <FieldDescription>Not known.</FieldDescription>}
+      </OpeningSpace>
+      <OpeningSpace>
+        {known && staying.length === 0 && <FieldDescription>None.</FieldDescription>}
+      </OpeningSpace>
+      <Entries>
+        {fields.map((field, index) => {
+          // A row on its way out keeps its place in the form's values until it
+          // has left, so the rows that stay are counted without it.
+          const shown = staying.indexOf(field);
+          const number = formatNumber((shown === -1 ? index : shown) + 1);
+          return (
+            // The legend is the row's first child, which names the row for a
+            // screen reader, and the button that removes the row sits beside
+            // it on the end side.
+            <Entry key={field.id} {...entryProps(field.id)}>
+              <FieldSet className="relative gap-3 rounded-lg border border-border p-3">
+                <FieldLegend
+                  variant="label"
+                  className="float-start mb-0 min-h-control w-full pe-14 leading-11"
+                >
+                  {specification.label} {number}
+                </FieldLegend>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="absolute end-3 top-3"
+                  aria-label={`Remove ${specification.label} ${number}`}
+                  onClick={() => removeRow(field.id)}
+                >
+                  <XIcon />
+                </Button>
+                {/* A row's fields side by side where the form is 40rem wide, so
                   that fifteen M.2 slots are not forty-five rows (break-ui). */}
-              <div className="grid items-start gap-3 @min-[40rem]/part-form:auto-cols-fr @min-[40rem]/part-form:grid-flow-col">
-                {rowFields.map((rowField) => (
-                  <SpecificationField
-                    key={rowField.path}
-                    specification={rowField}
-                    name={`${name}.${index}.${rowField.path}`}
-                  />
-                ))}
-              </div>
-            </FieldSet>
-          </Entry>
-        );
-      })}
+                <div className="grid items-start gap-3 @min-[40rem]/part-form:auto-cols-fr @min-[40rem]/part-form:grid-flow-col">
+                  {rowFields.map((rowField) => (
+                    <SpecificationField
+                      key={rowField.path}
+                      specification={rowField}
+                      name={`${name}.${index}.${rowField.path}`}
+                    />
+                  ))}
+                </div>
+              </FieldSet>
+            </Entry>
+          );
+        })}
+      </Entries>
       <div className="flex flex-wrap gap-2">
         <Button
           ref={addButton}
@@ -125,16 +143,18 @@ export function RowsField({
           <PlusIcon data-icon="inline-start" />
           Add a row
         </Button>
-        {known && (
-          <Button
-            type="button"
-            variant="ghost"
-            aria-label={`Make ${specification.label} not known`}
-            onClick={makeNotKnown}
-          >
-            Not known
-          </Button>
-        )}
+        {/* Always there, so that it fades rather than appears or goes in
+            one frame; while the list is not known it is faded and inert. */}
+        <Button
+          type="button"
+          variant="ghost"
+          inert={!known}
+          className={cn(!known && 'opacity-0')}
+          aria-label={`Make ${specification.label} not known`}
+          onClick={makeNotKnown}
+        >
+          Not known
+        </Button>
       </div>
       <FieldError id={errorId}>{error}</FieldError>
     </FieldSet>

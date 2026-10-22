@@ -1,7 +1,13 @@
 import { CameraIcon } from 'lucide-react';
 import type { ChangeEvent } from 'react';
 
-import { Alert, AlertDescription, AlertTitle, buttonVariants } from '@/shared/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  buttonVariants,
+  OpeningSpace,
+} from '@/shared/ui';
 
 import { useAddPhoto } from '../api/add-photo';
 import { whyNotAdded } from '../model/refusals';
@@ -77,12 +83,15 @@ export function PhotoField({ partId, hasPhoto }: { partId: string; hasPhoto: boo
       <p aria-live="polite" className="sr-only">
         {busy && 'Sending the photo…'}
       </p>
-      {addPhoto.error && (
-        <Alert variant="destructive" data-testid="photo-refusal" className="basis-full">
-          <AlertTitle>The photo was not added.</AlertTitle>
-          <AlertDescription>{whyNotAdded(addPhoto.error)}</AlertDescription>
-        </Alert>
-      )}
+      {/* Its space opens and closes smoothly (the No Snap Rule). */}
+      <OpeningSpace className="basis-full">
+        {addPhoto.error && (
+          <Alert variant="destructive" data-testid="photo-refusal">
+            <AlertTitle>The photo was not added.</AlertTitle>
+            <AlertDescription>{whyNotAdded(addPhoto.error)}</AlertDescription>
+          </Alert>
+        )}
+      </OpeningSpace>
     </>
   );
 }

@@ -17,6 +17,8 @@ import {
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
+import { aMadeUpPhoto } from './made-up-photo';
+import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
 import { apiUrl } from './platform';
 
 // The Admin works in the Vendors' shops, on a phone (LANG-8).
@@ -152,6 +154,108 @@ test.describe('a new Part, through the form', () => {
 
   // An entry added to a list takes the focus, so the Admin types at once;
   // an entry removed hands the focus to the one that took its place.
+  // The owner's word, "Field that grows": the whole name shows while it is
+  // edited, and it stays one line of text.
+  test('a long name shows whole in a field that grows, and Enter adds no line but saves', async ({
+    page,
+  }) => {
+    const field = page.getByRole('textbox', { name: 'Name', exact: true });
+    await field.fill('Line one\nLine two');
+    await expect(field).toHaveValue('Line one Line two');
+
+    const long = `${name} with a mounting kit for most sockets, two 140 mm fans, fan and radiator screws, a motherboard header cable, thermal compound applied and a quick start guide`;
+    await field.fill(long);
+    const { scrollHeight, clientHeight } = await field.evaluate((element) => ({
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+    }));
+    expect(scrollHeight, 'the whole name is shown').toBeLessThanOrEqual(clientHeight + 1);
+    expect((await field.boundingBox())?.height).toBeGreaterThan(60);
+
+    await field.press('Enter');
+    await expect(page).toHaveURL(partPageAddress);
+    await expect(page.getByRole('heading', { level: 1, name: long })).toBeVisible();
+  });
+
+  // A field's refusal and a refusal naming no field each open their space
+  // smoothly, so the form below them moves down over several frames, never
+  // in one (the No Snap Rule), at full and at reduced motion.
+  for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+    test(`a field's refusal moves the form below it smoothly, coming and going (${reducedMotion})`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion });
+      const cores = page.getByRole('textbox', { name: 'Cores', exact: true });
+      const below = page.getByRole('textbox', { name: 'Performance cores', exact: true });
+      await cores.fill('six');
+      const frames = await filmPlaces(page, { below }, async () => {
+        await page.getByRole('button', { name: 'Create the Part' }).click();
+        await expect(cores).toHaveAttribute('aria-invalid', 'true');
+      });
+      const { moved, mostInAFrame } = travelOf(frames, 'below');
+      expect(moved, 'the field below moved down').toBeGreaterThan(10);
+      expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(
+        aFrameAtMost(moved),
+      );
+
+      // The refusal leaves smoothly too, as soon as a number is written in
+      // its place (the form checks a refused field again as it changes).
+      const leaving = await filmPlaces(page, { below }, async () => {
+        await cores.fill('6');
+        await expect(cores).toHaveAttribute('aria-invalid', 'false');
+      });
+      const back = travelOf(leaving, 'below');
+      expect(back.moved, 'the field below moved back up').toBeGreaterThan(10);
+      expect(back.mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(
+        aFrameAtMost(back.moved),
+      );
+    });
+  }
+
+  test('a refusal that names no field moves the button smoothly', async ({ page }) => {
+    await page.route(`${apiUrl}/v1/parts`, (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, code: 'internalError', errors: [] }),
+      }),
+    );
+    const button = page.getByRole('button', { name: 'Create the Part' });
+    const frames = await filmPlaces(page, { button }, async () => {
+      await button.click();
+      await expect(page.getByTestId('refusal')).toBeVisible();
+    });
+    const { moved, mostInAFrame } = travelOf(frames, 'button');
+    expect(moved, 'the button moved down').toBeGreaterThan(40);
+    expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(aFrameAtMost(moved));
+  });
+
+  test('an added and a removed part number move what is below them smoothly', async ({
+    page,
+  }) => {
+    for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+      await page.emulateMedia({ reducedMotion });
+      const add = page.getByRole('button', { name: 'Add another part number' });
+      const added = await filmPlaces(page, { add }, () => add.click());
+      const down = travelOf(added, 'add');
+      expect(down.moved, `${reducedMotion}: Add moved down`).toBeGreaterThan(30);
+      expect(
+        down.mostInAFrame,
+        `${reducedMotion}: never far in one frame`,
+      ).toBeLessThanOrEqual(aFrameAtMost(down.moved));
+
+      const removed = await filmPlaces(page, { add }, () =>
+        page.getByRole('button', { name: 'Remove Part number 2' }).click(),
+      );
+      const up = travelOf(removed, 'add');
+      expect(up.moved, `${reducedMotion}: Add moved up`).toBeGreaterThan(30);
+      expect(
+        up.mostInAFrame,
+        `${reducedMotion}: never far in one frame`,
+      ).toBeLessThanOrEqual(aFrameAtMost(up.moved));
+    }
+  });
+
   test('an added part number takes the focus, and a removed one hands it on', async ({
     page,
   }) => {
@@ -231,6 +335,26 @@ test.describe("the form's columns follow the form's own width", () => {
   });
 });
 
+// A list of rows made not known again: its rows leave one by one as removed
+// rows do, never all at once, and the focus goes to the way to add a row
+// (the No Snap Rule, redesign ticket 08).
+test('a list of rows made not known lets its rows leave smoothly', async ({ page }) => {
+  await openTheFormForANewPart(page, 'Motherboard');
+  const addPcie = page.getByRole('button', { name: 'Add a row to PCIe slots' });
+  await addPcie.click();
+  await addPcie.click();
+  const below = page.getByRole('button', { name: 'Add a row to M.2 slots' });
+
+  const frames = await filmPlaces(page, { below }, () =>
+    page.getByRole('button', { name: 'Make PCIe slots not known' }).click(),
+  );
+  const { moved, mostInAFrame } = travelOf(frames, 'below');
+  expect(moved, 'what is below moved up').toBeGreaterThan(100);
+  expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(aFrameAtMost(moved));
+  await expect(page.getByRole('group', { name: /^PCIe slots \d$/ })).toHaveCount(0);
+  await expect(addPcie).toBeFocused();
+});
+
 // The form leaves out a row with every field empty. The API numbers a refused
 // field by its row's place in what it was sent, and the form has to put the
 // refusal beside that same row.
@@ -281,15 +405,49 @@ test.describe("a Part's page", () => {
     await expect(page.locator('[data-slot="plate"]')).toHaveCount(0);
   });
 
-  test('says when the Part lacks none of them', async ({ page, request }) => {
+  // The owner's word on 22 October 2026, "Say nothing": a Part that lacks
+  // nothing has no line about it.
+  test('says nothing about needed specifications when the Part lacks none', async ({
+    page,
+    request,
+  }) => {
     const part = await createAMadeUpPart(request, authorization, {
       socket: 'AM5',
       specifications: { tdp: 65, memory: { types: ['DDR5'] } },
     });
     await page.goto(`${catalogUrl}/parts/${part.id}`);
+    await expect(page.getByRole('heading', { level: 1, name: part.name })).toBeVisible();
 
     await expect(page.getByTestId('lacks')).toHaveCount(0);
-    await expect(page.getByText('Every needed specification is known')).toBeVisible();
+    await expect(page.getByText('Every needed specification is known')).toHaveCount(0);
+  });
+
+  // A photo added while the page is open: the picture grows from the icon's
+  // 32 pixels to the photo's 80, and the name beside it moves over smoothly,
+  // never in one frame (the No Snap Rule).
+  test('a photo added moves the name over smoothly, at full and at reduced motion', async ({
+    page,
+    request,
+  }) => {
+    for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+      await page.emulateMedia({ reducedMotion });
+      const part = await createAMadeUpPart(request, authorization);
+      await page.goto(`${catalogUrl}/parts/${part.id}`);
+      const name = page.getByRole('heading', { level: 1, name: part.name });
+      await expect(name).toBeVisible();
+
+      const frames = await filmPlaces(page, { name }, async () => {
+        await page.getByLabel('Add a photo').setInputFiles(aMadeUpPhoto([30, 110, 130]));
+        await expect(
+          page.getByRole('img', { name: `Photo of ${part.name}` }),
+        ).toBeVisible();
+      });
+      const { moved, mostInAFrame } = travelOf(frames, 'name');
+      expect(moved, `${reducedMotion}: the name moved over`).toBeGreaterThan(30);
+      expect(mostInAFrame, `${reducedMotion}: never far in one frame`).toBeLessThanOrEqual(
+        aFrameAtMost(moved),
+      );
+    }
   });
 
   // A Part with no photo shows its Category's icon at 32 pixels, plain, with
@@ -321,7 +479,10 @@ test.describe("a Part's page", () => {
       });
       await searchTheCatalog(page, { words: part.word });
       await rowOf(page, part.name).getByRole('link', { name: part.name }).click();
-      await expect(page.getByRole('heading', { level: 1, name: part.name })).toBeVisible();
+      // One first-level title to a page: beside the list the Part's is of
+      // the second level (the owner's word, "h2 on a desk").
+      await expect(page.getByRole('heading', { level: 2, name: part.name })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(['Catalog']);
 
       const cores = specificationRow(page, 'cores.total');
       const label = await cores.getByRole('term').boundingBox();

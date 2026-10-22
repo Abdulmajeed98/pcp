@@ -1,70 +1,54 @@
 import { cn } from 'cn';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 
-// How long an entry takes to fade, and then for its space to close, as the
-// dashboard's DESIGN.md's Motion 8 says: 150 ms on `--ease-out`, then 200 ms
-// on `--ease-in-out`.
-const fading = 150;
-const closing = 200;
-
-function motionIsReduced(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
 // The entries of a list in the Part's form, a part number or a row of a list
-// of rows, as they come and go (redesign ticket 08). An entry the Admin adds
-// arrives as Motion 6 says, rising 6 pixels as it fades in; the entries the
-// form opened with do not, so that the screen itself never fades in. An
-// entry the Admin removes leaves as Motion 8 says: it fades, no longer takes
-// a tap, and then its space closes, so the entries below rise into place
-// rather than jump; with reduced motion it fades, and its space closes at
-// once. It is taken out of the form's values when it has left.
+// of rows, as they come and go (redesign ticket 08), under the No Snap Rule.
+// An entry the Admin adds arrives: its space and the gap below it open from
+// none as it fades in, so that what is below moves down over the frames; the
+// entries the form opened with do not, so that the screen itself never fades
+// in. An entry the Admin removes leaves: it fades, no longer takes a tap, and
+// then its space and its gap close, so the entries below rise into place.
+// It is taken out of the form's values only once its space has closed, at
+// the end of that transition, whatever its speed. The theme's `entry-opens`.
 export function useEntriesMotion<Field extends { id: string }>(
   fields: readonly Field[],
-  remove: (index: number) => void,
+  remove: (places: number[]) => void,
 ) {
   const [initial] = useState<ReadonlySet<string>>(
     () => new Set(fields.map(({ id }) => id)),
   );
   const [leaving, setLeaving] = useState<ReadonlySet<string>>(new Set());
-  const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
-  // The entries as they are now, for a removal that ends after they changed.
+  // The entries as they are now, for removals that end after they changed.
   const current = useRef(fields);
   useLayoutEffect(() => {
     current.current = fields;
   });
-  const timers = useRef<number[]>([]);
-
-  useEffect(() => {
-    const pending = timers.current;
-    return () => pending.forEach((timer) => window.clearTimeout(timer));
-  }, []);
-
-  function later(then: () => void, after: number): void {
-    timers.current.push(window.setTimeout(then, after));
-  }
-
-  function without(set: ReadonlySet<string>, id: string): Set<string> {
-    const rest = new Set(set);
-    rest.delete(id);
-    return rest;
-  }
+  // The entries whose space has closed, taken out of the form together in
+  // the frame they closed in, by their places in the entries as they are
+  // then: several that close in one frame, such as every row of a list made
+  // not known, all go at once.
+  const gone = useRef<string[]>([]);
 
   // Starts the entry with this id on its way out.
   function leave(id: string): void {
     setLeaving((before) => new Set(before).add(id));
-    const gone = () => {
-      const index = current.current.findIndex((field) => field.id === id);
-      if (index !== -1) remove(index);
-      setLeaving((before) => without(before, id));
-      setClosed((before) => without(before, id));
-    };
-    later(() => {
-      if (motionIsReduced()) return gone();
-      setClosed((before) => new Set(before).add(id));
-      later(gone, closing);
-    }, fading);
+  }
+
+  // Takes the entry out once its space has closed.
+  function left(id: string): void {
+    if (gone.current.includes(id)) return;
+    gone.current.push(id);
+    if (gone.current.length > 1) return;
+    requestAnimationFrame(() => {
+      const ids = gone.current;
+      gone.current = [];
+      const places = ids
+        .map((each) => current.current.findIndex((field) => field.id === each))
+        .filter((place) => place !== -1);
+      if (places.length > 0) remove(places);
+      setLeaving((before) => new Set([...before].filter((each) => !ids.includes(each))));
+    });
   }
 
   // The entries that stay, in order: those not on their way out.
@@ -73,48 +57,53 @@ export function useEntriesMotion<Field extends { id: string }>(
   return {
     leave,
     staying,
-    isLeaving: (id: string) => leaving.has(id),
     entryProps: (id: string) => ({
       leaving: leaving.has(id),
-      closed: closed.has(id),
       arriving: !initial.has(id),
+      onLeft: () => left(id),
     }),
   };
 }
 
-// An entry's two boxes: the outer one closes its space, the inner one fades.
+// An entry: the outer box opens and closes its space and the gap below it,
+// the inner one holds what it shows. Entries sit in a box of their own with
+// no gap, each holding its gap below it as its margin.
 export function Entry({
   leaving,
-  closed,
   arriving,
+  onLeft,
   className,
   children,
 }: {
   leaving: boolean;
-  closed: boolean;
   arriving: boolean;
+  onLeft: () => void;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
     <div
       inert={leaving}
-      className={cn(
-        'grid transition-[grid-template-rows,margin-bottom] duration-200 ease-in-out motion-reduce:transition-none',
-        closed ? '-mb-2 grid-rows-[0fr]' : 'grid-rows-[1fr]',
-      )}
+      data-leaving={leaving || undefined}
+      data-arriving={(arriving && !leaving) || undefined}
+      className="entry-opens mb-2"
+      onTransitionEnd={(event) => {
+        if (
+          leaving &&
+          event.target === event.currentTarget &&
+          event.propertyName === 'grid-template-rows'
+        ) {
+          onLeft();
+        }
+      }}
     >
-      <div
-        className={cn(
-          'min-h-0',
-          leaving
-            ? 'overflow-hidden opacity-0 transition-opacity duration-150 ease-out'
-            : arriving && 'arrives',
-          className,
-        )}
-      >
-        {children}
-      </div>
+      <div className={cn(className)}>{children}</div>
     </div>
   );
+}
+
+// The box the entries sit in, with no gap of its own: each entry holds its
+// gap below it, and the box gives back the last one's.
+export function Entries({ children }: { children: React.ReactNode }) {
+  return <div className="-mb-2 flex flex-col">{children}</div>;
 }

@@ -7,7 +7,7 @@ import { partsKey, usePart } from '@/entities/part';
 import { PartForm } from '@/features/part-form';
 import { apiClient, dataOf, Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Alert, AlertDescription, BackLink, Button } from '@/shared/ui';
+import { Alert, AlertDescription, BackLink, Button, ScreenTitle } from '@/shared/ui';
 
 // The screen the form returns to: its address and its name, as the back
 // link says it.
@@ -52,9 +52,9 @@ export function EditPartPage({ returnTo }: { returnTo?: ReturnTo }) {
         </BackLink>
         {/* A screen of its own, with a title that says what was not done
             (redesign ticket 08's break-ui). */}
-        <h1 className="screen-title">
+        <ScreenTitle className="screen-title">
           {missing ? 'Part not found' : 'The Part could not be read'}
-        </h1>
+        </ScreenTitle>
         {missing ? (
           <p>The catalog holds no Part at this address.</p>
         ) : (
@@ -89,7 +89,7 @@ export function EditPartPage({ returnTo }: { returnTo?: ReturnTo }) {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery(back.address)}>{back.name}</BackLink>
-      <h1 className="screen-title">Edit the Part</h1>
+      <ScreenTitle className="screen-title">Edit the Part</ScreenTitle>
       {/* The Part's name is the form's first field, so it is not said again
           here, where a long one pushed the form down (break-ui). */}
       <p className="text-muted-foreground">

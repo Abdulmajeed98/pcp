@@ -7,7 +7,14 @@ import { Link } from 'react-router';
 import { categoryName, useCategories } from '@/entities/category';
 import { WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Alert, AlertDescription, AlertTitle, BackLink, SketchedRows } from '@/shared/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  BackLink,
+  ScreenTitle,
+  SketchedRows,
+} from '@/shared/ui';
 
 // The first step of a new Part: its Category, chosen from the eight. The
 // Category decides which specifications the form asks for, and it cannot be
@@ -27,7 +34,7 @@ export function ChooseCategoryPage() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
-      <h1 className="screen-title">New Part</h1>
+      <ScreenTitle className="screen-title">New Part</ScreenTitle>
       <p className="text-muted-foreground">
         Choose its Category first. The form then asks for that Category's specifications,
         and the Category cannot be changed once the Part exists.

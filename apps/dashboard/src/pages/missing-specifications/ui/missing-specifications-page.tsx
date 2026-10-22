@@ -2,6 +2,7 @@ import { cn } from 'cn';
 import { useOutlet } from 'react-router';
 
 import { usePageInTheAddress, useWideScreen } from '@/shared/lib';
+import { OpenedBesideAList } from '@/shared/ui';
 
 import { ListedParts } from './listed-parts';
 
@@ -31,7 +32,11 @@ export function MissingSpecificationsPage() {
         <TheList wide />
       </div>
       {opened !== null && (
-        <div className="col-span-5 min-w-0 border-s border-border ps-6">{opened}</div>
+        <div className="col-span-5 min-w-0 border-s border-border ps-6">
+          {/* The form's title is of the second level under the list's
+              (redesign ticket 08). */}
+          <OpenedBesideAList>{opened}</OpenedBesideAList>
+        </div>
       )}
     </div>
   );
