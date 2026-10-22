@@ -35,7 +35,7 @@ function MenuSheet({
       </DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="scrim-motion fixed inset-0 z-50 bg-black/40" />
-        <DialogPrimitive.Popup className="menu-sheet-motion fixed inset-y-0 start-0 z-50 flex w-[min(20rem,calc(100%-3rem))] flex-col gap-5 overflow-y-auto border-e border-border bg-frame p-4 wrap-break-word text-foreground shadow-floating outline-none">
+        <DialogPrimitive.Popup className="menu-sheet-motion fixed inset-y-0 start-0 z-50 flex w-[min(20rem,calc(100%-3rem))] flex-col gap-5 overflow-y-auto overscroll-contain border-e border-border bg-frame p-4 wrap-break-word text-foreground shadow-floating outline-none">
           <DialogPrimitive.Title className="flex min-h-control items-center font-semibold">
             {title}
           </DialogPrimitive.Title>
