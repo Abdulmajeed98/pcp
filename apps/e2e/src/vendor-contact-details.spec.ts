@@ -3,7 +3,12 @@ import { expect, type Page, type Request, test } from '@playwright/test';
 import { expectAccessible } from './accessibility';
 import { openTheDashboardAs } from './development-logins';
 import { type VendorLoginDetails } from './keycloak-screens';
-import { buttonFor, expectNoSidewaysScroll, languages, narrowWindow } from './languages';
+import {
+  chooseInThePortal,
+  expectNoSidewaysScroll,
+  languages,
+  narrowWindow,
+} from './languages';
 import { dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -149,10 +154,10 @@ test('a phone number that is not Iraqi is refused beside its field, which takes 
   ).toContain('contact-details-phoneNumber-error');
   const inEnglish = await refusal.innerText();
 
-  await buttonFor(page, kurdish).click();
+  await chooseInThePortal(page, kurdish);
   await expect(refusal).not.toHaveText(inEnglish);
   await expect(refusal).not.toBeEmpty();
-  await buttonFor(page, english).click();
+  await chooseInThePortal(page, english);
   await expect(refusal).toHaveText(inEnglish);
   await expect(page).not.toHaveURL(detailsUrl);
 });
@@ -170,7 +175,7 @@ test('an address over 300 characters is refused beside its field, the refusal sa
   await expect(formField(page, 'address')).toHaveAttribute('aria-invalid', 'true');
   await expect(refusal).toContainText('300');
   const inEnglish = await refusal.innerText();
-  await buttonFor(page, kurdish).click();
+  await chooseInThePortal(page, kurdish);
   await expect(refusal).not.toHaveText(inEnglish);
   await expect(refusal).toContainText('300');
 });

@@ -482,3 +482,42 @@
       background-color 100ms ease;
   }
 }
+
+/*
+ * 7. Confirm all's result: each changed row's Confirmation fades in at its
+ * new state, 200 ms, each row 30 ms after the one above it, by its place in
+ * `--settle-order`, the first ten rows only. With reduced motion every row
+ * fades at once.
+ */
+@utility settles {
+  transition: opacity 200ms var(--ease-out);
+  transition-delay: calc(var(--settle-order, 0) * 30ms);
+
+  @starting-style {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-delay: 0ms;
+  }
+}
+
+/*
+ * 7, the old words: a changed Confirmation's old words, laid over the new,
+ * fade out in the same turn as the new fade in (`settles`), 150 ms, so that
+ * no words vanish in one frame. With reduced motion they fade at once with
+ * every other row's.
+ */
+@utility unsettles {
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+  transition-delay: calc(var(--settle-order, 0) * 30ms);
+
+  @starting-style {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-delay: 0ms;
+  }
+}

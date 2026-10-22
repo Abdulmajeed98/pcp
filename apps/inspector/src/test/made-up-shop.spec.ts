@@ -14,14 +14,17 @@ const vendorId = shop.vendor.id;
 const aDay = 24 * 60 * 60 * 1000;
 
 function offersPage(
-  { search = '', at = now, page = 0, size = 50 } = {} as {
+  { search = '', state = '', at = now, page = 0, size = 50 } = {} as {
     search?: string;
+    state?: string;
     at?: Date;
     page?: number;
     size?: number;
   },
 ): VendorsOffersPageResponse {
-  const query = search === '' ? '' : `&search=${encodeURIComponent(search)}`;
+  const query =
+    (search === '' ? '' : `&search=${encodeURIComponent(search)}`) +
+    (state === '' ? '' : `&state=${state}`);
   const answer = answerFromTheMadeUpShop(shop, at, {
     method: 'GET',
     path: `/v1/vendors/${vendorId}/offers?page=${page}&size=${size}${query}`,
@@ -90,6 +93,29 @@ describe("the made-up shop's Offers", () => {
     ]);
     expect(page.totalElements).toBe(2);
     expect(page.counts).toEqual(offersPage().counts);
+  });
+
+  it('are found by state, those that need confirming or those out of stock, and the out of stock are counted', () => {
+    const all = offersPage().content;
+    const needConfirming = offersPage({ state: 'needs-confirming' });
+    const outOfStock = offersPage({ state: 'out-of-stock' });
+
+    expect(needConfirming.content.map((offer) => offer.id)).toEqual(
+      all.filter((offer) => offer.expired || offer.aboutToExpire).map((offer) => offer.id),
+    );
+    expect(needConfirming.content.length).toBe(5);
+    expect(outOfStock.content.map((offer) => offer.id)).toEqual(
+      all.filter((offer) => !offer.inStock).map((offer) => offer.id),
+    );
+    expect(outOfStock.content.length).toBe(3);
+    expect(offersPage({ state: 'all' }).content).toEqual(all);
+    expect(outOfStock.counts).toEqual({
+      offers: all.length,
+      expired: 2,
+      aboutToExpire: 3,
+      outOfStock: 3,
+    });
+    expect(needConfirming.counts).toEqual(offersPage().counts);
   });
 
   it('come a page at a time, oldest Confirmation first', () => {

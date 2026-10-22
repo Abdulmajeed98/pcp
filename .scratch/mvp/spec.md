@@ -886,6 +886,7 @@ End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a
   - a price typed on a Kurdish and on an Arabic keyboard, saved as its value (the spec, tickets 04 and 09);
   - the confirm-all button reached in the banner with a thumb (the spec, ticket 09);
   - Expiring Offers' WhatsApp link opening the WhatsApp app on the Admin's phone, in a chat with the Vendor, its phone link opening the phone's dialler, and the screen used with a thumb (the spec, tickets 07 and 09).
+- `redesign`, ticket 11: the Vendor portal's new frame and Offers screen used with a thumb at 360 pixels, in Kurdish and in English: the menu sheet and its language and scheme switches, the tabs scrolled sideways, the search with the phone's keyboard, the rows, Add an Offer in the bar and Confirm all; no grey flash and no wait on a tap, no button's words selected under a resting thumb, the browser bar in the Stone Frame's colour in each scheme; and on a phone with a notch, the page inside its safe areas.
 
 A module that leaves another adds it here.
 
