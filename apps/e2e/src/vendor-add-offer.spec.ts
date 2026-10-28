@@ -36,6 +36,7 @@ import {
   theOfferForm,
   theOffersScreen,
 } from './offers';
+import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -231,6 +232,122 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
     await expect(page.locator('#offer-form-usdPrice-error')).toBeVisible();
 
     await expectAccessible(page);
+  });
+});
+
+// The catalog search and the Offer form as the dashboard's DESIGN.md lays
+// them out (redesign ticket 12).
+test.describe('the catalog search and the Offer form, as a made-up Vendor', () => {
+  let vendor: VendorLoginDetails;
+  let first: MadeUpPart;
+  let second: MadeUpPart;
+  let third: MadeUpPart;
+
+  test.beforeAll(async ({ browser }) => {
+    vendor = await aMadeUpVendorThatHasLoggedIn(browser);
+    [first, second, third] = await madeUpParts(browser, 3);
+  });
+
+  test('on a phone the search has no button of its own, the count is in words and not on a plate, and a row has no picture but its part numbers in Geist Mono', async ({
+    page,
+  }) => {
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/add`);
+    const search = theCatalogSearch(page);
+    await expect(search.locator('search').getByRole('combobox')).toBeVisible();
+    await expect(search.locator('search button')).toHaveCount(0);
+    await expect(search.getByRole('searchbox')).toHaveCSS('font-size', '16px');
+
+    await searchTheCatalogFor(page, first.partNumber);
+    await expect(foundParts(page)).toHaveCount(1);
+    await expect(page.getByTestId('parts-found-count')).toHaveText('1');
+    await expect(search.locator('[data-slot="plate"]')).toHaveCount(0);
+    const row = rowOfFoundPart(page, first.name);
+    await expect(row.locator('img, svg')).toHaveCount(0);
+    await expect(row.getByTestId('part-numbers')).toHaveCSS('font-family', /Geist Mono/);
+    await expect(row).toHaveCSS('min-height', '72px');
+    await expectNoSidewaysScroll(page);
+  });
+
+  test('from 64rem the Parts found are a table of Part and Part numbers, which meets the automated part of WCAG 2.2 level AA', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/add`);
+    await searchTheCatalogFor(page, first.partNumber);
+
+    const table = theCatalogSearch(page).getByRole('table');
+    await expect(table.getByRole('columnheader')).toHaveCount(2);
+    await expect(foundParts(page)).toHaveCount(1);
+    expect(await foundParts(page).evaluate((row) => row.tagName)).toBe('TR');
+    await expect(rowOfFoundPart(page, first.name).locator('img, svg')).toHaveCount(0);
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+
+  // The note after an Offer is added stays until the next search, and then
+  // leaves as Motion 8 says: it fades, then its space closes, so that the
+  // search below it rises into place and never jumps (the No Snap Rule).
+  for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+    test(`the note after an Offer is added is a Confirmed Green card, and on the next search it leaves, the search rising smoothly (${reducedMotion})`, async ({
+      page,
+    }) => {
+      const part = reducedMotion === 'reduce' ? third : second;
+      await page.emulateMedia({ reducedMotion, colorScheme: 'light' });
+      await openTheDashboardAs(page, vendor, theFormFor(part));
+      await offerField(page, 'usdPrice').fill('99.50');
+      await saveTheOffer(page).click();
+
+      const note = page.getByTestId('offer-added');
+      await expect(note).toContainText(part.name);
+      await expect(note).toHaveCSS('border-top-color', 'rgb(30, 123, 79)');
+      await expect(note).toHaveCSS('border-top-left-radius', '8px');
+      await expect(note).toHaveCSS('opacity', '1');
+
+      const searchbox = theCatalogSearch(page).getByRole('searchbox');
+      const frames = await filmPlaces(page, { searchbox }, () =>
+        searchTheCatalogFor(page, first.partNumber),
+      );
+      await expect(note).toHaveCount(0);
+      await expect(foundParts(page)).toHaveCount(1);
+      const { moved, mostInAFrame } = travelOf(frames, 'searchbox');
+      expect(moved, 'the search rises into the space the note gave up').toBeGreaterThan(40);
+      expect(mostInAFrame, 'the search never jumps').toBeLessThanOrEqual(
+        aFrameAtMost(moved),
+      );
+    });
+  }
+
+  test("from 64rem the Offer form is one column at most 40rem wide, its Part on Raised Stone with no edge, a Part with no photo showing its Category's icon plain at 32 pixels", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.emulateMedia({ colorScheme: 'light' });
+    await openTheDashboardAs(page, vendor, theFormFor(first));
+    const form = theOfferForm(page);
+    await expect(form).toBeVisible();
+
+    const width = (await form.boundingBox())?.width ?? 0;
+    expect(width).toBeGreaterThan(400);
+    expect(width).toBeLessThanOrEqual(640);
+    const usd = await page.getByTestId('usdPrice-field').boundingBox();
+    const iqd = await page.getByTestId('iqdPrice-field').boundingBox();
+    expect(iqd?.y ?? 0, 'each price on its own row').toBeGreaterThan(
+      (usd?.y ?? 0) + (usd?.height ?? 0) - 1,
+    );
+
+    const offered = form.getByTestId('offered-part');
+    await expect(offered).toHaveCSS('background-color', 'rgb(245, 244, 242)');
+    await expect(offered).toHaveCSS('border-top-width', '0px');
+    await expect(offered).toHaveCSS('border-top-left-radius', '8px');
+    const picture = offered.getByTestId('part-picture');
+    await expect(picture).toHaveCSS('width', '32px');
+    await expect(picture).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(picture.locator('svg')).toHaveCSS('color', 'rgb(93, 95, 96)');
+    await expect(offered.getByTestId('part-numbers')).toHaveCSS(
+      'font-family',
+      /Geist Mono/,
+    );
+    await expectNoSidewaysScroll(page);
   });
 });
 

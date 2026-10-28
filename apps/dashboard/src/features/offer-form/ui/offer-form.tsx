@@ -13,6 +13,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  BusyLabel,
   Button,
   Field,
   FieldDescription,
@@ -22,6 +23,7 @@ import {
   FieldLegend,
   FieldSet,
   Input,
+  OpeningSpace,
   OptionalMark,
   Switch,
 } from '@/shared/ui';
@@ -53,6 +55,12 @@ import { OfferedPart } from './offered-part';
 // starting with the Offer's details as they are; its button and what it says
 // when the Offer is not saved follow which it does. Whatever else the screen
 // offers, such as removing the Offer, the screen puts below it.
+//
+// As DESIGN.md's Offer form lays it out (redesign ticket 12): one column at
+// every width, at most 40rem wide, each price on its own row; the refusal
+// panel above the prices, in an `OpeningSpace` whose space opens smoothly
+// (the No Snap Rule); and the pane's one primary button last, as wide as the
+// form on a phone, keeping its width while it waits (`BusyLabel`).
 export function OfferForm({
   part,
   values = newOfferFormValues,
@@ -97,19 +105,21 @@ export function OfferForm({
     <form
       noValidate
       data-testid="offer-form"
-      className="flex flex-col gap-6"
+      className="flex w-full max-w-[40rem] flex-col gap-6"
       onSubmit={handleSubmit(submit)}
     >
       <OfferedPart part={part} />
 
-      {notSaved !== undefined && <NotSaved why={notSaved.why} purpose={purpose} />}
+      <OpeningSpace>
+        {notSaved !== undefined && <NotSaved why={notSaved.why} purpose={purpose} />}
+      </OpeningSpace>
 
       <FieldSet>
         <FieldLegend>{t('OfferForm.prices')}</FieldLegend>
         <FieldDescription className="-mt-3">
           {t('OfferForm.pricesDescription')}
         </FieldDescription>
-        <FieldGroup className="grid items-start gap-4 sm:grid-cols-2">
+        <FieldGroup className="gap-4">
           <DetailField
             name="usdPrice"
             label={t('OfferForm.usdPrice')}
@@ -152,7 +162,7 @@ export function OfferForm({
         name="inStock"
         render={({ field }) => (
           <Field>
-            <label className="flex min-h-control items-center justify-between gap-4 font-medium">
+            <label className="flex min-h-control items-center justify-between gap-4 text-sm font-medium">
               {t('OfferForm.inStock')}
               <Switch
                 id="offer-form-inStock"
@@ -197,13 +207,13 @@ export function OfferForm({
         className="w-full sm:w-auto sm:self-start"
         disabled={formState.isSubmitting}
       >
-        {purpose === 'add'
-          ? formState.isSubmitting
-            ? t('OfferForm.saving')
-            : t('OfferForm.save')
-          : formState.isSubmitting
-            ? t('OfferForm.savingChanges')
-            : t('OfferForm.saveChanges')}
+        <BusyLabel
+          busy={formState.isSubmitting}
+          label={purpose === 'add' ? t('OfferForm.save') : t('OfferForm.saveChanges')}
+          busyLabel={
+            purpose === 'add' ? t('OfferForm.saving') : t('OfferForm.savingChanges')
+          }
+        />
       </Button>
     </form>
   );

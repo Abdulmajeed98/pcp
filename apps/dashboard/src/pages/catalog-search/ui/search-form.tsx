@@ -3,18 +3,18 @@ import { type FormEvent, useState } from 'react';
 
 import { type CategoryKey, categoryName, useCategories } from '@/entities/category';
 import { useTranslation } from '@/shared/i18n';
-import { Button, Input, Label, NativeSelect, NativeSelectOption } from '@/shared/ui';
+import { Input, Label, NativeSelect, NativeSelectOption } from '@/shared/ui';
 
 import type { CatalogSearch } from '../model/search';
 
-// The search of the catalog, in the portal's language: the words on a line
-// of their own, then the Category, named in the shared terms, sharing the
-// next line with the button, every control 44 pixels high. On a wider screen
-// all three share one line.
-//
-// The words are searched when the Vendor taps Search or presses Enter. A new
-// Category is searched at once, with the words as they are typed. Either
-// starts again at the first page.
+// The search of the catalog, in the portal's language: the words, with a
+// magnifier in Note Grey on their start side, then the Category, named in
+// the shared terms, on the next line on a phone and beside the words from
+// 40rem, every control as high as a control. It has no button of its own, as
+// DESIGN.md's Layout has it (redesign ticket 12): the words are searched
+// when the Vendor presses Enter or the keyboard's search key. A new Category
+// is searched at once, with the words as they are typed. Either starts again
+// at the first page.
 export function SearchForm({
   search,
   onSearch,
@@ -69,13 +69,13 @@ export function SearchForm({
             onChange={(event) => setWords(event.target.value)}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex sm:w-56">
           <Label htmlFor="catalog-category" className="sr-only">
             {t('CatalogSearch.category')}
           </Label>
           <NativeSelect
             id="catalog-category"
-            className="flex-1 sm:w-48 sm:flex-none"
+            className="w-full"
             value={search.category ?? ''}
             onChange={(event) => choose(event.target.value)}
           >
@@ -88,7 +88,6 @@ export function SearchForm({
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <Button type="submit">{t('CatalogSearch.search')}</Button>
         </div>
       </form>
     </search>
