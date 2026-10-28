@@ -1,7 +1,13 @@
 import type { VendorResponse } from '@pcp/api-client';
 import { AsWritten } from '@pcp/ui';
 import { cn } from 'cn';
-import { type LucideIcon, PackageIcon, StoreIcon } from 'lucide-react';
+import {
+  CircleSlashIcon,
+  type LucideIcon,
+  PackageIcon,
+  StoreIcon,
+  UserXIcon,
+} from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { NavLink, Outlet, ScrollRestoration } from 'react-router';
 
@@ -13,12 +19,15 @@ import {
 import { logOut } from '@/shared/auth';
 import { Refusal, WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
-import { useWideScreen } from '@/shared/lib';
+import { useCentredInTheWindow, useWideScreen } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
   AlertTitle,
   Button,
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
   MenuSheet,
   ScreenActionPlaceProvider,
   ScreenSearchPlaceProvider,
@@ -45,13 +54,20 @@ export function VendorPortalFrame() {
   const vendor = useCallersVendor();
 
   if (vendor.error instanceof Refusal && vendor.error.code === 'VENDOR_NOT_FOUND') {
-    return <PlainMessage testId="no-vendor" message={t('VendorPortalFrame.noVendor')} />;
+    return (
+      <PlainMessage
+        testId="no-vendor"
+        message={t('VendorPortalFrame.noVendor')}
+        Icon={UserXIcon}
+      />
+    );
   }
   if (isRefusedAsDeactivated(vendor.error)) {
     return (
       <PlainMessage
         testId="vendor-deactivated"
         message={t('VendorPortalFrame.deactivated')}
+        Icon={CircleSlashIcon}
       />
     );
   }
@@ -60,11 +76,32 @@ export function VendorPortalFrame() {
 }
 
 // A plain message in the portal's language in place of the portal, on the
-// frame's sheet, with the frame's switches and Log out and no sections.
-function PlainMessage({ testId, message }: { testId: string; message: string }) {
+// frame's sheet, with the frame's switches and Log out and no sections. It
+// is the dashboard's empty state, centred in the window's height as the
+// "not found" screens are (redesign ticket 13): its icon plain, and its one
+// sentence, in the Body type, with no heading and no action, since there is
+// nothing to do here but read it, change the language or log out.
+function PlainMessage({
+  testId,
+  message,
+  Icon,
+}: {
+  testId: string;
+  message: string;
+  Icon: LucideIcon;
+}) {
+  const centred = useCentredInTheWindow<HTMLDivElement>();
+
   return (
     <Framed>
-      <p data-testid={testId}>{message}</p>
+      <Empty ref={centred}>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Icon aria-hidden="true" />
+          </EmptyMedia>
+          <p data-testid={testId}>{message}</p>
+        </EmptyHeader>
+      </Empty>
     </Framed>
   );
 }

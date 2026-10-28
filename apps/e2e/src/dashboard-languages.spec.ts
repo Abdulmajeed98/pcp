@@ -343,7 +343,7 @@ test.describe('in a browser set to English', () => {
   // The login could not be completed when Keycloak's answer to the
   // dashboard's last step of it never arrives. Nobody is known then, so the
   // message follows the Vendor portal's rule, the remembered choice first.
-  test('the message for a login that could not be completed follows the remembered choice', async ({
+  test('the message for a login that could not be completed, and its Try again, follow the remembered choice', async ({
     page,
   }) => {
     await openTheDashboardAs(page, vendor);
@@ -358,6 +358,10 @@ test.describe('in a browser set to English', () => {
 
     await expect(page.getByTestId('login-failed')).toBeVisible();
     await expectPageIn(page, arabic);
+    const tryAgain = page.getByRole('main').getByRole('button');
+    await expect(tryAgain).toBeVisible();
+    await expect(tryAgain).not.toHaveText('Try again');
+    await expectNoSidewaysScroll(page);
   });
 });
 
@@ -591,11 +595,12 @@ test.describe('the details screen, as a made-up Vendor', () => {
   }) => {
     const texts = await readInEveryLanguageOfTheVendorPortal(page, async () => ({
       labels: (await page.locator('main dt').allInnerTexts()).join(', '),
+      headings: (await page.locator('main h2').allInnerTexts()).join(', '),
       sentence: await page.getByTestId('admin-changes').innerText(),
       city: await detailOf(page, 'city').innerText(),
     }));
 
-    for (const part of ['labels', 'sentence', 'city'] as const) {
+    for (const part of ['labels', 'headings', 'sentence', 'city'] as const) {
       expectADifferentTextInEachLanguage(
         new Map([...texts].map(([language, read]) => [language, read[part]])),
       );
@@ -652,6 +657,26 @@ test.describe('the details screen, as a made-up Vendor', () => {
       'https://www.google.com/maps/search/?api=1&query=36.1911744%2C44.0094145',
     );
   });
+});
+
+// The portal's "not found" screen, at an address that matches none of its
+// screens, which the redesign draws as the dashboard's empty state.
+test('the portal\'s "not found" screen passes the checks of every screen of the Vendor portal, and its title and its link differ in each of the three languages', async ({
+  page,
+}) => {
+  await openTheDashboardAs(page, vendor, `${dashboardUrl}/no-such-screen`);
+  await expect(detailsHeading(page)).toBeVisible();
+
+  const texts = await readInEveryLanguageOfTheVendorPortal(page, async () => ({
+    title: await detailsHeading(page).innerText(),
+    link: await page.getByRole('main').getByRole('link').innerText(),
+  }));
+
+  for (const part of ['title', 'link'] as const) {
+    expectADifferentTextInEachLanguage(
+      new Map([...texts].map(([language, read]) => [language, read[part]])),
+    );
+  }
 });
 
 // The form in which the Vendor changes its contact details, opened from the
