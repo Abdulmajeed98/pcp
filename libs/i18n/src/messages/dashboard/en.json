@@ -202,6 +202,7 @@
     "adminChanges": "The Admin changes your name, your city and your login phone number.",
     "reading": "Reading your details…",
     "notRead": "Your details could not be read.",
+    "vendor": "Vendor",
     "name": "Name",
     "city": "City",
     "contactDetails": "Contact details",
@@ -234,6 +235,7 @@
     "openingHours": "Opening hours",
     "openingHoursDescription": "As you write them, on as many lines as you need. At most <longest/> characters.",
     "save": "Save",
+    "saving": "Saving…",
     "notSaved": "Your contact details were not saved.",
     "refused": {
       "address": {
@@ -268,7 +270,8 @@
     "openOffers": "Open your Offers"
   },
   "LoginFailed": {
-    "message": "The login could not be completed."
+    "message": "The login could not be completed.",
+    "tryAgain": "Try again"
   },
   "MapLocationField": {
     "label": "Map location",

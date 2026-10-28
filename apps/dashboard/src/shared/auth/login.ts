@@ -28,6 +28,13 @@ export async function startLogin(): Promise<void> {
   });
 }
 
+// Starts the login again, after one that could not be completed: the browser
+// goes back to Keycloak, which answers from its own session if it has one,
+// and arrives back at a fresh load of the dashboard.
+export async function startLoginAgain(): Promise<void> {
+  await keycloak.login();
+}
+
 // The realm roles of the login, read from the access token's
 // `realm_access.roles`, the claim the API reads them from. They are there as
 // soon as the login has started. The API checks the token itself, so these

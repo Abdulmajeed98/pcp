@@ -1,6 +1,7 @@
 import type { EditContactDetailsRequest, VendorResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 import { type ReactNode, useState } from 'react';
 import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 
@@ -18,6 +19,7 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  OpeningSpace,
   OptionalMark,
   Textarea,
 } from '@/shared/ui';
@@ -87,17 +89,33 @@ export function ContactDetailsForm({
   }
 
   return (
-    <form noValidate className="flex flex-col gap-8" onSubmit={handleSubmit(submit)}>
-      {notSaved !== undefined && (
-        <Alert variant="destructive" data-testid="refusal">
-          <AlertTitle>{t('ContactDetailsForm.notSaved')}</AlertTitle>
-          <AlertDescription>
-            <WhyNotAnsweredInThePortal error={notSaved.why} />
-          </AlertDescription>
-        </Alert>
-      )}
+    <form
+      noValidate
+      className="@container flex flex-col gap-8"
+      onSubmit={handleSubmit(submit)}
+    >
+      {/* The refusal panel opens its room as it arrives, and closes it as it
+          goes, so the form below it never jumps (the No Snap Rule, in the
+          shared OpeningSpace of redesign ticket 08). */}
+      <OpeningSpace>
+        {notSaved !== undefined && (
+          <Alert variant="destructive" data-testid="refusal">
+            <AlertTitle>{t('ContactDetailsForm.notSaved')}</AlertTitle>
+            <AlertDescription>
+              <WhyNotAnsweredInThePortal error={notSaved.why} />
+            </AlertDescription>
+          </Alert>
+        )}
+      </OpeningSpace>
 
-      <FieldGroup className="grid items-start sm:grid-cols-2 sm:gap-x-6">
+      {/* The form spans the sheet (the owner's "Full width", 28 October
+          2026), and its details follow the form's own width, as the Part's
+          and the Vendor's forms do: one to a row under 40rem, two to a row
+          from 40rem, the address beside the map location, the phone number
+          beside the WhatsApp number and the Instagram name beside the
+          opening hours, so that none stretches across the sheet and none
+          stands beside an empty half. */}
+      <FieldGroup className="grid items-start @min-[40rem]:grid-cols-2 @min-[40rem]:gap-x-6">
         <DetailField
           name="address"
           label={t('ContactDetailsForm.address')}
@@ -108,13 +126,12 @@ export function ContactDetailsForm({
               components={upTo(longest.address)}
             />
           }
-          className="sm:col-span-2"
         >
           {(props) => (
             <Textarea dir="auto" {...props} {...register('address', required('address'))} />
           )}
         </DetailField>
-        <div className="sm:col-span-2">
+        <div>
           <MapLocationField
             control={control}
             name="mapLocation"
@@ -183,14 +200,33 @@ export function ContactDetailsForm({
               components={upTo(longest.openingHours)}
             />
           }
-          className="sm:col-span-2"
         >
           {(props) => <Textarea dir="auto" {...props} {...register('openingHours')} />}
         </DetailField>
       </FieldGroup>
 
-      <Button type="submit" className="self-start" disabled={formState.isSubmitting}>
-        {t('ContactDetailsForm.save')}
+      <Button
+        type="submit"
+        className="w-full sm:w-auto sm:self-start"
+        disabled={formState.isSubmitting}
+      >
+        {/* Both words hold the button's width, the one not said hidden, so
+            that it keeps its width while it says it is saving and nothing
+            moves (the owner on motion, 22 October 2026). */}
+        <span className="grid">
+          {[
+            { words: t('ContactDetailsForm.save'), said: !formState.isSubmitting },
+            { words: t('ContactDetailsForm.saving'), said: formState.isSubmitting },
+          ].map(({ words, said }) => (
+            <span
+              key={words}
+              aria-hidden={!said || undefined}
+              className={cn('col-start-1 row-start-1', !said && 'invisible')}
+            >
+              {words}
+            </span>
+          ))}
+        </span>
       </Button>
     </form>
   );
@@ -244,7 +280,9 @@ function DetailField({
 
   return (
     <Field className={className}>
-      <div className="flex flex-wrap items-center gap-2">
+      {/* As high as a label with its mark, so that two details side by side
+          start their controls on one line, marked or not. */}
+      <div className="flex min-h-5 flex-wrap items-center gap-2">
         <FieldLabel htmlFor={id}>{label}</FieldLabel>
         {optional && (
           <OptionalMark id={`${id}-optional`}>
