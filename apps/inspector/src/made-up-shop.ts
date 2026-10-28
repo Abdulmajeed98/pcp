@@ -381,7 +381,9 @@ export function answerFromTheMadeUpShop(
   if (offers === undefined) return { status: 200, body: shop.vendor };
   if (offers !== 'offers' || beyond.length > 0) return notFound;
   if (offerId !== undefined) {
-    const offer = shop.offers.find((each) => each.id === offerId);
+    // One Offer is read with its expiry at the moment it is read, as the API
+    // reads it and as its list shows it.
+    const offer = listedOffers.find((each) => each.id === offerId);
     return offer === undefined ? notFound : { status: 200, body: offer };
   }
 

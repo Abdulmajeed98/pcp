@@ -1550,7 +1550,7 @@ export type ReadOfferErrors = {
 export type ReadOfferError = ReadOfferErrors[keyof ReadOfferErrors];
 
 export type ReadOfferResponses = {
-    200: OfferResponse;
+    200: ListedOfferResponse;
 };
 
 export type ReadOfferResponse = ReadOfferResponses[keyof ReadOfferResponses];

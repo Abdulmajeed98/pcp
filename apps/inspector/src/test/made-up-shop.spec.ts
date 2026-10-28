@@ -244,12 +244,14 @@ describe("the made-up shop's Vendor", () => {
 });
 
 describe("the made-up shop's other answers", () => {
-  it('give one Offer by its identifier as the shop holds it', () => {
+  it('give one Offer by its identifier as the shop holds it, with its expiry at the moment it is read, as its list shows it', () => {
     const offer = shop.offers[0];
+    const listed = offersPage().content.find((each) => each.id === offer.id);
 
+    expect(listed).toMatchObject(offer);
     expect(answerTo('GET', `/v1/vendors/${vendorId}/offers/${offer.id}`)).toEqual({
       status: 200,
-      body: offer,
+      body: listed,
     });
     expect(
       answerTo('GET', `/v1/vendors/${vendorId}/offers/11111111-1111-4111-8111-111111111111`)
