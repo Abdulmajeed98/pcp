@@ -91,7 +91,7 @@ export function ContactDetailsForm({
   return (
     <form
       noValidate
-      className="flex max-w-[40rem] flex-col gap-8"
+      className="@container flex flex-col gap-8"
       onSubmit={handleSubmit(submit)}
     >
       {/* The refusal panel opens its room as it arrives, and closes it as it
@@ -108,9 +108,14 @@ export function ContactDetailsForm({
         )}
       </OpeningSpace>
 
-      {/* From 40rem the two phone numbers share a row; every other detail
-          takes a row of its own, so that none stands beside an empty half. */}
-      <FieldGroup className="grid items-start sm:grid-cols-2 sm:gap-x-6">
+      {/* The form spans the sheet (the owner's "Full width", 28 October
+          2026), and its details follow the form's own width, as the Part's
+          and the Vendor's forms do: one to a row under 40rem, two to a row
+          from 40rem, the address beside the map location, the phone number
+          beside the WhatsApp number and the Instagram name beside the
+          opening hours, so that none stretches across the sheet and none
+          stands beside an empty half. */}
+      <FieldGroup className="grid items-start @min-[40rem]:grid-cols-2 @min-[40rem]:gap-x-6">
         <DetailField
           name="address"
           label={t('ContactDetailsForm.address')}
@@ -121,13 +126,12 @@ export function ContactDetailsForm({
               components={upTo(longest.address)}
             />
           }
-          className="sm:col-span-2"
         >
           {(props) => (
             <Textarea dir="auto" {...props} {...register('address', required('address'))} />
           )}
         </DetailField>
-        <div className="sm:col-span-2">
+        <div>
           <MapLocationField
             control={control}
             name="mapLocation"
@@ -173,7 +177,6 @@ export function ContactDetailsForm({
               components={upTo(longest.instagramName)}
             />
           }
-          className="sm:col-span-2"
         >
           {(props) => (
             <Input
@@ -197,7 +200,6 @@ export function ContactDetailsForm({
               components={upTo(longest.openingHours)}
             />
           }
-          className="sm:col-span-2"
         >
           {(props) => <Textarea dir="auto" {...props} {...register('openingHours')} />}
         </DetailField>

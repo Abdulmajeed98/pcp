@@ -153,21 +153,46 @@ test('on a phone, Save is as wide as the form; while the details are on their wa
 test.describe("on a screen as wide as a desk's", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test('the form is at most 40rem wide, with two details to a row, and Save stays as wide as its words', async ({
+  // The owner's "Full width" (redesign ticket 13, 28 October 2026): the form
+  // spans the sheet, and its details follow the form's own width, as the
+  // Part's and the Vendor's forms do ("Follow width", tickets 08 and 09): two
+  // to a row from 40rem, so that no one detail stretches across the sheet.
+  test('the form spans the sheet, its details two to a row and none wider than half of it, and Save stays as wide as its words', async ({
     page,
   }) => {
     await openTheForm(page);
     const form = page.getByRole('main').locator('form');
+    const formWidth = (await form.boundingBox())?.width ?? 0;
 
-    expect((await form.boundingBox())?.width).toBeLessThanOrEqual(640);
-    const [phone, whatsApp] = await Promise.all([
-      formField(page, 'phoneNumber').boundingBox(),
-      formField(page, 'whatsAppNumber').boundingBox(),
-    ]);
-    expect(phone?.y).toBe(whatsApp?.y);
-    expect((await saveButton(page).boundingBox())?.width).toBeLessThan(
-      ((await form.boundingBox())?.width ?? 0) / 2,
-    );
+    expect(formWidth, 'the form is wider than 40rem').toBeGreaterThan(640);
+    for (const [start, end] of [
+      ['address', 'mapLocation'],
+      ['phoneNumber', 'whatsAppNumber'],
+      ['instagramName', 'openingHours'],
+    ]) {
+      const [first, second] = await Promise.all([
+        formField(page, start).boundingBox(),
+        formField(page, end).boundingBox(),
+      ]);
+      expect(
+        Math.abs((first?.y ?? 0) - (second?.y ?? 1)),
+        `${start} beside ${end}`,
+      ).toBeLessThan(2);
+    }
+    for (const detail of [
+      'address',
+      'mapLocation',
+      'phoneNumber',
+      'whatsAppNumber',
+      'instagramName',
+      'openingHours',
+    ]) {
+      expect(
+        (await formField(page, detail).boundingBox())?.width,
+        `${detail} is no wider than half the form`,
+      ).toBeLessThanOrEqual(formWidth / 2);
+    }
+    expect((await saveButton(page).boundingBox())?.width).toBeLessThan(formWidth / 2);
     await expectAccessible(page);
   });
 
