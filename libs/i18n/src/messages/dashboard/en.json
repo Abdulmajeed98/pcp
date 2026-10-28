@@ -146,6 +146,9 @@
     "warranty": "Warranty, in months",
     "warrantyDescription": "In whole months.",
     "optional": "Optional",
+    "specifications": "Specifications",
+    "yes": "Yes",
+    "no": "No",
     "save": "Add the Offer",
     "saving": "Adding…",
     "notSaved": "Your Offer was not added.",
@@ -192,7 +195,7 @@
   "RemoveOffer": {
     "remove": "Remove the Offer",
     "title": "Remove this Offer?",
-    "description": "Shoppers no longer see your Offer for <name/>. You can add it again later from the catalog search.",
+    "description": "Shoppers no longer see your Offer for this Part. You can add it again later from the catalog search.",
     "cancel": "Cancel",
     "confirm": "Remove",
     "removing": "Removing…",

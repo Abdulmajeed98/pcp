@@ -1,6 +1,7 @@
 import { type APIRequestContext, type Browser, expect, test } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
+import { expectCentredInTheWindow, expectTheEmptyState } from './empty-state';
 import { createAMadeUpPart, type MadeUpPart } from './catalog';
 import {
   authorizationOfTheDevelopmentAdmin,
@@ -13,6 +14,7 @@ import {
   chooseInThePortal,
   expectNoSidewaysScroll,
   languages,
+  layoutOf,
   narrowWindow,
 } from './languages';
 import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
@@ -31,7 +33,7 @@ import {
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
-const [kurdish] = languages;
+const [kurdish, , english] = languages;
 
 // A Vendor changes one of its Offers, or removes it after confirming, on a
 // phone (OFF-4, OFF-5). The browser is set to English, so the portal opens
@@ -196,6 +198,10 @@ test.describe('a made-up Vendor with Offers added over HTTP', () => {
 
     const gone = theOfferScreen(page).getByTestId('offer-gone');
     await expect(gone).toBeVisible();
+    // Centred in the window, as the not-found screens are (the owner's
+    // "Centred in window", redesign ticket 12).
+    await expectTheEmptyState(gone, gone.locator('[data-slot="empty-title"]'));
+    await expectCentredInTheWindow(gone, gone.locator('[data-slot="empty-title"]'));
     await expect(theOfferForm(page)).toHaveCount(0);
     await expect(page.getByTestId('refusal')).toHaveCount(0);
     await gone.getByRole('link').click();
@@ -222,6 +228,57 @@ test.describe('a made-up Vendor with Offers added over HTTP', () => {
 // Shoppers see it, with its Confirmation beside it, muted when out of
 // stock; then the form, and below it Remove the Offer on a row of its own,
 // as wide as the form on a phone.
+// The owner's "Own line" (redesign ticket 12): the removal's dialog names
+// the Part on a line of its own under its question, left to right in every
+// language, so that a long English name is never broken through a
+// right-to-left sentence.
+test.describe("the removal's dialog, as a made-up Vendor", () => {
+  let vendor: VendorLoginDetails;
+
+  test.beforeAll(async ({ browser }) => {
+    vendor = await aMadeUpVendorThatHasLoggedIn(browser);
+  });
+
+  test('names the Part on a line of its own under the question, left to right, in English and in Kurdish', async ({
+    page,
+    browser,
+  }) => {
+    const { part, offerId } = await anOfferOf(browser, vendor);
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/offers/${offerId}`);
+
+    for (const language of [kurdish, english]) {
+      await chooseInThePortal(page, language);
+      await removeTheOffer(page).click();
+      const dialog = theRemovalDialog(page);
+      const name = dialog.getByTestId('part-name');
+      await expect(name).toHaveText(part.name);
+      const [question, line, sentence] = await Promise.all([
+        dialog.getByRole('heading').boundingBox(),
+        name.boundingBox(),
+        dialog.locator('[data-slot="alert-dialog-description"]').boundingBox(),
+      ]);
+      expect(line?.y ?? 0, 'under the question').toBeGreaterThanOrEqual(
+        (question?.y ?? 0) + (question?.height ?? 0),
+      );
+      expect(
+        (line?.y ?? 0) + (line?.height ?? 0),
+        'above the sentence',
+      ).toBeLessThanOrEqual(sentence?.y ?? 0);
+      expect(await layoutOf(name)).toEqual({ direction: 'ltr', keptApart: true });
+      await expect(
+        dialog,
+        'the dialog is described by the name and its sentence',
+      ).toHaveAccessibleDescription(new RegExp(`^${part.name}\\s.+`));
+      await expect(
+        dialog.locator('[data-slot="alert-dialog-description"]').getByTestId('part-name'),
+        'the sentence does not hold the name',
+      ).toHaveCount(0);
+      await dialog.getByTestId('cancel-removal').click();
+      await expect(dialog).toHaveCount(0);
+    }
+  });
+});
+
 test.describe("an Offer's own screen, as a made-up Vendor", () => {
   let vendor: VendorLoginDetails;
 

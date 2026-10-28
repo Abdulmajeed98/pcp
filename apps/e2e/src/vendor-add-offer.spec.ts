@@ -213,6 +213,41 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
     await expect(refusal).toHaveText(inEnglish);
   });
 
+  // The owner's "Above the button" (redesign ticket 12): a refusal that
+  // names no field, such as a second Offer for the Part, opens just above
+  // Add the Offer, where the Vendor's eye is after pressing it, its space
+  // opening smoothly so that the button slides down rather than jumps.
+  test('a second Offer for the Part is refused in the panel just above the button, which slides down rather than jumps', async ({
+    page,
+  }) => {
+    await openTheDashboardAs(page, vendor, theFormFor(offered));
+    await offerField(page, 'usdPrice').fill('349.99');
+    const button = saveTheOffer(page);
+
+    const frames = await filmPlaces(page, { button }, () => button.click());
+    const refusal = theOfferForm(page).getByTestId('refusal');
+    await expect(refusal).toBeVisible();
+    const [panel, below, warranty] = await Promise.all([
+      refusal.boundingBox(),
+      button.boundingBox(),
+      page.getByTestId('warrantyMonths-field').boundingBox(),
+    ]);
+    expect(panel?.y ?? 0, 'below the last field').toBeGreaterThan(
+      (warranty?.y ?? 0) + (warranty?.height ?? 0),
+    );
+    expect(
+      (panel?.y ?? 0) + (panel?.height ?? 0),
+      'just above the button',
+    ).toBeLessThanOrEqual(below?.y ?? 0);
+    expect(
+      (below?.y ?? 0) - ((panel?.y ?? 0) + (panel?.height ?? 0)),
+      "with the form's gap between them",
+    ).toBeLessThanOrEqual(32);
+    const { moved, mostInAFrame } = travelOf(frames, 'button');
+    expect(moved, 'the button makes room for the panel').toBeGreaterThan(40);
+    expect(mostInAFrame, 'the button never jumps').toBeLessThanOrEqual(aFrameAtMost(moved));
+  });
+
   test('the search with results, and the note that an Offer was added, meet the automated part of WCAG 2.2 level AA, in light and in dark', async ({
     page,
   }) => {
@@ -332,16 +367,24 @@ test.describe('the catalog search and the Offer form, as a made-up Vendor', () =
     });
   }
 
-  test("from 64rem the Offer form is one column at most 40rem wide, its Part on Raised Stone with no edge, a Part with no photo showing its Category's icon plain at 32 pixels", async ({
+  // The owner's "Part beside form" (redesign ticket 12): from 64rem the
+  // Part's panel stands beside the form, on its end side, rather than at its
+  // head, with the Part's specifications, and the form keeps its own column.
+  test("from 64rem the Offer form is one column at most 40rem wide, with its Part beside it on Raised Stone, its specifications listed, a Part with no photo showing its Category's icon plain; mirrored in Kurdish", async ({
     page,
+    browser,
   }) => {
+    const part = await asTheAdmin(browser, (request, authorization) =>
+      createAMadeUpPart(request, authorization, { socket: 'AM5', cores: { total: 6 } }),
+    );
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.emulateMedia({ colorScheme: 'light' });
-    await openTheDashboardAs(page, vendor, theFormFor(first));
+    await openTheDashboardAs(page, vendor, theFormFor(part));
     const form = theOfferForm(page);
     await expect(form).toBeVisible();
 
-    const width = (await form.boundingBox())?.width ?? 0;
+    const formBox = await form.boundingBox();
+    const width = formBox?.width ?? 0;
     expect(width).toBeGreaterThan(400);
     expect(width).toBeLessThanOrEqual(640);
     const usd = await page.getByTestId('usdPrice-field').boundingBox();
@@ -350,10 +393,18 @@ test.describe('the catalog search and the Offer form, as a made-up Vendor', () =
       (usd?.y ?? 0) + (usd?.height ?? 0) - 1,
     );
 
-    const offered = form.getByTestId('offered-part');
+    const offered = page.getByTestId('offered-part');
+    await expect(form.getByTestId('offered-part')).toHaveCount(0);
+    const beside = await offered.boundingBox();
+    expect(
+      beside?.x ?? 0,
+      'the Part stands beside the form, on its end side',
+    ).toBeGreaterThanOrEqual((formBox?.x ?? 0) + width + 16);
+    expect(beside?.y ?? 0, 'level with its head').toBeCloseTo(formBox?.y ?? 0, 0);
     await expect(offered).toHaveCSS('background-color', 'rgb(245, 244, 242)');
     await expect(offered).toHaveCSS('border-top-width', '0px');
     await expect(offered).toHaveCSS('border-top-left-radius', '8px');
+    await expect(offered.getByTestId('part-name')).toHaveText(part.name);
     const picture = offered.getByTestId('part-picture');
     await expect(picture).toHaveCSS('width', '32px');
     await expect(picture).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
@@ -362,7 +413,29 @@ test.describe('the catalog search and the Offer form, as a made-up Vendor', () =
       'font-family',
       /Geist Mono/,
     );
+    const specifications = offered.getByTestId('part-specification');
+    await expect(specifications).toHaveCount(2);
+    await expect(specifications.filter({ hasText: 'AM5' })).toHaveCount(1);
+    await expect(specifications.filter({ hasText: '6' })).toHaveCount(1);
     await expectNoSidewaysScroll(page);
+
+    await chooseInThePortal(page, kurdish);
+    const formInKurdish = await form.boundingBox();
+    const besideInKurdish = await offered.boundingBox();
+    expect(
+      (besideInKurdish?.x ?? 0) + (besideInKurdish?.width ?? 0),
+      'in Kurdish the Part stands on the left, the end side',
+    ).toBeLessThanOrEqual((formInKurdish?.x ?? 0) - 16);
+    await expectNoSidewaysScroll(page);
+  });
+
+  test('on a phone the Part stays at the head of the form', async ({ page }) => {
+    await openTheDashboardAs(page, vendor, theFormFor(first));
+    const offered = theOfferForm(page).getByTestId('offered-part');
+    await expect(offered).toBeVisible();
+    const head = await offered.boundingBox();
+    const usd = await page.getByTestId('usdPrice-field').boundingBox();
+    expect(head?.y ?? 0).toBeLessThan(usd?.y ?? 0);
   });
 });
 

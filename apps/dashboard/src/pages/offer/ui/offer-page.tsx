@@ -15,6 +15,7 @@ import { formValuesOf, OfferForm } from '@/features/offer-form';
 import { RemoveOffer } from '@/features/remove-offer';
 import { apiClient, dataOf, Refusal, WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
+import { useCentredInTheWindow } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -46,9 +47,9 @@ import {
 // screen's one leading plate, the Offer's price as Shoppers see it now, both
 // currencies on it, muted when out of stock, with its Confirmation beside
 // it; it shows the saved price, and changes only when the form is saved.
-// Then a Note Grey sentence that saving it confirms it, the form, and below
-// the form, on a row of its own, Remove the Offer, as wide as the form on a
-// phone.
+// Then a Note Grey sentence that saving it confirms it, the form, with the
+// Part beside it from 64rem, and below the form, in its column, on a row of
+// its own, Remove the Offer, as wide as the form on a phone.
 export function OfferPage() {
   const { t } = useTranslation();
   const { vendorId } = useVendorShown();
@@ -123,22 +124,28 @@ function ChangeTheOffer({
         values={formValuesOf(offer)}
         purpose="change"
         save={(details) => change.mutateAsync(details)}
+        after={
+          <RemoveOffer vendorId={vendorId} offer={offer} onRemoved={backToTheOffers} />
+        }
       />
-      <RemoveOffer vendorId={vendorId} offer={offer} onRemoved={backToTheOffers} />
     </div>
   );
 }
 
 // What the screen says of an Offer that no longer exists, such as one the
-// Vendor removed, opened by an old link.
+// Vendor removed, opened by an old link: the dashboard's empty state,
+// centred in the window's height below the screen's title, as ticket 13
+// centres the "not found" screens (the owner's "Centred in window", redesign
+// ticket 12).
 function OfferGone() {
   const { t } = useTranslation();
+  const centred = useCentredInTheWindow<HTMLDivElement>();
 
   return (
-    <Empty data-testid="offer-gone" className="border-y border-rule">
+    <Empty ref={centred} data-testid="offer-gone">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <PackageXIcon />
+          <PackageXIcon aria-hidden="true" />
         </EmptyMedia>
         <EmptyTitle>{t('OfferScreen.gone')}</EmptyTitle>
         <EmptyDescription>{t('OfferScreen.goneDescription')}</EmptyDescription>

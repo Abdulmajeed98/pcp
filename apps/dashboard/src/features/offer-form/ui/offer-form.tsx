@@ -9,6 +9,7 @@ import {
   WhyNotAnsweredInThePortal,
 } from '@/shared/api';
 import { Trans, useTranslation } from '@/shared/i18n';
+import { useWideScreen } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -36,6 +37,7 @@ import {
 } from '../model/form-values';
 import { refusalOf, type RefusalMessage } from '../model/refusals';
 import { OfferedPart } from './offered-part';
+import { PartBeside } from './part-beside';
 
 // The form in which a Vendor gives its Offer for a Part, in the Vendor
 // portal's language: the Part at its head, then its prices, in USD, in IQD or
@@ -49,23 +51,29 @@ import { OfferedPart } from './offered-part';
 // refusal from the API is shown beside the detail it names, in the portal's
 // language, and that detail takes the focus. A refusal that names no detail,
 // such as a second Offer for the Part, or an API that cannot be reached, is
-// said above the form.
+// said just above the button.
 //
 // The same form adds an Offer, starting empty and in stock, and changes one,
 // starting with the Offer's details as they are; its button and what it says
 // when the Offer is not saved follow which it does. Whatever else the screen
-// offers, such as removing the Offer, the screen puts below it.
+// offers, such as removing the Offer, it gives as `after`, which stands below
+// the form in the form's own column.
 //
 // As DESIGN.md's Offer form lays it out (redesign ticket 12): one column at
-// every width, at most 40rem wide, each price on its own row; the refusal
-// panel above the prices, in an `OpeningSpace` whose space opens smoothly
-// (the No Snap Rule); and the pane's one primary button last, as wide as the
-// form on a phone, keeping its width while it waits (`BusyLabel`).
+// every width, at most 40rem wide, each price on its own row; the Part at its
+// head on a phone, and from 64rem beside it, on its end side, with its
+// specifications (the owner's "Part beside form"); the refusal panel that
+// names no field just above the button, where the Vendor's eye is after
+// pressing it (the owner's "Above the button"), in an `OpeningSpace` whose
+// space opens smoothly (the No Snap Rule); and the pane's one primary button
+// last, as wide as the form on a phone, keeping its width while it waits
+// (`BusyLabel`).
 export function OfferForm({
   part,
   values = newOfferFormValues,
   purpose = 'add',
   save,
+  after,
 }: {
   part: PartSummaryResponse;
   // What the form starts with.
@@ -75,8 +83,11 @@ export function OfferForm({
   // Sends the Offer's details. It throws a `Refusal` when the API refuses
   // them, and an `Unreachable` when the API cannot be reached.
   save: (details: EditOfferRequest) => Promise<unknown>;
+  // What the screen puts below the form, in its column.
+  after?: ReactNode;
 }) {
   const { t } = useTranslation();
+  const wide = useWideScreen();
   const { register, control, handleSubmit, setError, formState } = useForm<OfferFormValues>(
     { defaultValues: values },
   );
@@ -101,18 +112,14 @@ export function OfferForm({
     }
   }
 
-  return (
+  const form = (
     <form
       noValidate
       data-testid="offer-form"
       className="flex w-full max-w-[40rem] flex-col gap-6"
       onSubmit={handleSubmit(submit)}
     >
-      <OfferedPart part={part} />
-
-      <OpeningSpace>
-        {notSaved !== undefined && <NotSaved why={notSaved.why} purpose={purpose} />}
-      </OpeningSpace>
+      {!wide && <OfferedPart part={part} />}
 
       <FieldSet>
         <FieldLegend>{t('OfferForm.prices')}</FieldLegend>
@@ -202,6 +209,9 @@ export function OfferForm({
         )}
       </DetailField>
 
+      <OpeningSpace>
+        {notSaved !== undefined && <NotSaved why={notSaved.why} purpose={purpose} />}
+      </OpeningSpace>
       <Button
         type="submit"
         className="w-full sm:w-auto sm:self-start"
@@ -217,9 +227,23 @@ export function OfferForm({
       </Button>
     </form>
   );
+  const column = (
+    <div className="flex w-full max-w-[40rem] min-w-0 flex-col gap-6">
+      {form}
+      {after}
+    </div>
+  );
+
+  if (!wide) return column;
+  return (
+    <div className="grid grid-cols-[minmax(0,40rem)_minmax(16rem,1fr)] items-start gap-6">
+      {column}
+      <PartBeside part={part} />
+    </div>
+  );
 }
 
-// Why the Offer was not saved, above the form: a second Offer for the Part
+// Why the Offer was not saved, just above the button: a second Offer for the Part
 // in words of its own, and any other refusal, or an API that cannot be
 // reached, as the portal says it everywhere.
 function NotSaved({ why, purpose }: { why: unknown; purpose: 'add' | 'change' }) {

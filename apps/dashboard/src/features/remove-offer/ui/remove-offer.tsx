@@ -4,7 +4,7 @@ import { Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
-import { Trans, useTranslation } from '@/shared/i18n';
+import { useTranslation } from '@/shared/i18n';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,18 +68,22 @@ export function RemoveOffer({
         <Trash2Icon data-icon="inline-start" />
         {t('RemoveOffer.remove')}
       </AlertDialogTrigger>
-      <AlertDialogContent data-testid="remove-confirmation">
+      <AlertDialogContent
+        data-testid="remove-confirmation"
+        aria-describedby="remove-offer-part remove-offer-description"
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{t('RemoveOffer.title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            <Trans
-              i18nKey="RemoveOffer.description"
-              components={{
-                name: (
-                  <AlwaysEnglish data-testid="part-name">{offer.part.name}</AlwaysEnglish>
-                ),
-              }}
-            />
+          {/* The Part on a line of its own under the question, left to right
+              in every language, so that a long English name is never broken
+              through a right-to-left sentence (the owner's "Own line"). */}
+          <p id="remove-offer-part" className="font-[550]">
+            <AlwaysEnglish data-testid="part-name" className="block w-fit max-w-full">
+              {offer.part.name}
+            </AlwaysEnglish>
+          </p>
+          <AlertDialogDescription id="remove-offer-description">
+            {t('RemoveOffer.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogRefusal>
