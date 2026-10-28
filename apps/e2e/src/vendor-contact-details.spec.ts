@@ -9,6 +9,7 @@ import {
   languages,
   narrowWindow,
 } from './languages';
+import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
 import { dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -193,6 +194,30 @@ test.describe("on a screen as wide as a desk's", () => {
     answer();
     await expect(page).toHaveURL(detailsUrl);
   });
+});
+
+// The No Snap Rule (the owner on motion, 22 October 2026): when the details
+// cannot be sent, the refusal panel above the form opens its room as it
+// arrives, and the form below it moves down smoothly, never in one frame.
+test('when the platform cannot be reached, the refusal panel opens its room above the form, which moves down without a jump', async ({
+  page,
+}) => {
+  await openTheForm(page);
+  await page.route('**/contact-details', async (route) => {
+    if (isTheSave(route.request())) await route.abort();
+    else await route.continue();
+  });
+
+  const frames = await filmPlaces(page, { address: formField(page, 'address') }, () =>
+    saveButton(page).click(),
+  );
+
+  await expect(page.getByRole('main').getByTestId('refusal')).toBeVisible();
+  const { moved, mostInAFrame } = travelOf(frames, 'address');
+  expect(moved, 'the form moved down for the panel').toBeGreaterThan(20);
+  expect(mostInAFrame, 'with no step a person sees as a jump').toBeLessThanOrEqual(
+    aFrameAtMost(moved),
+  );
 });
 
 test("the browser is given a position in Erbil, and the location button fills the map location's coordinates from it", async ({

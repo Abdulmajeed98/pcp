@@ -19,6 +19,7 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  OpeningSpace,
   OptionalMark,
   Textarea,
 } from '@/shared/ui';
@@ -93,14 +94,19 @@ export function ContactDetailsForm({
       className="flex max-w-[40rem] flex-col gap-8"
       onSubmit={handleSubmit(submit)}
     >
-      {notSaved !== undefined && (
-        <Alert variant="destructive" data-testid="refusal">
-          <AlertTitle>{t('ContactDetailsForm.notSaved')}</AlertTitle>
-          <AlertDescription>
-            <WhyNotAnsweredInThePortal error={notSaved.why} />
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* The refusal panel opens its room as it arrives, and closes it as it
+          goes, so the form below it never jumps (the No Snap Rule, in the
+          shared OpeningSpace of redesign ticket 08). */}
+      <OpeningSpace>
+        {notSaved !== undefined && (
+          <Alert variant="destructive" data-testid="refusal">
+            <AlertTitle>{t('ContactDetailsForm.notSaved')}</AlertTitle>
+            <AlertDescription>
+              <WhyNotAnsweredInThePortal error={notSaved.why} />
+            </AlertDescription>
+          </Alert>
+        )}
+      </OpeningSpace>
 
       {/* From 40rem the two phone numbers share a row; every other detail
           takes a row of its own, so that none stands beside an empty half. */}
