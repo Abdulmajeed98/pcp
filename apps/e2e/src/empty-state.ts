@@ -38,8 +38,11 @@ export async function expectCentredInTheWindow(
 ): Promise<void> {
   const page = where.page();
   const icon = where.locator('svg[aria-hidden="true"]').first();
-  const last = where.getByRole('link').or(where.getByRole('button')).last();
+  const controls = where.getByRole('link').or(where.getByRole('button'));
   await expect(title).toBeVisible();
+  // Its foot is its last control's, or, with none, as a plain message, its
+  // title's.
+  const last = (await controls.count()) > 0 ? controls.last() : title;
 
   const [top, foot, shown] = await Promise.all([
     icon.boundingBox(),

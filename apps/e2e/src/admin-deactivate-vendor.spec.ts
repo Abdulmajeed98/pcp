@@ -7,6 +7,7 @@ import {
   openTheDashboardAs,
   vendorNameInTheFrame,
 } from './development-logins';
+import { expectCentredInTheWindow, expectTheEmptyState } from './empty-state';
 import {
   atTheLoginScreenInABrowserOfItsOwn,
   expectLoginScreen,
@@ -142,6 +143,11 @@ test("the Admin deactivates the Vendor, after confirming, while its portal is op
       messages.set(language, await theDeactivatedMessage(vendorsPage).innerText());
     }
     expect(messages.get(kurdish)).not.toBe(messages.get(english));
+    // The message is the dashboard's empty state, centred in the window, as
+    // the "not found" screens are (the redesign, ticket 13).
+    const main = vendorsPage.getByRole('main');
+    await expectTheEmptyState(main, theDeactivatedMessage(vendorsPage));
+    await expectCentredInTheWindow(main, theDeactivatedMessage(vendorsPage));
     await expectNoSidewaysScroll(vendorsPage);
     await expectAccessible(vendorsPage);
   });

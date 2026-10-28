@@ -324,6 +324,21 @@ test.describe('as a made-up Vendor', () => {
       await expect(page.getByRole('link')).toHaveCount(0);
       await expect(page.getByRole('heading')).toHaveCount(0);
       await expect(vendorNameInTheFrame(page)).toHaveCount(0);
+      // The message is the dashboard's empty state, centred in the window,
+      // as the "not found" screens are (the redesign, ticket 13).
+      await expectTheEmptyState(page.getByRole('main'), page.getByTestId('no-vendor'));
+      await expectCentredInTheWindow(page.getByRole('main'), page.getByTestId('no-vendor'));
+      // Crossing 64rem draws the frame anew, a desk's or a phone's, and the
+      // message with it, which is centred again at once.
+      for (const viewport of [{ width: 1280, height: 800 }, narrowWindow]) {
+        await page.setViewportSize(viewport);
+        await expect(async () => {
+          await expectCentredInTheWindow(
+            page.getByRole('main'),
+            page.getByTestId('no-vendor'),
+          );
+        }).toPass({ timeout: 2000 });
+      }
       await expectNoSidewaysScroll(page);
       await expectAccessible(page);
 
