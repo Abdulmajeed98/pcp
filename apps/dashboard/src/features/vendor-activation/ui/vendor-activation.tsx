@@ -11,8 +11,10 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogRefusal,
   AlertDialogTitle,
   AlertDialogTrigger,
+  BusyLabel,
   Button,
 } from '@/shared/ui';
 
@@ -138,11 +140,13 @@ function Confirmed({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
-        {change.error && (
-          <p role="alert" className="text-sm text-destructive">
-            {notDone} <WhyNotAnswered error={change.error} />
-          </p>
-        )}
+        <AlertDialogRefusal>
+          {change.error && (
+            <>
+              {notDone} <WhyNotAnswered error={change.error} />
+            </>
+          )}
+        </AlertDialogRefusal>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
@@ -150,7 +154,7 @@ function Confirmed({
             disabled={change.isPending}
             onClick={() => change.mutate(undefined, { onSuccess: () => setOpen(false) })}
           >
-            {change.isPending ? pending : action}
+            <BusyLabel busy={change.isPending} label={action} busyLabel={pending} />
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

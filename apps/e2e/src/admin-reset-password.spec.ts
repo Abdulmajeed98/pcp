@@ -109,3 +109,71 @@ test('the confirmation does not scroll sideways, and meets the automated part of
   await expectNoSidewaysScroll(page);
   await expectAccessible(page);
 });
+
+test('after the reset, the line that says so, the temporary password on a Raised Stone panel and the hand-over arrive below the actions and above the details with no snap, and meet WCAG 2.2 level AA in light and in dark', async ({
+  page,
+}) => {
+  await askForAReset(page);
+  // Watched four times slower, as the owner asked them to be watched, and
+  // the top of the details below taken frame by frame from the confirmation
+  // on.
+  const devTools = await page.context().newCDPSession(page);
+  await devTools.send('Animation.enable');
+  await devTools.send('Animation.setPlaybackRate', { playbackRate: 0.25 });
+  const tops = page.evaluate(
+    () =>
+      new Promise<number[]>((resolve) => {
+        const seen: number[] = [];
+        const end = performance.now() + 4000;
+        const look = () => {
+          const state = document.querySelector('[data-detail="state"]');
+          if (state !== null) seen.push(Math.round(state.getBoundingClientRect().top));
+          if (performance.now() < end) requestAnimationFrame(look);
+          else resolve(seen);
+        };
+        requestAnimationFrame(look);
+      }),
+  );
+  await confirmation(page).getByRole('button', { name: 'Reset the password' }).click();
+  const moved = await tops;
+  await devTools.send('Animation.setPlaybackRate', { playbackRate: 1 });
+  await expect(temporaryPassword(page)).toBeVisible();
+
+  const done = page.getByTestId('password-reset');
+  await expect(done).toContainText('The password is reset, and the Vendor is logged out.');
+  // It arrives as a row arrives in a list (DESIGN.md's Motion 8, the No Snap
+  // Rule): its space opens, and then it fades in. The details below slide
+  // down over many frames, never more than an eighth of the way in one.
+  const transition = await done.evaluate(
+    (element) => getComputedStyle(element).transitionProperty,
+  );
+  expect(transition.split(', ')).toEqual(
+    expect.arrayContaining(['grid-template-rows', 'opacity']),
+  );
+  const steps = moved
+    .slice(1)
+    .map((top, index) => top - moved[index])
+    .filter((step) => step !== 0);
+  const travel = (moved.at(-1) ?? 0) - (moved[0] ?? 0);
+  expect(travel).toBeGreaterThan(100);
+  expect(steps.length).toBeGreaterThanOrEqual(12);
+  expect(Math.max(...steps)).toBeLessThan(travel / 8);
+  const actions = await page.getByRole('button', { name: 'Deactivate' }).boundingBox();
+  const box = await done.boundingBox();
+  const details = await page.locator('[data-detail="state"]').boundingBox();
+  expect(box?.y).toBeGreaterThan((actions?.y ?? 0) + (actions?.height ?? 0));
+  expect(details?.y).toBeGreaterThan((box?.y ?? 0) + (box?.height ?? 0));
+
+  const raisedStone = await page.evaluate(() => {
+    const probe = document.createElement('div');
+    probe.className = 'bg-secondary';
+    document.body.append(probe);
+    const colour = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return colour;
+  });
+  await expect(temporaryPassword(page)).toHaveCSS('background-color', raisedStone);
+  await expect(temporaryPassword(page)).toHaveCSS('border-top-width', '0px');
+  await expectNoSidewaysScroll(page);
+  await expectAccessible(page);
+});

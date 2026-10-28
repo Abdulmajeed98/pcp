@@ -35,7 +35,7 @@ export function HandOver({
 
   return (
     <section aria-labelledby="hand-over" className="flex flex-col gap-4">
-      <h2 id="hand-over" className="text-base font-medium">
+      <h2 id="hand-over" className="text-base font-semibold">
         Hand the login details over
       </h2>
       <FieldSet>
@@ -45,7 +45,7 @@ export function HandOver({
             <label
               key={each}
               lang={each}
-              className="flex min-h-control cursor-pointer items-center gap-2 rounded-lg border border-input bg-card px-3 has-checked:bg-secondary has-checked:font-semibold has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
+              className="hover-colour flex min-h-control cursor-pointer items-center gap-2 rounded-control border border-input bg-background px-3 not-has-checked:hover:bg-secondary has-checked:bg-accent has-checked:font-semibold has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
             >
               <input
                 type="radio"

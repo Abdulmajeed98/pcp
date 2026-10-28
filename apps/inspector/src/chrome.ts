@@ -1,6 +1,12 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import { answerFromTheMadeUpShop, type MadeUpShop } from './made-up-shop.ts';
+import {
+  answerFromTheMadeUpShop,
+  listsTheVendors,
+  type MadeUpShop,
+  type ShopAnswer,
+  vendorsWithTheShops,
+} from './made-up-shop.ts';
 import type { TasteBrowser, TastePage } from './taste.ts';
 
 // What the command does inside the inspector's Chrome: the one login before
@@ -139,8 +145,9 @@ async function where(page: TastePage): Promise<string> {
 const theShopsPaths = ['/v1/vendors*', '/v1/offers*', '/v1/caller/vendor*'];
 
 // Answers every call about Vendors and Offers in a tab from the made-up shop,
-// before it leaves the browser, so that it never reaches the API and nothing
-// is written to the development database. The API is on another address than
+// before it leaves the browser, so that nothing is written to the
+// development database: only the calls that read the real Vendors reach the
+// API, and the list of them is answered with the shop's Vendor among them. The API is on another address than
 // the dashboard, so each answer carries what the browser asks of a
 // cross-origin answer, and a preflight is answered too.
 export async function answerFromTheShopIn(
@@ -177,25 +184,43 @@ export async function answerFromTheShopIn(
         return;
       }
 
-      const answer = answerFromTheMadeUpShop(shop, new Date(), {
-        method: request.method,
-        path: address.pathname + address.search,
-      });
+      const call = { method: request.method, path: address.pathname + address.search };
+      const fulfil = (answer: ShopAnswer) =>
+        page
+          .send('Fetch.fulfillRequest', {
+            requestId,
+            responseCode: answer.status,
+            responseHeaders: [
+              ...crossOrigin,
+              { name: 'Content-Type', value: 'application/json' },
+            ],
+            body: Buffer.from(JSON.stringify(answer.body)).toString('base64'),
+          })
+          .catch(() => {});
+
+      // The list of Vendors: the API's own page, read here with the tab's
+      // Authorization, and the shop's Vendor put among them.
+      if (listsTheVendors(call)) {
+        const authorization = header(request, 'Authorization');
+        void fetch(request.url, {
+          headers: authorization === undefined ? {} : { Authorization: authorization },
+        })
+          .then(async (response) => ({
+            status: response.status,
+            body: (await response.json()) as unknown,
+          }))
+          .then((api) => fulfil(vendorsWithTheShops(shop, api)))
+          .catch(() => page.send('Fetch.failRequest', { requestId, errorReason: 'Failed' }))
+          .catch(() => {});
+        return;
+      }
+
+      const answer = answerFromTheMadeUpShop(shop, new Date(), call);
       if (answer === undefined) {
         void page.send('Fetch.continueRequest', { requestId }).catch(() => {});
         return;
       }
-      void page
-        .send('Fetch.fulfillRequest', {
-          requestId,
-          responseCode: answer.status,
-          responseHeaders: [
-            ...crossOrigin,
-            { name: 'Content-Type', value: 'application/json' },
-          ],
-          body: Buffer.from(JSON.stringify(answer.body)).toString('base64'),
-        })
-        .catch(() => {});
+      void fulfil(answer);
     },
   );
   await page.send('Fetch.enable', {
