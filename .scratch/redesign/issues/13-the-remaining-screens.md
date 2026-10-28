@@ -6,7 +6,7 @@
 
 **Blocked by:** 11
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The details screen, the contact details form, the two plain messages, both "not found" screens and the failed login follow the new DESIGN.md and move as its Motion section says.
 - [x] Each that can be reached logged in passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command; the portal's in Kurdish and in English.
@@ -14,7 +14,7 @@
 - [x] The portal's screens pass `checkInEveryLanguageOfTheVendorPortal`. `expectAccessible` passes on each screen in the accessibility tests' list, in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
 - [x] No screen of the dashboard is left in the old look: each route in both routers is listed under Comments with the ticket that rebuilt it.
 - [x] Tests that had to change are listed under Comments with why; no test loses an assertion.
-- [ ] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
+- [x] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
@@ -236,3 +236,41 @@ The review page `.taste-skill/redesign-13/index.html` in the owner's checkout (p
 2. **The contact form at most 40rem wide** on a desk, as the Offer form is, leaving the sheet's end side empty at 1440 (the inspector's `hero-void`). The alternative is the form taking the sheet's width, with the two phone numbers still sharing a row.
 
 The record is otherwise ready to close: when the owner has looked, record the answers, tick box 7, and set the Status to resolved in `docs: close redesign ticket 13`.
+
+### 28 October 2026: the owner's last look, and closed
+
+The owner saw `.taste-skill/redesign-13/index.html` in the built-in browser and answered the two choices:
+
+| Choice | The owner's word | Result |
+|---|---|---|
+| 1. The plain messages as the empty state, centred in the window | "Centred state (Recommended)" | Kept as built |
+| 2. The contact details form at most 40rem wide on a desk | "Full width" | **Changed**, below |
+
+**Full width**, built test-first.
+- The desk-width test of `vendor-contact-details.spec.ts` asked for a form at most 640 pixels wide. It now asks for:
+  - a form wider than that;
+  - the address beside the map location, the phone number beside the WhatsApp number, and the Instagram name beside the opening hours;
+  - no detail wider than half the form;
+  - Save as wide as its words.
+- It failed first on the 640-pixel form, then passed.
+- The form lost its 40rem cap and became a container. Its details follow the form's own width, by the rule the owner approved for the Part's and the Vendor's forms ("Follow width", tickets 08 and 09): one to a row under 40rem and two to a row from 40rem, with no detail spanning both columns. On a phone, Save stays as wide as the form.
+- This replaces the owner's "Own row" of 22 October for the Instagram name: it now stands beside the opening hours, so it neither stretches across the sheet nor stands beside an empty half.
+- DESIGN.md says so, and says that the Offer form keeps its own 40rem cap unless the owner says otherwise.
+- Commit `6ce3761`. The test is listed under the tests changed: the owner's choice changed what it asks, and it lost no assertion (it gained four).
+
+**Taste's inspector on `6ce3761`**, at 1440, 768 and 360, English and Kurdish, light and dark, in the owner's `.taste-skill/redesign-13/inspect-5/`:
+- 0 FAIL throughout.
+- The 40rem `hero-void` on the contact form is gone.
+- In its place, `panel-void` at 1440: 120 pixels in English (89 in Kurdish) under the one-line Instagram name, beside the opening hours, which take a textarea's three lines. Defended: the two are top-aligned in their row, and the band closes at the row's foot.
+- The details screen: 0 WARN.
+- Both "not found" screens: the defended `hero-void` and `panel-void` of the centred state the owner chose.
+
+**`pnpm platform:check` on `6ce3761`.**
+- The first run under the lock had 231 passed and 2 failed, both in ticket 08's specs, which this ticket did not touch:
+  - `admin-edit.spec.ts:162`: the Category icon still counted after a photo was added.
+  - `admin-part.spec.ts:341`: a group of PCIe slots still counted after a list was made not known.
+  - Both read a state that ticket 08's motion leaves in place for a moment.
+- Re-run alone, both files passed (37 of 37).
+- The second full run: **233 passed**, none failed or flaky (10.5 minutes). The two failures of the first run are recorded as flakes of ticket 08's timing.
+
+Every box is ticked, and the ticket is resolved.
