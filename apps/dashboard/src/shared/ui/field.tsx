@@ -3,6 +3,7 @@ import { cn } from 'cn';
 import type * as React from 'react';
 
 import { Label } from './label';
+import { OpeningSpace } from './opening-space';
 import { Separator } from './separator';
 
 // shadcn/ui's field, in the Mira style: a form's field with its label, its
@@ -162,16 +163,20 @@ function FieldSeparator({
 
 // The error of a field, in words. It is the field's description as well, by
 // the `id` the field names in `aria-describedby`, so that a screen reader
-// reads it with the field.
+// reads it with the field. It lies in an `OpeningSpace`, so that it opens
+// its room smoothly when it is given and closes it smoothly when it is gone,
+// and the form below never jumps (the No Snap Rule, redesign ticket 08).
 function FieldError({ className, ...props }: React.ComponentProps<'p'>) {
-  if (!props.children) return null;
-
   return (
-    <p
-      data-slot="field-error"
-      className={cn('text-sm font-normal text-destructive', className)}
-      {...props}
-    />
+    <OpeningSpace>
+      {props.children ? (
+        <p
+          data-slot="field-error"
+          className={cn('text-sm font-normal text-destructive', className)}
+          {...props}
+        />
+      ) : null}
+    </OpeningSpace>
   );
 }
 

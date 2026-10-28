@@ -21,7 +21,7 @@ import { HandOver, TemporaryPassword } from '@/features/hand-over';
 import { ResetPassword } from '@/features/reset-password';
 import { VendorActivation } from '@/features/vendor-activation';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
-import { useAddressKeepingTheQuery, useWideScreen } from '@/shared/lib';
+import { useAddressKeepingTheQuery } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -29,6 +29,7 @@ import {
   BackLink,
   buttonVariants,
   InANewTab,
+  ScreenTitle,
 } from '@/shared/ui';
 
 // A Vendor's page: every detail the platform holds about it, and whether it
@@ -75,10 +76,6 @@ export function VendorPage() {
 }
 
 function VendorDetails({ vendor }: { vendor: VendorResponse }) {
-  // One h1 to a page (the owner's "h2 on a desk", redesign ticket 08):
-  // from 64rem this screen is beside the Vendors' list, whose title is the
-  // h1, so its own is an h2; on a phone it stands alone, an h1.
-  const Title = useWideScreen() ? 'h2' : 'h1';
   const keepingTheQuery = useAddressKeepingTheQuery();
   // The temporary password of the last reset, held by this screen alone:
   // leaving it loses the password, and the API answers it nowhere else.
@@ -88,9 +85,9 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
     <div className="flex flex-col">
       <div className="flex flex-col gap-3 pb-6">
         <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-        <Title className="screen-title">
+        <ScreenTitle className="screen-title">
           <AsWritten>{vendor.name}</AsWritten>
-        </Title>
+        </ScreenTitle>
         <div className="flex flex-wrap items-start gap-2">
           <Link
             to={keepingTheQuery(`/vendors/${vendor.id}/edit`)}
@@ -202,15 +199,11 @@ function None() {
 }
 
 function VendorNotFound() {
-  // One h1 to a page (the owner's "h2 on a desk", redesign ticket 08):
-  // from 64rem this screen is beside the Vendors' list, whose title is the
-  // h1, so its own is an h2; on a phone it stands alone, an h1.
-  const Title = useWideScreen() ? 'h2' : 'h1';
   const keepingTheQuery = useAddressKeepingTheQuery();
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-      <Title className="screen-title">Vendor not found</Title>
+      <ScreenTitle className="screen-title">Vendor not found</ScreenTitle>
       <p>The platform holds no Vendor at this address. It may never have existed.</p>
     </div>
   );

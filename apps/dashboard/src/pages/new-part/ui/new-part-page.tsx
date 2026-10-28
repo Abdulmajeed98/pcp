@@ -7,7 +7,7 @@ import { partsKey } from '@/entities/part';
 import { PartForm } from '@/features/part-form';
 import { apiClient, dataOf, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
+import { Alert, AlertDescription, AlertTitle, BackLink, ScreenTitle } from '@/shared/ui';
 
 // The form for a new Part of the Category the address names. Saving creates
 // the Part and opens its page, and the next search finds it.
@@ -42,7 +42,7 @@ export function NewPartPage() {
     return (
       <div className="flex flex-col gap-4">
         <BackLink to={keepingTheQuery('/catalog/new')}>Choose a Category</BackLink>
-        <h1 className="screen-title">Category not found</h1>
+        <ScreenTitle className="screen-title">Category not found</ScreenTitle>
         <p>The catalog has no Category of that name.</p>
       </div>
     );
@@ -51,10 +51,11 @@ export function NewPartPage() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/catalog/new')}>Choose another Category</BackLink>
-      <h1 className="screen-title">New {categoryName(category.key)}</h1>
+      <ScreenTitle className="screen-title">New {categoryName(category.key)}</ScreenTitle>
       <PartForm
         category={category}
         submitLabel="Create the Part"
+        busyLabel="Creating the Part…"
         save={(fields) => create.mutateAsync({ ...fields, category: category.key })}
       />
     </div>

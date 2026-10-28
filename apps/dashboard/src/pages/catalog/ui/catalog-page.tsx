@@ -3,7 +3,7 @@ import { PlusIcon } from 'lucide-react';
 import { Link, useOutlet } from 'react-router';
 
 import { useAddressKeepingTheQuery, useWideScreen } from '@/shared/lib';
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, OpenedBesideAList } from '@/shared/ui';
 
 import { useSearchInTheAddress } from '../model/search';
 import { CategoryTabs } from './category-tabs';
@@ -20,7 +20,8 @@ import { SearchForm } from './search-form';
 // A screen opened from it, a Part, its edit form or a new Part, is its child.
 // On a screen as wide as a desk's, the list takes the sheet's whole width
 // until one is opened; then the list keeps seven twelfths on the start side
-// and the opened screen takes five, past an Edge line. On a phone the opened
+// and the opened screen takes five, past an Edge line, its title of the
+// second level under the Catalog's (redesign ticket 08). On a phone the opened
 // screen takes the whole screen, and the list is not rendered at all, so that
 // it asks the API for nothing.
 export function CatalogPage() {
@@ -35,7 +36,9 @@ export function CatalogPage() {
         <TheList />
       </div>
       {opened !== null && (
-        <div className="col-span-5 min-w-0 border-s border-border ps-6">{opened}</div>
+        <div className="col-span-5 min-w-0 border-s border-border ps-6">
+          <OpenedBesideAList>{opened}</OpenedBesideAList>
+        </div>
       )}
     </div>
   );

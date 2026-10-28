@@ -89,6 +89,24 @@ test.describe('editing a Part, from its page', () => {
     await expect(specificationRow(page, 'cores.total')).toContainText('6');
   });
 
+  test('while the Part is on its way, its button says so and waits', async ({ page }) => {
+    await openTheEditForm(page);
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route(`${apiUrl}/v1/parts/${part.id}`, async (route) => {
+      if (route.request().method() !== 'PUT') return route.continue();
+      await held;
+      await route.continue();
+    });
+    await page.getByRole('button', { name: 'Save the Part' }).click();
+
+    const busy = page.getByRole('button', { name: 'Saving the Part…' });
+    await expect(busy).toBeVisible();
+    await expect(busy).toBeDisabled();
+    release();
+    await expect(page).toHaveURL(partPageAddress);
+  });
+
   test('the edit form does not scroll sideways, and meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
     page,
   }) => {
@@ -176,10 +194,30 @@ test.describe("a Part's photo, from its page", () => {
       buffer: Buffer.from('These are words, not a picture.'),
     });
 
-    await expect(page.getByTestId('photo-refusal')).toContainText(
-      'not a JPEG, PNG or WebP picture',
-    );
+    // A refusal is DESIGN.md's refusal panel: what was not done, then why.
+    const refusal = page.getByTestId('photo-refusal');
+    await expect(refusal).toHaveRole('alert');
+    await expect(refusal).toContainText('The photo was not added.');
+    await expect(refusal).toContainText('not a JPEG, PNG or WebP picture');
     await expect(page.getByTestId('category-icon')).toBeVisible();
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+
+  test('while the photo is on its way, its button says so and waits', async ({ page }) => {
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route(`${apiUrl}/v1/parts/${part.id}/photo`, async (route) => {
+      await held;
+      await route.continue();
+    });
+    await page.getByLabel('Add a photo').setInputFiles(aMadeUpPhoto([40, 200, 40]));
+
+    const busy = page.getByLabel('Sending…');
+    await expect(busy).toBeDisabled();
+    release();
+    await expect(page.getByRole('img', { name: `Photo of ${part.name}` })).toBeVisible();
+    await expect(page.getByLabel('Replace the photo')).toBeEnabled();
   });
 
   test('the photo field asks the browser for JPEG, PNG or WebP', async ({ page }) => {

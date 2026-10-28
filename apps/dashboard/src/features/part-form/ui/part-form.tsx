@@ -1,4 +1,6 @@
 import type { CategoryResponse, PartResponse, SubErrorResponse } from '@pcp/api-client';
+import { cn } from 'cn';
+import { type TransitionEvent, useRef } from 'react';
 import { type FieldPath, FormProvider, useForm } from 'react-hook-form';
 
 import { setRefusalsBesideTheirFields } from '@/shared/api';
@@ -15,6 +17,7 @@ import {
   FieldLegend,
   FieldSet,
   Input,
+  OpeningSpace,
 } from '@/shared/ui';
 
 import {
@@ -25,6 +28,7 @@ import {
 } from '../model/form-values';
 import { fieldOf, messageOf, partFieldMessages, whyNotSaved } from '../model/refusals';
 import { describedBy, errorOf } from './field-names';
+import { NameField } from './name-field';
 import { SpecificationField } from './specification-field';
 import { TextListField } from './text-list-field';
 
@@ -36,16 +40,27 @@ import { TextListField } from './text-list-field';
 //
 // Saving sends the whole Part. A refusal from the API is shown beside the
 // field it names, which takes the focus, and a refusal that names no field of
-// the form is shown above it.
+// the form is shown beside the button just pressed, in sight, rather than at
+// the head of a long form scrolled out of it (redesign ticket 08's break-ui).
+// While the Part is on its way, the button keeps its width, says so in
+// `busyLabel`, and waits.
+//
+// As the dashboard's DESIGN.md lays out a form (redesign ticket 08): its
+// fields go two to a row only where the form itself is 40rem wide, so beside
+// the list on a desk, where the form has five twelfths of the sheet, they go
+// one to a row; and its button is as wide as the form where the form is
+// narrower than that.
 export function PartForm({
   category,
   part,
   submitLabel,
+  busyLabel,
   save,
 }: {
   category: CategoryResponse;
   part?: PartResponse;
   submitLabel: string;
+  busyLabel: string;
   // Sends the Part. It throws a `Refusal` when the API refuses it, and an
   // `Unreachable` when the API cannot be reached.
   save: (fields: PartFields) => Promise<unknown>;
@@ -57,6 +72,16 @@ export function PartForm({
   const nameError = errorOf(formState.errors, 'name');
   const manufacturerError = errorOf(formState.errors, 'manufacturer');
   const refusal = formState.errors.root?.refusal?.message;
+  const busy = formState.isSubmitting;
+  const end = useRef<HTMLDivElement>(null);
+
+  // A refusal that arrives beside the button is kept in sight with it, once
+  // its space has opened, by a scroll as smooth as the opening (the No Snap
+  // Rule).
+  function keepInSight(event: TransitionEvent<HTMLDivElement>): void {
+    if (refusal === undefined || event.propertyName !== 'grid-template-rows') return;
+    end.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
 
   async function submit(values: PartFormValues): Promise<void> {
     try {
@@ -69,10 +94,33 @@ export function PartForm({
   function showWhyNot(error: unknown): void {
     const besideAField = setRefusalsBesideTheirFields(error, setError, (each) =>
       isOnTheForm(each)
-        ? { field: fieldOf(each) as FieldPath<PartFormValues>, message: messageOf(each) }
+        ? {
+            field: fieldOf(each) as FieldPath<PartFormValues>,
+            message: messageOf(each, kindOf(fieldOf(each))),
+          }
         : undefined,
     );
     if (!besideAField) setError('root.refusal', { message: whyNotSaved(error) });
+  }
+
+  // The kind of the specification a refused field holds, as
+  // `specifications.cores.total` or, in a list of rows,
+  // `specifications.pcie_slots.1.quantity`.
+  function kindOf(field: string | undefined): string | undefined {
+    const path = field?.replace(/^specifications\./, '');
+    if (path === undefined) return undefined;
+    const named = category.specifications.find((each) => each.path === path);
+    if (named !== undefined) return named.kind;
+    const list = category.specifications.find(
+      (each) => each.kind === 'listOfRows' && path.startsWith(`${each.path}.`),
+    );
+    // After the list's path come the row's place and the field's own path.
+    const inTheRow = path
+      .slice((list?.path.length ?? 0) + 1)
+      .split('.')
+      .slice(1)
+      .join('.');
+    return list?.fields?.find((each) => each.path === inTheRow)?.kind;
   }
 
   // Whether a refusal names a field this form shows.
@@ -90,22 +138,18 @@ export function PartForm({
 
   return (
     <FormProvider {...form}>
-      <form noValidate className="flex flex-col gap-8" onSubmit={handleSubmit(submit)}>
-        {refusal !== undefined && (
-          <Alert variant="destructive" data-testid="refusal">
-            <AlertTitle>The Part was not saved.</AlertTitle>
-            <AlertDescription>{refusal}</AlertDescription>
-          </Alert>
-        )}
-
+      <form
+        noValidate
+        className="@container/part-form flex flex-col gap-8"
+        onSubmit={handleSubmit(submit)}
+      >
         <FieldSet>
           <FieldLegend>The Part</FieldLegend>
-          <FieldGroup className="grid sm:grid-cols-2 sm:gap-x-6">
-            <Field className="sm:col-span-2">
+          <FieldGroup className="grid @min-[40rem]/part-form:grid-cols-2 @min-[40rem]/part-form:gap-x-6">
+            <Field className="col-span-full">
               <FieldLabel htmlFor="part-name">Name</FieldLabel>
-              <Input
+              <NameField
                 id="part-name"
-                autoComplete="off"
                 aria-invalid={nameError !== undefined}
                 aria-describedby={describedBy(nameError && 'part-name-error')}
                 {...register('name', {
@@ -147,16 +191,47 @@ export function PartForm({
             Leave a specification empty when it is not known. The needed ones are read by a
             Compatibility Rule, so fill those in first.
           </FieldDescription>
-          <FieldGroup className="grid items-start sm:grid-cols-2 sm:gap-x-6">
+          <FieldGroup className="grid items-start @min-[40rem]/part-form:grid-cols-2 @min-[40rem]/part-form:gap-x-6">
             {category.specifications.map((specification) => (
               <SpecificationField key={specification.path} specification={specification} />
             ))}
           </FieldGroup>
         </FieldSet>
 
-        <Button type="submit" className="self-start" disabled={formState.isSubmitting}>
-          {submitLabel}
-        </Button>
+        <div
+          ref={end}
+          className="flex scroll-my-4 flex-col gap-4"
+          onTransitionEnd={keepInSight}
+        >
+          {/* Its space opens and closes smoothly (the No Snap Rule). */}
+          <OpeningSpace>
+            {refusal !== undefined && (
+              <Alert variant="destructive" data-testid="refusal">
+                <AlertTitle>The Part was not saved.</AlertTitle>
+                <AlertDescription>{refusal}</AlertDescription>
+              </Alert>
+            )}
+          </OpeningSpace>
+          <Button
+            type="submit"
+            className={cn(
+              'self-start @max-[40rem]/part-form:self-stretch',
+              busy && 'disabled:opacity-100',
+            )}
+            disabled={busy}
+          >
+            {/* Both words in one cell, so that the button keeps the width of
+                the longer while it waits; only the shown one names it. */}
+            <span className="grid">
+              <span className={cn('col-start-1 row-start-1', busy && 'invisible')}>
+                {submitLabel}
+              </span>
+              <span className={cn('col-start-1 row-start-1', !busy && 'invisible')}>
+                {busyLabel}
+              </span>
+            </span>
+          </Button>
+        </div>
       </form>
     </FormProvider>
   );

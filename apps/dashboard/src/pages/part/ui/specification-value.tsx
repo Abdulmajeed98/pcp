@@ -1,6 +1,7 @@
 import type { SpecificationResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 import { CircleAlertIcon } from 'lucide-react';
 
 import { labelOf } from '@/entities/category';
@@ -48,13 +49,13 @@ export function NotKnown() {
 }
 
 // A needed specification the Part holds no value for: something the Admin
-// has to fill in for its Compatibility Rule to check, so it is in Action Red,
-// with a mark and in words.
+// has to fill in for its Compatibility Rule to check, so it is in Action Red
+// at weight 550, with a circled exclamation mark and in words.
 export function NeededNotKnown() {
   return (
     <span
       data-testid="missing-needed"
-      className="inline-flex items-center gap-1.5 font-medium text-destructive"
+      className="inline-flex items-center gap-1.5 font-[550] text-destructive"
     >
       <CircleAlertIcon aria-hidden="true" className="size-4 shrink-0" />
       Needed, not known
@@ -62,8 +63,15 @@ export function NeededNotKnown() {
   );
 }
 
-// A list of rows, one row of the table for each, under its fields' labels.
-// An empty list says that the Part has none.
+// Whether a specification is a number, whose column is set flush with the
+// end side so that its digits line up.
+function isANumber({ kind }: SpecificationResponse): boolean {
+  return kind === 'wholeNumber' || kind === 'decimalNumber';
+}
+
+// A list of rows, one row of the table for each, under its fields' labels,
+// the numbers flush with the column's end. An empty list says that the Part
+// has none.
 function Rows({
   specification,
   rows,
@@ -75,11 +83,16 @@ function Rows({
   const fields = specification.fields ?? [];
 
   return (
-    <Table>
+    <Table aria-label={specification.label}>
       <TableHeader>
         <TableRow>
           {fields.map((field) => (
-            <TableHead key={field.path}>{labelOf(field)}</TableHead>
+            <TableHead
+              key={field.path}
+              className={cn('last:pe-0', isANumber(field) && 'text-end')}
+            >
+              {labelOf(field)}
+            </TableHead>
           ))}
         </TableRow>
       </TableHeader>
@@ -88,7 +101,15 @@ function Rows({
           // The rows have no identity of their own, and are never reordered.
           <TableRow key={index}>
             {fields.map((field) => (
-              <TableCell key={field.path}>
+              <TableCell
+                key={field.path}
+                className={cn(
+                  // Rows inside a specification are a list of details, not a
+                  // screen's table: 36 pixels each (break-ui).
+                  'h-9 py-1.5 last:pe-0',
+                  isANumber(field) && 'text-end tabular-nums',
+                )}
+              >
                 <SpecificationValue specification={field} value={row[field.path]} />
               </TableCell>
             ))}

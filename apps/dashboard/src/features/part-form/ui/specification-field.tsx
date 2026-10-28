@@ -103,7 +103,9 @@ function SingleValueField({
 
   return (
     <Field>
-      <div className="flex flex-wrap items-center gap-2">
+      {/* As high whether or not it holds the Needed mark, so that two fields
+          side by side start their controls on one line. */}
+      <div className="flex min-h-5 flex-wrap items-center gap-2">
         <FieldLabel htmlFor={id}>{labelOf(specification)}</FieldLabel>
         {neededId !== undefined && <NeededMark id={neededId} />}
       </div>
@@ -159,13 +161,13 @@ function SeveralOfField({
 
   return (
     <FieldSet
-      className="gap-1 sm:col-span-2"
+      className="col-span-full gap-1"
       aria-describedby={describedBy(neededId, error && errorId)}
     >
       <FieldLegend variant="label" className="mb-1">
         <Legend specification={specification} neededId={neededId} />
       </FieldLegend>
-      <div className="grid grid-cols-2 gap-x-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-x-4 @min-[40rem]/part-form:grid-cols-3">
         {specification.values?.map((value) => (
           <label key={value} className="flex min-h-control items-center gap-3 text-base">
             <input

@@ -7,7 +7,7 @@ import {
   usePageInTheAddress,
   useWideScreen,
 } from '@/shared/lib';
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, OpenedBesideAList } from '@/shared/ui';
 
 import { ListedVendors } from './listed-vendors';
 
@@ -37,7 +37,11 @@ export function VendorsPage() {
         <TheList />
       </div>
       {opened !== null && (
-        <div className="col-span-5 min-w-0 border-s border-border ps-6">{opened}</div>
+        <div className="col-span-5 min-w-0 border-s border-border ps-6">
+          {/* One h1 to a page (the owner's "h2 on a desk", redesign ticket
+              08): the opened screen's title is of the second level. */}
+          <OpenedBesideAList>{opened}</OpenedBesideAList>
+        </div>
       )}
     </div>
   );
