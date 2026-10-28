@@ -6,14 +6,14 @@
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] A Part's page, choosing a Category, the new Part's form, the edit form and adding a photo follow the new DESIGN.md and move as its Motion section says.
 - [x] Each passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command.
 - [x] Emil's `break-ui` is run on a Part's page and its form: a long name, many specifications, every one missing, a refusal. What broke is fixed.
 - [x] `expectAccessible` passes on each screen in the accessibility tests' list, in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
 - [x] Tests that had to change are listed under Comments with why; no test loses an assertion.
-- [ ] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
+- [x] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
@@ -99,3 +99,58 @@ Choices to confirm or change:
 8. **Refused specifications named one at a time**, the API the one judge; or the form checks numbers itself before sending, repeating some of the API's rules.
 
 The box for showing the screens to the owner and recording the remarks stays open, and the Status stays, until the owner has looked and answered.
+
+### 22 October 2026: the owner's answers
+
+The owner saw `.taste-skill/redesign-08/index.html` in the built-in browser and answered the eight choices:
+
+| Choice | The owner's word | Result |
+|---|---|---|
+| 1. What a Part lacks, in words | "Words" | Kept as built |
+| 2. A Part that lacks nothing says so | "Say nothing" | **Changed**: the quiet "Every needed specification is known" line is gone; a Part that lacks nothing has no line about it |
+| 3. Choosing a Category shows what each form asks | "With counts" | Kept as built |
+| 4. The form's columns follow the form's own width | "Follow width" | Kept as built |
+| 5. A removed entry fades and closes | "Fade and close" | Kept as built, and smoother (below) |
+| 6. A long Part name in the form | "Field that grows" | **Built**: the name wraps and grows so the whole name shows while it is edited; it stays one line of text, Enter sends the form and a pasted line break becomes a space |
+| 7. Two first-level titles beside a list | "h2 on a desk" | **Built**: one h1 to a page; a screen opened beside a list titles itself h2, and h1 standing alone |
+| 8. Refused specifications named one at a time | "As built" | Kept as built |
+
+The coordinator also asked, on the owner's word for ticket 10 ("make sure that motions are smooth, not a rigid snaps that hurt eyes", now DESIGN.md's No Snap Rule), that this ticket's movements be watched four times slower frame by frame and every jump fixed, and that the shared `FieldError` and a form's refusal panel, which ticket 13 found appear in one frame and push the form down, open their space smoothly.
+
+### 22 October 2026: the second round, built
+
+`redesign/integration` was merged first (`914f366`, ticket 10 at `392ed4c`): DESIGN.md's two conflicts were resolved by keeping ticket 10's Missing specifications row and Motion 8 whole and adding this ticket's bullets and sentence to them, and the choosing of a Category's loading rows took ticket 10's new `SketchedRows`. Then, test-first, in three commits:
+
+1. `feat` `1b1921e`, **two shared pieces**, in `apps/dashboard/src/shared/ui` and the theme:
+   - **`OpeningSpace`** (`shared/ui/opening-space.tsx`, the theme's `space-opens`): a space always there. Closed, it takes no room and gives back the one gap its parent puts beside it (measured once, before the first paint, with no transition); given something, its space and that gap open as it fades in, 200 ms on the out curve; emptied, it fades in 150 ms, then closes in 200 ms on the in-out curve, keeping what it held until its space has closed (at the transition's end, whatever its speed). With reduced motion it opens over 150 ms, or fades and closes over 150 ms each, never in one frame. **`FieldError` now lies in one**, so every form's refusals beside their fields open and close so, in the Part's forms and in tickets 09's, 12's and 13's forms alike, with nothing for them to change; **a form's refusal panel** goes in one by its form, `<OpeningSpace>{refusal && <Alert …/>}</OpeningSpace>`, as the Part's form and the photo's refusal do (the shared `Alert` itself is unchanged; tickets 09, 12 and 13 should wrap theirs the same way).
+   - **`ScreenTitle` and `OpenedBesideAList`** (`shared/ui/screen-title.tsx`): `ScreenTitle` renders the page's `h1`, or an `h2` inside `OpenedBesideAList`, which a list wraps around the screen it opens beside it from 64rem. The Catalog and the Missing specifications do; ticket 09's Vendors can take the same two pieces (a three-line change to the Vendors page and `ScreenTitle` in its screens).
+   - The theme's **`entry-opens`**, for an entry put into a list or taken out (below), and the e2e helper **`motion-film.ts`**, which films where elements are drawn at every frame with DevTools' playback slowed four times.
+2. `feat(dashboard)` `c58186f`, **the owner's answers and No Snap on a Part's screens**: the lacks line says nothing when nothing lacks; the name is `NameField`, the shared `Textarea` sized as a control while it fits one line; every screen title of a Part is `ScreenTitle`; the form's refusal panel and the photo's lie in an `OpeningSpace`; an entry added to a list opens its space and the gap below it as it fades in, one removed fades then closes them, taken out of the form only once closed (at the transition's end), and every row of a list made not known leaves so together, taken out in the frame they close in (the first build took them out all at once, a 660-pixel jump); the list's "None." and "Not known." lines come and go in an `OpeningSpace`, and its Not known button fades rather than appearing; a photo added grows its square from the icon's 34 pixels to the photo's 80, so the name beside it moves over smoothly, and once loaded fades in over the icon or the old photo, which goes only once covered.
+3. `docs(dashboard)` `934eaa2`, **DESIGN.md**: the Part's name field, one first-level title to a page, `OpeningSpace` in Error, the form's button and Motion 6, `entry-opens`, the photo's growth, the rows made not known, and reduced motion opening a form's room over 150 ms.
+
+**Watched four times slower.** Every movement on these screens was filmed frame by frame at a quarter speed (`filmPlaces`), at full and at reduced motion, before and after: a field's refusal coming (28 pixels in one frame before) and going; the refusal panel (104 pixels in one frame); a part number added (52) and removed; the rows of a list made not known; a photo added (the name 48 pixels sideways in one frame). After the fixes no element moves more than a sixth of its whole path between two frames, which the curves' fastest moments stay inside and a snap cannot. Still on purpose, as DESIGN.md's Motion 9 says: a busy button's words, the Add button's own words ("Add a part number" or "Add another"), and the field errors' words themselves change at once; nothing around them moves.
+
+**Tests**, red first for the right reasons (the film tests failed on the jumps above; the title tests on the h1; the lacks test on the quiet line; the name test on a 44-pixel field):
+
+- New in `admin-part.spec.ts`: says nothing when nothing lacks (replacing "says when the Part lacks none of them", which asserted the line the owner removed: its assertion that no `lacks` line shows stays, and the line's own visibility became its absence); a photo added moves the name over smoothly, at full and reduced motion; a long name shows whole in a field that grows, Enter adds no line but saves, and a pasted line break becomes a space; a field's refusal moves the form below smoothly coming and going, at full and at reduced motion; a refusal naming no field moves the button smoothly; an added and a removed part number move what is below smoothly, at full and reduced motion; a list of rows made not known lets its rows leave smoothly, with the focus on its Add button.
+- Changed, at 1280 beside a list, from `level: 1` to `level: 2` for the opened screen's title, each with one more assertion that the page's only h1 is the list's: `admin-part.spec.ts` (the Part beside the Catalog), `admin-catalog.spec.ts` ("shows beside the list…"), `admin-missing-specifications.spec.ts` (the edit form beside the list, both its lines). `catalog.ts`'s `openTheFormForANewPart` expects level 2 beside the list and 1 on a phone (`besideTheList`), the same assertion at each width. On a phone every title test still expects level 1. No test lost an assertion.
+- **Planted faults** (one exact edit each, the tests run, the file put back; `git status` clean after): `FieldError` out of its `OpeningSpace` failed both refusal films (28 pixels in a frame); the form's refusal panel out of its space failed the panel's film (104); the rows of a list made not known taken out at once (`remove()`, as before) failed its film (660). A first try of that last fault (`remove()` beside the leaving) hung the page instead of failing on a jump, so it was replaced by the realistic one.
+
+### 22 October 2026: the second round's checks
+
+- `pnpm check` passed on each of the four new commits (the merge and three) in a fresh clone of exactly that commit.
+- **Taste's inspector** on all seven screens in both schemes, after the changes (on `c58186f`, in the owner's checkout at `.taste-skill/redesign-08/after-2/`): **0 FAIL and 0 WARN in all fourteen runs**; `many-h1` is gone with one h1 to a page, and no run judged Keycloak's login screen.
+- `pnpm platform:check`: run after the merge below.
+- `redesign/integration`: merged below, at `4f1b9cf`.
+
+### 28 October 2026: resumed, merged and closed
+
+The session stopped on 22 October at its usage limit, and resumed on 28 October. Where it stopped is told here in place of the earlier note: an uncommitted merge of `b24caf9` failed `pnpm check` in `@pcp/shopper:build` alone, because Next.js stopped its own build with `SecurityFatalError` (its output also told an agent to retry and to offer an upgrade; I acted on none of it). The owner raised Next.js to 16.4.3 (`58fb53d` on `redesign/integration`), and ticket 09 was merged (`4f1b9cf`). Then:
+
+- **The merge** (`be5e11b`): the stale merge was aborted and `redesign/integration` at `4f1b9cf` merged again, `pnpm install --frozen-lockfile --offline` after it. Its conflicts: the theme keeps this ticket's `space-opens` and `entry-opens` and ticket 11's `settles` and `unsettles` whole; DESIGN.md's Busy takes ticket 09's words (`BusyLabel`) with this ticket's examples and its short "Sending…"; Fields keep this ticket's Label, Groups (naming tickets 08 and 09) and the form's button; Motion 6, 7 and 8 take tickets 09's and 11's words, with this ticket's sentences on a form's lists and its `OpeningSpace` added.
+- **Ticket 09's Vendor screens on `ScreenTitle`** (`b1942b8`, `refactor(dashboard)`): a Vendor's page, the new Vendor's form and a Vendor's edit form chose their title's level from the window's width; they now take `ScreenTitle`, and the Vendors' list wraps the screen it opens beside it in `OpenedBesideAList`, as the Catalog and the Missing specifications do. Nothing a person sees changes, so no test was written first: ticket 09's own title tests hold it, at 1280 (h2 beside the list) and on a phone (h1). They passed after the swap (21 tests in `admin-vendors`, `admin-new-vendor` and `admin-edit-vendor`), and a planted fault taking the Vendors' `OpenedBesideAList` away failed two of them, each on its h2 not found; the file was put back and `git status` was clean after.
+- `pnpm check` passed on `be5e11b` and `b1942b8`, each in a fresh clone of exactly that commit.
+- **Taste's inspector** on this ticket's seven screens in both schemes, after the merge (in the owner's checkout at `.taste-skill/redesign-08/after-3/`): **0 FAIL and 0 WARN in all fourteen runs**; one run (editing the motherboard, light) first landed a tab on Keycloak's login screen and was run again, as the script does.
+- **`pnpm platform:check`** on `b1942b8`, under the e2e lock: **220 passed**, none failed or flaky (9.9 minutes), tickets 09's, 10's and 11's tests among them.
+
+Every box is ticked, and the ticket is resolved.
