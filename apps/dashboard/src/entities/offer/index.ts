@@ -20,4 +20,5 @@ export {
   usdAmountWritten,
   usdPriceShown,
 } from './model/prices';
+export { ConfirmationLook } from './ui/confirmation-look';
 export { OfferPlate } from './ui/offer-plate';

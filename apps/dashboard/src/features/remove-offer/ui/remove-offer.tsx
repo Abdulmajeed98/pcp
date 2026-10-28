@@ -13,8 +13,10 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogRefusal,
   AlertDialogTitle,
   AlertDialogTrigger,
+  BusyLabel,
   Button,
 } from '@/shared/ui';
 
@@ -27,7 +29,10 @@ import { useRemoveOffer } from '../api/remove-offer';
 // a removal is undone only by adding the Offer again. Cancelling changes
 // nothing. A removal that is refused says what was not done, then why, in the
 // dialog, which stays open to try again, and a removal on its way keeps it
-// open too; once the Offer is removed, `onRemoved` leaves the screen.
+// open too; once the Offer is removed, `onRemoved` leaves the screen. The
+// refusal's space opens before it fades in, so that the buttons slide down
+// rather than jump (`AlertDialogRefusal`), and Remove keeps its width while
+// it waits (`BusyLabel`), as DESIGN.md's Dialogs and Buttons say.
 export function RemoveOffer({
   vendorId,
   offer,
@@ -77,11 +82,14 @@ export function RemoveOffer({
             />
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {remove.error && (
-          <p role="alert" className="text-sm text-destructive">
-            {t('RemoveOffer.notRemoved')} <WhyNotAnsweredInThePortal error={remove.error} />
-          </p>
-        )}
+        <AlertDialogRefusal>
+          {remove.error && (
+            <>
+              {t('RemoveOffer.notRemoved')}{' '}
+              <WhyNotAnsweredInThePortal error={remove.error} />
+            </>
+          )}
+        </AlertDialogRefusal>
         <AlertDialogFooter>
           <AlertDialogCancel data-testid="cancel-removal" disabled={remove.isPending}>
             {t('RemoveOffer.cancel')}
@@ -92,7 +100,11 @@ export function RemoveOffer({
             disabled={remove.isPending}
             onClick={() => remove.mutate()}
           >
-            {remove.isPending ? t('RemoveOffer.removing') : t('RemoveOffer.confirm')}
+            <BusyLabel
+              busy={remove.isPending}
+              label={t('RemoveOffer.confirm')}
+              busyLabel={t('RemoveOffer.removing')}
+            />
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

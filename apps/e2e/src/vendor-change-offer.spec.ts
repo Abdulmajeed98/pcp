@@ -217,6 +217,85 @@ test.describe('a made-up Vendor with Offers added over HTTP', () => {
   });
 });
 
+// An Offer's own screen as the dashboard's DESIGN.md lays it out (redesign
+// ticket 12): under its title the leading plate, the Offer's price as
+// Shoppers see it, with its Confirmation beside it, muted when out of
+// stock; then the form, and below it Remove the Offer on a row of its own,
+// as wide as the form on a phone.
+test.describe("an Offer's own screen, as a made-up Vendor", () => {
+  let vendor: VendorLoginDetails;
+
+  test.beforeAll(async ({ browser }) => {
+    vendor = await aMadeUpVendorThatHasLoggedIn(browser);
+  });
+
+  test('leads with the Offer on one large plate, both prices on it, with its Confirmation beside it, and Remove the Offer below the form as wide as it', async ({
+    page,
+    browser,
+  }) => {
+    const offerId = await asTheAdmin(browser, async (request, authorization) => {
+      const part = await createAMadeUpPart(request, authorization);
+      return addAnOffer(request, authorization, vendor.vendorId, part.id, {
+        usdPrice: '1250.50',
+        iqdPrice: 1_875_000,
+      });
+    });
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/offers/${offerId}`);
+    const screen = theOfferScreen(page);
+    await expect(theOfferForm(page)).toBeVisible();
+
+    const plate = screen.getByTestId('leading-plate').locator('[data-slot="plate"]');
+    await expect(plate).toHaveCount(1);
+    await expect(plate.getByTestId('usd-price')).toHaveText('1,250.50 $');
+    await expect(plate.getByTestId('iqd-price')).toHaveText('1,875,000 IQD');
+    await expect(plate.getByTestId('usd-price')).toHaveCSS('font-size', '30px');
+    await expect(plate).toHaveCSS('border-top-left-radius', '6px');
+    await expect(plate).not.toHaveAttribute('data-muted', '');
+    await expect(
+      screen.getByTestId('leading-plate').getByTestId('confirmation'),
+    ).toHaveAttribute('data-state', 'today');
+    await expect(screen.locator('[data-slot="plate"]')).toHaveCount(1);
+
+    const title = await screen.getByRole('heading', { level: 1 }).boundingBox();
+    const plateBox = await plate.boundingBox();
+    const form = await theOfferForm(page).boundingBox();
+    const remove = await removeTheOffer(page).boundingBox();
+    expect(plateBox?.y ?? 0, 'the plate is under the title').toBeGreaterThan(title?.y ?? 0);
+    expect(form?.y ?? 0, 'and above the form').toBeGreaterThan(plateBox?.y ?? 0);
+    expect(remove?.y ?? 0, 'Remove is below the form').toBeGreaterThanOrEqual(
+      (form?.y ?? 0) + (form?.height ?? 0),
+    );
+    expect(remove?.width, 'and as wide as it on a phone').toBeCloseTo(form?.width ?? 0, 0);
+    await expectNoSidewaysScroll(page);
+  });
+
+  test("an Offer out of stock leads with its plate muted, and an Offer's screen meets the automated part of WCAG 2.2 level AA from 64rem", async ({
+    page,
+    browser,
+  }) => {
+    const offerId = await asTheAdmin(browser, async (request, authorization) => {
+      const part = await createAMadeUpPart(request, authorization);
+      return addAnOffer(request, authorization, vendor.vendorId, part.id, {
+        iqdPrice: 150_000_000,
+        inStock: false,
+      });
+    });
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/offers/${offerId}`);
+
+    const plate = theOfferScreen(page)
+      .getByTestId('leading-plate')
+      .locator('[data-slot="plate"]');
+    await expect(plate).toHaveAttribute('data-muted', '');
+    await expect(plate.getByTestId('iqd-price')).toHaveText('150,000,000 IQD');
+    await expect(plate.getByTestId('usd-price')).toHaveCount(0);
+    const form = (await theOfferForm(page).boundingBox())?.width ?? 0;
+    expect(form).toBeLessThanOrEqual(640);
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+});
+
 test.describe("the in-stock switch's thumb, as a made-up Vendor", () => {
   let vendor: VendorLoginDetails;
 
