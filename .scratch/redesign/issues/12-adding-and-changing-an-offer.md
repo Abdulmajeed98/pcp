@@ -6,14 +6,14 @@
 
 **Blocked by:** 11
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The catalog search, the Offer form, an Offer's screen, the removal's dialog and an Offer that no longer exists follow the new DESIGN.md and move as its Motion section says, mirrored in right-to-left.
 - [x] Each passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command, in Kurdish and in English.
-- [ ] Emil's `break-ui` and `mobile-native` are run on the search and the form: a long Part name, nothing found, every field refused; typing a price with a thumb at 360 pixels. What broke is fixed.
+- [x] Emil's `break-ui` and `mobile-native` are run on the search and the form: a long Part name, nothing found, every field refused; typing a price with a thumb at 360 pixels. What broke is fixed.
 - [x] Each passes `checkInEveryLanguageOfTheVendorPortal`. `expectAccessible` passes on each screen in the accessibility tests' list, in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
 - [x] Tests that had to change are listed under Comments with why; no test loses an assertion.
-- [ ] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
+- [x] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
@@ -111,3 +111,38 @@ With Impeccable's `document`: the catalog search's search in the sheet at every 
 11. **Left for hosting:** the keyboard over the form's button and the number pads on a real phone, in the MVP spec's list.
 
 The boxes for break-ui and mobile-native (their by-hand check on a phone waits for hosting), for showing the screens to the owner, and the Status, stay as they are until the owner has looked and answered.
+
+### 28 October 2026: the owner's answers
+
+The orchestrator opened `.taste-skill/redesign-12/index.html` for the owner in the built-in browser, and the owner answered the eleven choices:
+
+| Choice | The owner's word | Result |
+|---|---|---|
+| 1. The API reads one Offer with its expiry | "Keep it" | Kept as built |
+| 2. The catalog search in the sheet at every width | "In the page" | Kept as built |
+| 3. The form's 40rem column with the sheet's end side empty | "Part beside form" | **Built**, below |
+| 4. No Search button | "No button" | Kept as built |
+| 5. A table of Part and Part numbers from 64rem | "Table from 64rem" | Kept as built |
+| 6. The leading plate's Confirmation in its state's look | "State colour" | Kept as built |
+| 7. A long Part name inside the removal dialog's sentence | "Own line" | **Built**, below |
+| 8. Remove keeps the width of "Removing…" | "Keep width" | Kept as built |
+| 9. An Offer gone at the head of the sheet | "Centred in window" | **Built**, below |
+| 10. The refusal panel above the prices | "Above the button" | **Built**, below; it replaces the owner's choice of 20 October 2026 |
+| 11. The keyboard over the form's button and real number pads wait for hosting | "Accept" | In the MVP spec's list of checks on a phone (this ticket's line, added before) |
+
+**Built, test first** (commit `3378570`, `feat`), each under the No Snap Rule. Red first, each for the right reason: the refusal found at the form's head, 164 pixels down where it was expected below the last field; the Part's panel found inside the form at 1280; the gone state's middle 81 pixels above the window's; the Part's name found below the sentence's top, inside it. The phone's line, that the Part stays at the head of the form, passed before and after.
+
+- **"Part beside form":** from 64rem the form keeps its 40rem column, and the Part's panel (`part-beside.tsx`) stands beside it on its end side, level with its head, on Raised Stone with 8-pixel corners: its picture or its Category's icon, its name, manufacturer and Category, its part numbers, and then its specifications that hold a value, a row each, the label in Note Grey and the value beside it, English and left to right, yes and no in the portal's language. The specifications come from the Part's own read (`usePart`, which the form for a new Offer has already made, and which an Offer's screen now asks for), by its Category's list. Remove the Offer stays below the form in the form's column (`OfferForm`'s new `after`). On a phone the Part stays at the form's head as it was. The test makes a Part with a socket and a core count, finds both listed beside the form, 16 pixels or more past the form's end, and on the left in Kurdish.
+- **"Above the button":** a refusal that names no field opens in its `OpeningSpace` just above the form's button; the test asks for a second Offer for a Part already offered, finds the panel below the warranty and directly above the button, and films the button sliding down, slowed fourfold, never most of the way in one frame.
+- **"Own line":** the removal dialog names the Part on a line of its own under its question, at weight 550, left to right (`AlwaysEnglish`, its box on the start side, its lines starting on its left), in every language; its sentence no longer holds the name ("…your Offer for this Part…", reworded in the three languages), and the dialog is described by the name and the sentence together. The test reads both in Kurdish and in English: the name under the question and above the sentence, left to right and kept apart, outside the sentence, and the dialog's description beginning with the name.
+- **"Centred in window":** an Offer gone is the empty state centred in the window's height below the screen's title, through ticket 13's `useCentredInTheWindow`, its icon plain and its Rule lines dropped, as the not-found screens are; the test checks it with ticket 13's `expectTheEmptyState` and `expectCentredInTheWindow`.
+
+**Tests that changed**, with no assertion lost: the 64rem form test now finds the Part beside the form, not in it, and adds the specifications and the mirror; the gone test adds the centring.
+
+**DESIGN.md** is corrected for all four: the Offer form's Layout and its component (the Part beside it from 64rem, with its specifications; the refusal above the button), Removing an Offer (the name's own line, the sentence, the description), and An Offer that no longer exists (centred).
+
+**Taste's inspector** again on what changed (`.taste-skill/redesign-12/inspect-2/` in the owner's checkout), at 1440, 768 and 360, English and Kurdish, light and dark, 0 FAIL in all twelve runs: the form 0 WARN (its `hero-void` is gone, the Part beside it); an Offer's screen 1 WARN, `mixed-font-headline`, the leading plate as before; an Offer gone 2 WARN, `hero-void` and `panel-void` for the space around the centred state, which the owner chose, defended as ticket 13 defends the not-found screens'. The catalog search did not change.
+
+**The checks:** `pnpm check` before the commit; the Offer screens' and the languages' end-to-end lines, 74 passed under the lock; `pnpm platform:check` on `3378570`: **245 passed**, none failed or flaky (11.3 minutes), under the scratchpad's e2e lock. `redesign/integration` had not moved since `89a9970`, which this branch holds.
+
+Every box is ticked: break-ui and mobile-native were run and what broke is fixed or answered by the owner, and their checks by hand on a real phone wait for hosting, as the owner accepted (choice 11), in the MVP spec's list. The ticket is resolved.
