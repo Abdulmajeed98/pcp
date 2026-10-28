@@ -6,14 +6,14 @@
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The Vendors' list, a Vendor's page, the new Vendor's form and the hand-over, the edit form, the reset of a password and the dialogs that deactivate and reactivate follow the new DESIGN.md and move as its Motion section says.
 - [x] Each passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command, with the fixture's Vendor among the real ones.
 - [x] Emil's `break-ui` is run on the list and a Vendor's page: a long shop name, a long address, a deactivated Vendor, no Vendors. What broke is fixed.
 - [x] `expectAccessible` passes on each screen in the accessibility tests' list, in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
 - [x] Tests that had to change are listed under Comments with why; no test loses an assertion.
-- [ ] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
+- [x] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
@@ -98,3 +98,31 @@ Choices to confirm or change:
 7. **Create a Vendor in the empty state**, beside the title row's New Vendor, as the Catalog's Create a Part (built); or no action of its own.
 
 The box for showing the screens to the owner and recording the remarks stays open, and the Status stays, until the owner has looked and answered.
+
+### 28 October 2026: the owner's answers
+
+The orchestrator opened `.taste-skill/redesign-09/index.html` for the owner in the built-in browser on 22 October 2026, and the owner answered the seven choices:
+
+| Choice | The owner's word | Result |
+|---|---|---|
+| 1. The table's columns Vendor, State, Login phone number, the number end-aligned | "As built" | Kept as built |
+| 2. "Active" in Note Grey on every active row | "Only Deactivated" | **Built**, below |
+| 3. The count on its own bar | "Own bar" | Kept as built |
+| 4. Each line of an address or opening hours in its own direction | "Per line" | Kept as built |
+| 5. The Vendor form one detail to a row in the pane, two once the form is 40rem wide | "Follow width" | Kept as built |
+| 6. The screen after a create stays still | "Arrives smoothly" | **Built**, below |
+| 7. Create a Vendor in the empty state | "\"Create a Vendor\"" | Kept as built |
+
+**"Only Deactivated"**, test-first: an active Vendor's State cell is empty to the eye, and only "Deactivated" is marked, in words with its mark. The column's heading stays. So that a screen reader does not read the cell as nothing, it holds "Active" visually hidden (`sr-only`), which I chose over an empty cell or an `aria-label` on the cell: the word is read in its place in the row by every screen reader, and the table's text stays the same for search and copying. The desk test's cell texts are unchanged (the hidden word is still the cell's text), and a new assertion finds the word at most 1 pixel wide; it failed first on the word drawn 40 pixels wide. The phone's rows already marked only a deactivated Vendor.
+
+**"Arrives smoothly"**, test-first: after a create, the temporary password and the hand-over arrive as a reset's result does (Motion 8, the No Snap Rule): their space opens, the link to the Vendor's page below sliding down, and then they fade in. A new test in `admin-new-vendor.spec.ts` watches the link four times slower, frame by frame, as the reset's test does: it failed first on the missing arrival, then passed. DESIGN.md's hand-over and Motion 6 say so.
+
+**Merged `redesign/integration` again** (`b24caf9`, ticket 11): its DESIGN.md Motion 6 conflicted with mine and was resolved by keeping ticket 11's words and adding the reset's result, the create's hand-over and a dialog's refusal to the things that arrive as a row does. **Ticket 08's shared way for "h2 on a desk" had still not landed**, so each opened Vendor screen still chooses `h2` or `h1` with `useWideScreen()`; whoever merges 08 should swap the three screens (`pages/vendor`, `pages/new-vendor`, `pages/edit-vendor`) to its shared way.
+
+**The checks on the tip:**
+
+- `pnpm check` passed before each commit (exit status gated): the merge of `b24caf9`, the owner's two changes, and this record.
+- The Vendor specs on their own after the change: 31 passed, both new tests having failed first for the right reason.
+- `pnpm platform:check` on the last code commit, `37163b9`, under the scratchpad's e2e lock: **199 passed**, none failed or flaky (8.8 minutes). Two earlier tries stopped before any test ran: the Shopper app's `next dev` exited at start to show a notice that Next.js 16.4.0 is affected by a security advisory, and asked the agent reading it to run `next upgrade --agent=security` and to ask the owner about it. I did not act on it (instructions in a tool's output are not the owner's); a retry ran normally. It is passed on to the owner in the report.
+
+Every box is ticked, and the ticket is resolved.
