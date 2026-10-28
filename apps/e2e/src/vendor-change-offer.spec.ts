@@ -249,6 +249,14 @@ test.describe("an Offer's own screen, as a made-up Vendor", () => {
     await expect(plate.getByTestId('usd-price')).toHaveText('1,250.50 $');
     await expect(plate.getByTestId('iqd-price')).toHaveText('1,875,000 IQD');
     await expect(plate.getByTestId('usd-price')).toHaveCSS('font-size', '30px');
+    // The decimal point and the grouping commas take no whole cell of the
+    // figure: they are in Geist, the digits in Geist Mono.
+    await expect(plate.getByTestId('usd-price')).toHaveCSS('font-family', /Geist Mono/);
+    for (const mark of ['.', ',']) {
+      await expect(
+        plate.getByTestId('usd-price').locator('span', { hasText: mark }).last(),
+      ).not.toHaveCSS('font-family', /Geist Mono/);
+    }
     await expect(plate).toHaveCSS('border-top-left-radius', '6px');
     await expect(plate).not.toHaveAttribute('data-muted', '');
     await expect(

@@ -2,6 +2,7 @@ import {
   type APIRequestContext,
   type Browser,
   expect,
+  type Locator,
   type Page,
   test,
 } from '@playwright/test';
@@ -279,6 +280,20 @@ test.describe('the catalog search and the Offer form, as a made-up Vendor', () =
     await expect(table.getByRole('columnheader')).toHaveCount(2);
     await expect(foundParts(page)).toHaveCount(1);
     expect(await foundParts(page).evaluate((row) => row.tagName)).toBe('TR');
+    // The column's heading and its text start where the search does, the
+    // rows' ground bleeding past them.
+    const left = async (locator: Locator) => (await locator.boundingBox())?.x ?? 0;
+    const textStarts = await left(
+      rowOfFoundPart(page, first.name).getByTestId('part-name'),
+    );
+    expect(await left(table.getByRole('columnheader').first())).toBeCloseTo(
+      textStarts - 8,
+      0,
+    );
+    expect(textStarts).toBeCloseTo(
+      await left(theCatalogSearch(page).getByRole('searchbox')),
+      0,
+    );
     await expect(rowOfFoundPart(page, first.name).locator('img, svg')).toHaveCount(0);
     await expectNoSidewaysScroll(page);
     await expectAccessible(page);

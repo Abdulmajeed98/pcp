@@ -81,7 +81,8 @@ function Offered({ part }: { part: FoundPartResponse }) {
 
 // From 64rem: a table of two columns, Part and Part numbers, the Part's
 // given half the table. The rows bleed 8 pixels past the text on each side,
-// and every cell starts at the row's top.
+// the headings starting where their column's text does, and every cell
+// starts at the row's top.
 export function FoundPartsTable({ parts }: { parts: readonly FoundPartResponse[] }) {
   const { t } = useTranslation();
 
@@ -90,8 +91,8 @@ export function FoundPartsTable({ parts }: { parts: readonly FoundPartResponse[]
       <Table aria-label={t('CatalogSearch.listLabel')}>
         <TableHeader>
           <TableRow className="border-b-0">
-            <TableHead className="w-1/2 ps-2">{t('CatalogSearch.part')}</TableHead>
-            <TableHead className="pe-2">{t('CatalogSearch.partNumbers')}</TableHead>
+            <TableHead className="w-1/2 first:ps-2">{t('CatalogSearch.part')}</TableHead>
+            <TableHead className="last:pe-2">{t('CatalogSearch.partNumbers')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="border-t border-rule [&_tr:last-child]:border-b">
@@ -102,13 +103,13 @@ export function FoundPartsTable({ parts }: { parts: readonly FoundPartResponse[]
               data-offered={part.offerId !== null}
               className="hover-colour relative hover:bg-secondary"
             >
-              <TableCell className="py-3.5 ps-2 align-top">
+              <TableCell className="py-3.5 align-top first:ps-2">
                 <div className="flex flex-col gap-1">
                   <PartNamed part={part} />
                   <Offered part={part} />
                 </div>
               </TableCell>
-              <TableCell className="py-3.5 pe-2 align-top">
+              <TableCell className="py-3.5 align-top last:pe-2">
                 <PartNumbers part={part} className="block w-fit max-w-full" />
               </TableCell>
             </TableRow>

@@ -52,19 +52,23 @@ export function OfferPlate({
 }
 
 // One price: its figure, then its unit after a space, the unit smaller and
-// in Geist. The figure's grouping commas are set in Geist too, so that a
-// comma does not take a whole cell of the figure: "266,000", never
-// "266 , 000". Each price is English, left to right and kept apart from what
+// in Geist. The figure's grouping commas and its decimal point are set in
+// Geist too, so that neither takes a whole cell of the figure: "266,000"
+// and "349.99", never "266 , 000" or "349 . 99" (redesign ticket 12). Each price is English, left to right and kept apart from what
 // is around it on its own, as the plate is (LANG-3, LANG-5).
 function Price({ testId, figure, unit }: { testId: string; figure: string; unit: string }) {
-  const groups = figure.split(',');
+  // The figure's digits, and the comma or point between each run of them.
+  const pieces = figure.split(/([,.])/);
 
   return (
     <AlwaysEnglish data-testid={testId} className="whitespace-nowrap">
-      {groups.map((group, index) => (
+      {pieces.map((piece, index) => (
         <Fragment key={index}>
-          {index > 0 && <span className="font-sans">,</span>}
-          {group}
+          {piece === ',' || piece === '.' ? (
+            <span className="font-sans">{piece}</span>
+          ) : (
+            piece
+          )}
         </Fragment>
       ))}{' '}
       <span className="font-sans text-sm font-medium text-plate-unit group-data-[muted]/plate:text-plate-muted-figure">
