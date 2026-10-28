@@ -1,7 +1,11 @@
 import { describe, expect, it } from '@jest/globals';
 import type { VendorsOffersPageResponse } from '@pcp/api-client';
 
-import { answerFromTheMadeUpShop } from '../made-up-shop.ts';
+import {
+  answerFromTheMadeUpShop,
+  listsTheVendors,
+  vendorsWithTheShops,
+} from '../made-up-shop.ts';
 import { aShopFromTheCatalog, now } from './catalog-stand-in.ts';
 
 const shop = aShopFromTheCatalog();
@@ -10,14 +14,17 @@ const vendorId = shop.vendor.id;
 const aDay = 24 * 60 * 60 * 1000;
 
 function offersPage(
-  { search = '', at = now, page = 0, size = 50 } = {} as {
+  { search = '', state = '', at = now, page = 0, size = 50 } = {} as {
     search?: string;
+    state?: string;
     at?: Date;
     page?: number;
     size?: number;
   },
 ): VendorsOffersPageResponse {
-  const query = search === '' ? '' : `&search=${encodeURIComponent(search)}`;
+  const query =
+    (search === '' ? '' : `&search=${encodeURIComponent(search)}`) +
+    (state === '' ? '' : `&state=${state}`);
   const answer = answerFromTheMadeUpShop(shop, at, {
     method: 'GET',
     path: `/v1/vendors/${vendorId}/offers?page=${page}&size=${size}${query}`,
@@ -88,6 +95,29 @@ describe("the made-up shop's Offers", () => {
     expect(page.counts).toEqual(offersPage().counts);
   });
 
+  it('are found by state, those that need confirming or those out of stock, and the out of stock are counted', () => {
+    const all = offersPage().content;
+    const needConfirming = offersPage({ state: 'needs-confirming' });
+    const outOfStock = offersPage({ state: 'out-of-stock' });
+
+    expect(needConfirming.content.map((offer) => offer.id)).toEqual(
+      all.filter((offer) => offer.expired || offer.aboutToExpire).map((offer) => offer.id),
+    );
+    expect(needConfirming.content.length).toBe(5);
+    expect(outOfStock.content.map((offer) => offer.id)).toEqual(
+      all.filter((offer) => !offer.inStock).map((offer) => offer.id),
+    );
+    expect(outOfStock.content.length).toBe(3);
+    expect(offersPage({ state: 'all' }).content).toEqual(all);
+    expect(outOfStock.counts).toEqual({
+      offers: all.length,
+      expired: 2,
+      aboutToExpire: 3,
+      outOfStock: 3,
+    });
+    expect(needConfirming.counts).toEqual(offersPage().counts);
+  });
+
   it('come a page at a time, oldest Confirmation first', () => {
     const first = offersPage({ size: 5 });
     const all = offersPage().content;
@@ -110,30 +140,89 @@ function answerTo(method: string, path: string) {
 }
 
 describe("the made-up shop's Vendor", () => {
-  it('is the one Vendor listed, and is read by its identifier', () => {
-    const list = answerTo('GET', '/v1/vendors?page=0&size=20');
-    const one = answerTo('GET', `/v1/vendors/${vendorId}`);
+  const realVendor = (name: string, id: string) => ({
+    id,
+    name,
+    loginPhoneNumber: { international: '+9647700000000', national: '0770 000 0000' },
+    active: true,
+  });
+  const theShopsRow = {
+    id: vendorId,
+    name: shop.vendor.name,
+    loginPhoneNumber: shop.vendor.loginPhoneNumber,
+    active: true,
+  };
 
-    expect(list).toEqual({
+  it("is listed among the API's Vendors, in name order on the first page, and counted with them", () => {
+    const call = { method: 'GET', path: '/v1/vendors?page=0&size=20' };
+    const apis = {
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 2,
+      totalPages: 1,
+      first: true,
+      last: true,
+      content: [
+        realVendor('Made-up test Vendor A', 'real-a'),
+        realVendor('Made-up test Vendor B', 'real-b'),
+      ],
+    };
+
+    expect(answerTo(call.method, call.path)).toBeUndefined();
+    expect(listsTheVendors(call)).toBe(true);
+    expect(vendorsWithTheShops(shop, { status: 200, body: apis })).toEqual({
       status: 200,
       body: {
-        pageNumber: 0,
-        pageSize: 20,
-        totalElements: 1,
-        totalPages: 1,
-        first: true,
-        last: true,
-        content: [
-          {
-            id: vendorId,
-            name: shop.vendor.name,
-            loginPhoneNumber: shop.vendor.loginPhoneNumber,
-            active: true,
-          },
-        ],
+        ...apis,
+        totalElements: 3,
+        content: [apis.content[0], theShopsRow, apis.content[1]].sort((a, b) =>
+          a.name.localeCompare(b.name),
+        ),
       },
     });
-    expect(one).toEqual({ status: 200, body: shop.vendor });
+    expect(
+      vendorsWithTheShops(shop, { status: 200, body: { ...apis, content: [] } }).body,
+    ).toMatchObject({ content: [theShopsRow] });
+    expect(answerTo('GET', `/v1/vendors/${vendorId}`)).toEqual({
+      status: 200,
+      body: shop.vendor,
+    });
+  });
+
+  it("is listed alone when the API holds no Vendor, and is only counted on the API's later pages", () => {
+    const empty = {
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      last: true,
+      content: [],
+    };
+    const later = {
+      pageNumber: 1,
+      pageSize: 20,
+      totalElements: 21,
+      totalPages: 2,
+      first: false,
+      last: true,
+      content: [realVendor('Made-up test Vendor Z', 'real-z')],
+    };
+
+    expect(vendorsWithTheShops(shop, { status: 200, body: empty })).toEqual({
+      status: 200,
+      body: { ...empty, totalElements: 1, totalPages: 1, content: [theShopsRow] },
+    });
+    expect(vendorsWithTheShops(shop, { status: 200, body: later })).toEqual({
+      status: 200,
+      body: { ...later, totalElements: 22 },
+    });
+  });
+
+  it("leaves the API's refusal of the list as it is", () => {
+    const refused = { status: 401, body: { errors: [] } };
+
+    expect(vendorsWithTheShops(shop, refused)).toBe(refused);
   });
 
   it("is the Caller's own Vendor", () => {
@@ -143,11 +232,14 @@ describe("the made-up shop's Vendor", () => {
     });
   });
 
-  it('is the only Vendor there is: any other is not found, nor are its Offers', () => {
+  it('leaves any other Vendor, and its Offers, to the API, which only reads them; nothing is written to one', () => {
     const other = '11111111-1111-4111-8111-111111111111';
 
-    expect(answerTo('GET', `/v1/vendors/${other}`)?.status).toBe(404);
-    expect(answerTo('GET', `/v1/vendors/${other}/offers?page=0&size=20`)?.status).toBe(404);
+    expect(answerTo('GET', `/v1/vendors/${other}`)).toBeUndefined();
+    expect(answerTo('GET', `/v1/vendors/${other}/offers?page=0&size=20`)).toBeUndefined();
+    expect(answerTo('POST', `/v1/vendors/${other}/password`)?.status).toBe(405);
+    expect(listsTheVendors({ method: 'GET', path: `/v1/vendors/${other}` })).toBe(false);
+    expect(listsTheVendors({ method: 'POST', path: '/v1/vendors' })).toBe(false);
   });
 });
 

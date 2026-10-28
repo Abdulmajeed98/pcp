@@ -287,7 +287,22 @@ function counts(offers: readonly ListedOfferResponse[]): VendorsOfferCountsRespo
     offers: offers.length,
     expired: offers.filter((offer) => offer.expired).length,
     aboutToExpire: offers.filter((offer) => offer.aboutToExpire).length,
+    outOfStock: offers.filter((offer) => !offer.inStock).length,
   };
+}
+
+// Whether an Offer is in the state a call asks for, as the API's list of a
+// Vendor's Offers keeps them: every one, those that need confirming, or
+// those out of stock.
+function isInState(offer: ListedOfferResponse, state: string | null): boolean {
+  switch (state) {
+    case 'needs-confirming':
+      return offer.expired || offer.aboutToExpire;
+    case 'out-of-stock':
+      return !offer.inStock;
+    default:
+      return true;
+  }
 }
 
 // The paging of a list the API answers a page at a time: its page and size
@@ -323,8 +338,14 @@ const readOnly = refusal(
 );
 
 // Answers a call about Vendors or Offers from the shop, at `now`: every call
-// whose path starts with `/v1/vendors`, `/v1/offers` or `/v1/caller/vendor`.
-// Any other call is not the shop's, and is left to the API.
+// whose path starts with `/v1/vendors`, `/v1/offers` or `/v1/caller/vendor`,
+// but those that only read the real Vendors. The list of Vendors is the
+// API's, with the shop's Vendor among them (`listsTheVendors`), and another
+// Vendor's page and its Offers are the API's alone, so that the Vendors'
+// screens show the shop among the development database's real Vendors (the
+// end-to-end tests' leftovers). Every call that would write is refused, the
+// real Vendors' included. Any other call is not the shop's, and is left to
+// the API.
 export function answerFromTheMadeUpShop(
   shop: MadeUpShop,
   now: Date,
@@ -353,18 +374,9 @@ export function answerFromTheMadeUpShop(
     return { status: 200, body };
   }
 
-  if (second === undefined) {
-    const body: VendorPageResponse = paged(address, [
-      {
-        id: shop.vendor.id,
-        name: shop.vendor.name,
-        loginPhoneNumber: shop.vendor.loginPhoneNumber,
-        active: shop.vendor.active,
-      },
-    ]);
-    return { status: 200, body };
-  }
-  if (second !== shop.vendor.id) return notFound;
+  // The list of Vendors is the API's, joined with the shop's Vendor by
+  // `vendorsWithTheShops`, and any other Vendor is the API's alone.
+  if (second === undefined || second !== shop.vendor.id) return undefined;
   const [offers, offerId, ...beyond] = rest;
   if (offers === undefined) return { status: 200, body: shop.vendor };
   if (offers !== 'offers' || beyond.length > 0) return notFound;
@@ -377,7 +389,10 @@ export function answerFromTheMadeUpShop(
     .toLowerCase()
     .split(/\s+/)
     .filter((word) => word !== '');
-  const found = listedOffers.filter((offer) => holdsEveryWord(offer.part, words));
+  const state = address.searchParams.get('state');
+  const found = listedOffers.filter(
+    (offer) => isInState(offer, state) && holdsEveryWord(offer.part, words),
+  );
   const body: VendorsOffersPageResponse = {
     ...paged(address, found),
     counts: counts(listedOffers),
@@ -395,4 +410,37 @@ function listedOffersOf(shop: MadeUpShop, now: Date): ListedOfferResponse[] {
         a.confirmedAt.localeCompare(b.confirmedAt) ||
         a.part.name.localeCompare(b.part.name),
     );
+}
+
+// Whether a call asks for a page of the list of Vendors, which the API
+// answers and the shop joins (`vendorsWithTheShops`).
+export function listsTheVendors(call: ApiCall): boolean {
+  const { pathname } = new URL(call.path, 'http://api');
+  return call.method === 'GET' && /^\/v1\/vendors\/?$/.test(pathname);
+}
+
+// The API's page of the list of Vendors with the shop's Vendor among them:
+// on the first page, in name order among that page's Vendors, and counted
+// with every Vendor on every page. The first page holds one row more than
+// its size, so that the API's later pages stay as they are, and none of its
+// Vendors is lost or shown twice. A refusal is left as it is.
+export function vendorsWithTheShops(shop: MadeUpShop, api: ShopAnswer): ShopAnswer {
+  if (api.status !== 200) return api;
+  const page = api.body as VendorPageResponse;
+  const theShops: VendorPageResponse['content'][number] = {
+    id: shop.vendor.id,
+    name: shop.vendor.name,
+    loginPhoneNumber: shop.vendor.loginPhoneNumber,
+    active: shop.vendor.active,
+  };
+  const body: VendorPageResponse = {
+    ...page,
+    totalElements: page.totalElements + 1,
+    totalPages: Math.max(page.totalPages, 1),
+    content:
+      page.pageNumber === 0
+        ? [...page.content, theShops].sort((a, b) => a.name.localeCompare(b.name))
+        : page.content,
+  };
+  return { status: 200, body };
 }

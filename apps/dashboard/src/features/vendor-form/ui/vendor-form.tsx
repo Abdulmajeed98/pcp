@@ -9,6 +9,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  BusyLabel,
   Button,
   Field,
   FieldDescription,
@@ -45,13 +46,20 @@ import { vendorFormTexts } from '../model/texts';
 //
 // Given a Vendor, it is the Admin's edit of that Vendor, filled with its
 // details as they are.
+//
+// Its groups put two details to a row once the form itself is 40rem wide,
+// not the window: beside the Vendors' list, in the pane of five twelfths, it
+// keeps one to a row. While the Vendor is on its way to the API, the button
+// says so in `busyLabel` and waits.
 export function VendorForm({
   vendor,
   submitLabel,
+  busyLabel,
   save,
 }: {
   vendor?: VendorResponse;
   submitLabel: string;
+  busyLabel: string;
   // Sends the Vendor. It throws a `Refusal` when the API refuses it, and an
   // `Unreachable` when the API cannot be reached.
   save: (request: CreateVendorRequest) => Promise<unknown>;
@@ -85,7 +93,11 @@ export function VendorForm({
   }
 
   return (
-    <form noValidate className="flex flex-col gap-8" onSubmit={handleSubmit(submit)}>
+    <form
+      noValidate
+      className="@container flex flex-col gap-8"
+      onSubmit={handleSubmit(submit)}
+    >
       {refusal !== undefined && (
         <Alert variant="destructive" data-testid="refusal">
           <AlertTitle>{texts.notSaved}</AlertTitle>
@@ -95,13 +107,13 @@ export function VendorForm({
 
       <FieldSet>
         <FieldLegend>The Vendor</FieldLegend>
-        <FieldGroup className="grid sm:grid-cols-2 sm:gap-x-6">
+        <FieldGroup className="grid @min-[40rem]:grid-cols-2 @min-[40rem]:gap-x-6">
           <DetailField
             name="name"
             label="Name"
             errors={errors}
             description={`As the Vendor writes it, in any language. At most ${formatNumber(longest.name)} characters.`}
-            className="sm:col-span-2"
+            className="@min-[40rem]:col-span-2"
           >
             {(props) => (
               <Input
@@ -131,13 +143,13 @@ export function VendorForm({
         <FieldDescription className="-mt-2">
           The Vendor may change these itself, from its portal.
         </FieldDescription>
-        <FieldGroup className="grid items-start sm:grid-cols-2 sm:gap-x-6">
+        <FieldGroup className="grid items-start @min-[40rem]:grid-cols-2 @min-[40rem]:gap-x-6">
           <DetailField
             name="address"
             label="Address"
             errors={errors}
             description={`As the Vendor writes it, on as many lines as it needs. At most ${formatNumber(longest.address)} characters.`}
-            className="sm:col-span-2"
+            className="@min-[40rem]:col-span-2"
           >
             {(props) => (
               <Textarea
@@ -147,7 +159,7 @@ export function VendorForm({
               />
             )}
           </DetailField>
-          <div className="sm:col-span-2">
+          <div className="@min-[40rem]:col-span-2">
             <MapLocationField
               control={control}
               name="mapLocation"
@@ -200,7 +212,7 @@ export function VendorForm({
             optional
             errors={errors}
             description={`As the Vendor writes them, on as many lines as they need. At most ${formatNumber(longest.openingHours)} characters.`}
-            className="sm:col-span-2"
+            className="@min-[40rem]:col-span-2"
           >
             {(props) => <Textarea dir="auto" {...props} {...register('openingHours')} />}
           </DetailField>
@@ -209,7 +221,7 @@ export function VendorForm({
 
       <FieldSet>
         <FieldLegend>Its Login</FieldLegend>
-        <FieldGroup className="grid sm:grid-cols-2 sm:gap-x-6">
+        <FieldGroup className="grid @min-[40rem]:grid-cols-2 @min-[40rem]:gap-x-6">
           <DetailField
             name="loginPhoneNumber"
             label="Login phone number"
@@ -227,7 +239,11 @@ export function VendorForm({
       </FieldSet>
 
       <Button type="submit" className="self-start" disabled={formState.isSubmitting}>
-        {submitLabel}
+        <BusyLabel
+          busy={formState.isSubmitting}
+          label={submitLabel}
+          busyLabel={busyLabel}
+        />
       </Button>
     </form>
   );

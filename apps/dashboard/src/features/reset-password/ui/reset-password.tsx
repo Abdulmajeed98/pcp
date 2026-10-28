@@ -11,8 +11,10 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogRefusal,
   AlertDialogTitle,
   AlertDialogTrigger,
+  BusyLabel,
   Button,
 } from '@/shared/ui';
 
@@ -69,11 +71,13 @@ export function ResetPassword({
             Vendor replaces it at its next login.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {reset.error && (
-          <p role="alert" className="text-sm text-destructive">
-            The password was not reset. <WhyNotAnswered error={reset.error} />
-          </p>
-        )}
+        <AlertDialogRefusal>
+          {reset.error && (
+            <>
+              The password was not reset. <WhyNotAnswered error={reset.error} />
+            </>
+          )}
+        </AlertDialogRefusal>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
@@ -81,7 +85,11 @@ export function ResetPassword({
             disabled={reset.isPending}
             onClick={confirm}
           >
-            {reset.isPending ? 'Resetting…' : 'Reset the password'}
+            <BusyLabel
+              busy={reset.isPending}
+              label="Reset the password"
+              busyLabel="Resetting…"
+            />
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

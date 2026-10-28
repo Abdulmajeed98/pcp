@@ -1,3 +1,4 @@
+import type { VendorsOffersPageResponse } from '@pcp/api-client';
 import {
   keepPreviousData,
   type QueryClient,
@@ -66,30 +67,56 @@ export async function askAgainAfterAChangeToTheOffers(
 // little more, as a page of the Catalog's results holds.
 export const pageSize = 20;
 
+// Which of a Vendor's Offers a list holds, as the API names them: every
+// one, those that need confirming (Expired Offers and those about to expire),
+// or those out of stock. The API's client checks that it knows each.
+export type OffersState = 'all' | 'needs-confirming' | 'out-of-stock';
+export const offersStates: readonly OffersState[] = [
+  'all',
+  'needs-confirming',
+  'out-of-stock',
+];
+
 // A search of a Vendor's own Offers: the words typed, which a Part's name,
-// manufacturer or part number holds, and the page, counted from 0 as the API
-// counts it.
+// manufacturer or part number holds, the state the Offers are in, and the
+// page, counted from 0 as the API counts it.
 export interface OffersSearch {
   words: string;
+  state: OffersState;
   page: number;
 }
 
-// One page of a Vendor's Offers, Expired Offers among them, oldest
+// A page of a Vendor's Offers as the API answered it, and which search it
+// answered, so that a screen can tell an answer to the same search, asked
+// again, from an answer to another.
+export interface VendorsOffersAnswered extends VendorsOffersPageResponse {
+  asked: string;
+}
+
+// One page of a Vendor's Offers in a state, Expired Offers among them, oldest
 // Confirmation first, with the Vendor's counts of all its Offers, whatever
-// the search. While the next page or the next search is on its way, the last
-// answer stays on screen.
-export function useVendorsOffers(vendorId: string, { words, page }: OffersSearch) {
+// the search and the state. While the next page or the next search is on its
+// way, the last answer stays on screen.
+export function useVendorsOffers(vendorId: string, { words, state, page }: OffersSearch) {
   const search = words.trim();
+  const asked = { search, state, page };
 
   return useQuery({
-    queryKey: [...vendorsOffersKey(vendorId), 'list', { search, page }],
-    queryFn: () =>
-      dataOf(
+    queryKey: [...vendorsOffersKey(vendorId), 'list', asked],
+    queryFn: async (): Promise<VendorsOffersAnswered> => ({
+      ...(await dataOf(
         apiClient.listVendorsOffers({
           path: { vendorId },
-          query: { page, size: pageSize, ...(search === '' ? {} : { search }) },
+          query: {
+            page,
+            size: pageSize,
+            ...(search === '' ? {} : { search }),
+            ...(state === 'all' ? {} : { state }),
+          },
         }),
-      ),
+      )),
+      asked: JSON.stringify(asked),
+    }),
     // Another Vendor's last answer is never shown in its place, as when the
     // Admin acts as one Vendor after another.
     placeholderData: (previous, previousQuery) =>

@@ -11,7 +11,8 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 
 // Runs Taste's inspector on a screen of the dashboard as the development
 // Admin sees it, with the calls about Vendors and Offers answered from a
-// made-up shop. Run it from the repository root:
+// made-up shop, whose Vendor is listed among the real ones. Run it from the
+// repository root:
 //
 //   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [the inspector's options]
 //

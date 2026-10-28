@@ -4,6 +4,7 @@ import { Either } from 'effect';
 
 import { searchWordsOf } from '../part/search-words';
 import { VendorAccessRule } from '../vendor/VendorAccessRule';
+import { OfferState } from './offer-state';
 import { ListVendorsOffersParams, OfferStore, VendorsOffersPage } from './OfferStore';
 
 class Input {
@@ -12,6 +13,7 @@ class Input {
     private readonly callerRoles: readonly Role[],
     private readonly vendorId: string,
     private readonly term: string,
+    private readonly state: OfferState,
     private readonly pageable: PageableAttributes,
   ) {}
 
@@ -30,6 +32,10 @@ class Input {
 
   getTerm(): string {
     return this.term;
+  }
+
+  getState(): OfferState {
+    return this.state;
   }
 
   getPageable(): PageableAttributes {
@@ -64,7 +70,8 @@ export { Output as ListVendorsOffersQueryOutput };
 // A Vendor's own Offers, Expired Offers among them, a page at a time, for the
 // Admin or for the Vendor's own Login, by the rule for which Vendor a request
 // acts for. They are searched by their Parts' name, manufacturer and part
-// numbers, as the catalog search reads them, and ordered by last
+// numbers, as the catalog search reads them, limited to those that need
+// confirming or those out of stock when the request asks, and ordered by last
 // Confirmation, oldest first, so that the Offers that need attention come
 // first.
 @Injectable()
@@ -89,6 +96,7 @@ export class ListVendorsOffersQuery {
       new ListVendorsOffersParams(
         actedFor.right.getId(),
         searchWordsOf(input.getTerm()),
+        input.getState(),
         input.getPageable(),
         now,
       ),
