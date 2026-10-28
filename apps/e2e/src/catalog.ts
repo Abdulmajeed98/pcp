@@ -106,8 +106,18 @@ export async function openTheFormForANewPart(page: Page, category: string): Prom
   await page.getByRole('link', { name: 'New Part' }).click();
   await page.getByRole('link', { name: category, exact: true }).click();
   await expect(
-    page.getByRole('heading', { level: 1, name: `New ${category}` }),
+    page.getByRole('heading', {
+      level: besideTheList(page) ? 2 : 1,
+      name: `New ${category}`,
+    }),
   ).toBeVisible();
+}
+
+// Whether a screen opened from a list is shown beside it, as it is on a
+// screen as wide as a desk's (64rem), where its title is of the second level
+// under the list's (redesign ticket 08, the owner's "h2 on a desk").
+export function besideTheList(page: Page): boolean {
+  return (page.viewportSize()?.width ?? 0) >= 1024;
 }
 
 // The row of a Part's page that shows one specification, found by its path

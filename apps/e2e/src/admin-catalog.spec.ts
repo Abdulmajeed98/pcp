@@ -152,7 +152,9 @@ test.describe('a Part opened from the Catalog', () => {
     }) => {
       await rowOf(page, part.name).getByRole('link', { name: part.name }).click();
 
-      await expect(page.getByRole('heading', { level: 1, name: part.name })).toBeVisible();
+      // Beside the list the Part's title is of the second level, under the
+      // Catalog's (redesign ticket 08).
+      await expect(page.getByRole('heading', { level: 2, name: part.name })).toBeVisible();
       await expect(catalogHeading(page)).toBeVisible();
       await expect(page.getByRole('searchbox', { name: 'Search the catalog' })).toHaveValue(
         part.word,

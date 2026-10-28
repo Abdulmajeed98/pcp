@@ -182,9 +182,14 @@ test.describe('at a desk’s width', () => {
     const found = row as Locator;
 
     await found.getByRole('link', { name: part.name }).click();
+    // Beside the list the form's title is of the second level (redesign
+    // ticket 08).
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Edit the Part' }),
+      page.getByRole('heading', { level: 2, name: 'Edit the Part' }),
     ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText([
+      'Missing specifications',
+    ]);
     await expect(heading(page)).toBeVisible();
     await expect(found.getByRole('link', { name: part.name })).toHaveAttribute(
       'aria-current',
@@ -203,7 +208,7 @@ test.describe('at a desk’s width', () => {
     await page.getByRole('button', { name: 'Save the Part' }).click();
 
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Edit the Part' }),
+      page.getByRole('heading', { level: 2, name: 'Edit the Part' }),
     ).toHaveCount(0);
     await expect(listedParts(page).filter({ hasText: part.name })).toHaveCount(0);
     const left = (await leavingRowsOf(page)).filter((leaving) =>

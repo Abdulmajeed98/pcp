@@ -1,3 +1,5 @@
+import type { CategoryResponse } from '@pcp/api-client';
+import { formatNumber } from '@pcp/i18n';
 import { CategoryIcon } from '@pcp/ui';
 import { ChevronRightIcon } from 'lucide-react';
 import { Link } from 'react-router';
@@ -10,16 +12,21 @@ import {
   AlertDescription,
   AlertTitle,
   BackLink,
-  Item,
-  ItemContent,
-  ItemMedia,
-  ItemTitle,
+  ScreenTitle,
+  SketchedRows,
 } from '@/shared/ui';
 
-// The first step of a new Part: its Category, chosen from the eight, each
-// with its icon. The Category decides which specifications the form asks
-// for, and it cannot be changed once the Part exists. The Categories are the
-// API's, so a refusal to give them is said in words.
+// The first step of a new Part: its Category, chosen from the eight. The
+// Category decides which specifications the form asks for, and it cannot be
+// changed once the Part exists. The Categories are the API's, so a refusal
+// to give them is said in words.
+//
+// As the dashboard's DESIGN.md lays out a list (redesign ticket 08): two-line
+// rows divided by Rule lines, the Category's icon plain in Note Grey, its
+// name in the Row type, and on the second line what its form will ask, "29
+// specifications, 3 needed", so that the Admin knows the work before
+// choosing; the whole row is the link, with a Raised Stone ground under the
+// pointer.
 export function ChooseCategoryPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const categories = useCategories();
@@ -27,8 +34,8 @@ export function ChooseCategoryPage() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
-      <h1 className="screen-title">New Part</h1>
-      <p>
+      <ScreenTitle className="screen-title">New Part</ScreenTitle>
+      <p className="text-muted-foreground">
         Choose its Category first. The form then asks for that Category's specifications,
         and the Category cannot be changed once the Part exists.
       </p>
@@ -41,38 +48,51 @@ export function ChooseCategoryPage() {
         </Alert>
       )}
       {categories.isPending && (
-        <p className="text-sm text-muted-foreground">Reading the Categories…</p>
+        // Two-line rows, as the Categories are on every screen.
+        <SketchedRows words="Reading the Categories…" wide={false} />
       )}
       {categories.data !== undefined && (
         <ul
           aria-label="Categories"
-          className="divide-y divide-border border-y border-border"
+          className="-mx-2 divide-y divide-rule border-y border-rule"
         >
-          {categories.data.map(({ key }) => (
-            <li key={key}>
-              <Item className="relative rounded-none px-0 hover:bg-secondary has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2">
-                <ItemMedia variant="icon">
-                  <CategoryIcon category={key} />
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle className="text-base">
-                    <Link
-                      to={keepingTheQuery(`/catalog/new/${key}`)}
-                      className="after:absolute after:inset-0 focus-visible:outline-none"
-                    >
-                      {categoryName(key)}
-                    </Link>
-                  </ItemTitle>
-                </ItemContent>
-                <ChevronRightIcon
-                  aria-hidden="true"
-                  className="size-4 text-muted-foreground rtl:rotate-180"
-                />
-              </Item>
+          {categories.data.map((category) => (
+            <li key={category.key}>
+              <CategoryRow category={category} />
             </li>
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function CategoryRow({ category }: { category: CategoryResponse }) {
+  const keepingTheQuery = useAddressKeepingTheQuery();
+  const needed = category.specifications.filter((specification) => specification.needed);
+
+  return (
+    <div className="hover-colour relative flex min-h-18 items-center gap-3 px-2 py-3 hover:bg-secondary">
+      <CategoryIcon
+        category={category.key}
+        className="size-5 shrink-0 text-muted-foreground"
+      />
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5 text-sm">
+        <Link
+          to={keepingTheQuery(`/catalog/new/${category.key}`)}
+          className="font-[550] after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring"
+        >
+          {categoryName(category.key)}
+        </Link>
+        <p className="text-muted-foreground">
+          {formatNumber(category.specifications.length)} specifications,{' '}
+          {formatNumber(needed.length)} needed
+        </p>
+      </div>
+      <ChevronRightIcon
+        aria-hidden="true"
+        className="size-4 shrink-0 text-muted-foreground rtl:rotate-180"
+      />
     </div>
   );
 }

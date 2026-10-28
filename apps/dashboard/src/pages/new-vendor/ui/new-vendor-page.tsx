@@ -7,8 +7,8 @@ import { vendorsKey } from '@/entities/vendor';
 import { HandOver, TemporaryPassword } from '@/features/hand-over';
 import { VendorForm } from '@/features/vendor-form';
 import { apiClient, dataOf } from '@/shared/api';
-import { useAddressKeepingTheQuery, useWideScreen } from '@/shared/lib';
-import { BackLink, buttonVariants } from '@/shared/ui';
+import { useAddressKeepingTheQuery } from '@/shared/lib';
+import { BackLink, buttonVariants, ScreenTitle } from '@/shared/ui';
 
 // The form for a new Vendor. Creating it makes the Vendor and its Login, and
 // the screen then shows the Login's temporary password, this once, beside
@@ -21,10 +21,6 @@ export function NewVendorPage() {
 }
 
 function NewVendor() {
-  // One h1 to a page (the owner's "h2 on a desk", redesign ticket 08):
-  // from 64rem this screen is beside the Vendors' list, whose title is the
-  // h1, so its own is an h2; on a phone it stands alone, an h1.
-  const Title = useWideScreen() ? 'h2' : 'h1';
   const keepingTheQuery = useAddressKeepingTheQuery();
   const queryClient = useQueryClient();
   const create = useMutation({
@@ -37,7 +33,7 @@ function NewVendor() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-      <Title className="screen-title">New Vendor</Title>
+      <ScreenTitle className="screen-title">New Vendor</ScreenTitle>
       <VendorForm
         submitLabel="Create the Vendor"
         busyLabel="Creating the Vendor…"
@@ -54,19 +50,15 @@ function Created({
 }: {
   created: CreatedVendorResponse;
 }) {
-  // One h1 to a page (the owner's "h2 on a desk", redesign ticket 08):
-  // from 64rem this screen is beside the Vendors' list, whose title is the
-  // h1, so its own is an h2; on a phone it stands alone, an h1.
-  const Title = useWideScreen() ? 'h2' : 'h1';
   const keepingTheQuery = useAddressKeepingTheQuery();
 
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-3 pb-6">
         <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-        <Title className="screen-title">
+        <ScreenTitle className="screen-title">
           <AsWritten>{vendor.name}</AsWritten>
-        </Title>
+        </ScreenTitle>
         <p>The Vendor and its Login are made.</p>
       </div>
 

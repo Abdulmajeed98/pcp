@@ -1,7 +1,6 @@
 import type { CategoryResponse, PartResponse } from '@pcp/api-client';
-import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { PencilIcon } from 'lucide-react';
+import { CircleAlertIcon, PencilIcon } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
 import { categoryName, useCategories } from '@/entities/category';
@@ -12,12 +11,13 @@ import { useAddressKeepingTheQuery } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
-  AlertTitle,
   BackLink,
+  Button,
   buttonVariants,
-  Plate,
+  ScreenTitle,
 } from '@/shared/ui';
 
+import { DetailRow, DetailRows, PartNumbers } from './detail-rows';
 import { NeededNotKnown, NotKnown, SpecificationValue } from './specification-value';
 
 // The day a Part last changed, in English, with Western digits.
@@ -26,11 +26,15 @@ const day = new Intl.DateTimeFormat('en-GB', {
   numberingSystem: 'latn',
 });
 
-// A Part's page: everything the platform holds about it. Its picture, name,
-// manufacturer and Category; its part numbers; where it came from; how many
-// of its needed specifications it lacks, on the screen's one plate; and every
-// specification of its Category's list under its English label, the missing
-// ones said to be so, and the missing needed ones marked.
+// A Part's page, as the dashboard's DESIGN.md lays it out (redesign ticket
+// 08): everything the platform holds about it. At its head, its picture, its
+// name in the Title type, its manufacturer and Category, and in words which
+// needed specifications it lacks, never on a plate, since plates are for
+// prices; then the ways to edit it and to add its photo. Then its part
+// numbers, where it came from and when it last changed, and every
+// specification of its Category's list under its English label, each a row
+// divided by Rule lines, the missing ones said to be so and the missing
+// needed ones marked in Action Red.
 export function PartPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { partId = '' } = useParams();
@@ -39,16 +43,31 @@ export function PartPage() {
 
   if (part.error instanceof Refusal && part.error.status === 404) return <PartNotFound />;
   const error = part.error ?? categories.error;
+  // A Part the API does not give is a screen of its own: its title says
+  // what was not done, the refusal panel why, and the Admin may try again
+  // (redesign ticket 08's break-ui).
   if (error) {
     return (
       <div className="flex flex-col gap-4">
         <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
+        <ScreenTitle className="text-xl/snug font-[650]">
+          The Part could not be read
+        </ScreenTitle>
         <Alert variant="destructive" data-testid="refusal">
-          <AlertTitle>The Part could not be read.</AlertTitle>
           <AlertDescription>
             <WhyNotAnswered error={error} />
           </AlertDescription>
         </Alert>
+        <Button
+          variant="outline"
+          className="self-start"
+          onClick={() => {
+            void part.refetch();
+            void categories.refetch();
+          }}
+        >
+          Try again
+        </Button>
       </div>
     );
   }
@@ -74,20 +93,24 @@ function PartDetails({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
         <div className="flex items-start gap-4">
-          <PartPicture part={part} size="page" />
+          {/* A photo added while the page is open comes in smoothly, and
+              the page itself never fades in; another Part is another
+              picture. */}
+          <PartPicture key={part.id} part={part} size="page" />
           <div className="flex min-w-0 flex-col gap-1">
-            <h1 className="text-xl font-[650]">
+            <ScreenTitle className="text-xl/snug font-[650] wrap-break-word">
               <AlwaysEnglish>{part.name}</AlwaysEnglish>
-            </h1>
+            </ScreenTitle>
             <p className="text-sm text-muted-foreground">
               <AlwaysEnglish>{part.manufacturer}</AlwaysEnglish> ·{' '}
               {categoryName(part.category)}
             </p>
           </div>
         </div>
+        <Lacks part={part} category={category} />
         <div className="flex flex-wrap items-start gap-2">
           <Link
             to={keepingTheQuery(`/catalog/parts/${part.id}/edit`)}
@@ -100,56 +123,43 @@ function PartDetails({
         </div>
       </div>
 
-      <dl className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4 gap-y-2 text-sm">
-        <dt className="text-muted-foreground">Part numbers</dt>
-        <dd>
+      <DetailRows label="About the Part">
+        <DetailRow name="Part numbers">
           {part.partNumbers.length > 0 ? (
-            <AlwaysEnglish>{part.partNumbers.join(', ')}</AlwaysEnglish>
+            <PartNumbers partNumbers={part.partNumbers} />
           ) : (
             <span className="text-muted-foreground">None</span>
           )}
-        </dd>
-        <dt className="text-muted-foreground">Source</dt>
-        <dd>
+        </DetailRow>
+        <DetailRow name="Source">
           {part.openDbId === null ? (
             'Created by the Admin'
           ) : (
             <>
-              From OpenDB, as <AlwaysEnglish>{part.openDbId}</AlwaysEnglish>
+              From OpenDB, as{' '}
+              <AlwaysEnglish className="font-mono break-all">{part.openDbId}</AlwaysEnglish>
             </>
           )}
-        </dd>
-        <dt className="text-muted-foreground">Last changed</dt>
-        <dd>{day.format(new Date(part.updatedAt))}</dd>
-      </dl>
-
-      {missing.length > 0 ? (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <Plate data-testid="missing-needed-count">{formatNumber(missing.length)}</Plate>
-          {missing.length === 1
-            ? 'needed specification is not known'
-            : 'needed specifications are not known'}
-        </p>
-      ) : (
-        <p>Every needed specification is known.</p>
-      )}
+        </DetailRow>
+        <DetailRow name="Last changed">{day.format(new Date(part.updatedAt))}</DetailRow>
+      </DetailRows>
 
       <section aria-labelledby="specifications" className="flex flex-col gap-2">
-        <h2 id="specifications" className="text-xl font-semibold">
+        <h2 id="specifications" className="text-base font-semibold">
           Specifications
         </h2>
-        <dl className="divide-y divide-border border-y border-border text-sm">
+        <dl className="divide-y divide-rule border-y border-rule text-sm">
           {category.specifications.map((specification) => {
             const value = valueAt(part.specifications, specification.path);
-            const wide = specification.kind === 'listOfRows';
+            const wide = specification.kind === 'listOfRows' && value !== undefined;
             return (
               <div
                 key={specification.path}
                 data-specification={specification.path}
-                className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4 gap-y-1 py-2.5"
+                className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4 gap-y-2 py-3.5"
               >
                 <dt className="text-muted-foreground">{specification.label}</dt>
-                <dd className={wide && value !== undefined ? 'col-span-2' : undefined}>
+                <dd className={wide ? 'col-span-2' : 'min-w-0 wrap-break-word'}>
                   {missing.includes(specification.path) ? (
                     <NeededNotKnown />
                   ) : value === undefined ? (
@@ -167,12 +177,31 @@ function PartDetails({
   );
 }
 
+// Which needed specifications the Part lacks, by their labels, in Action Red
+// after a circled exclamation mark, as a Part missing specifications says it;
+// and nothing when it lacks none (the owner's word on 22 October 2026, "Say
+// nothing").
+function Lacks({ part, category }: { part: PartResponse; category: CategoryResponse }) {
+  const missing = part.missingNeededSpecifications;
+  if (missing.length === 0) return null;
+
+  const labels = category.specifications
+    .filter(({ path }) => missing.includes(path))
+    .map(({ label }) => label);
+  return (
+    <p className="flex items-start gap-1.5 text-sm font-[550] text-destructive">
+      <CircleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+      <span data-testid="lacks">Lacks {labels.join(', ')}</span>
+    </p>
+  );
+}
+
 function PartNotFound() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
-      <h1 className="text-xl font-[650]">Part not found</h1>
+      <ScreenTitle className="text-xl/snug font-[650]">Part not found</ScreenTitle>
       <p>The catalog holds no Part at this address. It may never have existed.</p>
     </div>
   );

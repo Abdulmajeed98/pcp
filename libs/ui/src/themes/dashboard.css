@@ -484,6 +484,120 @@
 }
 
 /*
+ * 6 and 8 for what takes room in a form (redesign ticket 08, under the No
+ * Snap Rule). A space that opens and closes in place, always there: closed,
+ * it takes no room, and it gives back the gap its parent sets beside it
+ * through `--gap-before` and `--gap-after`, which `OpeningSpace` measures;
+ * open (`data-open`), its space opens and the gap with it as it fades in,
+ * 200 ms on the out curve, so that what is below moves down over the frames
+ * rather than jumping. Closing, it fades in 150 ms, then its space closes,
+ * 200 ms on the in-out curve. What it holds is its one child. With reduced
+ * motion nothing jumps either: the space opens over 150 ms, or fades and
+ * then closes over 150 ms, on the out curve. A field's refusal and a form's
+ * refusal panel take it.
+ */
+@utility space-opens {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: calc(-1 * var(--gap-before, 0px));
+  margin-bottom: calc(-1 * var(--gap-after, 0px));
+  transition:
+    opacity 150ms var(--ease-out),
+    grid-template-rows 200ms var(--ease-in-out) 150ms,
+    margin-top 200ms var(--ease-in-out) 150ms,
+    margin-bottom 200ms var(--ease-in-out) 150ms;
+
+  & > * {
+    min-height: 0;
+    overflow: clip;
+    overflow-clip-margin: 0.25rem;
+  }
+
+  &[data-open] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-top: 0;
+    margin-bottom: 0;
+    transition:
+      opacity 200ms var(--ease-out),
+      grid-template-rows 200ms var(--ease-out),
+      margin-top 200ms var(--ease-out),
+      margin-bottom 200ms var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition:
+      opacity 150ms var(--ease-out),
+      grid-template-rows 150ms var(--ease-out) 150ms,
+      margin-top 150ms var(--ease-out) 150ms,
+      margin-bottom 150ms var(--ease-out) 150ms;
+
+    &[data-open] {
+      transition-duration: 150ms;
+    }
+  }
+}
+
+/*
+ * The same for an entry put into a list while the user is on it, or taken
+ * out, such as a part number added to the Part's form: an element of its own
+ * that holds its gap below it as its margin (`mb-*`), not its parent's gap.
+ * Put in (`data-arriving`), its space and its margin open from none as it
+ * fades in, 200 ms on the out curve; taken out (`data-leaving`), it fades in
+ * 150 ms, then its space and margin close, 200 ms on the in-out curve. With
+ * reduced motion, 150 ms on the out curve each, never in one frame. What it
+ * holds is its one child.
+ */
+@utility entry-opens {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    opacity 200ms var(--ease-out),
+    grid-template-rows 200ms var(--ease-out),
+    margin-bottom 200ms var(--ease-out);
+
+  & > * {
+    min-height: 0;
+  }
+
+  &[data-arriving] {
+    @starting-style {
+      opacity: 0;
+      grid-template-rows: 0fr;
+      margin-bottom: 0;
+    }
+  }
+
+  &[data-leaving] {
+    opacity: 0;
+    grid-template-rows: 0fr;
+    margin-bottom: 0;
+    transition:
+      opacity 150ms var(--ease-out),
+      grid-template-rows 200ms var(--ease-in-out) 150ms,
+      margin-bottom 200ms var(--ease-in-out) 150ms;
+  }
+
+  &[data-arriving] > *,
+  &[data-leaving] > * {
+    overflow: clip;
+    overflow-clip-margin: 0.25rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 150ms;
+
+    &[data-leaving] {
+      transition:
+        opacity 150ms var(--ease-out),
+        grid-template-rows 150ms var(--ease-out) 150ms,
+        margin-bottom 150ms var(--ease-out) 150ms;
+    }
+  }
+}
+
+/*
  * 7. Confirm all's result: each changed row's Confirmation fades in at its
  * new state, 200 ms, each row 30 ms after the one above it, by its place in
  * `--settle-order`, the first ten rows only. With reduced motion every row
