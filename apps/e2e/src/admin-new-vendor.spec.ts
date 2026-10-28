@@ -317,6 +317,55 @@ test('on a tablet, the form puts two details to a row', async ({ page }) => {
   await expectNoSidewaysScroll(page);
 });
 
+test('after the create, the temporary password and the hand-over arrive with no snap, as a reset’s do: their space opens, the link below sliding down over many frames, and then they fade in', async ({
+  page,
+}) => {
+  await page.goto(newVendorUrl);
+  await expect(newVendorHeading(page)).toBeVisible();
+  await fillInTheForm(page, aMadeUpVendorToType());
+  // Watched four times slower, as the owner asked them to be watched, and
+  // the top of the link below taken frame by frame from the create on.
+  const devTools = await page.context().newCDPSession(page);
+  await devTools.send('Animation.enable');
+  await devTools.send('Animation.setPlaybackRate', { playbackRate: 0.25 });
+  const tops = page.evaluate(
+    () =>
+      new Promise<number[]>((resolve) => {
+        const seen: number[] = [];
+        const end = performance.now() + 5000;
+        const look = () => {
+          const link = [...document.querySelectorAll('a')].find(
+            (each) => each.textContent === 'Open the Vendor’s page',
+          );
+          if (link !== undefined) seen.push(Math.round(link.getBoundingClientRect().top));
+          if (performance.now() < end) requestAnimationFrame(look);
+          else resolve(seen);
+        };
+        requestAnimationFrame(look);
+      }),
+  );
+  await page.getByRole('button', { name: 'Create the Vendor' }).click();
+  const moved = await tops;
+  await devTools.send('Animation.setPlaybackRate', { playbackRate: 1 });
+  await expect(temporaryPassword(page)).toBeVisible();
+
+  const handOver = page.getByTestId('vendor-created');
+  const transition = await handOver.evaluate(
+    (element) => getComputedStyle(element).transitionProperty,
+  );
+  expect(transition.split(', ')).toEqual(
+    expect.arrayContaining(['grid-template-rows', 'opacity']),
+  );
+  const steps = moved
+    .slice(1)
+    .map((top, index) => top - moved[index])
+    .filter((step) => step !== 0);
+  const travel = (moved.at(-1) ?? 0) - (moved[0] ?? 0);
+  expect(travel).toBeGreaterThan(100);
+  expect(steps.length).toBeGreaterThanOrEqual(12);
+  expect(Math.max(...steps)).toBeLessThan(travel / 8);
+});
+
 test('the temporary password and the hand-over do not scroll sideways, and meet the automated part of WCAG 2.2 level AA in light and in dark', async ({
   page,
 }) => {

@@ -113,6 +113,14 @@ test.describe('on a screen as wide as a desk', () => {
       'Active',
       inIraqsOwnForm(vendor.loginPhoneNumber),
     ]);
+    // Only "Deactivated" is marked (the owner's "Only Deactivated"): an
+    // active Vendor's State cell is empty to the eye, and says "Active" to
+    // a screen reader alone, so that the cell is never read as nothing.
+    const active = await cells
+      .nth(1)
+      .getByText('Active', { exact: true })
+      .evaluate((element) => element.getBoundingClientRect().width);
+    expect(active).toBeLessThanOrEqual(1);
     // The phone numbers end-aligned in tabular figures, so that their digits
     // line up down the column, its heading with them.
     await expect(cells.last()).toHaveCSS('text-align', 'end');

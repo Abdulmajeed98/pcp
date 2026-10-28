@@ -61,8 +61,8 @@ function Created({
   const keepingTheQuery = useAddressKeepingTheQuery();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-3 pb-6">
         <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
         <Title className="screen-title">
           <AsWritten>{vendor.name}</AsWritten>
@@ -70,12 +70,20 @@ function Created({
         <p>The Vendor and its Login are made.</p>
       </div>
 
-      <TemporaryPassword password={temporaryPassword} />
-
-      <HandOver
-        loginPhoneNumber={vendor.loginPhoneNumber}
-        temporaryPassword={temporaryPassword}
-      />
+      {/* The temporary password and the hand-over arrive as a reset's do
+          (the owner's "Arrives smoothly", redesign ticket 09; Motion 8 and
+          the No Snap Rule): their space opens, the link below sliding down,
+          and then they fade in. The space below them is their own padding,
+          inside what opens. */}
+      <div data-testid="vendor-created" data-arriving="" className="leaves">
+        <div className="flex flex-col gap-6 pb-6">
+          <TemporaryPassword password={temporaryPassword} />
+          <HandOver
+            loginPhoneNumber={vendor.loginPhoneNumber}
+            temporaryPassword={temporaryPassword}
+          />
+        </div>
+      </div>
 
       <Link
         to={keepingTheQuery(`/vendors/${vendor.id}`)}

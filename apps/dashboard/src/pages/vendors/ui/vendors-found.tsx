@@ -78,8 +78,11 @@ function VendorTableRow({ vendor }: { vendor: VendorSummaryResponse }) {
         </Link>
       </TableCell>
       <TableCell className={cn(cellAtTop, 'whitespace-nowrap')}>
+        {/* Only "Deactivated" is marked (the owner's "Only Deactivated",
+            redesign ticket 09): an active Vendor's cell is empty to the eye,
+            and says "Active" to a screen reader, never nothing. */}
         {vendor.active ? (
-          <span className="text-muted-foreground">Active</span>
+          <span className="sr-only">Active</span>
         ) : (
           <DeactivatedMark className="-ms-1.5" />
         )}
