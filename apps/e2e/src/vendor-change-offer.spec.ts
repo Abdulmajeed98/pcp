@@ -9,7 +9,13 @@ import {
   openTheDashboardAs,
 } from './development-logins';
 import { type VendorLoginDetails } from './keycloak-screens';
-import { expectNoSidewaysScroll, narrowWindow } from './languages';
+import {
+  chooseInThePortal,
+  expectNoSidewaysScroll,
+  languages,
+  narrowWindow,
+} from './languages';
+import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
 import {
   addAnOffer,
   inStockSwitch,
@@ -24,6 +30,8 @@ import {
 } from './offers';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
+
+const [kurdish] = languages;
 
 // A Vendor changes one of its Offers, or removes it after confirming, on a
 // phone (OFF-4, OFF-5). The browser is set to English, so the portal opens
@@ -207,6 +215,66 @@ test.describe('a made-up Vendor with Offers added over HTTP', () => {
     await expect(theRemovalDialog(page)).toBeVisible();
     await expectAccessible(page);
   });
+});
+
+test.describe("the in-stock switch's thumb, as a made-up Vendor", () => {
+  let vendor: VendorLoginDetails;
+
+  test.beforeAll(async ({ browser }) => {
+    vendor = await aMadeUpVendorThatHasLoggedIn(browser);
+  });
+
+  // DESIGN.md's Motion 4 and its reduced motion: the thumb slides in 150 ms
+  // on the out curve, or in 100 ms with reduced motion, and never jumps
+  // (the No Snap Rule). It travels to the end side when on, in either
+  // direction.
+  for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+    const duration = reducedMotion === 'reduce' ? '0.1s' : '0.15s';
+
+    test(`travels to the end side in ${duration} on the out curve, never in one frame, mirrored in Kurdish (${reducedMotion})`, async ({
+      page,
+      browser,
+    }) => {
+      const { offerId } = await anOfferOf(browser, vendor);
+      await page.emulateMedia({ reducedMotion });
+      await openTheDashboardAs(page, vendor, `${dashboardUrl}/offers/${offerId}`);
+      const track = inStockSwitch(page);
+      const thumb = track.locator('[data-slot="switch-thumb"]');
+      await expect(track).toHaveAttribute('aria-checked', 'true');
+      await expect(thumb).toHaveCSS('transition-duration', duration);
+      await expect(thumb).toHaveCSS(
+        'transition-timing-function',
+        'cubic-bezier(0.23, 1, 0.32, 1)',
+      );
+
+      // Where the thumb stands in its track: its centre against the track's.
+      const side = async () => {
+        const [inner, outer] = [await thumb.boundingBox(), await track.boundingBox()];
+        if (inner === null || outer === null) throw new Error('the switch is not drawn');
+        return inner.x + inner.width / 2 > outer.x + outer.width / 2 ? 'right' : 'left';
+      };
+      expect(await side()).toBe('right');
+
+      const frames = await filmPlaces(page, { thumb }, () => track.click(), {
+        forMs: 1000,
+      });
+      await expect(track).toHaveAttribute('aria-checked', 'false');
+      const { moved, mostInAFrame } = travelOf(frames, 'thumb');
+      expect(moved, 'the thumb crosses its track').toBeGreaterThan(15);
+      expect(mostInAFrame, 'the thumb never jumps').toBeLessThanOrEqual(
+        aFrameAtMost(moved),
+      );
+      expect(await side()).toBe('left');
+
+      await chooseInThePortal(page, kurdish);
+      expect(await side(), 'off, it stands on the start side, the right').toBe('right');
+      await track.click();
+      await expect(track).toHaveAttribute('aria-checked', 'true');
+      await expect
+        .poll(side, { message: 'on, it travels to the end side, the left' })
+        .toBe('left');
+    });
+  }
 });
 
 test.describe('the development Admin acting as a made-up Vendor', () => {
