@@ -8,11 +8,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] The details screen, the contact details form, the two plain messages, both "not found" screens and the failed login follow the new DESIGN.md and move as its Motion section says.
-- [ ] Each that can be reached logged in passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command; the portal's in Kurdish and in English.
+- [x] The details screen, the contact details form, the two plain messages, both "not found" screens and the failed login follow the new DESIGN.md and move as its Motion section says.
+- [x] Each that can be reached logged in passes `inspect.mjs --app` at 1440, 768 and 360 pixels through ticket 01's command; the portal's in Kurdish and in English.
 - [x] Emil's `break-ui` is run on the details screen: a long address, every optional detail missing. What broke is fixed.
-- [ ] The portal's screens pass `checkInEveryLanguageOfTheVendorPortal`. `expectAccessible` passes on each screen in the accessibility tests' list, in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
-- [ ] No screen of the dashboard is left in the old look: each route in both routers is listed under Comments with the ticket that rebuilt it.
+- [x] The portal's screens pass `checkInEveryLanguageOfTheVendorPortal`. `expectAccessible` passes on each screen in the accessibility tests' list, in the light and in the dark scheme. `pnpm check` and `pnpm platform:check` pass.
+- [x] No screen of the dashboard is left in the old look: each route in both routers is listed under Comments with the ticket that rebuilt it.
 - [x] Tests that had to change are listed under Comments with why; no test loses an assertion.
 - [ ] The screens are shown to the owner in the built-in browser before the ticket closes, and the owner's remarks are recorded under Comments. DESIGN.md is corrected where building them taught something.
 - [x] The work is committed in pieces, each leaving `pnpm check` passing.
@@ -130,52 +130,109 @@ The owner saw `.taste-skill/redesign-13/index.html` in the built-in browser and 
 
 ### Every route, and the ticket that rebuilt it
 
-From `app/admin-console-router.tsx`, `app/vendor-portal-router.tsx` and `app/vendor-portal-screens.tsx`, and the one screen drawn outside both routers. A draft until ticket 11's frame is merged: the frames' rows name 11 as their owner.
+From `app/admin-console-router.tsx`, `app/vendor-portal-router.tsx` and `app/vendor-portal-screens.tsx` as they stand on this branch after merging `redesign/integration` at `4d03eb4`, and the one screen drawn outside both routers. "Merged" says whether the rebuilding ticket is on `redesign/integration` at `4d03eb4`: 07, 08, 09, 10 and 11 are; 12 is not yet; 13 is this branch. Until 12 is merged, its three screens still show ticket 07's base (the new tokens and shared components) inside ticket 11's frame, not their own layout.
 
 **The Admin console's router**
 
-| Address | Screen | Rebuilt in |
-|---|---|---|
-| `/` (its frame) | The Admin console's frame: sidebar, top bar, menu sheet, scheme switch | 07 |
-| `/` (index) | Sends the Admin to `/catalog` | (no screen) |
-| `/catalog` | The Catalog | 07 |
-| `/catalog/new` | Choosing a Category for a new Part | 08 |
-| `/catalog/new/:category` | The new Part's form | 08 |
-| `/catalog/parts/:partId` | A Part's page | 08 |
-| `/catalog/parts/:partId/edit` | A Part's edit form, and adding a photo | 08 |
-| `/vendors` | The Vendors | 09 |
-| `/vendors/new` | The new Vendor's form and the hand-over | 09 |
-| `/vendors/:vendorId` | A Vendor's page, the reset, deactivating and reactivating | 09 |
-| `/vendors/:vendorId/edit` | A Vendor's edit form | 09 |
-| `/missing-specifications` | The Missing specifications | 10 |
-| `/missing-specifications/parts/:partId/edit` | A Part's edit form, returning to the list | 08 (the form), 10 (the list beside it) |
-| `/expiring-offers` | The Expiring Offers | 10 |
-| `*` | The Admin console's "not found" | 13 |
-| `/vendors/:vendorId/portal` (its frame) | The Vendor portal's frame with the band, the Admin acting as a Vendor | 11 |
-| `/vendors/:vendorId/portal/…` | The Vendor portal's screens, as below | as below |
+| Address | Screen | Rebuilt in | Merged |
+|---|---|---|---|
+| `/` (its frame) | The Admin console's frame: sidebar, top bar, menu sheet, scheme switch | 07 | yes |
+| `/` (index) | Sends the Admin to `/catalog` | (no screen of its own) | |
+| `/catalog` | The Catalog | 07 | yes |
+| `/catalog/new` | Choosing a Category for a new Part | 08 | yes |
+| `/catalog/new/:category` | The new Part's form | 08 | yes |
+| `/catalog/parts/:partId` | A Part's page | 08 | yes |
+| `/catalog/parts/:partId/edit` | A Part's edit form, and adding a photo | 08 | yes |
+| `/vendors` | The Vendors | 09 | yes |
+| `/vendors/new` | The new Vendor's form and the hand-over | 09 | yes |
+| `/vendors/:vendorId` | A Vendor's page: its details, the reset, deactivating and reactivating | 09 | yes |
+| `/vendors/:vendorId/edit` | A Vendor's edit form | 09 | yes |
+| `/missing-specifications` | The Missing specifications | 10 | yes |
+| `/missing-specifications/parts/:partId/edit` | A Part's edit form, beside the list it returns to | 08 (the form), 10 (the list) | yes |
+| `/expiring-offers` | The Expiring Offers | 10 | yes |
+| `*` | The Admin console's "not found" | 13 | this branch |
+| `/vendors/:vendorId/portal` (its frame) | The Vendor portal's frame with the band, the Admin acting as a Vendor | 11 | yes |
+| `/vendors/:vendorId/portal/…` | The Vendor portal's screens, as below | as below | |
 
 **The Vendor portal's screens** (`vendorPortalScreens`, under either frame)
 
-| Address | Screen | Rebuilt in |
-|---|---|---|
-| (index) | The Offers, the expiry banner and Confirm all | 11 |
-| `add` | The catalog search and the note after an Offer is added | 12 |
-| `add/:partId` | The Offer form for a new Offer | 12 |
-| `offers/:offerId` | An Offer's own screen, its removal, an Offer that no longer exists | 12 |
-| `details` | The details screen | 13 |
-| `details/contact-details` | The contact details form | 13 |
-| `*` | The portal's "not found" | 13 |
+| Address | Screen | Rebuilt in | Merged |
+|---|---|---|---|
+| (index) | The Offers, with their tabs, the expiry banner and Confirm all | 11 | yes |
+| `add` | The catalog search and the note after an Offer is added | 12 | not yet |
+| `add/:partId` | The Offer form for a new Offer | 12 | not yet |
+| `offers/:offerId` | An Offer's own screen, its removal, an Offer that no longer exists | 12 | not yet |
+| `details` | The details screen | 13 | this branch |
+| `details/contact-details` | The contact details form | 13 | this branch |
+| `*` | The portal's "not found" | 13 | this branch |
 
 **The Vendor portal's router**
 
-| Address | Screen | Rebuilt in |
-|---|---|---|
-| `/` (its frame) | The Vendor portal's frame for a Vendor's own Login | 11 |
-| `/` (its frame) | The plain message for a Login with no Vendor, and for a deactivated Vendor | 11 (the frame), 13 (the message) |
-| `/…` | The Vendor portal's screens, as above | as above |
+| Address | Screen | Rebuilt in | Merged |
+|---|---|---|---|
+| `/` (its frame) | The Vendor portal's frame for a Vendor's own Login | 11 | yes |
+| `/` (its frame) | The plain message for a Login with no Vendor, and for a deactivated Vendor | 11 (the frame), 13 (the message) | 11 yes, 13 this branch |
+| `/…` | The Vendor portal's screens, as above | as above | |
 
 **Outside both routers**
 
-| Where | Screen | Rebuilt in |
-|---|---|---|
-| `app/login-failed.tsx`, at any address | The login that could not be completed | 13 |
+| Where | Screen | Rebuilt in | Merged |
+|---|---|---|---|
+| `app/login-failed.tsx`, at any address | The login that could not be completed | 13 | this branch |
+
+Every route has a ticket that rebuilds it, so once 12 and this branch are merged, no screen is left in the old look.
+
+### 28 October 2026: in ticket 11's frame, with tickets 08 and 09 merged
+
+**The merges.**
+- `6381ceb` merged `redesign/integration` at `b24caf9`, bringing tickets 10 and 11 in.
+- `0f33e46` merged it at `4f1b9cf`, bringing ticket 09 in. It also brought Next.js 16.4.3 and `BusyLabel` and `AlertDialogRefusal`, and ticket 09's line direction and wrapping in the shared detail rows, which keep ticket 13's Rule lines and 48-pixel rows.
+- `792c767` merged it at `4d03eb4`, bringing ticket 08 in, with `OpeningSpace`, `ScreenTitle` and the motion film.
+- Each conflict was in DESIGN.md (Rows, States, Motion 6 and its reduced-motion row) or in `shared/lib/index.ts`, `vendor-portal.spec.ts` or `entities/vendor/ui/vendor-details.tsx`. Each was resolved by keeping both sides. `pnpm check` passed on each merge, and no migration came in.
+
+**The plain messages** (`22b9a8e`), test-first.
+- The tests failed first, for the right reason:
+  - `expectTheEmptyState` and `expectCentredInTheWindow` were added to the "no Vendor" test of `vendor-portal.spec.ts` and to the deactivation test of `admin-deactivate-vendor.spec.ts`. Both failed first: no icon on the sheet.
+  - `expectCentredInTheWindow` now takes a state with no link or button, measuring to its sentence.
+- The fix:
+  - In ticket 11's frame, both messages are the dashboard's empty state, centred in the window's height as the "not found" screens are. A crossed person marks no Vendor and a circled slash marks a deactivated Vendor, then comes the sentence in the Body type, with no heading and no action, as ticket 11's test asks.
+  - The switches and Log out stay in the top bar on a desk and behind the menu on a phone, as the owner chose in ticket 11 ("Behind the menu").
+- **A fault found on the way.**
+  - The frame draws its desk and phone layouts anew when the window crosses 64rem, and the message's element with them, while the message itself stays mounted.
+  - `useCentredInTheWindow` kept measuring the element that had gone, and left the new one at the sheet's head. The first captures showed it.
+  - A line in the "no Vendor" test that crosses to a desk and back failed first: the message's middle was at 161 against the window's 400.
+  - The hook now gives a callback ref, so each new element is measured as it enters the page.
+  - A first try at that line in `admin-not-found.spec.ts` passed even before the fix, because there the whole screen remounts with the frame. It was dropped as not testing the fault.
+- DESIGN.md's Navigation says how the messages are drawn.
+
+**The contact form's refusal panel** (`c10c0a3`).
+- With ticket 08 merged, every form's field refusals open their room in the shared `OpeningSpace`, so the contact form's own already did. Its refusal panel above the form did not, so it now lies in `OpeningSpace` as the Part's form does.
+- A new test films the form slowed four times with ticket 08's `motion-film.ts`, as the platform fails to answer. It failed first: the address field stepped 120 pixels in one frame.
+- This closes the "found, not changed here" note of 22 October.
+
+**Tests that changed since**, none losing an assertion:
+- `vendor-portal.spec.ts`: the "no Vendor" test adds the empty state, the centring, and the crossing to a desk and back.
+- `admin-deactivate-vendor.spec.ts`: the deactivation test adds the empty state and the centring.
+- `empty-state.ts`: the centring check takes a state with no control.
+- `vendor-contact-details.spec.ts`: new, the refusal panel opening without a jump.
+
+**The checks on `c10c0a3`.**
+- `pnpm check` passed before each commit.
+- `pnpm platform:check` under the e2e lock: **233 passed**, none failed or flaky (10.3 minutes).
+  - An earlier run of the four touched specs (before `c10c0a3`) failed once in `admin-deactivate-vendor.spec.ts` at ticket 09's `expectAccessible` on the Admin's page ("Execution context was destroyed, most likely because of a navigation"), before any of ticket 13's lines. The file then passed alone, 5 of 5, and in both full runs. It is recorded as a flake of that line.
+- **Taste's inspector**, on the portal's screens in ticket 11's frame acting as the made-up shop, English and Kurdish, light and dark, and on the Admin console's "not found", at 1440, 768 and 360 (in the owner's `.taste-skill/redesign-13/inspect-4/`):
+  - **0 FAIL** throughout.
+  - The details screen: 0 WARN.
+  - Both "not found" screens: `hero-void` and `panel-void` at 1440 for the space around the centred state, which the owner chose ("Centred in window"). Defended as before.
+  - The contact form: a new `hero-void` at 1440, the 540 pixels of the sheet beside the form, which is at most 40rem wide as the Offer form is. In the old portal frame, which was 48rem wide, the sheet ended near the form. It is put to the owner below.
+  - The two plain messages cannot be reached logged in through the inspector (it logs in as the Admin). They were captured by a throwaway Playwright spec (deleted after; it made one made-up Vendor through the e2e helpers, as every e2e run does) in both schemes at the three widths, with `expectAccessible` passing on each in the end-to-end tests.
+- The routes table below is finished: 07, 08, 09, 10 and 11 are merged; 12 is not yet.
+
+### 28 October 2026: for the owner, the last look
+
+The review page `.taste-skill/redesign-13/index.html` in the owner's checkout (port 4110) now shows every portal screen in ticket 11's frame, and the plain messages in their own look at `#s8`, with the menu sheet open over one. Box 7 stays open for that look, and the Status stays.
+
+1. **The plain messages as the empty state, centred in the window**, a crossed person or a circled slash above the sentence, matching the "not found" screens. The alternative is the sentence alone at the sheet's head, as ticket 11 left it.
+2. **The contact form at most 40rem wide** on a desk, as the Offer form is, leaving the sheet's end side empty at 1440 (the inspector's `hero-void`). The alternative is the form taking the sheet's width, with the two phone numbers still sharing a row.
+
+The record is otherwise ready to close: when the owner has looked, record the answers, tick box 7, and set the Status to resolved in `docs: close redesign ticket 13`.
