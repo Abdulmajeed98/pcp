@@ -332,7 +332,11 @@ describe("the made-up shop's other answers", () => {
             name: shop.vendor.name,
             phoneNumber: shop.vendor.phoneNumber,
             whatsAppNumber: shop.vendor.whatsAppNumber,
-            counts: offersPage().counts,
+            counts: {
+              offers: offersPage().counts.offers,
+              expired: offersPage().counts.expired,
+              aboutToExpire: offersPage().counts.aboutToExpire,
+            },
           },
         ],
       },

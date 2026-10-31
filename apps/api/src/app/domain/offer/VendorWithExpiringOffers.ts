@@ -1,5 +1,5 @@
 import { PhoneNumber } from '../phone-number/PhoneNumber';
-import { VendorsOfferCounts } from './OfferStore';
+import { OfferCounts } from './OfferStore';
 
 // An active Vendor that has at least one Expired Offer or Offer about to
 // expire, as the Admin's list of whom to remind shows it (OFF-9): who it is,
@@ -10,7 +10,7 @@ export class VendorWithExpiringOffers {
     private readonly name: string,
     private readonly phoneNumber: PhoneNumber,
     private readonly whatsAppNumber: PhoneNumber | null,
-    private readonly counts: VendorsOfferCounts,
+    private readonly counts: OfferCounts,
   ) {}
 
   getId(): string {
@@ -32,7 +32,7 @@ export class VendorWithExpiringOffers {
   }
 
   // Of all the Vendor's Offers, judged at the moment the list was read.
-  getCounts(): VendorsOfferCounts {
+  getCounts(): OfferCounts {
     return this.counts;
   }
 }

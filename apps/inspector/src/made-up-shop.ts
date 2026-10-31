@@ -378,7 +378,12 @@ export function answerFromTheMadeUpShop(
         name: shop.vendor.name,
         phoneNumber: shop.vendor.phoneNumber,
         whatsAppNumber: shop.vendor.whatsAppNumber,
-        counts: counts(listedOffers),
+        // As the API counts them for this list, without those out of stock.
+        counts: (({ offers, expired, aboutToExpire }) => ({
+          offers,
+          expired,
+          aboutToExpire,
+        }))(counts(listedOffers)),
       },
     ]);
     return { status: 200, body };
