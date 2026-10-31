@@ -556,8 +556,12 @@ test.describe("a Part's page", () => {
       await searchTheCatalog(page, { words: part.word });
       await rowOf(page, part.name).getByRole('link', { name: part.name }).click();
       // One first-level title to a page: beside the list the Part's is of
-      // the second level (the owner's word, "h2 on a desk").
+      // the second level (the owner's word, "h2 on a desk"), and its
+      // sections' titles of the third.
       await expect(page.getByRole('heading', { level: 2, name: part.name })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { level: 3, name: 'Specifications' }),
+      ).toBeVisible();
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(['Catalog']);
 
       const cores = specificationRow(page, 'cores.total');

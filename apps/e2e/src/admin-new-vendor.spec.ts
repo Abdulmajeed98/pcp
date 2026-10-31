@@ -302,6 +302,11 @@ test.describe('on a screen as wide as a desk', () => {
     expect((await busy.boundingBox())?.width).toBe(idle?.width);
     answer();
     await expect(temporaryPassword(page)).toBeVisible();
+    // Under the form's h2, the sections it shows after the create are of the
+    // third level.
+    for (const section of ['Temporary password', 'Hand the login details over']) {
+      await expect(page.getByRole('heading', { level: 3, name: section })).toBeVisible();
+    }
   });
 });
 

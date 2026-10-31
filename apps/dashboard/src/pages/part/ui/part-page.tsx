@@ -15,6 +15,7 @@ import {
   Button,
   buttonVariants,
   ScreenTitle,
+  SectionTitle,
 } from '@/shared/ui';
 
 import { DetailRow, DetailRows, PartNumbers } from './detail-rows';
@@ -145,9 +146,9 @@ function PartDetails({
       </DetailRows>
 
       <section aria-labelledby="specifications" className="flex flex-col gap-2">
-        <h2 id="specifications" className="text-base font-semibold">
+        <SectionTitle id="specifications" className="text-base font-semibold">
           Specifications
-        </h2>
+        </SectionTitle>
         <dl className="divide-y divide-rule border-y border-rule text-sm">
           {category.specifications.map((specification) => {
             const value = valueAt(part.specifications, specification.path);
