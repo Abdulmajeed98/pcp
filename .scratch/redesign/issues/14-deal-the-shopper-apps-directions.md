@@ -4,9 +4,9 @@
 
 **What to build:** The Shopper app is designed the new way before it is built far, so that it does not end up as the dashboard did. The owner decides whether its idea, Fit Diagram, Parts drawn the way a motherboard manual draws them, stays. Then directions for its public pages are dealt through Taste's page run, rendered with fictional data, and the owner chooses one by eye. It starts once the dashboard is rebuilt, so that what the dashboard taught carries over.
 
-**Blocked by:** the start of the `browse` module (deferred by the owner on 1 November 2026 until the `browse` module begins)
+**Blocked by:** None (moved out of this spec on 1 November 2026)
 
-**Status:** ready-for-human
+**Status:** wontfix
 
 - [x] What the dashboard's rebuild taught, from the Comments of tickets 06 to 13, is summed up for the owner first.
 - [ ] Taste and Impeccable critique the Shopper's DESIGN.md and its one page, and the owner decides whether Fit Diagram is kept as it is, kept with its execution changed, or dropped. The decision is recorded under Comments with the owner's word.
@@ -106,3 +106,7 @@ The owner learned that the Shopper app has only its shell, and that its first re
 - **What is provisional.** The answers above, "Keep, change execution" with "Something of Erbil" as the change, stand only provisionally. After giving them, the owner asked what the four offered changes meant and chose to revisit them, so the decision is to be taken again when the work resumes, and the line written above for the draw is provisional with it. The second box is unticked: the critique is done, but the decision is not settled.
 - **What was dealt, and not chosen.** Before the deferral, Taste's page run dealt three directions from the provisional line, with `--sector ecommerce --sections showcase,list,pricing,contact,footer --keep type`: The split stage (`split-stage`, seed 360368158), The contact sheet (`contact-sheet`, seed 96928038) and The pinned poster (`pinned-poster`, seed 1989406000). None was rendered, shown to the owner or chosen, and nothing of them is committed. Their sheets are in `.taste-skill/redesign-14/o1` to `o3`, and the pictures of Erbil for them in `.taste-skill/redesign-14/assets/` with their credits: ticket 05's six and two more of the bazaar's vaults ("Erbil Bazaar 1" and "Erbil Bazaar 3", Levi Clancy, CC BY-SA 4.0, via Wikimedia Commons). Two more downloads were dropped: one shows a real shop's sign with its phone number, the other faces up close. All of it is left as Taste wrote it. Taste's history (`~/.taste-skill/history.json`) records the three, so a later deal will differ from them; the resumed ticket deals afresh from the decision taken then.
 - **The Status** stays `ready-for-human`.
+
+### 1 November 2026: moved out of this spec
+
+Later the same day the owner said: "we will start fresh designing plan for the shopper unique to it. and follow the principle for it then. this redesign session was for the dashboard". The redesign is the dashboard's alone, and this ticket is closed as moved out (`wontfix` here). The Shopper app gets a fresh design plan of its own when the `browse` module begins, following the same principles (Taste, Emil's skills and Impeccable each leading its area, every choice rendered and chosen by eye). Nothing recorded in this ticket binds that plan, the provisional answers on Fit Diagram included.
