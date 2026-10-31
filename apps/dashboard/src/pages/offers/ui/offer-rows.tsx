@@ -149,7 +149,7 @@ export function OffersTable({ shown, settling }: RowsProps) {
       <Table aria-label={t('OffersScreen.listLabel')}>
         <TableHeader>
           <TableRow className="border-b-0">
-            <TableHead className="w-2/5 ps-2">{t('OffersScreen.part')}</TableHead>
+            <TableHead className="w-2/5 first:ps-2">{t('OffersScreen.part')}</TableHead>
             <TableHead className="text-end">{t('OffersScreen.price')}</TableHead>
             <TableHead>{t('OffersScreen.lastConfirmed')}</TableHead>
             <TableHead>{t('OffersScreen.stock')}</TableHead>

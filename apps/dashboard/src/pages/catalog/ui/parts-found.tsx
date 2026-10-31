@@ -72,7 +72,7 @@ export function PartsTable({ parts }: { parts: readonly PartSummaryResponse[] })
       <Table aria-label="Parts found">
         <TableHeader>
           <TableRow className="border-b-0">
-            <TableHead className="w-1/2 ps-2">Part</TableHead>
+            <TableHead className="w-1/2 first:ps-2">Part</TableHead>
             <TableHead className="w-1/5">Manufacturer</TableHead>
             <TableHead className="pe-2">Part numbers</TableHead>
           </TableRow>
@@ -92,7 +92,7 @@ function PartTableRow({ part }: { part: PartSummaryResponse }) {
 
   return (
     <TableRow className={rowGround(opened)}>
-      <TableCell className={cn(cellAtTop, 'ps-2 font-[550]')}>
+      <TableCell className={cn(cellAtTop, 'font-[550] first:ps-2')}>
         <Link to={to} aria-current={opened ? 'page' : undefined} className={linkOverRow}>
           <AlwaysEnglish>{part.name}</AlwaysEnglish>
         </Link>

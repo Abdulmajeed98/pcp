@@ -55,7 +55,7 @@ export function VendorsTable({ vendors }: { vendors: readonly VendorSummaryRespo
       <Table aria-label="Vendors">
         <TableHeader>
           <TableRow className="border-b-0">
-            <TableHead className="w-1/2 ps-2">Vendor</TableHead>
+            <TableHead className="w-1/2 first:ps-2">Vendor</TableHead>
             <TableHead>State</TableHead>
             <TableHead className="pe-2 text-end">Login phone number</TableHead>
           </TableRow>
@@ -75,7 +75,7 @@ function VendorTableRow({ vendor }: { vendor: VendorSummaryResponse }) {
 
   return (
     <TableRow className={rowGround(opened)}>
-      <TableCell className={cn(cellAtTop, 'ps-2 font-[550] wrap-anywhere')}>
+      <TableCell className={cn(cellAtTop, 'font-[550] wrap-anywhere first:ps-2')}>
         <Link to={to} aria-current={opened ? 'page' : undefined} className={linkOverRow}>
           <AsWritten>{vendor.name}</AsWritten>
         </Link>
