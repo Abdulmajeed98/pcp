@@ -4,16 +4,32 @@
     <meta charset="utf-8" />
     <title>Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f1f0ed" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0d0d" />
+    <!-- The browser's bar in the Stone Frame's colour of each scheme, the
+         device's until a scheme is chosen with the switch. -->
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#f1f0ed"
+      data-scheme="light"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#0d0d0d"
+      data-scheme="dark"
+    />
     <script>
       // The colour scheme chosen with the scheme switch, set before the first
-      // paint so that no screen flashes the other scheme (DESIGN.md). The key
-      // is the one src/shared/lib/scheme.ts keeps it under.
+      // paint so that no screen flashes the other scheme (DESIGN.md), and the
+      // browser's bar in its Stone Frame's colour. The key, and the way the
+      // bar's colour is chosen, are the ones src/shared/lib/scheme.ts keeps.
       try {
         var scheme = localStorage.getItem('scheme');
         if (scheme === 'light' || scheme === 'dark') {
           document.documentElement.dataset.scheme = scheme;
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (bar) {
+            bar.media = bar.dataset.scheme === scheme ? 'all' : 'not all';
+          });
         }
       } catch (refused) {}
     </script>
