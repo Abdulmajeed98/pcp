@@ -277,6 +277,41 @@ test.describe('a new Part, through the form', () => {
     await expect(page.getByRole('button', { name: 'Add a part number' })).toBeFocused();
   });
 
+  // An entry removed is taken out of the form's values once its space has
+  // closed, at the end of that transition, and still when the transition
+  // never ends, as one the browser never ran ends nothing: then at the latest
+  // a few seconds later, so that the Part is never saved with an entry the
+  // Admin removed (the redesign's code review).
+  test('a part number removed while no transition runs is still left out of the Part saved', async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Add another part number' }).click();
+    await page
+      .getByRole('textbox', { name: 'Part number 2', exact: true })
+      .fill('TEST-removed');
+    await page.addStyleTag({
+      content: '*, *::before, *::after { transition: none !important; }',
+    });
+    await page.getByRole('button', { name: 'Remove Part number 2' }).click();
+
+    await expect
+      .poll(() =>
+        page
+          .locator('input')
+          .evaluateAll((inputs) =>
+            inputs.some((input) => (input as HTMLInputElement).value === 'TEST-removed'),
+          ),
+      )
+      .toBe(false);
+    const sent = page.waitForRequest(
+      (request) => request.url() === `${apiUrl}/v1/parts` && request.method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Create the Part' }).click();
+    const { partNumbers } = (await sent).postDataJSON() as { partNumbers: string[] };
+    expect(partNumbers).toHaveLength(1);
+    expect(partNumbers).not.toContain('TEST-removed');
+  });
+
   test('the form does not scroll sideways, and meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
     page,
   }) => {

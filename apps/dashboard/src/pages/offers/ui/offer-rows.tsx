@@ -19,7 +19,7 @@ import {
   OfferPlate,
 } from '@/entities/offer';
 import { Trans, useTranslation } from '@/shared/i18n';
-import { type ShownRow, whenTheSpaceHasClosed } from '@/shared/lib';
+import { type Ended, movingProps, type ShownRow, useTakenOutOnceEnded } from '@/shared/lib';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 
 // The Vendor's Offers, as the dashboard's DESIGN.md lays out a list: a table
@@ -165,16 +165,13 @@ function OfferTableRow({
   row: ShownRow<ListedOfferResponse>;
   settleOrder: number | undefined;
 }) {
-  const { item: offer, leaving, arriving } = row;
+  const { item: offer } = row;
 
   return (
     <TableRow
       data-testid="offer"
       data-row={row.key}
-      data-leaving={leaving || undefined}
-      data-arriving={arriving || undefined}
-      inert={leaving}
-      onTransitionEnd={whenTheSpaceHasClosed(row)}
+      {...movingProps(row)}
       className="leaves-rule relative hover:bg-secondary"
     >
       <Cell>
@@ -231,10 +228,7 @@ export function OffersList({ shown, settling }: RowsProps) {
           key={row.key}
           data-testid="offer"
           data-row={row.key}
-          data-leaving={row.leaving || undefined}
-          data-arriving={row.arriving || undefined}
-          inert={row.leaving}
-          onTransitionEnd={whenTheSpaceHasClosed(row)}
+          {...movingProps(row)}
           className="leaves border-b border-rule"
         >
           <div>
@@ -355,6 +349,13 @@ function Confirmation({
     setOld(settleOrder === undefined ? null : drawn);
     setDrawn(state);
   }
+  // The old words are taken away once they have faded out, or at the latest
+  // after the shared mechanism's wait, so that they never stay over the new.
+  const faded = useTakenOutOnceEnded(
+    old === null ? [] : [keyOf(old)],
+    () => setOld(null),
+    fadedOut,
+  );
 
   return (
     <span
@@ -376,11 +377,16 @@ function Confirmation({
           key={`old ${keyOf(old)}`}
           state={old}
           className="unsettles pointer-events-none absolute start-0 top-0 whitespace-nowrap"
-          onFaded={() => setOld(null)}
+          onTransitionEnd={faded(keyOf(old))}
         />
       )}
     </span>
   );
+}
+
+// Whether old words have faded out: their own opacity's transition ended.
+function fadedOut({ propertyName, target, currentTarget }: Ended): boolean {
+  return propertyName === 'opacity' && target === currentTarget;
 }
 
 // What tells one Confirmation from another: its state and its count.

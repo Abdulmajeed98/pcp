@@ -4,6 +4,7 @@ import { cn } from 'cn';
 import { useState } from 'react';
 
 import { settings } from '@/shared/config';
+import { type Ended, useTakenOutOnceEnded } from '@/shared/lib';
 
 type PictureOf = Pick<PartSummaryResponse, 'category' | 'name' | 'photoPath'>;
 
@@ -46,6 +47,11 @@ export function PartPicture({
   );
 }
 
+// Whether a photo's fade in has ended: its own opacity's transition.
+function fadeEnded({ propertyName, target, currentTarget }: Ended): boolean {
+  return propertyName === 'opacity' && target === currentTarget;
+}
+
 // On a Part's page, as the dashboard's DESIGN.md has it (redesign ticket
 // 08): the photo in an 80-pixel square with 8-pixel corners and an Edge, or
 // the Category's icon at 32 pixels in Note Grey, plain, with no tinted square
@@ -63,6 +69,14 @@ function PagePicture({ part }: { part: PictureOf }) {
   const [loaded, setLoaded] = useState<string | null>(null);
   const newer = photo !== null && photo !== covered ? photo : null;
   const described = `Photo of ${part.name}`;
+  // The newer photo covers what was there once it has faded in, or at the
+  // latest after the shared mechanism's wait, should its fade never run.
+  const fadedIn = useTakenOutOnceEnded(
+    newer !== null && loaded === newer ? [newer] : [],
+    (photos) =>
+      setCovered((now) => (newer !== null && photos.includes(newer) ? newer : now)),
+    fadeEnded,
+  );
 
   return (
     <span
@@ -96,9 +110,7 @@ function PagePicture({ part }: { part: PictureOf }) {
             alt={described}
             decoding="async"
             onLoad={() => setLoaded(newer)}
-            onTransitionEnd={(event) => {
-              if (event.propertyName === 'opacity' && loaded === newer) setCovered(newer);
-            }}
+            onTransitionEnd={loaded === newer ? fadedIn(newer) : undefined}
             className={cn(
               'absolute inset-0 size-full object-cover transition-opacity duration-200 ease-out motion-reduce:duration-150',
               loaded === newer ? 'opacity-100' : 'opacity-0',

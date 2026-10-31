@@ -29,6 +29,7 @@ import {
   BackLink,
   buttonVariants,
   InANewTab,
+  OpeningSpace,
   ScreenTitle,
 } from '@/shared/ui';
 
@@ -116,11 +117,16 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
       {/* The reset's result arrives below the actions and above the details
           as a row arrives in a list (DESIGN.md's Motion 8, the No Snap
           Rule): its space opens, so that the details below slide down rather
-          than jump, and then it fades in. The space between it and the
-          details is its own padding, inside what opens. A second reset
-          replaces it in place. */}
-      {resetPassword !== undefined && (
-        <div data-testid="password-reset" data-arriving="" className="leaves">
+          than jump, and then it fades in. Its space is always there, giving
+          back the screen's gap above it while it is closed, so that not even
+          the gap jumps when it arrives. The space between it and the details
+          is its own padding, inside what opens. A second reset replaces it
+          in place. */}
+      <OpeningSpace
+        inStep
+        data-testid={resetPassword === undefined ? undefined : 'password-reset'}
+      >
+        {resetPassword !== undefined && (
           <div className="flex flex-col gap-6 pb-6">
             <p>The password is reset, and the Vendor is logged out.</p>
             <TemporaryPassword password={resetPassword} />
@@ -129,8 +135,8 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
               temporaryPassword={resetPassword}
             />
           </div>
-        </div>
-      )}
+        )}
+      </OpeningSpace>
 
       <DetailList>
         <Detail name="state" label="State">

@@ -11,7 +11,7 @@ import {
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
-import { type ShownRow, whatsAppChatWith, whenTheSpaceHasClosed } from '@/shared/lib';
+import { type ShownRow, whatsAppChatWith, movingProps } from '@/shared/lib';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 
 import { callTo } from '../model/links';
@@ -180,10 +180,7 @@ export function VendorsTable({
             <TableRow
               key={row.key}
               className="leaves-rule relative hover:bg-secondary"
-              data-leaving={row.leaving || undefined}
-              data-arriving={row.arriving || undefined}
-              inert={row.leaving}
-              onTransitionEnd={whenTheSpaceHasClosed(row)}
+              {...movingProps(row)}
             >
               <Cell>
                 <span>

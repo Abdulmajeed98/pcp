@@ -7,11 +7,7 @@ import type { ReactNode } from 'react';
 import { Link, type To, useMatch } from 'react-router';
 
 import { categoryName } from '@/entities/category';
-import {
-  type ShownRow,
-  useAddressKeepingTheQuery,
-  whenTheSpaceHasClosed,
-} from '@/shared/lib';
+import { type ShownRow, useAddressKeepingTheQuery, movingProps } from '@/shared/lib';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 
 // A Part on the list, as the dashboard's DESIGN.md lays out a Part missing
@@ -155,17 +151,11 @@ export function PartsTable({
 }
 
 function PartTableRow({ row }: { row: ShownRow<PartMissingSpecificationsResponse> }) {
-  const { item: part, leaving, arriving } = row;
+  const { item: part } = row;
   const { opened } = usePartLink(part);
 
   return (
-    <TableRow
-      className={cn('leaves-rule', rowGround(opened))}
-      data-leaving={leaving || undefined}
-      data-arriving={arriving || undefined}
-      inert={leaving}
-      onTransitionEnd={whenTheSpaceHasClosed(row)}
-    >
+    <TableRow className={cn('leaves-rule', rowGround(opened))} {...movingProps(row)}>
       <Cell>
         <span className="font-[550]">
           <PartLink part={part} />
