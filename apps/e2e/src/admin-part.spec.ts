@@ -18,7 +18,7 @@ import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
 import { aMadeUpPhoto } from './made-up-photo';
-import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
+import { filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
 import { apiUrl } from './platform';
 
 // The Admin works in the Vendors' shops, on a phone (LANG-8).
@@ -192,11 +192,9 @@ test.describe('a new Part, through the form', () => {
         await page.getByRole('button', { name: 'Create the Part' }).click();
         await expect(cores).toHaveAttribute('aria-invalid', 'true');
       });
-      const { moved, mostInAFrame } = travelOf(frames, 'below');
+      const moved = travelOf(frames, 'below');
       expect(moved, 'the field below moved down').toBeGreaterThan(10);
-      expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(
-        aFrameAtMost(moved),
-      );
+      expect(snapsOfThePlace(frames, 'below'), 'never far in one frame').toEqual([]);
 
       // The refusal leaves smoothly too, as soon as a number is written in
       // its place (the form checks a refused field again as it changes).
@@ -205,10 +203,8 @@ test.describe('a new Part, through the form', () => {
         await expect(cores).toHaveAttribute('aria-invalid', 'false');
       });
       const back = travelOf(leaving, 'below');
-      expect(back.moved, 'the field below moved back up').toBeGreaterThan(10);
-      expect(back.mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(
-        aFrameAtMost(back.moved),
-      );
+      expect(back, 'the field below moved back up').toBeGreaterThan(10);
+      expect(snapsOfThePlace(leaving, 'below'), 'never far in one frame').toEqual([]);
     });
   }
 
@@ -225,9 +221,9 @@ test.describe('a new Part, through the form', () => {
       await button.click();
       await expect(page.getByTestId('refusal')).toBeVisible();
     });
-    const { moved, mostInAFrame } = travelOf(frames, 'button');
+    const moved = travelOf(frames, 'button');
     expect(moved, 'the button moved down').toBeGreaterThan(40);
-    expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(aFrameAtMost(moved));
+    expect(snapsOfThePlace(frames, 'button'), 'never far in one frame').toEqual([]);
   });
 
   test('an added and a removed part number move what is below them smoothly', async ({
@@ -238,21 +234,21 @@ test.describe('a new Part, through the form', () => {
       const add = page.getByRole('button', { name: 'Add another part number' });
       const added = await filmPlaces(page, { add }, () => add.click());
       const down = travelOf(added, 'add');
-      expect(down.moved, `${reducedMotion}: Add moved down`).toBeGreaterThan(30);
+      expect(down, `${reducedMotion}: Add moved down`).toBeGreaterThan(30);
       expect(
-        down.mostInAFrame,
+        snapsOfThePlace(added, 'add'),
         `${reducedMotion}: never far in one frame`,
-      ).toBeLessThanOrEqual(aFrameAtMost(down.moved));
+      ).toEqual([]);
 
       const removed = await filmPlaces(page, { add }, () =>
         page.getByRole('button', { name: 'Remove Part number 2' }).click(),
       );
       const up = travelOf(removed, 'add');
-      expect(up.moved, `${reducedMotion}: Add moved up`).toBeGreaterThan(30);
+      expect(up, `${reducedMotion}: Add moved up`).toBeGreaterThan(30);
       expect(
-        up.mostInAFrame,
+        snapsOfThePlace(removed, 'add'),
         `${reducedMotion}: never far in one frame`,
-      ).toBeLessThanOrEqual(aFrameAtMost(up.moved));
+      ).toEqual([]);
     }
   });
 
@@ -383,9 +379,9 @@ test('a list of rows made not known lets its rows leave smoothly', async ({ page
   const frames = await filmPlaces(page, { below }, () =>
     page.getByRole('button', { name: 'Make PCIe slots not known' }).click(),
   );
-  const { moved, mostInAFrame } = travelOf(frames, 'below');
+  const moved = travelOf(frames, 'below');
   expect(moved, 'what is below moved up').toBeGreaterThan(100);
-  expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(aFrameAtMost(moved));
+  expect(snapsOfThePlace(frames, 'below'), 'never far in one frame').toEqual([]);
   await expect(page.getByRole('group', { name: /^PCIe slots \d$/ })).toHaveCount(0);
   await expect(addPcie).toBeFocused();
 });
@@ -477,11 +473,12 @@ test.describe("a Part's page", () => {
           page.getByRole('img', { name: `Photo of ${part.name}` }),
         ).toBeVisible();
       });
-      const { moved, mostInAFrame } = travelOf(frames, 'name');
+      const moved = travelOf(frames, 'name');
       expect(moved, `${reducedMotion}: the name moved over`).toBeGreaterThan(30);
-      expect(mostInAFrame, `${reducedMotion}: never far in one frame`).toBeLessThanOrEqual(
-        aFrameAtMost(moved),
-      );
+      expect(
+        snapsOfThePlace(frames, 'name'),
+        `${reducedMotion}: never far in one frame`,
+      ).toEqual([]);
     }
   });
 

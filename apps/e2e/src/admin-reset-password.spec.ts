@@ -11,6 +11,7 @@ import {
   type VendorLoginDetails,
 } from './keycloak-screens';
 import { expectNoSidewaysScroll, languages, narrowWindow } from './languages';
+import { film, snapsOf } from './motion-film';
 import { aMadeUpVendorThatHasLoggedIn, expectTheVendorPortal } from './vendors';
 
 // The Admin resets a Vendor's password on a phone, in the Vendor's own place
@@ -117,47 +118,30 @@ test('after the reset, the line that says so, the temporary password on a Raised
   // Watched four times slower, as the owner asked them to be watched, and
   // the top of the details below taken frame by frame from the confirmation
   // on.
-  const devTools = await page.context().newCDPSession(page);
-  await devTools.send('Animation.enable');
-  await devTools.send('Animation.setPlaybackRate', { playbackRate: 0.25 });
-  const tops = page.evaluate(
+  const frames = await film(
+    page,
     () =>
-      new Promise<number[]>((resolve) => {
-        const seen: number[] = [];
-        const end = performance.now() + 4000;
-        const look = () => {
-          const state = document.querySelector('[data-detail="state"]');
-          if (state !== null) seen.push(Math.round(state.getBoundingClientRect().top));
-          if (performance.now() < end) requestAnimationFrame(look);
-          else resolve(seen);
-        };
-        requestAnimationFrame(look);
-      }),
+      document.querySelector('[data-detail="state"]')?.getBoundingClientRect().top ?? null,
+    () => confirmation(page).getByRole('button', { name: 'Reset the password' }).click(),
+    { forMs: 4000 },
   );
-  await confirmation(page).getByRole('button', { name: 'Reset the password' }).click();
-  const moved = await tops;
-  await devTools.send('Animation.setPlaybackRate', { playbackRate: 1 });
   await expect(temporaryPassword(page)).toBeVisible();
 
   const done = page.getByTestId('password-reset');
   await expect(done).toContainText('The password is reset, and the Vendor is logged out.');
   // It arrives as a row arrives in a list (DESIGN.md's Motion 8, the No Snap
   // Rule): its space opens, and then it fades in. The details below slide
-  // down over many frames, never more than an eighth of the way in one.
+  // down over many frames, with no snap.
   const transition = await done.evaluate(
     (element) => getComputedStyle(element).transitionProperty,
   );
   expect(transition.split(', ')).toEqual(
     expect.arrayContaining(['grid-template-rows', 'opacity']),
   );
-  const steps = moved
-    .slice(1)
-    .map((top, index) => top - moved[index])
-    .filter((step) => step !== 0);
-  const travel = (moved.at(-1) ?? 0) - (moved[0] ?? 0);
-  expect(travel).toBeGreaterThan(100);
-  expect(steps.length).toBeGreaterThanOrEqual(12);
-  expect(Math.max(...steps)).toBeLessThan(travel / 8);
+  const tops = frames.map(({ at, drawn }) => ({ at, value: drawn }));
+  const seen = tops.flatMap(({ value }) => (value === null ? [] : [value]));
+  expect((seen.at(-1) ?? 0) - (seen[0] ?? 0), 'the details slid down').toBeGreaterThan(100);
+  expect(snapsOf('the details below', tops)).toEqual([]);
   const actions = await page.getByRole('button', { name: 'Deactivate' }).boundingBox();
   const box = await done.boundingBox();
   const details = await page.locator('[data-detail="state"]').boundingBox();

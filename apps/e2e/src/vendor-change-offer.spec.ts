@@ -17,7 +17,7 @@ import {
   layoutOf,
   narrowWindow,
 } from './languages';
-import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
+import { filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
 import {
   addAnOffer,
   inStockSwitch,
@@ -403,11 +403,9 @@ test.describe("the in-stock switch's thumb, as a made-up Vendor", () => {
         forMs: 1000,
       });
       await expect(track).toHaveAttribute('aria-checked', 'false');
-      const { moved, mostInAFrame } = travelOf(frames, 'thumb');
+      const moved = travelOf(frames, 'thumb');
       expect(moved, 'the thumb crosses its track').toBeGreaterThan(15);
-      expect(mostInAFrame, 'the thumb never jumps').toBeLessThanOrEqual(
-        aFrameAtMost(moved),
-      );
+      expect(snapsOfThePlace(frames, 'thumb'), 'the thumb never jumps').toEqual([]);
       expect(await side()).toBe('left');
 
       await chooseInThePortal(page, kurdish);

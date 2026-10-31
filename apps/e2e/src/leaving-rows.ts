@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
 
+import { film } from './motion-film';
+
 // A row a list was seen dropping while the user was on it, as the page drew
 // it the moment it was marked as leaving: its text, whether it still takes a
 // tap, and each transition of its own and of what it holds, one property at
@@ -77,66 +79,47 @@ export interface DrawnFrame {
 }
 
 // Records the list named `name` at every frame the page draws while `act`
-// runs and for `forMs` after it, with every animation and transition of the
-// page slowed by `slowedBy` (DevTools' own playback rate), so that a step
-// that a person would see at full speed is seen frame by frame.
+// runs and for `forMs` after it, slowed by `slowedBy`, through `film`.
 export async function filmTheList(
   page: Page,
   name: string,
   act: () => Promise<void>,
   { slowedBy, forMs }: { slowedBy: number; forMs: number },
 ): Promise<DrawnFrame[]> {
-  const devtools = await page.context().newCDPSession(page);
-  await devtools.send('Animation.enable');
-  await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 / slowedBy });
-  await page.evaluate((listName) => {
-    const frames: DrawnFrame[] = [];
-    const film = window as unknown as { film: { frames: DrawnFrame[]; on: boolean } };
-    film.film = { frames, on: true };
-    const opacityOf = (element: Element | null) => {
-      let opacity = 1;
-      for (let at = element; at !== null && at !== document.body; at = at.parentElement) {
-        opacity *= Number(getComputedStyle(at).opacity);
-      }
-      return opacity;
+  const frames = await film(page, drawnList, act, { slowedBy, forMs, arg: name });
+  return frames.map(({ at, drawn }) => ({ ...drawn, at }));
+}
+
+// The list named `listName` as the page draws it now, without the moment,
+// which `film` gives. It runs in the page.
+function drawnList(listName: string): Omit<DrawnFrame, 'at'> {
+  const opacityOf = (element: Element | null) => {
+    let opacity = 1;
+    for (let at = element; at !== null && at !== document.body; at = at.parentElement) {
+      opacity *= Number(getComputedStyle(at).opacity);
+    }
+    return opacity;
+  };
+  const list = document.querySelector(
+    `table[aria-label="${listName}"] tbody, ul[aria-label="${listName}"]`,
+  );
+  const rows = [...(list?.children ?? [])].map((row) => {
+    const box = row.getBoundingClientRect();
+    return {
+      key: (row.textContent ?? '').trim().slice(0, 24),
+      top: box.top,
+      height: box.height,
+      opacity: opacityOf(row.querySelector('a')),
     };
-    const draw = () => {
-      const list = document.querySelector(
-        `table[aria-label="${listName}"] tbody, ul[aria-label="${listName}"]`,
-      );
-      const rows = [...(list?.children ?? [])].map((row) => {
-        const box = row.getBoundingClientRect();
-        return {
-          key: (row.textContent ?? '').trim().slice(0, 24),
-          top: box.top,
-          height: box.height,
-          opacity: opacityOf(row.querySelector('a')),
-        };
-      });
-      const pages = document.querySelector(`nav[aria-label="Pages of the ${listName}"]`);
-      frames.push({
-        at: performance.now(),
-        rows,
-        pages: pages?.getBoundingClientRect().top ?? null,
-        headings: [...document.querySelectorAll(`table[aria-label="${listName}"] th`)].map(
-          (heading) => heading.getBoundingClientRect().left,
-        ),
-      });
-      if (film.film.on) requestAnimationFrame(draw);
-    };
-    requestAnimationFrame(draw);
-  }, name);
-  await act();
-  await page.waitForTimeout(forMs);
-  const frames = await page.evaluate(() => {
-    const film = (window as unknown as { film: { frames: DrawnFrame[]; on: boolean } })
-      .film;
-    film.on = false;
-    return film.frames;
   });
-  await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 });
-  await devtools.detach();
-  return frames;
+  const pages = document.querySelector(`nav[aria-label="Pages of the ${listName}"]`);
+  return {
+    rows,
+    pages: pages?.getBoundingClientRect().top ?? null,
+    headings: [...document.querySelectorAll(`table[aria-label="${listName}"] th`)].map(
+      (heading) => heading.getBoundingClientRect().left,
+    ),
+  };
 }
 
 // What jumps between one frame and the next, at most `step` pixels a frame

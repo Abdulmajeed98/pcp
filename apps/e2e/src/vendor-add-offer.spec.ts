@@ -37,7 +37,7 @@ import {
   theOfferForm,
   theOffersScreen,
 } from './offers';
-import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
+import { filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -243,9 +243,9 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
       (below?.y ?? 0) - ((panel?.y ?? 0) + (panel?.height ?? 0)),
       "with the form's gap between them",
     ).toBeLessThanOrEqual(32);
-    const { moved, mostInAFrame } = travelOf(frames, 'button');
+    const moved = travelOf(frames, 'button');
     expect(moved, 'the button makes room for the panel').toBeGreaterThan(40);
-    expect(mostInAFrame, 'the button never jumps').toBeLessThanOrEqual(aFrameAtMost(moved));
+    expect(snapsOfThePlace(frames, 'button'), 'the button never jumps').toEqual([]);
   });
 
   test('the search with results, and the note that an Offer was added, meet the automated part of WCAG 2.2 level AA, in light and in dark', async ({
@@ -359,11 +359,9 @@ test.describe('the catalog search and the Offer form, as a made-up Vendor', () =
       );
       await expect(note).toHaveCount(0);
       await expect(foundParts(page)).toHaveCount(1);
-      const { moved, mostInAFrame } = travelOf(frames, 'searchbox');
+      const moved = travelOf(frames, 'searchbox');
       expect(moved, 'the search rises into the space the note gave up').toBeGreaterThan(40);
-      expect(mostInAFrame, 'the search never jumps').toBeLessThanOrEqual(
-        aFrameAtMost(moved),
-      );
+      expect(snapsOfThePlace(frames, 'searchbox'), 'the search never jumps').toEqual([]);
     });
   }
 
