@@ -18,7 +18,7 @@ import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
 import { aMadeUpPhoto } from './made-up-photo';
-import { filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
+import { film, filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
 import { apiUrl } from './platform';
 
 // The Admin works in the Vendors' shops, on a phone (LANG-8).
@@ -150,6 +150,50 @@ test.describe('a new Part, through the form', () => {
     await expect(refusal).toBeInViewport();
     await expect(page.getByRole('button', { name: 'Create the Part' })).toBeInViewport();
     await expect(page).not.toHaveURL(partPageAddress);
+  });
+
+  // With reduced motion the scroll that keeps such a refusal in sight runs
+  // at once, as the Reduced motion section drops a movement of the whole
+  // screen, while the refusal's space still opens over its frames.
+  test('with reduced motion, a refusal that names no field is brought into sight at once, not by a smooth scroll', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.route(`${apiUrl}/v1/parts`, (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, code: 'internalError', errors: [] }),
+      }),
+    );
+    const button = page.getByRole('button', { name: 'Create the Part' });
+    // The button at the foot of the window, so that the refusal opening above
+    // it pushes it out of sight, and the browser's own scroll anchoring off,
+    // so that only the form's scroll moves the page.
+    await page.addStyleTag({ content: '* { overflow-anchor: none !important; }' });
+    await button.evaluate((element) => element.scrollIntoView({ block: 'end' }));
+
+    const frames = await film(
+      page,
+      () => window.scrollY,
+      () => button.click(),
+      {
+        slowedBy: 1,
+        forMs: 1500,
+      },
+    );
+    await expect(page.getByTestId('refusal')).toBeInViewport();
+    // A smooth scroll moves the page in frame after frame; one at once moves
+    // it in a frame of its own each time it is asked.
+    const moved = frames.map(
+      ({ drawn }, index) => index > 0 && drawn !== frames[index - 1].drawn,
+    );
+    const gliding = moved.filter((now, index) => now && moved[index - 1]);
+    expect(
+      (frames.at(-1)?.drawn ?? 0) - (frames[0]?.drawn ?? 0),
+      'it scrolled',
+    ).toBeGreaterThan(0);
+    expect(gliding, 'never in two frames running').toHaveLength(0);
   });
 
   // An entry added to a list takes the focus, so the Admin types at once;

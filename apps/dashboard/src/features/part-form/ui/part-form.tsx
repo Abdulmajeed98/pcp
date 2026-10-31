@@ -4,6 +4,7 @@ import { type TransitionEvent, useRef } from 'react';
 import { type FieldPath, FormProvider, useForm } from 'react-hook-form';
 
 import { setRefusalsBesideTheirFields } from '@/shared/api';
+import { aScroll } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -77,10 +78,11 @@ export function PartForm({
 
   // A refusal that arrives beside the button is kept in sight with it, once
   // its space has opened, by a scroll as smooth as the opening (the No Snap
-  // Rule).
+  // Rule), or at once with reduced motion, which drops a movement of the
+  // whole screen (DESIGN.md's Reduced motion).
   function keepInSight(event: TransitionEvent<HTMLDivElement>): void {
     if (refusal === undefined || event.propertyName !== 'grid-template-rows') return;
-    end.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    end.current?.scrollIntoView({ block: 'nearest', behavior: aScroll() });
   }
 
   async function submit(values: PartFormValues): Promise<void> {
