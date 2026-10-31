@@ -256,7 +256,7 @@ export const removeOffer = <ThrowOnError extends boolean = false>(options: Optio
 });
 
 /**
- * One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login
+ * One of a Vendor's Offers, with its Part and its expiry at the moment it is read, as its list answers it, for the Admin or for the Vendor's own Login
  */
 export const readOffer = <ThrowOnError extends boolean = false>(options: Options<ReadOfferData, ThrowOnError>): RequestResult<ReadOfferResponses, ReadOfferErrors, ThrowOnError> => (options.client ?? client).get<ReadOfferResponses, ReadOfferErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
