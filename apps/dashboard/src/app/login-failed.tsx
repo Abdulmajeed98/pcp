@@ -2,7 +2,14 @@ import { LogInIcon, RotateCwIcon } from 'lucide-react';
 
 import { startLoginAgain } from '@/shared/auth';
 import { useTranslation } from '@/shared/i18n';
-import { Button, Empty, EmptyContent, EmptyHeader, EmptyMedia } from '@/shared/ui';
+import {
+  Button,
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/shared/ui';
 
 // What the dashboard shows when the login could not be completed. Nobody is
 // known yet, so it follows the Vendor portal's rule for its language, the
@@ -21,9 +28,9 @@ export function LoginFailed() {
           <EmptyMedia variant="icon">
             <LogInIcon aria-hidden="true" className="rtl:-scale-x-100" />
           </EmptyMedia>
-          <h1 data-testid="login-failed" className="text-base font-semibold">
+          <EmptyTitle level={1} data-testid="login-failed">
             {t('LoginFailed.message')}
-          </h1>
+          </EmptyTitle>
         </EmptyHeader>
         <EmptyContent>
           <Button
