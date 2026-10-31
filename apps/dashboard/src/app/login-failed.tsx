@@ -26,7 +26,11 @@ export function LoginFailed() {
           </h1>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" onClick={() => void startLoginAgain()}>
+          <Button
+            data-testid="try-again"
+            variant="outline"
+            onClick={() => void startLoginAgain()}
+          >
             <RotateCwIcon aria-hidden="true" />
             {t('LoginFailed.tryAgain')}
           </Button>

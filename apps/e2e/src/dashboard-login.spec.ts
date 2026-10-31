@@ -81,7 +81,7 @@ test('a login that could not be completed says so as the empty state, and Try ag
   );
   await expectAccessible(page);
 
-  const tryAgain = page.getByRole('button', { name: 'Try again' });
+  const tryAgain = page.getByTestId('try-again');
   const startedAgain = page.waitForRequest((request) =>
     request.url().startsWith(`${realmUrl}/protocol/openid-connect/auth`),
   );
@@ -90,7 +90,7 @@ test('a login that could not be completed says so as the empty state, and Try ag
   await expect(message).toBeVisible();
 
   await page.unroute(tokenEndpoint);
-  await page.getByRole('button', { name: 'Try again' }).click();
+  await page.getByTestId('try-again').click();
   await expect(page.getByTestId('caller-name')).toHaveText(developmentAdmin.name);
   await expect(catalogHeading(page)).toBeVisible();
 });

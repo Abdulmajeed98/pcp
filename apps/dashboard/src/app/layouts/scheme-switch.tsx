@@ -25,6 +25,7 @@ export function SchemeSwitch({
 
   return (
     <fieldset
+      data-testid="scheme-switch"
       className={cn(
         'relative inline-flex shrink-0 rounded-control border border-input',
         className,
@@ -37,6 +38,7 @@ export function SchemeSwitch({
           <button
             key={scheme}
             type="button"
+            data-testid={`scheme-${scheme}`}
             aria-label={words[scheme]}
             title={words[scheme]}
             aria-pressed={scheme === shown}
