@@ -8,7 +8,15 @@ import { Link, type To, useMatch } from 'react-router';
 
 import { categoryName } from '@/entities/category';
 import { type ShownRow, useAddressKeepingTheQuery, movingProps } from '@/shared/lib';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
+import {
+  linkOverRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui';
 
 // A Part on the list, as the dashboard's DESIGN.md lays out a Part missing
 // specifications (redesign ticket 10): its name, its manufacturer and its
@@ -20,11 +28,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 // Raised Stone ground under the pointer, and the row of the Part open beside
 // the list is on Active Stone. A Part's name and manufacturer are English in
 // every language.
-
-// What makes the whole row the link: the link's box covers the row, and
-// draws the focus outline inside the row's edges.
-const linkOverRow =
-  'after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring';
 
 // The ground of a row: Raised Stone under the pointer, Active Stone when its
 // Part is open beside the list.

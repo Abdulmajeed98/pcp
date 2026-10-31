@@ -20,7 +20,15 @@ import {
 } from '@/entities/offer';
 import { Trans, useTranslation } from '@/shared/i18n';
 import { type Ended, movingProps, type ShownRow, useTakenOutOnceEnded } from '@/shared/lib';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
+import {
+  linkOverRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui';
 
 // The Vendor's Offers, as the dashboard's DESIGN.md lays out a list: a table
 // from 64rem, two-line rows on a phone, never cards and never a picture. An
@@ -48,11 +56,6 @@ interface RowsProps {
   shown: readonly ShownRow<ListedOfferResponse>[];
   settling: boolean;
 }
-
-// What makes the whole row the link: the link's box covers the row, and
-// draws the focus outline inside the row's edges.
-const linkOverRow =
-  'after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring';
 
 // How many rows settle in turn: the first ten that stay.
 const settlingRows = 10;

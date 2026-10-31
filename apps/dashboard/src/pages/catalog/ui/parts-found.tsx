@@ -4,7 +4,15 @@ import { cn } from 'cn';
 import { Link, type To, useMatch } from 'react-router';
 
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
+import {
+  linkOverRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui';
 
 // The Parts a search found, as the dashboard's DESIGN.md lays out a list:
 // a table from 64rem, two-line rows on a phone, never cards and never a
@@ -16,11 +24,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 // the list is on Active Stone. A Part's name, its manufacturer and its part
 // numbers are English in every language, and are kept apart from the text
 // around them.
-
-// What makes the whole row the link: the link's box covers the row, and
-// draws the focus outline inside the row's edges.
-const linkOverRow =
-  'after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring';
 
 // The ground of a row: Raised Stone under the pointer, Active Stone when its
 // Part is open beside the list.
