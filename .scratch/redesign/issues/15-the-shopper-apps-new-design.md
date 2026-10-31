@@ -4,7 +4,7 @@
 
 **What to build:** The direction the owner chose becomes the Shopper app's written design, and what the Shopper app has today is rebuilt to it, so the next module that builds Shopper pages starts from the new look. Impeccable rewrites its DESIGN.md with a Motion section led by Emil's skills, an ADR records what replaces ADR-0007's look for it, and its one page and its footer take the new look.
 
-**Blocked by:** 14
+**Blocked by:** 14 (deferred by the owner on 1 November 2026 until the `browse` module begins)
 
 **Status:** ready-for-agent
 
