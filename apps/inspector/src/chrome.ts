@@ -72,8 +72,15 @@ export async function logIn(
     let authorization: string | undefined;
     browser.on(page.sessionId, 'Fetch.requestPaused', (paused: PausedRequest) => {
       authorization ??= header(paused.request, 'Authorization');
+      // Only reads, and their preflights, reach the API from this tab too.
+      const reads = ['GET', 'OPTIONS'].includes(paused.request.method);
       void page
-        .send('Fetch.continueRequest', { requestId: paused.requestId })
+        .send(
+          reads ? 'Fetch.continueRequest' : 'Fetch.failRequest',
+          reads
+            ? { requestId: paused.requestId }
+            : { requestId: paused.requestId, errorReason: 'BlockedByClient' },
+        )
         .catch(() => {});
     });
     await page.send('Fetch.enable', {
@@ -142,17 +149,15 @@ async function where(page: TastePage): Promise<string> {
   return String(address) || 'an address the page would not give';
 }
 
-// The paths of the API the made-up shop answers for: every call about
-// Vendors and Offers.
-const theShopsPaths = ['/v1/vendors*', '/v1/offers*', '/v1/caller/vendor*', '/v1/parts*'];
-
 // Answers every call about Vendors and Offers in a tab from the made-up shop,
-// and marks a search of the catalog for the shop's Vendor with its Offers,
+// marks a search of the catalog for the shop's Vendor with its Offers, and
+// refuses every call to the API that is not a read, whatever it is about,
 // before it leaves the browser, so that nothing is written to the
-// development database: only the calls that read the real Vendors reach the
-// API, and the list of them is answered with the shop's Vendor among them. The API is on another address than
-// the dashboard, so each answer carries what the browser asks of a
-// cross-origin answer, and a preflight is answered too.
+// development database: only reads reach the API, and the list of the real
+// Vendors is answered with the shop's Vendor among them. Every call to the
+// API is paused for it. The API is on another address than the dashboard,
+// so each answer carries what the browser asks of a cross-origin answer, and
+// a preflight is answered too.
 export async function answerFromTheShopIn(
   browser: TasteBrowser,
   page: TastePage,
@@ -246,9 +251,6 @@ export async function answerFromTheShopIn(
     },
   );
   await page.send('Fetch.enable', {
-    patterns: theShopsPaths.map((path) => ({
-      urlPattern: `${apiUrl}${path}`,
-      requestStage: 'Request',
-    })),
+    patterns: [{ urlPattern: `${apiUrl}/*`, requestStage: 'Request' }],
   });
 }
