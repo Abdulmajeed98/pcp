@@ -4,7 +4,7 @@ import { parseEnv } from 'node:util';
 import type { PartPageResponse } from '@pcp/api-client';
 
 import { partsOfTheCatalog } from './catalog-parts.ts';
-import { answerFromTheShopIn, CannotInspect, logIn } from './chrome.ts';
+import { answerFromTheShopIn, CannotInspect, landOnTheDashboard, logIn } from './chrome.ts';
 import { BadScheme, emulatedMedia, type Scheme, takeTheScheme } from './colour-scheme.ts';
 import { madeUpShop } from './made-up-shop.ts';
 import { runTheInspector, tastesBrowser } from './taste.ts';
@@ -26,9 +26,10 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 // the shop's Vendor, under `/vendors/00000000-0000-4000-8000-000000000001/portal`.
 //
 // It exits with the inspector's own status, 0 with no FAIL findings and 1
-// with some, or with 3, before anything is inspected or written, when it
-// cannot start: when the login does not land back on the dashboard, above
-// all.
+// with some, or with 3, before any finding is written, when it cannot
+// start or cannot go on: when the login does not land back on the
+// dashboard, above all, or when a tab is left on Keycloak's login screen
+// though the screen was opened twice.
 
 const usage =
   'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--widths 1440,768,360] [--out DIR] [--app] [other options of inspect.mjs]';
@@ -106,12 +107,15 @@ try {
   });
   const shop = madeUpShop(new Date(), parts);
 
-  // Every tab the inspector opens is answered from the shop, and the
-  // inspector's own launch gives it this Chrome, logged in.
+  // Every tab the inspector opens is answered from the shop, and lands on
+  // the dashboard, drawn, before it is judged; the inspector's own launch
+  // gives it this Chrome, logged in.
   const newPage = browser.newPage.bind(browser);
+  const dashboard = new URL(address).origin;
   browser.newPage = async (options) => {
     const page = await newPage(options);
     await answerFromTheShopIn(browser, page, shop, apiUrl);
+    landOnTheDashboard(page, dashboard);
     if (scheme !== undefined) {
       await page.send('Emulation.setEmulatedMedia', emulatedMedia(scheme, options ?? {}));
     }
@@ -127,4 +131,11 @@ try {
   stop(error instanceof Error ? error.message : String(error));
 }
 
-await runTheInspector(inspectorArgs);
+try {
+  await runTheInspector(inspectorArgs);
+} catch (error) {
+  // A tab that did not land on the dashboard stops the inspection before
+  // the inspector writes any finding.
+  if (error instanceof CannotInspect) stop(error.message);
+  throw error;
+}

@@ -142,6 +142,60 @@ export async function logIn(
   }
 }
 
+// Where a tab is, once an address has been opened in it: on which origin,
+// whether Keycloak's login screen is drawn, and whether the dashboard is.
+export interface Landing {
+  origin: string;
+  loginScreen: boolean;
+  drawn: boolean;
+}
+
+const landing = `({
+  origin: location.origin,
+  loginScreen: document.querySelector('#kc-form-login') !== null,
+  drawn: (document.getElementById('root')?.childElementCount ?? 0) > 0,
+})`;
+
+// Makes every screen of the dashboard the inspector opens in this tab land on
+// the dashboard, drawn, before the inspector looks at it. Keycloak's cookie
+// usually sends a new tab straight back, but a tab was seen left on
+// Keycloak's login screen, which the inspector then judged as the screen
+// (false FAILs for its heavy shadow). So after each open the tab is watched
+// for up to `waitMs`; left on the login screen, or anywhere but the
+// dashboard drawn, the screen is opened once more; and should it still not
+// land, the inspection stops, loudly, rather than judge another page.
+// Addresses that are not the dashboard's, such as the inspector's own
+// contact sheet, are opened as the inspector asks.
+export function landOnTheDashboard(
+  page: TastePage,
+  dashboardOrigin: string,
+  { waitMs = 15000, pollMs = 100 } = {},
+): void {
+  const open = page.goto.bind(page);
+  page.goto = async (url, options) => {
+    if (new URL(url).origin !== dashboardOrigin) return open(url, options);
+    let last: Landing | undefined;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const how = await open(url, options);
+      const end = Date.now() + waitMs;
+      for (;;) {
+        last = (await page.eval(landing).catch(() => undefined)) as Landing | undefined;
+        if (last?.origin === dashboardOrigin && last.drawn && !last.loginScreen) {
+          return how;
+        }
+        if (Date.now() >= end) break;
+        await sleep(pollMs);
+      }
+    }
+    const shown = last?.loginScreen
+      ? "Keycloak's login screen"
+      : `a page at ${last?.origin ?? 'an address it would not give'} that is not the dashboard drawn`;
+    throw new CannotInspect(
+      `A tab of the inspector opened ${new URL(url).pathname} twice and was left on ${shown}, so the inspection stopped rather than judge it. Run the command again.`,
+    );
+  };
+}
+
 // Where the page is, without its query or fragment, which may hold a code
 // of the login.
 async function where(page: TastePage): Promise<string> {
