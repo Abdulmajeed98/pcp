@@ -9,7 +9,7 @@
 **Status:** ready-for-human
 
 - [x] What the dashboard's rebuild taught, from the Comments of tickets 06 to 13, is summed up for the owner first.
-- [ ] Taste and Impeccable critique the Shopper's DESIGN.md and its one page, and the owner decides whether Fit Diagram is kept as it is, kept with its execution changed, or dropped. The decision is recorded under Comments with the owner's word.
+- [x] Taste and Impeccable critique the Shopper's DESIGN.md and its one page, and the owner decides whether Fit Diagram is kept as it is, kept with its execution changed, or dropped. The decision is recorded under Comments with the owner's word.
 - [ ] The directions are dealt by Taste's page run as its `SKILL.md` describes it, from the repository root, never picked by an agent, with the hard rules as ticket 03 left them and the fonts kept (ADR-0006). Pictures of Erbil come from `assets.mjs` with their credits.
 - [ ] Each direction is rendered as the Shopper's pages to come (a Part with its Offers, and a Build), in Kurdish and in English, at 360 and 1440 pixels, filled with realistic, obviously fictional data, and with the BuildCores OpenDB credit in the footer (CAT-9).
 - [ ] The options are shown in the built-in browser on one page, one per anchor, two columns at most, before the owner is asked to choose. If the owner takes none, the script deals again.
@@ -84,3 +84,16 @@ The Shopper's one page is the placeholder at `/[locale]`, a scaffold of sample s
 3. **Drop it**: the draw is free of it.
 
 The first box is ticked. The second stays open for the owner's word, and the Status stays. The directions are dealt only after the owner decides and after ticket 12 is merged.
+
+### 1 November 2026: the owner's decision
+
+The owner read `.taste-skill/redesign-14/index.html` in the built-in browser and answered, through the coordinator:
+
+| Question | The owner's word | Result |
+|---|---|---|
+| Does Fit Diagram stay? | "Keep, change execution" | **Kept**, its execution changed |
+| What must change? (offered: the dashboard's lessons; only where it earns it; honest when unchecked; something of Erbil) | "Something of Erbil" | The look carries something of its place, Erbil's bazaar, its signs and its trade, so that it could not be any parts picker's |
+
+The other three were not chosen, so none of them is imposed as a change to the idea: the drawing's reach and the empty "not checked" callouts stay as the DESIGN.md has them. The hard rules as ticket 03 left them (44 pixels on a touchscreen and 36 under a mouse, the scheme switch, no text under 14 pixels, 360 pixels first, right to left, the Tall Script and No Capitals Rules, Western digits) and the No Snap Rule still bind every option, as they bind every app. The second box is ticked.
+
+**The line the draw must hold to:** keep Fit Diagram, Parts drawn the way a motherboard manual draws them, every Compatibility Rule a numbered callout ending in words and an unchecked one an empty callout that says "not checked", and carry something of Erbil (its bazaar, its signs, its trade) so that the look could belong to no other parts picker; the fonts kept (ADR-0006), and the hard rules of ticket 03 and the No Snap Rule held.
