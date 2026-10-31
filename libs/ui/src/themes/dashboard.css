@@ -207,9 +207,12 @@
 @layer base {
   /*
    * A control is 44 pixels high on a touchscreen, and 36 under a mouse on a
-   * screen as wide as a desk's, never lower (ticket 03 of the redesign).
+   * screen as wide as a desk's, never lower (ticket 03 of the redesign). A
+   * device with any touch input keeps 44, as a laptop with a touchscreen
+   * whose trackpad is its main pointer: anything tapped on a touchscreen is
+   * at least 44 by 44 (the root DESIGN.md).
    */
-  @media (pointer: fine) and (min-width: 64rem) {
+  @media (pointer: fine) and (not (any-pointer: coarse)) and (min-width: 64rem) {
     :root {
       --spacing-control: 2.25rem;
     }
