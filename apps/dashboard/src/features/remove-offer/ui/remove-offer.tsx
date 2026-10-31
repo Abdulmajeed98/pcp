@@ -4,7 +4,7 @@ import { Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
-import { Trans, useTranslation } from '@/shared/i18n';
+import { useTranslation } from '@/shared/i18n';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,8 +13,10 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogRefusal,
   AlertDialogTitle,
   AlertDialogTrigger,
+  BusyLabel,
   Button,
 } from '@/shared/ui';
 
@@ -27,7 +29,10 @@ import { useRemoveOffer } from '../api/remove-offer';
 // a removal is undone only by adding the Offer again. Cancelling changes
 // nothing. A removal that is refused says what was not done, then why, in the
 // dialog, which stays open to try again, and a removal on its way keeps it
-// open too; once the Offer is removed, `onRemoved` leaves the screen.
+// open too; once the Offer is removed, `onRemoved` leaves the screen. The
+// refusal's space opens before it fades in, so that the buttons slide down
+// rather than jump (`AlertDialogRefusal`), and Remove keeps its width while
+// it waits (`BusyLabel`), as DESIGN.md's Dialogs and Buttons say.
 export function RemoveOffer({
   vendorId,
   offer,
@@ -63,25 +68,32 @@ export function RemoveOffer({
         <Trash2Icon data-icon="inline-start" />
         {t('RemoveOffer.remove')}
       </AlertDialogTrigger>
-      <AlertDialogContent data-testid="remove-confirmation">
+      <AlertDialogContent
+        data-testid="remove-confirmation"
+        aria-describedby="remove-offer-part remove-offer-description"
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{t('RemoveOffer.title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            <Trans
-              i18nKey="RemoveOffer.description"
-              components={{
-                name: (
-                  <AlwaysEnglish data-testid="part-name">{offer.part.name}</AlwaysEnglish>
-                ),
-              }}
-            />
+          {/* The Part on a line of its own under the question, left to right
+              in every language, so that a long English name is never broken
+              through a right-to-left sentence (the owner's "Own line"). */}
+          <p id="remove-offer-part" className="font-[550]">
+            <AlwaysEnglish data-testid="part-name" className="block w-fit max-w-full">
+              {offer.part.name}
+            </AlwaysEnglish>
+          </p>
+          <AlertDialogDescription id="remove-offer-description">
+            {t('RemoveOffer.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {remove.error && (
-          <p role="alert" className="text-sm text-destructive">
-            {t('RemoveOffer.notRemoved')} <WhyNotAnsweredInThePortal error={remove.error} />
-          </p>
-        )}
+        <AlertDialogRefusal>
+          {remove.error && (
+            <>
+              {t('RemoveOffer.notRemoved')}{' '}
+              <WhyNotAnsweredInThePortal error={remove.error} />
+            </>
+          )}
+        </AlertDialogRefusal>
         <AlertDialogFooter>
           <AlertDialogCancel data-testid="cancel-removal" disabled={remove.isPending}>
             {t('RemoveOffer.cancel')}
@@ -92,7 +104,11 @@ export function RemoveOffer({
             disabled={remove.isPending}
             onClick={() => remove.mutate()}
           >
-            {remove.isPending ? t('RemoveOffer.removing') : t('RemoveOffer.confirm')}
+            <BusyLabel
+              busy={remove.isPending}
+              label={t('RemoveOffer.confirm')}
+              busyLabel={t('RemoveOffer.removing')}
+            />
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

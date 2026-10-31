@@ -218,9 +218,23 @@ describe("a Vendor's Offers", () => {
     return (await response.json()) as OfferBody;
   }
 
-  async function readOf(response: Response): Promise<OfferBody> {
+  async function readOf(response: Response): Promise<ListedOfferBody> {
     expect(response.status).toBe(200);
-    return (await response.json()) as OfferBody;
+    return (await response.json()) as ListedOfferBody;
+  }
+
+  // An Offer as it is read on its own just after it was confirmed: with its
+  // expiry at the moment it is read, as its list marks it, confirmed 0 days
+  // ago and neither expired nor about to expire. The days left are 14 on a
+  // clock held still and 13 once a millisecond has passed.
+  function asReadJustAfterItsConfirmation(offer: OfferBody): ListedOfferBody {
+    return {
+      ...offer,
+      daysSinceConfirmation: 0,
+      daysLeft: expect.any(Number) as number,
+      expired: false,
+      aboutToExpire: false,
+    };
   }
 
   function listOffers(
@@ -347,7 +361,7 @@ describe("a Vendor's Offers", () => {
           createdAt: created.confirmedAt,
         });
         expect(await readOf(await readOffer(vendor.id, created.id, token))).toEqual(
-          created,
+          asReadJustAfterItsConfirmation(created),
         );
       },
     );
@@ -724,7 +738,7 @@ describe("a Vendor's Offers", () => {
         );
         expect(
           await readOf(await readOffer(vendor.id, created.id, await adminToken())),
-        ).toEqual(created);
+        ).toEqual(asReadJustAfterItsConfirmation(created));
       }
     });
 
@@ -799,7 +813,7 @@ describe("a Vendor's Offers", () => {
       }
       expect(
         await readOf(await readOffer(vendor.id, offer.id, await adminToken())),
-      ).toEqual(offer);
+      ).toEqual(asReadJustAfterItsConfirmation(offer));
     });
 
     it("answers 404 with OFFER_NOT_FOUND for another Vendor's Offer changed or removed through one's own address, and for one that does not exist, leaving the other Vendor's Offer as it was", async () => {
@@ -835,7 +849,7 @@ describe("a Vendor's Offers", () => {
       }
       expect(
         await readOf(await readOffer(another.id, anothersOffer.id, await adminToken())),
-      ).toEqual(anothersOffer);
+      ).toEqual(asReadJustAfterItsConfirmation(anothersOffer));
       expect(await offerHistoryRows()).toEqual(historyBefore);
     });
 
@@ -915,7 +929,7 @@ describe("a Vendor's Offers", () => {
       );
       expect(
         await readOf(await readOffer(vendor.id, offer.id, await adminToken())),
-      ).toEqual(offer);
+      ).toEqual(asReadJustAfterItsConfirmation(offer));
     });
 
     it('answers a call without a token with 401', async () => {
@@ -1215,6 +1229,39 @@ describe("a Vendor's Offers", () => {
         expired: false,
         aboutToExpire: true,
       });
+    });
+
+    it('is read on its own with its expiry at the moment it is read, as its list marks it, for an Offer screen to lead with its Confirmation', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const created = await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+
+      const readAfter = async (later: number) => {
+        moveTheClockTo(after(aMovedMoment, later));
+        return readOf(
+          await readOffer(vendor.id, created.id, await tokenOfTheOwnLogin(vendor)),
+        );
+      };
+
+      expect(await readAfter(8 * aDay)).toEqual({
+        ...created,
+        daysSinceConfirmation: 8,
+        daysLeft: 6,
+        expired: false,
+        aboutToExpire: false,
+      });
+      expect(await readAfter(12 * aDay)).toMatchObject({
+        daysSinceConfirmation: 12,
+        daysLeft: 2,
+        expired: false,
+        aboutToExpire: true,
+      });
+      expect(await readAfter(20 * aDay)).toMatchObject({
+        daysSinceConfirmation: 20,
+        daysLeft: 0,
+        expired: true,
+        aboutToExpire: false,
+      });
+      expect(await readAfter(20 * aDay)).toEqual((await theListOf(vendor.id)).content[0]);
     });
 
     it('counts the days since Confirmation as whole days of 24 hours: 0 just before 24 hours, 1 at 24 hours, 14 at the boundary', async () => {
@@ -1587,7 +1634,7 @@ describe("a Vendor's Offers", () => {
       });
       expect(
         await readOf(await readOffer(vendor.id, created.id, await adminToken())),
-      ).toEqual(changed);
+      ).toEqual(asReadJustAfterItsConfirmation(changed));
     });
 
     it('confirms an Expired Offer saved unchanged, which is current again', async () => {
@@ -1647,9 +1694,14 @@ describe("a Vendor's Offers", () => {
           refused(field, reason),
         );
       }
-      expect(await readOf(await readOffer(vendor.id, created.id, ownToken))).toEqual(
-        created,
-      );
+      // Read a day after its Confirmation, unchanged.
+      expect(await readOf(await readOffer(vendor.id, created.id, ownToken))).toEqual({
+        ...created,
+        daysSinceConfirmation: 1,
+        daysLeft: 13,
+        expired: false,
+        aboutToExpire: false,
+      });
     });
 
     it("refuses to change the Offer's Part", async () => {

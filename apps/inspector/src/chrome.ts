@@ -2,9 +2,11 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import {
   answerFromTheMadeUpShop,
+  catalogSearchOfTheShop,
   listsTheVendors,
   type MadeUpShop,
   type ShopAnswer,
+  partsWithTheShopsOffers,
   vendorsWithTheShops,
 } from './made-up-shop.ts';
 import type { TasteBrowser, TastePage } from './taste.ts';
@@ -142,9 +144,10 @@ async function where(page: TastePage): Promise<string> {
 
 // The paths of the API the made-up shop answers for: every call about
 // Vendors and Offers.
-const theShopsPaths = ['/v1/vendors*', '/v1/offers*', '/v1/caller/vendor*'];
+const theShopsPaths = ['/v1/vendors*', '/v1/offers*', '/v1/caller/vendor*', '/v1/parts*'];
 
 // Answers every call about Vendors and Offers in a tab from the made-up shop,
+// and marks a search of the catalog for the shop's Vendor with its Offers,
 // before it leaves the browser, so that nothing is written to the
 // development database: only the calls that read the real Vendors reach the
 // API, and the list of them is answered with the shop's Vendor among them. The API is on another address than
@@ -210,6 +213,25 @@ export async function answerFromTheShopIn(
             body: (await response.json()) as unknown,
           }))
           .then((api) => fulfil(vendorsWithTheShops(shop, api)))
+          .catch(() => page.send('Fetch.failRequest', { requestId, errorReason: 'Failed' }))
+          .catch(() => {});
+        return;
+      }
+
+      // A search of the catalog for the shop's Vendor: the API's own search,
+      // read here with the tab's Authorization, without the Vendor, and the
+      // Parts the shop offers marked with its Offers.
+      const search = catalogSearchOfTheShop(shop, call);
+      if (search !== undefined) {
+        const authorization = header(request, 'Authorization');
+        void fetch(`${apiUrl}${search}`, {
+          headers: authorization === undefined ? {} : { Authorization: authorization },
+        })
+          .then(async (response) => ({
+            status: response.status,
+            body: (await response.json()) as unknown,
+          }))
+          .then((api) => fulfil(partsWithTheShopsOffers(shop, api)))
           .catch(() => page.send('Fetch.failRequest', { requestId, errorReason: 'Failed' }))
           .catch(() => {});
         return;

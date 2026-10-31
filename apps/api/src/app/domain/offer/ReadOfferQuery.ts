@@ -34,22 +34,31 @@ class Input {
 }
 
 class Output {
-  private constructor(private readonly offer: Offer) {}
+  private constructor(
+    private readonly offer: Offer,
+    private readonly now: Date,
+  ) {}
 
-  static of(offer: Offer): Output {
-    return new Output(offer);
+  static of(offer: Offer, now: Date): Output {
+    return new Output(offer, now);
   }
 
   getOffer(): Offer {
     return this.offer;
+  }
+
+  // The moment the Offer was read at, by the API's clock, which its expiry
+  // is judged at, as a list of the Offers judges each.
+  getNow(): Date {
+    return this.now;
   }
 }
 
 export { Input as ReadOfferQueryInput };
 export { Output as ReadOfferQueryOutput };
 
-// One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's
-// own Login, by the rule for which Vendor a request acts for. Another
+// One of a Vendor's Offers, with its Part and the moment it was read at, for
+// the Admin or for the Vendor's own Login, by the rule for which Vendor a request acts for. Another
 // Vendor's Offer is answered as one that does not exist.
 @Injectable()
 export class ReadOfferQuery {
@@ -66,6 +75,7 @@ export class ReadOfferQuery {
     );
     if (Either.isLeft(actedFor)) return Either.left(actedFor.left);
 
+    const now = new Date();
     const found = await this.offerStore.readById(
       actedFor.right.getId(),
       input.getOfferId(),
@@ -73,7 +83,7 @@ export class ReadOfferQuery {
 
     return Either.flatMap(found, (offer) =>
       Either.fromOption(offer, () => offerNotFound(input.getOfferId())).pipe(
-        Either.map(Output.of),
+        Either.map((offer) => Output.of(offer, now)),
       ),
     );
   }

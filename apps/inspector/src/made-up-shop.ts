@@ -2,6 +2,7 @@ import type {
   ErrorResponse,
   ListedOfferResponse,
   OfferResponse,
+  PartPageResponse,
   PartSummaryResponse,
   VendorPageResponse,
   VendorResponse,
@@ -329,6 +330,14 @@ function refusal(status: number, code: string, title: string): ShopAnswer {
 
 const notFound = refusal(404, 'NOT_FOUND', 'The made-up shop holds no such thing.');
 
+// An Offer the shop does not hold, as the API answers one that does not
+// exist, so that an Offer's screen says it no longer exists.
+const offerNotFound = refusal(
+  404,
+  'OFFER_NOT_FOUND',
+  'The made-up shop holds no such Offer.',
+);
+
 // Nothing is ever written: the shop is not in the database, and a change
 // that reached the API would be written to the development database.
 const readOnly = refusal(
@@ -381,8 +390,10 @@ export function answerFromTheMadeUpShop(
   if (offers === undefined) return { status: 200, body: shop.vendor };
   if (offers !== 'offers' || beyond.length > 0) return notFound;
   if (offerId !== undefined) {
-    const offer = shop.offers.find((each) => each.id === offerId);
-    return offer === undefined ? notFound : { status: 200, body: offer };
+    // One Offer is read with its expiry at the moment it is read, as the API
+    // reads it and as its list shows it.
+    const offer = listedOffers.find((each) => each.id === offerId);
+    return offer === undefined ? offerNotFound : { status: 200, body: offer };
   }
 
   const words = (address.searchParams.get('search') ?? '')
@@ -441,6 +452,38 @@ export function vendorsWithTheShops(shop: MadeUpShop, api: ShopAnswer): ShopAnsw
       page.pageNumber === 0
         ? [...page.content, theShops].sort((a, b) => a.name.localeCompare(b.name))
         : page.content,
+  };
+  return { status: 200, body };
+}
+
+// Whether a call searches the catalog for the shop's Vendor, as the portal's
+// catalog search does, and if so the API's own search, without the Vendor,
+// which the API does not know: the Parts are the catalog's, and the shop
+// marks those it offers (`partsWithTheShopsOffers`). Any other search of the
+// catalog is the API's alone.
+export function catalogSearchOfTheShop(
+  shop: MadeUpShop,
+  call: ApiCall,
+): string | undefined {
+  const address = new URL(call.path, 'http://api');
+  if (call.method !== 'GET' || address.pathname !== '/v1/parts') return undefined;
+  if (address.searchParams.get('vendorId') !== shop.vendor.id) return undefined;
+  address.searchParams.delete('vendorId');
+  return address.pathname + address.search;
+}
+
+// The API's page of a catalog search, each Part the shop offers marked with
+// its Offer, as the API marks a Vendor's own.
+export function partsWithTheShopsOffers(shop: MadeUpShop, api: ShopAnswer): ShopAnswer {
+  if (api.status !== 200) return api;
+  const page = api.body as PartPageResponse;
+  const offerOf = new Map(shop.offers.map((offer) => [offer.part.id, offer.id]));
+  const body: PartPageResponse = {
+    ...page,
+    content: page.content.map((part) => ({
+      ...part,
+      offerId: offerOf.get(part.id) ?? null,
+    })),
   };
   return { status: 200, body };
 }

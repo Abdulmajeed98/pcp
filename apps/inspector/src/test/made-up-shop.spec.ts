@@ -3,7 +3,9 @@ import type { VendorsOffersPageResponse } from '@pcp/api-client';
 
 import {
   answerFromTheMadeUpShop,
+  catalogSearchOfTheShop,
   listsTheVendors,
+  partsWithTheShopsOffers,
   vendorsWithTheShops,
 } from '../made-up-shop.ts';
 import { aShopFromTheCatalog, now } from './catalog-stand-in.ts';
@@ -244,17 +246,72 @@ describe("the made-up shop's Vendor", () => {
 });
 
 describe("the made-up shop's other answers", () => {
-  it('give one Offer by its identifier as the shop holds it', () => {
+  it('give one Offer by its identifier as the shop holds it, with its expiry at the moment it is read, as its list shows it', () => {
     const offer = shop.offers[0];
+    const listed = offersPage().content.find((each) => each.id === offer.id);
 
+    expect(listed).toMatchObject(offer);
     expect(answerTo('GET', `/v1/vendors/${vendorId}/offers/${offer.id}`)).toEqual({
       status: 200,
-      body: offer,
+      body: listed,
     });
     expect(
-      answerTo('GET', `/v1/vendors/${vendorId}/offers/11111111-1111-4111-8111-111111111111`)
-        ?.status,
-    ).toBe(404);
+      answerTo(
+        'GET',
+        `/v1/vendors/${vendorId}/offers/11111111-1111-4111-8111-111111111111`,
+      ),
+    ).toMatchObject({ status: 404, body: { errors: [{ code: 'OFFER_NOT_FOUND' }] } });
+  });
+
+  it("search the catalog for the shop's Vendor as the API's own search, every Part the shop offers marked with its Offer", () => {
+    const offered = shop.offers[1];
+    const other = { ...offered.part, id: '22222222-2222-4222-8222-222222222222' };
+    const call = {
+      method: 'GET',
+      path: `/v1/parts?vendorId=${vendorId}&page=0&size=20&search=ryzen`,
+    };
+    const apis = {
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 2,
+      totalPages: 1,
+      first: true,
+      last: true,
+      content: [
+        { ...offered.part, offerId: null },
+        { ...other, offerId: null },
+      ],
+    };
+
+    expect(answerTo(call.method, call.path)).toBeUndefined();
+    expect(catalogSearchOfTheShop(shop, call)).toBe(
+      '/v1/parts?page=0&size=20&search=ryzen',
+    );
+    expect(partsWithTheShopsOffers(shop, { status: 200, body: apis })).toEqual({
+      status: 200,
+      body: {
+        ...apis,
+        content: [
+          { ...offered.part, offerId: offered.id },
+          { ...other, offerId: null },
+        ],
+      },
+    });
+    expect(
+      catalogSearchOfTheShop(shop, {
+        method: 'GET',
+        path: '/v1/parts?vendorId=real-a&page=0',
+      }),
+    ).toBeUndefined();
+    expect(
+      catalogSearchOfTheShop(shop, { method: 'GET', path: '/v1/parts?page=0' }),
+    ).toBeUndefined();
+    expect(
+      catalogSearchOfTheShop(shop, {
+        method: 'POST',
+        path: `/v1/parts?vendorId=${vendorId}`,
+      }),
+    ).toBeUndefined();
   });
 
   it("list the shop among the Vendors with expiring Offers, with the list's counts", () => {

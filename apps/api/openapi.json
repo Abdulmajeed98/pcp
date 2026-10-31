@@ -1094,7 +1094,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OfferResponse"
+                  "$ref": "#/components/schemas/ListedOfferResponse"
                 }
               }
             }
@@ -1110,7 +1110,7 @@
             }
           }
         },
-        "summary": "One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login",
+        "summary": "One of a Vendor's Offers, with its Part and its expiry at the moment it is read, as its list answers it, for the Admin or for the Vendor's own Login",
         "tags": ["Offer"]
       },
       "put": {

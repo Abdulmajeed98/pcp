@@ -38,6 +38,7 @@ import { CreateOfferRequest } from './CreateOfferRequest';
 import { EditOfferRequest } from './EditOfferRequest';
 import { ListVendorsOffersRequest } from './ListVendorsOffersRequest';
 import { ListVendorsWithExpiringOffersRequest } from './ListVendorsWithExpiringOffersRequest';
+import { ListedOfferResponse } from './ListedOfferResponse';
 import { OfferResponse } from './OfferResponse';
 import { VendorsOffersPageResponse } from './VendorsOffersPageResponse';
 import { VendorsWithExpiringOffersPageResponse } from './VendorsWithExpiringOffersPageResponse';
@@ -150,22 +151,22 @@ export class OfferController {
 
   @ApiOperation({
     summary:
-      "One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login",
+      "One of a Vendor's Offers, with its Part and its expiry at the moment it is read, as its list answers it, for the Admin or for the Vendor's own Login",
   })
-  @ApiOkResponse({ type: OfferResponse })
+  @ApiOkResponse({ type: ListedOfferResponse })
   @PreAuthorize([Role.ADMIN, Role.VENDOR])
   @Get('v1/vendors/:vendorId/offers/:offerId')
   async readOffer(
     @Param('vendorId') vendorId: string,
     @Param('offerId') offerId: string,
-  ): Promise<OfferResponse> {
+  ): Promise<ListedOfferResponse> {
     const caller = this.callerResolver.getCaller();
     const result = await this.readOfferQuery.execute(
       new ReadOfferQueryInput(caller.getId(), caller.getRoles(), vendorId, offerId),
     );
 
     return result.pipe(
-      Either.map((output) => OfferResponse.of(output.getOffer())),
+      Either.map((output) => ListedOfferResponse.at(output.getNow())(output.getOffer())),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

@@ -4,9 +4,9 @@ import { Offer } from '~/domain/offer/Offer';
 
 import { OfferResponse } from './OfferResponse';
 
-// One of a Vendor's Offers as its list answers it: the Offer with its Part,
-// and its expiry at the moment the list was read, by the API's clock, so that
-// every frontend counts days the same way.
+// One of a Vendor's Offers as its list answers it, and as it is read on its
+// own: the Offer with its Part, and its expiry at the moment it was read, by
+// the API's clock, so that every frontend counts days the same way.
 export class ListedOfferResponse extends OfferResponse {
   @ApiProperty({
     description:
