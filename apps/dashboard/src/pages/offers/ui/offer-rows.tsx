@@ -19,7 +19,13 @@ import {
   OfferPlate,
 } from '@/entities/offer';
 import { Trans, useTranslation } from '@/shared/i18n';
-import { type Ended, movingProps, type ShownRow, useTakenOutOnceEnded } from '@/shared/lib';
+import {
+  aMovement,
+  type Ended,
+  movingProps,
+  type ShownRow,
+  useTakenOutOnceEnded,
+} from '@/shared/lib';
 import {
   linkOverRow,
   Table,
@@ -81,27 +87,28 @@ function settleOrders(
 // an expiry took two, goes from its old height to its new one over 200 ms on
 // the in-out curve (150 ms on the out curve with reduced motion), rather than
 // in one frame, and the rows below it move with it. What changes is the
-// height of the theme's `leaves` in each of its cells, which hold the row's
-// padding, so that the row's own content is never squeezed; a leaving or
-// arriving row moves by its own transitions instead.
+// height of each of the row's cells' spaces, marked `data-row-space`, which
+// hold the row's padding, so that the row's own content is never squeezed;
+// what each holds is measured, marked `data-row-words`. A leaving or
+// arriving row moves by its own transitions instead. The marks are this
+// hook's own, so that the theme's `leaves` may change its shape without it.
+// It follows the table's rows only, as it always has: the phone's rows were
+// never matched by the theme's shape it read before, and followed, they
+// jumped in the films of Confirm all in Kurdish.
 function useRowsFollowTheirHeight<List extends HTMLElement>() {
   const list = useRef<List>(null);
   const heights = useRef(new Map<string, number>());
 
   useLayoutEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     for (const row of list.current?.querySelectorAll<HTMLElement>('[data-row]') ?? []) {
       const key = row.dataset.row ?? '';
-      const spaces = [
-        ...row.querySelectorAll<HTMLElement>(':scope > td > .leaves, :scope > .leaves'),
-      ];
+      const spaces = [...row.querySelectorAll<HTMLElement>('[data-row-space]')];
       // The height the row's words take, whatever is moving now.
       const height = Math.max(
         0,
         ...spaces.map(
           (space) =>
-            (space.firstElementChild?.firstElementChild as HTMLElement | null)
-              ?.offsetHeight ?? 0,
+            space.querySelector<HTMLElement>('[data-row-words]')?.offsetHeight ?? 0,
         ),
       );
       const was = heights.current.get(key);
@@ -120,9 +127,7 @@ function useRowsFollowTheirHeight<List extends HTMLElement>() {
             { height: `${was}px`, overflow: 'hidden' },
             { height: `${height}px`, overflow: 'hidden' },
           ],
-          reduced
-            ? { duration: 150, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' }
-            : { duration: 200, easing: 'cubic-bezier(0.77, 0, 0.175, 1)' },
+          aMovement('ease-in-out'),
         );
       }
     }
@@ -202,9 +207,11 @@ function OfferTableRow({
 function Cell({ className, children }: { className?: string; children: ReactNode }) {
   return (
     <TableCell className="h-auto p-0 align-top first:ps-0">
-      <div className="leaves">
+      <div data-row-space="" className="leaves">
         <div>
-          <div className={cn('px-2 py-3.5', className)}>{children}</div>
+          <div data-row-words="" className={cn('px-2 py-3.5', className)}>
+            {children}
+          </div>
         </div>
       </div>
     </TableCell>
@@ -218,14 +225,9 @@ function Cell({ className, children }: { className?: string; children: ReactNode
 export function OffersList({ shown, settling }: RowsProps) {
   const { t } = useTranslation();
   const orders = settleOrders(shown, settling);
-  const list = useRowsFollowTheirHeight<HTMLUListElement>();
 
   return (
-    <ul
-      ref={list}
-      aria-label={t('OffersScreen.listLabel')}
-      className="-mx-2 border-t border-rule"
-    >
+    <ul aria-label={t('OffersScreen.listLabel')} className="-mx-2 border-t border-rule">
       {shown.map((row, index) => (
         <li
           key={row.key}
