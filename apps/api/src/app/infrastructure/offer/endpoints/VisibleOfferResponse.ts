@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { type Currency, currencies, ShownPrice } from '~/domain/offer/shown-price';
 import { VisibleOffer } from '~/domain/offer/VisibleOffer';
 
-import { usdPriceTextOf } from './OfferResponse';
+import { dollarsTextOf, usdPriceTextOf } from './OfferResponse';
 
 // The Vendor of a visible Offer, as far as a Shopper may know it here.
 export class VisibleOfferVendorResponse {
@@ -28,10 +29,44 @@ export class VisibleOfferVendorResponse {
   }
 }
 
+// The price an Offer shows in the chosen currency, as the API computed it, so
+// that no frontend converts a price or rounds one (PRC-3).
+export class ShownPriceResponse {
+  @ApiProperty({ description: 'The chosen currency.', enum: currencies, example: 'IQD' })
+  readonly currency: Currency;
+
+  @ApiProperty({
+    description:
+      'The amount, as decimal text: in USD with two decimal places, in IQD in whole dinars. A Quoted Price is as the Vendor entered it; a Converted Price is rounded to the nearest 250 IQD or whole dollar, and is never below one step.',
+    example: '551250',
+  })
+  readonly amount: string;
+
+  @ApiProperty({
+    description:
+      'Whether it is a Converted Price, derived from the Offer\'s Quoted Price in the other currency at the current Platform Rate, which a Shopper sees marked "≈".',
+    example: true,
+  })
+  readonly converted: boolean;
+
+  private constructor(shown: ShownPrice) {
+    this.currency = shown.getCurrency();
+    this.amount =
+      shown.getCurrency() === 'USD'
+        ? dollarsTextOf(shown.getAmount())
+        : String(shown.getAmount());
+    this.converted = shown.isConverted();
+  }
+
+  static of(shown: ShownPrice | null): ShownPriceResponse | null {
+    return shown === null ? null : new ShownPriceResponse(shown);
+  }
+}
+
 // One of a Part's visible Offers, as Shoppers see it: both Quoted Prices as
-// the Vendor entered them, so that `pricing` adds Converted Prices without
-// changing what is stored, and how many days ago it was confirmed, so that
-// every frontend counts days the same way (OFF-7).
+// the Vendor entered them, its Shown Price in the chosen currency, and how
+// many days ago it was confirmed, so that every frontend counts days the
+// same way (OFF-7).
 export class VisibleOfferResponse {
   @ApiProperty({ description: 'The Vendor.', type: VisibleOfferVendorResponse })
   readonly vendor: VisibleOfferVendorResponse;
@@ -53,6 +88,14 @@ export class VisibleOfferResponse {
     example: 525000,
   })
   readonly iqdPrice: number | null;
+
+  @ApiProperty({
+    description:
+      'The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.',
+    type: ShownPriceResponse,
+    nullable: true,
+  })
+  readonly shownPrice: ShownPriceResponse | null;
 
   @ApiProperty({ description: 'Whether the Vendor has the Part in stock.' })
   readonly inStock: boolean;
@@ -86,6 +129,7 @@ export class VisibleOfferResponse {
     );
     this.usdPrice = usdPriceTextOf(offer.getUsdPriceCents());
     this.iqdPrice = offer.getIqdPrice();
+    this.shownPrice = ShownPriceResponse.of(visible.getShownPrice());
     this.inStock = offer.isInStock();
     this.warrantyMonths = offer.getWarrantyMonths();
     this.confirmedAt = offer.getConfirmedAt().toISOString();

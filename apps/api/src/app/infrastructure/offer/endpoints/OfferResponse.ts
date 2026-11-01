@@ -5,10 +5,13 @@ import { PartSummaryResponse } from '~/infrastructure/part/endpoints/PartSummary
 
 // A USD price in whole cents as a decimal number with two decimal places,
 // "349.99", so that no frontend meets a binary fraction.
-export function usdPriceTextOf(cents: number | null): string | null {
-  if (cents === null) return null;
-
+export function dollarsTextOf(cents: number): string {
   return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`;
+}
+
+// The same, or null for no price.
+export function usdPriceTextOf(cents: number | null): string | null {
+  return cents === null ? null : dollarsTextOf(cents);
 }
 
 // One of a Vendor's Offers, with its Part.

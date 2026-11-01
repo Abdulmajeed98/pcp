@@ -278,7 +278,7 @@ export const editOffer = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * A Part's visible Offers: not Expired Offers, of active Vendors only, in-stock first and then the most recent Confirmation first, each with how many days ago it was confirmed
+ * A Part's visible Offers: not Expired Offers, of active Vendors only, in-stock first and then the most recent Confirmation first, each with its Shown Price in the chosen currency and how many days ago it was confirmed
  */
 export const listVisibleOffersOfPart = <ThrowOnError extends boolean = false>(options: Options<ListVisibleOffersOfPartData, ThrowOnError>): RequestResult<ListVisibleOffersOfPartResponses, ListVisibleOffersOfPartErrors, ThrowOnError> => (options.client ?? client).get<ListVisibleOffersOfPartResponses, ListVisibleOffersOfPartErrors, ThrowOnError>({ url: '/v1/parts/{partId}/offers', ...options });
 
