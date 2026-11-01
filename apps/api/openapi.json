@@ -1249,6 +1249,36 @@
         "summary": "A Part's visible Offers: not Expired Offers, of active Vendors only, in-stock first and then the most recent Confirmation first, each with how many days ago it was confirmed",
         "tags": ["PartOffers"]
       }
+    },
+    "/v1/platform-rate": {
+      "get": {
+        "operationId": "readPlatformRate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The current Platform Rate, in whole dinars per dollar, and when it was set, or none until the Admin sets the first",
+        "tags": ["PlatformRate"]
+      }
     }
   },
   "info": {
@@ -2841,6 +2871,38 @@
           "confirmedAt",
           "daysSinceConfirmation"
         ]
+      },
+      "CurrentPlatformRateResponse": {
+        "type": "object",
+        "properties": {
+          "iqdPerUsd": {
+            "type": "number",
+            "description": "The Platform Rate, in whole dinars per dollar.",
+            "example": 1575
+          },
+          "setAt": {
+            "type": "string",
+            "description": "When the Admin set it.",
+            "format": "date-time"
+          }
+        },
+        "required": ["iqdPerUsd", "setAt"]
+      },
+      "PlatformRateResponse": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "description": "The current Platform Rate, the newest setting, or null until the Admin sets the first.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrentPlatformRateResponse"
+              }
+            ]
+          }
+        },
+        "required": ["current"]
       }
     }
   },

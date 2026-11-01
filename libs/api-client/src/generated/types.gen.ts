@@ -915,6 +915,24 @@ export type VisibleOfferResponse = {
     daysSinceConfirmation: number;
 };
 
+export type CurrentPlatformRateResponse = {
+    /**
+     * The Platform Rate, in whole dinars per dollar.
+     */
+    iqdPerUsd: number;
+    /**
+     * When the Admin set it.
+     */
+    setAt: string;
+};
+
+export type PlatformRateResponse = {
+    /**
+     * The current Platform Rate, the newest setting, or null until the Admin sets the first.
+     */
+    current: CurrentPlatformRateResponse | null;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -1618,3 +1636,25 @@ export type ListVisibleOffersOfPartResponses = {
 };
 
 export type ListVisibleOffersOfPartResponse = ListVisibleOffersOfPartResponses[keyof ListVisibleOffersOfPartResponses];
+
+export type ReadPlatformRateData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/platform-rate';
+};
+
+export type ReadPlatformRateErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPlatformRateError = ReadPlatformRateErrors[keyof ReadPlatformRateErrors];
+
+export type ReadPlatformRateResponses = {
+    200: PlatformRateResponse;
+};
+
+export type ReadPlatformRateResponse = ReadPlatformRateResponses[keyof ReadPlatformRateResponses];
