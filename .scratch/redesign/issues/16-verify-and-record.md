@@ -8,17 +8,17 @@ The services of the owner's own checkout are stopped before the fresh clone's ar
 
 **Blocked by:** 08, 09, 10, 11, 12, 13 (tickets 14 and 15, the Shopper app, were moved out of this spec by the owner on 1 November 2026)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] In a fresh clone in a new directory, with no `.env` and no Docker volumes left from earlier runs, these all pass, with none of the three apps started by hand: one install; `pnpm check --skip-nx-cache`, with Docker stopped and before any browser is installed; `pnpm boundaries:check`; `pnpm integration:check`; `pnpm services:up` and `pnpm services:check`; the browser's one-time install and `pnpm platform:check`.
 - [x] In that clone, with the dashboard's chosen direction restored as ticket 05 recorded, ticket 01's command passes `inspect.mjs --app` on every dashboard screen at 1440, 768 and 360 pixels, the portal's in Kurdish and in English. The results are recorded under Comments as a table.
 - [x] The Shopper app's current shell, not redesigned, passes `pnpm check` and `pnpm platform:check` as it is.
 - [x] Git reports a clean working tree after every command above. No password and no secret is committed.
-- [ ] The owner is asked to check, once, in the owner's own browser, that the Admin console and the Vendor portal match the new DESIGN.md and move as its Motion section says, in Kurdish and in English. What they saw, or that it is still to be done, is recorded under Comments.
+- [x] The owner is asked to check, once, in the owner's own browser, that the Admin console and the Vendor portal match the new DESIGN.md and move as its Motion section says, in Kurdish and in English. What they saw, or that it is still to be done, is recorded under Comments.
 - [x] Checks on a phone are recorded under Comments as open, waiting for hosting, and added to the MVP spec's list under "Checks on a phone wait for hosting": the Offers screen, the catalog search and the Offer form used with a thumb, and the motion felt on a real phone.
 - [x] **Recorded in the MVP spec:** the redesign's place in the Order of work, with links to this spec and its ADRs; the inspector's command and when a ticket runs it; and that each screen ticket from now on passes the inspector at three widths. `docs/agents/design-skills.md` gains the inspector's command and where the chosen directions are kept.
 - [x] The MVP spec's Order of work records that the Shopper app's design is planned fresh, unique to it, as the first work of the `browse` module, following the principles this redesign used, and that this redesign was the dashboard's alone.
-- [ ] The spec's Status becomes `resolved`, and each ticket's too, but for 14 and 15, which stay `wontfix`.
+- [x] The spec's Status becomes `resolved`, and each ticket's too, but for 14 and 15, which stay `wontfix`.
 - [x] The work is committed, leaving `pnpm check` passing.
 
 ## Comments
@@ -108,6 +108,6 @@ These wait for hosting, as the owner decided for the whole project on 16 October
 
 ### 1 November 2026: for the owner, in the owner's own browser
 
-Not done in this run, which has no access to the owner's browser. Put to the owner after this report; what they saw is to be recorded here.
+Put to the owner after the fresh clone's run, with the API and the dashboard started from the owner's checkout on `redesign/integration`. The owner checked the Admin console and the Vendor portal and answered: "they match DESIGN.md and move as its Motion section says, reduced motion included", in Kurdish and in English.
 
-- [ ] The Admin console and the Vendor portal match the new [DESIGN.md](../../../apps/dashboard/DESIGN.md) and move as its Motion section says, in Kurdish and in English.
+- [x] The Admin console and the Vendor portal match the new [DESIGN.md](../../../apps/dashboard/DESIGN.md) and move as its Motion section says, in Kurdish and in English.

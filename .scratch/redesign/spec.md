@@ -1,6 +1,6 @@
 # Spec: Redesign
 
-Status: ready-for-human
+Status: resolved
 Category: enhancement
 
 A short hand-over, written on 21 October 2026 when the design skills were set up. The redesign session triages it, settles its open questions with the owner and writes the full spec and tickets. It follows [docs/agents/design-skills.md](../../docs/agents/design-skills.md) for which skill leads which area.
