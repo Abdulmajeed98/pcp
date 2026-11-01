@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
 import { libraries } from '@/shared/config';
+import { chosenCurrency } from '@/shared/currency';
 
 import { readApiStatus } from '../api/read-api-status';
 
@@ -51,6 +52,11 @@ function english(chunks: ReactNode) {
 // files, and none of that text is sent to the browser as data. The first real
 // page replaces it, sample and all.
 //
+// It also says which currency prices are shown in: the one the Shopper chose
+// with the currency switch, read on the server through `chosenCurrency`. No
+// page shows a price yet. Every page that will asks the API in that currency,
+// through the same function, so that every page shows the same one.
+//
 // A number is written by `formatNumber` and reaches a message as text. No
 // message formats one itself.
 //
@@ -58,10 +64,11 @@ function english(chunks: ReactNode) {
 // the right in Kurdish and Arabic. A class that has a side is always written
 // that way, with start and end.
 export async function PlaceholderPage() {
-  const [t, categoryName, status] = await Promise.all([
+  const [t, categoryName, status, currency] = await Promise.all([
     getTranslations('PlaceholderPage'),
     getTranslations('Category'),
     readApiStatus(),
+    chosenCurrency(),
   ]);
 
   return (
@@ -79,6 +86,7 @@ export async function PlaceholderPage() {
           })}
         </p>
       )}
+      <p data-testid="prices-shown-in">{t(`pricesShownIn.${currency}`)}</p>
       <p>{t('sample')}</p>
       <ul data-testid="category-names">
         {sampleCategories.map((key) => (

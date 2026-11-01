@@ -221,31 +221,38 @@ async function expectTheSwitchWithinReach(
   choiceOf: (other: Language) => Locator,
 ): Promise<void> {
   for (const other of languages) {
-    const box = await boxOf(choiceOf(other));
-    const insideTheWindow =
-      box.left >= 0 &&
-      box.right <= narrowWindow.width &&
-      box.top >= 0 &&
-      box.bottom <= narrowWindow.height;
-    expect(
-      insideTheWindow,
-      `the choice of ${other.name}, at ${JSON.stringify(box)}, is inside the window`,
-    ).toBe(true);
-    expect(
-      Math.min(box.right - box.left, box.bottom - box.top),
-      `the choice of ${other.name} is large enough to tap`,
-    ).toBeGreaterThanOrEqual(largeEnoughToTap);
+    await expectWithinReach(choiceOf(other), `the choice of ${other.name}`);
   }
 }
 
-// The switch on a page in `language` is on the end side of the frame: the
-// right in English, and the left in Kurdish and Arabic.
-async function expectTheSwitchAtTheEndOfTheFrame(
+// A control is where a thumb can reach it: inside the window, and large
+// enough to tap. `what` names it in a failure.
+export async function expectWithinReach(control: Locator, what: string): Promise<void> {
+  const box = await boxOf(control);
+  const insideTheWindow =
+    box.left >= 0 &&
+    box.right <= narrowWindow.width &&
+    box.top >= 0 &&
+    box.bottom <= narrowWindow.height;
+  expect(insideTheWindow, `${what}, at ${JSON.stringify(box)}, is inside the window`).toBe(
+    true,
+  );
+  expect(
+    Math.min(box.right - box.left, box.bottom - box.top),
+    `${what} is large enough to tap`,
+  ).toBeGreaterThanOrEqual(largeEnoughToTap);
+}
+
+// A switch on a page in `language` is on the end side of the frame: the
+// right in English, and the left in Kurdish and Arabic. It is the language
+// switch unless another is given.
+export async function expectTheSwitchAtTheEndOfTheFrame(
   page: Page,
   language: Language,
+  element: Locator = languageSwitch(page),
 ): Promise<void> {
   const frame = await boxOf(page.getByTestId('frame'));
-  const theSwitch = await boxOf(languageSwitch(page));
+  const theSwitch = await boxOf(element);
   const roomOnTheLeft = theSwitch.left - frame.left;
   const roomOnTheRight = frame.right - theSwitch.right;
   const [roomAtTheStart, roomAtTheEnd] =
