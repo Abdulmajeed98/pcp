@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { VendorWithExpiringOffers } from '~/domain/offer/VendorWithExpiringOffers';
 import { PhoneNumberResponse } from '~/infrastructure/vendor/endpoints/PhoneNumberResponse';
 
-import { VendorsOfferCountsResponse } from './VendorsOfferCountsResponse';
+import { OfferCountsResponse } from './OfferCountsResponse';
 
 // A Vendor as the Admin's list of whom to remind shows it.
 export class VendorWithExpiringOffersResponse {
@@ -35,9 +35,9 @@ export class VendorWithExpiringOffersResponse {
 
   @ApiProperty({
     description: "The Vendor's counts of all its Offers, at the moment the list was read.",
-    type: VendorsOfferCountsResponse,
+    type: OfferCountsResponse,
   })
-  readonly counts: VendorsOfferCountsResponse;
+  readonly counts: OfferCountsResponse;
 
   private constructor(vendor: VendorWithExpiringOffers) {
     const whatsAppNumber = vendor.getWhatsAppNumber();
@@ -46,7 +46,7 @@ export class VendorWithExpiringOffersResponse {
     this.phoneNumber = PhoneNumberResponse.of(vendor.getPhoneNumber());
     this.whatsAppNumber =
       whatsAppNumber === null ? null : PhoneNumberResponse.of(whatsAppNumber);
-    this.counts = VendorsOfferCountsResponse.of(vendor.getCounts());
+    this.counts = OfferCountsResponse.of(vendor.getCounts());
   }
 
   static of(vendor: VendorWithExpiringOffers): VendorWithExpiringOffersResponse {

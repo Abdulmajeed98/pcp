@@ -9,11 +9,13 @@ import {
 } from '~/domain/offer/expiry';
 import { Offer } from '~/domain/offer/Offer';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
+import { OfferState } from '~/domain/offer/offer-state';
 import {
   CreateOfferParams,
   EditOfferParams,
   ListVendorsOffersParams,
   ListVendorsWithExpiringOffersParams,
+  OfferCounts,
   OfferStore,
   RemoveOfferParams,
   VendorsOfferCounts,
@@ -67,6 +69,24 @@ function aboutToExpireAt(now: Date): SQL | undefined {
     gte(offer.confirmedAt, expiredIfConfirmedBefore(now)),
     lt(offer.confirmedAt, aboutToExpireIfConfirmedBefore(now)),
   );
+}
+
+// An Offer out of stock.
+const outOfStock = eq(offer.inStock, false);
+
+// The Offers in a state, as the database asks it, at now by the API's clock:
+// every one; those that need confirming, an Expired Offer or one about to
+// expire, which are both confirmed before the moment an Offer starts to be
+// about to expire; or those out of stock.
+function inState(state: OfferState, now: Date): SQL | undefined {
+  switch (state) {
+    case 'all':
+      return undefined;
+    case 'needs-confirming':
+      return lt(offer.confirmedAt, aboutToExpireIfConfirmedBefore(now));
+    case 'out-of-stock':
+      return outOfStock;
+  }
 }
 
 // The Vendor's Offer with this identifier. The Vendor is part of what is
@@ -136,7 +156,7 @@ function vendorWithExpiringOffersOf(row: {
       row.name,
       phoneNumber.right,
       whatsAppNumber,
-      new VendorsOfferCounts(row.offers, row.expired, row.aboutToExpire),
+      new OfferCounts(row.offers, row.expired, row.aboutToExpire),
     ),
   );
 }
@@ -313,8 +333,12 @@ export class DatabaseOfferStore implements OfferStore {
       );
     }
     const theVendors = eq(offer.vendorId, params.getVendorId());
-    const where = and(theVendors, ...holdingEveryWord(params.getWords()));
     const now = params.getNow();
+    const where = and(
+      theVendors,
+      inState(params.getState(), now),
+      ...holdingEveryWord(params.getWords()),
+    );
 
     try {
       // One snapshot for all, so that an Offer added or confirmed between them
@@ -338,12 +362,13 @@ export class DatabaseOfferStore implements OfferStore {
                 .from(offer)
                 .innerJoin(part, eq(part.id, offer.partId))
                 .where(where),
-              // Of all the Vendor's Offers, whatever the search.
+              // Of all the Vendor's Offers, whatever the search and the state.
               transaction
                 .select({
                   offers: count(),
                   expired: countWhere(expiredAt(now)),
                   aboutToExpire: countWhere(aboutToExpireAt(now)),
+                  outOfStock: countWhere(outOfStock),
                 })
                 .from(offer)
                 .where(theVendors),
@@ -360,7 +385,12 @@ export class DatabaseOfferStore implements OfferStore {
           new VendorsOffersPage(
             found,
             PageAttributes.of(pageable, total),
-            new VendorsOfferCounts(counts.offers, counts.expired, counts.aboutToExpire),
+            new VendorsOfferCounts(
+              counts.offers,
+              counts.expired,
+              counts.aboutToExpire,
+              counts.outOfStock,
+            ),
           ),
       );
     } catch (error) {

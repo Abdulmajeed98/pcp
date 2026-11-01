@@ -10,6 +10,7 @@ import {
   submitTheLoginScreen,
   type VendorLoginDetails,
 } from './keycloak-screens';
+import { withTheMenuOpenOnAPhone } from './menu-sheet';
 import { apiUrl, dashboardUrl } from './platform';
 
 // The login `pnpm services:up` creates: the development Admin, with the
@@ -60,15 +61,18 @@ export async function openTheDashboardAs(
   if ('vendorName' in login) {
     await expect(vendorNameInTheFrame(page)).toHaveText(login.vendorName);
   } else {
-    await expect(page.getByTestId('caller-name')).toHaveText(login.name);
+    await withTheMenuOpenOnAPhone(page, async () => {
+      await expect(page.getByTestId('caller-name')).toHaveText(login.name);
+    });
   }
 }
 
 // Logs out of the dashboard with its button, and waits for Keycloak's login
 // screen. The button's text is in the page's language, so it is found by
-// what it is and not by what it says.
+// what it is and not by what it says. On a phone both halves keep it in the
+// menu sheet, which is opened first.
 export async function logOutOfTheDashboard(page: Page): Promise<void> {
-  await page.getByTestId('log-out').click();
+  await withTheMenuOpenOnAPhone(page, () => page.getByTestId('log-out').click());
   await expectLoginScreen(page);
 }
 

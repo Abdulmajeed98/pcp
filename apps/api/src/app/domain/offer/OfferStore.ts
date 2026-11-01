@@ -3,6 +3,7 @@ import { Either, Option } from 'effect';
 
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
+import { OfferState } from './offer-state';
 import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 import { VisibleOffer } from './VisibleOffer';
 
@@ -105,12 +106,13 @@ export class RemoveOfferParams {
 }
 
 // What a Vendor's list of its Offers asks for: the Vendor, the words every
-// Offer's Part holds, the page, and now, by the API's clock, which every
-// expiry in the list is judged by.
+// Offer's Part holds, the state every Offer is in, the page, and now, by the
+// API's clock, which every expiry in the list is judged by.
 export class ListVendorsOffersParams {
   constructor(
     private readonly vendorId: string,
     private readonly words: readonly string[],
+    private readonly state: OfferState,
     private readonly pageable: PageableAttributes,
     private readonly now: Date,
   ) {}
@@ -123,6 +125,10 @@ export class ListVendorsOffersParams {
     return this.words;
   }
 
+  getState(): OfferState {
+    return this.state;
+  }
+
   getPageable(): PageableAttributes {
     return this.pageable;
   }
@@ -132,17 +138,16 @@ export class ListVendorsOffersParams {
   }
 }
 
-// How many Offers a Vendor has, how many of them are Expired Offers, and how
+// How many Offers a Vendor has, how many of them are Expired Offers and how
 // many are about to expire, at now by the API's clock, of all its Offers
-// whatever a search finds.
-export class VendorsOfferCounts {
+// whatever a search finds and whatever state a list holds: what the Admin's
+// list of whom to remind counts.
+export class OfferCounts {
   constructor(
     private readonly offers: number,
     private readonly expired: number,
     private readonly aboutToExpire: number,
   ) {}
-
-  static readonly NONE = new VendorsOfferCounts(0, 0, 0);
 
   getOffers(): number {
     return this.offers;
@@ -154,6 +159,25 @@ export class VendorsOfferCounts {
 
   getAboutToExpire(): number {
     return this.aboutToExpire;
+  }
+}
+
+// The same counts, and how many of the Vendor's Offers are out of stock, for
+// the tabs of a Vendor's own list.
+export class VendorsOfferCounts extends OfferCounts {
+  constructor(
+    offers: number,
+    expired: number,
+    aboutToExpire: number,
+    private readonly outOfStock: number,
+  ) {
+    super(offers, expired, aboutToExpire);
+  }
+
+  static readonly NONE = new VendorsOfferCounts(0, 0, 0, 0);
+
+  getOutOfStock(): number {
+    return this.outOfStock;
   }
 }
 
@@ -242,8 +266,8 @@ export abstract class OfferStore {
     params: RemoveOfferParams,
   ): Promise<Either.Either<boolean, StructuredError>>;
 
-  // The Vendor's Offers whose Parts hold every word, Expired Offers among
-  // them, oldest Confirmation first, then by Part name, then by identifier,
+  // The Vendor's Offers in the state asked for whose Parts hold every word,
+  // Expired Offers among them, oldest Confirmation first, then by Part name, then by identifier,
   // so that moving between pages never skips or repeats one; and the
   // Vendor's counts of all its Offers, judged at the params' now by the rules
   // in `expiry.ts`.

@@ -737,6 +737,10 @@ export type VendorsOfferCountsResponse = {
      * How many of them are not expired and will be within 3 days.
      */
     aboutToExpire: number;
+    /**
+     * How many of them are out of stock.
+     */
+    outOfStock: number;
 };
 
 export type VendorsOffersPageResponse = {
@@ -781,6 +785,21 @@ export type ConfirmedOffersResponse = {
     confirmed: number;
 };
 
+export type OfferCountsResponse = {
+    /**
+     * How many Offers the Vendor has.
+     */
+    offers: number;
+    /**
+     * How many of them are Expired Offers.
+     */
+    expired: number;
+    /**
+     * How many of them are not expired and will be within 3 days.
+     */
+    aboutToExpire: number;
+};
+
 export type VendorWithExpiringOffersResponse = {
     /**
      * The Vendor's identifier on the platform.
@@ -801,7 +820,7 @@ export type VendorWithExpiringOffersResponse = {
     /**
      * The Vendor's counts of all its Offers, at the moment the list was read.
      */
-    counts: VendorsOfferCountsResponse;
+    counts: OfferCountsResponse;
 };
 
 export type VendorsWithExpiringOffersPageResponse = {
@@ -1396,6 +1415,10 @@ export type ListVendorsOffersData = {
          * Words an Offer's Part must hold, in any order and any case, in its name, its manufacturer or a part number, as the catalog search reads them. Left out or empty, every Offer of the Vendor is found.
          */
         search?: string;
+        /**
+         * Which Offers are found: every one; those that need confirming, Expired Offers and those about to expire; or those out of stock. Left out, every Offer is found.
+         */
+        state?: 'all' | 'needs-confirming' | 'out-of-stock';
     };
     url: '/v1/vendors/{vendorId}/offers';
 };
@@ -1542,7 +1565,7 @@ export type ReadOfferErrors = {
 export type ReadOfferError = ReadOfferErrors[keyof ReadOfferErrors];
 
 export type ReadOfferResponses = {
-    200: OfferResponse;
+    200: ListedOfferResponse;
 };
 
 export type ReadOfferResponse = ReadOfferResponses[keyof ReadOfferResponses];

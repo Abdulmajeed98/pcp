@@ -7,7 +7,7 @@ import { useVendor, vendorKey, vendorsKey } from '@/entities/vendor';
 import { VendorForm } from '@/features/vendor-form';
 import { apiClient, dataOf, Refusal, WhyNotAnswered } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Alert, AlertDescription, AlertTitle, BackLink } from '@/shared/ui';
+import { Alert, AlertDescription, AlertTitle, BackLink, ScreenTitle } from '@/shared/ui';
 
 // The Admin's form for editing a Vendor, filled with every detail as it is,
 // its name, its city and its login phone number among them (ACC-8). Saving
@@ -63,12 +63,13 @@ export function EditVendorPage() {
       <BackLink to={keepingTheQuery(`/vendors/${vendorId}`)}>
         <AsWritten>{vendor.data.name}</AsWritten>
       </BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">
+      <ScreenTitle className="screen-title">
         Edit <AsWritten>{vendor.data.name}</AsWritten>
-      </h1>
+      </ScreenTitle>
       <VendorForm
         vendor={vendor.data}
         submitLabel="Save"
+        busyLabel="Saving…"
         save={(body) => edit.mutateAsync(body)}
       />
     </div>

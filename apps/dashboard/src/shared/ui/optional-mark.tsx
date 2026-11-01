@@ -8,7 +8,7 @@ export function OptionalMark({ id, children }: { id: string; children: ReactNode
   return (
     <span
       id={id}
-      className="rounded-sm bg-secondary px-1.5 text-sm font-medium text-secondary-foreground"
+      className="rounded-plate bg-secondary px-1.5 text-sm font-medium text-secondary-foreground"
     >
       {children}
     </span>

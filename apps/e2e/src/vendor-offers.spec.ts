@@ -16,16 +16,29 @@ import {
   vendorNameInTheFrame,
 } from './development-logins';
 import { type VendorLoginDetails } from './keycloak-screens';
-import { expectNoSidewaysScroll, narrowWindow } from './languages';
+import {
+  chooseInThePortal,
+  expectNoSidewaysScroll,
+  type Language,
+  languages,
+  narrowWindow,
+} from './languages';
+import { jumpsIn } from './leaving-rows';
 import {
   addAnOffer,
   answerTheOffersAsExpiring,
+  answerTheOwnOffersAsNeedingConfirmation,
+  expectTheCurrentSection,
+  filmTheOffersScreen,
+  goToTheSection,
   listedOffers,
   noOffers,
+  noOfferInTheState,
   rowOfOffer,
+  snapsIn,
   theBanner,
   theOffersScreen,
-  theSection,
+  theTab,
 } from './offers';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
@@ -36,6 +49,8 @@ import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 // test id, where it leads or what it is. Prices, Part names and counts are
 // not translations, and are read as they are.
 test.use({ viewport: narrowWindow, locale: 'en' });
+
+const [kurdish, , english] = languages;
 
 // Calls the API as the development Admin, in a browser of its own that is
 // closed afterwards.
@@ -119,6 +134,58 @@ test.describe('a made-up Vendor with two Offers, added over HTTP', () => {
     await expectNoSidewaysScroll(page);
   });
 
+  test('the tabs count the Offers in each state; Out of stock lists only the Offer out of stock, kept in the address across a reload, and Need confirming says that none needs confirming', async ({
+    page,
+  }) => {
+    await openTheDashboardAs(page, vendor);
+    await expect(listedOffers(page)).toHaveCount(2);
+    await expect(theTab(page, 'all')).toHaveAttribute('aria-current', 'page');
+    await expect(theTab(page, 'all').getByTestId('state-count')).toHaveText('2');
+    await expect(theTab(page, 'needs-confirming').getByTestId('state-count')).toHaveText(
+      '0',
+    );
+    await expect(theTab(page, 'out-of-stock').getByTestId('state-count')).toHaveText('1');
+
+    await theTab(page, 'out-of-stock').click();
+    await expect(page).toHaveURL(`${dashboardUrl}/?tab=out-of-stock`);
+    await expect(listedOffers(page)).toHaveCount(1);
+    await expect(rowOfOffer(page, quotedInBoth.name)).toBeVisible();
+    await expect(page.getByTestId('offers-count')).toHaveText('1');
+
+    await page.reload();
+    await expect(theTab(page, 'out-of-stock')).toHaveAttribute('aria-current', 'page');
+    await expect(listedOffers(page)).toHaveCount(1);
+
+    await theTab(page, 'needs-confirming').click();
+    await expect(noOfferInTheState(page)).toBeVisible();
+    await expect(listedOffers(page)).toHaveCount(0);
+    await expectNoSidewaysScroll(page);
+  });
+
+  test('from 64rem the Offers are a table, the search is in the top bar, and an Offer out of stock has its plate muted', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openTheDashboardAs(page, vendor);
+
+    const table = page.getByRole('table');
+    await expect(table.getByRole('columnheader')).toHaveCount(5);
+    await expect(page.getByRole('banner').getByRole('searchbox')).toBeVisible();
+    await expect(listedOffers(page)).toHaveCount(2);
+
+    const inBoth = rowOfOffer(page, quotedInBoth.name);
+    const plate = inBoth.locator('[data-slot="plate"]');
+    await expect(plate).toHaveCount(1);
+    await expect(plate.getByTestId('usd-price')).toHaveText('1,250.50 $');
+    await expect(plate.getByTestId('iqd-price')).toHaveText('1,875,000 IQD');
+    await expect(plate).toHaveAttribute('data-muted', '');
+    await expect(
+      rowOfOffer(page, quotedInUsd.name).locator('[data-slot="plate"]'),
+    ).not.toHaveAttribute('data-muted', '');
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+
   test('the Vendor searches its own Offers by a part number, and only that Offer is listed', async ({
     page,
   }) => {
@@ -170,6 +237,115 @@ test.describe('a made-up Vendor with two Offers, added over HTTP', () => {
     await expect(listedOffers(page)).toHaveCount(2);
   });
 
+  // Confirm all, on the screen as the Vendor's own Offers stand when every
+  // one needs confirming, on a phone, watched four times slower, frame by
+  // frame (the owner's No Snap Rule, DESIGN.md's Motion): how the banner
+  // was set to move before the tap, how each changed row's Confirmation
+  // settles, and every frame of the list and of the blocks around it.
+  async function watchConfirmAll(
+    page: Page,
+    reducedMotion: 'no-preference' | 'reduce',
+    tab: '' | '?tab=needs-confirming',
+    language: Language,
+  ) {
+    await page.emulateMedia({ reducedMotion });
+    await answerTheOwnOffersAsNeedingConfirmation(page, vendor.vendorId);
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/${tab}`);
+    await chooseInThePortal(page, language);
+    await expect(theBanner(page)).toBeVisible();
+    await expect(listedOffers(page)).toHaveCount(2);
+    const space = theBanner(page).locator(
+      'xpath=ancestor::*[contains(concat(" ", @class, " "), " leaves ")][1]',
+    );
+    const banner = await space.evaluate((wrapper) => {
+      const style = getComputedStyle(wrapper);
+      return {
+        property: style.transitionProperty,
+        duration: style.transitionDuration,
+        delay: style.transitionDelay,
+      };
+    });
+
+    const screen = await filmTheOffersScreen(
+      page,
+      () => theBanner(page).getByRole('button').click(),
+      { slowedBy: 4, forMs: 3500 },
+    );
+    const list = screen.map((frame) => frame.list);
+
+    await expect(page.getByTestId('confirmed-count')).toBeVisible();
+    await expect(theBanner(page)).toHaveCount(0);
+    const settling = await listedOffers(page)
+      .locator('[data-testid="confirmation"].settles')
+      .evaluateAll((confirmations) =>
+        confirmations.map((confirmation) => getComputedStyle(confirmation).transitionDelay),
+      );
+    // It was watched slowed: the banner took over a second to go.
+    const fading = screen.findIndex((frame) => (frame.banner?.opacity ?? 1) < 1);
+    const gone = screen.findIndex(
+      (frame, index) => index > fading && frame.banner === null,
+    );
+    expect(fading).toBeGreaterThan(-1);
+    expect(gone).toBeGreaterThan(fading);
+    return { banner, settling, list, screen, slowed: gone - fading };
+  }
+
+  // In English, left to right, and in Kurdish, right to left.
+  for (const [reducedMotion, language] of (['no-preference', 'reduce'] as const).flatMap(
+    (motion) => [english, kurdish].map((each) => [motion, each] as const),
+  )) {
+    test(`after confirm-all on All, the rows stay and settle in turn, the banner leaves and the result line arrives, jumping in no frame watched four times slower, ${reducedMotion} motion, in ${language.name}`, async ({
+      page,
+    }) => {
+      const watched = await watchConfirmAll(page, reducedMotion, '', language);
+
+      await expect(listedOffers(page)).toHaveCount(2);
+      await expect(
+        listedOffers(page).locator('[data-testid="confirmation"][data-state="today"]'),
+      ).toHaveCount(2);
+      expect(watched.settling).toEqual(
+        reducedMotion === 'reduce' ? ['0s', '0s'] : ['0s', '0.03s'],
+      );
+      expect(watched.banner.property).toContain('grid-template-rows');
+      expect(watched.banner.duration).toContain(
+        reducedMotion === 'reduce' ? '0.15s' : '0.2s',
+      );
+      expect(watched.banner.delay).toContain('0.15s');
+      // A row appears or is taken out only when it takes no room and cannot
+      // be seen, and fades by no more than a third a frame (ticket 10's
+      // check, whose steps the relative check below replaces); and nothing
+      // makes most of its movement in one frame.
+      expect([
+        ...jumpsIn(watched.list, { step: Infinity, fade: 0.35 }),
+        ...snapsIn(watched.screen, { fastest: 6 }),
+      ]).toEqual([]);
+      expect(watched.slowed).toBeGreaterThan(30);
+    });
+
+    test(`after confirm-all on Need confirming, its rows leave and its line arrives as the banner leaves, jumping in no frame watched four times slower, ${reducedMotion} motion, in ${language.name}`, async ({
+      page,
+    }) => {
+      const watched = await watchConfirmAll(
+        page,
+        reducedMotion,
+        '?tab=needs-confirming',
+        language,
+      );
+
+      await expect(listedOffers(page)).toHaveCount(0);
+      await expect(noOfferInTheState(page)).toBeVisible();
+      // A row appears or is taken out only when it takes no room and cannot
+      // be seen, and fades by no more than a third a frame (ticket 10's
+      // check, whose steps the relative check below replaces); and nothing
+      // makes most of its movement in one frame.
+      expect([
+        ...jumpsIn(watched.list, { step: Infinity, fade: 0.35 }),
+        ...snapsIn(watched.screen, { fastest: 6 }),
+      ]).toEqual([]);
+      expect(watched.slowed).toBeGreaterThan(30);
+    });
+  }
+
   test('the Offers screen with the banner meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
     page,
   }) => {
@@ -216,10 +392,10 @@ test.describe('the sections of the top bar, as a made-up Vendor', () => {
     await openTheDashboardAs(page, vendor);
     await expect(theOffersScreen(page)).toBeVisible();
 
-    await theSection(page, 'details').click();
+    await goToTheSection(page, 'details');
     await expect(page).toHaveURL(`${dashboardUrl}/details`);
     await expect(detailOf(page, 'name')).toHaveText(vendor.vendorName);
-    await expect(theSection(page, 'details')).toHaveAttribute('aria-current', 'page');
+    await expectTheCurrentSection(page, 'details');
 
     await page.getByRole('main').locator('a[href="/details/contact-details"]').click();
     await page.locator('#contact-details-openingHours').fill(openingHours);
@@ -227,10 +403,10 @@ test.describe('the sections of the top bar, as a made-up Vendor', () => {
     await expect(page).toHaveURL(`${dashboardUrl}/details`);
     await expect(detailOf(page, 'openingHours')).toHaveText(openingHours);
 
-    await theSection(page, 'offers').click();
+    await goToTheSection(page, 'offers');
     await expect(page).toHaveURL(`${dashboardUrl}/`);
     await expect(theOffersScreen(page)).toBeVisible();
-    await expect(theSection(page, 'offers')).toHaveAttribute('aria-current', 'page');
+    await expectTheCurrentSection(page, 'offers');
   });
 });
 

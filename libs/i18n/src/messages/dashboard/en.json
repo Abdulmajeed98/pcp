@@ -11,7 +11,12 @@
     "deactivated": "This Vendor is deactivated, so its portal cannot be opened. Ask the Admin to reactivate it.",
     "sections": "Sections",
     "offers": "Offers",
-    "details": "Details"
+    "details": "Details",
+    "menu": "Menu",
+    "scheme": "Colour scheme",
+    "light": "Light",
+    "dark": "Dark",
+    "device": "Device"
   },
   "ActingAsVendor": {
     "actingAs": "You are acting as <name/>.",
@@ -35,7 +40,6 @@
     "searching": "Searching…",
     "searchLabel": "Search your Offers",
     "searchPlaceholder": "Name, manufacturer or part number",
-    "search": "Search",
     "listLabel": "Your Offers",
     "none": "You have no Offers yet.",
     "noneDescription": "Each Offer you add is listed here, with its prices and when you last confirmed it.",
@@ -46,7 +50,19 @@
     "next": "Next",
     "page": "Page <page/> of <pages/>",
     "pastTheLast": "This page is past the last one.",
-    "firstPage": "Go to the first page"
+    "firstPage": "Go to the first page",
+    "states": "Your Offers by state",
+    "all": "All",
+    "needsConfirming": "Need confirming",
+    "outOfStock": "Out of stock",
+    "noneNeedsConfirming": "No Offer needs confirming.",
+    "noneOutOfStock": "No Offer is out of stock.",
+    "part": "Part",
+    "price": "Price",
+    "lastConfirmed": "Last confirmed",
+    "stock": "Stock",
+    "warranty": "Warranty",
+    "noWarranty": "No warranty stated"
   },
   "Offer": {
     "inStock": "In stock",
@@ -60,7 +76,10 @@
     "expiresIn_one": "Expires in <count/> day",
     "expiresIn_other": "Expires in <count/> days",
     "expired_one": "Expired, confirmed <count/> day ago",
-    "expired_other": "Expired, confirmed <count/> days ago"
+    "expired_other": "Expired, confirmed <count/> days ago",
+    "plateBoth": "<usd/> dollars, <iqd/> dinars",
+    "plateUsd": "<usd/> dollars",
+    "plateIqd": "<iqd/> dinars"
   },
   "ExpiryBanner": {
     "title": "Some of your Offers need confirming",
@@ -85,13 +104,14 @@
     "searchPlaceholder": "Name, manufacturer or part number",
     "category": "Category",
     "allCategories": "All Categories",
-    "search": "Search",
     "reading": "Searching the catalog…",
     "notSearched": "The catalog could not be searched.",
     "found_one": "<count/> Part found",
     "found_other": "<count/> Parts found",
     "searching": "Searching…",
     "listLabel": "Parts found",
+    "part": "Part",
+    "partNumbers": "Part numbers",
     "offered": "You offer this Part",
     "nothingFound": "No Part found",
     "nothingFoundDescription": "No Part holds every word of “<words/>” in its name, its manufacturer or a part number. Check the spelling.",
@@ -126,6 +146,9 @@
     "warranty": "Warranty, in months",
     "warrantyDescription": "In whole months.",
     "optional": "Optional",
+    "specifications": "Specifications",
+    "yes": "Yes",
+    "no": "No",
     "save": "Add the Offer",
     "saving": "Adding…",
     "notSaved": "Your Offer was not added.",
@@ -172,7 +195,7 @@
   "RemoveOffer": {
     "remove": "Remove the Offer",
     "title": "Remove this Offer?",
-    "description": "Shoppers no longer see your Offer for <name/>. You can add it again later from the catalog search.",
+    "description": "Shoppers no longer see your Offer for this Part. You can add it again later from the catalog search.",
     "cancel": "Cancel",
     "confirm": "Remove",
     "removing": "Removing…",
@@ -183,6 +206,7 @@
     "adminChanges": "The Admin changes your name, your city and your login phone number.",
     "reading": "Reading your details…",
     "notRead": "Your details could not be read.",
+    "vendor": "Vendor",
     "name": "Name",
     "city": "City",
     "contactDetails": "Contact details",
@@ -215,6 +239,7 @@
     "openingHours": "Opening hours",
     "openingHoursDescription": "As you write them, on as many lines as you need. At most <longest/> characters.",
     "save": "Save",
+    "saving": "Saving…",
     "notSaved": "Your contact details were not saved.",
     "refused": {
       "address": {
@@ -249,7 +274,8 @@
     "openOffers": "Open your Offers"
   },
   "LoginFailed": {
-    "message": "The login could not be completed."
+    "message": "The login could not be completed.",
+    "tryAgain": "Try again"
   },
   "MapLocationField": {
     "label": "Map location",

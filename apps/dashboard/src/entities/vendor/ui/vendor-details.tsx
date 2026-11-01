@@ -8,15 +8,17 @@ import type { ReactNode } from 'react';
 // words by the screen.
 
 // A list of a Vendor's details, a row each, divided and closed above and
-// below by Rule Sand rules.
+// below by Rule lines, lighter than Edge, as the dashboard's DESIGN.md draws
+// a Vendor's details (Rows).
 export function DetailList({ children }: { children: ReactNode }) {
-  return (
-    <dl className="divide-y divide-border border-y border-border text-sm">{children}</dl>
-  );
+  return <dl className="divide-y divide-rule border-y border-rule text-sm">{children}</dl>;
 }
 
 // One detail of the Vendor, under its name, found by the name the API gives
-// it. On a phone 360 pixels wide the name and the value share the row.
+// it: the name in Note Grey on the start side, two fifths of the row, and the
+// value beside it, three fifths, both from the row's top, 14 pixels each way,
+// so that a row of one line is 48 pixels high, as a table's row is. On a
+// phone 360 pixels wide the name and the value share the row.
 export function Detail({
   name,
   label,
@@ -29,19 +31,32 @@ export function Detail({
   return (
     <div
       data-detail={name}
-      className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4 gap-y-1 py-2.5"
+      className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4 gap-y-1 py-3.5"
     >
       <dt className="text-muted-foreground">{label}</dt>
-      <dd>{children}</dd>
+      {/* A long Instagram name has no space to break at: it wraps where it
+          must rather than pushing the page sideways (redesign ticket 09's
+          break-ui). */}
+      <dd className="min-w-0 wrap-anywhere">{children}</dd>
     </div>
   );
 }
 
 // Text the Vendor wrote on one or more lines, kept on its lines, and laid
 // out in its own direction, so that a Kurdish address is aligned right on an
-// English page (LANG-4).
+// English page (LANG-4). Each line takes its own direction too, as a phone's
+// messages do, so that an English line of a Kurdish address, such as a
+// landmark's name, starts on the left (redesign ticket 09's break-ui).
+//
+// The text stays one isolated piece, in the direction of its first letter;
+// inside it, `unicode-bidi: plaintext` gives each line, a paragraph of its
+// own, its own direction and aligns it to its own start.
 export function WrittenOnLines({ text }: { text: string }) {
-  return <AsWritten className="block whitespace-pre-line">{text}</AsWritten>;
+  return (
+    <AsWritten className="block whitespace-pre-line">
+      <span className="block [unicode-bidi:plaintext]">{text}</span>
+    </AsWritten>
+  );
 }
 
 // A phone number in Iraq's own form, which is English in every language

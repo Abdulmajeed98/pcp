@@ -934,6 +934,17 @@
               "example": "ryzen 7600",
               "type": "string"
             }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "description": "Which Offers are found: every one; those that need confirming, Expired Offers and those about to expire; or those out of stock. Left out, every Offer is found.",
+            "schema": {
+              "example": "needs-confirming",
+              "type": "string",
+              "enum": ["all", "needs-confirming", "out-of-stock"]
+            }
           }
         ],
         "responses": {
@@ -1083,7 +1094,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OfferResponse"
+                  "$ref": "#/components/schemas/ListedOfferResponse"
                 }
               }
             }
@@ -1099,7 +1110,7 @@
             }
           }
         },
-        "summary": "One of a Vendor's Offers, with its Part, for the Admin or for the Vendor's own Login",
+        "summary": "One of a Vendor's Offers, with its Part and its expiry at the moment it is read, as its list answers it, for the Admin or for the Vendor's own Login",
         "tags": ["Offer"]
       },
       "put": {
@@ -2538,9 +2549,14 @@
             "type": "number",
             "description": "How many of them are not expired and will be within 3 days.",
             "example": 5
+          },
+          "outOfStock": {
+            "type": "number",
+            "description": "How many of them are out of stock.",
+            "example": 3
           }
         },
-        "required": ["offers", "expired", "aboutToExpire"]
+        "required": ["offers", "expired", "aboutToExpire", "outOfStock"]
       },
       "VendorsOffersPageResponse": {
         "type": "object",
@@ -2613,6 +2629,27 @@
         },
         "required": ["confirmed"]
       },
+      "OfferCountsResponse": {
+        "type": "object",
+        "properties": {
+          "offers": {
+            "type": "number",
+            "description": "How many Offers the Vendor has.",
+            "example": 42
+          },
+          "expired": {
+            "type": "number",
+            "description": "How many of them are Expired Offers.",
+            "example": 2
+          },
+          "aboutToExpire": {
+            "type": "number",
+            "description": "How many of them are not expired and will be within 3 days.",
+            "example": 5
+          }
+        },
+        "required": ["offers", "expired", "aboutToExpire"]
+      },
       "VendorWithExpiringOffersResponse": {
         "type": "object",
         "properties": {
@@ -2648,7 +2685,7 @@
             "description": "The Vendor's counts of all its Offers, at the moment the list was read.",
             "allOf": [
               {
-                "$ref": "#/components/schemas/VendorsOfferCountsResponse"
+                "$ref": "#/components/schemas/OfferCountsResponse"
               }
             ]
           }

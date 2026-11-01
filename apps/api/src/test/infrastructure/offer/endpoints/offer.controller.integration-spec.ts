@@ -58,8 +58,13 @@ type ListedOfferBody = OfferBody & {
   aboutToExpire: boolean;
 };
 
-// The Vendor's counts, of all its Offers whatever the search.
-type OfferCountsBody = { offers: number; expired: number; aboutToExpire: number };
+// The Vendor's counts, of all its Offers whatever the search and the state.
+type OfferCountsBody = {
+  offers: number;
+  expired: number;
+  aboutToExpire: number;
+  outOfStock: number;
+};
 
 // One page of a Vendor's list of its Offers.
 type OffersPageBody = {
@@ -213,9 +218,23 @@ describe("a Vendor's Offers", () => {
     return (await response.json()) as OfferBody;
   }
 
-  async function readOf(response: Response): Promise<OfferBody> {
+  async function readOf(response: Response): Promise<ListedOfferBody> {
     expect(response.status).toBe(200);
-    return (await response.json()) as OfferBody;
+    return (await response.json()) as ListedOfferBody;
+  }
+
+  // An Offer as it is read on its own just after it was confirmed: with its
+  // expiry at the moment it is read, as its list marks it, confirmed 0 days
+  // ago and neither expired nor about to expire. The days left are 14 on a
+  // clock held still and 13 once a millisecond has passed.
+  function asReadJustAfterItsConfirmation(offer: OfferBody): ListedOfferBody {
+    return {
+      ...offer,
+      daysSinceConfirmation: 0,
+      daysLeft: expect.any(Number) as number,
+      expired: false,
+      aboutToExpire: false,
+    };
   }
 
   function listOffers(
@@ -280,17 +299,19 @@ describe("a Vendor's Offers", () => {
   }
 
   // An Offer the Admin adds for the Vendor with the clock at a moment, which
-  // is then the time of its Confirmation. The clock stays there.
+  // is then the time of its Confirmation, in stock unless the test says
+  // otherwise. The clock stays there.
   async function anOfferConfirmedAt(
     vendorId: string,
     part: OfferedPartBody,
     moment: Date,
+    inStock = true,
   ): Promise<OfferBody> {
     moveTheClockTo(moment);
     return createdOf(
       await createOffer(
         vendorId,
-        { partId: part.id, usdPrice: '349.99', inStock: true },
+        { partId: part.id, usdPrice: '349.99', inStock },
         await adminToken(),
       ),
     );
@@ -340,7 +361,7 @@ describe("a Vendor's Offers", () => {
           createdAt: created.confirmedAt,
         });
         expect(await readOf(await readOffer(vendor.id, created.id, token))).toEqual(
-          created,
+          asReadJustAfterItsConfirmation(created),
         );
       },
     );
@@ -717,7 +738,7 @@ describe("a Vendor's Offers", () => {
         );
         expect(
           await readOf(await readOffer(vendor.id, created.id, await adminToken())),
-        ).toEqual(created);
+        ).toEqual(asReadJustAfterItsConfirmation(created));
       }
     });
 
@@ -792,7 +813,7 @@ describe("a Vendor's Offers", () => {
       }
       expect(
         await readOf(await readOffer(vendor.id, offer.id, await adminToken())),
-      ).toEqual(offer);
+      ).toEqual(asReadJustAfterItsConfirmation(offer));
     });
 
     it("answers 404 with OFFER_NOT_FOUND for another Vendor's Offer changed or removed through one's own address, and for one that does not exist, leaving the other Vendor's Offer as it was", async () => {
@@ -828,7 +849,7 @@ describe("a Vendor's Offers", () => {
       }
       expect(
         await readOf(await readOffer(another.id, anothersOffer.id, await adminToken())),
-      ).toEqual(anothersOffer);
+      ).toEqual(asReadJustAfterItsConfirmation(anothersOffer));
       expect(await offerHistoryRows()).toEqual(historyBefore);
     });
 
@@ -908,7 +929,7 @@ describe("a Vendor's Offers", () => {
       );
       expect(
         await readOf(await readOffer(vendor.id, offer.id, await adminToken())),
-      ).toEqual(offer);
+      ).toEqual(asReadJustAfterItsConfirmation(offer));
     });
 
     it('answers a call without a token with 401', async () => {
@@ -1210,6 +1231,39 @@ describe("a Vendor's Offers", () => {
       });
     });
 
+    it('is read on its own with its expiry at the moment it is read, as its list marks it, for an Offer screen to lead with its Confirmation', async () => {
+      const { vendor, part } = await aVendorAndAPart();
+      const created = await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
+
+      const readAfter = async (later: number) => {
+        moveTheClockTo(after(aMovedMoment, later));
+        return readOf(
+          await readOffer(vendor.id, created.id, await tokenOfTheOwnLogin(vendor)),
+        );
+      };
+
+      expect(await readAfter(8 * aDay)).toEqual({
+        ...created,
+        daysSinceConfirmation: 8,
+        daysLeft: 6,
+        expired: false,
+        aboutToExpire: false,
+      });
+      expect(await readAfter(12 * aDay)).toMatchObject({
+        daysSinceConfirmation: 12,
+        daysLeft: 2,
+        expired: false,
+        aboutToExpire: true,
+      });
+      expect(await readAfter(20 * aDay)).toMatchObject({
+        daysSinceConfirmation: 20,
+        daysLeft: 0,
+        expired: true,
+        aboutToExpire: false,
+      });
+      expect(await readAfter(20 * aDay)).toEqual((await theListOf(vendor.id)).content[0]);
+    });
+
     it('counts the days since Confirmation as whole days of 24 hours: 0 just before 24 hours, 1 at 24 hours, 14 at the boundary', async () => {
       const { vendor, part } = await aVendorAndAPart();
       await anOfferConfirmedAt(vendor.id, part, aMovedMoment);
@@ -1290,9 +1344,19 @@ describe("a Vendor's Offers", () => {
       const searched = await theListOf(vendor.id, { search: 'ryzen' });
 
       expect(all.totalElements).toBe(7);
-      expect(all.counts).toEqual({ offers: 7, expired: 3, aboutToExpire: 2 });
+      expect(all.counts).toEqual({
+        offers: 7,
+        expired: 3,
+        aboutToExpire: 2,
+        outOfStock: 0,
+      });
       expect(searched.totalElements).toBe(1);
-      expect(searched.counts).toEqual({ offers: 7, expired: 3, aboutToExpire: 2 });
+      expect(searched.counts).toEqual({
+        offers: 7,
+        expired: 3,
+        aboutToExpire: 2,
+        outOfStock: 0,
+      });
       expect(
         all.content.map(({ part, expired, aboutToExpire }) => [
           part.name,
@@ -1321,10 +1385,10 @@ describe("a Vendor's Offers", () => {
       }
 
       expect(counts).toEqual([
-        { offers: 1, expired: 0, aboutToExpire: 0 },
-        { offers: 1, expired: 0, aboutToExpire: 1 },
-        { offers: 1, expired: 0, aboutToExpire: 1 },
-        { offers: 1, expired: 1, aboutToExpire: 0 },
+        { offers: 1, expired: 0, aboutToExpire: 0, outOfStock: 0 },
+        { offers: 1, expired: 0, aboutToExpire: 1, outOfStock: 0 },
+        { offers: 1, expired: 0, aboutToExpire: 1, outOfStock: 0 },
+        { offers: 1, expired: 1, aboutToExpire: 0, outOfStock: 0 },
       ]);
     });
 
@@ -1339,8 +1403,108 @@ describe("a Vendor's Offers", () => {
         totalPages: 0,
         first: true,
         last: true,
-        counts: { offers: 0, expired: 0, aboutToExpire: 0 },
+        counts: { offers: 0, expired: 0, aboutToExpire: 0, outOfStock: 0 },
       });
+    });
+  });
+
+  describe("a Vendor's list of its Offers by state", () => {
+    // A Vendor with seven Offers, at a moment 30 days after the moved one:
+    // current, about to expire and expired, some of each out of stock, and
+    // another Vendor with Offers in every state. The clock is left at that
+    // moment.
+    async function aVendorWithOffersInEveryState(): Promise<VendorBody> {
+      const vendor = await aVendorWith('0750 123 4567');
+      const another = await aVendorWith('0750 765 4321');
+      const now = after(aMovedMoment, 30 * aDay);
+      const confirmed = [
+        // Current.
+        ['Made-up Ryzen 5 7600', 1, true],
+        ['Made-up Part 1', 11, false],
+        // About to expire.
+        ['Made-up Part 2', 12, true],
+        ['Made-up Ryzen 7 7700', 14, false],
+        // Expired.
+        ['Made-up Part 4', 15, true],
+        ['Made-up Part 5', 20, false],
+        ['Made-up Part 6', 30, true],
+      ] as const;
+      for (const [name, daysAgo, inStock] of confirmed) {
+        const part = await aPart(name);
+        await anOfferConfirmedAt(vendor.id, part, after(now, -daysAgo * aDay), inStock);
+        await anOfferConfirmedAt(another.id, part, after(now, -20 * aDay), false);
+      }
+      moveTheClockTo(now);
+      return vendor;
+    }
+
+    function namesIn(page: OffersPageBody): string[] {
+      return page.content.map(({ part }) => part.name);
+    }
+
+    it('lists only the Offers that need confirming, expired or about to expire, oldest Confirmation first', async () => {
+      const vendor = await aVendorWithOffersInEveryState();
+
+      const listed = await theListOf(vendor.id, { state: 'needs-confirming' });
+
+      expect(namesIn(listed)).toEqual([
+        'Made-up Part 6',
+        'Made-up Part 5',
+        'Made-up Part 4',
+        'Made-up Ryzen 7 7700',
+        'Made-up Part 2',
+      ]);
+      expect(listed.totalElements).toBe(5);
+    });
+
+    it('lists only the Offers out of stock, oldest Confirmation first', async () => {
+      const vendor = await aVendorWithOffersInEveryState();
+
+      const listed = await theListOf(vendor.id, { state: 'out-of-stock' });
+
+      expect(namesIn(listed)).toEqual([
+        'Made-up Part 5',
+        'Made-up Ryzen 7 7700',
+        'Made-up Part 1',
+      ]);
+      expect(listed.content.every(({ inStock }) => !inStock)).toBe(true);
+      expect(listed.totalElements).toBe(3);
+    });
+
+    it('searches within the state, and lists every Offer with no state or the state all', async () => {
+      const vendor = await aVendorWithOffersInEveryState();
+
+      const searched = await theListOf(vendor.id, {
+        state: 'needs-confirming',
+        search: 'ryzen',
+      });
+      const all = await theListOf(vendor.id, { state: 'all' });
+      const unnamed = await theListOf(vendor.id);
+
+      expect(namesIn(searched)).toEqual(['Made-up Ryzen 7 7700']);
+      expect(all.totalElements).toBe(7);
+      expect(namesIn(all)).toEqual(namesIn(unnamed));
+    });
+
+    it('counts the Offers out of stock with the others, of all the Offers, whatever the search and the state', async () => {
+      const vendor = await aVendorWithOffersInEveryState();
+      const counts = { offers: 7, expired: 3, aboutToExpire: 2, outOfStock: 3 };
+
+      expect((await theListOf(vendor.id)).counts).toEqual(counts);
+      expect((await theListOf(vendor.id, { state: 'out-of-stock' })).counts).toEqual(
+        counts,
+      );
+      expect(
+        (await theListOf(vendor.id, { state: 'needs-confirming', search: 'ryzen' })).counts,
+      ).toEqual(counts);
+    });
+
+    it('refuses a state it does not know with 400, naming the state', async () => {
+      const { vendor, token } = await aVendorAndAPart();
+
+      const response = await listOffers(vendor.id, { state: 'expired' }, token);
+
+      await expectErrorResponse(response, 400, [notValid('state')]);
     });
   });
 
@@ -1387,7 +1551,12 @@ describe("a Vendor's Offers", () => {
           expired: false,
         })),
       );
-      expect(listed.counts).toEqual({ offers: 3, expired: 0, aboutToExpire: 0 });
+      expect(listed.counts).toEqual({
+        offers: 3,
+        expired: 0,
+        aboutToExpire: 0,
+        outOfStock: 0,
+      });
       const anothersListed = await theListOf(another.id);
       expect(anothersListed.content).toEqual([
         {
@@ -1465,7 +1634,7 @@ describe("a Vendor's Offers", () => {
       });
       expect(
         await readOf(await readOffer(vendor.id, created.id, await adminToken())),
-      ).toEqual(changed);
+      ).toEqual(asReadJustAfterItsConfirmation(changed));
     });
 
     it('confirms an Expired Offer saved unchanged, which is current again', async () => {
@@ -1494,7 +1663,12 @@ describe("a Vendor's Offers", () => {
           aboutToExpire: false,
         },
       ]);
-      expect(listed.counts).toEqual({ offers: 1, expired: 0, aboutToExpire: 0 });
+      expect(listed.counts).toEqual({
+        offers: 1,
+        expired: 0,
+        aboutToExpire: 0,
+        outOfStock: 0,
+      });
     });
 
     it('refuses a detail that does not fit, naming it, and leaves the Offer as it was', async () => {
@@ -1520,9 +1694,14 @@ describe("a Vendor's Offers", () => {
           refused(field, reason),
         );
       }
-      expect(await readOf(await readOffer(vendor.id, created.id, ownToken))).toEqual(
-        created,
-      );
+      // Read a day after its Confirmation, unchanged.
+      expect(await readOf(await readOffer(vendor.id, created.id, ownToken))).toEqual({
+        ...created,
+        daysSinceConfirmation: 1,
+        daysLeft: 13,
+        expired: false,
+        aboutToExpire: false,
+      });
     });
 
     it("refuses to change the Offer's Part", async () => {

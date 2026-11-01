@@ -13,9 +13,18 @@ export function vendorsHeading(page: Page): Locator {
   return page.getByRole('heading', { level: 1, name: 'Vendors' });
 }
 
-// The rows of the page of the list shown now.
+// The rows of the page of the list shown now: two-line rows on a phone, and
+// the table's rows of Vendors, under its header, from 64rem.
 export function listedVendors(page: Page): Locator {
-  return page.getByRole('list', { name: 'Vendors' }).getByRole('listitem');
+  return page
+    .getByRole('list', { name: 'Vendors' })
+    .getByRole('listitem')
+    .or(
+      page
+        .getByRole('table', { name: 'Vendors' })
+        .getByRole('row')
+        .filter({ has: page.getByRole('cell') }),
+    );
 }
 
 // The row of a Vendor, found by its name.

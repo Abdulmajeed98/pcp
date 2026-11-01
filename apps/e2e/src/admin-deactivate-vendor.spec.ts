@@ -7,6 +7,7 @@ import {
   openTheDashboardAs,
   vendorNameInTheFrame,
 } from './development-logins';
+import { expectCentredInTheWindow, expectTheEmptyState } from './empty-state';
 import {
   atTheLoginScreenInABrowserOfItsOwn,
   expectLoginScreen,
@@ -15,12 +16,13 @@ import {
   type VendorLoginDetails,
 } from './keycloak-screens';
 import {
-  buttonFor,
+  chooseInThePortal,
   expectNoSidewaysScroll,
   type Language,
   languages,
   narrowWindow,
 } from './languages';
+import { withTheMenuOpenOnAPhone } from './menu-sheet';
 import { apiUrl, dashboardUrl, realmUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -130,14 +132,22 @@ test("the Admin deactivates the Vendor, after confirming, while its portal is op
     await expect(theDeactivatedMessage(vendorsPage)).toBeVisible();
     await expect(vendorsPage.getByRole('main').locator('form')).toHaveCount(0);
     await expect(vendorNameInTheFrame(vendorsPage)).toHaveCount(0);
-    await expect(vendorsPage.getByTestId('log-out')).toBeVisible();
     await expect(vendorsPage.getByRole('link')).toHaveCount(0);
+    await withTheMenuOpenOnAPhone(vendorsPage, async () => {
+      await expect(vendorsPage.getByTestId('log-out')).toBeVisible();
+      await expect(vendorsPage.getByRole('dialog').getByRole('link')).toHaveCount(0);
+    });
     const messages = new Map<Language, string>();
     for (const language of [kurdish, english]) {
-      await buttonFor(vendorsPage, language).click();
+      await chooseInThePortal(vendorsPage, language);
       messages.set(language, await theDeactivatedMessage(vendorsPage).innerText());
     }
     expect(messages.get(kurdish)).not.toBe(messages.get(english));
+    // The message is the dashboard's empty state, centred in the window, as
+    // the "not found" screens are (the redesign, ticket 13).
+    const main = vendorsPage.getByRole('main');
+    await expectTheEmptyState(main, theDeactivatedMessage(vendorsPage));
+    await expectCentredInTheWindow(main, theDeactivatedMessage(vendorsPage));
     await expectNoSidewaysScroll(vendorsPage);
     await expectAccessible(vendorsPage);
   });

@@ -1,2 +1,30 @@
 /* The dashboard's own stylesheet. Tailwind CSS and the dashboard's look come from `ui`. */
 @import '@pcp/ui/themes/dashboard.css';
+
+/*
+ * How the dashboard takes a thumb on a phone (Emil's mobile-native, redesign
+ * ticket 11). No grey flash over a tapped control, whose own pressed state
+ * answers the tap instead (Motion 1); no font inflation when a phone turns
+ * sideways; no wait for a second tap before a control answers; and no
+ * selection of a button's words, or a callout, when a thumb rests on it.
+ * Text that is read, a Part's name among it, stays selectable.
+ */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  a,
+  button,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+}

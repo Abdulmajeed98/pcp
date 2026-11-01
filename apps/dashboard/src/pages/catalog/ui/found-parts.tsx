@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 
 import { categoryName } from '@/entities/category';
 import { WhyNotAnswered } from '@/shared/api';
-import { useAddressKeepingTheQuery } from '@/shared/lib';
+import { useAddressKeepingTheQuery, useWideScreen } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -19,16 +19,16 @@ import {
   EmptyTitle,
   ListPages,
   PastTheLastPage,
-  Plate,
 } from '@/shared/ui';
 
 import { useSearchParts } from '../api/search-parts';
 import type { CatalogSearch } from '../model/search';
-import { PartRow } from './part-row';
+import { PartsList, PartsTable } from './parts-found';
 
-// What the search found: how many, on the Catalog's one plate, then the
-// Parts of this page as rows, then the way to the other pages. While the
-// first answer is on its way, rows are sketched in its place, and while a
+// What the search found: how many, in words on the end side of the filter
+// bar, never on a plate, then the Parts of this page, a table from 64rem and
+// two-line rows on a phone, then the way to the other pages. While the first
+// answer is on its way, rows are sketched in its place, still, and while a
 // later one is, the last answer stays, at full strength, and a line beside
 // the count says that the next is on its way. A refusal and an API that
 // cannot be reached are each said in words.
@@ -40,9 +40,10 @@ export function FoundParts({
   onSearch: (search: CatalogSearch) => void;
 }) {
   const found = useSearchParts(search);
+  const wide = useWideScreen();
 
   if (found.error) return <NotSearched error={found.error} />;
-  if (found.data === undefined) return <Searching />;
+  if (found.data === undefined) return <Searching wide={wide} />;
   if (found.data.totalElements === 0) return <NothingFound search={search} />;
 
   const { content, totalElements, pageNumber, totalPages, first, last } = found.data;
@@ -53,30 +54,22 @@ export function FoundParts({
       aria-busy={found.isPlaceholderData}
       className="flex flex-col gap-4"
     >
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <Plate data-testid="parts-found-count">{formatNumber(totalElements)}</Plate>
-        <span id="parts-found">
-          {totalElements === 1 ? 'Part found' : 'Parts found'}
-          {search.category !== undefined && ` in ${categoryName(search.category)}`}
-        </span>
-        <span aria-live="polite" className="text-sm text-muted-foreground">
-          {found.isPlaceholderData && 'Searching…'}
+      <p className="flex min-h-control flex-wrap items-center justify-end gap-x-3 text-sm text-muted-foreground">
+        <span aria-live="polite">{found.isPlaceholderData && 'Searching…'}</span>
+        <span id="parts-found" data-testid="parts-found">
+          <span data-testid="parts-found-count" className="tabular-nums">
+            {formatNumber(totalElements)}
+          </span>{' '}
+          {totalElements === 1 ? 'Part' : 'Parts'}
         </span>
       </p>
 
-      {content.length > 0 ? (
-        <ul
-          aria-label="Parts found"
-          className="divide-y divide-border border-y border-border"
-        >
-          {content.map((part) => (
-            <li key={part.id}>
-              <PartRow part={part} />
-            </li>
-          ))}
-        </ul>
-      ) : (
+      {content.length === 0 ? (
         <PastTheLastPage onFirstPage={() => onSearch({ ...search, page: 0 })} />
+      ) : wide ? (
+        <PartsTable parts={content} />
+      ) : (
+        <PartsList parts={content} />
       )}
 
       {totalPages > 1 && (
@@ -93,19 +86,26 @@ export function FoundParts({
   );
 }
 
-// Rows sketched where the first answer will be.
-function Searching() {
+// Rows sketched in Raised Stone where the first answer will be, in the shape
+// of the rows to come, still: they do not shimmer.
+function Searching({ wide }: { wide: boolean }) {
   return (
     <div aria-busy="true" className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">Searching the catalog…</p>
-      <ul aria-hidden="true" className="divide-y divide-border border-y border-border">
-        {[0, 1, 2, 3].map((row) => (
-          <li key={row} className="flex items-center gap-3 py-2">
-            <span className="size-10 shrink-0 rounded-lg bg-secondary" />
-            <span className="flex flex-1 flex-col gap-2">
-              <span className="h-3.5 w-3/4 rounded-sm bg-secondary" />
-              <span className="h-3.5 w-1/2 rounded-sm bg-muted" />
-            </span>
+      <p className="flex min-h-control items-center justify-end text-sm text-muted-foreground">
+        Searching the catalog…
+      </p>
+      <ul aria-hidden="true" className="divide-y divide-rule border-y border-rule">
+        {[0, 1, 2, 3, 4].map((row) => (
+          <li
+            key={row}
+            className={
+              wide
+                ? 'flex h-12 items-center gap-4'
+                : 'flex h-18 flex-col justify-center gap-2'
+            }
+          >
+            <span className="h-3.5 w-2/5 rounded-plate bg-secondary" />
+            <span className="h-3.5 w-1/5 rounded-plate bg-secondary" />
           </li>
         ))}
       </ul>
@@ -121,7 +121,7 @@ function NothingFound({ search }: { search: CatalogSearch }) {
       : `the Category ${categoryName(search.category)}`;
 
   return (
-    <Empty data-testid="nothing-found" className="border-y border-border">
+    <Empty data-testid="nothing-found" className="border-y border-rule">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <SearchXIcon />
@@ -133,15 +133,15 @@ function NothingFound({ search }: { search: CatalogSearch }) {
           ) : (
             <>
               No Part in {where} holds every word of “
-              <AlwaysEnglish>{search.words.trim()}</AlwaysEnglish>” in its name, its
-              manufacturer or a part number. Check the spelling
+              <AlwaysEnglish className="wrap-anywhere">{search.words.trim()}</AlwaysEnglish>
+              ” in its name, its manufacturer or a part number. Check the spelling
               {search.category === undefined ? '.' : ', or search every Category.'}
             </>
           )}
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <p>A Part that OpenDB lacks can be created.</p>
+        <p className="text-muted-foreground">A Part that OpenDB lacks can be created.</p>
         <Link
           to={keepingTheQuery('/catalog/new')}
           className={buttonVariants({ variant: 'outline' })}

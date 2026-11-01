@@ -18,8 +18,9 @@ import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
 import { createAMadeUpVendor, inIraqsOwnForm, type MadeUpVendor } from './vendors';
 
-// The Admin works in the Vendors' shops, on a phone (LANG-8).
+// The Admin works in the Vendors' shops, on a phone (LANG-8), and at a desk.
 test.use({ viewport: narrowWindow });
+const deskWindow = { width: 1280, height: 800 };
 
 // What a Vendor in Erbil may write, in Sorani, in the Arabic script, with
 // Arabic-Indic digits, on more than one line, and the rest of its details,
@@ -90,6 +91,96 @@ test.describe('the Vendors list', () => {
   });
 });
 
+test.describe('on a screen as wide as a desk', () => {
+  test.use({ viewport: deskWindow });
+
+  test('the list is a table across the sheet, its count in words and on no plate, and meets WCAG 2.2 level AA in light and in dark', async ({
+    page,
+    request,
+  }) => {
+    const vendor = await createAMadeUpVendor(request, authorization);
+    await findOnTheList(page, [vendor.name]);
+
+    const table = page.getByRole('table', { name: 'Vendors' });
+    await expect(table.getByRole('columnheader')).toHaveText([
+      'Vendor',
+      'State',
+      'Login phone number',
+    ]);
+    const cells = rowOfVendor(page, vendor.name).getByRole('cell');
+    await expect(cells).toHaveText([
+      vendor.name,
+      'Active',
+      inIraqsOwnForm(vendor.loginPhoneNumber),
+    ]);
+    // Only "Deactivated" is marked (the owner's "Only Deactivated"): an
+    // active Vendor's State cell is empty to the eye, and says "Active" to
+    // a screen reader alone, so that the cell is never read as nothing.
+    const active = await cells
+      .nth(1)
+      .getByText('Active', { exact: true })
+      .evaluate((element) => element.getBoundingClientRect().width);
+    expect(active).toBeLessThanOrEqual(1);
+    // The phone numbers end-aligned in tabular figures, so that their digits
+    // line up down the column, its heading with them.
+    await expect(cells.last()).toHaveCSS('text-align', 'end');
+    await expect(cells.last()).toHaveCSS('font-variant-numeric', 'tabular-nums');
+    await expect(table.getByRole('columnheader').last()).toHaveCSS('text-align', 'end');
+    await expect(page.getByTestId('vendors-count')).toHaveText(/^[\d,]+ Vendors?$/);
+    await expect(page.locator('[data-slot="plate"]')).toHaveCount(0);
+    const sheet = await page.getByRole('main').boundingBox();
+    const list = await table.boundingBox();
+    // The sheet's 24 pixels of padding on each side, and the rows' 8 pixels
+    // of bleed past the text on each side.
+    expect(list?.width).toBeGreaterThanOrEqual((sheet?.width ?? 0) - 48 - 2);
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+
+  test("a Vendor's page opens beside the list, which keeps seven twelfths and marks the Vendor's row as open, on Active Stone", async ({
+    page,
+    request,
+  }) => {
+    const vendor = await createAMadeUpVendor(request, authorization, everyDetail);
+    await findOnTheList(page, [vendor.name]);
+    const before = await page.getByRole('table', { name: 'Vendors' }).boundingBox();
+
+    await rowOfVendor(page, vendor.name).getByRole('link', { name: vendor.name }).click();
+
+    // One h1 to a page: beside the list, the Vendor's page titles itself
+    // h2 (the owner's "h2 on a desk", redesign ticket 08).
+    await expect(page.getByRole('heading', { level: 2, name: vendor.name })).toBeVisible();
+    await expect(vendorsHeading(page)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    const row = rowOfVendor(page, vendor.name);
+    await expect(row.getByRole('link', { name: vendor.name })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    const activeStone = await page.evaluate(() => {
+      const probe = document.createElement('div');
+      probe.className = 'bg-accent';
+      document.body.append(probe);
+      const colour = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return colour;
+    });
+    await expect(row).toHaveCSS('background-color', activeStone);
+    const after = await page.getByRole('table', { name: 'Vendors' }).boundingBox();
+    const share = (after?.width ?? 0) / (before?.width ?? 1);
+    expect(share).toBeGreaterThan(0.5);
+    expect(share).toBeLessThan(0.62);
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+
+    await page.getByRole('link', { name: 'Edit', exact: true }).click();
+    await expect(
+      page.getByRole('heading', { level: 2, name: `Edit ${vendor.name}` }),
+    ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  });
+});
+
 test.describe("a Vendor's page", () => {
   let vendor: MadeUpVendor;
 
@@ -140,6 +231,45 @@ test.describe("a Vendor's page", () => {
     await expectNoSidewaysScroll(page);
     await expectAccessible(page);
   });
+});
+
+test("a Vendor's page holds its longest details at 360 pixels: an Instagram name of 30 characters wraps rather than scrolling sideways, and each line of an address takes its own direction", async ({
+  page,
+  request,
+}) => {
+  // An English line short enough to fit on one line of the value.
+  const englishLine = 'Made-up Complex';
+  const vendor = await createAMadeUpVendor(request, authorization, {
+    address: `شەقامی ٦٠ مەتری، نزیک بازاڕی ١٠٠\n${englishLine}`,
+    instagramName: 'made_up_computer_hardware_erbl',
+  });
+  await page.goto(vendorPageUrl(vendor.id));
+  await expect(page.getByRole('heading', { level: 1, name: vendor.name })).toBeVisible();
+
+  await expect(
+    detailRow(page, 'instagramName').getByRole('link', {
+      name: '@made_up_computer_hardware_erbl',
+    }),
+  ).toBeVisible();
+  await expectNoSidewaysScroll(page);
+  // The English line's words start on the left of the value, as English is
+  // read, though the address is Kurdish and laid out right to left.
+  const englishLineStartsOnTheLeft = await detailRow(page, 'address')
+    .locator('dd')
+    .evaluate((value, line) => {
+      const walker = document.createTreeWalker(value, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+        const at = (node as Text).data.indexOf(line);
+        if (at === -1) continue;
+        const words = document.createRange();
+        words.setStart(node, at);
+        words.setEnd(node, at + line.length);
+        const left = value.getBoundingClientRect().left;
+        return Math.abs(words.getClientRects()[0].left - left) < 2;
+      }
+      return false;
+    }, englishLine);
+  expect(englishLineStartsOnTheLeft).toBe(true);
 });
 
 test('the menu leads from the Vendors to the Catalog and back, and marks the section the Admin is in', async ({

@@ -1,4 +1,5 @@
 import { formatNumber } from '@pcp/i18n';
+import { cn } from 'cn';
 import { CheckCheckIcon } from 'lucide-react';
 
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
@@ -12,17 +13,18 @@ import type { useConfirmAllOffers } from '../api/confirm-all';
 type Confirming = ReturnType<typeof useConfirmAllOffers>;
 
 // The button that confirms all the Vendor's Offers at once, the pane's one
-// primary button. While the API is asked, it says so and waits. A refusal
-// is said below it, in the portal's language: what was not done, and why.
+// primary button, as wide as its panel on a phone. While the API is asked,
+// it says so and waits, keeping its width. A refusal is said below it, in
+// the portal's language: what was not done, and why.
 export function ConfirmAllButton({ confirming }: { confirming: Confirming }) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col items-start gap-2">
+    <div className="flex shrink-0 flex-col items-stretch gap-2 lg:items-end">
       <Button
         disabled={confirming.isPending}
         onClick={() => confirming.mutate()}
-        className="w-full sm:w-auto"
+        className="w-full lg:w-auto"
       >
         <CheckCheckIcon data-icon="inline-start" />
         {confirming.isPending
@@ -30,7 +32,7 @@ export function ConfirmAllButton({ confirming }: { confirming: Confirming }) {
           : t('ConfirmAllOffers.confirmAll')}
       </Button>
       {confirming.error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="arrives text-sm text-destructive">
           {t('ConfirmAllOffers.notConfirmed')}{' '}
           <WhyNotAnsweredInThePortal error={confirming.error} />
         </p>
@@ -40,33 +42,51 @@ export function ConfirmAllButton({ confirming }: { confirming: Confirming }) {
 }
 
 // What confirm-all did, once the API has answered: how many Offers it
-// confirmed, a sentence that counts. It is announced when it appears, and it
-// stays after the banner has left, until the screen is left.
-export function ConfirmedAll({ confirming }: { confirming: Confirming }) {
+// confirmed, a sentence that counts, in Confirmed Green at weight 500 after a
+// double tick. It is announced when it appears, and stays after the banner
+// has left, until the screen is left. It pushes what is below it down, so it
+// arrives as a row does (the theme's `leaves`, Motion 8): its space, with the
+// gap above it that the screen gives, opens first, and then it fades in, so
+// that nothing below it jumps.
+export function ConfirmedAll({
+  confirming,
+  gapAbove,
+}: {
+  confirming: Confirming;
+  // The space the screen keeps above it, which opens with it.
+  gapAbove?: string;
+}) {
   const confirmed = confirming.data?.confirmed;
 
   return (
     <output
       data-testid={confirmed === undefined ? undefined : 'confirmed'}
-      className={
-        confirmed === undefined
-          ? 'sr-only'
-          : 'flex items-center gap-2 text-sm font-medium text-success'
-      }
+      className="block"
     >
       {confirmed !== undefined && (
-        <>
-          <CheckCheckIcon aria-hidden="true" className="size-4 shrink-0" />
+        <span data-arriving className="leaves">
           <span>
-            <Trans
-              i18nKey="ConfirmAllOffers.confirmed"
-              count={confirmed}
-              components={{
-                count: <span data-testid="confirmed-count">{formatNumber(confirmed)}</span>,
-              }}
-            />
+            <span
+              className={cn(
+                'flex items-center gap-2 text-sm font-medium text-success',
+                gapAbove,
+              )}
+            >
+              <CheckCheckIcon aria-hidden="true" className="size-4 shrink-0" />
+              <span>
+                <Trans
+                  i18nKey="ConfirmAllOffers.confirmed"
+                  count={confirmed}
+                  components={{
+                    count: (
+                      <span data-testid="confirmed-count">{formatNumber(confirmed)}</span>
+                    ),
+                  }}
+                />
+              </span>
+            </span>
           </span>
-        </>
+        </span>
       )}
     </output>
   );

@@ -8,7 +8,7 @@ import { HandOver, TemporaryPassword } from '@/features/hand-over';
 import { VendorForm } from '@/features/vendor-form';
 import { apiClient, dataOf } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { BackLink, buttonVariants } from '@/shared/ui';
+import { BackLink, buttonVariants, ScreenTitle } from '@/shared/ui';
 
 // The form for a new Vendor. Creating it makes the Vendor and its Login, and
 // the screen then shows the Login's temporary password, this once, beside
@@ -33,9 +33,10 @@ function NewVendor() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">New Vendor</h1>
+      <ScreenTitle className="screen-title">New Vendor</ScreenTitle>
       <VendorForm
         submitLabel="Create the Vendor"
+        busyLabel="Creating the Vendor…"
         save={(body) => create.mutateAsync(body)}
       />
     </div>
@@ -52,21 +53,29 @@ function Created({
   const keepingTheQuery = useAddressKeepingTheQuery();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-3 pb-6">
         <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-        <h1 className="text-xl font-semibold sm:text-2xl">
+        <ScreenTitle className="screen-title">
           <AsWritten>{vendor.name}</AsWritten>
-        </h1>
+        </ScreenTitle>
         <p>The Vendor and its Login are made.</p>
       </div>
 
-      <TemporaryPassword password={temporaryPassword} />
-
-      <HandOver
-        loginPhoneNumber={vendor.loginPhoneNumber}
-        temporaryPassword={temporaryPassword}
-      />
+      {/* The temporary password and the hand-over arrive as a reset's do
+          (the owner's "Arrives smoothly", redesign ticket 09; Motion 8 and
+          the No Snap Rule): their space opens, the link below sliding down,
+          and then they fade in. The space below them is their own padding,
+          inside what opens. */}
+      <div data-testid="vendor-created" data-arriving="" className="leaves">
+        <div className="flex flex-col gap-6 pb-6">
+          <TemporaryPassword password={temporaryPassword} />
+          <HandOver
+            loginPhoneNumber={vendor.loginPhoneNumber}
+            temporaryPassword={temporaryPassword}
+          />
+        </div>
+      </div>
 
       <Link
         to={keepingTheQuery(`/vendors/${vendor.id}`)}

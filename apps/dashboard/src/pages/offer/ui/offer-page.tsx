@@ -1,14 +1,21 @@
-import type { EditOfferRequest, OfferResponse } from '@pcp/api-client';
+import type { EditOfferRequest, ListedOfferResponse } from '@pcp/api-client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PackageXIcon } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router';
 
-import { askAgainAfterAChangeToTheOffers, useOffer } from '@/entities/offer';
+import {
+  askAgainAfterAChangeToTheOffers,
+  ConfirmationLook,
+  confirmationOf,
+  OfferPlate,
+  useOffer,
+} from '@/entities/offer';
 import { useVendorShown } from '@/entities/vendor';
 import { formValuesOf, OfferForm } from '@/features/offer-form';
 import { RemoveOffer } from '@/features/remove-offer';
 import { apiClient, dataOf, Refusal, WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
+import { useCentredInTheWindow } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -35,6 +42,14 @@ import {
 // Its way back, and the way it leads after a save or a removal, `..`, are
 // written relative to its route, so that they reach the Offers screen under
 // either frame.
+//
+// As DESIGN.md lays it out (redesign ticket 12): under its title the
+// screen's one leading plate, the Offer's price as Shoppers see it now, both
+// currencies on it, muted when out of stock, with its Confirmation beside
+// it; it shows the saved price, and changes only when the form is saved.
+// Then a Note Grey sentence that saving it confirms it, the form, with the
+// Part beside it from 64rem, and below the form, in its column, on a row of
+// its own, Remove the Offer, as wide as the form on a phone.
 export function OfferPage() {
   const { t } = useTranslation();
   const { vendorId } = useVendorShown();
@@ -45,10 +60,7 @@ export function OfferPage() {
   return (
     <div data-testid="offer-screen" className="flex flex-col gap-4">
       <BackLink to="..">{t('OfferScreen.back')}</BackLink>
-      <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold sm:text-2xl">{t('OfferScreen.title')}</h1>
-        {!gone && <p className="text-sm text-muted-foreground">{t('OfferScreen.intro')}</p>}
-      </div>
+      <h1 className="screen-title">{t('OfferScreen.title')}</h1>
       {gone ? (
         <OfferGone />
       ) : offer.error ? (
@@ -67,7 +79,14 @@ export function OfferPage() {
   );
 }
 
-function ChangeTheOffer({ vendorId, offer }: { vendorId: string; offer: OfferResponse }) {
+function ChangeTheOffer({
+  vendorId,
+  offer,
+}: {
+  vendorId: string;
+  offer: ListedOfferResponse;
+}) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const backToTheOffers = async () => {
@@ -86,27 +105,47 @@ function ChangeTheOffer({ vendorId, offer }: { vendorId: string; offer: OfferRes
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
+        <p
+          data-testid="leading-plate"
+          className="flex flex-wrap items-center gap-x-3 gap-y-2"
+        >
+          <OfferPlate offer={offer} lead />
+          <ConfirmationLook
+            state={confirmationOf(offer)}
+            testId="confirmation"
+            className="text-sm"
+          />
+        </p>
+        <p className="text-sm text-muted-foreground">{t('OfferScreen.intro')}</p>
+      </div>
       <OfferForm
         part={offer.part}
         values={formValuesOf(offer)}
         purpose="change"
         save={(details) => change.mutateAsync(details)}
+        after={
+          <RemoveOffer vendorId={vendorId} offer={offer} onRemoved={backToTheOffers} />
+        }
       />
-      <RemoveOffer vendorId={vendorId} offer={offer} onRemoved={backToTheOffers} />
     </div>
   );
 }
 
 // What the screen says of an Offer that no longer exists, such as one the
-// Vendor removed, opened by an old link.
+// Vendor removed, opened by an old link: the dashboard's empty state,
+// centred in the window's height below the screen's title, as ticket 13
+// centres the "not found" screens (the owner's "Centred in window", redesign
+// ticket 12).
 function OfferGone() {
   const { t } = useTranslation();
+  const centred = useCentredInTheWindow<HTMLDivElement>();
 
   return (
-    <Empty data-testid="offer-gone" className="border-y border-border">
+    <Empty ref={centred} data-testid="offer-gone">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <PackageXIcon />
+          <PackageXIcon aria-hidden="true" />
         </EmptyMedia>
         <EmptyTitle>{t('OfferScreen.gone')}</EmptyTitle>
         <EmptyDescription>{t('OfferScreen.goneDescription')}</EmptyDescription>

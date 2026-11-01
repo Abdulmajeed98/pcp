@@ -39,9 +39,7 @@ export function EditContactDetailsPage() {
     <div className="flex flex-col gap-4">
       <BackLink to="..">{t('ContactDetailsForm.back')}</BackLink>
       <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold sm:text-2xl">
-          {t('ContactDetailsForm.title')}
-        </h1>
+        <h1 className="screen-title">{t('ContactDetailsForm.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('ContactDetailsForm.intro')}</p>
       </div>
       {vendor.error ? (

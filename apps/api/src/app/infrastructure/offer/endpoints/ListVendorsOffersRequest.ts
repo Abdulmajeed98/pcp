@@ -1,8 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PagingRequest, Role } from '@pcp/core';
-import { IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 import { ListVendorsOffersQueryInput } from '~/domain/offer/ListVendorsOffersQuery';
+import { type OfferState, offerStates } from '~/domain/offer/offer-state';
 
 // A search of a Vendor's own Offers, from the address's query, with the page
 // asked for.
@@ -16,6 +17,16 @@ export class ListVendorsOffersRequest extends PagingRequest {
   @IsString()
   readonly search?: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Which Offers are found: every one; those that need confirming, Expired Offers and those about to expire; or those out of stock. Left out, every Offer is found.',
+    enum: offerStates,
+    example: 'needs-confirming',
+  })
+  @IsOptional()
+  @IsIn(offerStates)
+  readonly state?: OfferState;
+
   toQueryInput(
     callerId: string,
     callerRoles: readonly Role[],
@@ -26,6 +37,7 @@ export class ListVendorsOffersRequest extends PagingRequest {
       callerRoles,
       vendorId,
       this.search ?? '',
+      this.state ?? 'all',
       this.toDomain(),
     );
   }

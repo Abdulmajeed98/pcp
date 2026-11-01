@@ -19,13 +19,14 @@ import {
   narrowWindow,
 } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
+import { film, snapsOf } from './motion-film';
 import {
   loginOfTheMessage,
   messageLanguage,
   temporaryPassword,
   theHandOver,
 } from './hand-over';
-import { dashboardUrl } from './platform';
+import { apiUrl, dashboardUrl } from './platform';
 import {
   atTheLoginScreenInABrowserOfItsOwn,
   expectNewPasswordScreen,
@@ -259,6 +260,99 @@ test('the form does not scroll sideways, and meets the automated part of WCAG 2.
   await expect(vendorFormField(page, 'Name')).toHaveAttribute('aria-invalid', 'true');
   await expectNoSidewaysScroll(page);
   await expectAccessible(page);
+});
+
+test.describe('on a screen as wide as a desk', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('the form opens beside the list, its details one to a row in the narrow pane; while the Vendor is created its button says so and waits; and it meets WCAG 2.2 level AA in light and in dark', async ({
+    page,
+  }) => {
+    await page.goto(vendorsUrl);
+    await expect(vendorsHeading(page)).toBeVisible();
+    await page.getByRole('link', { name: 'New Vendor' }).click();
+    // One h1 to a page: beside the list, the form titles itself h2 (the
+    // owner's "h2 on a desk", redesign ticket 08).
+    await expect(page.getByRole('heading', { level: 2, name: 'New Vendor' })).toBeVisible();
+    await expect(vendorsHeading(page)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+
+    const phone = await vendorFormField(page, 'Phone number').boundingBox();
+    const whatsApp = await vendorFormField(page, 'WhatsApp number').boundingBox();
+    expect(whatsApp?.x).toBe(phone?.x);
+    expect(whatsApp?.y).toBeGreaterThan((phone?.y ?? 0) + (phone?.height ?? 0));
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+
+    // The API's answer is held back a moment, as on a slow connection.
+    let answer: () => void = () => {};
+    const heldBack = new Promise<void>((resolve) => (answer = resolve));
+    await page.route(`${apiUrl}/v1/vendors`, async (route) => {
+      if (route.request().method() === 'POST') await heldBack;
+      await route.continue();
+    });
+    await fillInTheForm(page, aMadeUpVendorToType());
+    const idle = await page
+      .getByRole('button', { name: 'Create the Vendor' })
+      .boundingBox();
+    await page.getByRole('button', { name: 'Create the Vendor' }).click();
+    const busy = page.getByRole('button', { name: 'Creating the Vendor…' });
+    await expect(busy).toBeDisabled();
+    // It keeps its width, so that nothing beside it moves (the No Snap Rule).
+    expect((await busy.boundingBox())?.width).toBe(idle?.width);
+    answer();
+    await expect(temporaryPassword(page)).toBeVisible();
+    // Under the form's h2, the sections it shows after the create are of the
+    // third level.
+    for (const section of ['Temporary password', 'Hand the login details over']) {
+      await expect(page.getByRole('heading', { level: 3, name: section })).toBeVisible();
+    }
+  });
+});
+
+test('on a tablet, the form puts two details to a row', async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await page.goto(newVendorUrl);
+  await expect(newVendorHeading(page)).toBeVisible();
+
+  const phone = await vendorFormField(page, 'Phone number').boundingBox();
+  const whatsApp = await vendorFormField(page, 'WhatsApp number').boundingBox();
+  // On one row, give or take the part of a pixel a label's line box adds.
+  expect(Math.abs((whatsApp?.y ?? 0) - (phone?.y ?? 0))).toBeLessThan(2);
+  expect(whatsApp?.x).toBeGreaterThan((phone?.x ?? 0) + (phone?.width ?? 0));
+  await expectNoSidewaysScroll(page);
+});
+
+test('after the create, the temporary password and the hand-over arrive with no snap, as a reset’s do: their space opens, the link below sliding down over many frames, and then they fade in', async ({
+  page,
+}) => {
+  await page.goto(newVendorUrl);
+  await expect(newVendorHeading(page)).toBeVisible();
+  await fillInTheForm(page, aMadeUpVendorToType());
+  // Watched four times slower, as the owner asked them to be watched, and
+  // the top of the link below taken frame by frame from the create on.
+  const frames = await film(
+    page,
+    () =>
+      [...document.querySelectorAll('a')]
+        .find((each) => each.textContent === 'Open the Vendor’s page')
+        ?.getBoundingClientRect().top ?? null,
+    () => page.getByRole('button', { name: 'Create the Vendor' }).click(),
+    { forMs: 5000 },
+  );
+  await expect(temporaryPassword(page)).toBeVisible();
+
+  const handOver = page.getByTestId('vendor-created');
+  const transition = await handOver.evaluate(
+    (element) => getComputedStyle(element).transitionProperty,
+  );
+  expect(transition.split(', ')).toEqual(
+    expect.arrayContaining(['grid-template-rows', 'opacity']),
+  );
+  const tops = frames.map(({ at, drawn }) => ({ at, value: drawn }));
+  const seen = tops.flatMap(({ value }) => (value === null ? [] : [value]));
+  expect((seen.at(-1) ?? 0) - (seen[0] ?? 0), 'the link slid down').toBeGreaterThan(100);
+  expect(snapsOf('the link below', tops)).toEqual([]);
 });
 
 test('the temporary password and the hand-over do not scroll sideways, and meet the automated part of WCAG 2.2 level AA in light and in dark', async ({

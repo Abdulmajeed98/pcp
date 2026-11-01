@@ -1,10 +1,11 @@
 /*
- * The dashboard's look, Rate Board, for the Admin console and the Vendor
- * portal. The numbers a Vendor and the Admin keep are shown as figures on
- * dark plates, as a money changer shows the day's rate.
- * apps/dashboard/DESIGN.md says how each colour is used. Every pair meets
- * WCAG 2.2 level AA in both schemes: 4.5:1 for text, and 3:1 for an input's
- * border and for the focus ring.
+ * The dashboard's look, Framed sheet, for the Admin console and the Vendor
+ * portal (ADR-0011). A cool stone frame holds the navigation and the top
+ * bar, the work lies on a white sheet set into it, and only prices and the
+ * Platform Rate hang on graphite plates in amber. apps/dashboard/DESIGN.md
+ * says how each colour, size and movement is used. Every text colour meets
+ * WCAG 2.2 level AA's 4.5:1 on the grounds it is used on, and every control
+ * edge 3:1, in both schemes.
  */
 @import '../theme.css';
 
@@ -18,65 +19,164 @@
 @import '@fontsource-variable/noto-sans-arabic';
 @import '@fontsource-variable/geist-mono';
 
+/*
+ * The light scheme, Framed sheet's own. Each colour is named in DESIGN.md:
+ * Stone Frame, Sheet, Raised and Active Stone, Edge, Rule, Control Edge,
+ * Ink, Note Grey, Bazaar Teal, Confirmed Green, Action Red and the plates'.
+ */
 :root {
-  /* Small, firm corners, as a plate's are. */
+  /* A control's corners; the other corners are named below. */
   --radius: 0.375rem;
 
-  --background: oklch(0.967 0.007 88.6);
-  --foreground: oklch(0.203 0.005 248.1);
-  --card: oklch(0.985 0.004 91.4);
-  --card-foreground: oklch(0.203 0.005 248.1);
-  --popover: oklch(0.985 0.004 91.4);
-  --popover-foreground: oklch(0.203 0.005 248.1);
-  --primary: oklch(0.203 0.005 248.1);
-  --primary-foreground: oklch(0.967 0.007 88.6);
-  --secondary: oklch(0.925 0.01 87.5);
-  --secondary-foreground: oklch(0.203 0.005 248.1);
-  --muted: oklch(0.937 0.008 91.5);
-  --muted-foreground: oklch(0.484 0.013 256.7);
-  --accent: oklch(0.91 0.011 89.7);
-  --accent-foreground: oklch(0.203 0.005 248.1);
-  --destructive: oklch(0.501 0.178 28.7);
-  --destructive-foreground: oklch(1 0 0);
-  --warning: oklch(0.531 0.119 65.1);
-  --warning-foreground: oklch(1 0 0);
-  --success: oklch(0.475 0.099 148.2);
-  --success-foreground: oklch(1 0 0);
-  --border: oklch(0.874 0.013 86.8);
-  --input: oklch(0.599 0.018 82.8);
-  --ring: oklch(0.203 0.005 248.1);
+  --frame: #f1f0ed;
+  --background: #ffffff;
+  --foreground: #131416;
+  --card: #ffffff;
+  --card-foreground: #131416;
+  --popover: #ffffff;
+  --popover-foreground: #131416;
+  --primary: #131416;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f4f2;
+  --secondary-foreground: #131416;
+  --muted: #f5f4f2;
+  --muted-foreground: #5d5f60;
+  --accent: #e9e8e5;
+  --accent-foreground: #131416;
+  --destructive: #c4242a;
+  --destructive-foreground: #ffffff;
+  --success: #1e7b4f;
+  --success-foreground: #ffffff;
+  --border: #e6e5e2;
+  --rule: #efeeec;
+  --input: #858480;
+  --ring: #131416;
+  --tab-line: #1b6c80;
 
-  /* The plates and the figures on them, the same in both schemes. */
-  --plate: oklch(0.303 0.009 248.1);
-  --plate-figure: oklch(0.791 0.134 79.5);
+  --plate: #26292b;
+  --plate-edge: #26292b;
+  --plate-figure: #ecb64e;
+  --plate-unit: #a7aaac;
+  --plate-muted: #e9e8e5;
+  --plate-muted-figure: #55585a;
+
+  /* What floats over the screen, a dialog and the menu sheet, and the scrim
+   * under it. In the dark scheme the shadow cannot be seen, and the
+   * floating surface's edge carries it. */
+  --floating-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
 }
 
+/*
+ * The dark scheme. The page follows the device's scheme, unless the scheme
+ * switch chose one, which `data-scheme` on the document then names (the
+ * dashboard sets it before the first paint). The same values are written
+ * twice, once for each way the dark scheme is chosen, as CSS has no way to
+ * join a media query and a selector in one rule.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.194 0.005 248.1);
-    --foreground: oklch(0.934 0.008 91.5);
-    --card: oklch(0.226 0.007 258.4);
-    --card-foreground: oklch(0.934 0.008 91.5);
-    --popover: oklch(0.226 0.007 258.4);
-    --popover-foreground: oklch(0.934 0.008 91.5);
-    --primary: oklch(0.934 0.008 91.5);
-    --primary-foreground: oklch(0.194 0.005 248.1);
-    --secondary: oklch(0.271 0.007 248.1);
-    --secondary-foreground: oklch(0.934 0.008 91.5);
-    --muted: oklch(0.247 0.006 258.4);
-    --muted-foreground: oklch(0.697 0.014 86.9);
-    --accent: oklch(0.296 0.008 255.6);
-    --accent-foreground: oklch(0.934 0.008 91.5);
-    --destructive: oklch(0.708 0.155 26.9);
-    --destructive-foreground: oklch(0.198 0.056 29.2);
-    --warning: oklch(0.791 0.134 79.5);
-    --warning-foreground: oklch(0.211 0.044 75.5);
-    --success: oklch(0.758 0.108 150.2);
-    --success-foreground: oklch(0.234 0.048 149.3);
-    --border: oklch(0.332 0.008 255.6);
-    --input: oklch(0.608 0.013 84.6);
-    --ring: oklch(0.934 0.008 91.5);
+  :root:not([data-scheme='light']) {
+    --frame: #0d0d0d;
+    --background: #161616;
+    --foreground: #f2f2f2;
+    --card: #161616;
+    --card-foreground: #f2f2f2;
+    --popover: #161616;
+    --popover-foreground: #f2f2f2;
+    --primary: #f2f2f2;
+    --primary-foreground: #111111;
+    --secondary: #1d1d1d;
+    --secondary-foreground: #f2f2f2;
+    --muted: #1d1d1d;
+    --muted-foreground: #b4b4b4;
+    --accent: #262626;
+    --accent-foreground: #f2f2f2;
+    --destructive: #e5566f;
+    --destructive-foreground: #111111;
+    --success: #3fc07a;
+    --success-foreground: #111111;
+    --border: #2a2a2a;
+    --rule: #222222;
+    --input: #6f6f6f;
+    --ring: #f2f2f2;
+    --tab-line: #62b6ca;
+
+    --plate: #030303;
+    --plate-edge: #3d3d3d;
+    --plate-figure: #ecb64e;
+    --plate-unit: #9a9a9a;
+    --plate-muted: #232323;
+    --plate-muted-figure: #9a9a9a;
   }
+}
+
+:root[data-scheme='dark'] {
+  --frame: #0d0d0d;
+  --background: #161616;
+  --foreground: #f2f2f2;
+  --card: #161616;
+  --card-foreground: #f2f2f2;
+  --popover: #161616;
+  --popover-foreground: #f2f2f2;
+  --primary: #f2f2f2;
+  --primary-foreground: #111111;
+  --secondary: #1d1d1d;
+  --secondary-foreground: #f2f2f2;
+  --muted: #1d1d1d;
+  --muted-foreground: #b4b4b4;
+  --accent: #262626;
+  --accent-foreground: #f2f2f2;
+  --destructive: #e5566f;
+  --destructive-foreground: #111111;
+  --success: #3fc07a;
+  --success-foreground: #111111;
+  --border: #2a2a2a;
+  --rule: #222222;
+  --input: #6f6f6f;
+  --ring: #f2f2f2;
+  --tab-line: #62b6ca;
+
+  --plate: #030303;
+  --plate-edge: #3d3d3d;
+  --plate-figure: #ecb64e;
+  --plate-unit: #9a9a9a;
+  --plate-muted: #232323;
+  --plate-muted-figure: #9a9a9a;
+}
+
+/* A scheme chosen with the switch tells the browser, so that its own parts,
+ * such as form controls and scroll bars, take it too. */
+:root[data-scheme='light'] {
+  color-scheme: light;
+}
+
+:root[data-scheme='dark'] {
+  color-scheme: dark;
+}
+
+/*
+ * While the scheme switch changes the scheme, every colour changes in one
+ * frame: transitions are suppressed for that frame, so that nothing smears
+ * from one scheme to the other (DESIGN.md's Motion, 9).
+ */
+:root[data-scheme-changing] *,
+:root[data-scheme-changing] *::before,
+:root[data-scheme-changing] *::after {
+  transition: none !important;
+}
+
+@theme {
+  /*
+   * The motion's three curves (DESIGN.md's Motion). Tailwind's own
+   * `ease-out` and `ease-in-out` take the first two; `ease-in` is never
+   * used.
+   */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* A screen's title, 22 pixels at every width, from Taste's sheet. */
+  --text-title: 1.375rem;
+  --text-title--line-height: calc(30 / 22);
 }
 
 @theme inline {
@@ -84,6 +184,401 @@
     'Geist Variable', 'Noto Sans Arabic Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
 
+  --color-frame: var(--frame);
+  --color-rule: var(--rule);
+  --color-tab-line: var(--tab-line);
   --color-plate: var(--plate);
+  --color-plate-edge: var(--plate-edge);
   --color-plate-figure: var(--plate-figure);
+  --color-plate-unit: var(--plate-unit);
+  --color-plate-muted: var(--plate-muted);
+  --color-plate-muted-figure: var(--plate-muted-figure);
+
+  /* The corners by what they round: soft outside, firm inside. */
+  --radius-sheet: 1rem;
+  --radius-card: 0.5rem;
+  --radius-control: 0.375rem;
+  --radius-plate: 0.25rem;
+  --radius-plate-lead: 0.375rem;
+
+  --shadow-floating: var(--floating-shadow);
+}
+
+@layer base {
+  /*
+   * A control is 44 pixels high on a touchscreen, and 36 under a mouse on a
+   * screen as wide as a desk's, never lower (ticket 03 of the redesign). A
+   * device with any touch input keeps 44, as a laptop with a touchscreen
+   * whose trackpad is its main pointer: anything tapped on a touchscreen is
+   * at least 44 by 44 (the root DESIGN.md).
+   */
+  @media (pointer: fine) and (not (any-pointer: coarse)) and (min-width: 64rem) {
+    :root {
+      --spacing-control: 2.25rem;
+    }
+  }
+}
+
+/* A screen's title: the Screen title type, weight 650. */
+@utility screen-title {
+  font-size: var(--text-title);
+  line-height: var(--text-title--line-height);
+  font-weight: 650;
+}
+
+/*
+ * A row that scrolls sideways, such as a list's tabs on a phone, fades over
+ * its last 32 pixels on its end side while more of it lies beyond, so that
+ * it is seen to go on; the row names that state in `data-more-beyond`. The
+ * fade is mirrored in right to left, and leaves while a control in the row
+ * has the keyboard's focus, so that neither the control nor its outline is
+ * faded. What it fades is the overflow, never text read in place.
+ */
+@utility fade-end {
+  &[data-more-beyond] {
+    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+  }
+
+  &:where([dir='rtl'], [dir='rtl'] *)[data-more-beyond] {
+    mask-image: linear-gradient(to left, #000 calc(100% - 2rem), transparent);
+  }
+
+  &:has(:focus-visible) {
+    mask-image: none;
+  }
+}
+
+/*
+ * The movements of DESIGN.md's Motion, each a CSS transition on `scale`,
+ * `translate` and `opacity`, so that it runs off the main thread and a second
+ * action takes it from where it is. Every one has its reduced-motion
+ * variant, which keeps the fades and the colours and drops the movement in
+ * space. Tailwind already shows `hover:` only to a pointer that can hover.
+ */
+
+/*
+ * 1 and 2. The press, on a button, a link drawn as one, a segment of a
+ * switch, the menu button: `scale(0.97)` while pressed, 150 ms; and a colour
+ * under the pointer, 100 ms on `ease`. With reduced motion a pressed control
+ * does not scale; each control gives its pressed ground itself.
+ */
+@utility pressable {
+  transition:
+    scale 150ms var(--ease-out),
+    background-color 100ms ease,
+    color 100ms ease,
+    border-color 100ms ease,
+    opacity 100ms ease;
+
+  &:active:not(:disabled, [aria-disabled='true']) {
+    scale: 0.97;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:active:not(:disabled, [aria-disabled='true']) {
+      scale: none;
+    }
+  }
+}
+
+/* 2. A colour under the pointer, on what does not scale: rows, navigation
+ * links, tabs, the back link. */
+@utility hover-colour {
+  transition:
+    background-color 100ms ease,
+    color 100ms ease,
+    text-decoration-color 100ms ease;
+}
+
+/*
+ * 3. The alert dialog arrives from its centre, from `scale(0.96)` and
+ * transparent, in 200 ms, and leaves the same way in 150, with Base UI's
+ * starting and ending styles. With reduced motion it only fades.
+ */
+@utility dialog-motion {
+  transition:
+    opacity 200ms var(--ease-out),
+    scale 200ms var(--ease-out);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    scale: 0.96;
+  }
+
+  &[data-ending-style] {
+    transition-duration: 150ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 200ms var(--ease-out);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+      scale: none;
+    }
+  }
+}
+
+/* The scrim under what floats, which comes and goes with it. */
+@utility scrim-motion {
+  transition: opacity 200ms var(--ease-out);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+  }
+
+  &[data-ending-style] {
+    transition-duration: 150ms;
+  }
+}
+
+/*
+ * 5. The menu sheet on a phone slides in from the start side, 200 ms on the
+ * drawer's curve, and leaves back the same way in 150 ms. In Kurdish and
+ * Arabic the start side is the right. With reduced motion it fades in
+ * place.
+ */
+@utility menu-sheet-motion {
+  transition: translate 200ms var(--ease-drawer);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    translate: -100% 0;
+  }
+
+  &:where([dir='rtl'], [dir='rtl'] *)[data-starting-style],
+  &:where([dir='rtl'], [dir='rtl'] *)[data-ending-style] {
+    translate: 100% 0;
+  }
+
+  &[data-ending-style] {
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 200ms var(--ease-out);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+      translate: none;
+      opacity: 0;
+    }
+
+    &[data-ending-style] {
+      transition-duration: 150ms;
+    }
+  }
+}
+
+/*
+ * 6. Something arrives: a refusal panel, a note, a result line. It rises
+ * 6 pixels and fades in, 200 ms. With reduced motion it only fades.
+ */
+@utility arrives {
+  transition:
+    opacity 200ms var(--ease-out),
+    translate 200ms var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    @starting-style {
+      translate: none;
+    }
+  }
+}
+
+/*
+ * The gap a parent sets beside something that opens in place, which it gives
+ * back while it is closed (the utility below). Not inherited, so that what
+ * opens inside it reads none.
+ */
+@property --gap-before {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --gap-after {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+/*
+ * 6 and 8. Something takes room or gives it up in place, under the No Snap
+ * Rule: a row a list drops while the user is on it, and the row that takes
+ * its place; an entry put into a form's list, or taken out; a field's
+ * refusal, a form's refusal panel, a banner. It is one utility, `leaves`,
+ * whatever the caller, and the dashboard's `shared/lib/leaving.ts` keeps
+ * what leaves until its space has closed.
+ *
+ * What comes and goes is marked `data-leaving` (and inert) while it closes
+ * or stays closed, on itself or on its table row, and `data-arriving` when
+ * it is put in while the user is there. Leaving, its opacity goes to 0 in
+ * 150 ms; then its space closes, `grid-template-rows` from `1fr` to `0fr`,
+ * and with it its rule below it, its own margin below it, and the gap its
+ * parent sets beside it, which it gives back through `--gap-before` and
+ * `--gap-after` (measured by `OpeningSpace`), 200 ms on the in-out curve,
+ * so that what is below rises into place rather than jumps.
+ *
+ * Arriving, or coming back, in a list (the default): its space opens in
+ * step with a leaving row's closing, after the same 150 ms, and then it
+ * fades in, 200 ms. In a form, marked `data-opens-at-once`: its space opens
+ * as it fades in, 200 ms on the out curve, so that what is below moves down
+ * over the frames.
+ *
+ * What it holds is its one child, which holds its padding, so that the space
+ * closes whole and nothing is left to be taken out in one frame; that child
+ * is clipped while the space moves, a focus ring's width beyond its box.
+ * With reduced motion nothing jumps either: the fades stay, and the space
+ * closes or opens over 150 ms on the out curve.
+ */
+@utility leaves {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 200ms var(--ease-in-out) 150ms,
+    border-bottom-width 200ms var(--ease-in-out) 150ms,
+    margin-top 200ms var(--ease-in-out) 150ms,
+    margin-bottom 200ms var(--ease-in-out) 150ms,
+    opacity 200ms var(--ease-out) 350ms;
+
+  & > * {
+    min-height: 0;
+  }
+
+  &[data-opens-at-once] {
+    transition:
+      opacity 200ms var(--ease-out),
+      grid-template-rows 200ms var(--ease-out),
+      border-bottom-width 200ms var(--ease-out),
+      margin-top 200ms var(--ease-out),
+      margin-bottom 200ms var(--ease-out);
+  }
+
+  &:is([data-arriving], [data-arriving] > td > *) {
+    @starting-style {
+      opacity: 0;
+      grid-template-rows: 0fr;
+      border-bottom-width: 0;
+      margin-top: calc(-1 * var(--gap-before, 0px));
+      margin-bottom: calc(-1 * var(--gap-after, 0px));
+    }
+  }
+
+  &:is([data-leaving], [data-leaving] > td > *) {
+    opacity: 0;
+    grid-template-rows: 0fr;
+    border-bottom-width: 0;
+    margin-top: calc(-1 * var(--gap-before, 0px));
+    margin-bottom: calc(-1 * var(--gap-after, 0px));
+    transition:
+      opacity 150ms var(--ease-out),
+      grid-template-rows 200ms var(--ease-in-out) 150ms,
+      border-bottom-width 200ms var(--ease-in-out) 150ms,
+      margin-top 200ms var(--ease-in-out) 150ms,
+      margin-bottom 200ms var(--ease-in-out) 150ms;
+  }
+
+  &:is([data-leaving], [data-leaving] > td > *) > *,
+  &[data-opens-at-once][data-arriving] > * {
+    overflow: clip;
+    overflow-clip-margin: 0.25rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition:
+      grid-template-rows 150ms var(--ease-out) 150ms,
+      border-bottom-width 150ms var(--ease-out) 150ms,
+      margin-top 150ms var(--ease-out) 150ms,
+      margin-bottom 150ms var(--ease-out) 150ms,
+      opacity 150ms var(--ease-out) 300ms;
+
+    &[data-opens-at-once] {
+      transition-duration: 150ms;
+    }
+
+    &:is([data-leaving], [data-leaving] > td > *) {
+      transition:
+        opacity 150ms var(--ease-out),
+        grid-template-rows 150ms var(--ease-out) 150ms,
+        border-bottom-width 150ms var(--ease-out) 150ms,
+        margin-top 150ms var(--ease-out) 150ms,
+        margin-bottom 150ms var(--ease-out) 150ms;
+    }
+  }
+}
+
+/*
+ * A table's row cannot be a grid, so each of its cells' content takes
+ * `leaves`, and the row itself takes this: its rule closes with its space,
+ * or opens with it as it arrives. It keeps the colour under the pointer of
+ * `hover-colour` (Motion 2), which it replaces on the row.
+ */
+@utility leaves-rule {
+  transition:
+    border-bottom-width 200ms var(--ease-in-out) 150ms,
+    background-color 100ms ease;
+
+  &[data-arriving] {
+    @starting-style {
+      border-bottom-width: 0;
+    }
+  }
+
+  &[data-leaving] {
+    border-bottom-width: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition:
+      border-bottom-width 150ms var(--ease-out) 150ms,
+      background-color 100ms ease;
+  }
+}
+
+/*
+ * 7. Confirm all's result: each changed row's Confirmation fades in at its
+ * new state, 200 ms, each row 30 ms after the one above it, by its place in
+ * `--settle-order`, the first ten rows only. With reduced motion every row
+ * fades at once.
+ */
+@utility settles {
+  transition: opacity 200ms var(--ease-out);
+  transition-delay: calc(var(--settle-order, 0) * 30ms);
+
+  @starting-style {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-delay: 0ms;
+  }
+}
+
+/*
+ * 7, the old words: a changed Confirmation's old words, laid over the new,
+ * fade out in the same turn as the new fade in (`settles`), 150 ms, so that
+ * no words vanish in one frame. With reduced motion they fade at once with
+ * every other row's.
+ */
+@utility unsettles {
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+  transition-delay: calc(var(--settle-order, 0) * 30ms);
+
+  @starting-style {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-delay: 0ms;
+  }
 }

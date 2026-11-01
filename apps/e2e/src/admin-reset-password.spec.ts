@@ -11,6 +11,7 @@ import {
   type VendorLoginDetails,
 } from './keycloak-screens';
 import { expectNoSidewaysScroll, languages, narrowWindow } from './languages';
+import { film, snapsOf } from './motion-film';
 import { aMadeUpVendorThatHasLoggedIn, expectTheVendorPortal } from './vendors';
 
 // The Admin resets a Vendor's password on a phone, in the Vendor's own place
@@ -106,6 +107,57 @@ test('the confirmation does not scroll sideways, and meets the automated part of
 }) => {
   await askForAReset(page);
 
+  await expectNoSidewaysScroll(page);
+  await expectAccessible(page);
+});
+
+test('after the reset, the line that says so, the temporary password on a Raised Stone panel and the hand-over arrive below the actions and above the details with no snap, and meet WCAG 2.2 level AA in light and in dark', async ({
+  page,
+}) => {
+  await askForAReset(page);
+  // Watched four times slower, as the owner asked them to be watched, and
+  // the top of the details below taken frame by frame from the confirmation
+  // on.
+  const frames = await film(
+    page,
+    () =>
+      document.querySelector('[data-detail="state"]')?.getBoundingClientRect().top ?? null,
+    () => confirmation(page).getByRole('button', { name: 'Reset the password' }).click(),
+    { forMs: 4000 },
+  );
+  await expect(temporaryPassword(page)).toBeVisible();
+
+  const done = page.getByTestId('password-reset');
+  await expect(done).toContainText('The password is reset, and the Vendor is logged out.');
+  // It arrives as a row arrives in a list (DESIGN.md's Motion 8, the No Snap
+  // Rule): its space opens, and then it fades in. The details below slide
+  // down over many frames, with no snap.
+  const transition = await done.evaluate(
+    (element) => getComputedStyle(element).transitionProperty,
+  );
+  expect(transition.split(', ')).toEqual(
+    expect.arrayContaining(['grid-template-rows', 'opacity']),
+  );
+  const tops = frames.map(({ at, drawn }) => ({ at, value: drawn }));
+  const seen = tops.flatMap(({ value }) => (value === null ? [] : [value]));
+  expect((seen.at(-1) ?? 0) - (seen[0] ?? 0), 'the details slid down').toBeGreaterThan(100);
+  expect(snapsOf('the details below', tops)).toEqual([]);
+  const actions = await page.getByRole('button', { name: 'Deactivate' }).boundingBox();
+  const box = await done.boundingBox();
+  const details = await page.locator('[data-detail="state"]').boundingBox();
+  expect(box?.y).toBeGreaterThan((actions?.y ?? 0) + (actions?.height ?? 0));
+  expect(details?.y).toBeGreaterThan((box?.y ?? 0) + (box?.height ?? 0));
+
+  const raisedStone = await page.evaluate(() => {
+    const probe = document.createElement('div');
+    probe.className = 'bg-secondary';
+    document.body.append(probe);
+    const colour = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return colour;
+  });
+  await expect(temporaryPassword(page)).toHaveCSS('background-color', raisedStone);
+  await expect(temporaryPassword(page)).toHaveCSS('border-top-width', '0px');
   await expectNoSidewaysScroll(page);
   await expectAccessible(page);
 });

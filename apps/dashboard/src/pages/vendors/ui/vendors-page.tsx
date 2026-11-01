@@ -1,4 +1,5 @@
-import { MousePointerClickIcon, PlusIcon } from 'lucide-react';
+import { cn } from 'cn';
+import { PlusIcon } from 'lucide-react';
 import { Link, useOutlet } from 'react-router';
 
 import {
@@ -6,19 +7,24 @@ import {
   usePageInTheAddress,
   useWideScreen,
 } from '@/shared/lib';
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, OpenedBesideAList } from '@/shared/ui';
 
 import { ListedVendors } from './listed-vendors';
 
-// The Admin console's Vendors: every Vendor, active and deactivated, in name
-// order, a page at a time. The Admin console is in English only, so its text
-// is written here.
+// The Admin console's Vendors, as the dashboard's DESIGN.md lays out a list
+// (Framed sheet, redesign ticket 09): its title row with New Vendor, then
+// the count in words and every Vendor, active and deactivated, in name
+// order, a page at a time. The list has no states to filter by, so it has no
+// tabs, and no search. The Admin console is in English only, so its text is
+// written here.
 //
-// A screen opened from it, a Vendor's page or the form for a new Vendor, is
-// its child. On a screen as wide as a desk's, the list keeps the start side
-// and the opened screen shows beside it, as the Catalog lays out its list and
-// a Part. On a phone the opened screen takes the whole screen, and the list
-// is not rendered at all, so that it asks the API for nothing.
+// A screen opened from it, a Vendor's page, its edit form or the form for a
+// new Vendor, is its child. On a screen as wide as a desk's, the list takes
+// the sheet's whole width until one is opened; then the list keeps seven
+// twelfths on the start side and the opened screen takes five, past an Edge
+// line, as the Catalog lays out its list and a Part. On a phone the opened
+// screen takes the whole screen, and the list is not rendered at all, so
+// that it asks the API for nothing.
 export function VendorsPage() {
   const opened = useOutlet();
   const wide = useWideScreen();
@@ -26,11 +32,17 @@ export function VendorsPage() {
   if (!wide) return opened ?? <TheList />;
 
   return (
-    <div className="grid grid-cols-[minmax(0,26rem)_minmax(0,1fr)] gap-8">
-      <TheList />
-      <div className="min-w-0 border-s border-border ps-8">
-        {opened ?? <NothingOpened />}
+    <div className={cn('grid gap-6', opened !== null && 'grid-cols-12')}>
+      <div className={cn('min-w-0', opened !== null && 'col-span-7')}>
+        <TheList />
       </div>
+      {opened !== null && (
+        <div className="col-span-5 min-w-0 border-s border-border ps-6">
+          {/* One h1 to a page (the owner's "h2 on a desk", redesign ticket
+              08): the opened screen's title is of the second level. */}
+          <OpenedBesideAList>{opened}</OpenedBesideAList>
+        </div>
+      )}
     </div>
   );
 }
@@ -40,9 +52,9 @@ function TheList() {
   const keepingTheQuery = useAddressKeepingTheQuery();
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold sm:text-2xl">Vendors</h1>
+    <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="screen-title">Vendors</h1>
         <Link
           to={keepingTheQuery('/vendors/new')}
           className={buttonVariants({ variant: 'outline' })}
@@ -52,18 +64,6 @@ function TheList() {
         </Link>
       </div>
       <ListedVendors page={page} onPage={show} />
-    </div>
-  );
-}
-
-// The pane beside the list, before a Vendor is opened.
-function NothingOpened() {
-  return (
-    <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground">
-      <span className="flex size-10 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
-        <MousePointerClickIcon aria-hidden="true" className="size-5" />
-      </span>
-      <p>Open a Vendor from the list to see it here, or create a new one.</p>
     </div>
   );
 }

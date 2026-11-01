@@ -29,6 +29,8 @@ import {
   BackLink,
   buttonVariants,
   InANewTab,
+  OpeningSpace,
+  ScreenTitle,
 } from '@/shared/ui';
 
 // A Vendor's page: every detail the platform holds about it, and whether it
@@ -81,12 +83,12 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
   const [resetPassword, setResetPassword] = useState<string>();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-3 pb-6">
         <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-        <h1 className="text-xl font-semibold sm:text-2xl">
+        <ScreenTitle className="screen-title">
           <AsWritten>{vendor.name}</AsWritten>
-        </h1>
+        </ScreenTitle>
         <div className="flex flex-wrap items-start gap-2">
           <Link
             to={keepingTheQuery(`/vendors/${vendor.id}/edit`)}
@@ -112,16 +114,29 @@ function VendorDetails({ vendor }: { vendor: VendorResponse }) {
         </div>
       </div>
 
-      {resetPassword !== undefined && (
-        <div className="flex flex-col gap-6">
-          <p>The password is reset, and the Vendor is logged out.</p>
-          <TemporaryPassword password={resetPassword} />
-          <HandOver
-            loginPhoneNumber={vendor.loginPhoneNumber}
-            temporaryPassword={resetPassword}
-          />
-        </div>
-      )}
+      {/* The reset's result arrives below the actions and above the details
+          as a row arrives in a list (DESIGN.md's Motion 8, the No Snap
+          Rule): its space opens, so that the details below slide down rather
+          than jump, and then it fades in. Its space is always there, giving
+          back the screen's gap above it while it is closed, so that not even
+          the gap jumps when it arrives. The space between it and the details
+          is its own padding, inside what opens. A second reset replaces it
+          in place. */}
+      <OpeningSpace
+        inStep
+        data-testid={resetPassword === undefined ? undefined : 'password-reset'}
+      >
+        {resetPassword !== undefined && (
+          <div className="flex flex-col gap-6 pb-6">
+            <p>The password is reset, and the Vendor is logged out.</p>
+            <TemporaryPassword password={resetPassword} />
+            <HandOver
+              loginPhoneNumber={vendor.loginPhoneNumber}
+              temporaryPassword={resetPassword}
+            />
+          </div>
+        )}
+      </OpeningSpace>
 
       <DetailList>
         <Detail name="state" label="State">
@@ -194,7 +209,7 @@ function VendorNotFound() {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={keepingTheQuery('/vendors')}>Vendors</BackLink>
-      <h1 className="text-xl font-semibold sm:text-2xl">Vendor not found</h1>
+      <ScreenTitle className="screen-title">Vendor not found</ScreenTitle>
       <p>The platform holds no Vendor at this address. It may never have existed.</p>
     </div>
   );

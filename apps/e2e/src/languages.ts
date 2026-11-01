@@ -7,6 +7,7 @@ import {
   test,
 } from '@playwright/test';
 
+import { closeTheMenu, openTheMenuOnAPhone, theMenuSheet } from './menu-sheet';
 import { shopperUrl } from './platform';
 
 // The platform's three languages, in the order they are always listed in,
@@ -208,12 +209,12 @@ async function expectTheSwitchOnThePage(
   }
 
   await expectTheSwitchWithinReach(page, language, (other) => linkTo(page, other));
+  await expectTheSwitchAtTheEndOfTheFrame(page, language);
 }
 
-// The switch on a page in `language` is where a thumb can reach it. What it
+// The switch on a page in `language` is where a thumb can reach it: what it
 // offers for each language, found by `choiceOf`, is inside the window and
-// large enough to tap, and the switch is on the end side of the frame: the
-// right in English, and the left in Kurdish and Arabic.
+// large enough to tap.
 async function expectTheSwitchWithinReach(
   page: Page,
   language: Language,
@@ -235,7 +236,14 @@ async function expectTheSwitchWithinReach(
       `the choice of ${other.name} is large enough to tap`,
     ).toBeGreaterThanOrEqual(largeEnoughToTap);
   }
+}
 
+// The switch on a page in `language` is on the end side of the frame: the
+// right in English, and the left in Kurdish and Arabic.
+async function expectTheSwitchAtTheEndOfTheFrame(
+  page: Page,
+  language: Language,
+): Promise<void> {
   const frame = await boxOf(page.getByTestId('frame'));
   const theSwitch = await boxOf(languageSwitch(page));
   const roomOnTheLeft = theSwitch.left - frame.left;
@@ -259,8 +267,15 @@ export function buttonFor(page: Page, language: Language): Locator {
 // The switch as a Vendor finds it, on a screen of the Vendor portal in
 // `language`: three buttons, for Kurdish, Arabic and English in that order,
 // each under its own name. The one the screen is in is shown as pressed, and
-// the switch is within reach of a thumb.
-async function expectTheVendorPortalsSwitch(page: Page, language: Language): Promise<void> {
+// the switch is within reach of a thumb. On a phone it is in the menu sheet,
+// which the test has opened, with the portal's sections and Log out (the
+// dashboard's DESIGN.md, redesign ticket 11); on a wider screen it is on the
+// end side of the frame.
+async function expectTheVendorPortalsSwitch(
+  page: Page,
+  language: Language,
+  inTheMenu: boolean,
+): Promise<void> {
   const buttons = languageSwitch(page).getByRole('button');
   await expect(buttons).toHaveText(languages.map(({ ownName }) => ownName));
   await expect(languageSwitch(page).getByRole('button', { pressed: true })).toHaveText([
@@ -268,11 +283,25 @@ async function expectTheVendorPortalsSwitch(page: Page, language: Language): Pro
   ]);
 
   await expectTheSwitchWithinReach(page, language, (other) => buttonFor(page, other));
+  if (inTheMenu) {
+    await expect(theMenuSheet(page).getByTestId('language-switch')).toBeVisible();
+  } else {
+    await expectTheSwitchAtTheEndOfTheFrame(page, language);
+  }
+}
+
+// Chooses a language with the Vendor portal's switch, as a Vendor does: on a
+// phone it opens the menu sheet first, and closes it again after.
+export async function chooseInThePortal(page: Page, language: Language): Promise<void> {
+  const opened = await openTheMenuOnAPhone(page);
+  await buttonFor(page, language).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', language.tag);
+  if (opened) await closeTheMenu(page);
 }
 
 // Shows a screen of the Vendor portal, as a Vendor, in each of
-// the three languages in turn, by a tap on the switch, in a window as wide as
-// a narrow phone. It checks what holds for every screen: the language it
+// the three languages in turn, by a tap on the switch in the menu sheet, in a
+// window as wide as a narrow phone. It checks what holds for every screen: the language it
 // declares, its direction, that it is inside the frame, that the switch is
 // where a Vendor can tap it, that every digit on it is a Western one, and
 // that it does not scroll sideways. The test of a screen calls it once,
@@ -298,6 +327,7 @@ export async function readInEveryLanguageOfTheVendorPortal<Read>(
   openOver?: { open: () => Promise<void>; close: () => Promise<void> },
 ): Promise<Map<Language, Read>> {
   let opened = false;
+  let inTheMenu = false;
 
   return readInEachLanguage(
     page,
@@ -305,10 +335,12 @@ export async function readInEveryLanguageOfTheVendorPortal<Read>(
       show: async (language) => {
         if (opened) await openOver?.close();
         opened = false;
+        inTheMenu = await openTheMenuOnAPhone(page);
         await buttonFor(page, language).click();
       },
       expectTheSwitch: async (language) => {
-        await expectTheVendorPortalsSwitch(page, language);
+        await expectTheVendorPortalsSwitch(page, language, inTheMenu);
+        if (inTheMenu) await closeTheMenu(page);
         if (openOver !== undefined) {
           await openOver.open();
           opened = true;

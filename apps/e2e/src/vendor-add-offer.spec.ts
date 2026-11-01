@@ -2,6 +2,7 @@ import {
   type APIRequestContext,
   type Browser,
   expect,
+  type Locator,
   type Page,
   test,
 } from '@playwright/test';
@@ -15,10 +16,16 @@ import {
   openTheDashboardAs,
 } from './development-logins';
 import { type VendorLoginDetails } from './keycloak-screens';
-import { buttonFor, expectNoSidewaysScroll, languages, narrowWindow } from './languages';
+import {
+  chooseInThePortal,
+  expectNoSidewaysScroll,
+  languages,
+  narrowWindow,
+} from './languages';
 import {
   addAnOffer,
   foundParts,
+  goToTheSection,
   inStockSwitch,
   noOffers,
   offerField,
@@ -29,8 +36,8 @@ import {
   theCatalogSearch,
   theOfferForm,
   theOffersScreen,
-  theSection,
 } from './offers';
+import { filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
 import { apiUrl, dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -150,11 +157,12 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
     );
   });
 
-  test("the Offers screen's button leads to the search, which marks the Part the Vendor offers and leads to its Offer", async ({
+  test("the Offers screen's button, in the frame's bar on a phone, leads to the search, which marks the Part the Vendor offers and leads to its Offer", async ({
     page,
   }) => {
     await openTheDashboardAs(page, vendor);
-    await theOffersScreen(page).getByTestId('add-offer').click();
+    await expect(theOffersScreen(page)).toBeVisible();
+    await page.getByRole('banner').getByTestId('add-offer').click();
     await expect(page).toHaveURL(`${dashboardUrl}/add`);
 
     await searchTheCatalogFor(page, offered.partNumber);
@@ -197,12 +205,47 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
     await expect(page).toHaveURL(theFormFor(notOffered));
 
     const inEnglish = await refusal.innerText();
-    await buttonFor(page, kurdish).click();
+    await chooseInThePortal(page, kurdish);
     await expect(refusal).not.toHaveText(inEnglish);
     const inKurdish = await refusal.innerText();
     expect(inKurdish).not.toBe('');
-    await buttonFor(page, english).click();
+    await chooseInThePortal(page, english);
     await expect(refusal).toHaveText(inEnglish);
+  });
+
+  // The owner's "Above the button" (redesign ticket 12): a refusal that
+  // names no field, such as a second Offer for the Part, opens just above
+  // Add the Offer, where the Vendor's eye is after pressing it, its space
+  // opening smoothly so that the button slides down rather than jumps.
+  test('a second Offer for the Part is refused in the panel just above the button, which slides down rather than jumps', async ({
+    page,
+  }) => {
+    await openTheDashboardAs(page, vendor, theFormFor(offered));
+    await offerField(page, 'usdPrice').fill('349.99');
+    const button = saveTheOffer(page);
+
+    const frames = await filmPlaces(page, { button }, () => button.click());
+    const refusal = theOfferForm(page).getByTestId('refusal');
+    await expect(refusal).toBeVisible();
+    const [panel, below, warranty] = await Promise.all([
+      refusal.boundingBox(),
+      button.boundingBox(),
+      page.getByTestId('warrantyMonths-field').boundingBox(),
+    ]);
+    expect(panel?.y ?? 0, 'below the last field').toBeGreaterThan(
+      (warranty?.y ?? 0) + (warranty?.height ?? 0),
+    );
+    expect(
+      (panel?.y ?? 0) + (panel?.height ?? 0),
+      'just above the button',
+    ).toBeLessThanOrEqual(below?.y ?? 0);
+    expect(
+      (below?.y ?? 0) - ((panel?.y ?? 0) + (panel?.height ?? 0)),
+      "with the form's gap between them",
+    ).toBeLessThanOrEqual(32);
+    const moved = travelOf(frames, 'button');
+    expect(moved, 'the button makes room for the panel').toBeGreaterThan(40);
+    expect(snapsOfThePlace(frames, 'button'), 'the button never jumps').toEqual([]);
   });
 
   test('the search with results, and the note that an Offer was added, meet the automated part of WCAG 2.2 level AA, in light and in dark', async ({
@@ -225,6 +268,172 @@ test.describe('a made-up Vendor with an Offer added over HTTP', () => {
     await expect(page.locator('#offer-form-usdPrice-error')).toBeVisible();
 
     await expectAccessible(page);
+  });
+});
+
+// The catalog search and the Offer form as the dashboard's DESIGN.md lays
+// them out (redesign ticket 12).
+test.describe('the catalog search and the Offer form, as a made-up Vendor', () => {
+  let vendor: VendorLoginDetails;
+  let first: MadeUpPart;
+  let second: MadeUpPart;
+  let third: MadeUpPart;
+
+  test.beforeAll(async ({ browser }) => {
+    vendor = await aMadeUpVendorThatHasLoggedIn(browser);
+    [first, second, third] = await madeUpParts(browser, 3);
+  });
+
+  test('on a phone the search has no button of its own, the count is in words and not on a plate, and a row has no picture but its part numbers in Geist Mono', async ({
+    page,
+  }) => {
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/add`);
+    const search = theCatalogSearch(page);
+    await expect(search.locator('search').getByRole('combobox')).toBeVisible();
+    await expect(search.locator('search button')).toHaveCount(0);
+    await expect(search.getByRole('searchbox')).toHaveCSS('font-size', '16px');
+
+    await searchTheCatalogFor(page, first.partNumber);
+    await expect(foundParts(page)).toHaveCount(1);
+    await expect(page.getByTestId('parts-found-count')).toHaveText('1');
+    await expect(search.locator('[data-slot="plate"]')).toHaveCount(0);
+    const row = rowOfFoundPart(page, first.name);
+    await expect(row.locator('img, svg')).toHaveCount(0);
+    await expect(row.getByTestId('part-numbers')).toHaveCSS('font-family', /Geist Mono/);
+    await expect(row).toHaveCSS('min-height', '72px');
+    await expectNoSidewaysScroll(page);
+  });
+
+  test('from 64rem the Parts found are a table of Part and Part numbers, which meets the automated part of WCAG 2.2 level AA', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openTheDashboardAs(page, vendor, `${dashboardUrl}/add`);
+    await searchTheCatalogFor(page, first.partNumber);
+
+    const table = theCatalogSearch(page).getByRole('table');
+    await expect(table.getByRole('columnheader')).toHaveCount(2);
+    await expect(foundParts(page)).toHaveCount(1);
+    expect(await foundParts(page).evaluate((row) => row.tagName)).toBe('TR');
+    // The column's heading and its text start where the search does, the
+    // rows' ground bleeding past them.
+    const left = async (locator: Locator) => (await locator.boundingBox())?.x ?? 0;
+    const textStarts = await left(
+      rowOfFoundPart(page, first.name).getByTestId('part-name'),
+    );
+    expect(await left(table.getByRole('columnheader').first())).toBeCloseTo(
+      textStarts - 8,
+      0,
+    );
+    expect(textStarts).toBeCloseTo(
+      await left(theCatalogSearch(page).getByRole('searchbox')),
+      0,
+    );
+    await expect(rowOfFoundPart(page, first.name).locator('img, svg')).toHaveCount(0);
+    await expectNoSidewaysScroll(page);
+    await expectAccessible(page);
+  });
+
+  // The note after an Offer is added stays until the next search, and then
+  // leaves as Motion 8 says: it fades, then its space closes, so that the
+  // search below it rises into place and never jumps (the No Snap Rule).
+  for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+    test(`the note after an Offer is added is a Confirmed Green card, and on the next search it leaves, the search rising smoothly (${reducedMotion})`, async ({
+      page,
+    }) => {
+      const part = reducedMotion === 'reduce' ? third : second;
+      await page.emulateMedia({ reducedMotion, colorScheme: 'light' });
+      await openTheDashboardAs(page, vendor, theFormFor(part));
+      await offerField(page, 'usdPrice').fill('99.50');
+      await saveTheOffer(page).click();
+
+      const note = page.getByTestId('offer-added');
+      await expect(note).toContainText(part.name);
+      await expect(note).toHaveCSS('border-top-color', 'rgb(30, 123, 79)');
+      await expect(note).toHaveCSS('border-top-left-radius', '8px');
+      await expect(note).toHaveCSS('opacity', '1');
+
+      const searchbox = theCatalogSearch(page).getByRole('searchbox');
+      const frames = await filmPlaces(page, { searchbox }, () =>
+        searchTheCatalogFor(page, first.partNumber),
+      );
+      await expect(note).toHaveCount(0);
+      await expect(foundParts(page)).toHaveCount(1);
+      const moved = travelOf(frames, 'searchbox');
+      expect(moved, 'the search rises into the space the note gave up').toBeGreaterThan(40);
+      expect(snapsOfThePlace(frames, 'searchbox'), 'the search never jumps').toEqual([]);
+    });
+  }
+
+  // The owner's "Part beside form" (redesign ticket 12): from 64rem the
+  // Part's panel stands beside the form, on its end side, rather than at its
+  // head, with the Part's specifications, and the form keeps its own column.
+  test("from 64rem the Offer form is one column at most 40rem wide, with its Part beside it on Raised Stone, its specifications listed, a Part with no photo showing its Category's icon plain; mirrored in Kurdish", async ({
+    page,
+    browser,
+  }) => {
+    const part = await asTheAdmin(browser, (request, authorization) =>
+      createAMadeUpPart(request, authorization, { socket: 'AM5', cores: { total: 6 } }),
+    );
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.emulateMedia({ colorScheme: 'light' });
+    await openTheDashboardAs(page, vendor, theFormFor(part));
+    const form = theOfferForm(page);
+    await expect(form).toBeVisible();
+
+    const formBox = await form.boundingBox();
+    const width = formBox?.width ?? 0;
+    expect(width).toBeGreaterThan(400);
+    expect(width).toBeLessThanOrEqual(640);
+    const usd = await page.getByTestId('usdPrice-field').boundingBox();
+    const iqd = await page.getByTestId('iqdPrice-field').boundingBox();
+    expect(iqd?.y ?? 0, 'each price on its own row').toBeGreaterThan(
+      (usd?.y ?? 0) + (usd?.height ?? 0) - 1,
+    );
+
+    const offered = page.getByTestId('offered-part');
+    await expect(form.getByTestId('offered-part')).toHaveCount(0);
+    const beside = await offered.boundingBox();
+    expect(
+      beside?.x ?? 0,
+      'the Part stands beside the form, on its end side',
+    ).toBeGreaterThanOrEqual((formBox?.x ?? 0) + width + 16);
+    expect(beside?.y ?? 0, 'level with its head').toBeCloseTo(formBox?.y ?? 0, 0);
+    await expect(offered).toHaveCSS('background-color', 'rgb(245, 244, 242)');
+    await expect(offered).toHaveCSS('border-top-width', '0px');
+    await expect(offered).toHaveCSS('border-top-left-radius', '8px');
+    await expect(offered.getByTestId('part-name')).toHaveText(part.name);
+    const picture = offered.getByTestId('part-picture');
+    await expect(picture).toHaveCSS('width', '32px');
+    await expect(picture).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(picture.locator('svg')).toHaveCSS('color', 'rgb(93, 95, 96)');
+    await expect(offered.getByTestId('part-numbers')).toHaveCSS(
+      'font-family',
+      /Geist Mono/,
+    );
+    const specifications = offered.getByTestId('part-specification');
+    await expect(specifications).toHaveCount(2);
+    await expect(specifications.filter({ hasText: 'AM5' })).toHaveCount(1);
+    await expect(specifications.filter({ hasText: '6' })).toHaveCount(1);
+    await expectNoSidewaysScroll(page);
+
+    await chooseInThePortal(page, kurdish);
+    const formInKurdish = await form.boundingBox();
+    const besideInKurdish = await offered.boundingBox();
+    expect(
+      (besideInKurdish?.x ?? 0) + (besideInKurdish?.width ?? 0),
+      'in Kurdish the Part stands on the left, the end side',
+    ).toBeLessThanOrEqual((formInKurdish?.x ?? 0) - 16);
+    await expectNoSidewaysScroll(page);
+  });
+
+  test('on a phone the Part stays at the head of the form', async ({ page }) => {
+    await openTheDashboardAs(page, vendor, theFormFor(first));
+    const offered = theOfferForm(page).getByTestId('offered-part');
+    await expect(offered).toBeVisible();
+    const head = await offered.boundingBox();
+    const usd = await page.getByTestId('usdPrice-field').boundingBox();
+    expect(head?.y ?? 0).toBeLessThan(usd?.y ?? 0);
   });
 });
 
@@ -262,7 +471,7 @@ test.describe('a made-up Vendor adding an Offer typed as a Kurdish or an Arabic 
     });
     await expect(page.getByTestId('offer-added')).toBeVisible();
 
-    await theSection(page, 'offers').click();
+    await goToTheSection(page, 'offers');
     const offer = rowOfOffer(page, part.name);
     await expect(offer.getByTestId('usd-price')).toHaveText('1,250.50 $');
     await expect(offer.getByTestId('iqd-price')).toHaveText('1,875,000 IQD');

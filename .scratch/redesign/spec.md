@@ -1,6 +1,6 @@
 # Spec: Redesign
 
-Status: ready-for-human
+Status: resolved
 Category: enhancement
 
 A short hand-over, written on 21 October 2026 when the design skills were set up. The redesign session triages it, settles its open questions with the owner and writes the full spec and tickets. It follows [docs/agents/design-skills.md](../../docs/agents/design-skills.md) for which skill leads which area.
@@ -71,3 +71,12 @@ The dashboard follows its DESIGN.md, Rate Board on shadcn/ui's Mira style: scree
 - Writing made-up data to the development database, or inventing real Vendors (PRODUCT.md's Evidence on Hand).
 - Editing Taste's, Emil's or Impeccable's own files.
 - Checks by hand on a phone, which wait until the platform is hosted.
+- The Shopper app, which gets a fresh design plan of its own when the `browse` module begins (the owner, 1 November 2026).
+
+### 1 November 2026: the Shopper app's design deferred to `browse`
+
+The owner learned that the Shopper app has only its shell, and that its first real pages come with the `browse` module, two modules away, after `pricing`, and said: "then I prefer we would do thorough investigation/designing when we reach the shopper app not now". Step 7 of the order agreed with the owner, the Shopper app designed the same way through Taste's page run, therefore moves to the start of `browse`, as its first work. Tickets [14](issues/14-deal-the-shopper-apps-directions.md) and [15](issues/15-the-shopper-apps-new-design.md) wait for it. Ticket 14's lessons from the dashboard and its critique of Fit Diagram stay as done, and the owner's answers on Fit Diagram so far are provisional, to be revisited then. Ticket 16 now waits on tickets 08 to 13 only, and closes the dashboard's redesign.
+
+### 1 November 2026: the redesign is the dashboard's
+
+Later the same day the owner said: "we will start fresh designing plan for the shopper unique to it. and follow the principle for it then. this redesign session was for the dashboard". Step 7 of the agreed order leaves this spec: tickets [14](issues/14-deal-the-shopper-apps-directions.md) and [15](issues/15-the-shopper-apps-new-design.md) are closed as `wontfix` here, and nothing they recorded binds the Shopper's own plan. Ticket 16 closes the dashboard's redesign and records in the MVP spec where the Shopper's design begins.

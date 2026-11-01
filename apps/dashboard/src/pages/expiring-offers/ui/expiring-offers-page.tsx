@@ -11,17 +11,20 @@ import { ListedVendors } from './listed-vendors';
 //
 // A row leads to the Vendor's page, under the Vendors, which shows it beside
 // their list on a wide screen. The list itself has nothing beside it, so it
-// keeps a column no wider than a row needs.
+// takes the sheet's whole width, as the dashboard's DESIGN.md lays out a
+// list (redesign ticket 10).
 export function ExpiringOffersPage() {
   const [page, show] = usePageInTheAddress();
 
   return (
-    <div className="flex max-w-2xl min-w-0 flex-col gap-4">
-      <h1 className="text-xl font-semibold sm:text-2xl">Expiring Offers</h1>
-      <p className="text-sm text-muted-foreground">
-        Active Vendors with Offers expired or about to expire, most urgent first, to remind.
-        The platform sends them nothing itself.
-      </p>
+    <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="screen-title">Expiring Offers</h1>
+        <p className="text-sm text-muted-foreground">
+          Active Vendors with Offers expired or about to expire, most urgent first, to
+          remind. The platform sends them nothing itself.
+        </p>
+      </div>
       <ListedVendors page={page} onPage={show} />
     </div>
   );

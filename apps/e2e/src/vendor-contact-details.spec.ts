@@ -3,7 +3,13 @@ import { expect, type Page, type Request, test } from '@playwright/test';
 import { expectAccessible } from './accessibility';
 import { openTheDashboardAs } from './development-logins';
 import { type VendorLoginDetails } from './keycloak-screens';
-import { buttonFor, expectNoSidewaysScroll, languages, narrowWindow } from './languages';
+import {
+  chooseInThePortal,
+  expectNoSidewaysScroll,
+  languages,
+  narrowWindow,
+} from './languages';
+import { filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
 import { dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -116,6 +122,130 @@ test('the link to the form is described by the heading beside it; the Vendor cha
   await expect(detailOf(page, 'name')).toHaveText(vendor.vendorName);
 });
 
+// The pane's one primary button, as the dashboard's DESIGN.md draws it
+// (Buttons, and the Offer form's): as wide as the form on a phone, and
+// while the details are on their way it says so and waits, keeping its
+// width.
+test('on a phone, Save is as wide as the form; while the details are on their way it says so and waits, as wide as before', async ({
+  page,
+}) => {
+  await openTheForm(page);
+  const form = page.getByRole('main').locator('form');
+  const idleText = await saveButton(page).innerText();
+  const idleWidth = (await saveButton(page).boundingBox())?.width ?? 0;
+  expect(idleWidth).toBeCloseTo((await form.boundingBox())?.width ?? 0, 0);
+
+  let answer = () => {};
+  const answered = new Promise<void>((resolve) => (answer = resolve));
+  await page.route('**/contact-details', async (route) => {
+    if (isTheSave(route.request())) await answered;
+    await route.continue();
+  });
+  await saveButton(page).click();
+
+  await expect(saveButton(page)).toBeDisabled();
+  await expect(saveButton(page)).not.toHaveText(idleText, { useInnerText: true });
+  expect((await saveButton(page).boundingBox())?.width).toBeCloseTo(idleWidth, 0);
+  answer();
+  await expect(page).toHaveURL(detailsUrl);
+});
+
+test.describe("on a screen as wide as a desk's", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  // The owner's "Full width" (redesign ticket 13, 28 October 2026): the form
+  // spans the sheet, and its details follow the form's own width, as the
+  // Part's and the Vendor's forms do ("Follow width", tickets 08 and 09): two
+  // to a row from 40rem, so that no one detail stretches across the sheet.
+  test('the form spans the sheet, its details two to a row and none wider than half of it, and Save stays as wide as its words', async ({
+    page,
+  }) => {
+    await openTheForm(page);
+    const form = page.getByRole('main').locator('form');
+    const formWidth = (await form.boundingBox())?.width ?? 0;
+
+    expect(formWidth, 'the form is wider than 40rem').toBeGreaterThan(640);
+    for (const [start, end] of [
+      ['address', 'mapLocation'],
+      ['phoneNumber', 'whatsAppNumber'],
+      ['instagramName', 'openingHours'],
+    ]) {
+      const [first, second] = await Promise.all([
+        formField(page, start).boundingBox(),
+        formField(page, end).boundingBox(),
+      ]);
+      expect(
+        Math.abs((first?.y ?? 0) - (second?.y ?? 1)),
+        `${start} beside ${end}`,
+      ).toBeLessThan(2);
+    }
+    for (const detail of [
+      'address',
+      'mapLocation',
+      'phoneNumber',
+      'whatsAppNumber',
+      'instagramName',
+      'openingHours',
+    ]) {
+      expect(
+        (await formField(page, detail).boundingBox())?.width,
+        `${detail} is no wider than half the form`,
+      ).toBeLessThanOrEqual(formWidth / 2);
+    }
+    expect((await saveButton(page).boundingBox())?.width).toBeLessThan(formWidth / 2);
+    await expectAccessible(page);
+  });
+
+  // The owner on motion (22 October 2026): no rigid snaps. Save keeps its
+  // width while it says it is saving, so the change of its words moves
+  // nothing.
+  test('while the details are on their way, Save says so and keeps its width', async ({
+    page,
+  }) => {
+    await openTheForm(page);
+    const idleText = await saveButton(page).innerText();
+    const idleWidth = (await saveButton(page).boundingBox())?.width ?? 0;
+
+    let answer = () => {};
+    const answered = new Promise<void>((resolve) => (answer = resolve));
+    await page.route('**/contact-details', async (route) => {
+      if (isTheSave(route.request())) await answered;
+      await route.continue();
+    });
+    await saveButton(page).click();
+
+    await expect(saveButton(page)).not.toHaveText(idleText, { useInnerText: true });
+    expect((await saveButton(page).boundingBox())?.width).toBeCloseTo(idleWidth, 0);
+    answer();
+    await expect(page).toHaveURL(detailsUrl);
+  });
+});
+
+// The No Snap Rule (the owner on motion, 22 October 2026): when the details
+// cannot be sent, the refusal panel above the form opens its room as it
+// arrives, and the form below it moves down smoothly, never in one frame.
+test('when the platform cannot be reached, the refusal panel opens its room above the form, which moves down without a jump', async ({
+  page,
+}) => {
+  await openTheForm(page);
+  await page.route('**/contact-details', async (route) => {
+    if (isTheSave(route.request())) await route.abort();
+    else await route.continue();
+  });
+
+  const frames = await filmPlaces(page, { address: formField(page, 'address') }, () =>
+    saveButton(page).click(),
+  );
+
+  await expect(page.getByRole('main').getByTestId('refusal')).toBeVisible();
+  const moved = travelOf(frames, 'address');
+  expect(moved, 'the form moved down for the panel').toBeGreaterThan(20);
+  expect(
+    snapsOfThePlace(frames, 'address'),
+    'with no step a person sees as a jump',
+  ).toEqual([]);
+});
+
 test("the browser is given a position in Erbil, and the location button fills the map location's coordinates from it", async ({
   page,
 }) => {
@@ -149,10 +279,10 @@ test('a phone number that is not Iraqi is refused beside its field, which takes 
   ).toContain('contact-details-phoneNumber-error');
   const inEnglish = await refusal.innerText();
 
-  await buttonFor(page, kurdish).click();
+  await chooseInThePortal(page, kurdish);
   await expect(refusal).not.toHaveText(inEnglish);
   await expect(refusal).not.toBeEmpty();
-  await buttonFor(page, english).click();
+  await chooseInThePortal(page, english);
   await expect(refusal).toHaveText(inEnglish);
   await expect(page).not.toHaveURL(detailsUrl);
 });
@@ -170,7 +300,7 @@ test('an address over 300 characters is refused beside its field, the refusal sa
   await expect(formField(page, 'address')).toHaveAttribute('aria-invalid', 'true');
   await expect(refusal).toContainText('300');
   const inEnglish = await refusal.innerText();
-  await buttonFor(page, kurdish).click();
+  await chooseInThePortal(page, kurdish);
   await expect(refusal).not.toHaveText(inEnglish);
   await expect(refusal).toContainText('300');
 });
