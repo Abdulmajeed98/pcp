@@ -576,9 +576,11 @@ export class DatabaseOfferStore implements OfferStore {
         .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
         .leftJoin(currentRate, sql`true`)
         .where(and(eq(offer.partId, partId), visibleOffer(now)))
-        // In stock first (OFF-11), until `pricing` orders by price.
+        // In stock first, then the lowest Shown Price as answered, after
+        // rounding, with none after the others (OFF-11, PRC-4).
         .orderBy(
           desc(offer.inStock),
+          sql`${shownPrice.amount} asc nulls last`,
           desc(offer.confirmedAt),
           asc(vendor.name),
           asc(offer.id),

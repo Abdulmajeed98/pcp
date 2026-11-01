@@ -300,9 +300,10 @@ export abstract class OfferStore {
   // its Shown Price in the currency, converted by the rule in
   // `shown-price.ts` at the current Platform Rate, which is read in the same
   // query as the Offers, so that one answer never mixes two rates. In-stock
-  // Offers come first, and within each group the most recent Confirmation
-  // first, then by the Vendor's name and the Offer's identifier, so that the
-  // order is the same at every read.
+  // Offers come first, and within each group the lowest Shown Price, compared
+  // as answered, after rounding, with Offers that have none after the
+  // others; then the most recent Confirmation, the Vendor's name and the
+  // Offer's identifier, so that the order is the same at every read.
   abstract listVisibleByPart(
     partId: string,
     currency: Currency,

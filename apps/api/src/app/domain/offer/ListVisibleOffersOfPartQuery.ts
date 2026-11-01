@@ -52,8 +52,8 @@ export { Output as ListVisibleOffersOfPartQueryOutput };
 // A Part's visible Offers, for anyone, with no Login: those that are not
 // Expired Offers and whose Vendor is active, by the rule in `visibility.ts`
 // (CAT-7, OFF-6, ACC-7), each with its Shown Price in the chosen currency
-// (PRC-3). In-stock Offers come first, and within each group the most recent
-// Confirmation, until `pricing` orders them by price (OFF-11).
+// (PRC-3). In-stock Offers come first, and within each group the lowest Shown
+// Price (OFF-11, PRC-4).
 @Injectable()
 export class ListVisibleOffersOfPartQuery {
   constructor(

@@ -23,8 +23,9 @@ import {
 
 // A Part's visible Offers, which anyone may read without a token: those that
 // are not Expired Offers and whose Vendor is active (CAT-7, OFF-6, ACC-7),
-// each with how many days ago it was confirmed (OFF-7), in-stock Offers first
-// (OFF-11).
+// each with how many days ago it was confirmed (OFF-7) and its Shown Price in
+// the chosen currency (PRC-3), in-stock Offers first and then the lowest
+// Shown Price (OFF-11, PRC-4).
 
 // The price a visible Offer shows in the currency asked for.
 type ShownPriceBody = { currency: Currency; amount: string; converted: boolean };
@@ -521,43 +522,184 @@ describe("a Part's visible Offers", () => {
   });
 
   describe('the order', () => {
-    it('puts in-stock Offers before out-of-stock ones, each group with the most recent Confirmation first', async () => {
-      const partId = await aPart();
+    // Made-up Vendors, one for each name, made with the clock running, since
+    // that calls Keycloak; then each one's Offer for the Part, confirmed one
+    // day apart in the order given, with the clock then a day after the last.
+    async function offersConfirmedInTurn(
+      partId: string,
+      offers: [name: string, details: Record<string, unknown>][],
+    ): Promise<VendorBody[]> {
       const vendors = [];
-      for (const [name, phone] of [
-        ['Made-up Shop A', '0750 100 0001'],
-        ['Made-up Shop B', '0750 100 0002'],
-        ['Made-up Shop C', '0750 100 0003'],
-        ['Made-up Shop D', '0750 100 0004'],
-      ]) {
-        vendors.push(await aVendor(name, phone));
+      for (const [index, [name]] of offers.entries()) {
+        vendors.push(await aVendor(name, `0750 300 ${String(1000 + index)}`));
       }
-      const [a, b, c, d] = vendors;
-      // Confirmed one day apart: A first, D last.
-      const confirmations: [VendorBody, boolean][] = [
-        [a, true],
-        [b, false],
-        [c, true],
-        [d, false],
-      ];
-      for (const [index, [vendor, inStock]] of confirmations.entries()) {
-        await anOfferConfirmedAt(vendor.id, partId, after(aMovedMoment, index * aDay), {
-          iqdPrice: 525000,
-          inStock,
-        });
+      for (const [index, [, details]] of offers.entries()) {
+        await anOfferConfirmedAt(
+          vendors[index].id,
+          partId,
+          after(aMovedMoment, index * aDay),
+          details,
+        );
       }
-      moveTheClockTo(after(aMovedMoment, 4 * aDay));
+      moveTheClockTo(after(aMovedMoment, offers.length * aDay));
+      return vendors;
+    }
 
-      expect(
-        (await theVisibleOffersOf(partId)).map(({ vendor, inStock }) => [
-          vendor.name,
-          inStock,
-        ]),
-      ).toEqual([
-        ['Made-up Shop C', true],
-        ['Made-up Shop A', true],
-        ['Made-up Shop D', false],
-        ['Made-up Shop B', false],
+    // The names of the Vendors of the Part's visible Offers, in the order
+    // answered in a currency.
+    async function theVendorsInOrder(
+      partId: string,
+      currency: Currency,
+    ): Promise<string[]> {
+      return (await theVisibleOffersOf(partId, currency)).map(({ vendor }) => vendor.name);
+    }
+
+    it('puts in-stock Offers before out-of-stock ones, whatever their prices', async () => {
+      await setThePlatformRate(1575);
+      const partId = await aPart();
+      await offersConfirmedInTurn(partId, [
+        ['Out of stock, cheapest', { iqdPrice: 100000, inStock: false }],
+        ['In stock, dearest', { usdPrice: '900.00', inStock: true }],
+        ['Out of stock, dearest', { usdPrice: '950.00', inStock: false }],
+        ['In stock, cheapest', { iqdPrice: 200000, inStock: true }],
+      ]);
+
+      for (const currency of ['IQD', 'USD'] as const) {
+        expect(await theVendorsInOrder(partId, currency)).toEqual([
+          'In stock, cheapest',
+          'In stock, dearest',
+          'Out of stock, cheapest',
+          'Out of stock, dearest',
+        ]);
+      }
+    });
+
+    it('puts the lowest Shown Price first within each stock group, compared after rounding', async () => {
+      await setThePlatformRate(1575);
+      const partId = await aPart();
+      // In IQD, 349.99 $ is 551,234.25 before rounding, below 551,240, and
+      // 551,250 after it, above. In USD, 551,240 IQD is 349.99… before
+      // rounding, above 349.99, and 350.00 after it, above as well.
+      await offersConfirmedInTurn(partId, [
+        ['Quoted 349.99 $', { usdPrice: '349.99', inStock: true }],
+        ['Quoted 551,240 IQD', { iqdPrice: 551240, inStock: true }],
+        ['Quoted 600,000 IQD', { iqdPrice: 600000, inStock: true }],
+        ['Quoted 300.00 $', { usdPrice: '300.00', inStock: true }],
+        ['Out of stock, 1,000 IQD', { iqdPrice: 1000, inStock: false }],
+        ['Out of stock, 0.10 $', { usdPrice: '0.10', inStock: false }],
+      ]);
+
+      expect(await theVendorsInOrder(partId, 'IQD')).toEqual([
+        'Quoted 300.00 $',
+        'Quoted 551,240 IQD',
+        'Quoted 349.99 $',
+        'Quoted 600,000 IQD',
+        // 0.10 $ is 157.50 IQD, which is shown as 250.
+        'Out of stock, 0.10 $',
+        'Out of stock, 1,000 IQD',
+      ]);
+      expect(await theVendorsInOrder(partId, 'USD')).toEqual([
+        'Quoted 300.00 $',
+        'Quoted 349.99 $',
+        'Quoted 551,240 IQD',
+        'Quoted 600,000 IQD',
+        // 0.10 $ as entered; 1,000 IQD is 0.63 $, which is shown as 1 $.
+        'Out of stock, 0.10 $',
+        'Out of stock, 1,000 IQD',
+      ]);
+    });
+
+    it('puts an Offer quoted at 100 $ and 160,000 IQD before one quoted only at 101 $ in USD, and after it in IQD at 1,575', async () => {
+      await setThePlatformRate(1575);
+      const partId = await aPart();
+      await offersConfirmedInTurn(partId, [
+        ['Quoted in both', { usdPrice: '100.00', iqdPrice: 160000, inStock: true }],
+        ['Quoted only in USD', { usdPrice: '101.00', inStock: true }],
+      ]);
+
+      expect(await theVendorsInOrder(partId, 'USD')).toEqual([
+        'Quoted in both',
+        'Quoted only in USD',
+      ]);
+      // 101 $ × 1,575 = 159,075, shown as 159,000.
+      expect(await theVendorsInOrder(partId, 'IQD')).toEqual([
+        'Quoted only in USD',
+        'Quoted in both',
+      ]);
+    });
+
+    it("falls back on equal Shown Prices to the most recent Confirmation, then the Vendor's name, then the identifier", async () => {
+      await setThePlatformRate(1500);
+      const partId = await aPart();
+      // Every one shown as 300,000 IQD: 200 $ × 1,500 is a Converted Price
+      // equal to the Quoted Prices.
+      const equal = { iqdPrice: 300000, inStock: true };
+      // Three more confirmed at one moment, the day after the last of these
+      // two, two of them under one name; their Vendors are made first.
+      const others = [];
+      for (const [index, name] of [
+        'Made-up Shop B',
+        'Made-up Shop A',
+        'Made-up Shop A',
+      ].entries()) {
+        others.push(await aVendor(name, `0750 400 ${String(1000 + index)}`));
+      }
+      const [first, second] = await offersConfirmedInTurn(partId, [
+        ['Made-up Shop Z, confirmed first', equal],
+        ['Made-up Shop Y, confirmed later', { usdPrice: '200.00', inStock: true }],
+      ]);
+      const named = [];
+      for (const vendor of others) {
+        const offerId = await anOfferConfirmedAt(
+          vendor.id,
+          partId,
+          after(aMovedMoment, 2 * aDay),
+          equal,
+        );
+        named.push({ vendor, offerId });
+      }
+      moveTheClockTo(after(aMovedMoment, 3 * aDay));
+      const [b, ...theAs] = named;
+      // Of the two named A, the lower identifier of an Offer first.
+      const [lowerA, higherA] = theAs.sort((one, other) =>
+        one.offerId < other.offerId ? -1 : 1,
+      );
+
+      const answer = await theVisibleOffersOf(partId, 'IQD');
+
+      expect(answer.map(({ shownPrice }) => shownPrice?.amount)).toEqual(
+        Array(5).fill('300000'),
+      );
+      expect(answer.map(({ vendor }) => vendor.id)).toEqual([
+        lowerA.vendor.id,
+        higherA.vendor.id,
+        b.vendor.id,
+        second.id,
+        first.id,
+      ]);
+    });
+
+    it('puts Offers with no Shown Price after the others in their stock group', async () => {
+      // No Platform Rate is set.
+      const partId = await aPart();
+      await offersConfirmedInTurn(partId, [
+        ['In stock, only in USD', { usdPrice: '10.00', inStock: true }],
+        ['Out of stock, only in USD', { usdPrice: '10.00', inStock: false }],
+        ['Out of stock, in IQD', { iqdPrice: 900000, inStock: false }],
+        ['In stock, in IQD', { iqdPrice: 900000, inStock: true }],
+      ]);
+
+      expect(await theVendorsInOrder(partId, 'IQD')).toEqual([
+        'In stock, in IQD',
+        'In stock, only in USD',
+        'Out of stock, in IQD',
+        'Out of stock, only in USD',
+      ]);
+      expect(await theVendorsInOrder(partId, 'USD')).toEqual([
+        'In stock, only in USD',
+        'In stock, in IQD',
+        'Out of stock, only in USD',
+        'Out of stock, in IQD',
       ]);
     });
   });
@@ -577,7 +719,8 @@ describe("a Part's visible Offers", () => {
       return (await theVisibleOffersOf(partId)).map(({ vendor }) => vendor.id);
     }
 
-    it('are left out, and come back when the Vendor is reactivated', async () => {
+    it('are left out, with a rate set, and come back when the Vendor is reactivated', async () => {
+      await setThePlatformRate(1575);
       const partId = await aPart();
       const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
       const store = await aVendor('Made-up Computer Store', '0750 765 4321');
@@ -600,7 +743,8 @@ describe("a Part's visible Offers", () => {
       return (await theVisibleOffersOf(partId)).map(({ vendor }) => vendor.id);
     }
 
-    it('is visible when confirmed 14 days ago to the millisecond, and left out one millisecond later', async () => {
+    it('is visible when confirmed 14 days ago to the millisecond, and left out one millisecond later, with a rate set', async () => {
+      await setThePlatformRate(1575);
       const partId = await aPart();
       const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
       await anOfferConfirmedAt(shop.id, partId, aMovedMoment);
