@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { Trans, useTranslation } from '@/shared/i18n';
+import type { Ended } from '@/shared/lib';
 
 import type { ConfirmationState } from '../model/confirmation';
 
@@ -30,12 +31,13 @@ export function ConfirmationLook({
   state,
   className,
   testId,
-  onFaded,
+  onTransitionEnd,
 }: {
   state: ConfirmationState;
   className?: string;
   testId?: string;
-  onFaded?: () => void;
+  // What it listens to, as old words fading out (`unsettles`).
+  onTransitionEnd?: (event: Ended) => void;
 }) {
   const { Icon, className: look } = looks[state.state];
 
@@ -44,9 +46,7 @@ export function ConfirmationLook({
       data-testid={testId}
       data-state={testId === undefined ? undefined : state.state}
       aria-hidden={testId === undefined || undefined}
-      onTransitionEnd={(event) => {
-        if (event.propertyName === 'opacity') onFaded?.();
-      }}
+      onTransitionEnd={onTransitionEnd}
       className={cn('inline-flex items-center gap-1', look, className)}
     >
       <Icon aria-hidden="true" className="size-4 shrink-0" />

@@ -18,18 +18,30 @@ function schemeSwitch(page: Page): Locator {
   return page.getByRole('group', { name: 'Colour scheme' });
 }
 
-// The colour scheme the page is drawn in, as the browser resolves it, and
-// the colour of the screen's ground in it.
-async function schemeDrawn(page: Page): Promise<{ scheme: string; ground: string }> {
+// The colour scheme the page is drawn in, as the browser resolves it, the
+// colour of the screen's ground in it, and the colour the page gives the
+// browser's own bar: the theme colour whose media match now.
+async function schemeDrawn(
+  page: Page,
+): Promise<{ scheme: string; ground: string; bar: string | null }> {
   return page.evaluate(() => ({
     scheme: getComputedStyle(document.documentElement).colorScheme,
     ground: getComputedStyle(document.body).backgroundColor,
+    bar:
+      [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')]
+        .find((meta) => meta.media === '' || matchMedia(meta.media).matches)
+        ?.getAttribute('content') ?? null,
   }));
 }
 
-// The Sheet's colour in each scheme (DESIGN.md's Colors).
+// The Sheet's colour in each scheme, and the Stone Frame's, which the
+// browser's bar takes (DESIGN.md's Colors).
 const sheetInLight = 'rgb(255, 255, 255)';
 const sheetInDark = 'rgb(22, 22, 22)';
+const frameInLight = '#f1f0ed';
+const frameInDark = '#0d0d0d';
+const inLight = { scheme: 'light dark', ground: sheetInLight, bar: frameInLight };
+const inDark = { scheme: 'dark', ground: sheetInDark, bar: frameInDark };
 
 test.describe('on a screen as wide as a desk, under a mouse', () => {
   test.use({ viewport: deskWindow });
@@ -133,7 +145,7 @@ test.describe('on a phone', () => {
 test.describe('the scheme switch', () => {
   test.use({ viewport: deskWindow, colorScheme: 'light' });
 
-  test('follows the device at first, then the scheme chosen, remembered from before the first paint, until Device is chosen again', async ({
+  test("follows the device at first, then the scheme chosen, remembered from before the first paint, until Device is chosen again, and so does the browser's bar", async ({
     page,
   }) => {
     // The scheme the document names when its body starts, before anything is
@@ -154,11 +166,11 @@ test.describe('the scheme switch', () => {
     const device = schemeSwitch(page).getByRole('button', { name: 'Device' });
     const dark = schemeSwitch(page).getByRole('button', { name: 'Dark' });
     await expect(device).toHaveAttribute('aria-pressed', 'true');
-    expect(await schemeDrawn(page)).toEqual({ scheme: 'light dark', ground: sheetInLight });
+    expect(await schemeDrawn(page)).toEqual(inLight);
 
     await dark.click();
     await expect(dark).toHaveAttribute('aria-pressed', 'true');
-    expect(await schemeDrawn(page)).toEqual({ scheme: 'dark', ground: sheetInDark });
+    expect(await schemeDrawn(page)).toEqual(inDark);
 
     await page.reload();
     await expect(catalogHeading(page)).toBeVisible();
@@ -168,12 +180,16 @@ test.describe('the scheme switch', () => {
       ),
     ).toBe('dark');
     await expect(dark).toHaveAttribute('aria-pressed', 'true');
-    expect(await schemeDrawn(page)).toEqual({ scheme: 'dark', ground: sheetInDark });
+    expect(await schemeDrawn(page)).toEqual(inDark);
 
     await device.click();
     await expect(device).toHaveAttribute('aria-pressed', 'true');
-    expect(await schemeDrawn(page)).toEqual({ scheme: 'light dark', ground: sheetInLight });
+    expect(await schemeDrawn(page)).toEqual(inLight);
     await page.emulateMedia({ colorScheme: 'dark' });
-    expect(await schemeDrawn(page)).toEqual({ scheme: 'light dark', ground: sheetInDark });
+    expect(await schemeDrawn(page)).toEqual({
+      scheme: 'light dark',
+      ground: sheetInDark,
+      bar: frameInDark,
+    });
   });
 });

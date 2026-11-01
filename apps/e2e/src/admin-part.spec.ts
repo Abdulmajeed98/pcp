@@ -18,7 +18,7 @@ import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
 import { aMadeUpPhoto } from './made-up-photo';
-import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
+import { film, filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
 import { apiUrl } from './platform';
 
 // The Admin works in the Vendors' shops, on a phone (LANG-8).
@@ -152,6 +152,50 @@ test.describe('a new Part, through the form', () => {
     await expect(page).not.toHaveURL(partPageAddress);
   });
 
+  // With reduced motion the scroll that keeps such a refusal in sight runs
+  // at once, as the Reduced motion section drops a movement of the whole
+  // screen, while the refusal's space still opens over its frames.
+  test('with reduced motion, a refusal that names no field is brought into sight at once, not by a smooth scroll', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.route(`${apiUrl}/v1/parts`, (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, code: 'internalError', errors: [] }),
+      }),
+    );
+    const button = page.getByRole('button', { name: 'Create the Part' });
+    // The button at the foot of the window, so that the refusal opening above
+    // it pushes it out of sight, and the browser's own scroll anchoring off,
+    // so that only the form's scroll moves the page.
+    await page.addStyleTag({ content: '* { overflow-anchor: none !important; }' });
+    await button.evaluate((element) => element.scrollIntoView({ block: 'end' }));
+
+    const frames = await film(
+      page,
+      () => window.scrollY,
+      () => button.click(),
+      {
+        slowedBy: 1,
+        forMs: 1500,
+      },
+    );
+    await expect(page.getByTestId('refusal')).toBeInViewport();
+    // A smooth scroll moves the page in frame after frame; one at once moves
+    // it in a frame of its own each time it is asked.
+    const moved = frames.map(
+      ({ drawn }, index) => index > 0 && drawn !== frames[index - 1].drawn,
+    );
+    const gliding = moved.filter((now, index) => now && moved[index - 1]);
+    expect(
+      (frames.at(-1)?.drawn ?? 0) - (frames[0]?.drawn ?? 0),
+      'it scrolled',
+    ).toBeGreaterThan(0);
+    expect(gliding, 'never in two frames running').toHaveLength(0);
+  });
+
   // An entry added to a list takes the focus, so the Admin types at once;
   // an entry removed hands the focus to the one that took its place.
   // The owner's word, "Field that grows": the whole name shows while it is
@@ -192,11 +236,9 @@ test.describe('a new Part, through the form', () => {
         await page.getByRole('button', { name: 'Create the Part' }).click();
         await expect(cores).toHaveAttribute('aria-invalid', 'true');
       });
-      const { moved, mostInAFrame } = travelOf(frames, 'below');
+      const moved = travelOf(frames, 'below');
       expect(moved, 'the field below moved down').toBeGreaterThan(10);
-      expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(
-        aFrameAtMost(moved),
-      );
+      expect(snapsOfThePlace(frames, 'below'), 'never far in one frame').toEqual([]);
 
       // The refusal leaves smoothly too, as soon as a number is written in
       // its place (the form checks a refused field again as it changes).
@@ -205,10 +247,8 @@ test.describe('a new Part, through the form', () => {
         await expect(cores).toHaveAttribute('aria-invalid', 'false');
       });
       const back = travelOf(leaving, 'below');
-      expect(back.moved, 'the field below moved back up').toBeGreaterThan(10);
-      expect(back.mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(
-        aFrameAtMost(back.moved),
-      );
+      expect(back, 'the field below moved back up').toBeGreaterThan(10);
+      expect(snapsOfThePlace(leaving, 'below'), 'never far in one frame').toEqual([]);
     });
   }
 
@@ -225,9 +265,9 @@ test.describe('a new Part, through the form', () => {
       await button.click();
       await expect(page.getByTestId('refusal')).toBeVisible();
     });
-    const { moved, mostInAFrame } = travelOf(frames, 'button');
+    const moved = travelOf(frames, 'button');
     expect(moved, 'the button moved down').toBeGreaterThan(40);
-    expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(aFrameAtMost(moved));
+    expect(snapsOfThePlace(frames, 'button'), 'never far in one frame').toEqual([]);
   });
 
   test('an added and a removed part number move what is below them smoothly', async ({
@@ -238,21 +278,21 @@ test.describe('a new Part, through the form', () => {
       const add = page.getByRole('button', { name: 'Add another part number' });
       const added = await filmPlaces(page, { add }, () => add.click());
       const down = travelOf(added, 'add');
-      expect(down.moved, `${reducedMotion}: Add moved down`).toBeGreaterThan(30);
+      expect(down, `${reducedMotion}: Add moved down`).toBeGreaterThan(30);
       expect(
-        down.mostInAFrame,
+        snapsOfThePlace(added, 'add'),
         `${reducedMotion}: never far in one frame`,
-      ).toBeLessThanOrEqual(aFrameAtMost(down.moved));
+      ).toEqual([]);
 
       const removed = await filmPlaces(page, { add }, () =>
         page.getByRole('button', { name: 'Remove Part number 2' }).click(),
       );
       const up = travelOf(removed, 'add');
-      expect(up.moved, `${reducedMotion}: Add moved up`).toBeGreaterThan(30);
+      expect(up, `${reducedMotion}: Add moved up`).toBeGreaterThan(30);
       expect(
-        up.mostInAFrame,
+        snapsOfThePlace(removed, 'add'),
         `${reducedMotion}: never far in one frame`,
-      ).toBeLessThanOrEqual(aFrameAtMost(up.moved));
+      ).toEqual([]);
     }
   });
 
@@ -275,6 +315,41 @@ test.describe('a new Part, through the form', () => {
 
     await page.getByRole('button', { name: 'Remove Part number 1' }).click();
     await expect(page.getByRole('button', { name: 'Add a part number' })).toBeFocused();
+  });
+
+  // An entry removed is taken out of the form's values once its space has
+  // closed, at the end of that transition, and still when the transition
+  // never ends, as one the browser never ran ends nothing: then at the latest
+  // a few seconds later, so that the Part is never saved with an entry the
+  // Admin removed (the redesign's code review).
+  test('a part number removed while no transition runs is still left out of the Part saved', async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Add another part number' }).click();
+    await page
+      .getByRole('textbox', { name: 'Part number 2', exact: true })
+      .fill('TEST-removed');
+    await page.addStyleTag({
+      content: '*, *::before, *::after { transition: none !important; }',
+    });
+    await page.getByRole('button', { name: 'Remove Part number 2' }).click();
+
+    await expect
+      .poll(() =>
+        page
+          .locator('input')
+          .evaluateAll((inputs) =>
+            inputs.some((input) => (input as HTMLInputElement).value === 'TEST-removed'),
+          ),
+      )
+      .toBe(false);
+    const sent = page.waitForRequest(
+      (request) => request.url() === `${apiUrl}/v1/parts` && request.method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Create the Part' }).click();
+    const { partNumbers } = (await sent).postDataJSON() as { partNumbers: string[] };
+    expect(partNumbers).toHaveLength(1);
+    expect(partNumbers).not.toContain('TEST-removed');
   });
 
   test('the form does not scroll sideways, and meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
@@ -348,9 +423,9 @@ test('a list of rows made not known lets its rows leave smoothly', async ({ page
   const frames = await filmPlaces(page, { below }, () =>
     page.getByRole('button', { name: 'Make PCIe slots not known' }).click(),
   );
-  const { moved, mostInAFrame } = travelOf(frames, 'below');
+  const moved = travelOf(frames, 'below');
   expect(moved, 'what is below moved up').toBeGreaterThan(100);
-  expect(mostInAFrame, 'never far in one frame').toBeLessThanOrEqual(aFrameAtMost(moved));
+  expect(snapsOfThePlace(frames, 'below'), 'never far in one frame').toEqual([]);
   await expect(page.getByRole('group', { name: /^PCIe slots \d$/ })).toHaveCount(0);
   await expect(addPcie).toBeFocused();
 });
@@ -442,11 +517,12 @@ test.describe("a Part's page", () => {
           page.getByRole('img', { name: `Photo of ${part.name}` }),
         ).toBeVisible();
       });
-      const { moved, mostInAFrame } = travelOf(frames, 'name');
+      const moved = travelOf(frames, 'name');
       expect(moved, `${reducedMotion}: the name moved over`).toBeGreaterThan(30);
-      expect(mostInAFrame, `${reducedMotion}: never far in one frame`).toBeLessThanOrEqual(
-        aFrameAtMost(moved),
-      );
+      expect(
+        snapsOfThePlace(frames, 'name'),
+        `${reducedMotion}: never far in one frame`,
+      ).toEqual([]);
     }
   });
 
@@ -480,8 +556,12 @@ test.describe("a Part's page", () => {
       await searchTheCatalog(page, { words: part.word });
       await rowOf(page, part.name).getByRole('link', { name: part.name }).click();
       // One first-level title to a page: beside the list the Part's is of
-      // the second level (the owner's word, "h2 on a desk").
+      // the second level (the owner's word, "h2 on a desk"), and its
+      // sections' titles of the third.
       await expect(page.getByRole('heading', { level: 2, name: part.name })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { level: 3, name: 'Specifications' }),
+      ).toBeVisible();
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(['Catalog']);
 
       const cores = specificationRow(page, 'cores.total');

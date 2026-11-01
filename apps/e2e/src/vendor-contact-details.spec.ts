@@ -9,7 +9,7 @@ import {
   languages,
   narrowWindow,
 } from './languages';
-import { aFrameAtMost, filmPlaces, travelOf } from './motion-film';
+import { filmPlaces, snapsOfThePlace, travelOf } from './motion-film';
 import { dashboardUrl } from './platform';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -238,11 +238,12 @@ test('when the platform cannot be reached, the refusal panel opens its room abov
   );
 
   await expect(page.getByRole('main').getByTestId('refusal')).toBeVisible();
-  const { moved, mostInAFrame } = travelOf(frames, 'address');
+  const moved = travelOf(frames, 'address');
   expect(moved, 'the form moved down for the panel').toBeGreaterThan(20);
-  expect(mostInAFrame, 'with no step a person sees as a jump').toBeLessThanOrEqual(
-    aFrameAtMost(moved),
-  );
+  expect(
+    snapsOfThePlace(frames, 'address'),
+    'with no step a person sees as a jump',
+  ).toEqual([]);
 });
 
 test("the browser is given a position in Erbil, and the location button fills the map location's coordinates from it", async ({

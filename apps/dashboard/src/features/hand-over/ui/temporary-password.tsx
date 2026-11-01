@@ -1,3 +1,5 @@
+import { SectionTitle } from '@/shared/ui';
+
 // A Login's temporary password, shown this once after a create or a reset,
 // beside the hand-over: under its label, in Geist Mono at 1.5rem, weight
 // 700, on a Raised Stone panel with 8-pixel corners and no edge, never on a
@@ -7,9 +9,9 @@
 export function TemporaryPassword({ password }: { password: string }) {
   return (
     <section aria-labelledby="temporary-password-label" className="flex flex-col gap-2">
-      <h2 id="temporary-password-label" className="text-sm font-medium">
+      <SectionTitle id="temporary-password-label" className="text-sm font-medium">
         Temporary password
-      </h2>
+      </SectionTitle>
       <p
         data-testid="temporary-password"
         lang="en"

@@ -2,6 +2,7 @@ import { type APIRequestContext, expect, type Locator, type Page } from '@playwr
 
 import { closeTheMenu, openTheMenuOnAPhone } from './menu-sheet';
 import { type DrawnFrame } from './leaving-rows';
+import { film, snapsOf } from './motion-film';
 import { apiUrl } from './platform';
 
 // What a test gives an Offer it adds, as the API takes it. A price left out
@@ -261,125 +262,79 @@ export interface ScreenFrame {
 }
 
 // Records the Offers screen at every frame the page draws while `act` runs
-// and for `forMs` after it, with every animation and transition of the page
-// slowed by `slowedBy` (DevTools' own playback rate), as `filmTheList` does.
+// and for `forMs` after it, slowed by `slowedBy`, through `film`.
 export async function filmTheOffersScreen(
   page: Page,
   act: () => Promise<void>,
   { slowedBy, forMs }: { slowedBy: number; forMs: number },
 ): Promise<ScreenFrame[]> {
-  const devtools = await page.context().newCDPSession(page);
-  await devtools.send('Animation.enable');
-  await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 / slowedBy });
-  await page.evaluate(() => {
-    const frames: ScreenFrame[] = [];
-    const film = window as unknown as {
-      screenFilm: { frames: ScreenFrame[]; on: boolean };
-    };
-    film.screenFilm = { frames, on: true };
-    const opacityOf = (element: Element | null) => {
-      let opacity = 1;
-      for (let at = element; at !== null && at !== document.body; at = at.parentElement) {
-        opacity *= Number(getComputedStyle(at).opacity);
-      }
-      return opacity;
-    };
-    const boxOf = (element: Element | null) =>
-      element === null
-        ? null
-        : { height: element.getBoundingClientRect().height, opacity: opacityOf(element) };
-    const draw = () => {
-      const rows = [...document.querySelectorAll<HTMLElement>('[data-testid="offer"]')].map(
-        (row) => {
-          const box = row.getBoundingClientRect();
-          return {
-            key:
-              row.dataset.row ??
-              row.querySelector('a')?.getAttribute('href') ??
-              (row.textContent ?? '').trim().slice(0, 24),
-            top: box.top,
-            height: box.height,
-            opacity: opacityOf(row.querySelector('a')),
-          };
-        },
-      );
-      const banner = document.querySelector('[data-testid="expiry-banner"]');
-      // The banner's box is the space it takes, which closes as it leaves.
-      const space = banner?.closest('.leaves') ?? banner;
-      frames.push({
-        list: {
-          at: performance.now(),
-          rows,
-          pages: null,
-          headings: [...document.querySelectorAll('[data-testid="offers-screen"] th')].map(
-            (heading) => heading.getBoundingClientRect().left,
-          ),
-        },
-        banner: boxOf(space ?? null),
-        result: document.querySelector('output')?.getBoundingClientRect().height ?? 0,
-        none: boxOf(document.querySelector('[data-testid="no-offer-in-state"]')),
-        tabs:
-          document.querySelector('[data-testid="offer-states"]')?.getBoundingClientRect()
-            .top ?? null,
-      });
-      if (film.screenFilm.on) requestAnimationFrame(draw);
-    };
-    requestAnimationFrame(draw);
-  });
-  await act();
-  await page.waitForTimeout(forMs);
-  const frames = await page.evaluate(() => {
-    const film = (
-      window as unknown as { screenFilm: { frames: ScreenFrame[]; on: boolean } }
-    ).screenFilm;
-    film.on = false;
-    return film.frames;
-  });
-  await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 });
-  await devtools.detach();
-  return frames;
+  const frames = await film(page, drawnScreen, act, { slowedBy, forMs });
+  return frames.map(({ at, drawn }) => ({ ...drawn, list: { ...drawn.list, at } }));
 }
 
-// What snaps on the Offers screen, filmed frame by frame: a movement that
-// makes most of its change in one frame, rather than over the frames of its
-// transition. Every row's place and height, the banner's, the result line's
-// and the empty line's heights, and where the tabs stand are each followed
-// through the film; each run of frames in which one of them moves is a
-// movement, and a movement of more than a few pixels whose largest step is
-// over half of it, or which is faster than `fastest` pixels a millisecond
-// between two drawn frames, is a snap. A step is judged
-// against its own movement, since a 300-pixel banner closing smoothly over
-// a slowed 800 ms still takes larger steps than a 20-pixel line snapping.
-// Also a snap: the banner taken out, or the empty line put in, while it
-// takes room or can be seen. Empty when nothing snaps.
+// The Offers screen as the page draws it now, without the moment, which
+// `film` gives. It runs in the page.
+function drawnScreen(): Omit<ScreenFrame, 'list'> & { list: Omit<DrawnFrame, 'at'> } {
+  const opacityOf = (element: Element | null) => {
+    let opacity = 1;
+    for (let at = element; at !== null && at !== document.body; at = at.parentElement) {
+      opacity *= Number(getComputedStyle(at).opacity);
+    }
+    return opacity;
+  };
+  const boxOf = (element: Element | null) =>
+    element === null
+      ? null
+      : { height: element.getBoundingClientRect().height, opacity: opacityOf(element) };
+  const rows = [...document.querySelectorAll<HTMLElement>('[data-testid="offer"]')].map(
+    (row) => {
+      const box = row.getBoundingClientRect();
+      return {
+        key:
+          row.dataset.row ??
+          row.querySelector('a')?.getAttribute('href') ??
+          (row.textContent ?? '').trim().slice(0, 24),
+        top: box.top,
+        height: box.height,
+        opacity: opacityOf(row.querySelector('a')),
+      };
+    },
+  );
+  const banner = document.querySelector('[data-testid="expiry-banner"]');
+  // The banner's box is the space it takes, which closes as it leaves.
+  const space = banner?.closest('.leaves') ?? banner;
+  return {
+    list: {
+      rows,
+      pages: null,
+      headings: [...document.querySelectorAll('[data-testid="offers-screen"] th')].map(
+        (heading) => heading.getBoundingClientRect().left,
+      ),
+    },
+    banner: boxOf(space ?? null),
+    result: document.querySelector('output')?.getBoundingClientRect().height ?? 0,
+    none: boxOf(document.querySelector('[data-testid="no-offer-in-state"]')),
+    tabs:
+      document.querySelector('[data-testid="offer-states"]')?.getBoundingClientRect().top ??
+      null,
+  };
+}
+
+// What snaps on the Offers screen, filmed frame by frame, as `snapsOf`
+// judges a movement: every row's place and height, the banner's, the result
+// line's and the empty line's heights, and where the tabs stand are each
+// followed through the film. Also a snap: the banner taken out, or the empty
+// line put in, while it takes room or can be seen. Empty when nothing snaps.
 export function snapsIn(frames: ScreenFrame[], { fastest }: { fastest: number }): string[] {
   const snaps: string[] = [];
   const follow = (name: string, values: (number | null)[]) => {
-    let run: { step: number; speed: number }[] = [];
-    const judge = () => {
-      const whole = run.reduce((sum, { step }) => sum + Math.abs(step), 0);
-      const largest = Math.max(0, ...run.map(({ step }) => Math.abs(step)));
-      const quickest = Math.max(0, ...run.map(({ speed }) => speed));
-      if (whole > 4 && largest > whole / 2) {
-        snaps.push(
-          `${name} moved ${Math.round(largest)}px of its ${Math.round(whole)}px in one frame`,
-        );
-      } else if (whole > 4 && quickest > fastest) {
-        snaps.push(`${name} moved at ${quickest.toFixed(2)}px a millisecond`);
-      }
-      run = [];
-    };
-    values.slice(1).forEach((value, index) => {
-      const before = values[index];
-      if (value === null || before === null) return judge();
-      const step = value - before;
-      if (Math.abs(step) < 0.5) return judge();
-      // How fast, by the time between the two frames drawn, which a frame
-      // the page dropped while it was busy lengthens.
-      const elapsed = Math.max(1, frames[index + 1].list.at - frames[index].list.at);
-      run.push({ step, speed: Math.abs(step) / elapsed });
-    });
-    judge();
+    snaps.push(
+      ...snapsOf(
+        name,
+        values.map((value, index) => ({ at: frames[index].list.at, value })),
+        { fastest },
+      ),
+    );
   };
 
   const keys = new Set(frames.flatMap((frame) => frame.list.rows.map((row) => row.key)));

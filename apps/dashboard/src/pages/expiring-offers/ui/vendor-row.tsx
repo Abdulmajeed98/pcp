@@ -11,8 +11,16 @@ import {
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
-import { type ShownRow, whatsAppChatWith, whenTheSpaceHasClosed } from '@/shared/lib';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
+import { type ShownRow, whatsAppChatWith, movingProps } from '@/shared/lib';
+import {
+  linkOverRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui';
 
 import { callTo } from '../model/links';
 
@@ -26,11 +34,6 @@ import { callTo } from '../model/links';
 // leads to the Vendor's page, while the link's name is the Vendor's alone,
 // and takes a Raised Stone ground under the pointer. The owner chose the
 // numbers as underlined links on 20 October 2026, over outlined buttons.
-
-// What makes the whole row the link: the link's box covers the row, and
-// draws the focus outline inside the row's edges.
-const linkOverRow =
-  'after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring';
 
 // A link that is a row's own action, drawn above the link that covers the
 // whole row, as high as a control.
@@ -180,10 +183,7 @@ export function VendorsTable({
             <TableRow
               key={row.key}
               className="leaves-rule relative hover:bg-secondary"
-              data-leaving={row.leaving || undefined}
-              data-arriving={row.arriving || undefined}
-              inert={row.leaving}
-              onTransitionEnd={whenTheSpaceHasClosed(row)}
+              {...movingProps(row)}
             >
               <Cell>
                 <span>

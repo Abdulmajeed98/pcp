@@ -138,19 +138,16 @@ export class ListVendorsOffersParams {
   }
 }
 
-// How many Offers a Vendor has, how many of them are Expired Offers, how many
-// are about to expire, at now by the API's clock, and how many are out of
-// stock, of all its Offers whatever a search finds and whatever state a list
-// holds.
-export class VendorsOfferCounts {
+// How many Offers a Vendor has, how many of them are Expired Offers and how
+// many are about to expire, at now by the API's clock, of all its Offers
+// whatever a search finds and whatever state a list holds: what the Admin's
+// list of whom to remind counts.
+export class OfferCounts {
   constructor(
     private readonly offers: number,
     private readonly expired: number,
     private readonly aboutToExpire: number,
-    private readonly outOfStock: number,
   ) {}
-
-  static readonly NONE = new VendorsOfferCounts(0, 0, 0, 0);
 
   getOffers(): number {
     return this.offers;
@@ -163,6 +160,21 @@ export class VendorsOfferCounts {
   getAboutToExpire(): number {
     return this.aboutToExpire;
   }
+}
+
+// The same counts, and how many of the Vendor's Offers are out of stock, for
+// the tabs of a Vendor's own list.
+export class VendorsOfferCounts extends OfferCounts {
+  constructor(
+    offers: number,
+    expired: number,
+    aboutToExpire: number,
+    private readonly outOfStock: number,
+  ) {
+    super(offers, expired, aboutToExpire);
+  }
+
+  static readonly NONE = new VendorsOfferCounts(0, 0, 0, 0);
 
   getOutOfStock(): number {
     return this.outOfStock;

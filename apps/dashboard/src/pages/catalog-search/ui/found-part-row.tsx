@@ -7,7 +7,15 @@ import { Link, type To, useLocation } from 'react-router';
 import { categoryName } from '@/entities/category';
 import { PartNumbers } from '@/entities/part';
 import { useTranslation } from '@/shared/i18n';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
+import {
+  linkOverRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui';
 
 // The Parts the search found, as the dashboard's DESIGN.md lays out a list
 // (redesign ticket 12): a table from 64rem and two-line rows on a phone,
@@ -26,11 +34,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 // are English in every language (LANG-3); a long name wraps in a box of its
 // own, its lines starting on its left, on the screen's start side, so that
 // it is read whole in Kurdish and Arabic too.
-
-// What makes the whole row the link: the link's box covers the row, and
-// draws the focus outline inside the row's edges.
-const linkOverRow =
-  'after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring';
 
 // Where a found Part leads: its Offer, or the form for a new one, which
 // keeps the search.

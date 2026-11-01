@@ -1,6 +1,8 @@
 import { cn } from 'cn';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import type * as React from 'react';
+
+import { useKeptUntilClosed } from '@/shared/lib';
 
 // A space in a form that opens smoothly when something is put in it, such as
 // a field's refusal or a form's refusal panel, and closes smoothly when it is
@@ -8,8 +10,11 @@ import type * as React from 'react';
 // always there: closed, it takes no room, and it gives back the gap its
 // parent puts beside it, which it measures, so that putting something in
 // moves nothing in one frame. What it shows stays in it while it closes, and
-// leaves it once its space has closed, whatever the transition's speed. It
-// is the theme's `space-opens`.
+// leaves it once its space has closed, whatever the transition's speed, or
+// at the latest after the shared mechanism's wait (`shared/lib/leaving.ts`).
+// It is the theme's `leaves`, closed while it is marked as leaving, opening
+// at once as a form's spaces do (or in step, `inStep`), and what it shows is
+// always clipped to it.
 //
 // Used by `FieldError`, so every form's refusals beside its fields take it,
 // and around a form's refusal panel by the form, as the Part's form does:
@@ -18,13 +23,20 @@ import type * as React from 'react';
 function OpeningSpace({
   children,
   className,
+  inStep = false,
   ...props
-}: Omit<React.ComponentProps<'div'>, 'children'> & { children?: React.ReactNode }) {
+}: Omit<React.ComponentProps<'div'>, 'children'> & {
+  children?: React.ReactNode;
+  // Whether it opens as a row arrives in a list, its space first and then
+  // its fade, as a Vendor's reset arrives; a form's spaces open at once.
+  inStep?: boolean;
+}) {
   const space = useRef<HTMLDivElement>(null);
   const shown = Boolean(children);
   // What the space showed last, kept while it closes.
-  const [kept, setKept] = useState<React.ReactNode>(children);
-  if (shown && kept !== children) setKept(children);
+  const { kept, onTransitionEnd } = useKeptUntilClosed<React.ReactNode>(
+    shown ? children : null,
+  );
 
   // The one gap the parent adds for the space while it takes no room, the
   // one before it, or after it when it comes first, given back while it is
@@ -49,21 +61,16 @@ function OpeningSpace({
     <div
       ref={space}
       data-slot="opening-space"
-      data-open={shown || undefined}
+      data-leaving={shown ? undefined : ''}
+      data-opens-at-once={inStep ? undefined : ''}
       aria-hidden={shown ? undefined : true}
-      className={cn('space-opens', className)}
-      onTransitionEnd={(event) => {
-        if (
-          !shown &&
-          event.target === event.currentTarget &&
-          event.propertyName === 'grid-template-rows'
-        ) {
-          setKept(undefined);
-        }
-      }}
+      className={cn('leaves', className)}
+      onTransitionEnd={onTransitionEnd}
       {...props}
     >
-      <div>{shown ? children : kept}</div>
+      <div className="overflow-clip [overflow-clip-margin:0.25rem]">
+        {shown ? children : kept}
+      </div>
     </div>
   );
 }

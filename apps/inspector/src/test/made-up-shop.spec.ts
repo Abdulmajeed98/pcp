@@ -332,7 +332,11 @@ describe("the made-up shop's other answers", () => {
             name: shop.vendor.name,
             phoneNumber: shop.vendor.phoneNumber,
             whatsAppNumber: shop.vendor.whatsAppNumber,
-            counts: offersPage().counts,
+            counts: {
+              offers: offersPage().counts.offers,
+              expired: offersPage().counts.expired,
+              aboutToExpire: offersPage().counts.aboutToExpire,
+            },
           },
         ],
       },
@@ -349,6 +353,14 @@ describe("the made-up shop's other answers", () => {
     ['POST', `/v1/vendors/${vendorId}/offers/confirm`],
     ['PUT', `/v1/vendors/${vendorId}/offers/${shop.offers[0].id}`],
     ['DELETE', `/v1/vendors/${vendorId}/offers/${shop.offers[0].id}`],
+    // Nothing is written to the development database, the catalog included
+    // (redesign ticket 01): every call but a read is refused, whatever it is
+    // about.
+    ['POST', '/v1/parts'],
+    ['PUT', '/v1/parts/11111111-1111-4111-8111-111111111111'],
+    ['POST', '/v1/parts/11111111-1111-4111-8111-111111111111/photo'],
+    ['PUT', '/v1/vendors/11111111-1111-4111-8111-111111111111'],
+    ['PATCH', '/v1/categories'],
   ])('refuse a change, %s %s, which never reaches the API', (method, path) => {
     const answer = answerTo(method, path);
 
@@ -361,7 +373,6 @@ describe("the made-up shop's other answers", () => {
     ['GET', '/v1/categories'],
     ['GET', '/v1/parts?page=0&size=20&search=ryzen'],
     ['GET', '/v1/parts/11111111-1111-4111-8111-111111111111'],
-    ['PUT', '/v1/parts/11111111-1111-4111-8111-111111111111'],
   ])('leave %s %s to the API', (method, path) => {
     expect(answerTo(method, path)).toBeUndefined();
   });

@@ -2629,6 +2629,27 @@
         },
         "required": ["confirmed"]
       },
+      "OfferCountsResponse": {
+        "type": "object",
+        "properties": {
+          "offers": {
+            "type": "number",
+            "description": "How many Offers the Vendor has.",
+            "example": 42
+          },
+          "expired": {
+            "type": "number",
+            "description": "How many of them are Expired Offers.",
+            "example": 2
+          },
+          "aboutToExpire": {
+            "type": "number",
+            "description": "How many of them are not expired and will be within 3 days.",
+            "example": 5
+          }
+        },
+        "required": ["offers", "expired", "aboutToExpire"]
+      },
       "VendorWithExpiringOffersResponse": {
         "type": "object",
         "properties": {
@@ -2664,7 +2685,7 @@
             "description": "The Vendor's counts of all its Offers, at the moment the list was read.",
             "allOf": [
               {
-                "$ref": "#/components/schemas/VendorsOfferCountsResponse"
+                "$ref": "#/components/schemas/OfferCountsResponse"
               }
             ]
           }

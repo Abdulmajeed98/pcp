@@ -10,8 +10,28 @@ export const schemes: readonly Scheme[] = ['light', 'dark', 'device'];
 // Where the browser keeps the scheme chosen with the switch, as it keeps the
 // Vendor portal's language. Nothing is kept while the device's is chosen.
 // `index.html` reads the same key before the first paint, so that no screen
-// flashes the other scheme; the two are kept the same by hand.
+// flashes the other scheme; the two are kept the same by hand, since that
+// script runs before any module, and so cannot import this one.
 const rememberedKey = 'scheme';
+
+// Gives the browser's own bar the Stone Frame's colour of the scheme shown
+// (DESIGN.md's Do's): `index.html` holds one theme colour for each scheme,
+// each for the device's own scheme at first. A chosen scheme makes its own
+// apply whatever the device's, and the device's choice gives each its own
+// device scheme back. `index.html` does the same before the first paint.
+function showTheBarIn(scheme: Scheme): void {
+  for (const bar of document.querySelectorAll<HTMLMetaElement>(
+    'meta[name="theme-color"][data-scheme]',
+  )) {
+    const own = bar.dataset.scheme ?? '';
+    bar.media =
+      scheme === 'device'
+        ? `(prefers-color-scheme: ${own})`
+        : own === scheme
+          ? 'all'
+          : 'not all';
+  }
+}
 
 const listeners = new Set<() => void>();
 
@@ -24,6 +44,7 @@ export function chooseScheme(scheme: Scheme): void {
   root.setAttribute('data-scheme-changing', '');
   if (scheme === 'device') delete root.dataset.scheme;
   else root.dataset.scheme = scheme;
+  showTheBarIn(scheme);
   // Reading a style makes the browser apply the new colours now, while the
   // transitions are still suppressed.
   void getComputedStyle(root).color;

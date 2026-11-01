@@ -10,6 +10,7 @@ import {
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
+  EmptyTitle,
 } from '@/shared/ui';
 
 // What the Vendor portal shows, in its own language, at an address that
@@ -32,7 +33,7 @@ export function PortalNotFoundPage() {
         <EmptyMedia variant="icon">
           <SignpostIcon aria-hidden="true" />
         </EmptyMedia>
-        <h1 className="text-base font-semibold">{t('PortalNotFound.title')}</h1>
+        <EmptyTitle level={1}>{t('PortalNotFound.title')}</EmptyTitle>
         <EmptyDescription>{t('PortalNotFound.message')}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>

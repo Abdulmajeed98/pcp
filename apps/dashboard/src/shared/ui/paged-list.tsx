@@ -2,7 +2,7 @@ import { formatNumber } from '@pcp/i18n';
 import { CircleCheckIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { type ShownRow, useLeavingRows, whenTheSpaceHasClosed } from '@/shared/lib';
+import { type ShownRow, useLeavingRows, movingProps } from '@/shared/lib';
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from './empty';
 import { ListPages } from './list-pages';
@@ -91,10 +91,7 @@ function PagedList<Item>({
             <li
               key={each.key}
               className="leaves border-b border-rule"
-              data-leaving={each.leaving || undefined}
-              data-arriving={each.arriving || undefined}
-              inert={each.leaving}
-              onTransitionEnd={whenTheSpaceHasClosed(each)}
+              {...movingProps(each)}
             >
               <div>{row(each.item)}</div>
             </li>

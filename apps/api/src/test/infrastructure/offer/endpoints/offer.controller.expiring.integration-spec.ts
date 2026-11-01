@@ -29,7 +29,7 @@ type ExpiringVendorBody = {
   name: string;
   phoneNumber: PhoneNumberBody;
   whatsAppNumber: PhoneNumberBody | null;
-  counts: { offers: number; expired: number; aboutToExpire: number; outOfStock: number };
+  counts: { offers: number; expired: number; aboutToExpire: number };
 };
 
 type ListBody = {
@@ -179,7 +179,7 @@ describe('the Vendors with expiring Offers', () => {
           name: 'Made-up Reminded Shop',
           phoneNumber: { international: '+964662234567', national: '066 223 4567' },
           whatsAppNumber: null,
-          counts: { offers: 2, expired: 0, aboutToExpire: 1, outOfStock: 0 },
+          counts: { offers: 2, expired: 0, aboutToExpire: 1 },
         },
       ]);
       expect(list.totalElements).toBe(1);
@@ -193,12 +193,7 @@ describe('the Vendors with expiring Offers', () => {
 
       const [listed] = (await theList()).content;
 
-      expect(listed.counts).toEqual({
-        offers: 3,
-        expired: 2,
-        aboutToExpire: 1,
-        outOfStock: 0,
-      });
+      expect(listed.counts).toEqual({ offers: 3, expired: 2, aboutToExpire: 1 });
     });
 
     it("answers the Vendor's phone number and WhatsApp number in both forms", async () => {

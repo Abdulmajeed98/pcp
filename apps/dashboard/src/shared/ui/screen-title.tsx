@@ -22,4 +22,14 @@ function ScreenTitle(props: React.ComponentProps<'h1'>) {
   return <Heading {...props} />;
 }
 
-export { OpenedBesideAList, ScreenTitle };
+// A section's title within a screen, one level under the screen's own: an
+// `h2` when the screen stands alone, and an `h3` when it is opened beside a
+// list and titles itself `h2`, so that every opened screen keeps its
+// headings in order whichever way it is shown. It looks the same either
+// way; the caller gives its type.
+function SectionTitle(props: React.ComponentProps<'h2'>) {
+  const Heading = useContext(BesideAList) ? 'h3' : 'h2';
+  return <Heading {...props} />;
+}
+
+export { OpenedBesideAList, ScreenTitle, SectionTitle };

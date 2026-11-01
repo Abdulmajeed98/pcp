@@ -352,20 +352,21 @@ const readOnly = refusal(
 // API's, with the shop's Vendor among them (`listsTheVendors`), and another
 // Vendor's page and its Offers are the API's alone, so that the Vendors'
 // screens show the shop among the development database's real Vendors (the
-// end-to-end tests' leftovers). Every call that would write is refused, the
-// real Vendors' included. Any other call is not the shop's, and is left to
-// the API.
+// end-to-end tests' leftovers). Every call that would write is refused,
+// whatever it is about, the real Vendors' and the catalog's included, so
+// that nothing is written to the development database (redesign ticket 01).
+// Any other read is not the shop's, and is left to the API.
 export function answerFromTheMadeUpShop(
   shop: MadeUpShop,
   now: Date,
   call: ApiCall,
 ): ShopAnswer | undefined {
+  if (call.method !== 'GET') return readOnly;
   const address = new URL(call.path, 'http://api');
   const [version, first, second, ...rest] = address.pathname.split('/').filter(Boolean);
   const vendorsCall = first === 'vendors' || first === 'offers';
   const callersVendor = first === 'caller' && second === 'vendor';
   if (version !== 'v1' || !(vendorsCall || callersVendor)) return undefined;
-  if (call.method !== 'GET') return readOnly;
 
   const listedOffers = listedOffersOf(shop, now);
   if (callersVendor) return { status: 200, body: shop.vendor };
@@ -377,7 +378,12 @@ export function answerFromTheMadeUpShop(
         name: shop.vendor.name,
         phoneNumber: shop.vendor.phoneNumber,
         whatsAppNumber: shop.vendor.whatsAppNumber,
-        counts: counts(listedOffers),
+        // As the API counts them for this list, without those out of stock.
+        counts: (({ offers, expired, aboutToExpire }) => ({
+          offers,
+          expired,
+          aboutToExpire,
+        }))(counts(listedOffers)),
       },
     ]);
     return { status: 200, body };

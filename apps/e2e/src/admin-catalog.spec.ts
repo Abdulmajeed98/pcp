@@ -143,6 +143,21 @@ test.describe('a Part opened from the Catalog', () => {
       // The sheet's 24 pixels of padding on each side, and the rows' 8
       // pixels of bleed past the text on each side.
       expect(list?.width).toBeGreaterThanOrEqual((sheet?.width ?? 0) - 48 - 2);
+      // The first column's heading and its text start where the Catalog's
+      // title does, the rows' bleed taken back by their padding.
+      const title = await catalogHeading(page).boundingBox();
+      const heading = await table
+        .getByRole('columnheader', { name: 'Part', exact: true })
+        .evaluate(
+          (cell) =>
+            cell.getBoundingClientRect().left +
+            parseFloat(getComputedStyle(cell).paddingInlineStart),
+        );
+      const name = await rowOf(page, part.name)
+        .getByRole('link', { name: part.name })
+        .boundingBox();
+      expect(Math.abs(heading - (title?.x ?? 0)), 'the heading').toBeLessThan(1);
+      expect(Math.abs((name?.x ?? 0) - (title?.x ?? 0)), 'the name').toBeLessThan(1);
       await expectNoSidewaysScroll(page);
       await expectAccessible(page);
     });

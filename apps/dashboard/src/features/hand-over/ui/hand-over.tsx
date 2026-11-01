@@ -4,7 +4,7 @@ import { ExternalLinkIcon, MessageCircleIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { whatsAppChatWith } from '@/shared/lib';
-import { buttonVariants, FieldLegend, FieldSet } from '@/shared/ui';
+import { buttonVariants, FieldLegend, FieldSet, SectionTitle } from '@/shared/ui';
 
 import { handOverMessage } from '../model/message';
 
@@ -35,9 +35,9 @@ export function HandOver({
 
   return (
     <section aria-labelledby="hand-over" className="flex flex-col gap-4">
-      <h2 id="hand-over" className="text-base font-semibold">
+      <SectionTitle id="hand-over" className="text-base font-semibold">
         Hand the login details over
-      </h2>
+      </SectionTitle>
       <FieldSet>
         <FieldLegend variant="label">Language of the message</FieldLegend>
         <div className="flex flex-wrap gap-2">

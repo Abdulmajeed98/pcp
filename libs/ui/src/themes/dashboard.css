@@ -207,9 +207,12 @@
 @layer base {
   /*
    * A control is 44 pixels high on a touchscreen, and 36 under a mouse on a
-   * screen as wide as a desk's, never lower (ticket 03 of the redesign).
+   * screen as wide as a desk's, never lower (ticket 03 of the redesign). A
+   * device with any touch input keeps 44, as a laptop with a touchscreen
+   * whose trackpad is its main pointer: anything tapped on a touchscreen is
+   * at least 44 by 44 (the root DESIGN.md).
    */
-  @media (pointer: fine) and (min-width: 64rem) {
+  @media (pointer: fine) and (not (any-pointer: coarse)) and (min-width: 64rem) {
     :root {
       --spacing-control: 2.25rem;
     }
@@ -392,19 +395,50 @@
 }
 
 /*
- * 8. Something leaves a list, and the row that takes its place arrives: a
- * row the list drops while the user is on it is marked `data-leaving` (and
- * inert), on itself or on its table row, and a row new to the same page
- * `data-arriving`. A leaving row's opacity goes to 0 in 150 ms; then its
- * space closes, `grid-template-rows` from `1fr` to `0fr`, and its rule with
- * it, 200 ms on the in-out curve, so that the rows below rise into place
- * rather than jump. An arriving row's space opens in step with that, after
- * the same 150 ms, and then it fades in, 200 ms; a leaving row that comes
- * back does the same from wherever it is. What the row holds is its one
- * child, which holds the row's padding, so that the space closes whole and
- * nothing is left to be taken out in one frame. With reduced motion nothing
- * jumps either: the fades stay, and the space closes or opens over 150 ms
- * on the out curve.
+ * The gap a parent sets beside something that opens in place, which it gives
+ * back while it is closed (the utility below). Not inherited, so that what
+ * opens inside it reads none.
+ */
+@property --gap-before {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --gap-after {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+/*
+ * 6 and 8. Something takes room or gives it up in place, under the No Snap
+ * Rule: a row a list drops while the user is on it, and the row that takes
+ * its place; an entry put into a form's list, or taken out; a field's
+ * refusal, a form's refusal panel, a banner. It is one utility, `leaves`,
+ * whatever the caller, and the dashboard's `shared/lib/leaving.ts` keeps
+ * what leaves until its space has closed.
+ *
+ * What comes and goes is marked `data-leaving` (and inert) while it closes
+ * or stays closed, on itself or on its table row, and `data-arriving` when
+ * it is put in while the user is there. Leaving, its opacity goes to 0 in
+ * 150 ms; then its space closes, `grid-template-rows` from `1fr` to `0fr`,
+ * and with it its rule below it, its own margin below it, and the gap its
+ * parent sets beside it, which it gives back through `--gap-before` and
+ * `--gap-after` (measured by `OpeningSpace`), 200 ms on the in-out curve,
+ * so that what is below rises into place rather than jumps.
+ *
+ * Arriving, or coming back, in a list (the default): its space opens in
+ * step with a leaving row's closing, after the same 150 ms, and then it
+ * fades in, 200 ms. In a form, marked `data-opens-at-once`: its space opens
+ * as it fades in, 200 ms on the out curve, so that what is below moves down
+ * over the frames.
+ *
+ * What it holds is its one child, which holds its padding, so that the space
+ * closes whole and nothing is left to be taken out in one frame; that child
+ * is clipped while the space moves, a focus ring's width beyond its box.
+ * With reduced motion nothing jumps either: the fades stay, and the space
+ * closes or opens over 150 ms on the out curve.
  */
 @utility leaves {
   display: grid;
@@ -412,45 +446,72 @@
   transition:
     grid-template-rows 200ms var(--ease-in-out) 150ms,
     border-bottom-width 200ms var(--ease-in-out) 150ms,
+    margin-top 200ms var(--ease-in-out) 150ms,
+    margin-bottom 200ms var(--ease-in-out) 150ms,
     opacity 200ms var(--ease-out) 350ms;
 
   & > * {
     min-height: 0;
   }
 
-  &:is([data-arriving], [data-arriving] *) {
+  &[data-opens-at-once] {
+    transition:
+      opacity 200ms var(--ease-out),
+      grid-template-rows 200ms var(--ease-out),
+      border-bottom-width 200ms var(--ease-out),
+      margin-top 200ms var(--ease-out),
+      margin-bottom 200ms var(--ease-out);
+  }
+
+  &:is([data-arriving], [data-arriving] > td > *) {
     @starting-style {
       opacity: 0;
       grid-template-rows: 0fr;
       border-bottom-width: 0;
+      margin-top: calc(-1 * var(--gap-before, 0px));
+      margin-bottom: calc(-1 * var(--gap-after, 0px));
     }
   }
 
-  &:is([data-leaving], [data-leaving] *) {
+  &:is([data-leaving], [data-leaving] > td > *) {
     opacity: 0;
     grid-template-rows: 0fr;
     border-bottom-width: 0;
+    margin-top: calc(-1 * var(--gap-before, 0px));
+    margin-bottom: calc(-1 * var(--gap-after, 0px));
     transition:
       opacity 150ms var(--ease-out),
       grid-template-rows 200ms var(--ease-in-out) 150ms,
-      border-bottom-width 200ms var(--ease-in-out) 150ms;
+      border-bottom-width 200ms var(--ease-in-out) 150ms,
+      margin-top 200ms var(--ease-in-out) 150ms,
+      margin-bottom 200ms var(--ease-in-out) 150ms;
   }
 
-  &:is([data-leaving], [data-leaving] *) > * {
-    overflow: hidden;
+  &:is([data-leaving], [data-leaving] > td > *) > *,
+  &[data-opens-at-once][data-arriving] > * {
+    overflow: clip;
+    overflow-clip-margin: 0.25rem;
   }
 
   @media (prefers-reduced-motion: reduce) {
     transition:
       grid-template-rows 150ms var(--ease-out) 150ms,
       border-bottom-width 150ms var(--ease-out) 150ms,
+      margin-top 150ms var(--ease-out) 150ms,
+      margin-bottom 150ms var(--ease-out) 150ms,
       opacity 150ms var(--ease-out) 300ms;
 
-    &:is([data-leaving], [data-leaving] *) {
+    &[data-opens-at-once] {
+      transition-duration: 150ms;
+    }
+
+    &:is([data-leaving], [data-leaving] > td > *) {
       transition:
         opacity 150ms var(--ease-out),
         grid-template-rows 150ms var(--ease-out) 150ms,
-        border-bottom-width 150ms var(--ease-out) 150ms;
+        border-bottom-width 150ms var(--ease-out) 150ms,
+        margin-top 150ms var(--ease-out) 150ms,
+        margin-bottom 150ms var(--ease-out) 150ms;
     }
   }
 }
@@ -480,120 +541,6 @@
     transition:
       border-bottom-width 150ms var(--ease-out) 150ms,
       background-color 100ms ease;
-  }
-}
-
-/*
- * 6 and 8 for what takes room in a form (redesign ticket 08, under the No
- * Snap Rule). A space that opens and closes in place, always there: closed,
- * it takes no room, and it gives back the gap its parent sets beside it
- * through `--gap-before` and `--gap-after`, which `OpeningSpace` measures;
- * open (`data-open`), its space opens and the gap with it as it fades in,
- * 200 ms on the out curve, so that what is below moves down over the frames
- * rather than jumping. Closing, it fades in 150 ms, then its space closes,
- * 200 ms on the in-out curve. What it holds is its one child. With reduced
- * motion nothing jumps either: the space opens over 150 ms, or fades and
- * then closes over 150 ms, on the out curve. A field's refusal and a form's
- * refusal panel take it.
- */
-@utility space-opens {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  margin-top: calc(-1 * var(--gap-before, 0px));
-  margin-bottom: calc(-1 * var(--gap-after, 0px));
-  transition:
-    opacity 150ms var(--ease-out),
-    grid-template-rows 200ms var(--ease-in-out) 150ms,
-    margin-top 200ms var(--ease-in-out) 150ms,
-    margin-bottom 200ms var(--ease-in-out) 150ms;
-
-  & > * {
-    min-height: 0;
-    overflow: clip;
-    overflow-clip-margin: 0.25rem;
-  }
-
-  &[data-open] {
-    grid-template-rows: 1fr;
-    opacity: 1;
-    margin-top: 0;
-    margin-bottom: 0;
-    transition:
-      opacity 200ms var(--ease-out),
-      grid-template-rows 200ms var(--ease-out),
-      margin-top 200ms var(--ease-out),
-      margin-bottom 200ms var(--ease-out);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition:
-      opacity 150ms var(--ease-out),
-      grid-template-rows 150ms var(--ease-out) 150ms,
-      margin-top 150ms var(--ease-out) 150ms,
-      margin-bottom 150ms var(--ease-out) 150ms;
-
-    &[data-open] {
-      transition-duration: 150ms;
-    }
-  }
-}
-
-/*
- * The same for an entry put into a list while the user is on it, or taken
- * out, such as a part number added to the Part's form: an element of its own
- * that holds its gap below it as its margin (`mb-*`), not its parent's gap.
- * Put in (`data-arriving`), its space and its margin open from none as it
- * fades in, 200 ms on the out curve; taken out (`data-leaving`), it fades in
- * 150 ms, then its space and margin close, 200 ms on the in-out curve. With
- * reduced motion, 150 ms on the out curve each, never in one frame. What it
- * holds is its one child.
- */
-@utility entry-opens {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition:
-    opacity 200ms var(--ease-out),
-    grid-template-rows 200ms var(--ease-out),
-    margin-bottom 200ms var(--ease-out);
-
-  & > * {
-    min-height: 0;
-  }
-
-  &[data-arriving] {
-    @starting-style {
-      opacity: 0;
-      grid-template-rows: 0fr;
-      margin-bottom: 0;
-    }
-  }
-
-  &[data-leaving] {
-    opacity: 0;
-    grid-template-rows: 0fr;
-    margin-bottom: 0;
-    transition:
-      opacity 150ms var(--ease-out),
-      grid-template-rows 200ms var(--ease-in-out) 150ms,
-      margin-bottom 200ms var(--ease-in-out) 150ms;
-  }
-
-  &[data-arriving] > *,
-  &[data-leaving] > * {
-    overflow: clip;
-    overflow-clip-margin: 0.25rem;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition-duration: 150ms;
-
-    &[data-leaving] {
-      transition:
-        opacity 150ms var(--ease-out),
-        grid-template-rows 150ms var(--ease-out) 150ms,
-        margin-bottom 150ms var(--ease-out) 150ms;
-    }
   }
 }
 

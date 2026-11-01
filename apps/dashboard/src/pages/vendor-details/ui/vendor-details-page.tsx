@@ -18,6 +18,7 @@ import {
 } from '@/entities/vendor';
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
+import { aMovement } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -273,14 +274,13 @@ function ArrivesInPlace({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     const element = ref.current;
     if (element === null) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     element.style.overflow = 'hidden';
     const arriving = element.animate(
       [
         { height: `${sketchHeight}px`, opacity: 0 },
         { height: `${element.offsetHeight}px`, opacity: 1 },
       ],
-      { duration: reduced ? 150 : 200, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' },
+      aMovement('ease-out'),
     );
     const settled = () => {
       element.style.overflow = '';

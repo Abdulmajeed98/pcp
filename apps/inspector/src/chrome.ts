@@ -72,8 +72,15 @@ export async function logIn(
     let authorization: string | undefined;
     browser.on(page.sessionId, 'Fetch.requestPaused', (paused: PausedRequest) => {
       authorization ??= header(paused.request, 'Authorization');
+      // Only reads, and their preflights, reach the API from this tab too.
+      const reads = ['GET', 'OPTIONS'].includes(paused.request.method);
       void page
-        .send('Fetch.continueRequest', { requestId: paused.requestId })
+        .send(
+          reads ? 'Fetch.continueRequest' : 'Fetch.failRequest',
+          reads
+            ? { requestId: paused.requestId }
+            : { requestId: paused.requestId, errorReason: 'BlockedByClient' },
+        )
         .catch(() => {});
     });
     await page.send('Fetch.enable', {
@@ -135,6 +142,60 @@ export async function logIn(
   }
 }
 
+// Where a tab is, once an address has been opened in it: on which origin,
+// whether Keycloak's login screen is drawn, and whether the dashboard is.
+export interface Landing {
+  origin: string;
+  loginScreen: boolean;
+  drawn: boolean;
+}
+
+const landing = `({
+  origin: location.origin,
+  loginScreen: document.querySelector('#kc-form-login') !== null,
+  drawn: (document.getElementById('root')?.childElementCount ?? 0) > 0,
+})`;
+
+// Makes every screen of the dashboard the inspector opens in this tab land on
+// the dashboard, drawn, before the inspector looks at it. Keycloak's cookie
+// usually sends a new tab straight back, but a tab was seen left on
+// Keycloak's login screen, which the inspector then judged as the screen
+// (false FAILs for its heavy shadow). So after each open the tab is watched
+// for up to `waitMs`; left on the login screen, or anywhere but the
+// dashboard drawn, the screen is opened once more; and should it still not
+// land, the inspection stops, loudly, rather than judge another page.
+// Addresses that are not the dashboard's, such as the inspector's own
+// contact sheet, are opened as the inspector asks.
+export function landOnTheDashboard(
+  page: TastePage,
+  dashboardOrigin: string,
+  { waitMs = 15000, pollMs = 100 } = {},
+): void {
+  const open = page.goto.bind(page);
+  page.goto = async (url, options) => {
+    if (new URL(url).origin !== dashboardOrigin) return open(url, options);
+    let last: Landing | undefined;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const how = await open(url, options);
+      const end = Date.now() + waitMs;
+      for (;;) {
+        last = (await page.eval(landing).catch(() => undefined)) as Landing | undefined;
+        if (last?.origin === dashboardOrigin && last.drawn && !last.loginScreen) {
+          return how;
+        }
+        if (Date.now() >= end) break;
+        await sleep(pollMs);
+      }
+    }
+    const shown = last?.loginScreen
+      ? "Keycloak's login screen"
+      : `a page at ${last?.origin ?? 'an address it would not give'} that is not the dashboard drawn`;
+    throw new CannotInspect(
+      `A tab of the inspector opened ${new URL(url).pathname} twice and was left on ${shown}, so the inspection stopped rather than judge it. Run the command again.`,
+    );
+  };
+}
+
 // Where the page is, without its query or fragment, which may hold a code
 // of the login.
 async function where(page: TastePage): Promise<string> {
@@ -142,17 +203,15 @@ async function where(page: TastePage): Promise<string> {
   return String(address) || 'an address the page would not give';
 }
 
-// The paths of the API the made-up shop answers for: every call about
-// Vendors and Offers.
-const theShopsPaths = ['/v1/vendors*', '/v1/offers*', '/v1/caller/vendor*', '/v1/parts*'];
-
 // Answers every call about Vendors and Offers in a tab from the made-up shop,
-// and marks a search of the catalog for the shop's Vendor with its Offers,
+// marks a search of the catalog for the shop's Vendor with its Offers, and
+// refuses every call to the API that is not a read, whatever it is about,
 // before it leaves the browser, so that nothing is written to the
-// development database: only the calls that read the real Vendors reach the
-// API, and the list of them is answered with the shop's Vendor among them. The API is on another address than
-// the dashboard, so each answer carries what the browser asks of a
-// cross-origin answer, and a preflight is answered too.
+// development database: only reads reach the API, and the list of the real
+// Vendors is answered with the shop's Vendor among them. Every call to the
+// API is paused for it. The API is on another address than the dashboard,
+// so each answer carries what the browser asks of a cross-origin answer, and
+// a preflight is answered too.
 export async function answerFromTheShopIn(
   browser: TasteBrowser,
   page: TastePage,
@@ -246,9 +305,6 @@ export async function answerFromTheShopIn(
     },
   );
   await page.send('Fetch.enable', {
-    patterns: theShopsPaths.map((path) => ({
-      urlPattern: `${apiUrl}${path}`,
-      requestStage: 'Request',
-    })),
+    patterns: [{ urlPattern: `${apiUrl}/*`, requestStage: 'Request' }],
   });
 }

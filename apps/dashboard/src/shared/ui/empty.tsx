@@ -61,9 +61,18 @@ function EmptyMedia({
   );
 }
 
-function EmptyTitle({ className, ...props }: React.ComponentProps<'div'>) {
+// The empty state's title, in the Section type. Where the empty state is
+// the whole screen, as on a "not found" screen or the failed login, it is
+// the screen's heading, of the level `level` gives; elsewhere it is not a
+// heading.
+function EmptyTitle({
+  className,
+  level,
+  ...props
+}: React.ComponentProps<'div'> & { level?: 1 | 2 | 3 }) {
+  const Title = level === undefined ? 'div' : (`h${level}` as const);
   return (
-    <div
+    <Title
       data-slot="empty-title"
       className={cn('text-base font-semibold', className)}
       {...props}

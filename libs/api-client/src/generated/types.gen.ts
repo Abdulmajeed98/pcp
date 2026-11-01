@@ -785,6 +785,21 @@ export type ConfirmedOffersResponse = {
     confirmed: number;
 };
 
+export type OfferCountsResponse = {
+    /**
+     * How many Offers the Vendor has.
+     */
+    offers: number;
+    /**
+     * How many of them are Expired Offers.
+     */
+    expired: number;
+    /**
+     * How many of them are not expired and will be within 3 days.
+     */
+    aboutToExpire: number;
+};
+
 export type VendorWithExpiringOffersResponse = {
     /**
      * The Vendor's identifier on the platform.
@@ -805,7 +820,7 @@ export type VendorWithExpiringOffersResponse = {
     /**
      * The Vendor's counts of all its Offers, at the moment the list was read.
      */
-    counts: VendorsOfferCountsResponse;
+    counts: OfferCountsResponse;
 };
 
 export type VendorsWithExpiringOffersPageResponse = {

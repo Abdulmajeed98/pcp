@@ -19,8 +19,22 @@ import {
   OfferPlate,
 } from '@/entities/offer';
 import { Trans, useTranslation } from '@/shared/i18n';
-import { type ShownRow, whenTheSpaceHasClosed } from '@/shared/lib';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
+import {
+  aMovement,
+  type Ended,
+  movingProps,
+  type ShownRow,
+  useTakenOutOnceEnded,
+} from '@/shared/lib';
+import {
+  linkOverRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui';
 
 // The Vendor's Offers, as the dashboard's DESIGN.md lays out a list: a table
 // from 64rem, two-line rows on a phone, never cards and never a picture. An
@@ -49,11 +63,6 @@ interface RowsProps {
   settling: boolean;
 }
 
-// What makes the whole row the link: the link's box covers the row, and
-// draws the focus outline inside the row's edges.
-const linkOverRow =
-  'after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring';
-
 // How many rows settle in turn: the first ten that stay.
 const settlingRows = 10;
 
@@ -78,27 +87,28 @@ function settleOrders(
 // an expiry took two, goes from its old height to its new one over 200 ms on
 // the in-out curve (150 ms on the out curve with reduced motion), rather than
 // in one frame, and the rows below it move with it. What changes is the
-// height of the theme's `leaves` in each of its cells, which hold the row's
-// padding, so that the row's own content is never squeezed; a leaving or
-// arriving row moves by its own transitions instead.
+// height of each of the row's cells' spaces, marked `data-row-space`, which
+// hold the row's padding, so that the row's own content is never squeezed;
+// what each holds is measured, marked `data-row-words`. A leaving or
+// arriving row moves by its own transitions instead. The marks are this
+// hook's own, so that the theme's `leaves` may change its shape without it.
+// It follows the table's rows only, as it always has: the phone's rows were
+// never matched by the theme's shape it read before, and followed, they
+// jumped in the films of Confirm all in Kurdish.
 function useRowsFollowTheirHeight<List extends HTMLElement>() {
   const list = useRef<List>(null);
   const heights = useRef(new Map<string, number>());
 
   useLayoutEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     for (const row of list.current?.querySelectorAll<HTMLElement>('[data-row]') ?? []) {
       const key = row.dataset.row ?? '';
-      const spaces = [
-        ...row.querySelectorAll<HTMLElement>(':scope > td > .leaves, :scope > .leaves'),
-      ];
+      const spaces = [...row.querySelectorAll<HTMLElement>('[data-row-space]')];
       // The height the row's words take, whatever is moving now.
       const height = Math.max(
         0,
         ...spaces.map(
           (space) =>
-            (space.firstElementChild?.firstElementChild as HTMLElement | null)
-              ?.offsetHeight ?? 0,
+            space.querySelector<HTMLElement>('[data-row-words]')?.offsetHeight ?? 0,
         ),
       );
       const was = heights.current.get(key);
@@ -117,9 +127,7 @@ function useRowsFollowTheirHeight<List extends HTMLElement>() {
             { height: `${was}px`, overflow: 'hidden' },
             { height: `${height}px`, overflow: 'hidden' },
           ],
-          reduced
-            ? { duration: 150, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' }
-            : { duration: 200, easing: 'cubic-bezier(0.77, 0, 0.175, 1)' },
+          aMovement('ease-in-out'),
         );
       }
     }
@@ -141,7 +149,7 @@ export function OffersTable({ shown, settling }: RowsProps) {
       <Table aria-label={t('OffersScreen.listLabel')}>
         <TableHeader>
           <TableRow className="border-b-0">
-            <TableHead className="w-2/5 ps-2">{t('OffersScreen.part')}</TableHead>
+            <TableHead className="w-2/5 first:ps-2">{t('OffersScreen.part')}</TableHead>
             <TableHead className="text-end">{t('OffersScreen.price')}</TableHead>
             <TableHead>{t('OffersScreen.lastConfirmed')}</TableHead>
             <TableHead>{t('OffersScreen.stock')}</TableHead>
@@ -165,16 +173,13 @@ function OfferTableRow({
   row: ShownRow<ListedOfferResponse>;
   settleOrder: number | undefined;
 }) {
-  const { item: offer, leaving, arriving } = row;
+  const { item: offer } = row;
 
   return (
     <TableRow
       data-testid="offer"
       data-row={row.key}
-      data-leaving={leaving || undefined}
-      data-arriving={arriving || undefined}
-      inert={leaving}
-      onTransitionEnd={whenTheSpaceHasClosed(row)}
+      {...movingProps(row)}
       className="leaves-rule relative hover:bg-secondary"
     >
       <Cell>
@@ -202,9 +207,11 @@ function OfferTableRow({
 function Cell({ className, children }: { className?: string; children: ReactNode }) {
   return (
     <TableCell className="h-auto p-0 align-top first:ps-0">
-      <div className="leaves">
+      <div data-row-space="" className="leaves">
         <div>
-          <div className={cn('px-2 py-3.5', className)}>{children}</div>
+          <div data-row-words="" className={cn('px-2 py-3.5', className)}>
+            {children}
+          </div>
         </div>
       </div>
     </TableCell>
@@ -218,23 +225,15 @@ function Cell({ className, children }: { className?: string; children: ReactNode
 export function OffersList({ shown, settling }: RowsProps) {
   const { t } = useTranslation();
   const orders = settleOrders(shown, settling);
-  const list = useRowsFollowTheirHeight<HTMLUListElement>();
 
   return (
-    <ul
-      ref={list}
-      aria-label={t('OffersScreen.listLabel')}
-      className="-mx-2 border-t border-rule"
-    >
+    <ul aria-label={t('OffersScreen.listLabel')} className="-mx-2 border-t border-rule">
       {shown.map((row, index) => (
         <li
           key={row.key}
           data-testid="offer"
           data-row={row.key}
-          data-leaving={row.leaving || undefined}
-          data-arriving={row.arriving || undefined}
-          inert={row.leaving}
-          onTransitionEnd={whenTheSpaceHasClosed(row)}
+          {...movingProps(row)}
           className="leaves border-b border-rule"
         >
           <div>
@@ -355,6 +354,13 @@ function Confirmation({
     setOld(settleOrder === undefined ? null : drawn);
     setDrawn(state);
   }
+  // The old words are taken away once they have faded out, or at the latest
+  // after the shared mechanism's wait, so that they never stay over the new.
+  const faded = useTakenOutOnceEnded(
+    old === null ? [] : [keyOf(old)],
+    () => setOld(null),
+    fadedOut,
+  );
 
   return (
     <span
@@ -376,11 +382,16 @@ function Confirmation({
           key={`old ${keyOf(old)}`}
           state={old}
           className="unsettles pointer-events-none absolute start-0 top-0 whitespace-nowrap"
-          onFaded={() => setOld(null)}
+          onTransitionEnd={faded(keyOf(old))}
         />
       )}
     </span>
   );
+}
+
+// Whether old words have faded out: their own opacity's transition ended.
+function fadedOut({ propertyName, target, currentTarget }: Ended): boolean {
+  return propertyName === 'opacity' && target === currentTarget;
 }
 
 // What tells one Confirmation from another: its state and its count.

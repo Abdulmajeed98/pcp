@@ -19,6 +19,7 @@ import {
   narrowWindow,
 } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
+import { film, snapsOf } from './motion-film';
 import {
   loginOfTheMessage,
   messageLanguage,
@@ -301,6 +302,11 @@ test.describe('on a screen as wide as a desk', () => {
     expect((await busy.boundingBox())?.width).toBe(idle?.width);
     answer();
     await expect(temporaryPassword(page)).toBeVisible();
+    // Under the form's h2, the sections it shows after the create are of the
+    // third level.
+    for (const section of ['Temporary password', 'Hand the login details over']) {
+      await expect(page.getByRole('heading', { level: 3, name: section })).toBeVisible();
+    }
   });
 });
 
@@ -325,28 +331,15 @@ test('after the create, the temporary password and the hand-over arrive with no 
   await fillInTheForm(page, aMadeUpVendorToType());
   // Watched four times slower, as the owner asked them to be watched, and
   // the top of the link below taken frame by frame from the create on.
-  const devTools = await page.context().newCDPSession(page);
-  await devTools.send('Animation.enable');
-  await devTools.send('Animation.setPlaybackRate', { playbackRate: 0.25 });
-  const tops = page.evaluate(
+  const frames = await film(
+    page,
     () =>
-      new Promise<number[]>((resolve) => {
-        const seen: number[] = [];
-        const end = performance.now() + 5000;
-        const look = () => {
-          const link = [...document.querySelectorAll('a')].find(
-            (each) => each.textContent === 'Open the Vendor’s page',
-          );
-          if (link !== undefined) seen.push(Math.round(link.getBoundingClientRect().top));
-          if (performance.now() < end) requestAnimationFrame(look);
-          else resolve(seen);
-        };
-        requestAnimationFrame(look);
-      }),
+      [...document.querySelectorAll('a')]
+        .find((each) => each.textContent === 'Open the Vendor’s page')
+        ?.getBoundingClientRect().top ?? null,
+    () => page.getByRole('button', { name: 'Create the Vendor' }).click(),
+    { forMs: 5000 },
   );
-  await page.getByRole('button', { name: 'Create the Vendor' }).click();
-  const moved = await tops;
-  await devTools.send('Animation.setPlaybackRate', { playbackRate: 1 });
   await expect(temporaryPassword(page)).toBeVisible();
 
   const handOver = page.getByTestId('vendor-created');
@@ -356,14 +349,10 @@ test('after the create, the temporary password and the hand-over arrive with no 
   expect(transition.split(', ')).toEqual(
     expect.arrayContaining(['grid-template-rows', 'opacity']),
   );
-  const steps = moved
-    .slice(1)
-    .map((top, index) => top - moved[index])
-    .filter((step) => step !== 0);
-  const travel = (moved.at(-1) ?? 0) - (moved[0] ?? 0);
-  expect(travel).toBeGreaterThan(100);
-  expect(steps.length).toBeGreaterThanOrEqual(12);
-  expect(Math.max(...steps)).toBeLessThan(travel / 8);
+  const tops = frames.map(({ at, drawn }) => ({ at, value: drawn }));
+  const seen = tops.flatMap(({ value }) => (value === null ? [] : [value]));
+  expect((seen.at(-1) ?? 0) - (seen[0] ?? 0), 'the link slid down').toBeGreaterThan(100);
+  expect(snapsOf('the link below', tops)).toEqual([]);
 });
 
 test('the temporary password and the hand-over do not scroll sideways, and meet the automated part of WCAG 2.2 level AA in light and in dark', async ({

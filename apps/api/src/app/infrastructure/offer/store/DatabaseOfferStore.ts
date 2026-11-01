@@ -15,6 +15,7 @@ import {
   EditOfferParams,
   ListVendorsOffersParams,
   ListVendorsWithExpiringOffersParams,
+  OfferCounts,
   OfferStore,
   RemoveOfferParams,
   VendorsOfferCounts,
@@ -139,7 +140,6 @@ function vendorWithExpiringOffersOf(row: {
   offers: number;
   expired: number;
   aboutToExpire: number;
-  outOfStock: number;
 }): Either.Either<VendorWithExpiringOffers, StructuredError> {
   const phoneNumber = phoneNumberOf(row.id, row.phoneNumber);
   if (Either.isLeft(phoneNumber)) return Either.left(phoneNumber.left);
@@ -156,7 +156,7 @@ function vendorWithExpiringOffersOf(row: {
       row.name,
       phoneNumber.right,
       whatsAppNumber,
-      new VendorsOfferCounts(row.offers, row.expired, row.aboutToExpire, row.outOfStock),
+      new OfferCounts(row.offers, row.expired, row.aboutToExpire),
     ),
   );
 }
@@ -428,7 +428,6 @@ export class DatabaseOfferStore implements OfferStore {
                 offers: count().as('offers'),
                 expired: expired.as('expired'),
                 aboutToExpire: countWhere(aboutToExpireAt(now)).as('about_to_expire'),
-                outOfStock: countWhere(outOfStock).as('out_of_stock'),
               })
               .from(offer)
               .innerJoin(vendor, eq(vendor.id, offer.vendorId))

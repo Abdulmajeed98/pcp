@@ -74,7 +74,8 @@ export {
   useScreenSearchPlace,
 } from './screen-search';
 export { OpeningSpace } from './opening-space';
-export { OpenedBesideAList, ScreenTitle } from './screen-title';
+export { linkOverRow } from './row-link';
+export { OpenedBesideAList, ScreenTitle, SectionTitle } from './screen-title';
 export { Separator } from './separator';
 export { Switch } from './switch';
 export {

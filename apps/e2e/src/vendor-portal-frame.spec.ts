@@ -9,6 +9,7 @@ import {
 } from './development-logins';
 import { type VendorLoginDetails } from './keycloak-screens';
 import { buttonFor, expectNoSidewaysScroll, languages, narrowWindow } from './languages';
+import { theMenuButton } from './menu-sheet';
 import { theOffersScreen } from './offers';
 import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 
@@ -21,8 +22,8 @@ import { aMadeUpVendorThatHasLoggedIn } from './vendors';
 // band across the whole window, above the frame, names the Vendor.
 //
 // The browser is set to English. No test quotes the portal's text, which the
-// review of the translations may change, but for the scheme switch's words
-// in English, which the Admin console's test reads too.
+// review of the translations may change: the scheme switch, its segments and
+// the menu button are found by their test identifiers.
 
 const deskWindow = { width: 1280, height: 800 };
 const [kurdish] = languages;
@@ -40,9 +41,9 @@ function sections(page: Page): Locator {
   return page.getByTestId('portal-sections');
 }
 
-// The scheme switch, by its name in English.
-function schemeSwitch(page: Page): Locator {
-  return page.getByRole('group', { name: 'Colour scheme' });
+// The scheme switch, whatever language it is named in.
+function schemeSwitch(page: Page | Locator): Locator {
+  return page.getByTestId('scheme-switch');
 }
 
 // The sheet the screen lies on.
@@ -64,17 +65,17 @@ test.describe('on a screen as wide as a desk, under a mouse', () => {
       'aria-current',
       'page',
     );
-    await expect(page.getByRole('button', { name: 'Menu' })).toHaveCount(0);
+    await expect(theMenuButton(page)).toHaveCount(0);
 
     const topBar = page.getByRole('banner');
     await expect(topBar.getByTestId('language-switch')).toBeVisible();
-    await expect(topBar.getByRole('group', { name: 'Colour scheme' })).toBeVisible();
+    await expect(schemeSwitch(topBar)).toBeVisible();
     await expect(topBar.getByTestId('log-out')).toBeVisible();
 
     for (const control of [
       page.getByTestId('log-out'),
       buttonFor(page, kurdish),
-      schemeSwitch(page).getByRole('button', { name: 'Dark' }),
+      schemeSwitch(page).getByTestId('scheme-dark'),
       sections(page).getByRole('link').last(),
     ]) {
       expect((await control.boundingBox())?.height).toBe(36);
@@ -137,7 +138,7 @@ test.describe('on a phone', () => {
     await openTheDashboardAs(page, vendor);
     await expect(theOffersScreen(page)).toBeVisible();
 
-    const menuButton = page.getByRole('button', { name: 'Menu' });
+    const menuButton = theMenuButton(page);
     expect((await menuButton.boundingBox())?.height).toBe(44);
     await expect(page.getByTestId('log-out')).toHaveCount(0);
     await expect(page.getByTestId('language-switch')).toHaveCount(0);
@@ -147,7 +148,7 @@ test.describe('on a phone', () => {
     await expect(menu).toContainText(vendor.vendorName);
     await expect(menu.getByTestId('portal-sections')).toBeVisible();
     await expect(menu.getByTestId('language-switch')).toBeVisible();
-    await expect(menu.getByRole('group', { name: 'Colour scheme' })).toBeVisible();
+    await expect(schemeSwitch(menu)).toBeVisible();
     for (const control of [
       menu.getByTestId('log-out'),
       buttonFor(page, kurdish),

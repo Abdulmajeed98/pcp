@@ -5,7 +5,15 @@ import { Link, type To, useMatch } from 'react-router';
 
 import { DeactivatedMark } from '@/entities/vendor';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
+import {
+  linkOverRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui';
 
 // The Vendors of a page of the list, as the dashboard's DESIGN.md lays out a
 // list: a table from 64rem, two-line rows on a phone, never cards. A Vendor
@@ -16,11 +24,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 // the Vendor's alone, and the page of the list stays on its address; it
 // takes a Raised Stone ground under the pointer, and the row of the Vendor
 // open beside the list is on Active Stone.
-
-// What makes the whole row the link: the link's box covers the row, and
-// draws the focus outline inside the row's edges.
-const linkOverRow =
-  'after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring';
 
 // The ground of a row: Raised Stone under the pointer, Active Stone when its
 // Vendor is open beside the list.
@@ -52,7 +55,7 @@ export function VendorsTable({ vendors }: { vendors: readonly VendorSummaryRespo
       <Table aria-label="Vendors">
         <TableHeader>
           <TableRow className="border-b-0">
-            <TableHead className="w-1/2 ps-2">Vendor</TableHead>
+            <TableHead className="w-1/2 first:ps-2">Vendor</TableHead>
             <TableHead>State</TableHead>
             <TableHead className="pe-2 text-end">Login phone number</TableHead>
           </TableRow>
@@ -72,7 +75,7 @@ function VendorTableRow({ vendor }: { vendor: VendorSummaryResponse }) {
 
   return (
     <TableRow className={rowGround(opened)}>
-      <TableCell className={cn(cellAtTop, 'ps-2 font-[550] wrap-anywhere')}>
+      <TableCell className={cn(cellAtTop, 'font-[550] wrap-anywhere first:ps-2')}>
         <Link to={to} aria-current={opened ? 'page' : undefined} className={linkOverRow}>
           <AsWritten>{vendor.name}</AsWritten>
         </Link>

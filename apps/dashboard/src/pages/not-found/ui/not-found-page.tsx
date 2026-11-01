@@ -9,6 +9,7 @@ import {
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
+  EmptyTitle,
 } from '@/shared/ui';
 
 // What the Admin console shows at an address that matches none of its
@@ -27,7 +28,7 @@ export function NotFoundPage() {
         <EmptyMedia variant="icon">
           <SignpostIcon aria-hidden="true" />
         </EmptyMedia>
-        <h1 className="text-base font-semibold">Screen not found</h1>
+        <EmptyTitle level={1}>Screen not found</EmptyTitle>
         <EmptyDescription>
           This address matches no screen of the Admin console.
         </EmptyDescription>
