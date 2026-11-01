@@ -98,6 +98,30 @@ export async function offerHistoryRows(): Promise<OfferHistoryRow[]> {
   }
 }
 
+// A row of the Platform Rate's settings, as the database holds it.
+export type PlatformRateRow = {
+  iqdPerUsd: number;
+  setAt: Date;
+  setBy: string;
+};
+
+// Every setting of the Platform Rate, in the order they were added. The API
+// answers only the current one, so this is how a test sees that every
+// setting is kept.
+export async function platformRateRows(): Promise<PlatformRateRow[]> {
+  const client = new Client(connectionOf(testDatabaseSettings()));
+  await client.connect();
+  try {
+    const { rows } = await client.query<PlatformRateRow>(
+      `SELECT iqd_per_usd AS "iqdPerUsd", set_at AS "setAt", set_by AS "setBy"
+         FROM platform_rate ORDER BY id`,
+    );
+    return rows;
+  } finally {
+    await client.end();
+  }
+}
+
 // A fault planted in the database for as long as the function runs: a rule
 // that no Vendor meets, checked when a Vendor is stored and not against
 // those stored already, so that creating or editing one is refused.

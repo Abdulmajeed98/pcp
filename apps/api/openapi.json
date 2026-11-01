@@ -1278,6 +1278,44 @@
         },
         "summary": "The current Platform Rate, in whole dinars per dollar, and when it was set, or none until the Admin sets the first",
         "tags": ["PlatformRate"]
+      },
+      "put": {
+        "operationId": "setPlatformRate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlatformRateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the Platform Rate, in whole dinars per dollar, as a new setting, also when it equals the current one, and answer it as the current one",
+        "tags": ["PlatformRate"]
       }
     }
   },
@@ -2903,6 +2941,17 @@
           }
         },
         "required": ["current"]
+      },
+      "SetPlatformRateRequest": {
+        "type": "object",
+        "properties": {
+          "iqdPerUsd": {
+            "type": "number",
+            "description": "The Platform Rate, in whole dinars per dollar, as a JSON whole number from 500 to 5000.",
+            "example": 1575
+          }
+        },
+        "required": ["iqdPerUsd"]
       }
     }
   },

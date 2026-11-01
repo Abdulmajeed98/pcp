@@ -933,6 +933,13 @@ export type PlatformRateResponse = {
     current: CurrentPlatformRateResponse | null;
 };
 
+export type SetPlatformRateRequest = {
+    /**
+     * The Platform Rate, in whole dinars per dollar, as a JSON whole number from 500 to 5000.
+     */
+    iqdPerUsd: number;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -1658,3 +1665,25 @@ export type ReadPlatformRateResponses = {
 };
 
 export type ReadPlatformRateResponse = ReadPlatformRateResponses[keyof ReadPlatformRateResponses];
+
+export type SetPlatformRateData = {
+    body: SetPlatformRateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/platform-rate';
+};
+
+export type SetPlatformRateErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type SetPlatformRateError = SetPlatformRateErrors[keyof SetPlatformRateErrors];
+
+export type SetPlatformRateResponses = {
+    200: PlatformRateResponse;
+};
+
+export type SetPlatformRateResponse = SetPlatformRateResponses[keyof SetPlatformRateResponses];

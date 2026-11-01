@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadPlatformRateData, ReadPlatformRateErrors, ReadPlatformRateResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadPlatformRateData, ReadPlatformRateErrors, ReadPlatformRateResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses, SetPlatformRateData, SetPlatformRateErrors, SetPlatformRateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -289,4 +289,17 @@ export const readPlatformRate = <ThrowOnError extends boolean = false>(options?:
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/platform-rate',
     ...options
+});
+
+/**
+ * Set the Platform Rate, in whole dinars per dollar, as a new setting, also when it equals the current one, and answer it as the current one
+ */
+export const setPlatformRate = <ThrowOnError extends boolean = false>(options: Options<SetPlatformRateData, ThrowOnError>): RequestResult<SetPlatformRateResponses, SetPlatformRateErrors, ThrowOnError> => (options.client ?? client).put<SetPlatformRateResponses, SetPlatformRateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/platform-rate',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
