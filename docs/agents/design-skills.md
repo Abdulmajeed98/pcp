@@ -38,9 +38,26 @@ The owner has no references or brand to hand over, so the skills supply the idea
 2. **Find the subject's real world** with `scripts/assets.mjs`: Erbil's bazaar, its money changers' boards, shop signs and lettering, from open archives with their credits. It needs the network and no keys.
 3. **Show every option rendered** in the built-in browser before asking the owner to choose: a page served from the scratchpad, one option per anchor, two columns at most.
 4. **Fill screens with realistic, obviously fictional data**: a made-up Vendor with a full set of Offers, prices and dates, never empty or placeholder screens (PRODUCT.md's Evidence on Hand says what must not be invented).
-5. **Look at what was built** with `scripts/inspect.mjs --app <url> --widths 1440,768,360`, and fix what it fails.
+5. **Look at what was built** with `scripts/inspect.mjs --app <url> --widths 1440,768,360`, and fix what it fails. On the dashboard, run it through the project's own command, below.
 
 Taste writes its working files to `.taste-skill/` at the repository root, which Git ignores, and keeps its history of past draws in `~/.taste-skill/history.json` so that consecutive draws differ.
+
+## The inspector on the dashboard
+
+The dashboard's screens sit behind Keycloak's login, so Taste's inspector reaches them through `pnpm dashboard:inspect` (`apps/inspector`, the redesign's ticket 01), which logs in as the development Admin from `.env`, answers every call for Vendors and Offers from a made-up shop, refuses every write, and then runs `inspect.mjs` unchanged:
+
+```bash
+mkdir -p .taste-skill && cp apps/dashboard/design/taste/direction.json .taste-skill/direction.json
+pnpm dashboard:inspect http://localhost:3002/catalog --scheme light --app --widths 1440,768,360 --out .taste-skill/<folder>
+pnpm dashboard:inspect http://localhost:3002/vendors/00000000-0000-4000-8000-000000000001/portal --language ckb --scheme dark --app --widths 1440,768,360 --out .taste-skill/<folder>
+```
+
+It needs the services, the API (3001) and the dashboard (3002) running and the catalog imported. Every ticket that builds or changes a dashboard screen runs it on each screen it changed, in both schemes, the Vendor portal's in Kurdish and in English, before it closes: every FAIL fixed, every WARN fixed or defended in the ticket. The MVP spec's **The redesign's conventions** says the rest.
+
+## Where the chosen directions are kept
+
+- **The dashboard**: Framed sheet, chosen by the owner on 21 October 2026. The sheet as Taste dealt it is committed in [apps/dashboard/design/taste/](../../apps/dashboard/design/taste/) (`direction.json`, which the inspector's app rules read once restored into `.taste-skill/`, `sheet.md` and `held-rules.md`), since Git ignores `.taste-skill/`. What it became is [apps/dashboard/DESIGN.md](../../apps/dashboard/DESIGN.md) and [ADR-0011](../adr/0011-the-dashboards-look-is-framed-sheet.md). The renderings the owner chose from stay in the owner's `.taste-skill/redesign-05/`, and the redesign's record in `.scratch/redesign/`.
+- **The Shopper app**: none yet. Its design is planned fresh, unique to it, as the first work of the `browse` module, the same way: its direction dealt by Taste, chosen by the owner by eye, and its sheet committed in the repository as the dashboard's is.
 
 ## Kept out on purpose
 
