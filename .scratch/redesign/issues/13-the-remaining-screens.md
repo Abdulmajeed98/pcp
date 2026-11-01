@@ -80,7 +80,7 @@ With Impeccable's `document`, where building taught something: a Vendor's detail
   The WARNs, defended: on both "not found" screens `hero-void` at 1440 (the sheet below the empty state holds nothing, 60% and 73% of the first screen) and, in the Admin console, `panel-void` for the same band: a screen whose only content is that there is no screen at that address is empty by its nature, and the state sits where a screen's content starts, as DESIGN.md's empty state does; the alternative, the state centred in the window's height, is choice 1 for the owner. On the portal's at 360, `blank-gap`, 104 pixels between the old frame's rule and the state's own top Rule line, two lines that ticket 11's frame, with no rule under its bar, removes; to be inspected again after the merge.
 - **Not reachable through the inspector**: the failed login and the two plain messages (the inspector logs in as the Admin, and acting as a Vendor never shows them). They are captured by a throwaway Playwright spec instead, in both schemes at the three widths (deleted after; it made one made-up Vendor through the e2e helpers, as every e2e run does), and `expectAccessible` passes on each in the end-to-end tests.
 - 360 pixels first, logical classes only and Feature-Sliced Design's import rules: the dashboard's lint passes in `pnpm check`; the details page imports only `entities` and `shared`, the failed login only `shared`.
-- Nothing was written to the development database by the redesign's tooling: the inspector only reads, and the break-ui worst case was answered in the browser. The end-to-end tests and the capture made their own made-up Vendors, as e2e runs always do.
+- Corrected on 1 November 2026, by the code review's fixes ([review-fixes.md](../review-fixes.md)): this said that nothing was written to the development database by the redesign's tooling. The inspector only reads, and the break-ui worst case was answered in the browser, but the capture of the failed login and the plain messages, a throwaway spec of this ticket's, made one made-up Vendor in the development database through the e2e helpers, against the spec's "Nothing is written to the development database". The end-to-end tests make their own made-up Vendors as every run does; the capture is the redesign's tooling, and should have answered its Vendor in the browser as the inspector does. The Vendor stays, as the e2e runs' leftovers do, since Vendors are never deleted.
 
 ### 22 October 2026: for the owner
 
@@ -130,7 +130,7 @@ The owner saw `.taste-skill/redesign-13/index.html` in the built-in browser and 
 
 ### Every route, and the ticket that rebuilt it
 
-From `app/admin-console-router.tsx`, `app/vendor-portal-router.tsx` and `app/vendor-portal-screens.tsx` as they stand on this branch after merging `redesign/integration` at `4d03eb4`, and the one screen drawn outside both routers. "Merged" says whether the rebuilding ticket is on `redesign/integration` at `4d03eb4`: 07, 08, 09, 10 and 11 are; 12 is not yet; 13 is this branch. Until 12 is merged, its three screens still show ticket 07's base (the new tokens and shared components) inside ticket 11's frame, not their own layout.
+From `app/admin-console-router.tsx`, `app/vendor-portal-router.tsx` and `app/vendor-portal-screens.tsx` as they stand on this branch after merging `redesign/integration` at `4d03eb4`, and the one screen drawn outside both routers. "Merged" says whether the rebuilding ticket is on `redesign/integration`: brought up to date on 1 November 2026 by the code review's fixes, every one is, ticket 13 at `89a9970` and ticket 12 at `0757905`.
 
 **The Admin console's router**
 
@@ -150,7 +150,7 @@ From `app/admin-console-router.tsx`, `app/vendor-portal-router.tsx` and `app/ven
 | `/missing-specifications` | The Missing specifications | 10 | yes |
 | `/missing-specifications/parts/:partId/edit` | A Part's edit form, beside the list it returns to | 08 (the form), 10 (the list) | yes |
 | `/expiring-offers` | The Expiring Offers | 10 | yes |
-| `*` | The Admin console's "not found" | 13 | this branch |
+| `*` | The Admin console's "not found" | 13 | yes |
 | `/vendors/:vendorId/portal` (its frame) | The Vendor portal's frame with the band, the Admin acting as a Vendor | 11 | yes |
 | `/vendors/:vendorId/portal/…` | The Vendor portal's screens, as below | as below | |
 
@@ -159,28 +159,28 @@ From `app/admin-console-router.tsx`, `app/vendor-portal-router.tsx` and `app/ven
 | Address | Screen | Rebuilt in | Merged |
 |---|---|---|---|
 | (index) | The Offers, with their tabs, the expiry banner and Confirm all | 11 | yes |
-| `add` | The catalog search and the note after an Offer is added | 12 | not yet |
-| `add/:partId` | The Offer form for a new Offer | 12 | not yet |
-| `offers/:offerId` | An Offer's own screen, its removal, an Offer that no longer exists | 12 | not yet |
-| `details` | The details screen | 13 | this branch |
-| `details/contact-details` | The contact details form | 13 | this branch |
-| `*` | The portal's "not found" | 13 | this branch |
+| `add` | The catalog search and the note after an Offer is added | 12 | yes |
+| `add/:partId` | The Offer form for a new Offer | 12 | yes |
+| `offers/:offerId` | An Offer's own screen, its removal, an Offer that no longer exists | 12 | yes |
+| `details` | The details screen | 13 | yes |
+| `details/contact-details` | The contact details form | 13 | yes |
+| `*` | The portal's "not found" | 13 | yes |
 
 **The Vendor portal's router**
 
 | Address | Screen | Rebuilt in | Merged |
 |---|---|---|---|
 | `/` (its frame) | The Vendor portal's frame for a Vendor's own Login | 11 | yes |
-| `/` (its frame) | The plain message for a Login with no Vendor, and for a deactivated Vendor | 11 (the frame), 13 (the message) | 11 yes, 13 this branch |
+| `/` (its frame) | The plain message for a Login with no Vendor, and for a deactivated Vendor | 11 (the frame), 13 (the message) | yes |
 | `/…` | The Vendor portal's screens, as above | as above | |
 
 **Outside both routers**
 
 | Where | Screen | Rebuilt in | Merged |
 |---|---|---|---|
-| `app/login-failed.tsx`, at any address | The login that could not be completed | 13 | this branch |
+| `app/login-failed.tsx`, at any address | The login that could not be completed | 13 | yes |
 
-Every route has a ticket that rebuilds it, so once 12 and this branch are merged, no screen is left in the old look.
+Every route has a ticket that rebuilds it, and with 12 and 13 merged no screen is left in the old look.
 
 ### 28 October 2026: in ticket 11's frame, with tickets 08 and 09 merged
 
