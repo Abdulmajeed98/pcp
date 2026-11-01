@@ -3,12 +3,21 @@
     "title": "ئەپی کڕیار"
   },
   "Frame": {
-    "languageSwitch": "زمان"
+    "languageSwitch": "زمان",
+    "currencySwitch": "دراو",
+    "currencies": {
+      "IQD": "دینار",
+      "USD": "دۆلار"
+    }
   },
   "PlaceholderPage": {
     "notice": "شوێنگرەوەی ئەپی کڕیار. کتێبخانەکان: <english>{libraries}</english>.",
     "apiStartedAt": "API لە <time>{startedAt}</time> دەستی پێکرد.",
     "apiUnreachable": "ناتوانرێت پەیوەندی بە API بکرێت.",
+    "pricesShownIn": {
+      "IQD": "نرخەکان بە دینار پیشان دەدرێن.",
+      "USD": "نرخەکان بە دۆلار پیشان دەدرێن."
+    },
     "sample": "نموونەیەک لە هەر جۆرە دەقێک لە خوارەوەیە. هەموو بەهاکانی ساختەن.",
     "partsFound": "{count, plural, one {{countText} پارچە دۆزرایەوە} other {{countText} پارچە دۆزرایەوە}}",
     "readsAt": "تا <english>{speed}</english> دەخوێنێتەوە.",
