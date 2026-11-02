@@ -3,12 +3,21 @@
     "title": "Shopper app"
   },
   "Frame": {
-    "languageSwitch": "Language"
+    "languageSwitch": "Language",
+    "currencySwitch": "Currency",
+    "currencies": {
+      "IQD": "Dinars",
+      "USD": "Dollars"
+    }
   },
   "PlaceholderPage": {
     "notice": "Shopper app placeholder. Libraries: <english>{libraries}</english>.",
     "apiStartedAt": "The API started at <time>{startedAt}</time>.",
     "apiUnreachable": "The API cannot be reached.",
+    "pricesShownIn": {
+      "IQD": "Prices are shown in dinars.",
+      "USD": "Prices are shown in dollars."
+    },
     "sample": "A sample of each kind of text follows. Every value in it is made up.",
     "partsFound": "{count, plural, one {{countText} Part found} other {{countText} Parts found}}",
     "readsAt": "It reads at up to <english>{speed}</english>.",
