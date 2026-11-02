@@ -26,6 +26,14 @@ export function aMovement(fullCurve: 'ease-out' | 'ease-in-out'): {
     : { duration: 200, easing: curve(fullCurve) };
 }
 
+// How something fades where it is, as the Motion section's fades run, with
+// reduced motion as without, since a fade tells what happened and moves
+// nothing: an arrival in 200 ms and an exit, faster, in 150, both on the out
+// curve (the Exit Is Faster Rule).
+export function aFade(way: 'in' | 'out'): { duration: number; easing: string } {
+  return { duration: way === 'in' ? 200 : 150, easing: curve('ease-out') };
+}
+
 // How a scroll that keeps something in sight runs: smooth at full motion,
 // at once with reduced motion, which drops a movement of the whole screen.
 export function aScroll(): ScrollBehavior {

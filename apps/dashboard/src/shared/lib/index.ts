@@ -12,7 +12,7 @@ export {
   useTakenOutOnceEnded,
 } from './leaving';
 export { useMoreBeyondTheEnd } from './more-beyond-the-end';
-export { aMovement, aScroll, motionIsReduced } from './motion';
+export { aFade, aMovement, aScroll, motionIsReduced } from './motion';
 export { pageIn, usePageInTheAddress, writePageInto } from './page-in-the-address';
 export { chooseScheme, type Scheme, schemes, useScheme } from './scheme';
 export { westernDigitsIn } from './western-digits';
