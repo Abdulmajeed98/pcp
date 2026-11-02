@@ -455,15 +455,18 @@ describe("a Part's visible Offers", () => {
     // answer 10 $ at 2,000, or 20 $ at 1,500, 30,000 IQD.
     for (const lockedTable of ['offer', 'platform_rate'] as const) {
       it(`converts every price at the rate of the same moment as its Offers, read in one query, while ${lockedTable} is locked`, async () => {
-        await setThePlatformRate(1500);
         const partId = await aPart();
         const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
         const store = await aVendor('Made-up Computer Store', '0750 765 4321');
+        // The API's clock moved, and the change set at its time, `new Date()`,
+        // as every rate is set by the API's clock and not the database's.
+        moveTheClockTo(aMovedMoment);
+        await setThePlatformRate(1500);
         await anOffer(shop.id, partId, { usdPrice: '10.00', inStock: true });
         await anOffer(store.id, partId, { usdPrice: '10.00', inStock: false });
 
         const answer = await changeTheRateAndTheOffersWhileReading(
-          { iqdPerUsd: 2000, usdPriceCents: 2000, lockedTable },
+          { iqdPerUsd: 2000, setAt: new Date(), usdPriceCents: 2000, lockedTable },
           () => theVisibleOffersOf(partId, 'IQD'),
         );
 
