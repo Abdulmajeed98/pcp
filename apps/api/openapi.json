@@ -2991,7 +2991,7 @@
         "properties": {
           "iqdPerUsd": {
             "type": "number",
-            "description": "The Platform Rate, in whole dinars per dollar, as a JSON whole number from 500 to 5000.",
+            "description": "The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.",
             "example": 1575
           }
         },

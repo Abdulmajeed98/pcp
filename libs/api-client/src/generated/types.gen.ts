@@ -954,7 +954,7 @@ export type PlatformRateResponse = {
 
 export type SetPlatformRateRequest = {
     /**
-     * The Platform Rate, in whole dinars per dollar, as a JSON whole number from 500 to 5000.
+     * The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.
      */
     iqdPerUsd: number;
 };
