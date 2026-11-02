@@ -5,13 +5,22 @@ import { Either, Option } from 'effect';
 import { partNotFound } from '../part/part-errors';
 import { PartStore } from '../part/PartStore';
 import { OfferStore } from './OfferStore';
+import { Currency } from './shown-price';
 import { VisibleOffer } from './VisibleOffer';
 
 class Input {
-  constructor(private readonly partId: string) {}
+  constructor(
+    private readonly partId: string,
+    private readonly currency: Currency,
+  ) {}
 
   getPartId(): string {
     return this.partId;
+  }
+
+  // The chosen currency, which every Shown Price is in.
+  getCurrency(): Currency {
+    return this.currency;
   }
 }
 
@@ -42,8 +51,9 @@ export { Output as ListVisibleOffersOfPartQueryOutput };
 
 // A Part's visible Offers, for anyone, with no Login: those that are not
 // Expired Offers and whose Vendor is active, by the rule in `visibility.ts`
-// (CAT-7, OFF-6, ACC-7). In-stock Offers come first, and within each group the
-// most recent Confirmation, until `pricing` orders them by price (OFF-11).
+// (CAT-7, OFF-6, ACC-7), each with its Shown Price in the chosen currency
+// (PRC-3). In-stock Offers come first, and within each group the lowest Shown
+// Price (OFF-11, PRC-4).
 @Injectable()
 export class ListVisibleOffersOfPartQuery {
   constructor(
@@ -60,7 +70,11 @@ export class ListVisibleOffersOfPartQuery {
     // Read once, so that which Offers are visible and how many days ago each
     // was confirmed are judged at the same moment.
     const now = new Date();
-    const offers = await this.offerStore.listVisibleByPart(partId, now);
+    const offers = await this.offerStore.listVisibleByPart(
+      partId,
+      input.getCurrency(),
+      now,
+    );
 
     return Either.map(offers, (found) => Output.of(found, now));
   }
