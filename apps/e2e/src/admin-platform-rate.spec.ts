@@ -40,21 +40,30 @@ function theDrawnBoard(page: Page): Locator {
   return page.getByTestId('platform-rate-drawn');
 }
 
-// The rate the board shows once its tiles have settled: the digit of each of
-// its four tiles, with no flap still turning and no digit still fading.
+// The rate the board shows once its tiles have settled, as the dashboard
+// writes it: the digit of each of its tiles, a blank one adding nothing, and
+// each comma it shows, with no flap still turning and no digit still fading.
 async function expectTheBoardToShow(page: Page, rate: number): Promise<void> {
   await expect(thePlatesWords(page)).toHaveText(`1 dollar is ${written(rate)} dinars`);
   await expect
     .poll(() =>
       theBoard(page).evaluate((board) => ({
-        digits: [...board.querySelectorAll('[data-testid="board-tile"]')]
-          .map((tile) => tile.getAttribute('data-digit'))
+        figure: [
+          ...board.querySelectorAll(
+            '[data-testid="board-tile"], [data-testid="board-comma"]:not([data-blank])',
+          ),
+        ]
+          .map((cell) =>
+            cell.getAttribute('data-testid') === 'board-comma'
+              ? ','
+              : cell.getAttribute('data-digit'),
+          )
           .join(''),
         turning: board.querySelectorAll('[data-leaf], [data-testid="board-tile-fading"]')
           .length,
       })),
     )
-    .toEqual({ digits: String(rate), turning: 0 });
+    .toEqual({ figure: written(rate), turning: 0 });
 }
 
 function thePlatesWords(page: Page): Locator {
@@ -73,8 +82,11 @@ function save(page: Page): Locator {
   return page.getByRole('button', { name: 'Save', exact: true });
 }
 
-// A rate of the test's own, in the API's limits, with as many digits as it
-// is asked for, and never the one given, so that the plate has to change.
+// A rate of the test's own, with as many digits as it is asked for, and
+// never the one given, so that the plate has to change. Its bounds, 500 and
+// 4,999, are within the API's limits on a rate, 500 to 5,000 (`PlatformRate.ts`),
+// copied here as a test may copy them: the tests import no code of the
+// platform's.
 function aRateOfOurOwn(digits: 3 | 4, not?: number): number {
   const [lowest, highest] = digits === 3 ? [500, 999] : [1000, 4999];
   for (;;) {
@@ -278,6 +290,26 @@ test('an empty field is sent for the API to judge, and its refusal is said besid
   );
   await expect(theField(page)).toHaveAttribute('aria-invalid', 'true');
   await expectTheBoardToShow(page, rate);
+});
+
+// The API's limits keep a rate under 10,000 today, so a rate of five digits
+// is given to the page as the API would answer it, should they ever change:
+// the board gains a tile, and groups the figure as the dashboard writes it.
+test('a rate of five digits gains a tile, its comma where the dashboard writes it', async ({
+  page,
+}) => {
+  await page.route(rateEndpoint, (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill({
+          json: { current: { iqdPerUsd: 12345, setAt: new Date().toISOString() } },
+        })
+      : route.fallback(),
+  );
+  await page.goto(platformRateUrl);
+
+  await expectTheBoardToShow(page, 12345);
+  await expect(theBoard(page).getByTestId('board-tile')).toHaveCount(5);
+  await expectNoSidewaysScroll(page);
 });
 
 test('with no Platform Rate the empty state says so and what Shoppers see, and the form is still there', async ({
