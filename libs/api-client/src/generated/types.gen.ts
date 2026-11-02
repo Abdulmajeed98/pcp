@@ -884,6 +884,21 @@ export type VisibleOfferVendorResponse = {
     name: string;
 };
 
+export type ShownPriceResponse = {
+    /**
+     * The chosen currency.
+     */
+    currency: 'USD' | 'IQD';
+    /**
+     * The amount, as decimal text: in USD with two decimal places, in IQD in whole dinars. A Quoted Price is as the Vendor entered it; a Converted Price is rounded to the nearest 250 IQD or whole dollar, and is never below one step.
+     */
+    amount: string;
+    /**
+     * Whether it is a Converted Price, derived from the Offer's Quoted Price in the other currency at the current Platform Rate, which a Shopper sees marked "≈".
+     */
+    converted: boolean;
+};
+
 export type VisibleOfferResponse = {
     /**
      * The Vendor.
@@ -897,6 +912,10 @@ export type VisibleOfferResponse = {
      * The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.
      */
     iqdPrice: number | null;
+    /**
+     * The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.
+     */
+    shownPrice: ShownPriceResponse | null;
     /**
      * Whether the Vendor has the Part in stock.
      */
@@ -1625,7 +1644,12 @@ export type ListVisibleOffersOfPartData = {
     path: {
         partId: string;
     };
-    query?: never;
+    query: {
+        /**
+         * The chosen currency, which each Offer's Shown Price is in and the Offers are ordered by.
+         */
+        currency: 'USD' | 'IQD';
+    };
     url: '/v1/parts/{partId}/offers';
 };
 

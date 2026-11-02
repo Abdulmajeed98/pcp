@@ -11,6 +11,12 @@ import { Offer } from '~/domain/offer/Offer';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import { OfferState } from '~/domain/offer/offer-state';
 import {
+  convertedPriceIn,
+  Currency,
+  ShownPrice,
+  WholeNumbers,
+} from '~/domain/offer/shown-price';
+import {
   CreateOfferParams,
   EditOfferParams,
   ListVendorsOffersParams,
@@ -33,6 +39,7 @@ import { part, PartRow } from '~/infrastructure/part/part.schema';
 import { partOf } from '~/infrastructure/part/part-of-row';
 import { holdingEveryWord } from '~/infrastructure/part/search-text';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
+import { platformRate } from '~/infrastructure/platform-rate/platform-rate.schema';
 import { vendor } from '~/infrastructure/vendor/vendor.schema';
 
 import { offer, offerHistory, OfferRow, oneOfferForAPart } from '../offer.schema';
@@ -69,6 +76,52 @@ function aboutToExpireAt(now: Date): SQL | undefined {
     gte(offer.confirmedAt, expiredIfConfirmedBefore(now)),
     lt(offer.confirmedAt, aboutToExpireIfConfirmedBefore(now)),
   );
+}
+
+// Whole numbers as the database computes them, in `bigint`, so that a price
+// at the top of the Offers' limits times the highest rate cannot overflow.
+// Its division of two positive whole numbers rounds down.
+const inTheDatabase: WholeNumbers<SQL> = {
+  of: (value) => sql`${value}::bigint`,
+  plus: (a, b) => sql`(${a} + ${b})`,
+  times: (a, b) => sql`(${a} * ${b})`,
+  over: (a, b) => sql`(${a} / ${b})`,
+  greatest: (a, b) => sql`greatest(${a}, ${b})`,
+};
+
+// An Offer's Quoted Price in a currency, in its unit, or null.
+function quotedPriceIn(currency: Currency): SQL {
+  return currency === 'USD' ? sql`${offer.usdPriceCents}` : sql`${offer.iqdPrice}`;
+}
+
+// An Offer's Shown Price in a currency, in its unit, as the database asks it
+// at a Platform Rate: its Quoted Price in that currency if it has one, else
+// its Converted Price by the rule in `shown-price.ts`, else null when there
+// is no rate. A query that uses it joins the current rate, read in the same
+// query as its Offers.
+function shownPriceIn(
+  currency: Currency,
+  iqdPerUsd: SQL,
+): {
+  amount: SQL<number | null>;
+  converted: SQL<boolean>;
+} {
+  const quoted = quotedPriceIn(currency);
+  const other = quotedPriceIn(currency === 'USD' ? 'IQD' : 'USD');
+  const converted = convertedPriceIn(
+    inTheDatabase,
+    currency,
+    sql`${other}::bigint`,
+    sql`${iqdPerUsd}::bigint`,
+  );
+  return {
+    amount: sql<
+      number | null
+    >`coalesce(${quoted}::bigint, case when ${iqdPerUsd} is not null and ${other} is not null then ${converted} end)`.mapWith(
+      Number,
+    ),
+    converted: sql<boolean>`${quoted} is null`,
+  };
 }
 
 // An Offer out of stock.
@@ -492,22 +545,42 @@ export class DatabaseOfferStore implements OfferStore {
 
   async listVisibleByPart(
     partId: string,
+    currency: Currency,
     now: Date,
   ): Promise<Either.Either<readonly VisibleOffer[], StructuredError>> {
     if (!couldBeIdentifier(partId)) return Either.right([]);
 
     try {
-      const rows = await this.databaseProvider
-        .getClient()
-        .select({ ...offerWithPart, vendorName: vendor.name })
+      const client = this.databaseProvider.getClient();
+      // The current Platform Rate, or no row when none has been set, read in
+      // the same query as the Offers, so that their Shown Prices and their
+      // order are all at one rate.
+      const currentRate = client
+        .select({ iqdPerUsd: platformRate.iqdPerUsd })
+        .from(platformRate)
+        .orderBy(desc(platformRate.setAt), desc(platformRate.id))
+        .limit(1)
+        .as('current_rate');
+      const shownPrice = shownPriceIn(currency, sql`${currentRate.iqdPerUsd}`);
+
+      const rows = await client
+        .select({
+          ...offerWithPart,
+          vendorName: vendor.name,
+          shownAmount: shownPrice.amount,
+          shownConverted: shownPrice.converted,
+        })
         .from(offer)
         .innerJoin(vendor, eq(vendor.id, offer.vendorId))
         .innerJoin(part, eq(part.id, offer.partId))
         .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .leftJoin(currentRate, sql`true`)
         .where(and(eq(offer.partId, partId), visibleOffer(now)))
-        // In stock first (OFF-11), until `pricing` orders by price.
+        // In stock first, then the lowest Shown Price as answered, after
+        // rounding, with none after the others (OFF-11, PRC-4).
         .orderBy(
           desc(offer.inStock),
+          sql`${shownPrice.amount} asc nulls last`,
           desc(offer.confirmedAt),
           asc(vendor.name),
           asc(offer.id),
@@ -517,7 +590,14 @@ export class DatabaseOfferStore implements OfferStore {
         rows.map((row) =>
           Either.map(
             toDomain(row.offer, row.part, row.photoId),
-            (found) => new VisibleOffer(found, row.vendorName),
+            (found) =>
+              new VisibleOffer(
+                found,
+                row.vendorName,
+                row.shownAmount === null
+                  ? null
+                  : new ShownPrice(currency, row.shownAmount, row.shownConverted),
+              ),
           ),
         ),
       );

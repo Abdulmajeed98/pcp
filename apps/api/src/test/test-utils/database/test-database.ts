@@ -122,6 +122,53 @@ export async function platformRateRows(): Promise<PlatformRateRow[]> {
   }
 }
 
+// A change to the Platform Rate and to every Offer's USD Quoted Price, made
+// in one transaction, which holds one of their tables locked from its start
+// until a read has had to wait for it, and only then commits: a read that
+// takes the rate and the Offers in two queries takes one of them before the
+// change and the other after, where a read in one query takes both after.
+// No endpoint changes both at once, so this is the one way a test sees
+// whether an answer mixes a rate with Offers of another moment.
+export async function changeTheRateAndTheOffersWhileReading<T>(
+  change: {
+    iqdPerUsd: number;
+    usdPriceCents: number;
+    lockedTable: 'offer' | 'platform_rate';
+  },
+  read: () => Promise<T>,
+): Promise<T> {
+  const changing = new Client(connectionOf(testDatabaseSettings()));
+  const watching = new Client(connectionOf(testDatabaseSettings()));
+  await changing.connect();
+  await watching.connect();
+  try {
+    await changing.query('BEGIN');
+    await changing.query(`LOCK TABLE ${change.lockedTable} IN ACCESS EXCLUSIVE MODE`);
+    await changing.query(
+      `INSERT INTO platform_rate (iqd_per_usd, set_at, set_by) VALUES ($1, now(), 'test')`,
+      [change.iqdPerUsd],
+    );
+    await changing.query('UPDATE offer SET usd_price_cents = $1', [change.usdPriceCents]);
+
+    const reading = read();
+    // Until the read waits for the lock.
+    for (let tries = 0; ; tries += 1) {
+      const { rows } = await watching.query<{ waiting: number }>(
+        'SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted',
+      );
+      if (rows[0].waiting > 0) break;
+      if (tries > 200) throw new Error('No read waited for the locked table.');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    await changing.query('COMMIT');
+
+    return await reading;
+  } finally {
+    await changing.end();
+    await watching.end();
+  }
+}
+
 // A fault planted in the database for as long as the function runs: a rule
 // that no Vendor meets, checked when a Vendor is stored and not against
 // those stored already, so that creating or editing one is refused.

@@ -1218,6 +1218,17 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which each Offer's Shown Price is in and the Offers are ordered by.",
+            "schema": {
+              "example": "IQD",
+              "type": "string",
+              "enum": ["USD", "IQD"]
+            }
           }
         ],
         "responses": {
@@ -1246,7 +1257,7 @@
           }
         },
         "security": [],
-        "summary": "A Part's visible Offers: not Expired Offers, of active Vendors only, in-stock first and then the most recent Confirmation first, each with how many days ago it was confirmed",
+        "summary": "A Part's visible Offers: not Expired Offers, of active Vendors only, each with its Shown Price in the chosen currency and how many days ago it was confirmed, in-stock first and then the lowest Shown Price first, with Offers that have none after the others",
         "tags": ["PartOffers"]
       }
     },
@@ -2856,6 +2867,28 @@
         },
         "required": ["id", "name"]
       },
+      "ShownPriceResponse": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "description": "The chosen currency.",
+            "enum": ["USD", "IQD"],
+            "example": "IQD"
+          },
+          "amount": {
+            "type": "string",
+            "description": "The amount, as decimal text: in USD with two decimal places, in IQD in whole dinars. A Quoted Price is as the Vendor entered it; a Converted Price is rounded to the nearest 250 IQD or whole dollar, and is never below one step.",
+            "example": "551250"
+          },
+          "converted": {
+            "type": "boolean",
+            "description": "Whether it is a Converted Price, derived from the Offer's Quoted Price in the other currency at the current Platform Rate, which a Shopper sees marked \"≈\".",
+            "example": true
+          }
+        },
+        "required": ["currency", "amount", "converted"]
+      },
       "VisibleOfferResponse": {
         "type": "object",
         "properties": {
@@ -2878,6 +2911,16 @@
             "description": "The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.",
             "nullable": true,
             "example": 525000
+          },
+          "shownPrice": {
+            "description": "The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
           },
           "inStock": {
             "type": "boolean",
@@ -2904,6 +2947,7 @@
           "vendor",
           "usdPrice",
           "iqdPrice",
+          "shownPrice",
           "inStock",
           "warrantyMonths",
           "confirmedAt",

@@ -4,6 +4,7 @@ import { Either, Option } from 'effect';
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
 import { OfferState } from './offer-state';
+import { Currency } from './shown-price';
 import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 import { VisibleOffer } from './VisibleOffer';
 
@@ -295,12 +296,17 @@ export abstract class OfferStore {
   ): Promise<Either.Either<number, StructuredError>>;
 
   // The Part's visible Offers at now by the API's clock, by the rule in
-  // `visibility.ts`: not Expired Offers, and of active Vendors only. In-stock
-  // Offers come first, and within each group the most recent Confirmation
-  // first, then by the Vendor's name and the Offer's identifier, so that the
-  // order is the same at every read.
+  // `visibility.ts`: not Expired Offers, and of active Vendors only. Each has
+  // its Shown Price in the currency, converted by the rule in
+  // `shown-price.ts` at the current Platform Rate, which is read in the same
+  // query as the Offers, so that one answer never mixes two rates. In-stock
+  // Offers come first, and within each group the lowest Shown Price, compared
+  // as answered, after rounding, with Offers that have none after the
+  // others; then the most recent Confirmation, the Vendor's name and the
+  // Offer's identifier, so that the order is the same at every read.
   abstract listVisibleByPart(
     partId: string,
+    currency: Currency,
     now: Date,
   ): Promise<Either.Either<readonly VisibleOffer[], StructuredError>>;
 
