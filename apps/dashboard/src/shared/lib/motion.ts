@@ -34,6 +34,14 @@ export function aFade(way: 'in' | 'out'): { duration: number; easing: string } {
   return { duration: way === 'in' ? 200 : 150, easing: curve('ease-out') };
 }
 
+// How a tile of the Platform Rate's board flips (DESIGN.md's Motion 10):
+// each half of the flap turns in 150 ms on the out curve, the bottom after
+// the top, and each tile 40 ms after the one before it. With reduced motion
+// the board does not flip, and its tiles fade instead (`aFade`).
+export function aFlap(): { duration: number; easing: string; stagger: number } {
+  return { duration: 150, easing: curve('ease-out'), stagger: 40 };
+}
+
 // How a scroll that keeps something in sight runs: smooth at full motion,
 // at once with reduced motion, which drops a movement of the whole screen.
 export function aScroll(): ScrollBehavior {

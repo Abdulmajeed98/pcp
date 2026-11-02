@@ -30,10 +30,31 @@ function heading(page: Page): Locator {
   return page.getByRole('heading', { level: 1, name: 'Platform Rate' });
 }
 
-// The screen's one leading plate, as it is drawn, and the words a reader is
-// read in its place; and the day beside it.
-function thePlate(page: Page): Locator {
+// The screen's board, as it is drawn, and the words a reader is read in its
+// place; and the day beside it.
+function theBoard(page: Page): Locator {
+  return page.getByTestId('platform-rate-plate');
+}
+
+function theDrawnBoard(page: Page): Locator {
   return page.getByTestId('platform-rate-drawn');
+}
+
+// The rate the board shows once its tiles have settled: the digit of each of
+// its four tiles, with no flap still turning and no digit still fading.
+async function expectTheBoardToShow(page: Page, rate: number): Promise<void> {
+  await expect(thePlatesWords(page)).toHaveText(`1 dollar is ${written(rate)} dinars`);
+  await expect
+    .poll(() =>
+      theBoard(page).evaluate((board) => ({
+        digits: [...board.querySelectorAll('[data-testid="board-tile"]')]
+          .map((tile) => tile.getAttribute('data-digit'))
+          .join(''),
+        turning: board.querySelectorAll('[data-leaf], [data-testid="board-tile-fading"]')
+          .length,
+      })),
+    )
+    .toEqual({ digits: String(rate), turning: 0 });
 }
 
 function thePlatesWords(page: Page): Locator {
@@ -152,18 +173,21 @@ test('the Admin sets a rate, and the plate shows it with today’s date, with no
   const before = aRateOfOurOwn(4);
   await setTheRate(request, authorization, before);
   await page.goto(platformRateUrl);
-  await expect(thePlate(page)).toHaveText(`1 $ = ${written(before)} IQD`);
+  await expectTheBoardToShow(page, before);
   await markThePage(page);
 
   const rate = aRateOfOurOwn(4, before);
   await theField(page).fill(String(rate));
+  await expect(
+    page.getByTestId('on-the-board-after-save'),
+    'the rate as typed is shown as it will go up on the board',
+  ).toHaveText(`On the board after Save${written(rate)} IQD`);
   await save(page).click();
 
-  await expect(thePlate(page)).toHaveText(`1 $ = ${written(rate)} IQD`);
-  await expect(thePlatesWords(page)).toHaveText(`1 dollar is ${written(rate)} dinars`);
+  await expectTheBoardToShow(page, rate);
   await expect(
-    thePlate(page),
-    'the drawn figures are hidden from a reader',
+    theDrawnBoard(page),
+    'the drawn board is hidden from a reader',
   ).toHaveAttribute('aria-hidden', 'true');
   await expect(theDaySet(page)).toHaveText(`Set ${await today(page)}`);
   await expect(theField(page), 'the field is emptied for the next rate').toHaveValue('');
@@ -188,7 +212,7 @@ test('a rate typed in Arabic-Indic digits with a separator is saved as its value
   await save(page).click();
 
   expect((await sent).postDataJSON()).toEqual({ iqdPerUsd: rate });
-  await expect(thePlate(page)).toHaveText(`1 $ = ${written(rate)} IQD`);
+  await expectTheBoardToShow(page, rate);
 });
 
 test('a rate out of range is refused beside the field, and the plate keeps the current rate; what is not a number is refused before it is sent', async ({
@@ -198,7 +222,7 @@ test('a rate out of range is refused beside the field, and the plate keeps the c
   const rate = aRateOfOurOwn(4);
   await setTheRate(request, authorization, rate);
   await page.goto(platformRateUrl);
-  await expect(thePlate(page)).toHaveText(`1 $ = ${written(rate)} IQD`);
+  await expectTheBoardToShow(page, rate);
 
   const answered = page.waitForResponse(
     (response) => response.url() === rateEndpoint && response.request().method() === 'PUT',
@@ -214,7 +238,7 @@ test('a rate out of range is refused beside the field, and the plate keeps the c
     /The rate is outside the allowed range\./,
   );
   await expect(theField(page)).toBeFocused();
-  await expect(thePlate(page)).toHaveText(`1 $ = ${written(rate)} IQD`);
+  await expectTheBoardToShow(page, rate);
 
   let sent = false;
   page.on('request', (each) => {
@@ -224,7 +248,7 @@ test('a rate out of range is refused beside the field, and the plate keeps the c
   await save(page).click();
   await expect(refusal).toHaveText('Enter a number, such as 1,575.');
   expect(sent, 'nothing that is not a number is sent').toBe(false);
-  await expect(thePlate(page)).toHaveText(`1 $ = ${written(rate)} IQD`);
+  await expectTheBoardToShow(page, rate);
 });
 
 test('with no Platform Rate the empty state says so and what Shoppers see, and the form is still there', async ({
@@ -241,7 +265,7 @@ test('with no Platform Rate the empty state says so and what Shoppers see, and t
   await expect(empty).toContainText(
     'Until one is set, an Offer quoted in one currency is shown to Shoppers in that currency only.',
   );
-  await expect(thePlate(page)).toHaveCount(0);
+  await expect(theBoard(page)).toHaveCount(0);
   await expect(theField(page)).toBeVisible();
   await expect(save(page)).toBeVisible();
   await expectNoSidewaysScroll(page);
@@ -253,7 +277,7 @@ test('the screen meets the automated part of WCAG 2.2 level AA, in light and in 
 }) => {
   await setTheRate(request, authorization, aRateOfOurOwn(4));
   await page.goto(platformRateUrl);
-  await expect(thePlate(page)).toBeVisible();
+  await expect(theBoard(page)).toBeVisible();
   await theField(page).fill('20000');
   await save(page).click();
   await expect(page.getByTestId('rate-refusal')).toBeVisible();
@@ -265,27 +289,34 @@ test('the screen meets the automated part of WCAG 2.2 level AA, in light and in 
   await expectAccessible(page);
 });
 
-// What a film of the screen sees in each frame: the width of the rate's
-// figure, the top of the form, and how opaque the old and the new figures
-// are while they change.
-interface PlateFrame {
-  figureWidth: number | null;
+// What a film of the screen sees in each frame: the board's width, the top
+// of the form, the drawn height of the last tile's falling and landing
+// leaves while its flap turns, and how opaque its old digit is while it
+// fades with reduced motion.
+interface BoardFrame {
+  boardWidth: number | null;
   formTop: number | null;
-  shown: number | null;
-  leaving: number | null;
+  falling: number | null;
+  landing: number | null;
+  fading: number | null;
 }
 
-function lookAtThePlate(): PlateFrame {
-  const figure = document.querySelector('[data-testid="rate-figure"]');
-  const opacityOf = (element: Element | null | undefined) =>
-    element ? Number(getComputedStyle(element).opacity) : null;
+function lookAtTheBoard(): BoardFrame {
+  const tiles = document.querySelectorAll('[data-testid="board-tile"]');
+  const last = tiles[tiles.length - 1];
+  const heightOf = (element: Element | null | undefined) =>
+    element ? element.getBoundingClientRect().height : null;
+  const fading = last?.querySelector('[data-testid="board-tile-fading"]');
   return {
-    figureWidth: figure?.getBoundingClientRect().width ?? null,
+    boardWidth:
+      document.querySelector('[data-testid="platform-rate-plate"]')?.getBoundingClientRect()
+        .width ?? null,
     formTop:
       document.querySelector('[data-testid="platform-rate-form"]')?.getBoundingClientRect()
         .top ?? null,
-    shown: opacityOf(figure?.querySelector('[data-shown]')),
-    leaving: opacityOf(figure?.querySelector('[data-leaving]')),
+    falling: heightOf(last?.querySelector('[data-leaf="top"]')),
+    landing: heightOf(last?.querySelector('[data-leaf="bottom"]')),
+    fading: fading ? Number(getComputedStyle(fading).opacity) : null,
   };
 }
 
@@ -312,46 +343,65 @@ function seen(values: (number | null)[]): number[] {
   return values.flatMap((value) => (value === null ? [] : [value]));
 }
 
+// Two rates for a film, a 3-digit one and a 4-digit one whose last digits
+// differ, so that the last tile flips and the first comes out of blank.
+function twoRatesForAFilm(): [number, number] {
+  const before = aRateOfOurOwn(3);
+  for (;;) {
+    const after = aRateOfOurOwn(4);
+    if (after % 10 !== before % 10) return [before, after];
+  }
+}
+
 for (const reducedMotion of ['no-preference', 'reduce'] as const) {
-  test(`the plate takes a new rate with no snap: the old figure fades under the new one and its width follows (${reducedMotion})`, async ({
+  test(`the board takes a new rate with no snap: each changed tile ${reducedMotion === 'reduce' ? 'fades to its new digit' : 'flips, its top falling and then its bottom landing'}, and the board's width holds (${reducedMotion})`, async ({
     page,
     request,
   }) => {
     await page.emulateMedia({ reducedMotion });
-    await setTheRate(request, authorization, aRateOfOurOwn(3));
+    const [before, rate] = twoRatesForAFilm();
+    await setTheRate(request, authorization, before);
     await page.goto(platformRateUrl);
-    await expect(thePlate(page)).toBeVisible();
-    const rate = aRateOfOurOwn(4);
+    await expectTheBoardToShow(page, before);
     await theField(page).fill(String(rate));
     await untilStill(page);
 
     // Watched four times slower, as the owner asked them to be watched.
-    const frames = await film(page, lookAtThePlate, () => save(page).click());
-    await expect(thePlate(page)).toHaveText(`1 $ = ${written(rate)} IQD`);
+    const frames = await film(page, lookAtTheBoard, () => save(page).click());
+    await expectTheBoardToShow(page, rate);
 
-    const widths = frames.map(({ at, drawn }) => ({ at, value: drawn.figureWidth }));
-    const drawnWidths = seen(widths.map(({ value }) => value));
+    const widths = seen(frames.map(({ drawn }) => drawn.boardWidth));
     expect(
-      (drawnWidths.at(-1) ?? 0) - (drawnWidths[0] ?? 0),
-      'the figure grew by a digit and a comma',
-    ).toBeGreaterThan(15);
-    expect(snapsOf('the figure’s width', widths)).toEqual([]);
-
-    const leaving = seen(frames.map(({ drawn }) => drawn.leaving));
-    expect(
-      leaving.some((opacity) => opacity > 0.1 && opacity < 0.9),
-      'the old figure fades out',
-    ).toBe(true);
-    const shown = seen(frames.map(({ drawn }) => drawn.shown));
-    expect(
-      shown.some((opacity) => opacity > 0.1 && opacity < 0.9),
-      'the new figure fades in',
-    ).toBe(true);
+      Math.max(...widths) - Math.min(...widths),
+      'the board keeps its width',
+    ).toBeLessThan(1);
     const tops = seen(frames.map(({ drawn }) => drawn.formTop));
     expect(Math.max(...tops) - Math.min(...tops), 'the form holds still').toBeLessThan(1);
+
+    const falling = frames.map(({ at, drawn }) => ({ at, value: drawn.falling }));
+    const landing = frames.map(({ at, drawn }) => ({ at, value: drawn.landing }));
+    const fading = seen(frames.map(({ drawn }) => drawn.fading));
+    const halfway = (values: { value: number | null }[]) => {
+      const drawn = seen(values.map(({ value }) => value));
+      const whole = Math.max(...drawn);
+      return drawn.some((height) => height > whole * 0.15 && height < whole * 0.85);
+    };
+    if (reducedMotion === 'reduce') {
+      expect(seen(falling.map(({ value }) => value)), 'no flap turns').toEqual([]);
+      expect(
+        fading.some((opacity) => opacity > 0.1 && opacity < 0.9),
+        'the old digit fades out',
+      ).toBe(true);
+    } else {
+      expect(halfway(falling), 'the top half falls through every height').toBe(true);
+      expect(halfway(landing), 'the bottom half lands through every height').toBe(true);
+      expect(snapsOf('the falling half', falling)).toEqual([]);
+      expect(snapsOf('the landing half', landing)).toEqual([]);
+      expect(fading, 'nothing fades in place of the flip').toEqual([]);
+    }
   });
 
-  test(`the first rate takes the empty state’s place with no snap, the form rising (${reducedMotion})`, async ({
+  test(`the first rate takes the empty state’s place with no snap, the form below following (${reducedMotion})`, async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion });
@@ -362,15 +412,16 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     await theField(page).fill(String(rate));
     await untilStill(page);
 
-    const frames = await film(page, lookAtThePlate, () => save(page).click());
-    await expect(thePlate(page)).toHaveText(`1 $ = ${written(rate)} IQD`);
+    const frames = await film(page, lookAtTheBoard, () => save(page).click());
+    await expectTheBoardToShow(page, rate);
     await expect(page.getByTestId('no-platform-rate')).toHaveCount(0);
 
     const tops = frames.map(({ at, drawn }) => ({ at, value: drawn.formTop }));
     const drawnTops = seen(tops.map(({ value }) => value));
-    expect((drawnTops[0] ?? 0) - (drawnTops.at(-1) ?? 0), 'the form rose').toBeGreaterThan(
-      40,
-    );
+    expect(
+      Math.abs((drawnTops[0] ?? 0) - (drawnTops.at(-1) ?? 0)),
+      'the form moved with the field',
+    ).toBeGreaterThan(10);
     expect(snapsOf('the form’s top', tops)).toEqual([]);
   });
 }
