@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { cn } from 'cn';
 import {
+  ArrowRightLeftIcon,
   ClipboardListIcon,
   ClockAlertIcon,
   type LucideIcon,
@@ -27,6 +28,7 @@ const sections: { to: string; name: string; Icon: LucideIcon }[] = [
     Icon: ClipboardListIcon,
   },
   { to: '/expiring-offers', name: 'Expiring Offers', Icon: ClockAlertIcon },
+  { to: '/platform-rate', name: 'Platform Rate', Icon: ArrowRightLeftIcon },
 ];
 
 // The surface's name. No logo is decided (PRODUCT.md's Brand Commitments).

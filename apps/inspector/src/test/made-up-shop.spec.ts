@@ -3,12 +3,13 @@ import type { VendorsOffersPageResponse } from '@pcp/api-client';
 
 import {
   answerFromTheMadeUpShop,
+  madeUpShop,
   catalogSearchOfTheShop,
   listsTheVendors,
   partsWithTheShopsOffers,
   vendorsWithTheShops,
 } from '../made-up-shop.ts';
-import { aShopFromTheCatalog, now } from './catalog-stand-in.ts';
+import { aShopFromTheCatalog, catalogPartsOfTheShop, now } from './catalog-stand-in.ts';
 
 const shop = aShopFromTheCatalog();
 const vendorId = shop.vendor.id;
@@ -375,5 +376,34 @@ describe("the made-up shop's other answers", () => {
     ['GET', '/v1/parts/11111111-1111-4111-8111-111111111111'],
   ])('leave %s %s to the API', (method, path) => {
     expect(answerTo(method, path)).toBeUndefined();
+  });
+});
+
+describe("the made-up shop's Platform Rate", () => {
+  it('is the rate of 1,575 dinars to the dollar, set three days before, so that the Platform Rate screen shows its plate', () => {
+    expect(answerTo('GET', '/v1/platform-rate')).toEqual({
+      status: 200,
+      body: {
+        current: {
+          iqdPerUsd: 1575,
+          setAt: new Date(now.getTime() - 3 * aDay).toISOString(),
+        },
+      },
+    });
+  });
+
+  it('is none for a shop made without one, so that the screen shows its empty state', () => {
+    const withoutARate = madeUpShop(now, catalogPartsOfTheShop(), { platformRate: false });
+
+    expect(
+      answerFromTheMadeUpShop(withoutARate, now, {
+        method: 'GET',
+        path: '/v1/platform-rate',
+      }),
+    ).toEqual({ status: 200, body: { current: null } });
+  });
+
+  it('is never set: a new rate is refused, as every write is', () => {
+    expect(answerTo('PUT', '/v1/platform-rate')?.status).toBe(405);
   });
 });

@@ -19,6 +19,7 @@ export { AlertDialogRefusal } from './alert-dialog-refusal';
 export { BackLink } from './back-link';
 export { Button, buttonVariants } from './button';
 export { BusyLabel } from './busy-label';
+export { ChangingInPlace } from './changing-in-place';
 export { DirectionProvider, useDirection } from './direction';
 export {
   Empty,
