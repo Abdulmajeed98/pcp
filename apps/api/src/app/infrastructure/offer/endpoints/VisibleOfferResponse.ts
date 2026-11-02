@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { type Currency, currencies, ShownPrice } from '~/domain/offer/shown-price';
+import { type Currency, currencies, currencyFacts } from '~/domain/currency/currency';
+import { ShownPrice } from '~/domain/offer/shown-price';
 import { VisibleOffer } from '~/domain/offer/VisibleOffer';
 
-import { dollarsTextOf, usdPriceTextOf } from './OfferResponse';
+import { amountTextOf, usdPriceTextOf } from './OfferResponse';
 
 // The Vendor of a visible Offer, as far as a Shopper may know it here.
 export class VisibleOfferVendorResponse {
@@ -32,7 +33,12 @@ export class VisibleOfferVendorResponse {
 // The price an Offer shows in the chosen currency, as the API computed it, so
 // that no frontend converts a price or rounds one (PRC-3).
 export class ShownPriceResponse {
-  @ApiProperty({ description: 'The chosen currency.', enum: currencies, example: 'IQD' })
+  @ApiProperty({
+    description: 'The chosen currency.',
+    enum: currencies,
+    enumName: 'Currency',
+    example: 'IQD',
+  })
   readonly currency: Currency;
 
   @ApiProperty({
@@ -51,10 +57,10 @@ export class ShownPriceResponse {
 
   private constructor(shown: ShownPrice) {
     this.currency = shown.getCurrency();
-    this.amount =
-      shown.getCurrency() === 'USD'
-        ? dollarsTextOf(shown.getAmount())
-        : String(shown.getAmount());
+    this.amount = amountTextOf(
+      shown.getAmount(),
+      currencyFacts[shown.getCurrency()].unitsInOne,
+    );
     this.converted = shown.isConverted();
   }
 

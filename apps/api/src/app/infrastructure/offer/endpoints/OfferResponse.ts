@@ -1,12 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { centsInADollar } from '~/domain/currency/currency';
 import { Offer } from '~/domain/offer/Offer';
 import { PartSummaryResponse } from '~/infrastructure/part/endpoints/PartSummaryResponse';
 
+// An amount in whole units of a currency, of which `unitsInOne` make one of
+// it, as decimal text, so that no frontend meets a binary fraction: with as
+// many decimal places as a unit needs, "349.99" for cents, and none for whole
+// dinars, "1575000".
+export function amountTextOf(amount: number, unitsInOne: number): string {
+  if (unitsInOne === 1) return String(amount);
+  const places = String(unitsInOne - 1).length;
+  return `${Math.floor(amount / unitsInOne)}.${String(amount % unitsInOne).padStart(places, '0')}`;
+}
+
 // A USD price in whole cents as a decimal number with two decimal places,
-// "349.99", so that no frontend meets a binary fraction.
+// "349.99".
 export function dollarsTextOf(cents: number): string {
-  return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`;
+  return amountTextOf(cents, centsInADollar);
 }
 
 // The same, or null for no price.

@@ -1,7 +1,7 @@
 'use client';
 
 import type { Language } from '@pcp/i18n';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 import type { Currency } from '@/shared/currency';
 
@@ -13,13 +13,15 @@ import type { Currency } from '@/shared/currency';
 //
 // A choice is a button of a plain form, which asks the server to remember it.
 // The server's answer writes the choice down, for a year, and returns the
-// Shopper to the page they were on, in its language. It works before any
+// Shopper to the page they were on, with its query, in its language. It works before any
 // script has loaded, and Safari's seven days for what a page's script writes
 // do not apply. The choice is not in the page's address: a link opens in the
 // currency of whoever opens it.
 //
 // It is a component for the browser only because it asks for the address of
-// the page that is shown, as the language switch does. The server renders it
+// the page that is shown, as the language switch does, and its query. Every
+// Shopper page is drawn for each request, since the frame reads the chosen
+// currency from it, so the server knows the query too. The server renders it
 // as well, so the form is in the page as it arrives. The "not found" screen is
 // the exception, because the browser draws that whole screen by script.
 //
@@ -37,8 +39,9 @@ export function CurrencySwitch({
   choices: { currency: Currency; name: string }[];
 }) {
   // The first part of an address is the page's language, and the rest is the
-  // page.
-  const page = usePathname().replace(/^\/[^/]+/, '');
+  // page, with its query.
+  const query = useSearchParams().toString();
+  const page = `${usePathname().replace(/^\/[^/]+/, '')}${query === '' ? '' : `?${query}`}`;
 
   return (
     // The address of `app/[locale]/currency/route.ts`, which answers it.

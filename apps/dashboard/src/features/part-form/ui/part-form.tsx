@@ -4,7 +4,7 @@ import { type TransitionEvent, useRef } from 'react';
 import { type FieldPath, FormProvider, useForm } from 'react-hook-form';
 
 import { setRefusalsBesideTheirFields } from '@/shared/api';
-import { aScroll } from '@/shared/lib';
+import { aScroll, describedBy } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -28,7 +28,7 @@ import {
   partFieldsOf,
 } from '../model/form-values';
 import { fieldOf, messageOf, partFieldMessages, whyNotSaved } from '../model/refusals';
-import { describedBy, errorOf } from './field-names';
+import { errorOf } from './field-names';
 import { NameField } from './name-field';
 import { SpecificationField } from './specification-field';
 import { TextListField } from './text-list-field';

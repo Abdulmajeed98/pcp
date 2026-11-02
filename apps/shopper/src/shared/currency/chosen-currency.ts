@@ -1,11 +1,14 @@
+import type { Currency } from '@pcp/api-client';
 import { cookies } from 'next/headers';
 
-// The two currencies a Shopper can see every price in, by the codes the API
-// knows them by. Dinars come first: a Shopper sees prices in dinars until they
-// choose dollars (PRC-2).
-export const currencies = ['IQD', 'USD'] as const;
+export type { Currency };
 
-export type Currency = (typeof currencies)[number];
+// The two currencies a Shopper can see every price in, in the order the
+// switch offers them. `Currency` is the API's own, from the generated client,
+// so the codes are the API's, and a code it does not know fails the type
+// check. Dinars come first: a Shopper sees prices in dinars until they choose
+// dollars (PRC-2).
+export const currencies = ['IQD', 'USD'] as const satisfies readonly Currency[];
 
 // The currency a Shopper starts with, and the one read whenever the browser
 // holds no choice the platform knows.

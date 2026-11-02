@@ -4,6 +4,7 @@ import { ArrowRightLeftIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { WhyNotAnswered } from '@/shared/api';
+import { dayWritten } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -20,13 +21,6 @@ import {
 import { usePlatformRate, useSetPlatformRate } from '../api/platform-rate';
 import { RateBoard } from './rate-board';
 import { RateForm } from './rate-form';
-
-// The day a rate was set, in English, with Western digits, in the Admin's
-// own time zone, as a Part's page writes the day it last changed.
-const day = new Intl.DateTimeFormat('en-GB', {
-  dateStyle: 'long',
-  numberingSystem: 'latn',
-});
 
 // The Admin console's Platform Rate (PRC-1): the single number of IQD per
 // USD that every Converted Price follows, which the Admin sets by hand to
@@ -102,7 +96,7 @@ export function PlatformRatePage() {
 // sentence on what it does. A new day fades in over the old as its width
 // follows, as Confirm all's words change.
 function Board({ current }: { current: CurrentPlatformRateResponse }) {
-  const setOn = day.format(new Date(current.setAt));
+  const setOn = dayWritten(current.setAt);
 
   return (
     <div className="flex flex-col items-center gap-4 text-center lg:gap-5">

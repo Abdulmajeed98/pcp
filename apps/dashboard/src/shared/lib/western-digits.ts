@@ -2,8 +2,8 @@
 // decimal separator as Western ones: Arabic-Indic digits, ٠ to ٩, and
 // Eastern Arabic-Indic ones, ۰ to ۹, become 0 to 9, and the Arabic decimal
 // separator, ٫, becomes a point. Everything else is left as it was, for the
-// caller to read as it needs: an Offer's price drops its thousands
-// separators, and a map location takes the Arabic comma as a comma.
+// caller to read as it needs: a number drops its thousands separators
+// (`westernNumberIn`), and a map location takes the Arabic comma as a comma.
 const western: Record<string, string> = { '٫': '.' };
 for (let digit = 0; digit <= 9; digit++) {
   western[String.fromCharCode(0x0660 + digit)] = String(digit);
@@ -12,4 +12,16 @@ for (let digit = 0; digit <= 9; digit++) {
 
 export function westernDigitsIn(text: string): string {
   return text.replace(/[٠-٩۰-۹٫]/g, (character) => western[character] ?? character);
+}
+
+// A number as a keyboard writes it, as the API reads it: Western digits and
+// a point, and nothing between the digits. Someone may group thousands with a
+// comma, the Arabic thousands separator, ٬, the Arabic comma, ،, or a space
+// of any width, and these are dropped, as an Offer's price and the Platform
+// Rate take them. The API takes numbers in Western digits only, and says what
+// is wrong with what is left.
+const grouping = /[,٬،\s]/gu;
+
+export function westernNumberIn(typed: string): string {
+  return westernDigitsIn(typed).replace(grouping, '');
 }

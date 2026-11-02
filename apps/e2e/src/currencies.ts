@@ -10,7 +10,8 @@ import { shopperUrl } from './platform';
 
 // The two currencies a Shopper chooses between, by the code the platform
 // knows each by, which is the same in every language. Dinars are the first a
-// Shopper sees (PRC-2).
+// Shopper sees (PRC-2). A copy of the API's `Currency`, kept on purpose: the
+// tests import no code of the platform's, so that they check it from outside.
 export const currencies = ['IQD', 'USD'] as const;
 
 export type Currency = (typeof currencies)[number];

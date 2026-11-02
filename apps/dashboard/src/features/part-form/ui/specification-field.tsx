@@ -2,7 +2,7 @@ import type { SpecificationResponse } from '@pcp/api-client';
 import { useFormContext } from 'react-hook-form';
 
 import { labelOf } from '@/entities/category';
-
+import { describedBy } from '@/shared/lib';
 import {
   Field,
   FieldError,
@@ -15,7 +15,7 @@ import {
 } from '@/shared/ui';
 
 import type { PartFormValues } from '../model/form-values';
-import { describedBy, errorOf, idOf } from './field-names';
+import { errorOf, idOf } from './field-names';
 import { NeededMark } from './needed-mark';
 import { RowsField } from './rows-field';
 import { TextListField } from './text-list-field';

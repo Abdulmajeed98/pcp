@@ -8,7 +8,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 // covers it), and it is taken out once that transition has ended, whatever
 // its speed, or at the latest after `atTheLatest`, should the transition
 // never end (a transition that does not run, as when the browser had not
-// drawn its start, ends nothing).
+// drawn its start, ends nothing). Content that changes in place, the
+// Platform Rate's board and `ChangingInPlace`, leaves by a movement of the
+// Web Animations API instead, and is taken out once that has finished, by
+// the same rule and with the same fallback (`useKeptWhileChanging`).
 
 // How long a leaving thing waits at most for its transition to end: longer
 // than any leaving watched four times slower.
@@ -32,16 +35,14 @@ export function spaceClosed({ propertyName, target, currentTarget }: Ended): boo
 }
 
 // The things now on their way out, by key, each taken out by `takeOut` once
-// the transition that `ended` recognises has ended on its element (the
-// listener that `whenEnded(key)` gives it), or after `atTheLatest`. Several
-// that end in one frame are taken out together in the next one, such as
-// every row of a list made not known. `takeOut` may be told of a key again,
-// and of one already gone, and does nothing then.
-export function useTakenOutOnceEnded<Key>(
+// it is done with, as the function this answers is told of its key, or after
+// `atTheLatest`. Several done with in one frame are taken out together in the
+// next one, such as every row of a list made not known. `takeOut` may be
+// told of a key again, and of one already gone, and does nothing then.
+export function useTakenOutOnceDone<Key>(
   leaving: readonly Key[],
   takeOut: (keys: Key[]) => void,
-  ended: (event: Ended) => boolean = spaceClosed,
-): (key: Key) => (event: Ended) => void {
+): (key: Key) => void {
   const latest = useRef(takeOut);
   useLayoutEffect(() => {
     latest.current = takeOut;
@@ -75,12 +76,80 @@ export function useTakenOutOnceEnded<Key>(
     return () => timers.forEach(clearTimeout);
   });
 
+  return done;
+}
+
+// The same, for things that leave by a CSS transition: each is taken out once
+// the transition that `ended` recognises has ended on its element (the
+// listener that `whenEnded(key)` gives it), or after `atTheLatest`.
+export function useTakenOutOnceEnded<Key>(
+  leaving: readonly Key[],
+  takeOut: (keys: Key[]) => void,
+  ended: (event: Ended) => boolean = spaceClosed,
+): (key: Key) => (event: Ended) => void {
+  const done = useTakenOutOnceDone(leaving, takeOut);
   return useCallback(
     (key: Key) => (event: Ended) => {
       if (ended(event)) done(key);
     },
     [done, ended],
   );
+}
+
+// What was shown for a key, such as a figure or which state a screen is in.
+export interface Kept<Value> {
+  key: string;
+  value: Value;
+}
+
+// What was shown before a change, kept while it leaves, by the order the
+// changes came in.
+export interface KeptLeaving<Value> extends Kept<Value> {
+  id: number;
+}
+
+// Content that changes in place: what is shown for a key that changes, and
+// what was shown for each key before it, still on its way out, the newest
+// last, as the Platform Rate's board tile and `ChangingInPlace` keep them. A
+// new key, seen while rendering, starts what was shown leaving, as React lets
+// a component adjust its state to its props; the value for a key is taken as
+// it was first given for it. `left(id)` is told once a leaving one's own
+// movement has run, and takes it out with every one that began to leave
+// before it, which it has covered; each is taken out after `atTheLatest`
+// should its movement never finish.
+export function useKeptWhileChanging<Value>(
+  key: string,
+  value: Value,
+): {
+  shown: Kept<Value>;
+  leaving: readonly KeptLeaving<Value>[];
+  left: (id: number) => void;
+} {
+  const [kept, setKept] = useState<{
+    shown: Kept<Value>;
+    leaving: KeptLeaving<Value>[];
+    changes: number;
+  }>({ shown: { key, value }, leaving: [], changes: 0 });
+  if (key !== kept.shown.key) {
+    setKept({
+      shown: { key, value },
+      leaving: [...kept.leaving, { ...kept.shown, id: kept.changes }],
+      changes: kept.changes + 1,
+    });
+  }
+
+  const left = useTakenOutOnceDone(
+    kept.leaving.map(({ id }) => id),
+    (ids) => {
+      const newest = Math.max(...ids);
+      setKept((now) =>
+        now.leaving.some(({ id }) => id <= newest)
+          ? { ...now, leaving: now.leaving.filter(({ id }) => id > newest) }
+          : now,
+      );
+    },
+  );
+  return { shown: kept.shown, leaving: kept.leaving, left };
 }
 
 // What a thing that comes and goes in place is marked with: whether it is

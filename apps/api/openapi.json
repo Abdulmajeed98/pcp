@@ -1225,9 +1225,7 @@
             "in": "query",
             "description": "The chosen currency, which each Offer's Shown Price is in and the Offers are ordered by.",
             "schema": {
-              "example": "IQD",
-              "type": "string",
-              "enum": ["USD", "IQD"]
+              "$ref": "#/components/schemas/Currency"
             }
           }
         ],
@@ -2851,6 +2849,10 @@
         },
         "required": ["inStock"]
       },
+      "Currency": {
+        "type": "string",
+        "enum": ["USD", "IQD"]
+      },
       "VisibleOfferVendorResponse": {
         "type": "object",
         "properties": {
@@ -2871,10 +2873,13 @@
         "type": "object",
         "properties": {
           "currency": {
-            "type": "string",
             "description": "The chosen currency.",
-            "enum": ["USD", "IQD"],
-            "example": "IQD"
+            "example": "IQD",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
           },
           "amount": {
             "type": "string",
@@ -2991,7 +2996,7 @@
         "properties": {
           "iqdPerUsd": {
             "type": "number",
-            "description": "The Platform Rate, in whole dinars per dollar, as a JSON whole number from 500 to 5000.",
+            "description": "The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.",
             "example": 1575
           }
         },

@@ -17,6 +17,9 @@ const [, arabic] = languages;
 const firstPage = `${shopperUrl}/en`;
 // An address that matches no page.
 const notFound = `${firstPage}/no-such-page`;
+// The first page with a query, as a page with a search or a page number of
+// its own will have one.
+const withAQuery = `${firstPage}?search=ryzen&page=2`;
 
 test('a fresh browser shows the switch with dinars chosen, and the placeholder says prices are in dinars', async ({
   page,
@@ -41,6 +44,16 @@ test('choosing dollars returns to the same page with dollars chosen, and the pla
   await choose(page, 'IQD');
   await expectChosen(page, 'IQD');
   await expectPricesShownIn(page, 'IQD');
+});
+
+test('choosing a currency returns to the same page with the same query', async ({
+  page,
+}) => {
+  await page.goto(withAQuery);
+
+  await choose(page, 'USD');
+  expect(page.url()).toBe(withAQuery);
+  await expectChosen(page, 'USD');
 });
 
 test.describe('after choosing dollars', () => {
@@ -136,12 +149,25 @@ test.describe('with scripts switched off', () => {
 
     await expectTheChoiceKept(page, browser, 'USD', { javaScriptEnabled: false });
   });
+
+  test('the switch keeps the page’s query too', async ({ page }) => {
+    await page.goto(withAQuery);
+
+    await choose(page, 'USD');
+    expect(page.url()).toBe(withAQuery);
+    await expectChosen(page, 'USD');
+  });
 });
 
 // The form says which page to return to, and anything can be sent in its
 // place. Whatever is sent, the answer returns to a page of the Shopper app.
 test('the switch never sends anyone to another site', async ({ request }) => {
-  for (const page of ['//example.com', 'https://example.com', '/\\example.com']) {
+  for (const page of [
+    '//example.com',
+    'https://example.com',
+    '/\\example.com',
+    '?//example.com',
+  ]) {
     const answer = await request.post(`${firstPage}/currency`, {
       form: { currency: 'USD', page },
       maxRedirects: 0,

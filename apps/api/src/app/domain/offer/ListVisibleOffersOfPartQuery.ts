@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
+import { Currency } from '../currency/currency';
 import { partNotFound } from '../part/part-errors';
 import { PartStore } from '../part/PartStore';
 import { OfferStore } from './OfferStore';
-import { Currency } from './shown-price';
 import { VisibleOffer } from './VisibleOffer';
 
 class Input {

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { setRefusalsBesideTheirFields, WhyNotAnswered } from '@/shared/api';
+import { describedBy } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -17,12 +18,13 @@ import {
   Input,
   OpeningSpace,
   Plate,
+  PlateFigure,
   SectionTitle,
 } from '@/shared/ui';
 
 import {
+  notANumberMessage,
   rateIn,
-  rateMessage,
   type RateFormValues,
   refusalOfTheRate,
 } from '../model/rate-typed';
@@ -33,8 +35,9 @@ const id = 'platform-rate-iqdPerUsd';
 // heading, one field, "New rate", in whole dinars for one dollar, the rate
 // as typed on a muted plate, as it will go up on the board, and Save. The
 // rate is typed as the Admin's keyboard writes it, and what is not a number is
-// refused beside the field before it is sent; anything else is sent, and
-// the API's refusal is said beside the field, in words that name no limit.
+// refused beside the field before it is sent; anything else is sent, an
+// empty field as no rate, and the API's refusal is said beside the field, in
+// words that name no limit.
 // A refusal that names no field, or an API that cannot be reached, is said
 // just above Save. Once the rate is saved, the field is emptied for the
 // next one, since the plate above it shows the rate.
@@ -43,7 +46,8 @@ export function RateForm({
 }: {
   // Sends the rate. It throws a `Refusal` when the API refuses it, and an
   // `Unreachable` when the API cannot be reached.
-  save: (iqdPerUsd: number) => Promise<PlatformRateResponse>;
+  // An empty field is sent as null.
+  save: (iqdPerUsd: number | null) => Promise<PlatformRateResponse>;
 }) {
   const { register, handleSubmit, setError, reset, formState, control } =
     useForm<RateFormValues>({
@@ -59,7 +63,8 @@ export function RateForm({
   async function submit(typed: RateFormValues): Promise<void> {
     setNotSaved(undefined);
     try {
-      await save(rateIn(typed.iqdPerUsd) ?? Number.NaN);
+      // The field's own check has refused what is not a number.
+      await save(rateIn(typed.iqdPerUsd) ?? null);
       reset({ iqdPerUsd: '' });
     } catch (error) {
       if (!setRefusalsBesideTheirFields(error, setError, refusalOfTheRate)) {
@@ -86,15 +91,12 @@ export function RateForm({
           autoComplete="off"
           spellCheck={false}
           aria-invalid={refusal !== undefined}
-          aria-describedby={[`${id}-description`, refusal !== undefined && `${id}-error`]
-            .filter((each) => typeof each === 'string')
-            .join(' ')}
+          aria-describedby={describedBy(
+            `${id}-description`,
+            refusal !== undefined && `${id}-error`,
+          )}
           {...register('iqdPerUsd', {
-            validate: (typed) => {
-              const rate = rateIn(typed);
-              if (rate === null) return rateMessage('missing');
-              return rate !== undefined || rateMessage('notANumber');
-            },
+            validate: (typed) => rateIn(typed) !== undefined || notANumberMessage(),
           })}
         />
         <FieldDescription id={`${id}-description`}>
@@ -110,7 +112,7 @@ export function RateForm({
         >
           On the board after Save
           <Plate muted className="min-w-[7.5ch] justify-end gap-1.5 text-lg">
-            {typeof typed === 'number' ? <Grouped figure={formatNumber(typed)} /> : '—'}{' '}
+            {typeof typed === 'number' ? <PlateFigure figure={formatNumber(typed)} /> : '—'}{' '}
             <span className="font-sans text-sm font-medium">IQD</span>
           </Plate>
         </p>
@@ -134,23 +136,5 @@ export function RateForm({
         <BusyLabel busy={formState.isSubmitting} label="Save" busyLabel="Saving…" />
       </Button>
     </form>
-  );
-}
-
-// A figure on a plate, its grouping commas set in Geist so that a comma
-// takes no whole cell of the figure, as on every plate (redesign ticket 12).
-function Grouped({ figure }: { figure: string }) {
-  return (
-    <>
-      {figure.split(/(,)/).map((piece, index) =>
-        piece === ',' ? (
-          <span key={index} className="font-sans">
-            ,
-          </span>
-        ) : (
-          piece
-        ),
-      )}
-    </>
   );
 }

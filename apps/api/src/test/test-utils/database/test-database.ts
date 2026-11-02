@@ -127,11 +127,21 @@ export async function platformRateRows(): Promise<PlatformRateRow[]> {
 // until a read has had to wait for it, and only then commits: a read that
 // takes the rate and the Offers in two queries takes one of them before the
 // change and the other after, where a read in one query takes both after.
-// No endpoint changes both at once, so this is the one way a test sees
-// whether an answer mixes a rate with Offers of another moment.
+//
+// It is a named exception to testing the platform from outside, as
+// `offerHistoryRows` and `keepSpecificationsAsTheyAre` are: the second, after
+// `keepSpecificationsAsTheyAre`, that arranges data through the database
+// rather than the endpoints. No endpoint can arrange it: each request is its own
+// transaction, so none changes the rate and the Offers at once, and none
+// holds a table locked while another request reads. The rate is set at
+// `setAt`, the time by the API's clock, which a test may have moved, and
+// never by the database's own clock: the API sets every rate by its clock
+// (`platform-rate.schema.ts`), and a rate set by another clock could fall
+// before the current one and never become current.
 export async function changeTheRateAndTheOffersWhileReading<T>(
   change: {
     iqdPerUsd: number;
+    setAt: Date;
     usdPriceCents: number;
     lockedTable: 'offer' | 'platform_rate';
   },
@@ -145,8 +155,8 @@ export async function changeTheRateAndTheOffersWhileReading<T>(
     await changing.query('BEGIN');
     await changing.query(`LOCK TABLE ${change.lockedTable} IN ACCESS EXCLUSIVE MODE`);
     await changing.query(
-      `INSERT INTO platform_rate (iqd_per_usd, set_at, set_by) VALUES ($1, now(), 'test')`,
-      [change.iqdPerUsd],
+      `INSERT INTO platform_rate (iqd_per_usd, set_at, set_by) VALUES ($1, $2, 'test')`,
+      [change.iqdPerUsd, change.setAt],
     );
     await changing.query('UPDATE offer SET usd_price_cents = $1', [change.usdPriceCents]);
 

@@ -1,13 +1,7 @@
 import { cn } from 'cn';
-import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { type ReactNode, useLayoutEffect, useRef } from 'react';
 
-import { aFade, aMovement } from '@/shared/lib';
-
-// What is shown, by the key that tells one showing from the next.
-interface Showing {
-  key: string;
-  node: ReactNode;
-}
+import { aFade, aMovement, useKeptWhileChanging } from '@/shared/lib';
 
 // Something whose content changes in place, under the No Snap Rule (the
 // dashboard's DESIGN.md, Motion 10, built for the Platform Rate's leading
@@ -23,7 +17,8 @@ interface Showing {
 // it moves with the Web Animations API, through `shared/lib/motion.ts`. A
 // change while one is under way takes the size from where it is. While the
 // size moves, what it holds is clipped to it. The old content is hidden
-// from a reader and takes no tap, and is taken out once it has faded.
+// from a reader and takes no tap, and is taken out once it has faded, or
+// after 3 seconds should its fade never finish (`shared/lib/leaving.ts`).
 //
 // The content for a key is taken as it was first shown for that key: the
 // key is what it shows, such as a figure, or which state it is in.
@@ -43,16 +38,8 @@ export function ChangingInPlace({
   children: ReactNode;
   'data-testid'?: string;
 }) {
-  const [shown, setShown] = useState<Showing>({ key: changeKey, node: children });
-  const [leaving, setLeaving] = useState<(Showing & { id: number })[]>([]);
-  const [changes, setChanges] = useState(0);
-  // A new key, seen while rendering: what was shown starts to leave, as
-  // React lets a component adjust its state to its props.
-  if (changeKey !== shown.key) {
-    setLeaving([...leaving, { ...shown, id: changes }]);
-    setChanges(changes + 1);
-    setShown({ key: changeKey, node: children });
-  }
+  // A new key: what was shown starts to leave.
+  const { shown, leaving, left } = useKeptWhileChanging(changeKey, children);
 
   const holder = useRef<HTMLElement | null>(null);
   const shownElement = useRef<HTMLElement | null>(null);
@@ -126,14 +113,8 @@ export function ChangingInPlace({
         {children}
       </Layer>
       {leaving.map((each) => (
-        <FadingOut
-          key={each.id}
-          inline={inline}
-          onFaded={() =>
-            setLeaving((before) => before.filter((other) => other.id !== each.id))
-          }
-        >
-          {each.node}
+        <FadingOut key={each.id} inline={inline} onFaded={() => left(each.id)}>
+          {each.value}
         </FadingOut>
       ))}
     </Holder>

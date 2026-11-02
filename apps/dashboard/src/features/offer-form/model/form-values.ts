@@ -1,8 +1,7 @@
 import type { EditOfferRequest, OfferResponse } from '@pcp/api-client';
 
 import { iqdAmountWritten, usdAmountWritten } from '@/entities/offer';
-
-import { westernNumberOf } from './western-digits';
+import { westernNumberIn } from '@/shared/lib';
 
 // What the Offer form holds while the Vendor fills it in: each price and the
 // warranty as typed, and whether the Part is in stock.
@@ -43,7 +42,7 @@ const decimalNumber = /^-?\d+(?:\.\d+)?$/;
 // then say whether it fits, so a fraction of a dinar or a negative price is
 // sent as it is, for the API to refuse naming why.
 export function numberIn(typed: string): number | null | undefined {
-  const western = westernNumberOf(typed);
+  const western = westernNumberIn(typed);
   if (western === '') return null;
   return decimalNumber.test(western) ? Number(western) : undefined;
 }
@@ -55,7 +54,7 @@ export function numberIn(typed: string): number | null | undefined {
 // numbers. A detail left empty is sent as null, not given, which a change
 // takes as cleared.
 export function offerDetailsOf(values: OfferFormValues): EditOfferRequest {
-  const usdPrice = westernNumberOf(values.usdPrice);
+  const usdPrice = westernNumberIn(values.usdPrice);
 
   return {
     usdPrice: usdPrice === '' ? null : usdPrice,
