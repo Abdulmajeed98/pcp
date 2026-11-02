@@ -1,4 +1,4 @@
-import type { PlatformRateResponse } from '@pcp/api-client';
+import type { PlatformRateResponse, SetPlatformRateRequest } from '@pcp/api-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient, dataOf } from '@/shared/api';
@@ -18,11 +18,15 @@ export function usePlatformRate() {
 // Sets the Platform Rate. The API answers the setting it added as the
 // current rate, and the answer is written into the rate's query, so that the
 // plate shows it at once, with the day it was set, without asking again.
+//
+// An empty field is sent as null, for the API to refuse as `missing`. The
+// generated client's type names only the rate the API takes, so the body is
+// widened to it here, the one place a rate is sent.
 export function useSetPlatformRate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (iqdPerUsd: number) =>
-      dataOf(apiClient.setPlatformRate({ body: { iqdPerUsd } })),
+    mutationFn: (iqdPerUsd: number | null) =>
+      dataOf(apiClient.setPlatformRate({ body: { iqdPerUsd } as SetPlatformRateRequest })),
     onSuccess: (answer: PlatformRateResponse) => {
       queryClient.setQueryData(platformRateKey, answer);
     },

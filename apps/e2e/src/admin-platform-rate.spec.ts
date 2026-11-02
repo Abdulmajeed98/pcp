@@ -251,6 +251,35 @@ test('a rate out of range is refused beside the field, and the plate keeps the c
   await expectTheBoardToShow(page, rate);
 });
 
+test('an empty field is sent for the API to judge, and its refusal is said beside the field', async ({
+  page,
+  request,
+}) => {
+  const rate = aRateOfOurOwn(4);
+  await setTheRate(request, authorization, rate);
+  await page.goto(platformRateUrl);
+  await expectTheBoardToShow(page, rate);
+
+  const sent = page.waitForRequest(
+    (each) => each.url() === rateEndpoint && each.method() === 'PUT',
+    { timeout: 5000 },
+  );
+  const answered = page.waitForResponse(
+    (response) => response.url() === rateEndpoint && response.request().method() === 'PUT',
+  );
+  await save(page).click();
+
+  expect((await sent).postDataJSON(), 'the empty field is sent as no rate').toEqual({
+    iqdPerUsd: null,
+  });
+  expect((await answered).status()).toBe(400);
+  await expect(page.getByTestId('rate-refusal')).toHaveText(
+    'Enter the rate, such as 1,575.',
+  );
+  await expect(theField(page)).toHaveAttribute('aria-invalid', 'true');
+  await expectTheBoardToShow(page, rate);
+});
+
 test('with no Platform Rate the empty state says so and what Shoppers see, and the form is still there', async ({
   page,
 }) => {

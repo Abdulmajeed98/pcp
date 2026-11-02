@@ -27,6 +27,7 @@ export type {
   PasswordResetResponse,
   PhoneNumberResponse,
   PlatformRateResponse,
+  SetPlatformRateRequest,
   SpecificationResponse,
   StatusResponse,
   SubErrorResponse,

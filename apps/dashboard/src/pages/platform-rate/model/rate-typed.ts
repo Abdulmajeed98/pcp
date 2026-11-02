@@ -28,8 +28,8 @@ export interface RateFormValues {
 }
 
 // The Admin is told, beside the field, why a rate was not taken: by the
-// form itself when nothing is typed or what is typed is not a number, and
-// by the API's reason otherwise. A limit is not named, so no copy of the
+// form itself when what is typed is not a number, and by the API's reason
+// otherwise, an empty field's `missing` among them. A limit is not named, so no copy of the
 // limits is kept here.
 const messages: Record<string, string> = {
   missing: 'Enter the rate, such as 1,575.',
@@ -38,8 +38,8 @@ const messages: Record<string, string> = {
   outOfRange: 'The rate is outside the allowed range.',
 };
 
-export function rateMessage(reason: 'missing' | 'notANumber'): string {
-  return messages[reason];
+export function notANumberMessage(): string {
+  return messages.notANumber;
 }
 
 // The field's message for a refusal of the API, if it names the rate.
