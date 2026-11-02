@@ -4,6 +4,7 @@ export type {
   CategoryResponse,
   ConfirmedOffersResponse,
   CreatedVendorResponse,
+  Currency,
   CurrentPlatformRateResponse,
   CreateOfferRequest,
   CreatePartRequest,

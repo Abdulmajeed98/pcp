@@ -33,7 +33,12 @@ export class VisibleOfferVendorResponse {
 // The price an Offer shows in the chosen currency, as the API computed it, so
 // that no frontend converts a price or rounds one (PRC-3).
 export class ShownPriceResponse {
-  @ApiProperty({ description: 'The chosen currency.', enum: currencies, example: 'IQD' })
+  @ApiProperty({
+    description: 'The chosen currency.',
+    enum: currencies,
+    enumName: 'Currency',
+    example: 'IQD',
+  })
   readonly currency: Currency;
 
   @ApiProperty({

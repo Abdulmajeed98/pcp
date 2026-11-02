@@ -873,6 +873,8 @@ export type EditOfferRequest = {
     warrantyMonths?: number | null;
 };
 
+export type Currency = 'USD' | 'IQD';
+
 export type VisibleOfferVendorResponse = {
     /**
      * The Vendor's identifier on the platform.
@@ -888,7 +890,7 @@ export type ShownPriceResponse = {
     /**
      * The chosen currency.
      */
-    currency: 'USD' | 'IQD';
+    currency: Currency;
     /**
      * The amount, as decimal text: in USD with two decimal places, in IQD in whole dinars. A Quoted Price is as the Vendor entered it; a Converted Price is rounded to the nearest 250 IQD or whole dollar, and is never below one step.
      */
@@ -1648,7 +1650,7 @@ export type ListVisibleOffersOfPartData = {
         /**
          * The chosen currency, which each Offer's Shown Price is in and the Offers are ordered by.
          */
-        currency: 'USD' | 'IQD';
+        currency: Currency;
     };
     url: '/v1/parts/{partId}/offers';
 };

@@ -12,6 +12,8 @@ export class ListVisibleOffersOfPartRequest {
     description:
       "The chosen currency, which each Offer's Shown Price is in and the Offers are ordered by.",
     enum: currencies,
+    // Named, so that the generated client gives the frontends one `Currency`.
+    enumName: 'Currency',
     example: 'IQD',
   })
   @IsIn(currencies)
