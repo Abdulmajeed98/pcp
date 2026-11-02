@@ -7,7 +7,7 @@ import { categoryName, useCategories } from '@/entities/category';
 import { PartPicture, usePart, valueAt } from '@/entities/part';
 import { PhotoField } from '@/features/add-photo';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
-import { useAddressKeepingTheQuery } from '@/shared/lib';
+import { dayWritten, useAddressKeepingTheQuery } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -20,12 +20,6 @@ import {
 
 import { DetailRow, DetailRows, PartNumbers } from './detail-rows';
 import { NeededNotKnown, NotKnown, SpecificationValue } from './specification-value';
-
-// The day a Part last changed, in English, with Western digits.
-const day = new Intl.DateTimeFormat('en-GB', {
-  dateStyle: 'long',
-  numberingSystem: 'latn',
-});
 
 // A Part's page, as the dashboard's DESIGN.md lays it out (redesign ticket
 // 08): everything the platform holds about it. At its head, its picture, its
@@ -142,7 +136,7 @@ function PartDetails({
             </>
           )}
         </DetailRow>
-        <DetailRow name="Last changed">{day.format(new Date(part.updatedAt))}</DetailRow>
+        <DetailRow name="Last changed">{dayWritten(part.updatedAt)}</DetailRow>
       </DetailRows>
 
       <section aria-labelledby="specifications" className="flex flex-col gap-2">

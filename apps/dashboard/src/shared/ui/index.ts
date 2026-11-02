@@ -63,7 +63,7 @@ export { PastTheLastPage } from './past-the-last-page';
 export { OptionalMark } from './optional-mark';
 export { MenuSheet } from './menu-sheet';
 export { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from './native-select';
-export { Plate } from './plate';
+export { Plate, PlateFigure } from './plate';
 export {
   ScreenAction,
   ScreenActionPlaceProvider,

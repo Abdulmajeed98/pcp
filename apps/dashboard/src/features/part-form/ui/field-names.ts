@@ -18,10 +18,3 @@ export function errorOf(
     | undefined;
   return error?.message ?? error?.root?.message;
 }
-
-// The ids a control names in `aria-describedby`: what it says about the
-// field, and its error when it has one. Undefined when there are none.
-export function describedBy(...ids: (string | false | undefined)[]): string | undefined {
-  const named = ids.filter((id): id is string => typeof id === 'string');
-  return named.length > 0 ? named.join(' ') : undefined;
-}

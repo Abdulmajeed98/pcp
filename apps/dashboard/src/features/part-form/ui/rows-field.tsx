@@ -5,6 +5,7 @@ import { PlusIcon, XIcon } from 'lucide-react';
 import { useRef } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 
+import { describedBy } from '@/shared/lib';
 import {
   Button,
   FieldDescription,
@@ -16,7 +17,7 @@ import {
 
 import type { PartFormValues, RowEntry } from '../model/form-values';
 import { Entries, Entry, useEntriesMotion } from './entries-motion';
-import { describedBy, errorOf, idOf } from './field-names';
+import { errorOf, idOf } from './field-names';
 import { SpecificationField } from './specification-field';
 
 // A list of rows, such as a motherboard's M.2 slots, each row with fields of

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { setRefusalsBesideTheirFields, WhyNotAnswered } from '@/shared/api';
+import { describedBy } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -17,6 +18,7 @@ import {
   Input,
   OpeningSpace,
   Plate,
+  PlateFigure,
   SectionTitle,
 } from '@/shared/ui';
 
@@ -89,9 +91,10 @@ export function RateForm({
           autoComplete="off"
           spellCheck={false}
           aria-invalid={refusal !== undefined}
-          aria-describedby={[`${id}-description`, refusal !== undefined && `${id}-error`]
-            .filter((each) => typeof each === 'string')
-            .join(' ')}
+          aria-describedby={describedBy(
+            `${id}-description`,
+            refusal !== undefined && `${id}-error`,
+          )}
           {...register('iqdPerUsd', {
             validate: (typed) => rateIn(typed) !== undefined || notANumberMessage(),
           })}
@@ -109,7 +112,7 @@ export function RateForm({
         >
           On the board after Save
           <Plate muted className="min-w-[7.5ch] justify-end gap-1.5 text-lg">
-            {typeof typed === 'number' ? <Grouped figure={formatNumber(typed)} /> : '—'}{' '}
+            {typeof typed === 'number' ? <PlateFigure figure={formatNumber(typed)} /> : '—'}{' '}
             <span className="font-sans text-sm font-medium">IQD</span>
           </Plate>
         </p>
@@ -133,23 +136,5 @@ export function RateForm({
         <BusyLabel busy={formState.isSubmitting} label="Save" busyLabel="Saving…" />
       </Button>
     </form>
-  );
-}
-
-// A figure on a plate, its grouping commas set in Geist so that a comma
-// takes no whole cell of the figure, as on every plate (redesign ticket 12).
-function Grouped({ figure }: { figure: string }) {
-  return (
-    <>
-      {figure.split(/(,)/).map((piece, index) =>
-        piece === ',' ? (
-          <span key={index} className="font-sans">
-            ,
-          </span>
-        ) : (
-          piece
-        ),
-      )}
-    </>
   );
 }

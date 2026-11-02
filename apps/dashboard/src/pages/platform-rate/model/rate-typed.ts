@@ -1,13 +1,6 @@
 import type { SubErrorResponse } from '@pcp/api-client';
 
-import { westernDigitsIn } from '@/shared/lib';
-
-// A rate as the Admin's keyboard writes it, as the API reads it, as the
-// Offer form takes a price: Arabic-Indic and Eastern Arabic-Indic digits
-// become Western ones, and thousands separators (a comma, the Arabic
-// thousands separator ٬ and the Arabic comma ،) and spaces of any width are
-// dropped.
-const grouping = /[,٬،\s]/gu;
+import { westernNumberIn } from '@/shared/lib';
 
 // A number as the API reads one, in Western digits.
 const aNumber = /^-?\d+(?:\.\d+)?$/;
@@ -16,8 +9,11 @@ const aNumber = /^-?\d+(?:\.\d+)?$/;
 // undefined when what is typed is not a number. Anything that is a number is
 // sent as it is, a fraction or a rate out of range too, for the API to judge:
 // no frontend holds the limits.
+//
+// A rate is read as the Admin's keyboard writes it, as the Offer form takes a
+// price (`westernNumberIn`).
 export function rateIn(typed: string): number | null | undefined {
-  const western = westernDigitsIn(typed).replace(grouping, '');
+  const western = westernNumberIn(typed);
   if (western === '') return null;
   return aNumber.test(western) ? Number(western) : undefined;
 }

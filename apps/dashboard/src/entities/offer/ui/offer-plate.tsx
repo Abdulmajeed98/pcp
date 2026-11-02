@@ -1,9 +1,8 @@
 import type { OfferResponse } from '@pcp/api-client';
 import { AlwaysEnglish } from '@pcp/ui';
-import { Fragment } from 'react';
 
 import { Trans } from '@/shared/i18n';
-import { Plate } from '@/shared/ui';
+import { Plate, PlateFigure } from '@/shared/ui';
 
 import { iqdAmountWritten, usdAmountWritten } from '../model/prices';
 
@@ -51,26 +50,14 @@ export function OfferPlate({
   );
 }
 
-// One price: its figure, then its unit after a space, the unit smaller and
-// in Geist. The figure's grouping commas and its decimal point are set in
-// Geist too, so that neither takes a whole cell of the figure: "266,000"
-// and "349.99", never "266 , 000" or "349 . 99" (redesign ticket 12). Each price is English, left to right and kept apart from what
-// is around it on its own, as the plate is (LANG-3, LANG-5).
+// One price: its figure, its commas and point in Geist (`PlateFigure`), then
+// its unit after a space, the unit smaller and in Geist. Each price is
+// English, left to right and kept apart from what is around it on its own,
+// as the plate is (LANG-3, LANG-5).
 function Price({ testId, figure, unit }: { testId: string; figure: string; unit: string }) {
-  // The figure's digits, and the comma or point between each run of them.
-  const pieces = figure.split(/([,.])/);
-
   return (
     <AlwaysEnglish data-testid={testId} className="whitespace-nowrap">
-      {pieces.map((piece, index) => (
-        <Fragment key={index}>
-          {piece === ',' || piece === '.' ? (
-            <span className="font-sans">{piece}</span>
-          ) : (
-            piece
-          )}
-        </Fragment>
-      ))}{' '}
+      <PlateFigure figure={figure} />{' '}
       <span className="font-sans text-sm font-medium text-plate-unit group-data-[muted]/plate:text-plate-muted-figure">
         {unit}
       </span>

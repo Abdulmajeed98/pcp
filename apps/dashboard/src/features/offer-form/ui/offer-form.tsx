@@ -9,7 +9,7 @@ import {
   WhyNotAnsweredInThePortal,
 } from '@/shared/api';
 import { Trans, useTranslation } from '@/shared/i18n';
-import { useWideScreen } from '@/shared/lib';
+import { describedBy, useWideScreen } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -299,11 +299,6 @@ function DetailField({
   const { t } = useTranslation();
   const id = `offer-form-${name}`;
   const refusal = errors[name]?.message;
-  const describedBy = [
-    optional && `${id}-optional`,
-    `${id}-description`,
-    refusal !== undefined && `${id}-error`,
-  ].filter((each) => typeof each === 'string');
 
   return (
     <Field data-testid={`${name}-field`}>
@@ -316,7 +311,11 @@ function DetailField({
       {children({
         id,
         'aria-invalid': refusal !== undefined,
-        'aria-describedby': describedBy.join(' '),
+        'aria-describedby': describedBy(
+          optional && `${id}-optional`,
+          `${id}-description`,
+          refusal !== undefined && `${id}-error`,
+        ),
       })}
       <FieldDescription id={`${id}-description`}>{description}</FieldDescription>
       <FieldError id={`${id}-error`}>
