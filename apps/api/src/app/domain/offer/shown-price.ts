@@ -1,19 +1,4 @@
-// The currencies a Shopper may choose, which every price is quoted and shown
-// in (PRC-2).
-export const currencies = ['USD', 'IQD'] as const;
-
-export type Currency = (typeof currencies)[number];
-
-// Every price is a whole number of its currency's unit: cents for USD, as a
-// Quoted Price in USD is kept, and whole dinars for IQD.
-export const centsInADollar = 100;
-
-// The step a Converted Price is rounded to, in its currency's unit: 250
-// dinars, or one whole dollar (PRC-3).
-export const convertedPriceStep: Readonly<Record<Currency, number>> = {
-  IQD: 250,
-  USD: centsInADollar,
-};
+import { type Currency, currencyFacts } from '../currency/currency';
 
 // Arithmetic on positive whole numbers, in whatever holds them: the Offer
 // Store's are the database's expressions, so that the conversion is computed
@@ -51,20 +36,29 @@ function nearestStepTo<N>(
 
 // The Converted Price in a currency, in its unit, of a Quoted Price in the
 // other currency, in that one's unit, at a Platform Rate of whole dinars per
-// dollar (PRC-3). IQD from USD is the cents × the rate ÷ 100, rounded to the
-// nearest 250 dinars; USD from IQD is the dinars ÷ the rate, rounded to the
-// nearest whole dollar, here in cents, as the dinars × 100 ÷ the rate.
+// dollar (PRC-3), from each currency's facts (`currency.ts`): the quoted
+// units, in ones of the other currency, in dinars, in ones of this currency,
+// in its units, rounded to its step. IQD from USD is the cents × the rate ÷
+// 100, rounded to the nearest 250 dinars; USD from IQD is the dinars × 100 ÷
+// the rate, rounded to the nearest whole dollar, here in cents.
 export function convertedPriceIn<N>(
   numbers: WholeNumbers<N>,
   currency: Currency,
   quotedInTheOther: N,
   iqdPerUsd: N,
 ): N {
-  const step = numbers.of(convertedPriceStep[currency]);
-  const cents = numbers.of(centsInADollar);
-  return currency === 'IQD'
-    ? nearestStepTo(numbers, numbers.times(quotedInTheOther, iqdPerUsd), cents, step)
-    : nearestStepTo(numbers, numbers.times(quotedInTheOther, cents), iqdPerUsd, step);
+  const to = currencyFacts[currency];
+  const from = currencyFacts[to.other];
+  const one = numbers.of(1);
+  return nearestStepTo(
+    numbers,
+    numbers.times(
+      numbers.times(quotedInTheOther, from.dinarsInOne(iqdPerUsd, one)),
+      numbers.of(to.unitsInOne),
+    ),
+    numbers.times(numbers.of(from.unitsInOne), to.dinarsInOne(iqdPerUsd, one)),
+    numbers.of(to.convertedPriceStep),
+  );
 }
 
 // The price an Offer shows in the chosen currency: its Quoted Price in that

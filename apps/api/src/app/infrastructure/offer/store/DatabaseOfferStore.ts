@@ -7,15 +7,11 @@ import {
   aboutToExpireIfConfirmedBefore,
   expiredIfConfirmedBefore,
 } from '~/domain/offer/expiry';
+import { Currency, currencyFacts } from '~/domain/currency/currency';
 import { Offer } from '~/domain/offer/Offer';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import { OfferState } from '~/domain/offer/offer-state';
-import {
-  convertedPriceIn,
-  Currency,
-  ShownPrice,
-  WholeNumbers,
-} from '~/domain/offer/shown-price';
+import { convertedPriceIn, ShownPrice, WholeNumbers } from '~/domain/offer/shown-price';
 import {
   CreateOfferParams,
   EditOfferParams,
@@ -39,7 +35,7 @@ import { part, PartRow } from '~/infrastructure/part/part.schema';
 import { partOf } from '~/infrastructure/part/part-of-row';
 import { holdingEveryWord } from '~/infrastructure/part/search-text';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
-import { platformRate } from '~/infrastructure/platform-rate/platform-rate.schema';
+import { currentPlatformRate } from '~/infrastructure/platform-rate/current-platform-rate';
 import { vendor } from '~/infrastructure/vendor/vendor.schema';
 
 import { offer, offerHistory, OfferRow, oneOfferForAPart } from '../offer.schema';
@@ -89,9 +85,13 @@ const inTheDatabase: WholeNumbers<SQL> = {
   greatest: (a, b) => sql`greatest(${a}, ${b})`,
 };
 
-// An Offer's Quoted Price in a currency, in its unit, or null.
+// An Offer's Quoted Price in each currency, in its unit, or null.
+const quotedPrice = {
+  USD: offer.usdPriceCents,
+  IQD: offer.iqdPrice,
+} satisfies Record<Currency, unknown>;
 function quotedPriceIn(currency: Currency): SQL {
-  return currency === 'USD' ? sql`${offer.usdPriceCents}` : sql`${offer.iqdPrice}`;
+  return sql`${quotedPrice[currency]}`;
 }
 
 // An Offer's Shown Price in a currency, in its unit, as the database asks it
@@ -107,7 +107,7 @@ function shownPriceIn(
   converted: SQL<boolean>;
 } {
   const quoted = quotedPriceIn(currency);
-  const other = quotedPriceIn(currency === 'USD' ? 'IQD' : 'USD');
+  const other = quotedPriceIn(currencyFacts[currency].other);
   const converted = convertedPriceIn(
     inTheDatabase,
     currency,
@@ -555,12 +555,7 @@ export class DatabaseOfferStore implements OfferStore {
       // The current Platform Rate, or no row when none has been set, read in
       // the same query as the Offers, so that their Shown Prices and their
       // order are all at one rate.
-      const currentRate = client
-        .select({ iqdPerUsd: platformRate.iqdPerUsd })
-        .from(platformRate)
-        .orderBy(desc(platformRate.setAt), desc(platformRate.id))
-        .limit(1)
-        .as('current_rate');
+      const currentRate = currentPlatformRate(client).as('current_rate');
       const shownPrice = shownPriceIn(currency, sql`${currentRate.iqdPerUsd}`);
 
       const rows = await client

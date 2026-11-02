@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { databaseErrorOf, StructuredError } from '@pcp/core';
-import { desc } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import { PlatformRate } from '~/domain/platform-rate/PlatformRate';
@@ -10,6 +9,7 @@ import {
 } from '~/domain/platform-rate/PlatformRateStore';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 
+import { currentPlatformRate } from '../current-platform-rate';
 import { platformRate, PlatformRateRow } from '../platform-rate.schema';
 
 // A row as the Platform Rate it set.
@@ -48,14 +48,7 @@ export class DatabasePlatformRateStore implements PlatformRateStore {
     Either.Either<Option.Option<PlatformRate>, StructuredError>
   > {
     try {
-      const [row] = await this.databaseProvider
-        .getClient()
-        .select()
-        .from(platformRate)
-        // The newest setting, and of two set at the same moment the one added
-        // later.
-        .orderBy(desc(platformRate.setAt), desc(platformRate.id))
-        .limit(1);
+      const [row] = await currentPlatformRate(this.databaseProvider.getClient());
 
       return Either.right(Option.fromNullable(row).pipe(Option.map(toDomain)));
     } catch (error) {

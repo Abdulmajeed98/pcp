@@ -1,10 +1,11 @@
 import { PageableAttributes, PageAttributes, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
+import { Currency } from '../currency/currency';
+
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
 import { OfferState } from './offer-state';
-import { Currency } from './shown-price';
 import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 import { VisibleOffer } from './VisibleOffer';
 

@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsIn } from 'class-validator';
 
 import { ListVisibleOffersOfPartQueryInput } from '~/domain/offer/ListVisibleOffersOfPartQuery';
-import { type Currency, currencies } from '~/domain/offer/shown-price';
+import { type Currency, currencies } from '~/domain/currency/currency';
 
 // What a read of a Part's visible Offers asks for, from the address's query:
 // the currency every Shown Price is in. It is required, so that no page can
