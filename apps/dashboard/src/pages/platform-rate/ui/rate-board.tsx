@@ -1,9 +1,9 @@
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
 import { cn } from 'cn';
-import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { type ReactNode, useLayoutEffect, useRef } from 'react';
 
-import { aFade, aFlap, motionIsReduced } from '@/shared/lib';
+import { aFade, aFlap, motionIsReduced, useKeptWhileChanging } from '@/shared/lib';
 import { Plate } from '@/shared/ui';
 
 // The fewest tiles the board has, as a real board has four: every rate the
@@ -104,31 +104,20 @@ function Unit({ children }: { children: string }) {
   );
 }
 
-// A change of a tile's digit, while its flap turns or, with reduced motion,
-// while the old digit fades.
-interface Flip {
-  from: string;
-  to: string;
-  id: number;
-}
-
 // One split-flap tile: the top and the bottom half of its digit, split by a
 // dark line. When its digit changes, the old top half falls forward to its
 // edge, uncovering the new top half behind it, and then the new bottom half
 // comes down from its edge over the old one; the tile `index` places waits
 // 40 ms for each tile before it. The halves' backs are hidden, so a leaf on
 // its edge shows nothing, and the leaves are taken away only once the new
-// bottom half has landed over a half that already shows the new digit.
+// bottom half has landed over a half that already shows the new digit, or
+// after 3 seconds should it never land (`shared/lib/leaving.ts`).
 function Tile({ digit = ' ', index }: { digit?: string; index: number }) {
-  const [shown, setShown] = useState(digit);
-  const [flip, setFlip] = useState<Flip | null>(null);
-  const [flips, setFlips] = useState(0);
-  // A new digit, seen while rendering, starts a flip from the one shown.
-  if (digit !== shown) {
-    setFlip({ from: shown, to: digit, id: flips });
-    setFlips(flips + 1);
-    setShown(digit);
-  }
+  // A new digit starts a flip from the one shown: the flip under way is from
+  // the digit shown before the newest change, which covers any before it.
+  const { shown: kept, leaving, left } = useKeptWhileChanging(digit, digit);
+  const shown = kept.value;
+  const flip = leaving.at(-1);
   const reduced = motionIsReduced();
   const falling = useRef<HTMLSpanElement>(null);
   const landing = useRef<HTMLSpanElement>(null);
@@ -136,8 +125,8 @@ function Tile({ digit = ' ', index }: { digit?: string; index: number }) {
   const halves = useRef<HTMLSpanElement>(null);
 
   useLayoutEffect(() => {
-    if (flip === null) return;
-    const done = () => setFlip((now) => (now?.id === flip.id ? null : now));
+    if (flip === undefined) return;
+    const done = () => left(flip.id);
     if (fading.current) {
       // Reduced motion: the old digit fades out over the new, which fades in.
       const out = fading.current.animate([{ opacity: 1 }, { opacity: 0 }], {
@@ -163,9 +152,9 @@ function Tile({ digit = ' ', index }: { digit?: string; index: number }) {
       top?.cancel();
       bottom?.cancel();
     };
-  }, [flip, index]);
+  }, [flip, index, left]);
 
-  const flipping = flip !== null && !reduced;
+  const flipping = flip !== undefined && !reduced;
 
   return (
     <span
@@ -175,22 +164,22 @@ function Tile({ digit = ' ', index }: { digit?: string; index: number }) {
     >
       <span ref={halves} className="absolute inset-0">
         <Half side="top">{shown}</Half>
-        <Half side="bottom">{flipping ? flip.from : shown}</Half>
+        <Half side="bottom">{flipping ? flip.value : shown}</Half>
       </span>
       {flipping && (
         <>
           <Half side="top" ref={falling} leaf>
-            {flip.from}
+            {flip.value}
           </Half>
           <Half side="bottom" ref={landing} leaf>
-            {flip.to}
+            {shown}
           </Half>
         </>
       )}
-      {flip !== null && reduced && (
+      {flip !== undefined && reduced && (
         <span ref={fading} data-testid="board-tile-fading" className="absolute inset-0">
-          <Half side="top">{flip.from}</Half>
-          <Half side="bottom">{flip.from}</Half>
+          <Half side="top">{flip.value}</Half>
+          <Half side="bottom">{flip.value}</Half>
         </span>
       )}
       <span

@@ -5,12 +5,16 @@ export { describedBy } from './described-by';
 export {
   atTheLatest,
   type Ended,
+  type Kept,
+  type KeptLeaving,
   type Moving,
   movingProps,
   type ShownRow,
   spaceClosed,
   useKeptUntilClosed,
+  useKeptWhileChanging,
   useLeavingRows,
+  useTakenOutOnceDone,
   useTakenOutOnceEnded,
 } from './leaving';
 export { useMoreBeyondTheEnd } from './more-beyond-the-end';
