@@ -6,7 +6,7 @@ import { routing } from '@/shared/i18n';
 
 // What the currency switch asks for: its form is sent here, at
 // `/<language>/currency`, with the chosen currency and the page the Shopper
-// was on, as the part of its address after the language.
+// was on, as the part of its address after the language, its query with it.
 //
 // The answer writes the choice into the browser for a year and sends the
 // Shopper back to that page, in the language of this address, which is the
@@ -15,9 +15,11 @@ import { routing } from '@/shared/i18n';
 // reload does not send the form a second time.
 //
 // A currency that is neither of the two is not written down, and the Shopper
-// is sent back all the same. A page that does not start with a slash is not
-// one of the Shopper app's, and the Shopper is sent to the first page instead,
-// so that this address can never send anyone to another site.
+// is sent back all the same. A page that starts with neither a slash nor a
+// question mark, the first page's query, is not one of the Shopper app's, and
+// the Shopper is sent to the first page instead. Whatever it holds, the answer
+// starts with the language's own path, so this address can never send anyone
+// to another site.
 export async function chooseCurrency(
   request: Request,
   { params }: { params: Promise<{ locale: string }> },
@@ -30,7 +32,7 @@ export async function chooseCurrency(
   const form = await request.formData();
   const page = form.get('page');
   const currency = form.get('currency');
-  const back = typeof page === 'string' && page.startsWith('/') ? page : '';
+  const back = typeof page === 'string' && /^[/?]/.test(page) ? page : '';
 
   // A relative address, so that the Shopper returns to the host they asked,
   // whatever the server is known by behind it.
