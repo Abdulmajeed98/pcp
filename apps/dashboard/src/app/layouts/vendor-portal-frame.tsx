@@ -167,6 +167,11 @@ export function PortalFrame({
 // A word too long for the screen is broken, so that it cannot make the page
 // scroll sideways. A new address starts at the top of its screen, and the
 // browser's back button returns to where the Vendor was.
+//
+// The screen stays where it is in the frame at every width, so that a window
+// crossing 64rem changes the frame around it and leaves the screen as it is:
+// nothing on it is drawn anew, and nothing typed into it is lost. Only the
+// bars and the sidebar are a desk's or a phone's, as in the Admin console.
 function Framed({
   band,
   name,
@@ -181,95 +186,119 @@ function Framed({
   children: ReactNode;
 }) {
   const wide = useWideScreen();
-  const Layout = wide ? OnADesk : OnAPhone;
+  // Where the screen's search goes on a desk, in the top bar's centre.
+  const [searchPlace, setSearchPlace] = useState<HTMLElement | null>(null);
+  // Where the screen's one action goes on a phone, on the bar's end side.
+  const [actionPlace, setActionPlace] = useState<HTMLElement | null>(null);
 
   return (
     <div data-testid="frame" className="flex min-h-dvh flex-col bg-frame wrap-break-word">
       {band}
-      <Layout name={name} sections={sections}>
-        {children}
-      </Layout>
+      <div
+        className={cn(
+          'flex-1',
+          wide
+            ? 'grid grid-cols-[14.25rem_minmax(0,1fr)] grid-rows-[3rem_1fr]'
+            : 'flex flex-col',
+        )}
+      >
+        {wide && <Sidebar name={name} sections={sections} />}
+        {wide ? (
+          <TopBar searchPlace={setSearchPlace} />
+        ) : (
+          <PhoneBar name={name} sections={sections} actionPlace={setActionPlace} />
+        )}
+        <main
+          className={cn(
+            'min-w-0',
+            wide
+              ? 'me-2 mb-2 rounded-sheet border border-border bg-background p-6'
+              : 'flex-1 bg-background p-4',
+          )}
+        >
+          <div className={cn(wide && 'max-w-[80rem]')}>
+            <ScreenSearchPlaceProvider place={wide ? searchPlace : null}>
+              <ScreenActionPlaceProvider place={wide ? null : actionPlace}>
+                {children}
+              </ScreenActionPlaceProvider>
+            </ScreenSearchPlaceProvider>
+          </div>
+        </main>
+      </div>
       <ScrollRestoration />
     </div>
   );
 }
 
-interface LayoutProps {
-  name: string | undefined;
-  sections: boolean;
-  children: ReactNode;
-}
-
-function OnADesk({ name, sections, children }: LayoutProps) {
-  const { t } = useTranslation();
-  // Where the screen's search goes, in the top bar's centre.
-  const [searchPlace, setSearchPlace] = useState<HTMLElement | null>(null);
-
+// From 64rem: the sidebar, with the Vendor's name and "Vendor portal" at its
+// head and the sections below.
+function Sidebar({ name, sections }: { name: string | undefined; sections: boolean }) {
   return (
-    <div className="grid flex-1 grid-cols-[14.25rem_minmax(0,1fr)] grid-rows-[3rem_1fr]">
-      <div className="sticky top-0 row-span-2 flex max-h-dvh flex-col gap-5 self-start overflow-y-auto px-3 pt-1.5 pb-4">
-        <Scope name={name} />
-        {sections && <Sections />}
-      </div>
-      <header className="grid grid-cols-[minmax(0,1fr)_minmax(0,34.25rem)_minmax(max-content,1fr)] items-center gap-4 pe-2">
-        <div />
-        <div ref={setSearchPlace} className="min-w-0" />
-        <div className="flex min-w-0 items-center justify-end gap-3">
-          <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
-          <PortalSchemeSwitch />
-          <LogOut />
-        </div>
-      </header>
-      <main className="me-2 mb-2 min-w-0 rounded-sheet border border-border bg-background p-6">
-        <div className="max-w-[80rem]">
-          <ScreenSearchPlaceProvider place={searchPlace}>
-            {children}
-          </ScreenSearchPlaceProvider>
-        </div>
-      </main>
+    <div className="sticky top-0 row-span-2 flex max-h-dvh flex-col gap-5 self-start overflow-y-auto px-3 pt-1.5 pb-4">
+      <Scope name={name} />
+      {sections && <Sections />}
     </div>
   );
 }
 
-function OnAPhone({ name, sections, children }: LayoutProps) {
+// From 64rem: the top bar, with the place for the screen's search, and the
+// language switch, the scheme switch and Log out.
+function TopBar({ searchPlace }: { searchPlace: (place: HTMLElement | null) => void }) {
   const { t } = useTranslation();
-  const [menuOpen, setMenuOpen] = useState(false);
-  // Where the screen's one action goes, on the bar's end side.
-  const [actionPlace, setActionPlace] = useState<HTMLElement | null>(null);
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex h-14 items-center gap-2 bg-frame px-4">
-        <MenuSheet
-          label={t('VendorPortalFrame.menu')}
-          title={<ScopeInTheMenu name={name} />}
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
-        >
-          {sections && <Sections onChosen={() => setMenuOpen(false)} />}
-          <div className="mt-auto flex flex-col items-start gap-3">
-            <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
-            <PortalSchemeSwitch />
-            <LogOut className="-ms-3.5" />
-          </div>
-        </MenuSheet>
-        {/* The name is cut at its own end, in its own direction, so that a
-            long name keeps its start (redesign ticket 11's break-ui). */}
-        <p className="min-w-0 flex-1 text-center font-semibold">
-          {name !== undefined && (
-            <AsWritten data-testid="vendor-name" className="block truncate">
-              {name}
-            </AsWritten>
-          )}
-        </p>
-        <div ref={setActionPlace} className="flex size-control shrink-0 justify-end" />
-      </header>
-      <main className="flex-1 bg-background p-4">
-        <ScreenActionPlaceProvider place={actionPlace}>
-          {children}
-        </ScreenActionPlaceProvider>
-      </main>
-    </div>
+    <header className="grid grid-cols-[minmax(0,1fr)_minmax(0,34.25rem)_minmax(max-content,1fr)] items-center gap-4 pe-2">
+      <div />
+      <div ref={searchPlace} className="min-w-0" />
+      <div className="flex min-w-0 items-center justify-end gap-3">
+        <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
+        <PortalSchemeSwitch />
+        <LogOut />
+      </div>
+    </header>
+  );
+}
+
+// Below 64rem: the one bar, with the menu button, which opens the menu
+// sheet, the Vendor's name and the place for the screen's one action.
+function PhoneBar({
+  name,
+  sections,
+  actionPlace,
+}: {
+  name: string | undefined;
+  sections: boolean;
+  actionPlace: (place: HTMLElement | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <header className="flex h-14 items-center gap-2 bg-frame px-4">
+      <MenuSheet
+        label={t('VendorPortalFrame.menu')}
+        title={<ScopeInTheMenu name={name} />}
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+      >
+        {sections && <Sections onChosen={() => setMenuOpen(false)} />}
+        <div className="mt-auto flex flex-col items-start gap-3">
+          <LanguageSwitch label={t('VendorPortalFrame.languageSwitch')} />
+          <PortalSchemeSwitch />
+          <LogOut className="-ms-3.5" />
+        </div>
+      </MenuSheet>
+      {/* The name is cut at its own end, in its own direction, so that a
+          long name keeps its start (redesign ticket 11's break-ui). */}
+      <p className="min-w-0 flex-1 text-center font-semibold">
+        {name !== undefined && (
+          <AsWritten data-testid="vendor-name" className="block truncate">
+            {name}
+          </AsWritten>
+        )}
+      </p>
+      <div ref={actionPlace} className="flex size-control shrink-0 justify-end" />
+    </header>
   );
 }
 

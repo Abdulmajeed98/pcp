@@ -1,5 +1,6 @@
 import type { EditOfferRequest, PartSummaryResponse } from '@pcp/api-client';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 import { type ComponentProps, type ReactNode, useState } from 'react';
 import { Controller, type FieldErrors, useForm } from 'react-hook-form';
 
@@ -227,18 +228,20 @@ export function OfferForm({
       </Button>
     </form>
   );
-  const column = (
-    <div className="flex w-full max-w-[40rem] min-w-0 flex-col gap-6">
-      {form}
-      {after}
-    </div>
-  );
-
-  if (!wide) return column;
+  // The form's column stays where it is at every width, so that a window
+  // crossing 64rem leaves the form as it is, with what is typed into it;
+  // only the Part beside it comes and goes.
   return (
-    <div className="grid grid-cols-[minmax(0,40rem)_minmax(16rem,1fr)] items-start gap-6">
-      {column}
-      <PartBeside part={part} />
+    <div
+      className={cn(
+        wide && 'grid grid-cols-[minmax(0,40rem)_minmax(16rem,1fr)] items-start gap-6',
+      )}
+    >
+      <div className="flex w-full max-w-[40rem] min-w-0 flex-col gap-6">
+        {form}
+        {after}
+      </div>
+      {wide && <PartBeside part={part} />}
     </div>
   );
 }
