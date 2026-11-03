@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
-import { and, asc, count, desc, eq, gt, gte, lt, sql, SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, lt, lte, sql, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import {
@@ -17,17 +17,20 @@ import {
   EditOfferParams,
   ListVendorsOffersParams,
   ListVendorsWithExpiringOffersParams,
+  ListVisiblePartsParams,
   OfferCounts,
   OfferStore,
   RemoveOfferParams,
   VendorsOfferCounts,
   VendorsOffersPage,
   VendorsWithExpiringOffersPage,
+  VisiblePartsPage,
 } from '~/domain/offer/OfferStore';
 import { VendorWithExpiringOffers } from '~/domain/offer/VendorWithExpiringOffers';
 import { PhoneNumber } from '~/domain/phone-number/PhoneNumber';
 import { visibleOfferRuleAt } from '~/domain/offer/visibility';
 import { VisibleOffer } from '~/domain/offer/VisibleOffer';
+import { VisiblePart } from '~/domain/offer/VisiblePart';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { brokeUniqueRule } from '~/infrastructure/database/unique-rule';
@@ -59,6 +62,30 @@ function visibleOffer(now: Date): SQL | undefined {
     eq(vendor.active, rule.vendorActive),
     gte(offer.confirmedAt, rule.confirmedFrom),
   );
+}
+
+// The rule for a Visible Part, as the database asks it of a Part, at now by
+// the API's clock: a Part with at least one visible Offer, by
+// `visibleOffer(now)` (CAT-7). Every query of Parts for Shoppers asks it of
+// `part`, and no other: a Category's list here, and a Visible Part's own read,
+// its Category's filters and the picker (`browse` and `builder`).
+function visiblePart(now: Date): SQL {
+  return sql`exists (select 1 from ${offer} inner join ${vendor} on ${eq(vendor.id, offer.vendorId)} where ${and(eq(offer.partId, part.id), visibleOffer(now))})`;
+}
+
+// The order of a Part's visible Offers (OFF-11, PRC-4), given their Shown
+// Price: in stock first, then the lowest Shown Price as answered, after
+// rounding, with none after the others; then the most recent Confirmation,
+// the Vendor's name and the Offer's identifier, so that the order is the same
+// at every read. A query that uses it joins the Vendor.
+function inTheOrderOfAPartsOffers(shownAmount: SQL): SQL[] {
+  return [
+    desc(offer.inStock),
+    sql`${shownAmount} asc nulls last`,
+    desc(offer.confirmedAt),
+    asc(vendor.name),
+    asc(offer.id),
+  ];
 }
 
 // An Expired Offer, and one about to expire, as the database asks them, at now
@@ -571,15 +598,7 @@ export class DatabaseOfferStore implements OfferStore {
         .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
         .leftJoin(currentRate, sql`true`)
         .where(and(eq(offer.partId, partId), visibleOffer(now)))
-        // In stock first, then the lowest Shown Price as answered, after
-        // rounding, with none after the others (OFF-11, PRC-4).
-        .orderBy(
-          desc(offer.inStock),
-          sql`${shownPrice.amount} asc nulls last`,
-          desc(offer.confirmedAt),
-          asc(vendor.name),
-          asc(offer.id),
-        );
+        .orderBy(...inTheOrderOfAPartsOffers(shownPrice.amount));
 
       return Either.all(
         rows.map((row) =>
@@ -600,6 +619,141 @@ export class DatabaseOfferStore implements OfferStore {
       this.logger.error(error, "A Part's visible Offers could not be listed");
       return Either.left(
         databaseErrorOf(error, "A Part's visible Offers could not be listed"),
+      );
+    }
+  }
+
+  async listVisibleParts(
+    params: ListVisiblePartsParams,
+  ): Promise<Either.Either<VisiblePartsPage, StructuredError>> {
+    const client = this.databaseProvider.getClient();
+    const now = params.getNow();
+    const currency = params.getCurrency();
+    const pageable = params.getPageable();
+    // The current Platform Rate, read once, in the one statement that reads
+    // the Parts, their page and their total, so that every Lowest Price, the
+    // order and the total are at one rate.
+    const currentRate = currentPlatformRate(client).as('current_rate');
+    const shownPrice = shownPriceIn(currency, sql`${currentRate.iqdPerUsd}`);
+    const inTheirOrder = sql.join(inTheOrderOfAPartsOffers(shownPrice.amount), sql`, `);
+    // The first of them in stock, in the order a Part's page lists them.
+    function firstInStock<T>(value: SQL): SQL<T | null> {
+      return sql<T | null>`(array_agg(${value} order by ${inTheirOrder}) filter (where ${offer.inStock}))[1]`;
+    }
+
+    // What a Part's visible Offers say of it: how many there are, which is
+    // how many Vendors offer it, since a Vendor has one Offer for a Part at
+    // most; whether any is in stock; and its Lowest Price, the Shown Price of
+    // the first in stock as a Part's page lists them, the lowest, with
+    // whether it is converted. It describes the Part, and the rule for a
+    // Visible Part alone decides whether the Part is listed. Drizzle names a
+    // subquery's field by its alias alone, so each alias here and below is
+    // one no table in the same statement has as a column.
+    const offered = client
+      .select({
+        vendorCount: sql<number>`count(*)::int`.as('vendor_count'),
+        inStock: sql<boolean>`coalesce(bool_or(${offer.inStock}), false)`.as(
+          'any_in_stock',
+        ),
+        lowestAmount: firstInStock<number>(shownPrice.amount)
+          .mapWith(Number)
+          .as('lowest_amount'),
+        lowestConverted: firstInStock<boolean>(shownPrice.converted).as('lowest_converted'),
+      })
+      .from(offer)
+      .innerJoin(vendor, eq(vendor.id, offer.vendorId))
+      .where(and(eq(offer.partId, part.id), visibleOffer(now)))
+      .as('offered');
+
+    // Every Visible Part asked for, with what its Offers say of it and its
+    // place in the list's order (BRW-1): a Lowest Price first, the lowest
+    // first; then in stock with none; then all out of stock; then by name and
+    // identifier.
+    const listed = client.$with('listed').as(
+      client
+        .select({
+          partId: sql<string>`${part.id}`.as('visible_part_id'),
+          vendorCount: offered.vendorCount,
+          inStock: offered.inStock,
+          lowestAmount: offered.lowestAmount,
+          lowestConverted: offered.lowestConverted,
+          place:
+            sql<number>`row_number() over (order by ${offered.lowestAmount} asc nulls last, ${offered.inStock} desc, ${part.name} asc, ${part.id} asc)`
+              .mapWith(Number)
+              .as('place_in_list'),
+        })
+        .from(part)
+        .leftJoin(currentRate, sql`true`)
+        .crossJoinLateral(offered)
+        .where(
+          and(
+            eq(part.category, params.getCategory().getKey()),
+            ...holdingEveryWord(params.getWords()),
+            visiblePart(now),
+          ),
+        ),
+    );
+    // How many there are, as one row, which the page is joined to, so that a
+    // page past the end still answers the total.
+    const counted = client
+      .select({ total: sql<number>`count(*)::int`.as('total') })
+      .from(listed)
+      .as('counted');
+    const offset = pageable.getOffset();
+
+    try {
+      const rows = await client
+        .with(listed)
+        .select({
+          total: counted.total,
+          part,
+          photoId: partPhoto.id,
+          vendorCount: listed.vendorCount,
+          inStock: listed.inStock,
+          lowestAmount: listed.lowestAmount,
+          lowestConverted: listed.lowestConverted,
+        })
+        .from(counted)
+        .leftJoin(
+          listed,
+          and(gt(listed.place, offset), lte(listed.place, offset + pageable.getLimit())),
+        )
+        .leftJoin(part, eq(part.id, listed.partId))
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .orderBy(asc(listed.place));
+
+      const parts = Either.all(
+        rows.flatMap((row) =>
+          row.part === null
+            ? []
+            : [
+                Either.map(
+                  partOf(row.part, row.photoId),
+                  (found) =>
+                    new VisiblePart(
+                      found,
+                      row.lowestAmount === null
+                        ? null
+                        : new ShownPrice(
+                            currency,
+                            row.lowestAmount,
+                            row.lowestConverted === true,
+                          ),
+                      row.vendorCount ?? 0,
+                      row.inStock === true,
+                    ),
+                ),
+              ],
+        ),
+      );
+      return Either.map(
+        parts,
+        (found) => new VisiblePartsPage(found, PageAttributes.of(pageable, rows[0].total)),
+      );
+    } catch (error) {
+      this.logger.error(error, "A Category's Visible Parts could not be listed");
+      return Either.left(
+        databaseErrorOf(error, "A Category's Visible Parts could not be listed"),
       );
     }
   }
