@@ -21,5 +21,4 @@ export { useMoreBeyondTheEnd } from './more-beyond-the-end';
 export { aFade, aFlap, aMovement, aScroll, motionIsReduced } from './motion';
 export { pageIn, usePageInTheAddress, writePageInto } from './page-in-the-address';
 export { chooseScheme, type Scheme, schemes, useScheme } from './scheme';
-export { whatsAppChatWith } from './whatsapp';
 export { useWideScreen } from './wide-screen';
