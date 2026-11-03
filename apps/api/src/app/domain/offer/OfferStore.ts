@@ -2,12 +2,14 @@ import { PageableAttributes, PageAttributes, StructuredError } from '@pcp/core';
 import { Either, Option } from 'effect';
 
 import { Currency } from '../currency/currency';
+import { Category } from '../part/Category';
 
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
 import { OfferState } from './offer-state';
 import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 import { VisibleOffer } from './VisibleOffer';
+import { VisiblePart } from './VisiblePart';
 
 // A new Offer: the Vendor and the Part, its details, the time of its first
 // Confirmation, and the Caller who adds it, whom its history records.
@@ -238,6 +240,55 @@ export class VendorsWithExpiringOffersPage {
   }
 }
 
+// What a Category's list of Visible Parts asks for: the Category, the chosen
+// currency every Lowest Price is in, the words every Part holds, the page,
+// and now, by the API's clock, which every Offer's visibility is judged by.
+export class ListVisiblePartsParams {
+  constructor(
+    private readonly category: Category,
+    private readonly currency: Currency,
+    private readonly words: readonly string[],
+    private readonly pageable: PageableAttributes,
+    private readonly now: Date,
+  ) {}
+
+  getCategory(): Category {
+    return this.category;
+  }
+
+  getCurrency(): Currency {
+    return this.currency;
+  }
+
+  getWords(): readonly string[] {
+    return this.words;
+  }
+
+  getPageable(): PageableAttributes {
+    return this.pageable;
+  }
+
+  getNow(): Date {
+    return this.now;
+  }
+}
+
+// One page of a Category's Visible Parts, and where it stands among them all.
+export class VisiblePartsPage {
+  constructor(
+    private readonly parts: readonly VisiblePart[],
+    private readonly page: PageAttributes,
+  ) {}
+
+  getParts(): readonly VisiblePart[] {
+    return this.parts;
+  }
+
+  getPageAttributes(): PageAttributes {
+    return this.page;
+  }
+}
+
 // Where Offers and their history are kept. It is the port: the domain says
 // what it needs, and infrastructure provides it.
 export abstract class OfferStore {
@@ -310,6 +361,21 @@ export abstract class OfferStore {
     currency: Currency,
     now: Date,
   ): Promise<Either.Either<readonly VisibleOffer[], StructuredError>>;
+
+  // The Category's Visible Parts that hold every word, judged at the params'
+  // now by the rule for a Visible Part: a Part with at least one Visible
+  // Offer, by the rule in `visibility.ts`. Each has its Lowest Price in the
+  // currency, from the Shown Prices of its in-stock Visible Offers at the
+  // current Platform Rate, which is read in the same query as the Parts, the
+  // page and the total, so that one answer never mixes two rates. Parts with
+  // a Lowest Price come first, the lowest first, compared as answered, after
+  // rounding (BRW-1, PRC-4); then the in-stock Parts with none, which happens
+  // only with no Platform Rate; then the Parts whose Visible Offers are all
+  // out of stock; then by name and identifier, so that moving between pages
+  // never skips or repeats one.
+  abstract listVisibleParts(
+    params: ListVisiblePartsParams,
+  ): Promise<Either.Either<VisiblePartsPage, StructuredError>>;
 
   // The Vendor's Offer with this identifier, or none when there is no such
   // Offer or it is another Vendor's.
