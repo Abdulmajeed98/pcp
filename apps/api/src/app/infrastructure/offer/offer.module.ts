@@ -7,6 +7,7 @@ import { ListVendorsOffersQuery } from '~/domain/offer/ListVendorsOffersQuery';
 import { ListVendorsWithExpiringOffersQuery } from '~/domain/offer/ListVendorsWithExpiringOffersQuery';
 import { ListVisibleOffersOfPartQuery } from '~/domain/offer/ListVisibleOffersOfPartQuery';
 import { ListVisiblePartsQuery } from '~/domain/offer/ListVisiblePartsQuery';
+import { ReadVisiblePartsFiltersQuery } from '~/domain/offer/ReadVisiblePartsFiltersQuery';
 import { OfferStore } from '~/domain/offer/OfferStore';
 import { ReadOfferQuery } from '~/domain/offer/ReadOfferQuery';
 import { RemoveOfferCommand } from '~/domain/offer/RemoveOfferCommand';
@@ -32,6 +33,7 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     ListVendorsWithExpiringOffersQuery,
     ListVisibleOffersOfPartQuery,
     ListVisiblePartsQuery,
+    ReadVisiblePartsFiltersQuery,
     EditOfferCommand,
     RemoveOfferCommand,
   ],

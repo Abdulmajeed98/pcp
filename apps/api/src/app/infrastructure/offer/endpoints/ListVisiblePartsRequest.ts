@@ -1,14 +1,27 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PagingRequest } from '@pcp/core';
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import { Transform, TransformFnParams } from 'class-transformer';
+import { IsIn, IsOptional, IsString, Matches } from 'class-validator';
 
 import { type Currency, currencies } from '~/domain/currency/currency';
 import { ListVisiblePartsQueryInput } from '~/domain/offer/ListVisiblePartsQuery';
 import { Category } from '~/domain/part/Category';
+import { filterParameters, type FilterKind } from '~/domain/specification/filters';
+
+// A parameter given once is read as a list of one, and one repeated as the
+// list of its values, as the address's query gives them.
+function asAList({ value }: TransformFnParams): unknown {
+  return typeof value === 'string' ? [value] : value;
+}
+
+// A whole number in Western digits, as a Shopper app sends one, short enough
+// to be read exactly.
+const wholeNumber = /^\d{1,15}$/;
 
 // What a Category's list of Visible Parts asks for, from the address's query:
-// the Category, the chosen currency, the search and the page. The Category
-// and the currency are required, so that no page can forget to send them.
+// the Category, the chosen currency, the search, the manufacturers, a
+// parameter for each filter of the Category, the price range, and the page. The Category and
+// the currency are required, so that no page can forget to send them.
 export class ListVisiblePartsRequest extends PagingRequest {
   @ApiProperty({
     description: 'The Category whose Visible Parts are listed.',
@@ -38,13 +51,93 @@ export class ListVisiblePartsRequest extends PagingRequest {
   @IsString()
   readonly search?: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Manufacturers, repeated for several: a Part of any of them is found. Left out, a Part of any manufacturer is.',
+    type: [String],
+    example: ['AMD', 'Intel'],
+  })
+  @IsOptional()
+  @Transform(asAList)
+  @IsString({ each: true })
+  readonly manufacturer?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      "The price range's lowest end, in whole ones of the chosen currency, whole dollars or whole dinars, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out. Refused when it is above the highest end.",
+    type: 'integer',
+    minimum: 0,
+    example: 250000,
+  })
+  @IsOptional()
+  @Matches(wholeNumber)
+  readonly lowest?: string;
+
+  @ApiPropertyOptional({
+    description:
+      "The price range's highest end, in whole ones of the chosen currency, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out.",
+    type: 'integer',
+    minimum: 0,
+    example: 500000,
+  })
+  @IsOptional()
+  @Matches(wholeNumber)
+  readonly highest?: string;
+
   toQueryInput(): ListVisiblePartsQueryInput {
+    // Each filter's parameter, as declared below, with the texts given it.
+    const given = this as unknown as Record<string, string[] | undefined>;
+    const filters = new Map<string, readonly string[]>();
+    for (const parameter of filterParameters().keys()) {
+      const texts = given[parameter];
+      if (texts !== undefined) filters.set(parameter, texts);
+    }
+
     return new ListVisiblePartsQueryInput(
       // The check above lets through only the keys of the eight.
       Category.withKey(this.category) as Category,
       this.currency,
       this.search ?? '',
+      this.manufacturer ?? [],
+      filters,
+      this.lowest === undefined ? undefined : Number(this.lowest),
+      this.highest === undefined ? undefined : Number(this.highest),
       this.toDomain(),
     );
   }
+}
+
+// The type each kind of filter's values have in the description.
+const typeOfKind: Record<FilterKind, 'integer' | 'string' | 'boolean'> = {
+  number: 'integer',
+  text: 'string',
+  yesNo: 'boolean',
+};
+
+// A parameter for each filter, declared here from the filters' statement in
+// `filters.ts`, which alone names them, so that the request takes them and
+// the description lists them: a list of texts, repeated for several values.
+// Whether the Category has the filter, and whether each value is of its
+// kind, the use case decides, naming the parameter when it refuses it.
+for (const [parameter, filters] of filterParameters()) {
+  const target = ListVisiblePartsRequest.prototype;
+  // Every parameter the class declares, its paging's among them, has its type
+  // recorded by its decorators, so that a filter cannot take one's place.
+  if (Reflect.hasMetadata('design:type', target, parameter)) {
+    throw new Error(`A filter's parameter is already the list's own: ${parameter}`);
+  }
+  const ofCategories = filters
+    .map((filter) => {
+      const specification = filter.getSpecification();
+      return `in \`${filter.getCategory().getKey()}\`, the ${specification.getLabel()} at \`${specification.getPath()}\``;
+    })
+    .join('; ');
+  ApiPropertyOptional({
+    description: `A filter: ${ofCategories}. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.`,
+    type: typeOfKind[filters[0].getKind()],
+    isArray: true,
+  })(target, parameter);
+  IsOptional()(target, parameter);
+  Transform(asAList)(target, parameter);
+  IsString({ each: true })(target, parameter);
 }

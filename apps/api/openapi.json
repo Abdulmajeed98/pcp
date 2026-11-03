@@ -1325,6 +1325,209 @@
               "example": "ryzen 7600",
               "type": "string"
             }
+          },
+          {
+            "name": "manufacturer",
+            "required": false,
+            "in": "query",
+            "description": "Manufacturers, repeated for several: a Part of any of them is found. Left out, a Part of any manufacturer is.",
+            "schema": {
+              "example": ["AMD", "Intel"],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "lowest",
+            "required": false,
+            "in": "query",
+            "description": "The price range's lowest end, in whole ones of the chosen currency, whole dollars or whole dinars, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out. Refused when it is above the highest end.",
+            "schema": {
+              "minimum": 0,
+              "example": 250000,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "highest",
+            "required": false,
+            "in": "query",
+            "description": "The price range's highest end, in whole ones of the chosen currency, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out.",
+            "schema": {
+              "minimum": 0,
+              "example": 500000,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "socket",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `cpu`, the Socket at `socket`; in `motherboard`, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "cores",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `cpu`, the Cores at `cores.total`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "waterCooled",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `cpuCooler`, the Liquid cooled at `water_cooled`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "name": "radiatorSize",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `cpuCooler`, the Radiator size at `radiator_size`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "formFactor",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `motherboard`, the Form factor at `form_factor`; in `case`, the Form factor at `form_factor`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "ramType",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `motherboard`, the Memory type at `memory.ram_type`; in `ram`, the Memory type at `ram_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "capacity",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `ram`, the Total capacity at `capacity`; in `storage`, the Capacity at `capacity`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "speed",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `ram`, the Speed at `speed`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "driveType",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `storage`, the Drive type at `storage_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "interface",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `storage`, the Interface at `interface`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "chipset",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `gpu`, the Chipset at `chipset`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "memory",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `gpu`, the Memory at `memory`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "wattage",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `psu`, the Wattage at `wattage`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "efficiencyRating",
+            "required": false,
+            "in": "query",
+            "description": "A filter: in `psu`, the Efficiency rating at `efficiency_rating`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           }
         ],
         "responses": {
@@ -1351,6 +1554,67 @@
         },
         "security": [],
         "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last",
+        "tags": ["VisibleParts"]
+      }
+    },
+    "/v1/visible-parts/filters": {
+      "get": {
+        "operationId": "readVisiblePartsFilters",
+        "parameters": [
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "description": "The Category whose filters are answered.",
+            "schema": {
+              "example": "cpu",
+              "type": "string",
+              "enum": [
+                "cpu",
+                "cpuCooler",
+                "motherboard",
+                "ram",
+                "storage",
+                "gpu",
+                "case",
+                "psu"
+              ]
+            }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which the range of Lowest Prices is in.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisiblePartsFiltersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied",
         "tags": ["VisibleParts"]
       }
     },
@@ -3183,6 +3447,110 @@
           "last",
           "content"
         ]
+      },
+      "FilterKind": {
+        "type": "string",
+        "enum": ["number", "text", "yesNo"],
+        "description": "The kind of value it offers: a whole number, text, or yes or no."
+      },
+      "FilterResponse": {
+        "type": "object",
+        "properties": {
+          "parameter": {
+            "type": "string",
+            "description": "The parameter a Category's list of Visible Parts is narrowed by it with, repeated for several values.",
+            "example": "socket"
+          },
+          "kind": {
+            "description": "The kind of value it offers: a whole number, text, or yes or no.",
+            "example": "text",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FilterKind"
+              }
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit of a number.",
+            "example": "GB"
+          },
+          "values": {
+            "type": "array",
+            "description": "The distinct values the Visible Parts hold, numbers by size and text alphabetically, as a Part's specifications hold them: never one that stands for \"not known\".",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "example": ["AM4", "AM5"]
+          }
+        },
+        "required": ["parameter", "kind", "values"]
+      },
+      "PriceRangeResponse": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "description": "The chosen currency.",
+            "example": "IQD",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "lowest": {
+            "type": "string",
+            "description": "The lowest of the Visible Parts' Lowest Prices, as decimal text, as a Lowest Price's amount is. Null when none has a Lowest Price.",
+            "nullable": true,
+            "example": "410000"
+          },
+          "highest": {
+            "type": "string",
+            "description": "The highest of the Visible Parts' Lowest Prices, as decimal text. Null when none has a Lowest Price.",
+            "nullable": true,
+            "example": "1250000"
+          }
+        },
+        "required": ["currency", "lowest", "highest"]
+      },
+      "VisiblePartsFiltersResponse": {
+        "type": "object",
+        "properties": {
+          "manufacturers": {
+            "description": "The Visible Parts' manufacturers, alphabetically.",
+            "example": ["AMD", "Intel"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filters": {
+            "description": "The Category's filters that some Visible Part holds a value of, in the order a form shows them, each with its values.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FilterResponse"
+            }
+          },
+          "priceRange": {
+            "description": "The range of the Visible Parts' Lowest Prices.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceRangeResponse"
+              }
+            ]
+          }
+        },
+        "required": ["manufacturers", "filters", "priceRange"]
       },
       "CurrentPlatformRateResponse": {
         "type": "object",
