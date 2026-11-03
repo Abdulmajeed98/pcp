@@ -4,14 +4,17 @@ import { Either, Option } from 'effect';
 import { Currency } from '../currency/currency';
 import { Category } from '../part/Category';
 import { Part } from '../part/Part';
+import { FilterChoice } from '../specification/filters';
 
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
 import { OfferState } from './offer-state';
+import { PriceRange } from './PriceRange';
 import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 import { VisibleOffer } from './VisibleOffer';
 import { VisibleOffersOfVendorPage } from './VisibleOffersOfVendorPage';
 import { VisiblePart } from './VisiblePart';
+import { VisiblePartsFilters } from './VisiblePartsFilters';
 
 // A new Offer: the Vendor and the Part, its details, the time of its first
 // Confirmation, and the Caller who adds it, whom its history records.
@@ -243,13 +246,19 @@ export class VendorsWithExpiringOffersPage {
 }
 
 // What a Category's list of Visible Parts asks for: the Category, the chosen
-// currency every Lowest Price is in, the words every Part holds, the page,
-// and now, by the API's clock, which every Offer's visibility is judged by.
+// currency every Lowest Price is in, the words every Part holds, the
+// manufacturers one of which every Part's is, the choices among the
+// Category's filters every Part matches, the range every Part's Lowest Price
+// is within, the page, and now, by the API's clock, which every Offer's
+// visibility is judged by.
 export class ListVisiblePartsParams {
   constructor(
     private readonly category: Category,
     private readonly currency: Currency,
     private readonly words: readonly string[],
+    private readonly manufacturers: readonly string[],
+    private readonly choices: readonly FilterChoice[],
+    private readonly priceRange: PriceRange,
     private readonly pageable: PageableAttributes,
     private readonly now: Date,
   ) {}
@@ -264,6 +273,19 @@ export class ListVisiblePartsParams {
 
   getWords(): readonly string[] {
     return this.words;
+  }
+
+  // None asks for every manufacturer.
+  getManufacturers(): readonly string[] {
+    return this.manufacturers;
+  }
+
+  getChoices(): readonly FilterChoice[] {
+    return this.choices;
+  }
+
+  getPriceRange(): PriceRange {
+    return this.priceRange;
   }
 
   getPageable(): PageableAttributes {
@@ -288,6 +310,29 @@ export class VisiblePartsPage {
 
   getPageAttributes(): PageAttributes {
     return this.page;
+  }
+}
+
+// What a Category's filters ask for: the Category, the chosen currency the
+// range of Lowest Prices is in, and now, by the API's clock, which every
+// Offer's visibility is judged by.
+export class ReadVisiblePartsFiltersParams {
+  constructor(
+    private readonly category: Category,
+    private readonly currency: Currency,
+    private readonly now: Date,
+  ) {}
+
+  getCategory(): Category {
+    return this.category;
+  }
+
+  getCurrency(): Currency {
+    return this.currency;
+  }
+
+  getNow(): Date {
+    return this.now;
   }
 }
 
@@ -364,9 +409,15 @@ export abstract class OfferStore {
     now: Date,
   ): Promise<Either.Either<readonly VisibleOffer[], StructuredError>>;
 
-  // The Category's Visible Parts that hold every word, judged at the params'
-  // now by the rule for a Visible Part: a Part with at least one Visible
-  // Offer, by the rule in `visibility.ts`. Each has its Lowest Price in the
+  // The Category's Visible Parts that hold every word, whose manufacturer is
+  // one of those asked, if any, and that match every choice among the
+  // Category's filters, by holding any of the values chosen of it; judged at
+  // the params' now by the rule for a Visible Part: a Part with at least one
+  // Visible Offer, by the rule in `visibility.ts`. A Part missing a filter's
+  // specification, or holding a value that stands for "not known", matches no
+  // value of that filter. A price range with an end leaves out a Part with no
+  // Lowest Price, and keeps those whose Lowest Price, as answered, after
+  // rounding, is within both ends. Each has its Lowest Price in the
   // currency, from the Shown Prices of its in-stock Visible Offers at the
   // current Platform Rate, which is read in the same query as the Parts, the
   // page and the total, so that one answer never mixes two rates. Parts with
@@ -378,6 +429,17 @@ export abstract class OfferStore {
   abstract listVisibleParts(
     params: ListVisiblePartsParams,
   ): Promise<Either.Either<VisiblePartsPage, StructuredError>>;
+
+  // The Category's filters, read from all its Visible Parts at the params'
+  // now, by the same rule as its list, before any filter or search: the
+  // manufacturers they have; for each filter in `filters.ts`, the distinct
+  // values they hold, numbers by size and text alphabetically, leaving out a
+  // value that stands for "not known" and a filter none holds a value of;
+  // and the lowest and highest of their Lowest Prices in the currency, at the
+  // current Platform Rate, read in the same query as the Parts.
+  abstract readVisiblePartsFilters(
+    params: ReadVisiblePartsFiltersParams,
+  ): Promise<Either.Either<VisiblePartsFilters, StructuredError>>;
 
   // The Vendor's Offer with this identifier, or none when there is no such
   // Offer or it is another Vendor's.

@@ -1045,6 +1045,60 @@ export type VisiblePartPageResponse = {
     content: Array<VisiblePartResponse>;
 };
 
+/**
+ * The kind of value it offers: a whole number, text, or yes or no.
+ */
+export type FilterKind = 'number' | 'text' | 'yesNo';
+
+export type FilterResponse = {
+    /**
+     * The parameter a Category's list of Visible Parts is narrowed by it with, repeated for several values.
+     */
+    parameter: string;
+    /**
+     * The kind of value it offers: a whole number, text, or yes or no.
+     */
+    kind: FilterKind;
+    /**
+     * The unit of a number.
+     */
+    unit?: string;
+    /**
+     * The distinct values the Visible Parts hold, numbers by size and text alphabetically, as a Part's specifications hold them: never one that stands for "not known".
+     */
+    values: Array<number | string | boolean>;
+};
+
+export type PriceRangeResponse = {
+    /**
+     * The chosen currency.
+     */
+    currency: Currency;
+    /**
+     * The lowest of the Visible Parts' Lowest Prices, as decimal text, as a Lowest Price's amount is. Null when none has a Lowest Price.
+     */
+    lowest: string | null;
+    /**
+     * The highest of the Visible Parts' Lowest Prices, as decimal text. Null when none has a Lowest Price.
+     */
+    highest: string | null;
+};
+
+export type VisiblePartsFiltersResponse = {
+    /**
+     * The Visible Parts' manufacturers, alphabetically.
+     */
+    manufacturers: Array<string>;
+    /**
+     * The Category's filters that some Visible Part holds a value of, in the order a form shows them, each with its values.
+     */
+    filters: Array<FilterResponse>;
+    /**
+     * The range of the Visible Parts' Lowest Prices.
+     */
+    priceRange: PriceRangeResponse;
+};
+
 export type LabelledSpecificationResponse = {
     /**
      * The specification's place in a Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it. For a field of a row, its name in the row.
@@ -1947,6 +2001,74 @@ export type ListVisiblePartsData = {
          * Words a Part must hold, in any order and any case, in its name, its manufacturer or a part number. Left out or empty, every Visible Part of the Category is found.
          */
         search?: string;
+        /**
+         * Manufacturers, repeated for several: a Part of any of them is found. Left out, a Part of any manufacturer is.
+         */
+        manufacturer?: Array<string>;
+        /**
+         * The price range's lowest end, in whole ones of the chosen currency, whole dollars or whole dinars, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out. Refused when it is above the highest end.
+         */
+        lowest?: number;
+        /**
+         * The price range's highest end, in whole ones of the chosen currency, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out.
+         */
+        highest?: number;
+        /**
+         * A filter: in `cpu`, the Socket at `socket`; in `motherboard`, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        socket?: Array<string>;
+        /**
+         * A filter: in `cpu`, the Cores at `cores.total`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        cores?: Array<number>;
+        /**
+         * A filter: in `cpuCooler`, the Liquid cooled at `water_cooled`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        waterCooled?: Array<boolean>;
+        /**
+         * A filter: in `cpuCooler`, the Radiator size at `radiator_size`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        radiatorSize?: Array<number>;
+        /**
+         * A filter: in `motherboard`, the Form factor at `form_factor`; in `case`, the Form factor at `form_factor`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        formFactor?: Array<string>;
+        /**
+         * A filter: in `motherboard`, the Memory type at `memory.ram_type`; in `ram`, the Memory type at `ram_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        ramType?: Array<string>;
+        /**
+         * A filter: in `ram`, the Total capacity at `capacity`; in `storage`, the Capacity at `capacity`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        capacity?: Array<number>;
+        /**
+         * A filter: in `ram`, the Speed at `speed`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        speed?: Array<number>;
+        /**
+         * A filter: in `storage`, the Drive type at `storage_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        driveType?: Array<string>;
+        /**
+         * A filter: in `storage`, the Interface at `interface`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        interface?: Array<string>;
+        /**
+         * A filter: in `gpu`, the Chipset at `chipset`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        chipset?: Array<string>;
+        /**
+         * A filter: in `gpu`, the Memory at `memory`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        memory?: Array<number>;
+        /**
+         * A filter: in `psu`, the Wattage at `wattage`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        wattage?: Array<number>;
+        /**
+         * A filter: in `psu`, the Efficiency rating at `efficiency_rating`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        efficiencyRating?: Array<string>;
     };
     url: '/v1/visible-parts';
 };
@@ -1965,6 +2087,37 @@ export type ListVisiblePartsResponses = {
 };
 
 export type ListVisiblePartsResponse = ListVisiblePartsResponses[keyof ListVisiblePartsResponses];
+
+export type ReadVisiblePartsFiltersData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The Category whose filters are answered.
+         */
+        category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+        /**
+         * The chosen currency, which the range of Lowest Prices is in.
+         */
+        currency: Currency;
+    };
+    url: '/v1/visible-parts/filters';
+};
+
+export type ReadVisiblePartsFiltersErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVisiblePartsFiltersError = ReadVisiblePartsFiltersErrors[keyof ReadVisiblePartsFiltersErrors];
+
+export type ReadVisiblePartsFiltersResponses = {
+    200: VisiblePartsFiltersResponse;
+};
+
+export type ReadVisiblePartsFiltersResponse = ReadVisiblePartsFiltersResponses[keyof ReadVisiblePartsFiltersResponses];
 
 export type ReadVisiblePartData = {
     body?: never;

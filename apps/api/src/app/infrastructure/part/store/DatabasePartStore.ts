@@ -15,7 +15,6 @@ import {
   PartStore,
   SearchPartsParams,
 } from '~/domain/part/PartStore';
-import { Specification } from '~/domain/specification/Specification';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { offer } from '~/infrastructure/offer/offer.schema';
@@ -26,24 +25,7 @@ import { part } from '../part.schema';
 import { columnsOf } from '../part-columns';
 import { partOf, partWithPhoto } from '../part-of-row';
 import { holdingEveryWord } from '../search-text';
-
-// Whether a Part's specifications lack one specification, asked of its
-// document as `Specification.isMissingIn` asks it of a value: nothing at the
-// path, null, an empty text, an empty choice of several or list of text, and
-// 0 where 0 stands for "not known".
-function isMissingAt(specification: Specification): SQL {
-  const path = `{${specification.getPath().split('.').join(',')}}`;
-  const value = sql`(${part.specifications} #> ${path}::text[])`;
-  const empty = ['null', '""'];
-  const kind = specification.getKind();
-  if (kind === 'severalOf' || kind === 'listOfText') empty.push('[]');
-  if (specification.isZeroMissing()) empty.push('0');
-
-  return sql`(${value} IS NULL OR ${value} IN (${sql.join(
-    empty.map((each) => sql`${each}::jsonb`),
-    sql`, `,
-  )}))`;
-}
+import { isMissingAt } from '../specification-at';
 
 // The paths of the needed specifications a Part lacks, in its list's order,
 // as a list of text: for each Category, the paths of its needed ones that
