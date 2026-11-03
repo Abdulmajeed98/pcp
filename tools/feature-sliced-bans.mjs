@@ -18,10 +18,18 @@ export const writtenFile = '.oxlintrc.feature-sliced.json';
 // routing folder, which sits beside `src`, outside the layers. `proxy` is
 // Next's proxy file, which sits beside the routing folder. Next runs it
 // before it answers a request, and next-intl's redirect to a language is
-// there.
+// there. `tests` is the folder of a frontend's unit tests, beside `src`,
+// outside the layers too.
 export const frontends = [
   { folder: 'apps/dashboard', app: 'app', pages: 'pages' },
-  { folder: 'apps/shopper', app: '_app', pages: '_pages', routing: 'app', proxy: 'proxy' },
+  {
+    folder: 'apps/shopper',
+    app: '_app',
+    pages: '_pages',
+    routing: 'app',
+    proxy: 'proxy',
+    tests: 'test',
+  },
 ];
 
 // The segment of the Shared layer that holds next-intl's statement of the
@@ -54,6 +62,8 @@ const messages = {
   proxy: `Next's proxy file takes next-intl's statement of the languages from the \`${languagesSegment}\` segment of the Shared layer, through its index file, and imports nothing else from the project.`,
   proxyPath:
     'The proxy file reaches that segment through the `@/` alias and never by a relative path.',
+  testsPath:
+    'A unit test reaches the layers through the `@/` alias and never by a relative path, so that it calls a function as the rest of the app does, through its index file.',
 };
 
 // How far below its home a file's climbing relative import is followed. Home
@@ -148,7 +158,7 @@ function climbing(folders, message) {
 }
 
 // The bans for one frontend, as the content of the file it extends.
-export function featureSlicedBans({ app, pages, routing, proxy }) {
+export function featureSlicedBans({ app, pages, routing, proxy, tests }) {
   // From the top. The App and Shared layers have segments and no slices.
   const layers = [
     { folder: app, sliced: false, oneIndex: true },
@@ -197,6 +207,22 @@ export function featureSlicedBans({ app, pages, routing, proxy }) {
           { group: [appLayer, pagesLayer].flatMap(pastTheIndex), message: messages.index },
           notInShortestForm,
           { regex: '^(\\.\\./)+(.*/)?src(/|$)', message: messages.routingPath },
+        ],
+      ),
+    );
+  }
+  // A unit test may import any layer, each only through its index file: its
+  // public face, as another part of the app imports it. A test that reached
+  // past the index would test a helper, which is free to change.
+  if (tests !== undefined) {
+    overrides.push(
+      block(
+        [`${tests}/**`],
+        [
+          outsideTheLayers(layers),
+          { group: layers.flatMap(pastTheIndex), message: messages.index },
+          notInShortestForm,
+          { regex: '^(\\.\\./)+(.*/)?src(/|$)', message: messages.testsPath },
         ],
       ),
     );

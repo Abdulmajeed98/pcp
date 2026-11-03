@@ -28,6 +28,7 @@
     "app/**/*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "test/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts"
   ],
