@@ -1,3 +1,4 @@
+export { addressAfterChoosingCurrency } from './address-after-choosing-currency';
 export {
   type Currency,
   chosenCurrency,

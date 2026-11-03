@@ -75,6 +75,13 @@
       }
     },
     {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test",
+        "testMode": "run"
+      }
+    },
+    {
       "plugin": "@nx/playwright/plugin",
       "options": {
         "targetName": "e2e"
