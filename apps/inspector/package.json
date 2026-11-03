@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@pcp/api-client": "workspace:*"
+    "@pcp/api-client": "workspace:*",
+    "sharp": "~0.35.5"
   },
   "nx": {
     "tags": [

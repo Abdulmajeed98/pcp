@@ -576,6 +576,9 @@ importers:
       '@pcp/api-client':
         specifier: workspace:*
         version: link:../../libs/api-client
+      sharp:
+        specifier: ~0.35.5
+        version: 0.35.5(@types/node@24.19.1)
 
   apps/shopper:
     dependencies:
