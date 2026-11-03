@@ -6,23 +6,23 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The research.** It reads Next.js's current documentation on testing and the unit-test runners it documents. For each runner, it finds how widely used it is (its weekly downloads), how it runs in an Nx project (Nx's own plugin for it, if any), and how it fits this workspace's TypeScript, its ES modules, Node 24, and the Shopper app's next-intl and Feature-Sliced Design. Sources are cited. It is recorded under Comments.
 - [x] **The owner's choice.** The runners are put to the owner, the most widely used one that fits recommended first, as the owner has chosen every library so far. The owner's word is recorded under Comments.
-- [ ] **Its set-up.** The runner is installed pinned to an exact version, with no exception to the workspace's release-age rule. It runs through the Shopper app's own `test` target, so `pnpm check` runs it. Where the tests live is decided and recorded under Comments.
-- [ ] **The first function.** It writes the address the currency switch returns to: the page the Shopper was on, with its query, without `lowest` and `highest`. Its tests are written before the code, and they prove each of these:
+- [x] **Its set-up.** The runner is installed pinned to an exact version, with no exception to the workspace's release-age rule. It runs through the Shopper app's own `test` target, so `pnpm check` runs it. Where the tests live is decided and recorded under Comments.
+- [x] **The first function.** It writes the address the currency switch returns to: the page the Shopper was on, with its query, without `lowest` and `highest`. Its tests are written before the code, and they prove each of these:
   - the rest of the query is kept, a repeated parameter among it;
   - `lowest` and `highest` are dropped, alone or together;
   - a page with no query returns with none;
   - the language part of the address is kept.
-- [ ] **Its use.** The currency switch's server answer uses the function, and it is the only place the rule is written.
-- [ ] `pnpm platform:check`'s `shopper-currency.spec.ts` gains a line and passes on every line: a page whose query holds `lowest`, `highest` and another parameter returns without the two and with the other, with scripts and without.
-- [ ] **What the seam tests.** Plain functions only, through their module's public face. Never a server component, a page, the API, or what the browser draws. This is written where the seam's tests live.
-- [ ] Shown once and then reverted: the function keeping `lowest`, failing its unit test.
-- [ ] `pnpm check` passes with Docker stopped, its new unit tests among it.
-- [ ] The results of the fault check are recorded under Comments.
-- [ ] The work is committed in pieces, each leaving `pnpm check` passing.
+- [x] **Its use.** The currency switch's server answer uses the function, and it is the only place the rule is written.
+- [x] `pnpm platform:check`'s `shopper-currency.spec.ts` gains a line and passes on every line: a page whose query holds `lowest`, `highest` and another parameter returns without the two and with the other, with scripts and without.
+- [x] **What the seam tests.** Plain functions only, through their module's public face. Never a server component, a page, the API, or what the browser draws. This is written where the seam's tests live.
+- [x] Shown once and then reverted: the function keeping `lowest`, failing its unit test.
+- [x] `pnpm check` passes with Docker stopped, its new unit tests among it.
+- [x] The results of the fault check are recorded under Comments.
+- [x] The work is committed in pieces, each leaving `pnpm check` passing.
 
 ## Comments
 
@@ -80,3 +80,36 @@ Waiting for the owner's choice.
 ### 3 November 2026: the owner's choice
 
 Asked "Which runner should the Shopper app use?", with Vitest 4.1.12 recommended first and Jest 30 second, the owner chose **Vitest 4.1.12**, as recommended. Vitest 5 waits for an upgrade of Nx to 23.3 or later.
+
+### 4 November 2026: the set-up, the first function and the checks
+
+**The set-up.** `vitest` 4.1.12 and `@nx/vitest` 23.2.1 are devDependencies at the root, each pinned to that exact version. pnpm installed them under its default minimum release age, and `pnpm-workspace.yaml` is unchanged: there is no exception. The Vite that Vitest runs on is the dashboard's 8.3.2, and no second copy was installed. `nx.json` registers `@nx/vitest` with `testMode: run`, and it gives `@pcp/shopper` a `test` target from `apps/shopper/vitest.config.mts`, which runs `vitest run` once, so `pnpm check` runs it with every project's `test`. The configuration runs the tests in Node, with no browser, finds `test/**/*.spec.ts`, and resolves the `@/` alias through Vite 8's `resolve.tsconfigPaths`. `tsconfig.json` now includes `test/`, so the project's `typecheck` checks the tests' types with the rest. No jsdom, React plugin, Testing Library or `vite-tsconfig-paths` was installed: the seam draws nothing.
+
+**Where the tests live.** In `apps/shopper/test/`, beside `src` and outside its layers, mirroring `src`: the tests of `src/shared/currency` are in `test/shared/currency/`. `test/README.md` says what the seam tests and what it never tests, as the ticket asks. The tests import `describe`, `it` and `expect` from `vitest`, and nothing is global.
+
+**The import bans cover the tests.** `tools/feature-sliced-bans.mjs` has a block for the folder: a test may import any layer, but only through its index file, and never by a relative path into `src`. `pnpm boundaries:check` proves it with eight new cases, five refused (past a Shared segment's index, past the App layer's index, past a page's index, a folder that is not a layer, a relative path into `src`) and three allowed; all 122 cases pass.
+
+**The test-file lint rules read Vitest tests.** The Shopper's lint configuration now extends `.oxlintrc.test-files.json` with Oxlint's `jest` plugin, as the API, `core` and the inspector do. A throwaway test file, deleted after, was reported three times: `jest(no-focused-tests)` for an `it.only`, `jest(expect-expect)` for a test with no assertion, and `jest(consistent-test-it)` for a `test` in place of `it`.
+
+**The first function** is `addressAfterChoosingCurrency(language, page)`, in the Shared layer's `currency` segment and exported from its index. It takes the language of the switch's own address and what the form sent as the page, and answers the address to return to. It keeps the query as the page wrote it, each parameter in its place, and drops the parameters named `lowest` and `highest`, reading each name decoded as the page does; a query left empty is dropped. It also holds the rule the route had held, that a page starting with neither `/` nor `?` returns to the first page, so the whole address is written in one place. Its tests were written one at a time, each run red before its code:
+
+1. The language of the address is kept, in each of the three: red, the function did not exist.
+2. `lowest` is dropped: red, the address kept it.
+3. `highest` alone, and both together: red, the address kept `highest`.
+4. The rest of the query is kept as it is, a repeated `manufacturer` among it: green on its first run, as written so far. It guards against a rewrite that keeps one value for each name.
+5. A page with no query returns with none, and one whose query held only a price range returns with none: the second was red, the address ended in `?`.
+6. Another site, a path with no slash first, nothing, and no page at all each return to the first page: red, the first three were joined onto the language, and the last threw.
+
+There are 13 tests in one file.
+
+**Its use.** The currency switch's server answer, `chooseCurrency` in `src/_app/routes/choose-currency.ts`, sends the Shopper to `addressAfterChoosingCurrency(locale, form.get('page'))`. `lowest` and `highest` appear nowhere else in the Shopper app.
+
+**The end-to-end lines.** `shopper-currency.spec.ts` has two new lines, one with scripts and one without: the first page with `?lowest=150000&search=ryzen&highest=900000` returns, after a choice, to `?search=ryzen`. `choose` in `currencies.ts` takes the address it should return to, which is the page's own unless given. With the route planted to return to the page as it was sent, a run of the file failed exactly those two lines, each with "the choice returns to http://localhost:3000/en?search=ryzen" and the range still in the address it received; the other 13 passed. Reverted, the whole of `pnpm platform:check` passed on `13fe553`, 290 tests, the two new lines among them, in 10.6 minutes.
+
+**The fault**, planted on the committed tree by one exact edit and reverted by its inverse: the function's price range named `highest` alone, so it kept `lowest`. `nx test @pcp/shopper` failed 4 of the 13 tests, each with `lowest=150000` still in the address it received: the rest of the query kept, a repeated parameter among it; `lowest` dropped; both ends dropped together; and a query of nothing but a price range returning with none. The other 9 passed, `highest` dropped alone among them. Reverted, all 13 passed, and the tree was clean.
+
+**`pnpm check` with Docker stopped.** Each commit, checked out in turn, passed `pnpm check --skip-nx-cache` with `DOCKER_HOST` pointing at a socket that does not exist and `PLAYWRIGHT_BROWSERS_PATH` at an empty folder, `@pcp/shopper:test` among its tasks.
+
+**After merging `browse/integration`** at `e74ead9`, which brought ticket 02's endpoint and no change to a file of this ticket's, `pnpm check` passed, `pnpm integration:check` passed its 430 tests, and `pnpm platform:check` passed its 290.
+
+**Outside this ticket**, for the follow-ups: Vitest 5 (5.1.0 of 2 November 2026) waits for Nx 23.3 or later, whose `@nx/vitest` accepts it.
