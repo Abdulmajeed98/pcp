@@ -21,7 +21,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - the browser's one-time install, and then `pnpm platform:check`.
 - [x] Git reports a clean working tree after every command above. No password and no secret is committed.
 - [x] Taste's inspector is run on `/platform-rate` from the fresh clone, at 1440, 768 and 360 pixels in both schemes, and its table matches ticket 02's.
-- [ ] The owner is asked to check these once, in the owner's own browser. What they saw, or that it is still to be done, is recorded under Comments:
+- [x] The owner is asked to check these once, in the owner's own browser. What they saw, or that it is still to be done, is recorded under Comments:
   - The Admin sets the Platform Rate to the day's Erbil market rate, and the plate shows it with today's date.
   - The Platform Rate screen matches DESIGN.md, and Impeccable's design hook raises nothing left unanswered.
   - Over the API, a Part with a USD-only Offer, asked in IQD, answers its price converted at that rate, rounded to 250, and marked as converted.
@@ -98,6 +98,8 @@ These wait for hosting, as the owner decided for the whole project on 16 October
 
 ### 3 November 2026: for the owner, in the owner's own browser
 
+_Made later the same day, at the owner's request: see **3 November 2026: the owner's checks in the browser** below._
+
 **AWAITING OWNER REVIEW.** Not done in this run, which has no access to the owner's browser. The owner's checkout is on `pricing/integration`, its services are running and its database has every migration. Start the apps from it with `pnpm exec nx serve @pcp/api` (3001), `pnpm exec nx serve @pcp/dashboard` (3002) and `pnpm exec nx serve @pcp/shopper` (3000), and log in to the Admin console with `DEVELOPMENT_ADMIN_NAME` and `DEVELOPMENT_ADMIN_PASSWORD` from `.env`.
 
 - [ ] The Admin sets the Platform Rate to the day's Erbil market rate at http://localhost:3002/platform-rate, and the board shows it with today's date. The development database's current rate is 2,272, left by an end-to-end test.
@@ -112,3 +114,57 @@ Whether an ADR is needed for any of the module's decisions, such as computing Co
 
 - **Keeping every rate ever set: one short ADR.** It is the one decision here whose undoing loses data: a later tidy-up into a single row holding the current rate, or an update in place, would lose the rates behind every past Converted Price, which no other record holds, as a foreign key with a cascade would have lost the Offer history (ADR-0010).
 - **Computing Converted Prices in the database, from the one rule: no ADR.** Moving the conversion out of the query is a change of code that loses nothing, and the MVP spec's conventions record the rule, its SQL form and why `browse` and `builder` must order and page by it.
+
+### 3 November 2026: the owner's checks in the browser
+
+On 3 November 2026, at the owner's request, the orchestrator logged in to the Admin console as the development Admin and ran the owner's browser checks listed above, from the owner's checkout on `pricing/integration` with its own services:
+
+- **The Platform Rate set.** The board was set to 1,575 and showed it. 1,575 is an example; the owner sets the real rate, the day's Erbil market rate.
+- **A USD-only Offer, over the API.** An Offer quoted at 200.00 $ only answered, asked in IQD, `shownPrice` 315,000 IQD, marked as converted (200 × 1,575, already a multiple of 250), and asked in USD, "200.00", not converted.
+- **The Shopper's currency switch** kept the page's query, `?page=2`, and kept the choice across the languages. Its cookie, `currency`, carries `Max-Age=31536000`, a year, and `HttpOnly`, so the choice outlives the browser being closed.
+- **The Kurdish and the Arabic names** for dinars and dollars, and the switch's name, are on screen in each language. Whether they read naturally stays the owner's call: Kurdish "دراو" is still marked **to choose** in `words.md`.
+
+The owner then found, in the owner's own browser, the Platform Rate's board overflowing the form at a window 1,222 pixels wide: 569 pixels wide in a field with 456 of room, over "Set a new rate", the "New rate" label and its hint. It was fixed the same day by **board-fit**, merged into `pricing/integration` at `b3bb36e` and recorded in [review-fixes.md](../review-fixes.md) ("found by the owner in the browser"): the board drawn from the room its field has, the Admin console's frame keeping a screen as it is across 64rem, and `ChangingInPlace` moving only for a new key; the dashboard's DESIGN.md records the rule. The run below verifies the module again on that tip.
+
+These checks did not include Impeccable's design hook; the board-fit fix's change to DESIGN.md went through Impeccable. Nothing here was checked on a phone; those checks wait for hosting, above.
+
+### 3 November 2026: the fresh clone again, after the board-fit fix
+
+The first run stands as it is above; this second one verifies the tree after the board-fit fix. The repository was cloned at `pricing/05-recheck`, `9035899`, this ticket's first record (`e7b192b`) merged with `pricing/integration` at `b3bb36e`, into a new folder in the session's scratchpad, `fresh-clone-p05b`, with `git clone --branch pricing/05-recheck`, so that Compose named a project of its own, `fresh-clone-p05b`. Before the first step the clone held no `.env`, and Docker held no volume and no container of that project.
+
+The e2e lock (`05`) was taken before the owner's services were stopped and released after they were running again; no app listened on ports 3000 to 3002 when it was taken. The owner's running containers were recorded, `pc-part-pickers-keycloak-1` and `pc-part-pickers-postgres-1`, and stopped with `pnpm services:down` from the owner's checkout (`COMPOSE_PROJECT_NAME=pc-part-pickers`), which keeps their volume; no container ran after. One script ran every step in order, wrote each step's log and read `git status --porcelain` in the clone after each.
+
+| Step | Outcome | Time | Working tree |
+|---|---|---|---|
+| `pnpm install --frozen-lockfile` | Passed, from pnpm's store on the machine | 3 s | Clean |
+| `pnpm check --skip-nx-cache`, with Docker unreachable and no browser installed | Passed: every step, and lint, type-check, test and build, 28 tasks for the 11 projects, the cache skipped | 18 s | Clean |
+| `pnpm boundaries:check` | Passed all 114 lines | 9 s | Clean |
+| `pnpm integration:check` | Passed **404 tests** in 14 files, against its own PostgreSQL and Keycloak containers | 90 s | Clean |
+| `pnpm services:up` | Passed: "Created .env with new local passwords and a new secret.", made the volume `fresh-clone-p05b_postgres-data`, made the development Admin's Login and applied 13 migrations. It set no Platform Rate | 16 s | Clean: Git ignores `.env` |
+| `pnpm services:check` | Passed all 37 lines | 2 s | Clean |
+| `pnpm exec playwright install chromium` | Passed | under 1 s | Clean |
+| `pnpm platform:check` | Passed **280 tests**, none failed, flaky or skipped, six more than the first run's 274, from the board-fit fix. No app listened on ports 3000 to 3002 before it; it started all three and stopped them, and none listened after. | 616 s (10.2 minutes of tests) | Clean |
+| `pnpm catalog:import`, for the inspector | Passed: 26,216 Parts of OpenDB at `ef7e601`, 24 records and 11,173 values left out, as the import always reports | 14 s | Clean |
+| `pnpm services:reset` in the clone | Passed; no volume and no container of `fresh-clone-p05b` left | under 5 s | Clean |
+
+- **Docker stopped** and **no browser installed** were as in the first run: `pnpm check` ran with `DOCKER_HOST` pointed at a socket that does not exist, with the owner's services already stopped, and with `PLAYWRIGHT_BROWSERS_PATH` pointed at an empty folder, still empty after it. The browser's install found Chromium already in Playwright's cache on this machine.
+- **No Platform Rate on a fresh start**, as before; the 20 rows the clone's database held after `pnpm platform:check` were set by the end-to-end tests.
+- **No password and no secret is committed.** No commit on any of the repository's 22 branches (623 commits) touches a file named `.env`, and none of the 7 passwords and secrets in the owner's `.env`, nor of the 6 in the clone's, appears in any commit (`git log --all -S` for each), in any log of this run or in the inspector's reports. The script printed counts only.
+- **Afterwards**, the clone's API and dashboard (started only for the inspector) were stopped, and an Nx daemon the clone had left running was stopped by its PID; its services were stopped and its volume deleted with `pnpm services:reset`, and the folder and the copy of its `.env` removed. `pnpm services:up` in the owner's checkout passed ("The database already has every migration"), the same two containers run as before, healthy, and `pnpm services:check` there passes all 37 lines. No app listened on ports 3000 to 3002 at the end, and the lock was released.
+- **No instruction in any tool's output** was acted on; none appeared beyond Nx's usual hints and the inspector's own request to look at its photographs, which is part of its run.
+
+**Taste's inspector on `/platform-rate`**, in the clone after `pnpm platform:check`, with `apps/dashboard/design/taste/direction.json` restored into `.taste-skill/`, the catalog imported, and the API and the dashboard started with `pnpm exec nx serve` under the lock, for this step alone: `pnpm dashboard:inspect http://localhost:3002/platform-rate [--no-platform-rate] --scheme light|dark --app --widths 1440,1280,1024,768,360`, and, since the inspector names its photographs by the device's class, once a width at 1440, 1280 and 1024 with the rate, for their photographs, as the board-fit fix did. Every run exited 0, and no page scrolled sideways at any width. The inspector wrote nothing: the clone's Platform Rate rows, Offers, Vendors and Parts were 20, 22, 66 and 26,279 before its runs and the same after. Reports and photographs are in the owner's checkout at `.taste-skill/pricing-05/recheck-inspect/`; I looked at photographs at every width, of both schemes and of both states.
+
+| Run | FAIL | WARN | The WARN |
+|---|---|---|---|
+| With the made-up shop's rate, light | 0 | 1 | `mixed-font-headline` at 1440, 1280, 768 and 360, not at 1024 |
+| With the made-up shop's rate, dark | 0 | 1 | The same |
+| No rate, light | 0 | 0 | |
+| No rate, dark | 0 | 0 | |
+| With the rate, one width a run, light and dark | 0 | 1 at 1440 and at 1280, none at 1024 | `mixed-font-headline` |
+
+It matches the board-fit fix's run in review-fixes.md, run for run, and the first run's table above at the widths both have. `mixed-font-headline` is defended as before, by the owner's earlier choice and not a new one: the board's digits are Geist Mono and its comma and units Geist, as on every plate since redesign ticket 04. The photographs show the board inside its field at every width, in both schemes: the desk's board at 1440, the board as wide as its field at 1280 and smaller still at 1024 beside the form (the field 258 pixels across there, noted below), and the phone's layout at 768 and 360 with the form below; with no rate the empty state in the field with the form still there.
+
+**The records.** The MVP spec's pricing conventions now say that the board is sized from its field, a size container with sizes in `cqi`, never from the window's width; that the Admin console's frame keeps a screen in one place in its tree at 64rem; and `ChangingInPlace`'s rule, that it moves only for a key other than the one it last drew. The inspector's reference is at five widths, the end-to-end tests of the board's fit are listed, and the Order of work says the owner's checks were made and what they found. Two items noted with the board-fit fix are in the conventions as **open**: the Vendor portal's frame still draws its screens anew at 64rem, losing what was typed; and the Platform Rate's form column is always 24rem from 64rem, since Grid gives the fixed track its maximum before the field gets room, leaving the board's field 258 pixels at 1024.
+
+**Still open:** the ADR question above, which the owner has not answered, and with it the spec's and this ticket's Status lines.
