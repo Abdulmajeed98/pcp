@@ -1,6 +1,5 @@
 import type { MapLocationResponse } from '@pcp/api-client';
-
-import { westernDigitsIn } from '@/shared/lib';
+import { westernDigitsIn } from '@pcp/i18n';
 
 // The address of Google Maps' search for a Vendor's coordinates, which is
 // Google's documented way to link to a place: on a phone with Google Maps it

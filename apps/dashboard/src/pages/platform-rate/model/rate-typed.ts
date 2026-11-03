@@ -1,6 +1,5 @@
 import type { SubErrorResponse } from '@pcp/api-client';
-
-import { westernNumberIn } from '@/shared/lib';
+import { westernNumberIn } from '@pcp/i18n';
 
 // A number as the API reads one, in Western digits.
 const aNumber = /^-?\d+(?:\.\d+)?$/;
