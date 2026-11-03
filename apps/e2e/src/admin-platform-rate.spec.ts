@@ -23,6 +23,9 @@ import { apiUrl, dashboardUrl } from './platform';
 // the test, as the API answers it until the first rate is set.
 test.use({ viewport: narrowWindow });
 
+// A window as wide as a desk's, the inspector's widest.
+const aDesk = { width: 1440, height: 900 };
+
 const platformRateUrl = `${dashboardUrl}/platform-rate`;
 const rateEndpoint = `${apiUrl}/v1/platform-rate`;
 
@@ -414,11 +417,17 @@ function twoRatesForAFilm(): [number, number] {
   }
 }
 
-for (const reducedMotion of ['no-preference', 'reduce'] as const) {
-  test(`the board takes a new rate with no snap: each changed tile ${reducedMotion === 'reduce' ? 'fades to its new digit' : 'flips, its top falling and then its bottom landing'}, and the board's width holds (${reducedMotion})`, async ({
+for (const [reducedMotion, window] of [
+  ['no-preference', narrowWindow],
+  ['reduce', narrowWindow],
+  ['no-preference', aDesk],
+  ['reduce', aDesk],
+] as const) {
+  test(`the board takes a new rate with no snap: each changed tile ${reducedMotion === 'reduce' ? 'fades to its new digit' : 'flips, its top falling and then its bottom landing'}, and the board's width holds (${reducedMotion}, ${window.width} wide)`, async ({
     page,
     request,
   }) => {
+    await page.setViewportSize(window);
     await page.emulateMedia({ reducedMotion });
     const [before, rate] = twoRatesForAFilm();
     await setTheRate(request, authorization, before);
@@ -461,7 +470,9 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
       expect(fading, 'nothing fades in place of the flip').toEqual([]);
     }
   });
+}
 
+for (const reducedMotion of ['no-preference', 'reduce'] as const) {
   test(`the first rate takes the empty state’s place with no snap, the form below following (${reducedMotion})`, async ({
     page,
   }) => {
@@ -486,3 +497,247 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     expect(snapsOf('the form’s top', tops)).toEqual([]);
   });
 }
+
+// A box on the page, in the window's own coordinates.
+interface Box {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+// Where the board's field holds what it shows, inside its padding, and
+// where the board is drawn: its plate and each piece drawn on it, the
+// "1 $ =", every tile and comma, and "IQD".
+async function whereTheBoardLies(
+  page: Page,
+): Promise<{ field: Box; drawn: { name: string; box: Box }[] }> {
+  return theBoard(page).evaluate((plate) => {
+    const boxOf = (element: Element) => {
+      const { left, right, top, bottom } = element.getBoundingClientRect();
+      return { left, right, top, bottom };
+    };
+    const field = plate.closest('section');
+    if (field === null) throw new Error('the board is not in its field');
+    const padding = getComputedStyle(field);
+    const outer = boxOf(field);
+    const drawing = plate.querySelector('[data-testid="platform-rate-drawn"]');
+    return {
+      field: {
+        left: outer.left + Number.parseFloat(padding.paddingLeft),
+        right: outer.right - Number.parseFloat(padding.paddingRight),
+        top: outer.top + Number.parseFloat(padding.paddingTop),
+        bottom: outer.bottom - Number.parseFloat(padding.paddingBottom),
+      },
+      drawn: [
+        { name: 'the plate', box: boxOf(plate) },
+        ...[...(drawing?.children ?? [])].map((piece, at) => ({
+          name: `piece ${at + 1} of the drawing`,
+          box: boxOf(piece),
+        })),
+        ...[
+          ...plate.querySelectorAll(
+            '[data-testid="board-tile"], [data-testid="board-comma"]',
+          ),
+        ].map((cell, at) => ({ name: `cell ${at + 1} of the figure`, box: boxOf(cell) })),
+      ],
+    };
+  });
+}
+
+// What the form shows that the board must never cover.
+function theFormsParts(page: Page): [string, Locator][] {
+  return [
+    ['heading', page.getByRole('heading', { name: 'Set a new rate', exact: true })],
+    ['label', page.getByText('New rate', { exact: true })],
+    ['field', theField(page)],
+    [
+      'hint',
+      page.getByText('Whole dinars for one dollar, such as 1,575.', { exact: true }),
+    ],
+  ];
+}
+
+// The board, and every piece drawn on it, lies inside its field, and none
+// of it covers any part of the form.
+async function expectTheBoardToFit(page: Page, where: string): Promise<void> {
+  const { field, drawn } = await whereTheBoardLies(page);
+  for (const { name, box } of drawn) {
+    expect(box.left, `${name} starts inside the field (${where})`).toBeGreaterThanOrEqual(
+      field.left - 0.5,
+    );
+    expect(box.right, `${name} ends inside the field (${where})`).toBeLessThanOrEqual(
+      field.right + 0.5,
+    );
+    expect(box.top, `${name} is inside the field (${where})`).toBeGreaterThanOrEqual(
+      field.top - 0.5,
+    );
+    expect(box.bottom, `${name} is inside the field (${where})`).toBeLessThanOrEqual(
+      field.bottom + 0.5,
+    );
+  }
+  for (const [part, locator] of theFormsParts(page)) {
+    const found = await locator.boundingBox();
+    expect(found, `the form's ${part} is drawn (${where})`).not.toBeNull();
+    if (found === null) continue;
+    const covered = drawn.filter(
+      ({ box }) =>
+        box.left < found.x + found.width &&
+        found.x < box.right &&
+        box.top < found.y + found.height &&
+        found.y < box.bottom,
+    );
+    expect(
+      covered.map(({ name }) => name),
+      `nothing of the board covers the form's ${part} (${where})`,
+    ).toEqual([]);
+  }
+}
+
+// Sets the window's width, and waits until the screen has followed it: the
+// frame is drawn anew for a desk or a phone in the frame after the window
+// changes, and nothing still moves, such as the field's height as the
+// board takes the sketch's place.
+async function toWidth(page: Page, width: number): Promise<void> {
+  await page.setViewportSize({ width, height: 900 });
+  await page.evaluate(
+    () =>
+      new Promise<void>((drawn) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => drawn())),
+      ),
+  );
+  await untilStill(page);
+}
+
+test('at a desk the board lies inside its field, with the room the field has, and covers nothing of the form, in light and in dark', async ({
+  page,
+  request,
+}) => {
+  const rate = aRateOfOurOwn(4);
+  await setTheRate(request, authorization, rate);
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto(platformRateUrl);
+  await expectTheBoardToShow(page, rate);
+  await page.evaluate(() => document.fonts.ready);
+
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme });
+    for (const width of [1024, 1222, 1280, 1440]) {
+      await toWidth(page, width);
+      await expectTheBoardToFit(page, `${width} wide, ${colorScheme}`);
+    }
+  }
+});
+
+test('the board lies inside its field at every width from 320 to 1920 pixels, with the browser’s text at its own size and at 200%', async ({
+  page,
+  request,
+}) => {
+  // Eighty-two windows, each looked at in full.
+  test.setTimeout(180_000);
+  const rate = aRateOfOurOwn(4);
+  await setTheRate(request, authorization, rate);
+  const devtools = await page.context().newCDPSession(page);
+  try {
+    for (const standard of [16, 32]) {
+      // The browser's own text size, as its settings set it (WCAG 1.4.4).
+      await devtools.send('Page.setFontSizes', {
+        fontSizes: { standard, fixed: Math.round((standard * 13) / 16) },
+      });
+      await page.setViewportSize({ width: 1024, height: 900 });
+      await page.goto(platformRateUrl);
+      await expectTheBoardToShow(page, rate);
+      await page.evaluate(() => document.fonts.ready);
+      expect(
+        await page.evaluate(() => getComputedStyle(document.documentElement).fontSize),
+        'the page takes the browser’s text size',
+      ).toBe(`${standard}px`);
+      const text = standard === 16 ? 'the browser’s own size' : '200%';
+
+      for (let width = 320; width <= 1920; width += 40) {
+        await toWidth(page, width);
+        await expectTheBoardToFit(page, `${width} wide, text at ${text}`);
+        await expectNoSidewaysScroll(page);
+      }
+    }
+  } finally {
+    await devtools.send('Page.setFontSizes', { fontSizes: { standard: 16, fixed: 13 } });
+    await devtools.detach();
+  }
+});
+
+// What a film of the board's place sees in each frame: whether the board
+// drawn is the one marked before the film, and how opaque it is drawn, its
+// own opacity and that of everything around it; or nothing, while no board
+// is drawn.
+function lookAtTheBoardsPlace(): { same: boolean; opacity: number } | null {
+  const board = document.querySelector('[data-testid="platform-rate-plate"]');
+  if (board === null) return null;
+  let opacity = 1;
+  for (let each: Element | null = board; each !== null; each = each.parentElement) {
+    opacity *= Number(getComputedStyle(each).opacity);
+  }
+  return {
+    same: board === (window as unknown as { boardBefore?: Element }).boardBefore,
+    opacity,
+  };
+}
+
+test('crossing 64rem as the window changes leaves the board as it is: it is not drawn anew, never fades, and the rate typed stays', async ({
+  page,
+  request,
+}) => {
+  const rate = aRateOfOurOwn(4);
+  await setTheRate(request, authorization, rate);
+  await page.setViewportSize({ width: 1222, height: 900 });
+  await page.goto(platformRateUrl);
+  await expectTheBoardToShow(page, rate);
+  const typed = String(aRateOfOurOwn(4, rate));
+  await theField(page).fill(typed);
+  await untilStill(page);
+  await theBoard(page).evaluate((board) => {
+    (window as unknown as { boardBefore: Element }).boardBefore = board;
+  });
+
+  const frames = await film(page, lookAtTheBoardsPlace, async () => {
+    await page.setViewportSize({ width: 1000, height: 900 });
+    await page.waitForTimeout(400);
+    await page.setViewportSize({ width: 1222, height: 900 });
+  });
+
+  expect(frames.length, 'the film saw the window change').toBeGreaterThan(10);
+  expect(
+    frames.filter(({ drawn }) => drawn === null || !drawn.same).length,
+    'every frame draws the board drawn before the window changed',
+  ).toBe(0);
+  expect(
+    Math.min(...frames.map(({ drawn }) => drawn?.opacity ?? 0)),
+    'the board never fades',
+  ).toBeGreaterThan(0.999);
+  await expect(theField(page), 'the rate typed is kept').toHaveValue(typed);
+});
+
+test('coming back to the Platform Rate shows the board at once, with no fade, as a change of screen is still', async ({
+  page,
+  request,
+}) => {
+  const rate = aRateOfOurOwn(4);
+  await setTheRate(request, authorization, rate);
+  await page.goto(platformRateUrl);
+  await expectTheBoardToShow(page, rate);
+  await openTheSection(page, 'Catalog');
+  await expect(catalogHeading(page)).toBeVisible();
+  await untilStill(page);
+
+  const frames = await film(page, lookAtTheBoardsPlace, () =>
+    openTheSection(page, 'Platform Rate'),
+  );
+
+  await expectTheBoardToShow(page, rate);
+  const opacities = seen(frames.map(({ drawn }) => drawn?.opacity ?? null));
+  expect(opacities.length, 'the film saw the board').toBeGreaterThan(10);
+  expect(
+    Math.min(...opacities),
+    'the board is drawn whole from its first frame',
+  ).toBeGreaterThan(0.999);
+});

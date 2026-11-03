@@ -51,6 +51,11 @@ const surface = 'Admin console';
 // A word too long for the screen is broken, so that it cannot make the page
 // scroll sideways. A new address starts at the top of its screen, and the
 // browser's back button returns to where the Admin was.
+//
+// The screen stays where it is in the frame at every width, so that a window
+// crossing 64rem changes the frame around it and leaves the screen as it is:
+// nothing on it is drawn anew, and nothing typed into it is lost. Only the
+// bars and the sidebar are a desk's or a phone's.
 export function AdminConsoleFrame() {
   const wide = useWideScreen();
   // Who the API says the caller is, asked for as the console opens.
@@ -59,71 +64,97 @@ export function AdminConsoleFrame() {
     queryFn: () => dataOf(apiClient.getCaller()),
   });
   const callerName = caller.data?.loginName;
+  // Where the screen's search goes on a desk, in the top bar's centre.
+  const [searchPlace, setSearchPlace] = useState<HTMLElement | null>(null);
 
   return (
     <>
-      {wide ? <OnADesk callerName={callerName} /> : <OnAPhone callerName={callerName} />}
+      <div
+        className={cn(
+          'min-h-dvh wrap-break-word',
+          wide
+            ? 'grid grid-cols-[14.25rem_minmax(0,1fr)] grid-rows-[3rem_1fr] bg-frame'
+            : 'bg-background',
+        )}
+      >
+        {wide && <Sidebar />}
+        {wide ? (
+          <TopBar callerName={callerName} searchPlace={setSearchPlace} />
+        ) : (
+          <PhoneBar callerName={callerName} />
+        )}
+        <main
+          className={cn(
+            'min-w-0',
+            wide ? 'me-2 mb-2 rounded-sheet border border-border bg-background p-6' : 'p-4',
+          )}
+        >
+          <div className={cn(wide && 'max-w-[80rem]')}>
+            <ScreenSearchPlaceProvider place={wide ? searchPlace : null}>
+              <Outlet />
+            </ScreenSearchPlaceProvider>
+          </div>
+        </main>
+      </div>
       <ScrollRestoration />
     </>
   );
 }
 
-function OnADesk({ callerName }: { callerName: string | undefined }) {
-  // Where the screen's search goes, in the top bar's centre.
-  const [searchPlace, setSearchPlace] = useState<HTMLElement | null>(null);
-
+// From 64rem: the sidebar, with the surface's name and the sections.
+function Sidebar() {
   return (
-    <div className="grid min-h-dvh grid-cols-[14.25rem_minmax(0,1fr)] grid-rows-[3rem_1fr] bg-frame wrap-break-word">
-      <div className="sticky top-0 row-span-2 flex h-dvh flex-col gap-5 self-start overflow-y-auto px-3 pt-1.5 pb-4">
-        <p className="flex min-h-control items-center px-3 font-semibold">{surface}</p>
-        <Sections />
-      </div>
-      <header className="grid grid-cols-[minmax(0,1fr)_minmax(0,34.25rem)_minmax(max-content,1fr)] items-center gap-4 pe-2">
-        <div />
-        <div ref={setSearchPlace} className="min-w-0" />
-        <div className="flex min-w-0 items-center justify-end gap-3">
-          <CallerName name={callerName} className="max-w-48" />
-          <SchemeSwitch />
-          <LogOut />
-        </div>
-      </header>
-      <main className="me-2 mb-2 min-w-0 rounded-sheet border border-border bg-background p-6">
-        <div className="max-w-[80rem]">
-          <ScreenSearchPlaceProvider place={searchPlace}>
-            <Outlet />
-          </ScreenSearchPlaceProvider>
-        </div>
-      </main>
+    <div className="sticky top-0 row-span-2 flex h-dvh flex-col gap-5 self-start overflow-y-auto px-3 pt-1.5 pb-4">
+      <p className="flex min-h-control items-center px-3 font-semibold">{surface}</p>
+      <Sections />
     </div>
   );
 }
 
-function OnAPhone({ callerName }: { callerName: string | undefined }) {
+// From 64rem: the top bar, with the place for the screen's search.
+function TopBar({
+  callerName,
+  searchPlace,
+}: {
+  callerName: string | undefined;
+  searchPlace: (place: HTMLElement | null) => void;
+}) {
+  return (
+    <header className="grid grid-cols-[minmax(0,1fr)_minmax(0,34.25rem)_minmax(max-content,1fr)] items-center gap-4 pe-2">
+      <div />
+      <div ref={searchPlace} className="min-w-0" />
+      <div className="flex min-w-0 items-center justify-end gap-3">
+        <CallerName name={callerName} className="max-w-48" />
+        <SchemeSwitch />
+        <LogOut />
+      </div>
+    </header>
+  );
+}
+
+// Below 64rem: the one bar, with the menu button, which opens the menu
+// sheet, and the surface's name.
+function PhoneBar({ callerName }: { callerName: string | undefined }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-dvh bg-background wrap-break-word">
-      <header className="flex h-14 items-center gap-2 bg-frame px-4">
-        <MenuSheet
-          label="Sections"
-          title={surface}
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
-        >
-          <Sections onChosen={() => setMenuOpen(false)} />
-          <div className="mt-auto flex flex-col items-start gap-3">
-            <CallerName name={callerName} />
-            <SchemeSwitch />
-            <LogOut className="-ms-3.5" />
-          </div>
-        </MenuSheet>
-        <p className="min-w-0 flex-1 truncate text-center font-semibold">{surface}</p>
-        <span aria-hidden="true" className="size-control shrink-0" />
-      </header>
-      <main className="p-4">
-        <Outlet />
-      </main>
-    </div>
+    <header className="flex h-14 items-center gap-2 bg-frame px-4">
+      <MenuSheet
+        label="Sections"
+        title={surface}
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+      >
+        <Sections onChosen={() => setMenuOpen(false)} />
+        <div className="mt-auto flex flex-col items-start gap-3">
+          <CallerName name={callerName} />
+          <SchemeSwitch />
+          <LogOut className="-ms-3.5" />
+        </div>
+      </MenuSheet>
+      <p className="min-w-0 flex-1 truncate text-center font-semibold">{surface}</p>
+      <span aria-hidden="true" className="size-control shrink-0" />
+    </header>
   );
 }
 
