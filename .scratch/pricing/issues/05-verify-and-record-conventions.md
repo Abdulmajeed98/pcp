@@ -10,7 +10,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 
 **Blocked by:** 02, 03, 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] In a fresh clone in a new directory, with no `.env` and no Docker volumes left from earlier runs, these all pass, with none of the three apps started by hand:
   - one install;
@@ -32,8 +32,8 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - [ ] The Shopper's currency switch used with a thumb, in Kurdish and in English, and its choice kept after the phone's browser is closed.
   - [ ] The plate's change felt on a real phone, with reduced motion on and off, with no movement felt as a snap.
 - [x] **Recorded in the MVP spec.** The Technology section gains `pricing`'s place in the order of work and a part of its own, **The pricing module's conventions**: the Platform Rate's table, its limits and that every setting is kept; the conversion rule, written once, and its SQL expression; the Shown Price and `shownPrice`; the order by price; the required `currency`; the currency switch's cookie and the one function that reads it. PRC-3 gains the one-step floor the owner decided on 2 November 2026. PRC-5 says `builder` builds totals. The Admin console's list of screens and the accessibility tests' list are brought up to date. OFF-11's note that the order waits for `pricing` is updated.
-- [ ] Whether an ADR is needed for any of the module's decisions, such as computing Converted Prices in the database or keeping every rate ever set, is decided with the owner, and the answer is recorded under Comments.
-- [ ] The spec's Status becomes `resolved`, and each ticket's too.
+- [x] Whether an ADR is needed for any of the module's decisions, such as computing Converted Prices in the database or keeping every rate ever set, is decided with the owner, and the answer is recorded under Comments.
+- [x] The spec's Status becomes `resolved`, and each ticket's too.
 - [x] The work is committed, leaving `pnpm check` passing.
 
 ## Comments
@@ -168,3 +168,11 @@ It matches the board-fit fix's run in review-fixes.md, run for run, and the firs
 **The records.** The MVP spec's pricing conventions now say that the board is sized from its field, a size container with sizes in `cqi`, never from the window's width; that the Admin console's frame keeps a screen in one place in its tree at 64rem; and `ChangingInPlace`'s rule, that it moves only for a key other than the one it last drew. The inspector's reference is at five widths, the end-to-end tests of the board's fit are listed, and the Order of work says the owner's checks were made and what they found. Two items noted with the board-fit fix are in the conventions as **open**: the Vendor portal's frame still draws its screens anew at 64rem, losing what was typed; and the Platform Rate's form column is always 24rem from 64rem, since Grid gives the fixed track its maximum before the field gets room, leaving the board's field 258 pixels at 1024.
 
 **Still open:** the ADR question above, which the owner has not answered, and with it the spec's and this ticket's Status lines.
+
+### 3 November 2026: the owner's answer to the ADR question
+
+The owner chose **"One ADR, rate history"**: an ADR that every Platform Rate ever set is kept, and none for computing Converted Prices in the database.
+
+- **Keeping every rate ever set: an ADR.** [ADR-0012](../../../docs/adr/0012-every-platform-rate-ever-set-is-kept.md) records it: one new row for each setting, never updated in place or deleted, so that the rates behind past Converted Prices can be reconstructed. It gives why (PRC-1 and ADR-0002's rate typed in by hand, which no service holds, and OFF-10's reasoning applied to the rate), what a table of the current rate alone would lose, the options it was chosen over, and what it means for later modules. The MVP spec's Order of work and its pricing conventions link to it, the conventions where they name the rate's table.
+- **Computing Converted Prices in the database: no ADR.** Moving the conversion out of the query later is a change of code that loses no data. The MVP spec's conventions record the rule, its SQL form and why `browse` and `builder` order and page by it, and now say why it has no ADR.
+- **Resolved.** With the ADR question answered, the pricing spec's Status and this ticket's are `resolved`; tickets 01 to 04 already were. The checks on a phone keep their boxes open, waiting for hosting, as the MVP spec's list under "Checks on a phone wait for hosting" records.
