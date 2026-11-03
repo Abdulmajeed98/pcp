@@ -6,6 +6,7 @@ import { EditOfferCommand } from '~/domain/offer/EditOfferCommand';
 import { ListVendorsOffersQuery } from '~/domain/offer/ListVendorsOffersQuery';
 import { ListVendorsWithExpiringOffersQuery } from '~/domain/offer/ListVendorsWithExpiringOffersQuery';
 import { ListVisibleOffersOfPartQuery } from '~/domain/offer/ListVisibleOffersOfPartQuery';
+import { ListVisiblePartsQuery } from '~/domain/offer/ListVisiblePartsQuery';
 import { OfferStore } from '~/domain/offer/OfferStore';
 import { ReadOfferQuery } from '~/domain/offer/ReadOfferQuery';
 import { RemoveOfferCommand } from '~/domain/offer/RemoveOfferCommand';
@@ -14,12 +15,13 @@ import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
 import { OfferController } from './endpoints/offer.controller';
 import { PartOffersController } from './endpoints/part-offers.controller';
+import { VisiblePartsController } from './endpoints/visible-parts.controller';
 import { DatabaseOfferStore } from './store/DatabaseOfferStore';
 
 @Module({
   // The rule for which Vendor a request acts for, and the Parts offered.
   imports: [VendorModule, PartModule],
-  controllers: [OfferController, PartOffersController],
+  controllers: [OfferController, PartOffersController, VisiblePartsController],
   providers: [
     // The abstract class is the token the domain asks for.
     { provide: OfferStore, useClass: DatabaseOfferStore },
@@ -29,6 +31,7 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     ConfirmAllOffersCommand,
     ListVendorsWithExpiringOffersQuery,
     ListVisibleOffersOfPartQuery,
+    ListVisiblePartsQuery,
     EditOfferCommand,
     RemoveOfferCommand,
   ],
