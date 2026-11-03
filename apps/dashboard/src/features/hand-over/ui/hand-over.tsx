@@ -1,9 +1,9 @@
 import type { PhoneNumberResponse } from '@pcp/api-client';
 import { type Language, languageNames, languages } from '@pcp/i18n';
+import { whatsAppChatWith } from '@pcp/links';
 import { ExternalLinkIcon, MessageCircleIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import { whatsAppChatWith } from '@/shared/lib';
 import { buttonVariants, FieldLegend, FieldSet, SectionTitle } from '@/shared/ui';
 
 import { handOverMessage } from '../model/message';

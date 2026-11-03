@@ -1,7 +1,7 @@
 import type { EditOfferRequest, OfferResponse } from '@pcp/api-client';
+import { westernNumberIn } from '@pcp/i18n';
 
 import { iqdAmountWritten, usdAmountWritten } from '@/entities/offer';
-import { westernNumberIn } from '@/shared/lib';
 
 // What the Offer form holds while the Vendor fills it in: each price and the
 // warranty as typed, and whether the Part is in stock.

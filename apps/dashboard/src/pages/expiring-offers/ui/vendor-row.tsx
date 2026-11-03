@@ -1,5 +1,6 @@
 import type { VendorWithExpiringOffersResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
+import { whatsAppChatWith } from '@pcp/links';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { cn } from 'cn';
 import {
@@ -11,7 +12,7 @@ import {
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
-import { type ShownRow, whatsAppChatWith, movingProps } from '@/shared/lib';
+import { type ShownRow, movingProps } from '@/shared/lib';
 import {
   linkOverRow,
   Table,
