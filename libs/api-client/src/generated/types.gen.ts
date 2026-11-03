@@ -588,6 +588,45 @@ export type PasswordResetResponse = {
     temporaryPassword: string;
 };
 
+export type VisibleVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as it writes it.
+     */
+    name: string;
+    /**
+     * The city the Vendor is in.
+     */
+    city: 'erbil';
+    /**
+     * The Vendor's address, as it writes it, on one or more lines.
+     */
+    address: string;
+    /**
+     * Where the Vendor is, or null when it has not been given.
+     */
+    mapLocation: MapLocationResponse | null;
+    /**
+     * The Vendor's phone number, a mobile number or a landline.
+     */
+    phoneNumber: PhoneNumberResponse;
+    /**
+     * The Vendor's WhatsApp number, or null when it has none.
+     */
+    whatsAppNumber: PhoneNumberResponse | null;
+    /**
+     * The Vendor's Instagram name, bare and in lower case, or null when it has none.
+     */
+    instagramName: string | null;
+    /**
+     * The Vendor's opening hours, as it writes them, on one or more lines, or null when it has not given them.
+     */
+    openingHours: string | null;
+};
+
 export type CreateOfferRequest = {
     /**
      * The Quoted Price in USD, as a decimal number in Western digits, with at most two decimal places, more than 0 and at most 100000.00. It or the IQD price, or both, must be given.
@@ -1566,6 +1605,30 @@ export type ReadCallersVendorResponses = {
 };
 
 export type ReadCallersVendorResponse = ReadCallersVendorResponses[keyof ReadCallersVendorResponses];
+
+export type ReadVisibleVendorData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/visible-vendors/{vendorId}';
+};
+
+export type ReadVisibleVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVisibleVendorError = ReadVisibleVendorErrors[keyof ReadVisibleVendorErrors];
+
+export type ReadVisibleVendorResponses = {
+    200: VisibleVendorResponse;
+};
+
+export type ReadVisibleVendorResponse = ReadVisibleVendorResponses[keyof ReadVisibleVendorResponses];
 
 export type ListVendorsOffersData = {
     body?: never;
