@@ -69,14 +69,12 @@ export class ShownPriceResponse {
   }
 }
 
-// One of a Part's visible Offers, as Shoppers see it: both Quoted Prices as
-// the Vendor entered them, its Shown Price in the chosen currency, and how
-// many days ago it was confirmed, so that every frontend counts days the
-// same way (OFF-7).
-export class VisibleOfferResponse {
-  @ApiProperty({ description: 'The Vendor.', type: VisibleOfferVendorResponse })
-  readonly vendor: VisibleOfferVendorResponse;
-
+// What a visible Offer says, as Shoppers see it, wherever it is listed: both
+// Quoted Prices as the Vendor entered them, its Shown Price in the chosen
+// currency, and how many days ago it was confirmed, so that every frontend
+// counts days the same way (OFF-7). A Part's Offers add their Vendor, and a
+// Vendor's their Part.
+export class VisibleOfferDetailsResponse {
   @ApiProperty({
     description:
       'The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.',
@@ -127,12 +125,8 @@ export class VisibleOfferResponse {
   })
   readonly daysSinceConfirmation: number;
 
-  private constructor(visible: VisibleOffer, now: Date) {
+  protected constructor(visible: VisibleOffer, now: Date) {
     const offer = visible.getOffer();
-    this.vendor = VisibleOfferVendorResponse.of(
-      offer.getVendorId(),
-      visible.getVendorName(),
-    );
     this.usdPrice = usdPriceTextOf(offer.getUsdPriceCents());
     this.iqdPrice = offer.getIqdPrice();
     this.shownPrice = ShownPriceResponse.of(visible.getShownPrice());
@@ -140,6 +134,20 @@ export class VisibleOfferResponse {
     this.warrantyMonths = offer.getWarrantyMonths();
     this.confirmedAt = offer.getConfirmedAt().toISOString();
     this.daysSinceConfirmation = offer.getDaysSinceConfirmation(now);
+  }
+}
+
+// One of a Part's visible Offers, as Shoppers see it, with its Vendor.
+export class VisibleOfferResponse extends VisibleOfferDetailsResponse {
+  @ApiProperty({ description: 'The Vendor.', type: VisibleOfferVendorResponse })
+  readonly vendor: VisibleOfferVendorResponse;
+
+  private constructor(visible: VisibleOffer, now: Date) {
+    super(visible, now);
+    this.vendor = VisibleOfferVendorResponse.of(
+      visible.getOffer().getVendorId(),
+      visible.getVendorName(),
+    );
   }
 
   static at(now: Date): (visible: VisibleOffer) => VisibleOfferResponse {
