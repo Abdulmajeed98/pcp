@@ -61,6 +61,21 @@ function visibleOffer(now: Date): SQL | undefined {
   );
 }
 
+// The order of a Part's visible Offers (OFF-11, PRC-4), given their Shown
+// Price: in stock first, then the lowest Shown Price as answered, after
+// rounding, with none after the others; then the most recent Confirmation,
+// the Vendor's name and the Offer's identifier, so that the order is the same
+// at every read. A query that uses it joins the Vendor.
+function inTheOrderOfAPartsOffers(shownAmount: SQL): SQL[] {
+  return [
+    desc(offer.inStock),
+    sql`${shownAmount} asc nulls last`,
+    desc(offer.confirmedAt),
+    asc(vendor.name),
+    asc(offer.id),
+  ];
+}
+
 // An Expired Offer, and one about to expire, as the database asks them, at now
 // by the API's clock: the same moments as the Offer entity's rules
 // (`expiry.ts`), from the same now.
@@ -571,15 +586,7 @@ export class DatabaseOfferStore implements OfferStore {
         .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
         .leftJoin(currentRate, sql`true`)
         .where(and(eq(offer.partId, partId), visibleOffer(now)))
-        // In stock first, then the lowest Shown Price as answered, after
-        // rounding, with none after the others (OFF-11, PRC-4).
-        .orderBy(
-          desc(offer.inStock),
-          sql`${shownPrice.amount} asc nulls last`,
-          desc(offer.confirmedAt),
-          asc(vendor.name),
-          asc(offer.id),
-        );
+        .orderBy(...inTheOrderOfAPartsOffers(shownPrice.amount));
 
       return Either.all(
         rows.map((row) =>
