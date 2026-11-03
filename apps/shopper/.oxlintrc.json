@@ -2,7 +2,8 @@
   "extends": [
     "../../.oxlintrc.json",
     "../../.oxlintrc.logical-classes.json",
-    "./.oxlintrc.feature-sliced.json"
+    "./.oxlintrc.feature-sliced.json",
+    "../../.oxlintrc.test-files.json"
   ],
-  "plugins": ["nextjs", "react", "jsx-a11y"]
+  "plugins": ["nextjs", "react", "jsx-a11y", "jest"]
 }

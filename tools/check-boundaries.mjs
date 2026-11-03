@@ -60,6 +60,7 @@ const routesUseTheAlias = 'A route file reaches the layers through the `@/` alia
 const proxyTakesOnlyTheLanguages =
   "Next's proxy file takes next-intl's statement of the languages";
 const proxyUsesTheAlias = 'The proxy file reaches that segment through the `@/` alias';
+const testsUseTheAlias = 'A unit test reaches the layers through the `@/` alias';
 
 // A case is one planted file. `file` is its path inside the project, without
 // the suffix, and `specifier` is what its one import names. `form` says how
@@ -515,6 +516,58 @@ const casesInTheProxyFile = [
   ),
 ];
 
+// The Shopper app's unit tests, in their folder beside `src`, outside the
+// layers. A test imports any layer, but only through its index file.
+const unitTest = 'test/boundary-proof';
+
+const casesInTheUnitTests = [
+  inTheShopperApp.refused(
+    'a unit test that reaches past the index file of a Shared segment',
+    `${unitTest}/reaches-into-a-segment`,
+    '@/shared/currency/chosen-currency',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'a unit test that reaches past the index file of the App layer',
+    `${unitTest}/reaches-into-the-app-layer`,
+    '@/_app/routes/choose-currency',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'a unit test that reaches past the index file of a page',
+    `${unitTest}/reaches-into-a-page`,
+    '@/_pages/placeholder/ui/placeholder-page',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'a unit test that imports a folder that is not a layer',
+    `${unitTest}/imports-outside-the-layers`,
+    '@/i18n/request',
+    aliasReachesOnlyLayers,
+  ),
+  inTheShopperApp.refused(
+    'a unit test that reaches a layer by a relative path',
+    `${unitTest}/climbs-into-a-layer`,
+    '../../src/shared/currency',
+    testsUseTheAlias,
+  ),
+  inTheShopperApp.allowed(
+    'a unit test that imports a Shared segment through its index file',
+    `${unitTest}/imports-a-segment`,
+    '@/shared/currency',
+  ),
+  inTheShopperApp.allowed(
+    'a unit test that imports a page through its index file',
+    `${unitTest}/imports-a-page`,
+    '@/_pages/placeholder',
+  ),
+  inTheShopperApp.allowed(
+    'a relative import between two files of the unit tests',
+    `${unitTest}/imports-a-neighbour`,
+    '../helpers',
+  ),
+];
+
 // `core` has the API's two layers and the API's ban. It has no alias of its
 // own, so a relative path is the only way from one layer to the other.
 const casesInCore = [
@@ -546,6 +599,7 @@ const cases = [
   ...casesInAFrontend(inTheShopperApp, { app: '_app', pages: '_pages' }),
   ...casesInTheRoutingFolder,
   ...casesInTheProxyFile,
+  ...casesInTheUnitTests,
 ];
 
 // A planted file's name, as the project's lint target is given it and as the
