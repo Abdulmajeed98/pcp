@@ -13,8 +13,8 @@ import type { Currency } from '@/shared/currency';
 //
 // A choice is a button of a plain form, which asks the server to remember it.
 // The server's answer writes the choice down, for a year, and returns the
-// Shopper to the page they were on, with its query, in its language. It works before any
-// script has loaded, and Safari's seven days for what a page's script writes
+// Shopper to the page they were on, with its query but for a price range, in its
+// language. It works before any script has loaded, and Safari's seven days for what a page's script writes
 // do not apply. The choice is not in the page's address: a link opens in the
 // currency of whoever opens it.
 //

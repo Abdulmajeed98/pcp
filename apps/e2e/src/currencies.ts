@@ -57,16 +57,21 @@ export async function expectPricesShownIn(page: Page, currency: Currency): Promi
 }
 
 // Chooses a currency with the switch, as a Shopper does, and waits for the
-// server's answer: the page it returns to.
-export async function choose(page: Page, currency: Currency): Promise<void> {
-  const before = page.url();
+// server's answer: the page it returns to. That is the page the choice was
+// made on, address and all, unless `returnsTo` gives the address it returns
+// to instead.
+export async function choose(
+  page: Page,
+  currency: Currency,
+  returnsTo = page.url(),
+): Promise<void> {
   const asked = page.waitForRequest(
     (request) => request.isNavigationRequest() && request.method() === 'POST',
   );
   await choiceOf(page, currency).click();
   await asked;
   await expect(choiceOf(page, currency)).toHaveAttribute('aria-current', 'true');
-  expect(page.url(), 'the choice returns to the page it was made on').toBe(before);
+  expect(page.url(), `the choice returns to ${returnsTo}`).toBe(returnsTo);
 }
 
 // What a choice leaves behind in the browser it was made in: a cookie that
