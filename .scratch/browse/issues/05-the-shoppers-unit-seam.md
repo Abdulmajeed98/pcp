@@ -9,7 +9,7 @@
 **Status:** ready-for-agent
 
 - [x] **The research.** It reads Next.js's current documentation on testing and the unit-test runners it documents. For each runner, it finds how widely used it is (its weekly downloads), how it runs in an Nx project (Nx's own plugin for it, if any), and how it fits this workspace's TypeScript, its ES modules, Node 24, and the Shopper app's next-intl and Feature-Sliced Design. Sources are cited. It is recorded under Comments.
-- [ ] **The owner's choice.** The runners are put to the owner, the most widely used one that fits recommended first, as the owner has chosen every library so far. The owner's word is recorded under Comments.
+- [x] **The owner's choice.** The runners are put to the owner, the most widely used one that fits recommended first, as the owner has chosen every library so far. The owner's word is recorded under Comments.
 - [ ] **Its set-up.** The runner is installed pinned to an exact version, with no exception to the workspace's release-age rule. It runs through the Shopper app's own `test` target, so `pnpm check` runs it. Where the tests live is decided and recorded under Comments.
 - [ ] **The first function.** It writes the address the currency switch returns to: the page the Shopper was on, with its query, without `lowest` and `highest`. Its tests are written before the code, and they prove each of these:
   - the rest of the query is kept, a repeated parameter among it;
@@ -76,3 +76,7 @@ Vitest passed Jest during 2026 and is now downloaded about 2.8 times as often. T
 - Oxlint: [`jest/expect-expect`](https://oxc.rs/docs/guide/usage/linter/rules/jest/expect-expect.html).
 
 Waiting for the owner's choice.
+
+### 3 November 2026: the owner's choice
+
+Asked "Which runner should the Shopper app use?", with Vitest 4.1.12 recommended first and Jest 30 second, the owner chose **Vitest 4.1.12**, as recommended. Vitest 5 waits for an upgrade of Nx to 23.3 or later.
