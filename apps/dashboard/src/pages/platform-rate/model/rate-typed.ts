@@ -1,0 +1,51 @@
+import type { SubErrorResponse } from '@pcp/api-client';
+
+import { westernNumberIn } from '@/shared/lib';
+
+// A number as the API reads one, in Western digits.
+const aNumber = /^-?\d+(?:\.\d+)?$/;
+
+// What the field holds, as a number: null when nothing is typed, and
+// undefined when what is typed is not a number. Anything that is a number is
+// sent as it is, a fraction or a rate out of range too, for the API to judge:
+// no frontend holds the limits.
+//
+// A rate is read as the Admin's keyboard writes it, as the Offer form takes a
+// price (`westernNumberIn`).
+export function rateIn(typed: string): number | null | undefined {
+  const western = westernNumberIn(typed);
+  if (western === '') return null;
+  return aNumber.test(western) ? Number(western) : undefined;
+}
+
+// What the form holds while the Admin types.
+export interface RateFormValues {
+  iqdPerUsd: string;
+}
+
+// The Admin is told, beside the field, why a rate was not taken: by the
+// form itself when what is typed is not a number, and by the API's reason
+// otherwise, an empty field's `missing` among them. A limit is not named, so no copy of the
+// limits is kept here.
+const messages: Record<string, string> = {
+  missing: 'Enter the rate, such as 1,575.',
+  notANumber: 'Enter a number, such as 1,575.',
+  notWhole: 'Enter a whole number of dinars, such as 1,575.',
+  outOfRange: 'The rate is outside the allowed range.',
+};
+
+export function notANumberMessage(): string {
+  return messages.notANumber;
+}
+
+// The field's message for a refusal of the API, if it names the rate.
+export function refusalOfTheRate(
+  error: SubErrorResponse,
+): { field: 'iqdPerUsd'; message: string } | undefined {
+  if (error.additionalInformation?.field !== 'iqdPerUsd') return undefined;
+  const reason = error.additionalInformation.reason ?? '';
+  return {
+    field: 'iqdPerUsd',
+    message: messages[reason] ?? 'The API did not accept this rate.',
+  };
+}

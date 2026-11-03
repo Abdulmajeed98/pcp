@@ -4,6 +4,7 @@ import {
   bearerHeader,
   expectErrorResponse,
   type ExpectedErrorResponse,
+  notValid,
 } from '@pcp/core/test-utils';
 
 import { letTheClockRun, moveTheClockTo } from '../../../test-utils/clock';
@@ -11,7 +12,10 @@ import {
   createTestAppWithLogins,
   TestAppWithLogins,
 } from '../../../test-utils/create-test-app';
-import { emptyTheDatabase } from '../../../test-utils/database/test-database';
+import {
+  changeTheRateAndTheOffersWhileReading,
+  emptyTheDatabase,
+} from '../../../test-utils/database/test-database';
 import {
   emptyTheRealm,
   loginsNamed,
@@ -19,19 +23,36 @@ import {
 
 // A Part's visible Offers, which anyone may read without a token: those that
 // are not Expired Offers and whose Vendor is active (CAT-7, OFF-6, ACC-7),
-// each with how many days ago it was confirmed (OFF-7), in-stock Offers first
-// (OFF-11).
+// each with how many days ago it was confirmed (OFF-7) and its Shown Price in
+// the chosen currency (PRC-3), in-stock Offers first and then the lowest
+// Shown Price (OFF-11, PRC-4).
+
+// The price a visible Offer shows in the currency asked for.
+type ShownPriceBody = { currency: Currency; amount: string; converted: boolean };
 
 // A visible Offer as the API answers it.
 type VisibleOfferBody = {
   vendor: { id: string; name: string };
   usdPrice: string | null;
   iqdPrice: number | null;
+  shownPrice: ShownPriceBody | null;
   inStock: boolean;
   warrantyMonths: number | null;
   confirmedAt: string;
   daysSinceConfirmation: number;
 };
+
+// The currencies a Shopper may choose.
+type Currency = 'USD' | 'IQD';
+
+// A Shown Price that is the Quoted Price in the currency, and one that is a
+// Converted Price.
+function quoted(currency: Currency, amount: string): ShownPriceBody {
+  return { currency, amount, converted: false };
+}
+function converted(currency: Currency, amount: string): ShownPriceBody {
+  return { currency, amount, converted: true };
+}
 
 // A Vendor as the API answers it, as far as these tests read it.
 type VendorBody = { id: string; name: string; loginPhoneNumber: { international: string } };
@@ -150,22 +171,40 @@ describe("a Part's visible Offers", () => {
     return anOffer(vendorId, partId, details);
   }
 
-  function readVisibleOffers(
-    partId: string,
-    headers: Record<string, string> = {},
-  ): Promise<Response> {
-    return fetch(`${testApp.baseUrl}/v1/parts/${partId}/offers`, { headers });
+  // The Admin sets the Platform Rate, in whole dinars per dollar.
+  async function setThePlatformRate(iqdPerUsd: number): Promise<void> {
+    const response = await fetch(`${testApp.baseUrl}/v1/platform-rate`, {
+      method: 'PUT',
+      headers: { ...bearerHeader(await adminToken()), 'content-type': 'application/json' },
+      body: JSON.stringify({ iqdPerUsd }),
+    });
+    expect(response.status).toBe(200);
   }
 
-  // The Part's visible Offers, read without a token at the time of the clock.
-  async function theVisibleOffersOf(partId: string): Promise<VisibleOfferBody[]> {
-    const response = await readVisibleOffers(partId);
+  // The Part's visible Offers, asked for with the query given, `currency`
+  // among it unless a test leaves it out.
+  function readVisibleOffers(
+    partId: string,
+    query: Record<string, string> = { currency: 'IQD' },
+    headers: Record<string, string> = {},
+  ): Promise<Response> {
+    const search = new URLSearchParams(query).toString();
+    return fetch(`${testApp.baseUrl}/v1/parts/${partId}/offers?${search}`, { headers });
+  }
+
+  // The Part's visible Offers in a currency, read without a token at the time
+  // of the clock.
+  async function theVisibleOffersOf(
+    partId: string,
+    currency: Currency = 'IQD',
+  ): Promise<VisibleOfferBody[]> {
+    const response = await readVisibleOffers(partId, { currency });
     expect(response.status).toBe(200);
     return (await response.json()) as VisibleOfferBody[];
   }
 
   describe('the answer', () => {
-    it("gives each Offer with its Vendor's name, both Quoted Prices as entered, the stock, the warranty, and when it was confirmed", async () => {
+    it("gives each Offer with its Vendor's name, both Quoted Prices as entered, its Shown Price, the stock, the warranty, and when it was confirmed", async () => {
       const partId = await aPart();
       const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
       const store = await aVendor('شەقامی ٦٠ کۆمپیوتەر', '0750 765 4321');
@@ -185,6 +224,7 @@ describe("a Part's visible Offers", () => {
           vendor: { id: store.id, name: 'شەقامی ٦٠ کۆمپیوتەر' },
           usdPrice: null,
           iqdPrice: 525000,
+          shownPrice: { currency: 'IQD', amount: '525000', converted: false },
           inStock: true,
           warrantyMonths: null,
           confirmedAt: after(aMovedMoment, 2 * aDay).toISOString(),
@@ -194,6 +234,7 @@ describe("a Part's visible Offers", () => {
           vendor: { id: shop.id, name: 'Made-up Computer Shop' },
           usdPrice: '349.99',
           iqdPrice: null,
+          shownPrice: null,
           inStock: true,
           warrantyMonths: 36,
           confirmedAt: aMovedMoment.toISOString(),
@@ -217,9 +258,225 @@ describe("a Part's visible Offers", () => {
       }
     });
 
+    it('refuses a missing currency, and one that is neither USD nor IQD, with 400, naming the currency', async () => {
+      const partId = await aPart();
+      const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
+      await anOffer(shop.id, partId);
+
+      const queries: Record<string, string>[] = [
+        {},
+        { currency: 'EUR' },
+        { currency: 'usd' },
+        { currency: '' },
+      ];
+      for (const query of queries) {
+        await expectErrorResponse(await readVisibleOffers(partId, query), 400, [
+          notValid('currency'),
+        ]);
+      }
+    });
+
     it('answers an empty list for a Part with no Offer', async () => {
       expect(await theVisibleOffersOf(await aPart())).toEqual([]);
     });
+  });
+
+  describe('the Shown Price', () => {
+    // The one visible Offer of the Part's, its Shown Price in a currency.
+    async function theShownPriceOf(
+      partId: string,
+      currency: Currency,
+    ): Promise<ShownPriceBody | null> {
+      const [only] = await theVisibleOffersOf(partId, currency);
+      return only.shownPrice;
+    }
+
+    // A Part with one Offer, in stock, of a made-up Vendor of its own, with
+    // these prices.
+    let parts = 0;
+    async function aPartOfferedAt(prices: Record<string, unknown>): Promise<string> {
+      parts += 1;
+      const partId = await aPart(`Made-up Ryzen 5 76${String(parts).padStart(2, '0')}`);
+      const shop = await aVendor(
+        `Made-up Computer Shop ${parts}`,
+        `0750 200 ${String(1000 + parts)}`,
+      );
+      await anOffer(shop.id, partId, { ...prices, inStock: true });
+      return partId;
+    }
+
+    it('of an Offer quoted only in USD is its Quoted Price with its cents in USD, and in IQD the conversion rounded to 250, marked converted', async () => {
+      await setThePlatformRate(1575);
+      const partId = await aPartOfferedAt({ usdPrice: '349.99' });
+
+      expect(await theShownPriceOf(partId, 'USD')).toEqual(quoted('USD', '349.99'));
+      // 349.99 × 1,575 = 551,234.25, nearer to 551,250 than to 551,000.
+      expect(await theShownPriceOf(partId, 'IQD')).toEqual(converted('IQD', '551250'));
+    });
+
+    it('of an Offer quoted only in IQD is its dinars as entered in IQD, not a multiple of 250, and whole dollars in USD, marked converted', async () => {
+      await setThePlatformRate(1575);
+      const partId = await aPartOfferedAt({ iqdPrice: 1574990 });
+
+      expect(await theShownPriceOf(partId, 'IQD')).toEqual(quoted('IQD', '1574990'));
+      // 1,574,990 ÷ 1,575 = 999.99…, nearer to 1,000 than to 999.
+      expect(await theShownPriceOf(partId, 'USD')).toEqual(converted('USD', '1000.00'));
+    });
+
+    it('of an Offer quoted in both is its own Quoted Price in each, never converted, even where the rate gives another figure', async () => {
+      await setThePlatformRate(1575);
+      // At 1,575, 100 $ would be 157,500 IQD, and 160,000 IQD about 102 $.
+      const partId = await aPartOfferedAt({ usdPrice: '100.00', iqdPrice: 160000 });
+
+      expect(await theShownPriceOf(partId, 'USD')).toEqual(quoted('USD', '100.00'));
+      expect(await theShownPriceOf(partId, 'IQD')).toEqual(quoted('IQD', '160000'));
+    });
+
+    it('rounds exactly half a step up and just below it down, both ways', async () => {
+      await setThePlatformRate(1500);
+      // 0.25 $ × 1,500 = 375 IQD, half-way from 250 to 500; 0.24 $ is 360.
+      const half = await aPartOfferedAt({ usdPrice: '0.25' });
+      const belowHalf = await aPartOfferedAt({ usdPrice: '0.24' });
+      // 2,250 IQD ÷ 1,500 = 1.5 $; 2,249 IQD is just below.
+      const halfADollar = await aPartOfferedAt({ iqdPrice: 2250 });
+      const belowHalfADollar = await aPartOfferedAt({ iqdPrice: 2249 });
+
+      expect(await theShownPriceOf(half, 'IQD')).toEqual(converted('IQD', '500'));
+      expect(await theShownPriceOf(belowHalf, 'IQD')).toEqual(converted('IQD', '250'));
+      expect(await theShownPriceOf(halfADollar, 'USD')).toEqual(converted('USD', '2.00'));
+      expect(await theShownPriceOf(belowHalfADollar, 'USD')).toEqual(
+        converted('USD', '1.00'),
+      );
+    });
+
+    it('is never below one step, where the conversion would round to 0, in each direction', async () => {
+      await setThePlatformRate(1500);
+      // 0.08 $ × 1,500 = 120 IQD, nearer to 0 than to 250.
+      const cents = await aPartOfferedAt({ usdPrice: '0.08' });
+      // 749 IQD ÷ 1,500 = 0.499… $, nearer to 0 than to 1.
+      const dinars = await aPartOfferedAt({ iqdPrice: 749 });
+      const oneDinar = await aPartOfferedAt({ iqdPrice: 1 });
+
+      expect(await theShownPriceOf(cents, 'IQD')).toEqual(converted('IQD', '250'));
+      expect(await theShownPriceOf(dinars, 'USD')).toEqual(converted('USD', '1.00'));
+      expect(await theShownPriceOf(oneDinar, 'USD')).toEqual(converted('USD', '1.00'));
+    });
+
+    it("converts a price at the top of the Offers' limits exactly, at the highest rate and at one just below it", async () => {
+      const largestUsd = await aPartOfferedAt({ usdPrice: '100000.00' });
+      const justBelowLargestUsd = await aPartOfferedAt({ usdPrice: '99999.99' });
+      const largestIqd = await aPartOfferedAt({ iqdPrice: 150000000 });
+      const justBelowLargestIqd = await aPartOfferedAt({ iqdPrice: 149999999 });
+
+      await setThePlatformRate(5000);
+      expect(await theShownPriceOf(largestUsd, 'IQD')).toEqual(
+        converted('IQD', '500000000'),
+      );
+      // 150,000,000 ÷ 5,000 = 30,000 $.
+      expect(await theShownPriceOf(largestIqd, 'USD')).toEqual(
+        converted('USD', '30000.00'),
+      );
+
+      await setThePlatformRate(4999);
+      // 99,999.99 × 4,999 = 499,899,950.01, nearer to 499,900,000 than to
+      // 499,899,750.
+      expect(await theShownPriceOf(justBelowLargestUsd, 'IQD')).toEqual(
+        converted('IQD', '499900000'),
+      );
+      // 149,999,999 ÷ 4,999 = 30,006.0010…, nearer to 30,006 than to 30,007.
+      expect(await theShownPriceOf(justBelowLargestIqd, 'USD')).toEqual(
+        converted('USD', '30006.00'),
+      );
+
+      await setThePlatformRate(500);
+      // 150,000,000 ÷ 500 = 300,000 $, above the largest Quoted Price in USD.
+      expect(await theShownPriceOf(largestIqd, 'USD')).toEqual(
+        converted('USD', '300000.00'),
+      );
+    });
+
+    it('changes every Converted Price at the next read after a new rate, and no Quoted Price', async () => {
+      const usdOnly = await aPartOfferedAt({ usdPrice: '10.00' });
+      const iqdOnly = await aPartOfferedAt({ iqdPrice: 30000 });
+      const both = await aPartOfferedAt({ usdPrice: '10.00', iqdPrice: 16000 });
+      // The Shown Prices of the three, in IQD and in USD.
+      async function theShownPrices(): Promise<(ShownPriceBody | null)[]> {
+        const shown = [];
+        for (const currency of ['IQD', 'USD'] as const) {
+          for (const partId of [usdOnly, iqdOnly, both]) {
+            shown.push(await theShownPriceOf(partId, currency));
+          }
+        }
+        return shown;
+      }
+
+      await setThePlatformRate(1500);
+      expect(await theShownPrices()).toEqual([
+        converted('IQD', '15000'),
+        quoted('IQD', '30000'),
+        quoted('IQD', '16000'),
+        quoted('USD', '10.00'),
+        converted('USD', '20.00'),
+        quoted('USD', '10.00'),
+      ]);
+
+      await setThePlatformRate(2000);
+      expect(await theShownPrices()).toEqual([
+        converted('IQD', '20000'),
+        quoted('IQD', '30000'),
+        quoted('IQD', '16000'),
+        quoted('USD', '10.00'),
+        converted('USD', '15.00'),
+        quoted('USD', '10.00'),
+      ]);
+    });
+
+    it('is null with no rate for an Offer not quoted in the chosen currency, which keeps both Quoted Prices', async () => {
+      const usdOnly = await aPartOfferedAt({ usdPrice: '349.99' });
+      const iqdOnly = await aPartOfferedAt({ iqdPrice: 525000 });
+
+      expect(await theVisibleOffersOf(usdOnly, 'IQD')).toMatchObject([
+        { usdPrice: '349.99', iqdPrice: null, shownPrice: null },
+      ]);
+      expect(await theVisibleOffersOf(usdOnly, 'USD')).toMatchObject([
+        { usdPrice: '349.99', iqdPrice: null, shownPrice: quoted('USD', '349.99') },
+      ]);
+      expect(await theVisibleOffersOf(iqdOnly, 'USD')).toMatchObject([
+        { usdPrice: null, iqdPrice: 525000, shownPrice: null },
+      ]);
+      expect(await theVisibleOffersOf(iqdOnly, 'IQD')).toMatchObject([
+        { usdPrice: null, iqdPrice: 525000, shownPrice: quoted('IQD', '525000') },
+      ]);
+    });
+  });
+
+  describe('one answer', () => {
+    // A read that took the rate and the Offers at different moments would
+    // answer 10 $ at 2,000, or 20 $ at 1,500, 30,000 IQD.
+    for (const lockedTable of ['offer', 'platform_rate'] as const) {
+      it(`converts every price at the rate of the same moment as its Offers, read in one query, while ${lockedTable} is locked`, async () => {
+        const partId = await aPart();
+        const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
+        const store = await aVendor('Made-up Computer Store', '0750 765 4321');
+        // The API's clock moved, and the change set at its time, `new Date()`,
+        // as every rate is set by the API's clock and not the database's.
+        moveTheClockTo(aMovedMoment);
+        await setThePlatformRate(1500);
+        await anOffer(shop.id, partId, { usdPrice: '10.00', inStock: true });
+        await anOffer(store.id, partId, { usdPrice: '10.00', inStock: false });
+
+        const answer = await changeTheRateAndTheOffersWhileReading(
+          { iqdPerUsd: 2000, setAt: new Date(), usdPriceCents: 2000, lockedTable },
+          () => theVisibleOffersOf(partId, 'IQD'),
+        );
+
+        // Both after the change, as a read in one query sees them.
+        expect(answer.map(({ usdPrice, shownPrice }) => [usdPrice, shownPrice])).toEqual([
+          ['20.00', converted('IQD', '40000')],
+          ['20.00', converted('IQD', '40000')],
+        ]);
+      });
+    }
   });
 
   describe('who may read them', () => {
@@ -241,7 +498,11 @@ describe("a Part's visible Offers", () => {
         'nonsense',
       ];
       for (const token of tokens) {
-        const response = await readVisibleOffers(partId, bearerHeader(token));
+        const response = await readVisibleOffers(
+          partId,
+          { currency: 'IQD' },
+          bearerHeader(token),
+        );
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual(withoutAToken);
       }
@@ -264,43 +525,184 @@ describe("a Part's visible Offers", () => {
   });
 
   describe('the order', () => {
-    it('puts in-stock Offers before out-of-stock ones, each group with the most recent Confirmation first', async () => {
-      const partId = await aPart();
+    // Made-up Vendors, one for each name, made with the clock running, since
+    // that calls Keycloak; then each one's Offer for the Part, confirmed one
+    // day apart in the order given, with the clock then a day after the last.
+    async function offersConfirmedInTurn(
+      partId: string,
+      offers: [name: string, details: Record<string, unknown>][],
+    ): Promise<VendorBody[]> {
       const vendors = [];
-      for (const [name, phone] of [
-        ['Made-up Shop A', '0750 100 0001'],
-        ['Made-up Shop B', '0750 100 0002'],
-        ['Made-up Shop C', '0750 100 0003'],
-        ['Made-up Shop D', '0750 100 0004'],
-      ]) {
-        vendors.push(await aVendor(name, phone));
+      for (const [index, [name]] of offers.entries()) {
+        vendors.push(await aVendor(name, `0750 300 ${String(1000 + index)}`));
       }
-      const [a, b, c, d] = vendors;
-      // Confirmed one day apart: A first, D last.
-      const confirmations: [VendorBody, boolean][] = [
-        [a, true],
-        [b, false],
-        [c, true],
-        [d, false],
-      ];
-      for (const [index, [vendor, inStock]] of confirmations.entries()) {
-        await anOfferConfirmedAt(vendor.id, partId, after(aMovedMoment, index * aDay), {
-          iqdPrice: 525000,
-          inStock,
-        });
+      for (const [index, [, details]] of offers.entries()) {
+        await anOfferConfirmedAt(
+          vendors[index].id,
+          partId,
+          after(aMovedMoment, index * aDay),
+          details,
+        );
       }
-      moveTheClockTo(after(aMovedMoment, 4 * aDay));
+      moveTheClockTo(after(aMovedMoment, offers.length * aDay));
+      return vendors;
+    }
 
-      expect(
-        (await theVisibleOffersOf(partId)).map(({ vendor, inStock }) => [
-          vendor.name,
-          inStock,
-        ]),
-      ).toEqual([
-        ['Made-up Shop C', true],
-        ['Made-up Shop A', true],
-        ['Made-up Shop D', false],
-        ['Made-up Shop B', false],
+    // The names of the Vendors of the Part's visible Offers, in the order
+    // answered in a currency.
+    async function theVendorsInOrder(
+      partId: string,
+      currency: Currency,
+    ): Promise<string[]> {
+      return (await theVisibleOffersOf(partId, currency)).map(({ vendor }) => vendor.name);
+    }
+
+    it('puts in-stock Offers before out-of-stock ones, whatever their prices', async () => {
+      await setThePlatformRate(1575);
+      const partId = await aPart();
+      await offersConfirmedInTurn(partId, [
+        ['Out of stock, cheapest', { iqdPrice: 100000, inStock: false }],
+        ['In stock, dearest', { usdPrice: '900.00', inStock: true }],
+        ['Out of stock, dearest', { usdPrice: '950.00', inStock: false }],
+        ['In stock, cheapest', { iqdPrice: 200000, inStock: true }],
+      ]);
+
+      for (const currency of ['IQD', 'USD'] as const) {
+        expect(await theVendorsInOrder(partId, currency)).toEqual([
+          'In stock, cheapest',
+          'In stock, dearest',
+          'Out of stock, cheapest',
+          'Out of stock, dearest',
+        ]);
+      }
+    });
+
+    it('puts the lowest Shown Price first within each stock group, compared after rounding', async () => {
+      await setThePlatformRate(1575);
+      const partId = await aPart();
+      // In IQD, 349.99 $ is 551,234.25 before rounding, below 551,240, and
+      // 551,250 after it, above. In USD, 551,240 IQD is 349.99… before
+      // rounding, above 349.99, and 350.00 after it, above as well.
+      await offersConfirmedInTurn(partId, [
+        ['Quoted 349.99 $', { usdPrice: '349.99', inStock: true }],
+        ['Quoted 551,240 IQD', { iqdPrice: 551240, inStock: true }],
+        ['Quoted 600,000 IQD', { iqdPrice: 600000, inStock: true }],
+        ['Quoted 300.00 $', { usdPrice: '300.00', inStock: true }],
+        ['Out of stock, 1,000 IQD', { iqdPrice: 1000, inStock: false }],
+        ['Out of stock, 0.10 $', { usdPrice: '0.10', inStock: false }],
+      ]);
+
+      expect(await theVendorsInOrder(partId, 'IQD')).toEqual([
+        'Quoted 300.00 $',
+        'Quoted 551,240 IQD',
+        'Quoted 349.99 $',
+        'Quoted 600,000 IQD',
+        // 0.10 $ is 157.50 IQD, which is shown as 250.
+        'Out of stock, 0.10 $',
+        'Out of stock, 1,000 IQD',
+      ]);
+      expect(await theVendorsInOrder(partId, 'USD')).toEqual([
+        'Quoted 300.00 $',
+        'Quoted 349.99 $',
+        'Quoted 551,240 IQD',
+        'Quoted 600,000 IQD',
+        // 0.10 $ as entered; 1,000 IQD is 0.63 $, which is shown as 1 $.
+        'Out of stock, 0.10 $',
+        'Out of stock, 1,000 IQD',
+      ]);
+    });
+
+    it('puts an Offer quoted at 100 $ and 160,000 IQD before one quoted only at 101 $ in USD, and after it in IQD at 1,575', async () => {
+      await setThePlatformRate(1575);
+      const partId = await aPart();
+      await offersConfirmedInTurn(partId, [
+        ['Quoted in both', { usdPrice: '100.00', iqdPrice: 160000, inStock: true }],
+        ['Quoted only in USD', { usdPrice: '101.00', inStock: true }],
+      ]);
+
+      expect(await theVendorsInOrder(partId, 'USD')).toEqual([
+        'Quoted in both',
+        'Quoted only in USD',
+      ]);
+      // 101 $ × 1,575 = 159,075, shown as 159,000.
+      expect(await theVendorsInOrder(partId, 'IQD')).toEqual([
+        'Quoted only in USD',
+        'Quoted in both',
+      ]);
+    });
+
+    it("falls back on equal Shown Prices to the most recent Confirmation, then the Vendor's name, then the identifier", async () => {
+      await setThePlatformRate(1500);
+      const partId = await aPart();
+      // Every one shown as 300,000 IQD: 200 $ × 1,500 is a Converted Price
+      // equal to the Quoted Prices.
+      const equal = { iqdPrice: 300000, inStock: true };
+      // Three more confirmed at one moment, the day after the last of these
+      // two, two of them under one name; their Vendors are made first.
+      const others = [];
+      for (const [index, name] of [
+        'Made-up Shop B',
+        'Made-up Shop A',
+        'Made-up Shop A',
+      ].entries()) {
+        others.push(await aVendor(name, `0750 400 ${String(1000 + index)}`));
+      }
+      const [first, second] = await offersConfirmedInTurn(partId, [
+        ['Made-up Shop Z, confirmed first', equal],
+        ['Made-up Shop Y, confirmed later', { usdPrice: '200.00', inStock: true }],
+      ]);
+      const named = [];
+      for (const vendor of others) {
+        const offerId = await anOfferConfirmedAt(
+          vendor.id,
+          partId,
+          after(aMovedMoment, 2 * aDay),
+          equal,
+        );
+        named.push({ vendor, offerId });
+      }
+      moveTheClockTo(after(aMovedMoment, 3 * aDay));
+      const [b, ...theAs] = named;
+      // Of the two named A, the lower identifier of an Offer first.
+      const [lowerA, higherA] = theAs.sort((one, other) =>
+        one.offerId < other.offerId ? -1 : 1,
+      );
+
+      const answer = await theVisibleOffersOf(partId, 'IQD');
+
+      expect(answer.map(({ shownPrice }) => shownPrice?.amount)).toEqual(
+        Array(5).fill('300000'),
+      );
+      expect(answer.map(({ vendor }) => vendor.id)).toEqual([
+        lowerA.vendor.id,
+        higherA.vendor.id,
+        b.vendor.id,
+        second.id,
+        first.id,
+      ]);
+    });
+
+    it('puts Offers with no Shown Price after the others in their stock group', async () => {
+      // No Platform Rate is set.
+      const partId = await aPart();
+      await offersConfirmedInTurn(partId, [
+        ['In stock, only in USD', { usdPrice: '10.00', inStock: true }],
+        ['Out of stock, only in USD', { usdPrice: '10.00', inStock: false }],
+        ['Out of stock, in IQD', { iqdPrice: 900000, inStock: false }],
+        ['In stock, in IQD', { iqdPrice: 900000, inStock: true }],
+      ]);
+
+      expect(await theVendorsInOrder(partId, 'IQD')).toEqual([
+        'In stock, in IQD',
+        'In stock, only in USD',
+        'Out of stock, in IQD',
+        'Out of stock, only in USD',
+      ]);
+      expect(await theVendorsInOrder(partId, 'USD')).toEqual([
+        'In stock, only in USD',
+        'In stock, in IQD',
+        'Out of stock, only in USD',
+        'Out of stock, in IQD',
       ]);
     });
   });
@@ -320,7 +722,8 @@ describe("a Part's visible Offers", () => {
       return (await theVisibleOffersOf(partId)).map(({ vendor }) => vendor.id);
     }
 
-    it('are left out, and come back when the Vendor is reactivated', async () => {
+    it('are left out, with a rate set, and come back when the Vendor is reactivated', async () => {
+      await setThePlatformRate(1575);
       const partId = await aPart();
       const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
       const store = await aVendor('Made-up Computer Store', '0750 765 4321');
@@ -343,7 +746,8 @@ describe("a Part's visible Offers", () => {
       return (await theVisibleOffersOf(partId)).map(({ vendor }) => vendor.id);
     }
 
-    it('is visible when confirmed 14 days ago to the millisecond, and left out one millisecond later', async () => {
+    it('is visible when confirmed 14 days ago to the millisecond, and left out one millisecond later, with a rate set', async () => {
+      await setThePlatformRate(1575);
       const partId = await aPart();
       const shop = await aVendor('Made-up Computer Shop', '0750 123 4567');
       await anOfferConfirmedAt(shop.id, partId, aMovedMoment);
@@ -410,6 +814,10 @@ describe("a Part's visible Offers", () => {
             vendor: { id: shop.id, name: 'Made-up Computer Shop' },
             usdPrice: null,
             iqdPrice: null,
+            shownPrice:
+              'iqdPrice' in details
+                ? { currency: 'IQD', amount: String(details.iqdPrice), converted: false }
+                : null,
             warrantyMonths: null,
             ...details,
             confirmedAt: later.toISOString(),

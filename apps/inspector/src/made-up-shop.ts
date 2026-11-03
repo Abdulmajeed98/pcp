@@ -4,6 +4,7 @@ import type {
   OfferResponse,
   PartPageResponse,
   PartSummaryResponse,
+  PlatformRateResponse,
   VendorPageResponse,
   VendorResponse,
   VendorsOfferCountsResponse,
@@ -193,6 +194,8 @@ export const partsTheShopOffers: readonly CatalogPart[] = madeUpOffers.map(
 export interface MadeUpShop {
   vendor: VendorResponse;
   offers: readonly OfferResponse[];
+  // The Platform Rate as the shop's screens see it.
+  platformRate: PlatformRateResponse;
 }
 
 // Identifiers that say they are made up: zeros, and a counter.
@@ -205,10 +208,14 @@ function before(now: Date, milliseconds: number): string {
 }
 
 // The shop as it stands at `now`, its Offers confirmed that long before it,
-// with the Parts the catalog gave for their names.
+// with the Parts the catalog gave for their names. Its Platform Rate is
+// 1,575 dinars to the dollar, about the Erbil market rate of October 2026
+// (PRODUCT.md's Evidence on Hand), set three days before; or, for a look at
+// the Platform Rate screen before the Admin sets the first, none.
 export function madeUpShop(
   now: Date,
   catalogParts: ReadonlyMap<string, PartSummaryResponse>,
+  { platformRate = true }: { platformRate?: boolean } = {},
 ): MadeUpShop {
   const vendor: VendorResponse = {
     id: madeUpIdentifier(1),
@@ -244,7 +251,13 @@ export function madeUpShop(
     };
   });
 
-  return { vendor, offers };
+  return {
+    vendor,
+    offers,
+    platformRate: {
+      current: platformRate ? { iqdPerUsd: 1575, setAt: before(now, 3 * aDay) } : null,
+    },
+  };
 }
 
 // One call to the API, as the inspector's Chrome makes it: its method, and
@@ -348,7 +361,10 @@ const readOnly = refusal(
 
 // Answers a call about Vendors or Offers from the shop, at `now`: every call
 // whose path starts with `/v1/vendors`, `/v1/offers` or `/v1/caller/vendor`,
-// but those that only read the real Vendors. The list of Vendors is the
+// but those that only read the real Vendors, and the read of the Platform
+// Rate, which the shop holds, so that the Platform Rate screen is seen with
+// a rate or with none whatever the development database holds (the pricing
+// module's ticket 02). The list of Vendors is the
 // API's, with the shop's Vendor among them (`listsTheVendors`), and another
 // Vendor's page and its Offers are the API's alone, so that the Vendors'
 // screens show the shop among the development database's real Vendors (the
@@ -364,6 +380,9 @@ export function answerFromTheMadeUpShop(
   if (call.method !== 'GET') return readOnly;
   const address = new URL(call.path, 'http://api');
   const [version, first, second, ...rest] = address.pathname.split('/').filter(Boolean);
+  if (version === 'v1' && first === 'platform-rate' && second === undefined) {
+    return { status: 200, body: shop.platformRate };
+  }
   const vendorsCall = first === 'vendors' || first === 'offers';
   const callersVendor = first === 'caller' && second === 'vendor';
   if (version !== 'v1' || !(vendorsCall || callersVendor)) return undefined;

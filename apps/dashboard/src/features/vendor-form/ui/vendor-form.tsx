@@ -5,6 +5,7 @@ import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hoo
 
 import { cities, cityName, longest, MapLocationField } from '@/entities/vendor';
 import { setRefusalsBesideTheirFields } from '@/shared/api';
+import { describedBy } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -278,11 +279,6 @@ function DetailField({
 }) {
   const id = `vendor-${name}`;
   const error = errors[name]?.message;
-  const describedBy = [
-    optional && `${id}-optional`,
-    description !== undefined && `${id}-description`,
-    error !== undefined && `${id}-error`,
-  ].filter((each) => typeof each === 'string');
 
   return (
     <Field className={className}>
@@ -293,7 +289,11 @@ function DetailField({
       {children({
         id,
         'aria-invalid': error !== undefined,
-        'aria-describedby': describedBy.length > 0 ? describedBy.join(' ') : undefined,
+        'aria-describedby': describedBy(
+          optional && `${id}-optional`,
+          description !== undefined && `${id}-description`,
+          error !== undefined && `${id}-error`,
+        ),
       })}
       {description !== undefined && (
         <FieldDescription id={`${id}-description`}>{description}</FieldDescription>

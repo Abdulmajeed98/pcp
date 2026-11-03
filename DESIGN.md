@@ -53,7 +53,7 @@ The research behind every rule is in [docs/research/design-system.md](docs/resea
 
 ## Typography
 
-Each look chooses its own faces. The sizes are shared, in `rem`, so that the browser's text size setting scales every one of them (WCAG 1.4.4). A look may set two sizes of its own, in `rem` too: a screen's title, and the text in its buttons. It does so within the hard rules: no text under 14 pixels, and one pixel more in Kurdish and Arabic by the Tall Script Rule, so a button's text at 14 is 15 there. The owner allowed this on 21 October 2026, when the dashboard took a 22-pixel title and 14-pixel button text from its Taste sheet.
+Each look chooses its own faces. The sizes are shared, in `rem`, so that the browser's text size setting scales every one of them (WCAG 1.4.4). A look may set two sizes of its own, in `rem` too: a screen's title, and the text in its buttons. It does so within the hard rules: no text under 14 pixels, and one pixel more in Kurdish and Arabic by the Tall Script Rule, so a button's text at 14 is 15 there. The owner allowed this on 21 October 2026, when the dashboard took a 22-pixel title and 14-pixel button text from its Taste sheet. A look may also set a board figure, in `rem` and within the same hard rules: a single leading figure that is a screen's whole answer, one on the screen at most, beside its title and button sizes. The owner allowed this on 3 November 2026 for the dashboard's changer's board, the Platform Rate's figure on its split-flap tiles, 7rem (112 pixels) and 2.625rem (42 pixels) on a phone (pricing ticket 02).
 
 - **Heading large** (1.875rem, 30 pixels): one per page at most.
 - **Heading** (1.5rem): a page's title on a wider screen.

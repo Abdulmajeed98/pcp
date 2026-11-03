@@ -19,6 +19,7 @@ export { AlertDialogRefusal } from './alert-dialog-refusal';
 export { BackLink } from './back-link';
 export { Button, buttonVariants } from './button';
 export { BusyLabel } from './busy-label';
+export { ChangingInPlace } from './changing-in-place';
 export { DirectionProvider, useDirection } from './direction';
 export {
   Empty,
@@ -62,7 +63,7 @@ export { PastTheLastPage } from './past-the-last-page';
 export { OptionalMark } from './optional-mark';
 export { MenuSheet } from './menu-sheet';
 export { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from './native-select';
-export { Plate } from './plate';
+export { Plate, PlateFigure } from './plate';
 export {
   ScreenAction,
   ScreenActionPlaceProvider,

@@ -98,6 +98,87 @@ export async function offerHistoryRows(): Promise<OfferHistoryRow[]> {
   }
 }
 
+// A row of the Platform Rate's settings, as the database holds it.
+export type PlatformRateRow = {
+  iqdPerUsd: number;
+  setAt: Date;
+  setBy: string;
+};
+
+// Every setting of the Platform Rate, in the order they were added. The API
+// answers only the current one, so this is how a test sees that every
+// setting is kept.
+export async function platformRateRows(): Promise<PlatformRateRow[]> {
+  const client = new Client(connectionOf(testDatabaseSettings()));
+  await client.connect();
+  try {
+    const { rows } = await client.query<PlatformRateRow>(
+      `SELECT iqd_per_usd AS "iqdPerUsd", set_at AS "setAt", set_by AS "setBy"
+         FROM platform_rate ORDER BY id`,
+    );
+    return rows;
+  } finally {
+    await client.end();
+  }
+}
+
+// A change to the Platform Rate and to every Offer's USD Quoted Price, made
+// in one transaction, which holds one of their tables locked from its start
+// until a read has had to wait for it, and only then commits: a read that
+// takes the rate and the Offers in two queries takes one of them before the
+// change and the other after, where a read in one query takes both after.
+//
+// It is a named exception to testing the platform from outside, as
+// `offerHistoryRows` and `keepSpecificationsAsTheyAre` are: the second, after
+// `keepSpecificationsAsTheyAre`, that arranges data through the database
+// rather than the endpoints. No endpoint can arrange it: each request is its own
+// transaction, so none changes the rate and the Offers at once, and none
+// holds a table locked while another request reads. The rate is set at
+// `setAt`, the time by the API's clock, which a test may have moved, and
+// never by the database's own clock: the API sets every rate by its clock
+// (`platform-rate.schema.ts`), and a rate set by another clock could fall
+// before the current one and never become current.
+export async function changeTheRateAndTheOffersWhileReading<T>(
+  change: {
+    iqdPerUsd: number;
+    setAt: Date;
+    usdPriceCents: number;
+    lockedTable: 'offer' | 'platform_rate';
+  },
+  read: () => Promise<T>,
+): Promise<T> {
+  const changing = new Client(connectionOf(testDatabaseSettings()));
+  const watching = new Client(connectionOf(testDatabaseSettings()));
+  await changing.connect();
+  await watching.connect();
+  try {
+    await changing.query('BEGIN');
+    await changing.query(`LOCK TABLE ${change.lockedTable} IN ACCESS EXCLUSIVE MODE`);
+    await changing.query(
+      `INSERT INTO platform_rate (iqd_per_usd, set_at, set_by) VALUES ($1, $2, 'test')`,
+      [change.iqdPerUsd, change.setAt],
+    );
+    await changing.query('UPDATE offer SET usd_price_cents = $1', [change.usdPriceCents]);
+
+    const reading = read();
+    // Until the read waits for the lock.
+    for (let tries = 0; ; tries += 1) {
+      const { rows } = await watching.query<{ waiting: number }>(
+        'SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted',
+      );
+      if (rows[0].waiting > 0) break;
+      if (tries > 200) throw new Error('No read waited for the locked table.');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    await changing.query('COMMIT');
+
+    return await reading;
+  } finally {
+    await changing.end();
+    await watching.end();
+  }
+}
+
 // A fault planted in the database for as long as the function runs: a rule
 // that no Vendor meets, checked when a Vendor is stored and not against
 // those stored already, so that creating or editing one is refused.

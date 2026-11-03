@@ -59,6 +59,10 @@
   --plate-unit: #a7aaac;
   --plate-muted: #e9e8e5;
   --plate-muted-figure: #55585a;
+  /* The Platform Rate's board: a flap tile one step lighter than the
+   * plate, and the split across its middle. */
+  --plate-tile: #2f3335;
+  --plate-split: rgb(0 0 0 / 0.55);
 
   /* What floats over the screen, a dialog and the menu sheet, and the scrim
    * under it. In the dark scheme the shadow cannot be seen, and the
@@ -106,6 +110,8 @@
     --plate-unit: #9a9a9a;
     --plate-muted: #232323;
     --plate-muted-figure: #9a9a9a;
+    --plate-tile: #121212;
+    --plate-split: rgb(255 255 255 / 0.08);
   }
 }
 
@@ -141,6 +147,8 @@
   --plate-unit: #9a9a9a;
   --plate-muted: #232323;
   --plate-muted-figure: #9a9a9a;
+  --plate-tile: #121212;
+  --plate-split: rgb(255 255 255 / 0.08);
 }
 
 /* A scheme chosen with the switch tells the browser, so that its own parts,
@@ -193,6 +201,8 @@
   --color-plate-unit: var(--plate-unit);
   --color-plate-muted: var(--plate-muted);
   --color-plate-muted-figure: var(--plate-muted-figure);
+  --color-plate-tile: var(--plate-tile);
+  --color-plate-split: var(--plate-split);
 
   /* The corners by what they round: soft outside, firm inside. */
   --radius-sheet: 1rem;

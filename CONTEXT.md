@@ -96,6 +96,14 @@ _Avoid_: Original price, real price
 A price the platform derived from a Quoted Price because the Vendor did not quote that currency.
 _Avoid_: Estimated price, approximate price
 
+**Chosen currency**:
+The currency, USD or IQD, a Shopper has picked with the currency switch, which every price is shown in; IQD until they pick.
+_Avoid_: Selected currency, display currency, user currency
+
+**Shown Price**:
+The price an Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price.
+_Avoid_: Display price, final price, effective price
+
 **Platform Rate**:
 The single USD-to-IQD rate behind every Converted Price, set by hand to follow the Erbil market rate.
 _Avoid_: Exchange rate, official rate, market rate

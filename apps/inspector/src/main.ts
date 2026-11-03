@@ -14,7 +14,7 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 // made-up shop, whose Vendor is listed among the real ones. Run it from the
 // repository root:
 //
-//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [the inspector's options]
+//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [the inspector's options]
 //
 // It launches the inspector's Chrome, logs in once as the development Admin
 // before the first tab, so that Keycloak's cookie carries to every width,
@@ -22,7 +22,9 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 // `inspect.mjs` unchanged, with every option but `--language` and `--scheme`
 // passed through (`--widths`, `--out`, `--app` and the rest). `--scheme` shows
 // every tab in the light or the dark scheme; without it Chrome follows the
-// computer's appearance. The Vendor portal's screens are the Admin acting as
+// computer's appearance. The shop holds a Platform Rate, and
+// `--no-platform-rate` shows the Platform Rate screen as it is before the
+// Admin sets the first. The Vendor portal's screens are the Admin acting as
 // the shop's Vendor, under `/vendors/00000000-0000-4000-8000-000000000001/portal`.
 //
 // It exits with the inspector's own status, 0 with no FAIL findings and 1
@@ -32,7 +34,7 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 // though the screen was opened twice.
 
 const usage =
-  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--widths 1440,768,360] [--out DIR] [--app] [other options of inspect.mjs]';
+  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--widths 1440,768,360] [--out DIR] [--app] [other options of inspect.mjs]';
 
 // Where the API is during development, as the dashboard's settings have it.
 const apiUrl = process.env.VITE_API_URL ?? 'http://localhost:3001';
@@ -62,9 +64,12 @@ function commandLine(args: readonly string[]) {
     passed.splice(at, 2);
     if (language === undefined || !['ckb', 'ar', 'en'].includes(language)) stop(usage);
   }
+  const withoutARate = passed.indexOf('--no-platform-rate');
+  const platformRate = withoutARate === -1;
+  if (!platformRate) passed.splice(withoutARate, 1);
   const address = passed[0];
   if (address === undefined || !/^https?:\/\//.test(address)) stop(usage);
-  return { address, language, scheme, inspectorArgs: passed };
+  return { address, language, scheme, platformRate, inspectorArgs: passed };
 }
 
 // The development Admin's name and password, from `.env`, as
@@ -86,7 +91,9 @@ function developmentAdmin() {
   return { name, password };
 }
 
-const { address, language, scheme, inspectorArgs } = commandLine(process.argv.slice(2));
+const { address, language, scheme, platformRate, inspectorArgs } = commandLine(
+  process.argv.slice(2),
+);
 const login = developmentAdmin();
 const Browser = await tastesBrowser();
 const browser = await Browser.launch();
@@ -105,7 +112,7 @@ try {
     }
     return ((await response.json()) as PartPageResponse).content;
   });
-  const shop = madeUpShop(new Date(), parts);
+  const shop = madeUpShop(new Date(), parts, { platformRate });
 
   // Every tab the inspector opens is answered from the shop, and lands on
   // the dashboard, drawn, before it is judged; the inspector's own launch

@@ -1,6 +1,6 @@
 # Spec: Pricing
 
-Status: ready-for-agent
+Status: resolved
 
 This is `pricing`, the fifth module in the build order of [the MVP spec](../mvp/spec.md)'s capability map, after `offers` and the dashboard's redesign. It covers the requirements PRC-1 to PRC-4, and records PRC-5 for `builder`. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0002](../../docs/adr/0002-platform-rate-set-by-hand.md), [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md), [ADR-0010](../../docs/adr/0010-offer-history-kept-apart-from-the-offer.md) and [ADR-0011](../../docs/adr/0011-the-dashboards-look-is-framed-sheet.md). It builds on the conventions that `languages`, `catalog`, `accounts`, `offers` and the redesign recorded in the MVP spec.
 

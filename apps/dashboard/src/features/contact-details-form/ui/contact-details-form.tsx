@@ -8,6 +8,7 @@ import { type FieldErrors, useForm, type UseFormRegisterReturn } from 'react-hoo
 import { longest, MapLocationField } from '@/entities/vendor';
 import { setRefusalsBesideTheirFields, WhyNotAnsweredInThePortal } from '@/shared/api';
 import { Trans, useTranslation } from '@/shared/i18n';
+import { describedBy } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -272,11 +273,6 @@ function DetailField({
         components={{ longest: <>{limit === undefined ? null : formatNumber(limit)}</> }}
       />
     );
-  const describedBy = [
-    optional && `${id}-optional`,
-    `${id}-description`,
-    error !== undefined && `${id}-error`,
-  ].filter((each) => typeof each === 'string');
 
   return (
     <Field className={className}>
@@ -293,7 +289,11 @@ function DetailField({
       {children({
         id,
         'aria-invalid': error !== undefined,
-        'aria-describedby': describedBy.join(' '),
+        'aria-describedby': describedBy(
+          optional && `${id}-optional`,
+          `${id}-description`,
+          error !== undefined && `${id}-error`,
+        ),
       })}
       <FieldDescription id={`${id}-description`}>{description}</FieldDescription>
       <FieldError id={`${id}-error`}>{error}</FieldError>

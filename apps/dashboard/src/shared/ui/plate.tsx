@@ -1,4 +1,5 @@
 import { cn } from 'cn';
+import { Fragment } from 'react';
 import type * as React from 'react';
 
 // A plate: a figure that matters, in amber Geist Mono on graphite, as a money
@@ -41,4 +42,23 @@ function Plate({
   );
 }
 
-export { Plate };
+// A figure on a plate, as `formatNumber` writes it: its grouping commas and
+// its decimal point are set in Geist, so that neither takes a whole cell of
+// the figure, "266,000" and "349.99", never "266 , 000" or "349 . 99"
+// (redesign ticket 12). Every figure written on a plate takes it.
+function PlateFigure({ figure }: { figure: string }) {
+  // The figure's digits, and the comma or point between each run of them.
+  return figure
+    .split(/([,.])/)
+    .map((piece, index) => (
+      <Fragment key={index}>
+        {piece === ',' || piece === '.' ? (
+          <span className="font-sans">{piece}</span>
+        ) : (
+          piece
+        )}
+      </Fragment>
+    ));
+}
+
+export { Plate, PlateFigure };

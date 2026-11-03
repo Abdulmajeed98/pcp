@@ -1218,6 +1218,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which each Offer's Shown Price is in and the Offers are ordered by.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
           }
         ],
         "responses": {
@@ -1246,8 +1255,76 @@
           }
         },
         "security": [],
-        "summary": "A Part's visible Offers: not Expired Offers, of active Vendors only, in-stock first and then the most recent Confirmation first, each with how many days ago it was confirmed",
+        "summary": "A Part's visible Offers: not Expired Offers, of active Vendors only, each with its Shown Price in the chosen currency and how many days ago it was confirmed, in-stock first and then the lowest Shown Price first, with Offers that have none after the others",
         "tags": ["PartOffers"]
+      }
+    },
+    "/v1/platform-rate": {
+      "get": {
+        "operationId": "readPlatformRate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The current Platform Rate, in whole dinars per dollar, and when it was set, or none until the Admin sets the first",
+        "tags": ["PlatformRate"]
+      },
+      "put": {
+        "operationId": "setPlatformRate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlatformRateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the Platform Rate, in whole dinars per dollar, as a new setting, also when it equals the current one, and answer it as the current one",
+        "tags": ["PlatformRate"]
       }
     }
   },
@@ -2772,6 +2849,10 @@
         },
         "required": ["inStock"]
       },
+      "Currency": {
+        "type": "string",
+        "enum": ["USD", "IQD"]
+      },
       "VisibleOfferVendorResponse": {
         "type": "object",
         "properties": {
@@ -2787,6 +2868,31 @@
           }
         },
         "required": ["id", "name"]
+      },
+      "ShownPriceResponse": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "description": "The chosen currency.",
+            "example": "IQD",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "description": "The amount, as decimal text: in USD with two decimal places, in IQD in whole dinars. A Quoted Price is as the Vendor entered it; a Converted Price is rounded to the nearest 250 IQD or whole dollar, and is never below one step.",
+            "example": "551250"
+          },
+          "converted": {
+            "type": "boolean",
+            "description": "Whether it is a Converted Price, derived from the Offer's Quoted Price in the other currency at the current Platform Rate, which a Shopper sees marked \"≈\".",
+            "example": true
+          }
+        },
+        "required": ["currency", "amount", "converted"]
       },
       "VisibleOfferResponse": {
         "type": "object",
@@ -2810,6 +2916,16 @@
             "description": "The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.",
             "nullable": true,
             "example": 525000
+          },
+          "shownPrice": {
+            "description": "The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
           },
           "inStock": {
             "type": "boolean",
@@ -2836,11 +2952,55 @@
           "vendor",
           "usdPrice",
           "iqdPrice",
+          "shownPrice",
           "inStock",
           "warrantyMonths",
           "confirmedAt",
           "daysSinceConfirmation"
         ]
+      },
+      "CurrentPlatformRateResponse": {
+        "type": "object",
+        "properties": {
+          "iqdPerUsd": {
+            "type": "number",
+            "description": "The Platform Rate, in whole dinars per dollar.",
+            "example": 1575
+          },
+          "setAt": {
+            "type": "string",
+            "description": "When the Admin set it.",
+            "format": "date-time"
+          }
+        },
+        "required": ["iqdPerUsd", "setAt"]
+      },
+      "PlatformRateResponse": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "description": "The current Platform Rate, the newest setting, or null until the Admin sets the first.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrentPlatformRateResponse"
+              }
+            ]
+          }
+        },
+        "required": ["current"]
+      },
+      "SetPlatformRateRequest": {
+        "type": "object",
+        "properties": {
+          "iqdPerUsd": {
+            "type": "number",
+            "description": "The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.",
+            "example": 1575
+          }
+        },
+        "required": ["iqdPerUsd"]
       }
     }
   },

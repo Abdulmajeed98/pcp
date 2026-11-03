@@ -873,6 +873,8 @@ export type EditOfferRequest = {
     warrantyMonths?: number | null;
 };
 
+export type Currency = 'USD' | 'IQD';
+
 export type VisibleOfferVendorResponse = {
     /**
      * The Vendor's identifier on the platform.
@@ -882,6 +884,21 @@ export type VisibleOfferVendorResponse = {
      * The Vendor's name, as the Vendor writes it.
      */
     name: string;
+};
+
+export type ShownPriceResponse = {
+    /**
+     * The chosen currency.
+     */
+    currency: Currency;
+    /**
+     * The amount, as decimal text: in USD with two decimal places, in IQD in whole dinars. A Quoted Price is as the Vendor entered it; a Converted Price is rounded to the nearest 250 IQD or whole dollar, and is never below one step.
+     */
+    amount: string;
+    /**
+     * Whether it is a Converted Price, derived from the Offer's Quoted Price in the other currency at the current Platform Rate, which a Shopper sees marked "≈".
+     */
+    converted: boolean;
 };
 
 export type VisibleOfferResponse = {
@@ -898,6 +915,10 @@ export type VisibleOfferResponse = {
      */
     iqdPrice: number | null;
     /**
+     * The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.
+     */
+    shownPrice: ShownPriceResponse | null;
+    /**
      * Whether the Vendor has the Part in stock.
      */
     inStock: boolean;
@@ -913,6 +934,31 @@ export type VisibleOfferResponse = {
      * The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.
      */
     daysSinceConfirmation: number;
+};
+
+export type CurrentPlatformRateResponse = {
+    /**
+     * The Platform Rate, in whole dinars per dollar.
+     */
+    iqdPerUsd: number;
+    /**
+     * When the Admin set it.
+     */
+    setAt: string;
+};
+
+export type PlatformRateResponse = {
+    /**
+     * The current Platform Rate, the newest setting, or null until the Admin sets the first.
+     */
+    current: CurrentPlatformRateResponse | null;
+};
+
+export type SetPlatformRateRequest = {
+    /**
+     * The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.
+     */
+    iqdPerUsd: number;
 };
 
 export type GetCallerData = {
@@ -1600,7 +1646,12 @@ export type ListVisibleOffersOfPartData = {
     path: {
         partId: string;
     };
-    query?: never;
+    query: {
+        /**
+         * The chosen currency, which each Offer's Shown Price is in and the Offers are ordered by.
+         */
+        currency: Currency;
+    };
     url: '/v1/parts/{partId}/offers';
 };
 
@@ -1618,3 +1669,47 @@ export type ListVisibleOffersOfPartResponses = {
 };
 
 export type ListVisibleOffersOfPartResponse = ListVisibleOffersOfPartResponses[keyof ListVisibleOffersOfPartResponses];
+
+export type ReadPlatformRateData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/platform-rate';
+};
+
+export type ReadPlatformRateErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPlatformRateError = ReadPlatformRateErrors[keyof ReadPlatformRateErrors];
+
+export type ReadPlatformRateResponses = {
+    200: PlatformRateResponse;
+};
+
+export type ReadPlatformRateResponse = ReadPlatformRateResponses[keyof ReadPlatformRateResponses];
+
+export type SetPlatformRateData = {
+    body: SetPlatformRateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/platform-rate';
+};
+
+export type SetPlatformRateErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type SetPlatformRateError = SetPlatformRateErrors[keyof SetPlatformRateErrors];
+
+export type SetPlatformRateResponses = {
+    200: PlatformRateResponse;
+};
+
+export type SetPlatformRateResponse = SetPlatformRateResponses[keyof SetPlatformRateResponses];

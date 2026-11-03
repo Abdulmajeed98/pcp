@@ -3,11 +3,12 @@ import { PlusIcon, XIcon } from 'lucide-react';
 import { useRef } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 
+import { describedBy } from '@/shared/lib';
 import { Button, FieldError, FieldLegend, FieldSet, Input } from '@/shared/ui';
 
 import type { PartFormValues } from '../model/form-values';
 import { Entries, Entry, useEntriesMotion } from './entries-motion';
-import { describedBy, errorOf, idOf } from './field-names';
+import { errorOf, idOf } from './field-names';
 
 // A list of text, such as a Part's part numbers or a case's front panel
 // ports: one line for each entry, each with a way to remove it, and a way to

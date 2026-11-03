@@ -1,11 +1,14 @@
 import { type Browser, expect, type Page, test } from '@playwright/test';
 
+import { choiceOf, currencies, currencySwitch } from './currencies';
 import {
   addressIn,
   alternateAddresses,
   expectADifferentTextInEachLanguage,
   expectPageIn,
+  expectTheSwitchAtTheEndOfTheFrame,
   expectTheSwitchInWhatTheServerSent,
+  expectWithinReach,
   fetchWithNoBrowser,
   type Language,
   languages,
@@ -222,6 +225,47 @@ test.describe('in a browser set to English, with scripts switched off', () => {
     await expectTheChoiceIsKept(page, browser, arabic);
   });
 });
+
+// The currency switch, beside the language switch: named in the page's
+// language, its two choices too, on the end side of the frame, and each choice
+// within reach of a thumb. The names are told apart by differing between the
+// languages, as every translation is, on the first page and on the "not
+// found" screen, which the browser draws by script.
+for (const { where, address, drawnByScript } of [
+  { where: 'on the first page', address: '', drawnByScript: false },
+  { where: 'on the "not found" screen', address: '/no-such-page', drawnByScript: true },
+]) {
+  test(`the currency switch is named in the page's language, on the end side, and each of its choices is large enough to tap, ${where}`, async ({
+    page,
+  }) => {
+    const names = await readInEveryLanguage(
+      page,
+      address,
+      async (language) => {
+        const label = (await currencySwitch(page).getAttribute('aria-label')) ?? '';
+        await expect(page.getByRole('form', { name: label, exact: true })).toHaveCount(1);
+        await expectTheSwitchAtTheEndOfTheFrame(page, language, currencySwitch(page));
+
+        const choices: string[] = [];
+        for (const currency of currencies) {
+          await expectWithinReach(choiceOf(page, currency), `the choice of ${currency}`);
+          choices.push((await choiceOf(page, currency).innerText()).trim());
+        }
+        return { label, choices };
+      },
+      { drawnByScript },
+    );
+
+    expectADifferentTextInEachLanguage(
+      new Map([...names].map(([language, { label }]) => [language, label])),
+    );
+    for (const index of currencies.keys()) {
+      expectADifferentTextInEachLanguage(
+        new Map([...names].map(([language, { choices }]) => [language, choices[index]])),
+      );
+    }
+  });
+}
 
 test('the same piece of text is different in each of the three languages', async ({
   page,
