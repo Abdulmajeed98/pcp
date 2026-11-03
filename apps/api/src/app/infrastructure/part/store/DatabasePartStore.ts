@@ -21,6 +21,7 @@ import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { offer } from '~/infrastructure/offer/offer.schema';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
 
+import { placeOfCategory } from '../category-order';
 import { part } from '../part.schema';
 import { columnsOf } from '../part-columns';
 import { partOf, partWithPhoto } from '../part-of-row';
@@ -64,12 +65,6 @@ function missingPathsOf(params: ListPartsMissingSpecificationsParams): SQL {
 
   return sql`CASE ${part.category} ${sql.join(byCategory, sql` `)} END`;
 }
-
-// The place of a Category among the eight, for ordering by it.
-const categoryOrder = sql`ARRAY[${sql.join(
-  Category.keys().map((key) => sql`${key}`),
-  sql`, `,
-)}]::part_category[]`;
 
 @Injectable()
 export class DatabasePartStore implements PartStore {
@@ -204,7 +199,7 @@ export class DatabasePartStore implements PartStore {
               .from(offered)
               .where(lacking)
               .orderBy(
-                sql`array_position(${categoryOrder}, ${offered.category})`,
+                placeOfCategory(offered.category),
                 desc(offered.offerCount),
                 asc(offered.name),
                 asc(offered.id),
