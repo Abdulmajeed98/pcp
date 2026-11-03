@@ -1,6 +1,7 @@
 import type { FoundPartResponse, PartSummaryResponse } from '@pcp/api-client';
 
-import { type CatalogPart, partsTheShopOffers } from './made-up-shop.ts';
+import type { CatalogPart } from './made-up-offers.ts';
+import { partsTheShopOffers } from './made-up-shop.ts';
 
 // A search of the catalog for the Parts of one Category whose names hold
 // every word of `search`, as the API answers it.
@@ -23,7 +24,7 @@ export async function partsOfTheCatalog(
       if (named.length !== 1) {
         const howMany = named.length === 0 ? 'no' : String(named.length);
         throw new Error(
-          `The catalog holds ${howMany} ${wanted.category} Part${named.length > 1 ? 's' : ''} named "${wanted.name}", which the made-up shop offers. Change the shop's Part in apps/inspector/src/made-up-shop.ts.`,
+          `The catalog holds ${howMany} ${wanted.category} Part${named.length > 1 ? 's' : ''} named "${wanted.name}", which the made-up shop offers. Change the shop's Part in apps/inspector/src/made-up-offers.ts.`,
         );
       }
       const { id, category, name, manufacturer, partNumbers, photoPath } = named[0];
