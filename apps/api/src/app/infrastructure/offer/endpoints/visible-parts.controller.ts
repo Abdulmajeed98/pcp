@@ -39,8 +39,9 @@ export class VisiblePartsController {
     );
   }
 
-  // Declared before any address of one Visible Part, so that `filters` is
-  // never read as a Part's identifier.
+  // Matched before a Visible Part's own address, `v1/visible-parts/:partId`,
+  // since `OfferModule` lists this controller before that one's, so that
+  // `filters` is never read as a Part's identifier.
   @ApiOperation({
     summary:
       "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied",

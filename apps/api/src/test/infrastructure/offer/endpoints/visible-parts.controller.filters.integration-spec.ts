@@ -221,6 +221,23 @@ describe("a Category's filters and its price range", () => {
     });
   });
 
+  describe('the address', () => {
+    it("is the filters' own, beside a Visible Part's, and never read as a Part's identifier", async () => {
+      const ryzen = await aPart('Made-up Ryzen 7 7700', {
+        specifications: { socket: 'AM5' },
+      });
+      const shop = await aVendor();
+      await anOffer(shop.id, ryzen.id);
+
+      expect((await theFilters()).filters).toEqual([
+        { parameter: 'socket', kind: 'text', values: ['AM5'] },
+      ]);
+      const part = await fetch(`${testApp.baseUrl}/v1/visible-parts/${ryzen.id}`);
+      expect(part.status).toBe(200);
+      expect(await part.json()).toMatchObject({ id: ryzen.id });
+    });
+  });
+
   describe("a filter's values", () => {
     it('come only from Visible Parts: not from a Part with no Offer, one whose only Offer is an Expired Offer, or one whose only Vendor is deactivated', async () => {
       const shop = await aVendor();
