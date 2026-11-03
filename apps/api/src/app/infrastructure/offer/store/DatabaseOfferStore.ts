@@ -1,5 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
+import {
+  databaseErrorOf,
+  PageableAttributes,
+  PageAttributes,
+  ServerError,
+  StructuredError,
+} from '@pcp/core';
 import {
   and,
   asc,
@@ -23,6 +29,7 @@ import {
 } from '~/domain/offer/expiry';
 import { Currency, currencyFacts } from '~/domain/currency/currency';
 import { Offer } from '~/domain/offer/Offer';
+import { Part } from '~/domain/part/Part';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import { PriceRange } from '~/domain/offer/PriceRange';
 import { OfferState } from '~/domain/offer/offer-state';
@@ -46,6 +53,7 @@ import { VendorWithExpiringOffers } from '~/domain/offer/VendorWithExpiringOffer
 import { PhoneNumber } from '~/domain/phone-number/PhoneNumber';
 import { visibleOfferRuleAt } from '~/domain/offer/visibility';
 import { VisibleOffer } from '~/domain/offer/VisibleOffer';
+import { VisibleOffersOfVendorPage } from '~/domain/offer/VisibleOffersOfVendorPage';
 import { VisiblePart } from '~/domain/offer/VisiblePart';
 import { FilterValues, VisiblePartsFilters } from '~/domain/offer/VisiblePartsFilters';
 import { Category } from '~/domain/part/Category';
@@ -59,8 +67,9 @@ import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import type { Schema } from '~/infrastructure/database/schema';
 import { brokeUniqueRule } from '~/infrastructure/database/unique-rule';
+import { placeOfCategory } from '~/infrastructure/part/category-order';
 import { part, PartRow } from '~/infrastructure/part/part.schema';
-import { partOf } from '~/infrastructure/part/part-of-row';
+import { partOf, partWithPhoto } from '~/infrastructure/part/part-of-row';
 import { holdingEveryWord } from '~/infrastructure/part/search-text';
 import { isMissingAt, specificationAt } from '~/infrastructure/part/specification-at';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
@@ -99,17 +108,29 @@ function visiblePart(now: Date): SQL {
   return sql`exists (select 1 from ${offer} inner join ${vendor} on ${eq(vendor.id, offer.vendorId)} where ${and(eq(offer.partId, part.id), visibleOffer(now))})`;
 }
 
-// The order of a Part's visible Offers (OFF-11, PRC-4), given their Shown
-// Price: in stock first, then the lowest Shown Price as answered, after
-// rounding, with none after the others; then the most recent Confirmation,
-// the Vendor's name and the Offer's identifier, so that the order is the same
-// at every read. A query that uses it joins the Vendor.
+// OFF-11's order of visible Offers (PRC-4), given their Shown Price: in stock
+// first, then the lowest Shown Price as answered, after rounding, with none
+// after the others; then the most recent Confirmation. Each list of them
+// adds what tells its Offers apart, so that the order is the same at every
+// read.
+function inOff11sOrder(shownAmount: SQL): SQL[] {
+  return [desc(offer.inStock), sql`${shownAmount} asc nulls last`, desc(offer.confirmedAt)];
+}
+
+// The order of a Part's visible Offers: OFF-11's, then the Vendor's name and
+// the Offer's identifier. A query that uses it joins the Vendor.
 function inTheOrderOfAPartsOffers(shownAmount: SQL): SQL[] {
+  return [...inOff11sOrder(shownAmount), asc(vendor.name), asc(offer.id)];
+}
+
+// The order of a Vendor's visible Offers: by their Parts' Categories, in the
+// catalog's order, and within each Category OFF-11's, then the Part's name
+// and the Offer's identifier. A query that uses it joins the Part.
+function inTheOrderOfAVendorsOffers(shownAmount: SQL): SQL[] {
   return [
-    desc(offer.inStock),
-    sql`${shownAmount} asc nulls last`,
-    desc(offer.confirmedAt),
-    asc(vendor.name),
+    placeOfCategory(part.category),
+    ...inOff11sOrder(shownAmount),
+    asc(part.name),
     asc(offer.id),
   ];
 }
@@ -930,6 +951,136 @@ export class DatabaseOfferStore implements OfferStore {
     } catch (error) {
       this.logger.error(error, 'An Offer could not be read');
       return Either.left(databaseErrorOf(error, 'An Offer could not be read'));
+    }
+  }
+
+  async readVisiblePart(
+    partId: string,
+    now: Date,
+  ): Promise<Either.Either<Option.Option<Part>, StructuredError>> {
+    if (!couldBeIdentifier(partId)) return Either.right(Option.none());
+
+    try {
+      const [row] = await this.databaseProvider
+        .getClient()
+        .select(partWithPhoto)
+        .from(part)
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .where(and(eq(part.id, partId), visiblePart(now)));
+
+      if (row === undefined) return Either.right(Option.none());
+      return Either.map(partOf(row.part, row.photoId), Option.some);
+    } catch (error) {
+      this.logger.error(error, 'A Visible Part could not be read');
+      return Either.left(databaseErrorOf(error, 'A Visible Part could not be read'));
+    }
+  }
+
+  async listVisibleByVendor(
+    vendorId: string,
+    currency: Currency,
+    pageable: PageableAttributes,
+    now: Date,
+  ): Promise<Either.Either<Option.Option<VisibleOffersOfVendorPage>, StructuredError>> {
+    if (!couldBeIdentifier(vendorId)) return Either.right(Option.none());
+
+    const client = this.databaseProvider.getClient();
+    // The current Platform Rate, read once, in the one statement that reads
+    // the Vendor, its Offers, their page and their total, so that every Shown
+    // Price, the order and the total are at one rate.
+    const currentRate = currentPlatformRate(client).as('current_rate');
+    const shownPrice = shownPriceIn(currency, sql`${currentRate.iqdPerUsd}`);
+    const inTheirOrder = sql.join(inTheOrderOfAVendorsOffers(shownPrice.amount), sql`, `);
+
+    // Every visible Offer of the Vendor, with its Shown Price and its place in
+    // the order of a Vendor's Offers. Drizzle names a subquery's field by its
+    // alias alone, so each alias here and below is one no table in the same
+    // statement has as a column.
+    const listed = client.$with('listed').as(
+      client
+        .select({
+          offerId: sql<string>`${offer.id}`.as('listed_offer_id'),
+          shownAmount: shownPrice.amount.as('shown_amount'),
+          shownConverted: shownPrice.converted.as('shown_converted'),
+          place: sql<number>`row_number() over (order by ${inTheirOrder})`
+            .mapWith(Number)
+            .as('place_in_list'),
+        })
+        .from(offer)
+        .innerJoin(vendor, eq(vendor.id, offer.vendorId))
+        .innerJoin(part, eq(part.id, offer.partId))
+        .leftJoin(currentRate, sql`true`)
+        .where(and(eq(offer.vendorId, vendorId), visibleOffer(now))),
+    );
+    // How many there are, as one row, which the page is joined to, so that a
+    // page past the end still answers the total.
+    const counted = client
+      .select({ total: sql<number>`count(*)::int`.as('total') })
+      .from(listed)
+      .as('counted');
+    const offset = pageable.getOffset();
+
+    try {
+      // The Vendor's row, which there is none of when it is deactivated or
+      // unknown, since Shoppers see only active Vendors (ACC-7), with the
+      // total and the page's Offers.
+      const rows = await client
+        .with(listed)
+        .select({
+          vendorName: vendor.name,
+          total: counted.total,
+          offer,
+          part,
+          photoId: partPhoto.id,
+          shownAmount: listed.shownAmount,
+          shownConverted: listed.shownConverted,
+        })
+        .from(vendor)
+        .innerJoin(counted, sql`true`)
+        .leftJoin(
+          listed,
+          and(gt(listed.place, offset), lte(listed.place, offset + pageable.getLimit())),
+        )
+        .leftJoin(offer, eq(offer.id, listed.offerId))
+        .leftJoin(part, eq(part.id, offer.partId))
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .where(and(eq(vendor.id, vendorId), eq(vendor.active, true)))
+        .orderBy(asc(listed.place));
+      if (rows.length === 0) return Either.right(Option.none());
+
+      const offers = Either.all(
+        rows.flatMap((row) =>
+          row.offer === null || row.part === null
+            ? []
+            : [
+                Either.map(
+                  toDomain(row.offer, row.part, row.photoId),
+                  (found) =>
+                    new VisibleOffer(
+                      found,
+                      row.vendorName,
+                      row.shownAmount === null
+                        ? null
+                        : new ShownPrice(
+                            currency,
+                            row.shownAmount,
+                            row.shownConverted === true,
+                          ),
+                    ),
+                ),
+              ],
+        ),
+      );
+      return Either.map(offers, (found) =>
+        Option.some(
+          new VisibleOffersOfVendorPage(found, PageAttributes.of(pageable, rows[0].total)),
+        ),
+      );
+    } catch (error) {
+      this.logger.error(error, "A Vendor's visible Offers could not be listed");
+      return Either.left(
+        databaseErrorOf(error, "A Vendor's visible Offers could not be listed"),
+      );
     }
   }
 }

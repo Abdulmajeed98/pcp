@@ -1,3 +1,4 @@
+import { LabelledSpecification } from '../specification/LabelledSpecification';
 import { specificationListOf } from '../specification/specification-lists';
 import { SpecificationDocument } from '../specification/specification-document';
 import { Category } from './Category';
@@ -60,6 +61,12 @@ export class Part {
   // The identifier of the Part's photo, or null when it has none.
   getPhotoId(): string | null {
     return this.photoId;
+  }
+
+  // Its specifications as Shoppers read them: those it holds, labelled, in
+  // its list's order.
+  getLabelledSpecifications(): LabelledSpecification[] {
+    return specificationListOf(this.category).labelledIn(this.specifications);
   }
 
   // The specifications a Compatibility Rule reads that this Part lacks, by

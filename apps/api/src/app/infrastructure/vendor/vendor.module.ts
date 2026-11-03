@@ -8,17 +8,19 @@ import { ListVendorsQuery } from '~/domain/vendor/ListVendorsQuery';
 import { ReactivateVendorCommand } from '~/domain/vendor/ReactivateVendorCommand';
 import { ReadCallersVendorQuery } from '~/domain/vendor/ReadCallersVendorQuery';
 import { ReadVendorQuery } from '~/domain/vendor/ReadVendorQuery';
+import { ReadVisibleVendorQuery } from '~/domain/vendor/ReadVisibleVendorQuery';
 import { ResetVendorPasswordCommand } from '~/domain/vendor/ResetVendorPasswordCommand';
 import { VendorAccessRule } from '~/domain/vendor/VendorAccessRule';
 import { VendorStore } from '~/domain/vendor/VendorStore';
 import { LoginModule } from '~/infrastructure/login/login.module';
 
 import { VendorController } from './endpoints/vendor.controller';
+import { VisibleVendorsController } from './endpoints/visible-vendors.controller';
 import { DatabaseVendorStore } from './store/DatabaseVendorStore';
 
 @Module({
   imports: [LoginModule],
-  controllers: [VendorController],
+  controllers: [VendorController, VisibleVendorsController],
   providers: [
     // The abstract class is the token the domain asks for.
     { provide: VendorStore, useClass: DatabaseVendorStore },
@@ -32,6 +34,7 @@ import { DatabaseVendorStore } from './store/DatabaseVendorStore';
     ReadCallersVendorQuery,
     ResetVendorPasswordCommand,
     VendorAccessRule,
+    ReadVisibleVendorQuery,
   ],
   // Every Vendor portal endpoint, those of other modules among them, decides
   // by the rule for which Vendor a request acts for.

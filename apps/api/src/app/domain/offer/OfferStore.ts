@@ -3,6 +3,7 @@ import { Either, Option } from 'effect';
 
 import { Currency } from '../currency/currency';
 import { Category } from '../part/Category';
+import { Part } from '../part/Part';
 import { FilterChoice } from '../specification/filters';
 
 import { Offer } from './Offer';
@@ -11,6 +12,7 @@ import { OfferState } from './offer-state';
 import { PriceRange } from './PriceRange';
 import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 import { VisibleOffer } from './VisibleOffer';
+import { VisibleOffersOfVendorPage } from './VisibleOffersOfVendorPage';
 import { VisiblePart } from './VisiblePart';
 import { VisiblePartsFilters } from './VisiblePartsFilters';
 
@@ -452,4 +454,30 @@ export abstract class OfferStore {
     vendorId: string,
     partId: string,
   ): Promise<Either.Either<Option.Option<Offer>, StructuredError>>;
+
+  // The Part with this identifier when it is a Visible Part at now by the
+  // API's clock, by the same rule as a Category's list of them: a Part with
+  // at least one visible Offer, by the rule in `visibility.ts`. None when it
+  // is not visible, or there is no such Part.
+  abstract readVisiblePart(
+    partId: string,
+    now: Date,
+  ): Promise<Either.Either<Option.Option<Part>, StructuredError>>;
+
+  // One page of the Vendor's visible Offers at now by the API's clock, by
+  // the rule in `visibility.ts`, each with its Part and its Shown Price in the
+  // currency at the current Platform Rate, which is read in the same query as
+  // the Vendor, the Offers, the page and the total, so that one answer never
+  // mixes two rates. They are grouped by their Parts' Categories in the
+  // catalog's order, and within each come in the order of a Part's visible
+  // Offers (OFF-11, PRC-4): in stock first, then the lowest Shown Price, then
+  // the most recent Confirmation; then by the Part's name and the Offer's
+  // identifier, so that moving between pages never skips or repeats one.
+  // None when the Vendor is deactivated, or there is no such Vendor.
+  abstract listVisibleByVendor(
+    vendorId: string,
+    currency: Currency,
+    pageable: PageableAttributes,
+    now: Date,
+  ): Promise<Either.Either<Option.Option<VisibleOffersOfVendorPage>, StructuredError>>;
 }

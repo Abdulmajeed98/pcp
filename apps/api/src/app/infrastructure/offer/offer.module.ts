@@ -6,23 +6,36 @@ import { EditOfferCommand } from '~/domain/offer/EditOfferCommand';
 import { ListVendorsOffersQuery } from '~/domain/offer/ListVendorsOffersQuery';
 import { ListVendorsWithExpiringOffersQuery } from '~/domain/offer/ListVendorsWithExpiringOffersQuery';
 import { ListVisibleOffersOfPartQuery } from '~/domain/offer/ListVisibleOffersOfPartQuery';
+import { ListVisibleOffersOfVendorQuery } from '~/domain/offer/ListVisibleOffersOfVendorQuery';
 import { ListVisiblePartsQuery } from '~/domain/offer/ListVisiblePartsQuery';
 import { ReadVisiblePartsFiltersQuery } from '~/domain/offer/ReadVisiblePartsFiltersQuery';
 import { OfferStore } from '~/domain/offer/OfferStore';
 import { ReadOfferQuery } from '~/domain/offer/ReadOfferQuery';
+import { ReadVisiblePartQuery } from '~/domain/offer/ReadVisiblePartQuery';
 import { RemoveOfferCommand } from '~/domain/offer/RemoveOfferCommand';
 import { PartModule } from '~/infrastructure/part/part.module';
 import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
 import { OfferController } from './endpoints/offer.controller';
 import { PartOffersController } from './endpoints/part-offers.controller';
+import { VisiblePartController } from './endpoints/visible-part.controller';
 import { VisiblePartsController } from './endpoints/visible-parts.controller';
+import { VisibleVendorOffersController } from './endpoints/visible-vendor-offers.controller';
 import { DatabaseOfferStore } from './store/DatabaseOfferStore';
 
 @Module({
   // The rule for which Vendor a request acts for, and the Parts offered.
   imports: [VendorModule, PartModule],
-  controllers: [OfferController, PartOffersController, VisiblePartsController],
+  controllers: [
+    OfferController,
+    PartOffersController,
+    VisiblePartsController,
+    // After the list of Visible Parts, whose own addresses below
+    // `v1/visible-parts/` would otherwise be taken for a Part's identifier:
+    // the routes are matched in the order the controllers are given.
+    VisiblePartController,
+    VisibleVendorOffersController,
+  ],
   providers: [
     // The abstract class is the token the domain asks for.
     { provide: OfferStore, useClass: DatabaseOfferStore },
@@ -36,6 +49,8 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     ReadVisiblePartsFiltersQuery,
     EditOfferCommand,
     RemoveOfferCommand,
+    ReadVisiblePartQuery,
+    ListVisibleOffersOfVendorQuery,
   ],
 })
 export class OfferModule {}
