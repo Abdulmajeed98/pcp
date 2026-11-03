@@ -914,17 +914,6 @@ export type EditOfferRequest = {
 
 export type Currency = 'USD' | 'IQD';
 
-export type VisibleOfferVendorResponse = {
-    /**
-     * The Vendor's identifier on the platform.
-     */
-    id: string;
-    /**
-     * The Vendor's name, as the Vendor writes it.
-     */
-    name: string;
-};
-
 export type ShownPriceResponse = {
     /**
      * The chosen currency.
@@ -940,11 +929,18 @@ export type ShownPriceResponse = {
     converted: boolean;
 };
 
-export type VisibleOfferResponse = {
+export type VisibleOfferVendorResponse = {
     /**
-     * The Vendor.
+     * The Vendor's identifier on the platform.
      */
-    vendor: VisibleOfferVendorResponse;
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+};
+
+export type VisibleOfferResponse = {
     /**
      * The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.
      */
@@ -973,6 +969,10 @@ export type VisibleOfferResponse = {
      * The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.
      */
     daysSinceConfirmation: number;
+    /**
+     * The Vendor.
+     */
+    vendor: VisibleOfferVendorResponse;
 };
 
 export type VisiblePartResponse = {
@@ -1097,6 +1097,72 @@ export type VisiblePartWithSpecificationsResponse = {
      * The specifications the Part holds, in the order of its Category's specification list, each with its English label and unit. One it lacks is left out, and so is a 0 where 0 stands for "not known".
      */
     specifications: Array<LabelledSpecificationResponse>;
+};
+
+export type VisibleOfferOfVendorResponse = {
+    /**
+     * The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.
+     */
+    shownPrice: ShownPriceResponse | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor last confirmed the Offer.
+     */
+    confirmedAt: string;
+    /**
+     * The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.
+     */
+    daysSinceConfirmation: number;
+    /**
+     * The Part offered.
+     */
+    part: PartSummaryResponse;
+};
+
+export type VisibleOfferOfVendorPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Offers, grouped by their Parts' Categories in the catalog's order, and within each Category in stock first, then the lowest Shown Price, with Offers that have none after the others, then the most recent Confirmation, then the Part's name.
+     */
+    content: Array<VisibleOfferOfVendorResponse>;
 };
 
 export type CurrentPlatformRateResponse = {
@@ -1923,6 +1989,43 @@ export type ReadVisiblePartResponses = {
 };
 
 export type ReadVisiblePartResponse = ReadVisiblePartResponses[keyof ReadVisiblePartResponses];
+
+export type ListVisibleOffersOfVendorData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+        /**
+         * The chosen currency, which each Offer's Shown Price is in and the Offers of each Category are ordered by.
+         */
+        currency: Currency;
+    };
+    url: '/v1/visible-vendors/{vendorId}/offers';
+};
+
+export type ListVisibleOffersOfVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVisibleOffersOfVendorError = ListVisibleOffersOfVendorErrors[keyof ListVisibleOffersOfVendorErrors];
+
+export type ListVisibleOffersOfVendorResponses = {
+    200: VisibleOfferOfVendorPageResponse;
+};
+
+export type ListVisibleOffersOfVendorResponse = ListVisibleOffersOfVendorResponses[keyof ListVisibleOffersOfVendorResponses];
 
 export type ReadPlatformRateData = {
     body?: never;

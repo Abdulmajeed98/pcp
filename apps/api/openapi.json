@@ -1434,6 +1434,79 @@
         "tags": ["VisiblePart"]
       }
     },
+    "/v1/visible-vendors/{vendorId}/offers": {
+      "get": {
+        "operationId": "listVisibleOffersOfVendor",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which each Offer's Shown Price is in and the Offers of each Category are ordered by.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisibleOfferOfVendorPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "One page of an active Vendor's visible Offers: not Expired Offers, each with its Part, its Shown Price in the chosen currency and how many days ago it was confirmed, grouped by Category in the catalog's order, and within each in stock first and then the lowest Shown Price first; a deactivated Vendor is answered as one that does not exist",
+        "tags": ["VisibleVendorOffers"]
+      }
+    },
     "/v1/platform-rate": {
       "get": {
         "operationId": "readPlatformRate",
@@ -3105,22 +3178,6 @@
         "type": "string",
         "enum": ["USD", "IQD"]
       },
-      "VisibleOfferVendorResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The Vendor's identifier on the platform.",
-            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
-          },
-          "name": {
-            "type": "string",
-            "description": "The Vendor's name, as the Vendor writes it.",
-            "example": "Made-up Computer Shop"
-          }
-        },
-        "required": ["id", "name"]
-      },
       "ShownPriceResponse": {
         "type": "object",
         "properties": {
@@ -3146,17 +3203,25 @@
         },
         "required": ["currency", "amount", "converted"]
       },
+      "VisibleOfferVendorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as the Vendor writes it.",
+            "example": "Made-up Computer Shop"
+          }
+        },
+        "required": ["id", "name"]
+      },
       "VisibleOfferResponse": {
         "type": "object",
         "properties": {
-          "vendor": {
-            "description": "The Vendor.",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/VisibleOfferVendorResponse"
-              }
-            ]
-          },
           "usdPrice": {
             "type": "string",
             "description": "The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.",
@@ -3198,17 +3263,25 @@
             "type": "number",
             "description": "The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.",
             "example": 3
+          },
+          "vendor": {
+            "description": "The Vendor.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisibleOfferVendorResponse"
+              }
+            ]
           }
         },
         "required": [
-          "vendor",
           "usdPrice",
           "iqdPrice",
           "shownPrice",
           "inStock",
           "warrantyMonths",
           "confirmedAt",
-          "daysSinceConfirmation"
+          "daysSinceConfirmation",
+          "vendor"
         ]
       },
       "VisiblePartResponse": {
@@ -3471,6 +3544,122 @@
           "partNumbers",
           "photoPath",
           "specifications"
+        ]
+      },
+      "VisibleOfferOfVendorResponse": {
+        "type": "object",
+        "properties": {
+          "usdPrice": {
+            "type": "string",
+            "description": "The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": "349.99"
+          },
+          "iqdPrice": {
+            "type": "number",
+            "description": "The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": 525000
+          },
+          "shownPrice": {
+            "description": "The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether the Vendor has the Part in stock."
+          },
+          "warrantyMonths": {
+            "type": "number",
+            "description": "The warranty, in whole months, or null when the Vendor states none.",
+            "nullable": true,
+            "example": 12
+          },
+          "confirmedAt": {
+            "type": "string",
+            "description": "When the Vendor last confirmed the Offer.",
+            "format": "date-time"
+          },
+          "daysSinceConfirmation": {
+            "type": "number",
+            "description": "The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.",
+            "example": 3
+          },
+          "part": {
+            "description": "The Part offered.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartSummaryResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "usdPrice",
+          "iqdPrice",
+          "shownPrice",
+          "inStock",
+          "warrantyMonths",
+          "confirmedAt",
+          "daysSinceConfirmation",
+          "part"
+        ]
+      },
+      "VisibleOfferOfVendorPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Offers, grouped by their Parts' Categories in the catalog's order, and within each Category in stock first, then the lowest Shown Price, with Offers that have none after the others, then the most recent Confirmation, then the Part's name.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VisibleOfferOfVendorResponse"
+            }
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content"
         ]
       },
       "CurrentPlatformRateResponse": {

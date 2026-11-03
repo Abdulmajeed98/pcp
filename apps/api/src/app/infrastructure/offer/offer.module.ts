@@ -6,6 +6,7 @@ import { EditOfferCommand } from '~/domain/offer/EditOfferCommand';
 import { ListVendorsOffersQuery } from '~/domain/offer/ListVendorsOffersQuery';
 import { ListVendorsWithExpiringOffersQuery } from '~/domain/offer/ListVendorsWithExpiringOffersQuery';
 import { ListVisibleOffersOfPartQuery } from '~/domain/offer/ListVisibleOffersOfPartQuery';
+import { ListVisibleOffersOfVendorQuery } from '~/domain/offer/ListVisibleOffersOfVendorQuery';
 import { ListVisiblePartsQuery } from '~/domain/offer/ListVisiblePartsQuery';
 import { OfferStore } from '~/domain/offer/OfferStore';
 import { ReadOfferQuery } from '~/domain/offer/ReadOfferQuery';
@@ -18,6 +19,7 @@ import { OfferController } from './endpoints/offer.controller';
 import { PartOffersController } from './endpoints/part-offers.controller';
 import { VisiblePartController } from './endpoints/visible-part.controller';
 import { VisiblePartsController } from './endpoints/visible-parts.controller';
+import { VisibleVendorOffersController } from './endpoints/visible-vendor-offers.controller';
 import { DatabaseOfferStore } from './store/DatabaseOfferStore';
 
 @Module({
@@ -31,6 +33,7 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     // `v1/visible-parts/` would otherwise be taken for a Part's identifier:
     // the routes are matched in the order the controllers are given.
     VisiblePartController,
+    VisibleVendorOffersController,
   ],
   providers: [
     // The abstract class is the token the domain asks for.
@@ -45,6 +48,7 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     EditOfferCommand,
     RemoveOfferCommand,
     ReadVisiblePartQuery,
+    ListVisibleOffersOfVendorQuery,
   ],
 })
 export class OfferModule {}
