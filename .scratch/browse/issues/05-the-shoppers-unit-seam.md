@@ -110,6 +110,6 @@ There are 13 tests in one file.
 
 **`pnpm check` with Docker stopped.** Each commit, checked out in turn, passed `pnpm check --skip-nx-cache` with `DOCKER_HOST` pointing at a socket that does not exist and `PLAYWRIGHT_BROWSERS_PATH` at an empty folder, `@pcp/shopper:test` among its tasks.
 
-**After merging `browse/integration`** at `e74ead9`, which brought ticket 02's endpoint and no change to a file of this ticket's, `pnpm check` passed, `pnpm integration:check` passed its 430 tests, and `pnpm platform:check` passed its 290.
+**After merging `browse/integration`** at `e74ead9`, which brought ticket 02's endpoint and no change to a file of this ticket's, `pnpm check` passed, `pnpm integration:check` passed its 430 tests, and `pnpm platform:check` passed its 290. Merging it again at `77db8c8`, which brought ticket 01's `@pcp/links`, changed three files this ticket changes too, `apps/shopper/tsconfig.json`, `pnpm-lock.yaml` and `tools/check-boundaries.mjs`, and Git joined each without a conflict. The frozen install found the lockfile up to date, `pnpm check` passed, `pnpm boundaries:check` passed all 123 cases, and `pnpm platform:check` passed its 290 on `3e32035`.
 
 **Outside this ticket**, for the follow-ups: Vitest 5 (5.1.0 of 2 November 2026) waits for Nx 23.3 or later, whose `@nx/vitest` accepts it.
