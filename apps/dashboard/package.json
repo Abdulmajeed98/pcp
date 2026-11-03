@@ -6,6 +6,7 @@
     "@base-ui/react": "^1.9.0",
     "@pcp/api-client": "workspace:*",
     "@pcp/i18n": "workspace:*",
+    "@pcp/links": "workspace:*",
     "@pcp/ui": "workspace:*",
     "@tanstack/react-query": "^5.104.2",
     "class-variance-authority": "^0.7.1",
