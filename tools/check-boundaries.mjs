@@ -155,6 +155,13 @@ const casesBetweenProjects = [
     'src/shared/boundary-proof/imports-compatibility',
     '@pcp/compatibility',
   ),
+  // Both frontends may import the addresses they link out to. The dashboard
+  // imports them already, so its lint shows its half; this shows the other.
+  inTheShopperApp.allowed(
+    'an import of @pcp/links',
+    'src/shared/boundary-proof/imports-links',
+    '@pcp/links',
+  ),
 ];
 
 const infrastructure = '~/infrastructure/status/status.module';
