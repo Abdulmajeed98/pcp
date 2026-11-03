@@ -594,6 +594,21 @@ async function expectTheBoardToFit(page: Page, where: string): Promise<void> {
   }
 }
 
+// Sets the window's width, and waits until the screen has followed it: the
+// frame is drawn anew for a desk or a phone in the frame after the window
+// changes, and nothing still moves, such as the field's height as the
+// board takes the sketch's place.
+async function toWidth(page: Page, width: number): Promise<void> {
+  await page.setViewportSize({ width, height: 900 });
+  await page.evaluate(
+    () =>
+      new Promise<void>((drawn) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => drawn())),
+      ),
+  );
+  await untilStill(page);
+}
+
 test('at a desk the board lies inside its field, with the room the field has, and covers nothing of the form, in light and in dark', async ({
   page,
   request,
@@ -608,7 +623,7 @@ test('at a desk the board lies inside its field, with the room the field has, an
   for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme });
     for (const width of [1024, 1222, 1280, 1440]) {
-      await page.setViewportSize({ width, height: 900 });
+      await toWidth(page, width);
       await expectTheBoardToFit(page, `${width} wide, ${colorScheme}`);
     }
   }
@@ -640,7 +655,7 @@ test('the board lies inside its field at every width from 320 to 1920 pixels, wi
       const text = standard === 16 ? 'the browser’s own size' : '200%';
 
       for (let width = 320; width <= 1920; width += 40) {
-        await page.setViewportSize({ width, height: 900 });
+        await toWidth(page, width);
         await expectTheBoardToFit(page, `${width} wide, text at ${text}`);
         await expectNoSidewaysScroll(page);
       }

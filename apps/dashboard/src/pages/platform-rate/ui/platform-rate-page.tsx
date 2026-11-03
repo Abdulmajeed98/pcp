@@ -19,7 +19,7 @@ import {
 } from '@/shared/ui';
 
 import { usePlatformRate, useSetPlatformRate } from '../api/platform-rate';
-import { RateBoard } from './rate-board';
+import { RateBoard, RateBoardSketch } from './rate-board';
 import { RateForm } from './rate-form';
 
 // The Admin console's Platform Rate (PRC-1): the single number of IQD per
@@ -34,7 +34,9 @@ import { RateForm } from './rate-form';
 // from 64rem, and below it on a phone, the form for a new rate. A saved rate
 // is written into the rate's query, so the board flips to it at once
 // (Motion 10), and the field's height follows where the empty state gives
-// way to the board.
+// way to the board. The field is a size container: the board is drawn as
+// large as the room the field has (`rate-board.tsx`), not as the window's
+// width would have it.
 export function PlatformRatePage() {
   const rate = usePlatformRate();
   const setRate = useSetPlatformRate();
@@ -56,7 +58,7 @@ export function PlatformRatePage() {
       <div className="grid gap-6 lg:min-h-[calc(100dvh-10.5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)] lg:gap-8">
         <section
           aria-label="The current Platform Rate"
-          className="flex flex-col justify-center rounded-card bg-secondary px-4 py-6 lg:px-8 lg:py-12"
+          className="@container flex flex-col justify-center rounded-card bg-secondary px-4 py-6 lg:px-8 lg:py-12"
         >
           <ChangingInPlace axis="height" changeKey={state}>
             {state === 'rate' && current ? (
@@ -106,9 +108,14 @@ function Board({ current }: { current: CurrentPlatformRateResponse }) {
         axis="width"
         changeKey={setOn}
         data-testid="platform-rate-set-on"
-        className="text-muted-foreground"
+        className="max-w-full text-muted-foreground"
       >
-        Set <span className="font-semibold text-foreground">{setOn}</span>
+        {/* On one line, so that its width can follow a new day; in a field
+            too narrow for it (the browser's text at 200% on a phone), on
+            two. */}
+        <span className="@max-[12.5rem]:whitespace-normal">
+          Set <span className="font-semibold text-foreground">{setOn}</span>
+        </span>
       </ChangingInPlace>
       <p className="max-w-[40ch] text-sm text-muted-foreground">
         Every Converted Price follows this rate. A price a Vendor quoted is never changed by
@@ -137,16 +144,12 @@ function NoPlatformRate() {
   );
 }
 
-// While the rate is read: the board's place sketched a step darker than its
-// field, still, as the dashboard's loading sketches are, with a status for a
+// While the rate is read: the board's place sketched, with a status for a
 // reader.
 function Reading() {
   return (
     <div className="flex flex-col items-center gap-4">
-      <span
-        aria-hidden="true"
-        className="block h-[4.75rem] w-full max-w-[18rem] rounded-plate-lead bg-accent lg:h-[10.75rem] lg:max-w-[38rem]"
-      />
+      <RateBoardSketch />
       <output className="sr-only">Reading the Platform Rate…</output>
     </div>
   );
