@@ -67,3 +67,7 @@ On `faba34d`, `browse/integration` still at `4375afb`, so there was nothing to m
 Among the 288, the lines on the moved rules: the hand-over's link opening a WhatsApp chat with the login phone number and its message; Expiring Offers' row links and its table's links that still call and chat; the Admin's Vendor page, whose map link holds its coordinates; the details screen's map location linking to Google Maps' search, in the language tests; the location button filling the coordinates and the contact details sent as written; prices typed in Arabic-Indic and Eastern Arabic-Indic digits with separators, saved as their values; and a Platform Rate typed in Arabic-Indic digits with a separator, saved as its value.
 
 `pnpm integration:check` was not needed: the API did not change.
+
+### 4 November 2026: after merging `browse/integration`
+
+`browse/integration` had moved to `e74ead9`, with ticket 02's endpoint and client, and merged without a conflict as `f7ee616`. On it `pnpm check` passed, `pnpm integration:check` passed (15 suites, 430 tests), and `pnpm platform:check`, under the e2e lock again, passed all 288 lines.
