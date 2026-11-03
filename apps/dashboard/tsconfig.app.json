@@ -21,6 +21,9 @@
       "path": "../../libs/i18n/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/links/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/api-client/tsconfig.lib.json"
     }
   ]
