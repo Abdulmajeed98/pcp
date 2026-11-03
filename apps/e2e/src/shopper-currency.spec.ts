@@ -20,6 +20,11 @@ const notFound = `${firstPage}/no-such-page`;
 // The first page with a query, as a page with a search or a page number of
 // its own will have one.
 const withAQuery = `${firstPage}?search=ryzen&page=2`;
+// The first page with a price range in its query, as a Category page will
+// have one, both its ends and a search among them. A range is typed in the
+// currency the Shopper had, so a choice returns to the page without it.
+const withAPriceRange = `${firstPage}?lowest=150000&search=ryzen&highest=900000`;
+const withThePriceRangeDropped = `${firstPage}?search=ryzen`;
 
 test('a fresh browser shows the switch with dinars chosen, and the placeholder says prices are in dinars', async ({
   page,
@@ -53,6 +58,15 @@ test('choosing a currency returns to the same page with the same query', async (
 
   await choose(page, 'USD');
   expect(page.url()).toBe(withAQuery);
+  await expectChosen(page, 'USD');
+});
+
+test('choosing a currency drops a price range from the query and keeps the rest', async ({
+  page,
+}) => {
+  await page.goto(withAPriceRange);
+
+  await choose(page, 'USD', withThePriceRangeDropped);
   await expectChosen(page, 'USD');
 });
 
@@ -155,6 +169,15 @@ test.describe('with scripts switched off', () => {
 
     await choose(page, 'USD');
     expect(page.url()).toBe(withAQuery);
+    await expectChosen(page, 'USD');
+  });
+
+  test('the switch drops a price range from the query too, and keeps the rest', async ({
+    page,
+  }) => {
+    await page.goto(withAPriceRange);
+
+    await choose(page, 'USD', withThePriceRangeDropped);
     await expectChosen(page, 'USD');
   });
 });
