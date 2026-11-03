@@ -516,6 +516,9 @@ importers:
       '@pcp/i18n':
         specifier: workspace:*
         version: link:../../libs/i18n
+      '@pcp/links':
+        specifier: workspace:*
+        version: link:../../libs/links
       '@pcp/ui':
         specifier: workspace:*
         version: link:../../libs/ui
@@ -579,6 +582,9 @@ importers:
       '@pcp/i18n':
         specifier: workspace:*
         version: link:../../libs/i18n
+      '@pcp/links':
+        specifier: workspace:*
+        version: link:../../libs/links
       '@pcp/opendb':
         specifier: workspace:*
         version: link:../../libs/opendb
@@ -659,6 +665,8 @@ importers:
       '@formatjs/intl-localematcher':
         specifier: ^0.8.1
         version: 0.8.14
+
+  libs/links: {}
 
   libs/opendb: {}
 

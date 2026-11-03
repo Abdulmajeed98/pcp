@@ -11,3 +11,4 @@ export { type DashboardMessages, dashboardMessages } from './messages/dashboard'
 export { type SharedTerms, sharedTerms } from './messages/shared';
 export { type ShopperMessages, shopperMessages } from './messages/shopper';
 export { formatNumber } from './numbers';
+export { westernDigitsIn, westernNumberIn } from './western-digits';

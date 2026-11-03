@@ -40,6 +40,9 @@
       "path": "../../libs/i18n"
     },
     {
+      "path": "../../libs/links"
+    },
+    {
       "path": "../../libs/compatibility"
     },
     {
