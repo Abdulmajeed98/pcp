@@ -10,11 +10,11 @@ import { useCallback, useLayoutEffect, useRef } from 'react';
 // taller than the room left simply takes its own height.
 //
 // It gives a ref to put on the element. The element is measured as soon as
-// it is in the page, before the browser paints, also when the frame around
-// it is drawn anew, as when the window crosses from a phone's width to a
-// desk's; and again whenever the page changes size, such as when the window
-// does, or the frame above it takes another height in another language. A
-// measure that changes nothing changes no size, so it settles at once.
+// it is in the page, before the browser paints, and again whenever the page
+// changes size, such as when the window does, as when it crosses from a
+// phone's width to a desk's and the frame changes around the element, or
+// the frame above it takes another height in another language. A measure
+// that changes nothing changes no size, so it settles at once.
 export function useCentredInTheWindow<Element extends HTMLElement>(): (
   element: Element | null,
 ) => void {
