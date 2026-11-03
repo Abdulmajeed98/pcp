@@ -1,4 +1,10 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
+import {
+  type APIRequestContext,
+  expect,
+  type Locator,
+  type Page,
+  test,
+} from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
 import { openTheSection } from './admin-vendors';
@@ -33,32 +39,68 @@ function listedParts(page: Page): Locator {
     );
 }
 
-// Goes through the list from its first page until the Part's row is seen or
-// the last page is passed, and gives back its row, or none.
-async function findOnTheList(page: Page, name: string): Promise<Locator | undefined> {
-  await page.goto(missingSpecificationsUrl);
-  await expect(heading(page)).toBeVisible();
+// How many Parts a page of the dashboard's list holds, and the most the API
+// gives in one answer.
+const partsOnAPage = 20;
+const partsInAnAnswer = 100;
 
+// The Part's place on the list, counted from 0, in the order the API gives
+// it, or none when the list does not hold it. The list is by Category, a CPU
+// first, then by count of Offers, most first, then by name, and the word in
+// a made-up Part's name begins with the time it was made. So a new made-up
+// CPU with one Offer is the last CPU on the list, and only Parts of the other
+// Categories follow it: the API is asked for its pages from the last back,
+// and answers in one or two, however many Parts earlier runs left.
+async function placeOnTheList(
+  request: APIRequestContext,
+  id: string,
+): Promise<number | undefined> {
+  const pageOf = async (number: number) => {
+    const answered = await request.get(`${apiUrl}/v1/parts/missing-specifications`, {
+      headers: { authorization },
+      params: { page: number, size: partsInAnAnswer },
+    });
+    expect(answered.status()).toBe(200);
+    return (await answered.json()) as { content: { id: string }[]; totalPages: number };
+  };
+
+  const { totalPages } = await pageOf(0);
+  for (let number = totalPages - 1; number >= 0; number--) {
+    const place = (await pageOf(number)).content.findIndex((part) => part.id === id);
+    if (place >= 0) return number * partsInAnAnswer + place;
+  }
+  return undefined;
+}
+
+// Opens the list at the page that holds the Part, by the page in the list's
+// address, and gives back its row.
+async function findOnTheList(
+  page: Page,
+  request: APIRequestContext,
+  part: MadeUpPart,
+): Promise<Locator> {
+  const place = await placeOnTheList(request, part.id);
+  expect(place, 'the made-up Part is on the list').toBeDefined();
+  const number = Math.floor((place as number) / partsOnAPage) + 1;
+  await page.goto(
+    number === 1 ? missingSpecificationsUrl : `${missingSpecificationsUrl}?page=${number}`,
+  );
+  await expect(heading(page)).toBeVisible();
+  await expect(listedParts(page).first()).toBeVisible();
+
+  // The list shows the way to other pages only when it has more than one.
   const pages = page.getByRole('navigation', {
     name: 'Pages of the Parts missing specifications',
   });
-  for (let number = 1; ; number++) {
-    // An empty list has no rows; a list with rows shows its count.
+  if ((await pages.count()) > 0) {
     await expect(
-      page.getByTestId('nothing-missing').or(listedParts(page).first()),
+      pages.getByText(`Page ${number.toLocaleString('en-US')} of`),
     ).toBeVisible();
-    if ((await pages.count()) > 0) {
-      await expect(pages.getByText(`Page ${number} of`)).toBeVisible();
-    }
-    await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
-    const row = listedParts(page).filter({ hasText: name });
-    if ((await row.count()) > 0) return row;
-
-    if ((await pages.count()) === 0) return undefined;
-    const next = pages.getByRole('button', { name: 'Next' });
-    if (await next.isDisabled()) return undefined;
-    await next.click();
   }
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+  const row = listedParts(page).filter({ hasText: part.name });
+  await expect(row, 'the made-up Part is on its page of the list').toHaveCount(1);
+  return row;
 }
 
 let authorization: string;
@@ -83,14 +125,14 @@ test.beforeEach(async ({ page, request }) => {
 
 test('the top bar’s menu leads to the list, which holds a made-up Part with a gap and an Offer, naming what it lacks; its row leads to the edit form, and once the gap is filled and saved the list no longer holds it', async ({
   page,
+  request,
 }) => {
   await openTheSection(page, 'Missing specifications');
   await expect(heading(page)).toBeVisible();
   await expect(page).toHaveURL(missingSpecificationsUrl);
 
-  const row = await findOnTheList(page, part.name);
-  expect(row, 'the made-up Part is on the list').toBeDefined();
-  const found = row as Locator;
+  const found = await findOnTheList(page, request, part);
+  const listAddress = page.url();
   await expect(found.getByTestId('lacks')).toHaveText('Lacks TDP');
   await expect(found.getByTestId('offer-count')).toHaveText('1 Offer');
   await expect(found).toContainText('CPU');
@@ -109,21 +151,27 @@ test('the top bar’s menu leads to the list, which holds a made-up Part with a 
   await page.getByRole('button', { name: 'Save the Part' }).click();
 
   // The list again, on the page the Part was found on, which is kept in the
-  // address: the development database's Parts from earlier runs can put it
-  // past the first.
-  await expect(page).toHaveURL(new RegExp(`^${missingSpecificationsUrl}(\\?page=\\d+)?$`));
+  // address: the development database's Parts from earlier runs put it past
+  // the first. Once the list is read again, the page no longer holds the
+  // Part, and nor does any other.
+  await expect(page).toHaveURL(listAddress);
   await expect(heading(page)).toBeVisible();
+  await expect(
+    page.getByTestId('nothing-missing').or(listedParts(page).first()),
+  ).toBeVisible();
+  await expect(listedParts(page).filter({ hasText: part.name })).toHaveCount(0);
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   expect(
-    await findOnTheList(page, part.name),
+    await placeOnTheList(request, part.id),
     'the Part has left the list',
   ).toBeUndefined();
 });
 
 test('the list does not scroll sideways, and meets the automated part of WCAG 2.2 level AA, in light and in dark', async ({
   page,
+  request,
 }) => {
-  const row = await findOnTheList(page, part.name);
-  expect(row).toBeDefined();
+  await findOnTheList(page, request, part);
 
   await expectNoSidewaysScroll(page);
   await expectAccessible(page);
@@ -136,10 +184,9 @@ test.describe('at a desk’s width', () => {
 
   test('the list is a table across the sheet, its Part, Offers and Lacks, with no picture, and meets WCAG 2.2 level AA in light and in dark', async ({
     page,
+    request,
   }) => {
-    const row = await findOnTheList(page, part.name);
-    expect(row, 'the made-up Part is on the list').toBeDefined();
-    const found = row as Locator;
+    const found = await findOnTheList(page, request, part);
 
     const table = page.getByRole('table', { name: 'Parts missing specifications' });
     await expect(table.getByRole('columnheader')).toHaveText(['Part', 'Offers', 'Lacks']);
@@ -176,10 +223,9 @@ test.describe('at a desk’s width', () => {
 
   test('a Part opened from its row shows its edit form beside the list, which marks it as open; once saved, its row leaves the list as the Motion section says', async ({
     page,
+    request,
   }) => {
-    const row = await findOnTheList(page, part.name);
-    expect(row, 'the made-up Part is on the list').toBeDefined();
-    const found = row as Locator;
+    const found = await findOnTheList(page, request, part);
 
     await found.getByRole('link', { name: part.name }).click();
     // Beside the list the form's title is of the second level (redesign
