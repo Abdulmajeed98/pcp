@@ -32,32 +32,48 @@ export function rowOfVendor(page: Page, name: string): Locator {
   return listedVendors(page).filter({ hasText: name });
 }
 
-// Opens the Vendors list at its first page, and goes on to the next page
-// until each name has been seen or the last page is reached. It gives back
-// the names in the order the list showed them, and leaves the list at the
-// page where the last of them was seen.
+// Finds Vendors on the Vendors list and gives back their names in the order
+// the list showed them. The word in a made-up Vendor's name begins with the
+// time it was made, so the newest sort last among the made-up Vendors, and
+// only Vendors named otherwise follow them. So it opens the list at its last
+// page, by the page in the list's address, and goes back a page at a time
+// until each name has been seen or the first page is reached: a page or two,
+// however many Vendors earlier runs left. It leaves the list at the page
+// where the first of them was seen.
 export async function findOnTheList(page: Page, names: string[]): Promise<string[]> {
   await page.goto(vendorsUrl);
   await expect(vendorsHeading(page)).toBeVisible();
+  await expect(listedVendors(page).first()).toBeVisible();
 
+  // The list shows the way to other pages only when it has more than one.
   const pages = page.getByRole('navigation', { name: 'Pages of the Vendors' });
+  let number = 1;
+  if ((await pages.count()) > 0) {
+    const where = await pages.getByText(/^Page [\d,]+ of [\d,]+$/).innerText();
+    number = Number(where.replace(/^.* of /, '').replaceAll(',', ''));
+    await page.goto(`${vendorsUrl}?page=${number}`);
+  }
+
   const seen: string[] = [];
-  for (let number = 1; ; number++) {
-    // The list shows the way to other pages only when it has more than one.
-    // While the next page is on its way the last one stays, marked busy.
+  for (; ; number--) {
+    // While the page before is on its way the last one stays, marked busy.
     await expect(listedVendors(page).first()).toBeVisible();
     if ((await pages.count()) > 0) {
-      await expect(pages.getByText(`Page ${number} of`)).toBeVisible();
+      await expect(
+        pages.getByText(`Page ${number.toLocaleString('en-US')} of`),
+      ).toBeVisible();
     }
     await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+    const here: string[] = [];
     for (const shown of await listedVendors(page).allInnerTexts()) {
-      seen.push(...names.filter((name) => shown.includes(name)));
+      here.push(...names.filter((name) => shown.includes(name) && !seen.includes(name)));
     }
+    seen.unshift(...here);
 
-    const next = pages.getByRole('button', { name: 'Next' });
+    const previous = pages.getByRole('button', { name: 'Previous' });
     if (seen.length === names.length || (await pages.count()) === 0) return seen;
-    if (await next.isDisabled()) return seen;
-    await next.click();
+    if (await previous.isDisabled()) return seen;
+    await previous.click();
   }
 }
 
