@@ -6,6 +6,86 @@ import { type ReactNode, useLayoutEffect, useRef } from 'react';
 import { aFade, aFlap, motionIsReduced, useKeptWhileChanging } from '@/shared/lib';
 import { Plate } from '@/shared/ui';
 
+// The board's size, from the room its field has (the field is a CSS size
+// container, so `cqi` is a hundredth of its width inside its padding), never
+// from the window's: the field beside the form at a desk can be as narrow as
+// a phone's, and wider than a phone's below 64rem.
+//
+// The board has two drawings, as the dashboard's DESIGN.md gives them: a
+// phone's, its tiles 2.25 by 3.5rem, and a desk's, its tiles 5.875 by 8.75rem
+// with the Board figure. In a field with room for the desk's, the board is
+// the desk's; in a field with room for less, every size on it, the tiles, the
+// type, the gaps and the plate's padding, lies between the two in proportion
+// to the room there is, so that the board is as wide as its field; with room
+// for less than the phone's, its tiles are narrower still, and only the
+// tiles; and where four tiles that narrow would not do (the browser's text at
+// 200% on a narrow phone), the "1 $ =" and the "IQD" go to lines of their
+// own. Everything drawn is in rem, so that it follows the browser's text
+// size, but the plate's 1-pixel edge and the 3 pixels between tiles.
+//
+// The two drawings' widths, in rem, with the dashboard's own fonts (measured
+// in the browser: the "1 $ =" and the "IQD" are as wide as their type makes
+// them), and the 14 pixels of the edge and the gaps, which neither changes.
+const phoneDrawing = 16.0456;
+const deskDrawing = 34.6848;
+const unchanging = '14px';
+// What the board leaves of its field, for a font that draws a hair wider.
+const spare = '0.25rem';
+const span = deskDrawing - phoneDrawing;
+
+// The room beyond the phone's drawing, from none to the desk's, and how much
+// narrower than the phone's the field is (negative), or nothing.
+const beyond = `100cqi - ${phoneDrawing}rem - ${unchanging} - ${spare}`;
+const room = `clamp(0rem, ${beyond}, ${span.toFixed(4)}rem)`;
+const short = `min(0rem, ${beyond})`;
+
+// A size that is `phone` rem on a phone's drawing and `desk` rem on a
+// desk's, and in proportion between them.
+function between(phone: number, desk: number): string {
+  return `calc(${phone}rem + var(--board-room) * ${((desk - phone) / span).toFixed(6)})`;
+}
+
+// A size of a tile that is `phone` rem on a tile 2.25rem wide and `desk` rem
+// on one 5.875rem wide, and follows the tile's width on a line through both.
+function alongTheTile(phone: number, desk: number): string {
+  const slope = (desk - phone) / (5.875 - 2.25);
+  const offset = phone - 2.25 * slope;
+  return `calc(var(--board-tile) * ${slope.toFixed(6)} ${offset < 0 ? '-' : '+'} ${Math.abs(offset).toFixed(6)}rem)`;
+}
+
+// The tile's width: between the two drawings', less a quarter of what the
+// field lacks for the phone's; and at least 1.75rem, or as wide as four
+// tiles with their comma can be on a line of their own, if that is less.
+const tile = `max(min(1.75rem, (100cqi - 2px - 1.25rem - 12px - 0.6rem - ${spare}) / 4), calc(${between(2.25, 5.875)} + var(--board-short) / 4))`;
+
+// The sizes, set on the plate as custom properties, which the pieces drawn
+// on it take.
+const boardSize = {
+  '--board-room': room,
+  '--board-short': short,
+  '--board-tile': tile,
+  '--board-tile-height': alongTheTile(3.5, 8.75),
+  '--board-digit': alongTheTile(2.625, 7),
+  '--board-padding-x': between(0.625, 1.25),
+  '--board-padding-y': between(0.625, 1),
+  '--board-gap': between(0.5, 1),
+  '--board-one': between(1.5, 1.875),
+  '--board-one-leading': between(2, 2.25),
+  '--board-one-gap': between(0.375, 0.625),
+  '--board-unit': between(0.875, 1),
+  '--board-unit-leading': between(1.25, 1.5),
+  '--board-comma': between(1.5, 3.5),
+} as React.CSSProperties;
+
+// The board's place while the rate is read: as wide and as high as the
+// board will be in the room its field has.
+const sketchSize = {
+  '--board-room': room,
+  '--board-short': short,
+  width: `calc(${phoneDrawing}rem + ${unchanging} + var(--board-room) + var(--board-short))`,
+  height: `calc(${between(4.75, 10.75)} + 2px)`,
+} as React.CSSProperties;
+
 // The fewest tiles the board has, as a real board has four: every rate the
 // API takes today, up to 5,000, fits them, and a rate of three digits leaves
 // the first blank, so the board's width does not change between the two.
@@ -47,7 +127,8 @@ function cellsOf(written: string): Cell[] {
 // hidden, so the board's width does not change. The board is drawn left to
 // right and hidden from a reader, who is read its words, "1 dollar is 1,575
 // dinars". A new rate flips the tiles whose digit changes, left to right
-// (Motion 10); with reduced motion they fade.
+// (Motion 10); with reduced motion they fade. It is as large as the room its
+// field has (`boardSize`).
 export function RateBoard({ iqdPerUsd }: { iqdPerUsd: number }) {
   const written = formatNumber(iqdPerUsd);
   const cells = cellsOf(written);
@@ -56,7 +137,8 @@ export function RateBoard({ iqdPerUsd }: { iqdPerUsd: number }) {
     <Plate
       lead
       data-testid="platform-rate-plate"
-      className="max-w-full gap-2 px-2.5 py-2.5 lg:gap-4 lg:px-5 lg:py-4"
+      className="max-w-full px-(--board-padding-x) py-(--board-padding-y)"
+      style={boardSize}
     >
       <span data-testid="platform-rate-words" className="sr-only">
         1 dollar is {written} dinars
@@ -64,9 +146,9 @@ export function RateBoard({ iqdPerUsd }: { iqdPerUsd: number }) {
       <AlwaysEnglish
         data-testid="platform-rate-drawn"
         aria-hidden="true"
-        className="flex items-center gap-2 lg:gap-4"
+        className="flex flex-wrap items-center justify-center gap-(--board-gap)"
       >
-        <span className="flex items-baseline gap-1.5 text-2xl lg:gap-2.5 lg:text-3xl">
+        <span className="flex items-baseline gap-(--board-one-gap) text-(length:--board-one) leading-(--board-one-leading)">
           1 <Unit>$</Unit> <Unit>=</Unit>
         </span>
         <span className="flex items-end gap-[3px]">
@@ -79,7 +161,7 @@ export function RateBoard({ iqdPerUsd }: { iqdPerUsd: number }) {
                 data-testid="board-comma"
                 data-blank={cell.comma ? undefined : ''}
                 className={cn(
-                  'w-[0.4em] self-end font-sans text-2xl transition-opacity duration-150 ease-out lg:text-[3.5rem]',
+                  'w-[0.4em] self-end font-sans text-(length:--board-comma) leading-[1.3333] transition-opacity duration-150 ease-out',
                   !cell.comma && 'opacity-0',
                 )}
               >
@@ -94,11 +176,25 @@ export function RateBoard({ iqdPerUsd }: { iqdPerUsd: number }) {
   );
 }
 
+// While the rate is read: the board's place, as large as the board will be,
+// sketched a step darker than its field, still, as the dashboard's loading
+// sketches are.
+export function RateBoardSketch() {
+  return (
+    <span
+      aria-hidden="true"
+      data-testid="platform-rate-sketch"
+      className="block max-w-full rounded-plate-lead bg-accent"
+      style={sketchSize}
+    />
+  );
+}
+
 // A unit after a figure, or the equals sign: smaller, in Geist and in Plate
 // Unit.
 function Unit({ children }: { children: string }) {
   return (
-    <span className="font-sans text-sm font-medium text-plate-unit lg:text-base">
+    <span className="font-sans text-(length:--board-unit) leading-(--board-unit-leading) font-medium text-plate-unit">
       {children}
     </span>
   );
@@ -160,7 +256,7 @@ function Tile({ digit = ' ', index }: { digit?: string; index: number }) {
     <span
       data-testid="board-tile"
       data-digit={shown.trim()}
-      className="relative block h-14 w-9 font-mono text-[2.625rem] font-semibold perspective-[25rem] lg:h-[8.75rem] lg:w-[5.875rem] lg:text-[7rem]"
+      className="relative block h-(--board-tile-height) w-(--board-tile) font-mono text-(length:--board-digit) font-semibold perspective-[25rem]"
     >
       <span ref={halves} className="absolute inset-0">
         <Half side="top">{shown}</Half>
