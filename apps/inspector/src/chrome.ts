@@ -34,7 +34,7 @@ function header(request: PausedRequest['request'], name: string): string | undef
 // Waits until an expression is true in the page, at most `timeoutMs`. A page
 // on its way to another address cannot be asked, and counts as not yet. It
 // asks at least once.
-async function until(
+export async function until(
   page: TastePage,
   expression: string,
   timeoutMs: number,

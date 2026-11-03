@@ -12,8 +12,11 @@ import type {
   VendorsWithExpiringOffersPageResponse,
 } from '@pcp/api-client';
 
-// One obviously fictional shop, a Vendor with about a dozen Offers in every
-// state a Vendor can see: confirmed today, confirmed some days ago, about to
+import { type CatalogPart, offersOfTheFirstVendor } from './made-up-offers.ts';
+import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
+
+// The made-up shop's first Vendor (`made-up-vendors.ts`) as the dashboard's
+// screens see it, with about a dozen Offers in every state a Vendor can see: confirmed today, confirmed some days ago, about to
 // expire, expired, out of stock, and with no warranty stated. The inspector's
 // Chrome is answered from it for every call about Vendors and Offers, because
 // the API stamps each Confirmation with the moment it is made, so no Offer
@@ -36,157 +39,9 @@ const anHour = 60 * 60 * 1000;
 const daysAnOfferStaysCurrent = 14;
 const daysOfWarning = 3;
 
-// A Part of the catalog, as the shop names it.
-export interface CatalogPart {
-  category: PartSummaryResponse['category'];
-  name: string;
-}
-
-// What the shop says about one of its Offers, apart from the Part: how long
-// ago it was last confirmed, its prices, its stock and its warranty.
-interface MadeUpOffer {
-  part: CatalogPart;
-  confirmedAgo: { days: number; hours: number };
-  usdPrice: string | null;
-  iqdPrice: number | null;
-  inStock: boolean;
-  warrantyMonths: number | null;
-}
-
-const madeUpOffers: readonly MadeUpOffer[] = [
-  {
-    part: { category: 'cpu', name: 'AMD Ryzen 7 7800X3D' },
-    confirmedAgo: { days: 0, hours: 2 },
-    usdPrice: '365.00',
-    iqdPrice: 575000,
-    inStock: true,
-    warrantyMonths: 12,
-  },
-  {
-    part: {
-      category: 'gpu',
-      name: 'Palit Dual OC GeForce RTX 4070 SUPER 12GB GDDR6X Black',
-    },
-    confirmedAgo: { days: 0, hours: 5 },
-    usdPrice: null,
-    iqdPrice: 950000,
-    inStock: true,
-    warrantyMonths: null,
-  },
-  {
-    part: {
-      category: 'storage',
-      name: 'Western Digital WD_Black SN850X 1TB SSD M.2 PCIe 4.0 NVMe',
-    },
-    confirmedAgo: { days: 1, hours: 4 },
-    usdPrice: '79.00',
-    iqdPrice: null,
-    inStock: false,
-    warrantyMonths: 60,
-  },
-  {
-    part: { category: 'cpu', name: 'AMD Ryzen 5 7600X' },
-    confirmedAgo: { days: 2, hours: 6 },
-    usdPrice: '189.00',
-    iqdPrice: 298000,
-    inStock: true,
-    warrantyMonths: 12,
-  },
-  {
-    part: {
-      category: 'gpu',
-      name: 'NVIDIA GeForce RTX 4070 SUPER 12GB GDDR6X Founders Edition',
-    },
-    confirmedAgo: { days: 3, hours: 1 },
-    usdPrice: '599.00',
-    iqdPrice: null,
-    inStock: false,
-    warrantyMonths: null,
-  },
-  {
-    part: { category: 'motherboard', name: 'MSI MAG B650 TOMAHAWK WIFI AM5 DDR5 ATX' },
-    confirmedAgo: { days: 5, hours: 3 },
-    usdPrice: '215.00',
-    iqdPrice: null,
-    inStock: true,
-    warrantyMonths: 24,
-  },
-  {
-    part: {
-      category: 'case',
-      name: 'Corsair 4000D AIRFLOW Tempered Glass Mid-Tower ATX Case - Black',
-    },
-    confirmedAgo: { days: 6, hours: 8 },
-    usdPrice: null,
-    iqdPrice: 135000,
-    inStock: true,
-    warrantyMonths: 12,
-  },
-  {
-    part: {
-      category: 'gpu',
-      name: 'Asus TUF GAMING OC Radeon RX 7800 XT 16GB GDDR6 Black',
-    },
-    confirmedAgo: { days: 8, hours: 2 },
-    usdPrice: null,
-    iqdPrice: 820000,
-    inStock: true,
-    warrantyMonths: null,
-  },
-  {
-    part: {
-      category: 'psu',
-      name: 'Corsair RM850e (2022) Black 850W Fully Modular 80+ Gold Certified',
-    },
-    confirmedAgo: { days: 11, hours: 1 },
-    usdPrice: '124.00',
-    iqdPrice: 195000,
-    inStock: true,
-    warrantyMonths: 84,
-  },
-  {
-    part: { category: 'ram', name: 'CORSAIR Vengeance 32GB (2x16GB) DDR5 6000 CL30 Black' },
-    confirmedAgo: { days: 12, hours: 3 },
-    usdPrice: '109.00',
-    iqdPrice: 172000,
-    inStock: true,
-    warrantyMonths: 24,
-  },
-  {
-    part: { category: 'cpuCooler', name: 'Noctua NH-D15 chromax.black Air 165mm Black' },
-    confirmedAgo: { days: 13, hours: 20 },
-    usdPrice: '119.00',
-    iqdPrice: null,
-    inStock: true,
-    warrantyMonths: 72,
-  },
-  {
-    part: {
-      category: 'cpuCooler',
-      name: 'Thermalright Peerless Assassin 120 SE Air 155mm Black/Silver',
-    },
-    confirmedAgo: { days: 20, hours: 0 },
-    usdPrice: null,
-    iqdPrice: 52000,
-    inStock: true,
-    warrantyMonths: 6,
-  },
-  {
-    part: {
-      category: 'storage',
-      name: 'Samsung 990 Pro 2TB SSD M.2-2280 PCIe 4.0 x4 NVMe',
-    },
-    confirmedAgo: { days: 45, hours: 0 },
-    usdPrice: '169.00',
-    iqdPrice: 266000,
-    inStock: false,
-    warrantyMonths: 60,
-  },
-];
-
 // The Parts of the catalog the shop offers, which the command reads from the
 // API before anything else.
-export const partsTheShopOffers: readonly CatalogPart[] = madeUpOffers.map(
+export const partsTheShopOffers: readonly CatalogPart[] = offersOfTheFirstVendor.map(
   (offer) => offer.part,
 );
 
@@ -196,11 +51,6 @@ export interface MadeUpShop {
   offers: readonly OfferResponse[];
   // The Platform Rate as the shop's screens see it.
   platformRate: PlatformRateResponse;
-}
-
-// Identifiers that say they are made up: zeros, and a counter.
-function madeUpIdentifier(counter: number): string {
-  return `00000000-0000-4000-8000-${String(counter).padStart(12, '0')}`;
 }
 
 function before(now: Date, milliseconds: number): string {
@@ -218,22 +68,14 @@ export function madeUpShop(
   { platformRate = true }: { platformRate?: boolean } = {},
 ): MadeUpShop {
   const vendor: VendorResponse = {
-    id: madeUpIdentifier(1),
-    name: 'Made-up PC Parts',
-    city: 'erbil',
-    address: '1 Made-up Street\nFictional Bazaar, Erbil',
-    mapLocation: { latitude: 36.1911, longitude: 44.0092 },
-    phoneNumber: { international: '+9647500000001', national: '0750 000 0001' },
-    whatsAppNumber: { international: '+9647500000002', national: '0750 000 0002' },
-    instagramName: 'made.up.pc.parts',
-    openingHours: 'Saturday to Thursday, 10:00 to 21:00\nFriday closed',
+    ...theFirstVendor,
     loginPhoneNumber: { international: '+9647500000003', national: '0750 000 0003' },
     active: true,
     createdAt: before(now, 90 * aDay),
     updatedAt: before(now, 7 * aDay),
   };
 
-  const offers = madeUpOffers.map((offer, index): OfferResponse => {
+  const offers = offersOfTheFirstVendor.map((offer, index): OfferResponse => {
     const part = catalogParts.get(offer.part.name);
     if (part === undefined) {
       throw new Error(`The catalog gave no Part named "${offer.part.name}".`);
@@ -242,8 +84,8 @@ export function madeUpShop(
     return {
       id: madeUpIdentifier(101 + index),
       part,
-      usdPrice: offer.usdPrice,
-      iqdPrice: offer.iqdPrice,
+      usdPrice: 'usd' in offer.prices ? offer.prices.usd : null,
+      iqdPrice: 'iqd' in offer.prices ? offer.prices.iqd : null,
       inStock: offer.inStock,
       warrantyMonths: offer.warrantyMonths,
       confirmedAt: before(now, ago),

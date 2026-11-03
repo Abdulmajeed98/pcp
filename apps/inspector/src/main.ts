@@ -1,11 +1,15 @@
-import { readFileSync } from 'node:fs';
-import { parseEnv } from 'node:util';
-
 import type { PartPageResponse } from '@pcp/api-client';
 
 import { partsOfTheCatalog } from './catalog-parts.ts';
-import { answerFromTheShopIn, CannotInspect, landOnTheDashboard, logIn } from './chrome.ts';
+import {
+  answerFromTheShopIn,
+  CannotInspect,
+  landOnTheDashboard,
+  type Login,
+  logIn,
+} from './chrome.ts';
 import { BadScheme, emulatedMedia, type Scheme, takeTheScheme } from './colour-scheme.ts';
+import { developmentAdmin } from './development-admin.ts';
 import { madeUpShop } from './made-up-shop.ts';
 import { runTheInspector, tastesBrowser } from './taste.ts';
 
@@ -39,8 +43,6 @@ const usage =
 // Where the API is during development, as the dashboard's settings have it.
 const apiUrl = process.env.VITE_API_URL ?? 'http://localhost:3001';
 
-const repositoryRoot = new URL('../../../', import.meta.url);
-
 const cannotStart = 3;
 
 function stop(message: string): never {
@@ -72,29 +74,15 @@ function commandLine(args: readonly string[]) {
   return { address, language, scheme, platformRate, inspectorArgs: passed };
 }
 
-// The development Admin's name and password, from `.env`, as
-// `pnpm services:up` wrote them. Neither is ever printed.
-function developmentAdmin() {
-  let settings: Record<string, string | undefined>;
-  try {
-    settings = parseEnv(readFileSync(new URL('.env', repositoryRoot), 'utf8'));
-  } catch {
-    stop(
-      'There is no .env at the repository root. Start the services with "pnpm services:up".',
-    );
-  }
-  const name = settings.DEVELOPMENT_ADMIN_NAME;
-  const password = settings.DEVELOPMENT_ADMIN_PASSWORD;
-  if (!name || !password) {
-    stop(".env does not hold the development Admin's name and password.");
-  }
-  return { name, password };
-}
-
 const { address, language, scheme, platformRate, inspectorArgs } = commandLine(
   process.argv.slice(2),
 );
-const login = developmentAdmin();
+let login: Login;
+try {
+  login = developmentAdmin();
+} catch (error) {
+  stop(error instanceof Error ? error.message : String(error));
+}
 const Browser = await tastesBrowser();
 const browser = await Browser.launch();
 

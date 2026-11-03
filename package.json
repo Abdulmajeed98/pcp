@@ -19,7 +19,8 @@
     "catalog:import": "nx run @pcp/api:catalog-import",
     "platform:check": "node tools/check-platform.mjs",
     "integration:check": "node tools/check-integration.mjs",
-    "dashboard:inspect": "node apps/inspector/src/main.ts"
+    "dashboard:inspect": "node apps/inspector/src/main.ts",
+    "shopper:inspect": "node apps/inspector/src/shopper-inspect.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
