@@ -292,7 +292,7 @@ Kurdish and Arabic follow the root's Tall Script Rule (15, 17 and 19 pixels, loo
 
 **From 64rem, the frame.** One Stone Frame holds a sidebar 228 pixels wide on the start side and a top bar 48 pixels high along the top, with no rule between them, an L. The sheet fills the rest, butting against the sidebar and the top bar, inset 8 pixels from the window's end and bottom edges, with 16-pixel corners, a 1-pixel Edge and no shadow; in Kurdish and Arabic the inset falls on the left, the end side. Inside the sheet, 24 pixels of padding, and one gap, 24 pixels, horizontally and vertically. The content is at most 80rem wide, on the start side.
 
-**Crossing 64rem** changes the frame around the screen and leaves the screen as it is: nothing on it is drawn anew or replays its arrival, and nothing typed into it is lost (the Admin console's frame, since 3 November 2026).
+**Crossing 64rem** changes the frame around the screen and leaves the screen as it is: nothing on it is drawn anew or replays its arrival, and nothing typed into it is lost (both frames, the Admin console's and the Vendor portal's, since 3 November 2026).
 
 **Below 64rem, the sheet is the screen.** The frame disappears. One bar, 56 pixels high on the Stone Frame, holds the menu button on the start side, the screen's scope in the middle (the Vendor's name as it writes it, or "Admin console"), and at most one action on the end side, such as Add an Offer. The sections, the language and scheme switches and Log out are in the menu sheet. The sheet below has 16 pixels of padding and a 16-pixel gap. A screen that feels heavy with controls on a phone takes fewer rows of them, not smaller ones.
 
