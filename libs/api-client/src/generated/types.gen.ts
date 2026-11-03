@@ -936,6 +936,76 @@ export type VisibleOfferResponse = {
     daysSinceConfirmation: number;
 };
 
+export type VisiblePartResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+    /**
+     * The Lowest Price: the lowest Shown Price among the Part's in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is. Null when no Visible Offer is in stock, and when none in stock has a Shown Price, which happens only when no Platform Rate has been set.
+     */
+    lowestPrice: ShownPriceResponse | null;
+    /**
+     * How many Vendors have a Visible Offer for the Part, in stock or not.
+     */
+    vendorCount: number;
+    /**
+     * Whether any Visible Offer for the Part is in stock. False when every Vendor has it out of stock.
+     */
+    inStock: boolean;
+};
+
+export type VisiblePartPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Visible Parts: those with a Lowest Price first, the lowest first; then those in stock with none; then those every Vendor has out of stock; then by name.
+     */
+    content: Array<VisiblePartResponse>;
+};
+
 export type CurrentPlatformRateResponse = {
     /**
      * The Platform Rate, in whole dinars per dollar.
@@ -1669,6 +1739,49 @@ export type ListVisibleOffersOfPartResponses = {
 };
 
 export type ListVisibleOffersOfPartResponse = ListVisibleOffersOfPartResponses[keyof ListVisibleOffersOfPartResponses];
+
+export type ListVisiblePartsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+        /**
+         * The Category whose Visible Parts are listed.
+         */
+        category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+        /**
+         * The chosen currency, which each Part's Lowest Price is in and the Parts are ordered by.
+         */
+        currency: Currency;
+        /**
+         * Words a Part must hold, in any order and any case, in its name, its manufacturer or a part number. Left out or empty, every Visible Part of the Category is found.
+         */
+        search?: string;
+    };
+    url: '/v1/visible-parts';
+};
+
+export type ListVisiblePartsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVisiblePartsError = ListVisiblePartsErrors[keyof ListVisiblePartsErrors];
+
+export type ListVisiblePartsResponses = {
+    200: VisiblePartPageResponse;
+};
+
+export type ListVisiblePartsResponse = ListVisiblePartsResponses[keyof ListVisiblePartsResponses];
 
 export type ReadPlatformRateData = {
     body?: never;

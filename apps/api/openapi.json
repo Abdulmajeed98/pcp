@@ -1259,6 +1259,101 @@
         "tags": ["PartOffers"]
       }
     },
+    "/v1/visible-parts": {
+      "get": {
+        "operationId": "listVisibleParts",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "description": "The Category whose Visible Parts are listed.",
+            "schema": {
+              "example": "cpu",
+              "type": "string",
+              "enum": [
+                "cpu",
+                "cpuCooler",
+                "motherboard",
+                "ram",
+                "storage",
+                "gpu",
+                "case",
+                "psu"
+              ]
+            }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which each Part's Lowest Price is in and the Parts are ordered by.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Words a Part must hold, in any order and any case, in its name, its manufacturer or a part number. Left out or empty, every Visible Part of the Category is found.",
+            "schema": {
+              "example": "ryzen 7600",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisiblePartPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last",
+        "tags": ["VisibleParts"]
+      }
+    },
     "/v1/platform-rate": {
       "get": {
         "operationId": "readPlatformRate",
@@ -2957,6 +3052,136 @@
           "warrantyMonths",
           "confirmedAt",
           "daysSinceConfirmation"
+        ]
+      },
+      "VisiblePartResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Part's identifier on the platform.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "category": {
+            "type": "string",
+            "description": "The Part's Category.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Part's name.",
+            "example": "AMD Ryzen 5 7600"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "The Part's manufacturer.",
+            "example": "AMD"
+          },
+          "partNumbers": {
+            "description": "The manufacturer's part numbers.",
+            "example": ["100-100001015BOX"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          },
+          "lowestPrice": {
+            "description": "The Lowest Price: the lowest Shown Price among the Part's in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is. Null when no Visible Offer is in stock, and when none in stock has a Shown Price, which happens only when no Platform Rate has been set.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "vendorCount": {
+            "type": "number",
+            "description": "How many Vendors have a Visible Offer for the Part, in stock or not.",
+            "example": 3
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether any Visible Offer for the Part is in stock. False when every Vendor has it out of stock."
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "name",
+          "manufacturer",
+          "partNumbers",
+          "photoPath",
+          "lowestPrice",
+          "vendorCount",
+          "inStock"
+        ]
+      },
+      "VisiblePartPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Visible Parts: those with a Lowest Price first, the lowest first; then those in stock with none; then those every Vendor has out of stock; then by name.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VisiblePartResponse"
+            }
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content"
         ]
       },
       "CurrentPlatformRateResponse": {
