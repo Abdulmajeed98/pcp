@@ -9,6 +9,7 @@ import {
 } from '~/domain/offer/expiry';
 import { Currency, currencyFacts } from '~/domain/currency/currency';
 import { Offer } from '~/domain/offer/Offer';
+import { Part } from '~/domain/part/Part';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import { OfferState } from '~/domain/offer/offer-state';
 import { convertedPriceIn, ShownPrice, WholeNumbers } from '~/domain/offer/shown-price';
@@ -35,7 +36,7 @@ import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { brokeUniqueRule } from '~/infrastructure/database/unique-rule';
 import { part, PartRow } from '~/infrastructure/part/part.schema';
-import { partOf } from '~/infrastructure/part/part-of-row';
+import { partOf, partWithPhoto } from '~/infrastructure/part/part-of-row';
 import { holdingEveryWord } from '~/infrastructure/part/search-text';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
 import { currentPlatformRate } from '~/infrastructure/platform-rate/current-platform-rate';
@@ -797,6 +798,28 @@ export class DatabaseOfferStore implements OfferStore {
     } catch (error) {
       this.logger.error(error, 'An Offer could not be read');
       return Either.left(databaseErrorOf(error, 'An Offer could not be read'));
+    }
+  }
+
+  async readVisiblePart(
+    partId: string,
+    now: Date,
+  ): Promise<Either.Either<Option.Option<Part>, StructuredError>> {
+    if (!couldBeIdentifier(partId)) return Either.right(Option.none());
+
+    try {
+      const [row] = await this.databaseProvider
+        .getClient()
+        .select(partWithPhoto)
+        .from(part)
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .where(and(eq(part.id, partId), visiblePart(now)));
+
+      if (row === undefined) return Either.right(Option.none());
+      return Either.map(partOf(row.part, row.photoId), Option.some);
+    } catch (error) {
+      this.logger.error(error, 'A Visible Part could not be read');
+      return Either.left(databaseErrorOf(error, 'A Visible Part could not be read'));
     }
   }
 }

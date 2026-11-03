@@ -3,6 +3,7 @@ import { Either, Option } from 'effect';
 
 import { Currency } from '../currency/currency';
 import { Category } from '../part/Category';
+import { Part } from '../part/Part';
 
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
@@ -390,4 +391,13 @@ export abstract class OfferStore {
     vendorId: string,
     partId: string,
   ): Promise<Either.Either<Option.Option<Offer>, StructuredError>>;
+
+  // The Part with this identifier when it is a Visible Part at now by the
+  // API's clock, by the same rule as a Category's list of them: a Part with
+  // at least one visible Offer, by the rule in `visibility.ts`. None when it
+  // is not visible, or there is no such Part.
+  abstract readVisiblePart(
+    partId: string,
+    now: Date,
+  ): Promise<Either.Either<Option.Option<Part>, StructuredError>>;
 }

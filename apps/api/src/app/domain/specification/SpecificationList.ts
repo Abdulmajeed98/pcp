@@ -1,3 +1,4 @@
+import { LabelledSpecification } from './LabelledSpecification';
 import { Specification, SpecificationProblem } from './Specification';
 import {
   isPlainObject,
@@ -57,6 +58,15 @@ export class SpecificationList {
         specification.isMissingIn(valueAt(document, specification.getPath())),
       )
       .map((specification) => specification.getPath());
+  }
+
+  // The specifications a Part's specifications hold, labelled, in the list's
+  // order, leaving out each one it lacks, as `Specification.labelled` says.
+  labelledIn(document: SpecificationDocument): LabelledSpecification[] {
+    return this.specifications.flatMap((specification) => {
+      const held = specification.labelled(valueAt(document, specification.getPath()));
+      return held === undefined ? [] : [held];
+    });
   }
 
   // A name no specification has, whatever its value, null included. A name

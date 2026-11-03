@@ -1006,6 +1006,60 @@ export type VisiblePartPageResponse = {
     content: Array<VisiblePartResponse>;
 };
 
+export type LabelledSpecificationResponse = {
+    /**
+     * The specification's place in a Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it. For a field of a row, its name in the row.
+     */
+    path: string;
+    /**
+     * The specification's English label.
+     */
+    label: string;
+    /**
+     * The kind of value it holds, which says how to show it.
+     */
+    kind: 'wholeNumber' | 'decimalNumber' | 'text' | 'yesNo' | 'oneOf' | 'severalOf' | 'listOfText' | 'listOfRows';
+    /**
+     * The unit of a number, or null when it has none.
+     */
+    unit: string | null;
+    /**
+     * What the Part holds: a number, in the unit; a text; true or false, for yes or no; a list of texts, for a choice of several or a list of text; or, for a list of rows, each row as the list of the fields it holds, answered as a specification is, and no rows when the Part has none.
+     */
+    value: number | string | boolean | Array<string> | Array<Array<LabelledSpecificationResponse>>;
+};
+
+export type VisiblePartWithSpecificationsResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+    /**
+     * The specifications the Part holds, in the order of its Category's specification list, each with its English label and unit. One it lacks is left out, and so is a 0 where 0 stands for "not known".
+     */
+    specifications: Array<LabelledSpecificationResponse>;
+};
+
 export type CurrentPlatformRateResponse = {
     /**
      * The Platform Rate, in whole dinars per dollar.
@@ -1782,6 +1836,30 @@ export type ListVisiblePartsResponses = {
 };
 
 export type ListVisiblePartsResponse = ListVisiblePartsResponses[keyof ListVisiblePartsResponses];
+
+export type ReadVisiblePartData = {
+    body?: never;
+    path: {
+        partId: string;
+    };
+    query?: never;
+    url: '/v1/visible-parts/{partId}';
+};
+
+export type ReadVisiblePartErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVisiblePartError = ReadVisiblePartErrors[keyof ReadVisiblePartErrors];
+
+export type ReadVisiblePartResponses = {
+    200: VisiblePartWithSpecificationsResponse;
+};
+
+export type ReadVisiblePartResponse = ReadVisiblePartResponses[keyof ReadVisiblePartResponses];
 
 export type ReadPlatformRateData = {
     body?: never;

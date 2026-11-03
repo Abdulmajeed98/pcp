@@ -1354,6 +1354,46 @@
         "tags": ["VisibleParts"]
       }
     },
+    "/v1/visible-parts/{partId}": {
+      "get": {
+        "operationId": "readVisiblePart",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisiblePartWithSpecificationsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Visible Part, a Part with at least one Visible Offer, with its specifications labelled in English; a Part that is not visible is answered as one that does not exist",
+        "tags": ["VisiblePart"]
+      }
+    },
     "/v1/platform-rate": {
       "get": {
         "operationId": "readPlatformRate",
@@ -3182,6 +3222,138 @@
           "first",
           "last",
           "content"
+        ]
+      },
+      "LabelledSpecificationResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The specification's place in a Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it. For a field of a row, its name in the row.",
+            "example": "specifications.tdp"
+          },
+          "label": {
+            "type": "string",
+            "description": "The specification's English label.",
+            "example": "TDP"
+          },
+          "kind": {
+            "type": "string",
+            "description": "The kind of value it holds, which says how to show it.",
+            "enum": [
+              "wholeNumber",
+              "decimalNumber",
+              "text",
+              "yesNo",
+              "oneOf",
+              "severalOf",
+              "listOfText",
+              "listOfRows"
+            ],
+            "example": "wholeNumber"
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit of a number, or null when it has none.",
+            "nullable": true,
+            "example": "W"
+          },
+          "value": {
+            "description": "What the Part holds: a number, in the unit; a text; true or false, for yes or no; a list of texts, for a choice of several or a list of text; or, for a list of rows, each row as the list of the fields it holds, answered as a specification is, and no rows when the Part has none.",
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LabelledSpecificationResponse"
+                  }
+                }
+              }
+            ],
+            "example": 65
+          }
+        },
+        "required": ["path", "label", "kind", "unit", "value"]
+      },
+      "VisiblePartWithSpecificationsResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Part's identifier on the platform.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "category": {
+            "type": "string",
+            "description": "The Part's Category.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Part's name.",
+            "example": "AMD Ryzen 5 7600"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "The Part's manufacturer.",
+            "example": "AMD"
+          },
+          "partNumbers": {
+            "description": "The manufacturer's part numbers.",
+            "example": ["100-100001015BOX"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          },
+          "specifications": {
+            "description": "The specifications the Part holds, in the order of its Category's specification list, each with its English label and unit. One it lacks is left out, and so is a 0 where 0 stands for \"not known\".",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LabelledSpecificationResponse"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "name",
+          "manufacturer",
+          "partNumbers",
+          "photoPath",
+          "specifications"
         ]
       },
       "CurrentPlatformRateResponse": {

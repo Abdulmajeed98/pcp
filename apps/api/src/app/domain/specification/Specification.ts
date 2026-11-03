@@ -1,3 +1,8 @@
+import {
+  LabelledRows,
+  LabelledSpecification,
+  LabelledValue,
+} from './LabelledSpecification';
 import { isPlainObject } from './specification-document';
 
 const kinds = [
@@ -211,6 +216,28 @@ export class Specification {
       return Array.isArray(value) && value.length === 0;
     }
     return value === 0 && this.zeroMeansMissing;
+  }
+
+  // What a Part holds for this specification, labelled, or nothing when it
+  // lacks it, as `isMissingIn` says: a stored 0 where 0 stands for "not known"
+  // is left out with the rest. Each row of a list of rows holds the fields it
+  // does not lack, in the order of the list's fields, each named by its name
+  // in the row; something stored there that is not a list, or not a row, is
+  // left out.
+  labelled(value: unknown): LabelledSpecification | undefined {
+    if (this.isMissingIn(value)) return undefined;
+    if (this.kind !== 'listOfRows') {
+      return new LabelledSpecification(this, value as LabelledValue);
+    }
+    if (!Array.isArray(value)) return undefined;
+
+    const rows = value.filter(isPlainObject).map((row) =>
+      (this.fields ?? []).flatMap((field) => {
+        const held = field.labelled(row[field.getPath()]);
+        return held === undefined ? [] : [held];
+      }),
+    );
+    return new LabelledSpecification(this, new LabelledRows(rows));
   }
 
   // Checks one value against this specification. Null, an empty text and an
