@@ -45,7 +45,10 @@ export function ChangingInPlace({
   const shownElement = useRef<HTMLElement | null>(null);
   const size = useRef<number | null>(null);
   const moving = useRef<Animation | null>(null);
-  const firstKey = useRef(changeKey);
+  // The key whose content was last drawn: content shown as it first mounts,
+  // or drawn again for the key it already shows (as React's strict mode
+  // runs a new component's effects twice), does not move.
+  const drawnKey = useRef(changeKey);
 
   // The size as it is drawn, followed frame by frame while it moves and as
   // the window's width changes it, so that the next change starts from what
@@ -65,10 +68,11 @@ export function ChangingInPlace({
     if (element === null) return;
     const measured = () => element.getBoundingClientRect()[axis];
     // Shown first, or not changed: nothing moves, and the size is noted.
-    if (shown.key === firstKey.current && size.current === null) {
+    if (shown.key === drawnKey.current) {
       size.current = measured();
       return;
     }
+    drawnKey.current = shown.key;
     const from = size.current;
     moving.current?.cancel();
     moving.current = null;
