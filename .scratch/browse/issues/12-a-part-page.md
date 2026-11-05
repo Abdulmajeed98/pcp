@@ -28,7 +28,7 @@ A link to the page pasted into WhatsApp previews the Part in the link's language
   - days since Confirmation with the ICU plural: today, one day ago, n days ago.
 
   The Offers are in the order the API answers them, and none is promoted or highlighted (OFF-11). The wording of days and of a warranty are plain functions, tested at the Shopper's unit seam in each language.
-- [ ] **The preview.** The title names the Part. The description names the Part, its manufacturer and Category, and how many shops in Erbil offer it, in the page's language, with no price. Open Graph's image is the Part's photo, on the Shopper app's public address, when it has one. These are tested at the unit seam.
+- [ ] **The preview.** The title names the Part. The description names the Part, its manufacturer and Category, and how many shops offer it, in the page's language, with no price. Open Graph's image is the Part's photo, on the Shopper app's public address, when it has one. These are tested at the unit seam.
 - [ ] **The words.** Every new text is in `i18n`'s Shopper set in all three languages, as drafts under LANG-7.
 - [ ] `pnpm platform:check` passes on every line. These are checked in a window 360 pixels wide, in Kurdish and in English:
   - A Part reached from its Category page shows its name, part numbers and specifications in English.
