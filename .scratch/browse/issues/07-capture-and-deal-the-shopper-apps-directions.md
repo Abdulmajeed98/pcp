@@ -25,7 +25,7 @@
 
   A direction that brings a new font keeps that rule, or keeps the current fonts.
 - [x] **The deal.** Taste's script deals the directions with the run its SKILL.md gives for public pages, from the repository root. Its one-line brief says three things: the Shopper compares local shops' prices in Erbil, on a phone first, in Kurdish, Arabic and English; prices and the "≈" mark are the page's centre; and the hard rules hold.
-- [ ] **The world of the subject.** Pictures of Erbil's bazaar, its computer shops, signs and lettering are found with Taste's `assets.mjs`, each with its credit recorded.
+- [x] **The world of the subject.** Pictures of Erbil's bazaar, its computer shops, signs and lettering are found with Taste's `assets.mjs`, each with its credit recorded.
 - [x] **The rendering.** Each direction is drawn as four pages: the home page, a Category page with its filters, a Part page with several Offers, one converted, and a Vendor page. Each is drawn in Kurdish and in English, at 360 and 1440 pixels, filled with ticket 06's made-up shop, so that no page is empty or a placeholder. Every option keeps the hard rules, and an option that breaks one says so on its page.
 - [ ] **The choosing.** The options are shown in the built-in browser on one page, one option per anchor, two columns at most, before the owner is asked. If the owner takes none, the script deals again. The owner's choice is recorded under Comments with the owner's word.
 - [ ] **Kept.** The chosen direction's sheet (its tokens and the inspector's allowances) is committed under the Shopper app's design folder, as the dashboard's is, since Git ignores `.taste-skill/`. A note under Comments says how to restore it there for the inspector.
@@ -171,3 +171,81 @@ The comparison page is the scratchpad's `browse-07/index.html`, which the orches
 3. **The pinned poster** (`#o3`, seed 1959420171): a title pinned while the bazaar's portraits and the rows pass beneath it; the Categories and Offers as a line-up at one type size, a Part between its Lowest Price and "at 20 Vendors", a Vendor's phone number as display type; Cabinet Grotesk on bubblegum pink with lime for the action.
 
 Or ask for a new deal. Also waiting on the owner: the pictures as found (no computer shop, no Sorani shop lettering), and the critique's three questions above. The boxes for the world of the subject, the choosing, the sheet kept and the last one stay open, and the Status stays, until the owner chooses.
+
+### 5 November 2026: the owner's answers to the first deal
+
+The orchestrator showed the first page, and relayed the owner's words:
+
+- **The directions:** "I liked (2) so make a new deal to replace the (1,3) and include (2) to see more".
+- **The pictures:** "Since I am planning to broad the app outside of erbil, we don't need Erbil specific pictures, prepare the designs without erbil photos, it is preferred to be more PC enthusiastic instead which is the representation of PC uniquely. Search Credible sources like `dribbble.com` and similars".
+- **Which comes first in ticket 09's frame:** "All of the options".
+- **Whether the frame carries Erbil's warmth:** "No erbil specifics".
+- **Whether the not-found page lists the Categories or a search:** "List the Categories".
+
+So option 2, The page is the object, stays, drawn again without Erbil; two new directions replace options 1 and 3; the pictures stand for PCs, not for a place; and the box for the world of the subject is answered by pictures of PC hardware in place of Erbil's, with their credits.
+
+### 5 November 2026: for ticket 09, the frame
+
+The owner's answers to the critique's three questions, for ticket 09, which builds the frame:
+
+- **All three P1 fixes come in the frame**: the way home and a name slot (a plain description until the platform's name is chosen); the three switches, the currency named on the page as the price's own control, the language, and the light, dark or device switch the hard rules ask for beside the language switch, told apart from one another and in fewer rows on a phone; and the not-found page.
+- **No Erbil specifics** in the frame, nor anywhere in the design: the owner plans the app beyond Erbil.
+- **The not-found page lists the eight Categories**, each leading to its Category page.
+
+### 6 November 2026: the second deal
+
+The brief, with no city: "The Shopper app compares the prices that computer shops charge for PC parts, for people who build their own PCs, on a phone first, in Kurdish, Arabic and English, in dinars and dollars; prices and the ≈ mark of a converted price are the page's centre; hard rules hold: WCAG 2.2 AA in both schemes with a switch between them, 44-pixel controls on a touchscreen, no text under 14 pixels (15 in Kurdish and Arabic), 360 pixels wide, right to left, self-hosted fonts that draw all of Sorani". It keeps the product, the three languages, dinars and dollars and the hard rules.
+
+- **With the same sector**, from the root of this ticket's worktree: `node ~/.claude/skills/design-taste-frontend/scripts/draw.mjs --sector ecommerce --sections list,showcase,intro,contact,footer --brief "<the line>" --options 2`. It dealt `split-stage`, which is new, and `contact-sheet`, the first deal's option 1 again (its output in `dealt.md`). Taste's library holds only four directions for `ecommerce` that need no photographs of the product (`contact-sheet`, `page-is-the-object`, `pinned-poster` and `split-stage`); the first deal had taken three, and the draw keeps only the two most recent out of a pool so small. So `ecommerce` can give one new direction, and it gave it.
+- **The split stage** was dealt in full with `--direction split-stage --out browse-07-deal2/o4`: seed 289709026.
+- **The second new direction** was left to the script in the next nearest sector, `physical-product` (PC parts are physical products), with no direction named, so that the script itself chose it: `--sector physical-product --out browse-07-deal2/o5` with the same brief and sections. It dealt `sentence-as-layout`: seed 1777153484. Taste's history in `~/.taste-skill/history.json` now holds both; the writes were not refused. If the owner would rather the second came from another sector, the script deals again from it.
+- **Option 2 is not dealt again**: its sheet stays as dealt on 4 November (seed 2092360077, in `browse-07-deal2/o2/direction.json`, a copy of the first deal's), since a new deal with the same seed would differ now that Taste's history has moved. Its brief still names Erbil; its renderings no longer do.
+
+| Option | Direction | Seed | Sector | Type | Palette | Hero | Sections |
+|---|---|---|---|---|---|---|---|
+| 2 (kept) | The page is the object | 2092360077 | ecommerce | Big Shoulders / Public Sans | Bone, green, chocolate | Card over a dim room | The printed menu sheet · Square plate, spare text · Title, note, facts row · Clip-out coupon form · Invitation over a cropped name |
+| 4 (new) | The split stage | 289709026 | ecommerce | Imbue / Albert Sans | Orange and black | Menu column, sticky photograph | Giant word, filled bar rows · Square plate, spare text · Narrow column, empty field · Photo strip, three-cell bar · Name across the last photograph |
+| 5 (new) | The sentence is the layout | 1777153484 | physical-product | Newsreader | Stone and blueprint | Sentence with a photo strip | Statement, table pushed right · One frame, three distances · Headline crossing onto a photograph · The email as display type · Invitation over a cropped name |
+
+Both new sheets suggest searching for "kurdish postcard" and "kurdish old map": Taste reads a place out of "in Kurdish" in the brief. Those searches were not made, as the owner asked for no place.
+
+### 6 November 2026: the pictures and the references
+
+**The pictures** stand for PCs: hardware, components and builds. Found with Taste's `assets.mjs` (licences safe for commercial use) with queries for motherboards, graphics cards, CPUs, RAM, builds, gaming PCs, water cooling, case fans, hardware, circuit boards, heat sinks, SSDs, power supplies and PC components, and downloaded with `--get` into `browse-07-deal2/assets/` with `credits.json`. Kept, 15:
+
+- by Shixart1985, CC BY 2.0: a red-lit motherboard, a hand setting a RAM module into a board under red and blue light, a board's connectors under blue light;
+- "Computer motherboard magnified by water" by Therringshaw, CC BY 4.0; "Computer Motherboard Closeup" by Lenharth Systems, CC0; "Four SDRAM DIMM slots on a computer motherboard" and "Full modular ATX power supply unit" by Project Kei, CC BY-SA 4.0;
+- "computer case with RGB fans" by Ajith R N and a gloved hand holding a DDR5 SODIMM by dumanag, CC0, via the WordPress Photo Directory; "RGB computer cooling system with LED lighting" by SankalpSasnur, CC0;
+- "Gaming-PC 20240426 HOF2514" by PantheraLeo1359531, CC BY 4.0; "SDRAM memory module, zoomed" by Vitaly Zdanevich, CC0; "Copper heat sink with pipes" by Charles Gaudette, CC BY-SA 3.0; "Water Cooled PC" by Dave Monk, CC BY-SA 2.0; "Infrared photography of computer hardware" by FritzchensFritz, CC0;
+- all via Wikimedia Commons but the two from the WordPress Photo Directory, each with its page in `credits.json` and on the page's `#credits`.
+
+Ten more were downloaded, looked at and dropped (their reasons in `assets/dropped.json`): six show a chip, card or board maker's name or logo large, which a neutral platform must not seem to endorse; one shows an identifiable young person; three had little to show. No picture stands next to a Part as if it were that Part: the Parts keep ticket 06's drawings, marked "Made-up photo".
+
+**The references**, for how PC-enthusiast design looks, are linked on the page's `#references`, never copied into a rendering: on Dribbble, Daniel Ezsias' "Build Your PC Price Calculator", Daan's illustration of a graphics card's circuit board, Farzana Akter's "Gaming Product Landing Page", Panze studio's "PC Mate AI" parts app, and the galleries for the tags PC parts, custom PC and graphic card and the search "PC build"; on Behance, Andrey Karpets' "Gaming Computer Store" redesign, Karim Emad's "PC builder" case study, Alex Casabò's "Crystal PC Case Concept", Kresimir Jelusic's "pc case study", and the search "computer parts". They were found by web search; Dribbble served an empty page to an automated reader, so none was opened here, and the page says only what the search results describe: dark grounds, the hardware shown large, a picture of the build that changes as parts are chosen, filters by specification.
+
+### 6 November 2026: the second deal's renderings
+
+Built as the first deal's were (`browse-07-deal2/build/`, the same made-up shop and words, now with no place): for each option the four pages in Kurdish and English, in dinars and dollars, 48 pages, with the frame's three switches, pictures at 1440 by 900 and 360 by 780, the first screen and the whole page, in both schemes, in `browse-07-deal2/shots/`. None scrolls sideways at 360, measured by the page's own width and the viewport's.
+
+- **The words name no place**: the name slot reads "PC Parts and Prices" ("پارچە و نرخی کۆمپیوتەر"), the home page's title "PC Parts, priced Vendor by Vendor" ("نرخی پارچە، فرۆشیار بە فرۆشیار"), and a Category page's line "9 Parts that Vendors offer now". **The made-up shop's own data still names Erbil**: one of ticket 06's made-up Vendors is called "Mock Hardware Erbil", the Vendors' addresses and their city say Erbil, and the API knows one city, `erbil`. The pages show a Vendor's data as written, as the spec asks (its city and address on its page), so it stays; it is ticket 06's to change if the owner wants it gone.
+- **Option 2, drawn again**: the card's three words are now Parts, Prices and Vendors; it lies over a dim photograph of a red-lit motherboard in place of the Qaysari bazaar; a Category's printed sheet, a Part's Offers and a Vendor's coupon now lie over dim photographs of hardware, as its list blueprint allows, and the facts row carries a copper heat sink at 4:3. Its sheet, type, palette and compositions are unchanged.
+- **Option 4, The split stage**: a sticky photograph of hardware (a water-cooled PC with orange tubing on the home page, changing to a copper heat sink and a red-lit board as their sections arrive; a board's connectors on a Category page; the Part itself on a white field on a Part page) beside a column set like a counter's price card: the name, the switches and the title centred, then one giant word over filled bars that open, each Category, group of Offers or filter a bar. The square plate breaks the split once, full width; the Vendor page opens with the photo strip and three cells; the footer is the name across a dim photograph of a power supply.
+- **Option 5, The sentence is the layout**: "Every PC [four memory slots] priced" ("هەموو [ ] بە نرخ"), the word "part" in the photograph's place and in the heading's accessible name; then each section a statement on the left with its proof on the right, its table pushed right, every photograph printed in the one blue ink; one frame at three distances; "Nobody buys a better place" crossing onto a photograph, in paper colour where it lies on it; the Vendor's phone number as display type; an invitation over the cropped name.
+
+**The hard rules in each option.** Every option keeps them; where its sheet as dealt breaks one, its section on the page says how it is held:
+
+- All three: the dealt small steps of 12 and 13 pixels are held at 14, 15 in Kurdish; each palette is light only, so each has a dark scheme drawn from its own colours, with the switch; no dealt Latin face draws Arabic script, so Kurdish is set in fonts that draw all of Sorani (ADR-0006's list): Noto Kufi Arabic in option 2, Noto Naskh Arabic for display and Noto Sans Arabic for text in option 4, Noto Naskh Arabic in option 5. New faces would be self-hosted as ADR-0006 asks; the renderings load them from Google Fonts, and their packages are to be checked when one is chosen.
+- Options 2 and 4: their type systems set Big Shoulders and Imbue in capitals, which the No Capitals Rule forbids; both are set in sentence case. Option 4's 20-pixel panel corners become square, the page's one radius.
+- Option 5: on a phone its crossing headline may run to three lines, so it does not cross there; the photograph follows it.
+
+**Taste's inspector on the renderings**, by its rules for public pages, at 1440 and 360, over a local server of the folder: the four pages in English and Kurdish in the light scheme and each option's Part page in the dark, ten runs an option, its pictures and `report.json` in `browse-07-deal2/inspect/`. Option 2: 3 to 6 FAIL and 4 to 7 WARN a page; option 4: 3 to 7 FAIL and 3 to 5 WARN; option 5: 4 to 5 FAIL and 3 to 5 WARN. Nothing it measures against a hard rule remains: no contrast under 4.5:1, no page scrolling sideways at 360, and a scan of every page found no text under 14 pixels nor Arabic-script text under 15. On the way, and fixed: a Kurdish word and a phone number that widened a right-to-left phone page by 3 pixels; option 4's Kurdish title on three lines, its footer's text 12 pixels from the edge and two warm whites it read as cream; and, from the scan, the language switch's Kurdish and Arabic names and a Vendor's Kurdish address at 14 pixels on English pages, now 15. What it still fails is what still renderings of working pages lack, as in the first deal: `still-page` in every run (no motion yet; Emil leads it in ticket 08), `few-pictures` (a Category, Part or Vendor page carries one to three real pictures), `blank-gap` and `empty-screens` (option 5's generous spaces, short stretches on a phone), `eyebrow` (the crumb or the frame's name above an h1), `body-size` (lists of 14-pixel lines read as running text), `off-centre` (option 4's split and option 2's offset sheets), `focal-point`, and `no-title` on a phone, where option 4's photograph or option 2's card comes first and the h1 starts 224 to 318 pixels down, inside a 780-pixel phone's first screen. Two more are the dealt devices themselves: option 5's `covered-text`, where the heading's paper-coloured copy lies over the heading, clipped to the photograph, as its blueprint's crossing asks; and option 2's `palette-cream` WARN in the dark scheme, its own bone ink. These, and the page rules above, are for the Kept box's allowances, once the owner has chosen.
+
+### 6 November 2026: for the owner
+
+The second deal's page is the scratchpad's `browse-07-deal2/index.html`, for the owner's `.taste-skill/browse-07-deal2/`; the first deal's page stays at `browse-07/` for comparison. Anchors: `#o2`, `#o4`, `#o5`, `#references` and `#credits`.
+
+1. **The page is the object** (`#o2`, seed 2092360077), kept: the printed price list a computer shop hands over the counter; a card over a dim, red-lit motherboard, scalloped printed sheets over dim hardware, the Vendor as a clip-out coupon; Big Shoulders and Public Sans on bone, chocolate and one green.
+2. **The split stage** (`#o4`, seed 289709026), new: half the screen holds still, a photograph of hardware or the Part itself, beside a price card that scrolls; a giant word over bars that open; Imbue and Albert Sans on hot orange and blue-black.
+3. **The sentence is the layout** (`#o5`, seed 1777153484), new: one poster-sized sentence with a strip of memory slots for a word, every section a statement with its proof, the pictures printed in one blue; Newsreader on stone.
+
+Or ask for another deal, from another sector if the owner names one. The boxes for the choosing, the sheet kept and the last one stay open, and the Status stays, until the owner chooses.
