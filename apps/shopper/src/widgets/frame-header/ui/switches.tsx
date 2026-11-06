@@ -11,10 +11,12 @@ import { SchemeSwitch } from './scheme-switch';
 // The frame's three switches (DESIGN.md's The switches), in one row, in this
 // order: the currency, the language and the colours, each told apart by its
 // own name before it from 48rem, by the gap between them and by what it
-// holds. On a phone they take one row, the name slot one above it. Each
-// works before any script has loaded, as a plain link or a plain form, and
-// is remembered for a year. The server reads the Shopper's choices and hands
-// each switch its words in the page's language.
+// holds. On a phone they take one row, the name slot one above it, 2 pixels
+// apart, as the renderings the owner chose set them, so that the row fits a
+// 360-pixel stub in Kurdish and Arabic too. Each works before any script has
+// loaded, as a plain link or a plain form, and is remembered for a year. The
+// server reads the Shopper's choices and hands each switch its words in the
+// page's language.
 export async function Switches() {
   const [language, currency, sent, t] = await Promise.all([
     getLocale(),
@@ -36,7 +38,7 @@ export async function Switches() {
   return (
     <div
       data-testid="switches"
-      className="flex flex-wrap items-center gap-x-1 sm:gap-x-3 md:gap-x-6"
+      className="flex flex-wrap items-center gap-x-0.5 sm:gap-x-3 md:gap-x-6"
     >
       <CurrencySwitch
         language={language}

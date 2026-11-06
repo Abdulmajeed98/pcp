@@ -16,8 +16,9 @@ import { type FirstPage, thePlatesPart } from '../model/the-plates-part';
 // the eight Categories' lists, for its count of Visible Parts and its first
 // Part, one request a Category, all at once; the Offers of the one Part on
 // the plate, for its slip; and the platform's figures. A read the API does
-// not answer, or refuses, is nothing, and the page shows what it has: each
-// figure only where the API answers it.
+// not answer, or refuses, is nothing, as the API's client answers both with
+// no data, and the page shows what it has: each figure only where the API
+// answers it, and the eight Categories, which need nothing from the API.
 export interface HomePageReading {
   firstPages: FirstPage[];
   plate:

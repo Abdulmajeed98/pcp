@@ -18,7 +18,8 @@ import { NameSlot, Switches } from '@/widgets/frame-header';
 // sentence at the end; along its foot, the photograph's caption, Choose a
 // Category and the plate's Part with its Lowest Price as a link. On a phone
 // the words wrap at the start and the button comes first in the foot. It
-// does not move.
+// does not move. The card's top row is the page's header, so the room above
+// the card clears a phone's notch, as the stub's padding does.
 //
 // Each fact is true and comes from the data or the platform's rules: the
 // eight Categories always, and a count only where the API answered it.
@@ -34,7 +35,7 @@ export async function Card({
   return (
     <section
       aria-labelledby="home-title"
-      className="page-margins relative isolate grid min-h-svh place-items-center py-10"
+      className="page-margins relative isolate grid min-h-svh place-items-center pt-[max(2.5rem,env(safe-area-inset-top))] pb-10"
     >
       <DimPhotograph photograph={photographs.redLitMotherboard} dimmedTo={62} first />
       <div

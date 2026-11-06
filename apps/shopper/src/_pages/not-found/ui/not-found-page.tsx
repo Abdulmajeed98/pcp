@@ -29,7 +29,7 @@ export async function NotFoundPage() {
         <DimPhotograph photograph={photographs.builtPc} first />
         <Sheet print="arrival">
           <SheetTitle as="h1">{t('title')}</SheetTitle>
-          <SheetNote>{t('description')}</SheetNote>
+          <SheetNote lead>{t('description')}</SheetNote>
           <SheetGroup heading={t('chooseACategory')} as="h2">
             {categories.map((category) => (
               <Item

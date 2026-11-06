@@ -97,9 +97,26 @@ export function SheetTitle({
   );
 }
 
-// The one-line note under a sheet's title, in Small Soft Ink.
-export function SheetNote({ children }: { children: ReactNode }) {
-  return <p className="mt-2.5 text-center text-sm text-muted-foreground">{children}</p>;
+// The one-line note under a sheet's title, in Small Soft Ink. A note that is
+// what its page says, as the not-found page's is, is its `lead`: Body large
+// in the Ink, as the card's sentence is.
+export function SheetNote({
+  lead = false,
+  children,
+}: {
+  lead?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <p
+      className={cn(
+        'text-center',
+        lead ? 'mt-4 text-lg' : 'mt-2.5 text-sm text-muted-foreground',
+      )}
+    >
+      {children}
+    </p>
+  );
 }
 
 // A group of a sheet's items, 56 pixels below what comes before it, under a
