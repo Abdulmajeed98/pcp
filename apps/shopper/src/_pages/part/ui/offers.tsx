@@ -62,7 +62,7 @@ export async function Offers({
       className="relative isolate px-ground-edge py-section-phone md:page-margins md:py-section"
     >
       <DimPhotograph photograph={photographs.handSettingMemory} />
-      <div className="mx-auto grid w-full max-w-[40rem] justify-items-center gap-y-10 lg:max-w-none lg:grid-cols-[23rem_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
+      <div className="mx-auto grid w-full max-w-[40rem] grid-cols-[minmax(0,1fr)] justify-items-center gap-y-10 lg:max-w-none lg:grid-cols-[minmax(0,23rem)_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
         <PriceSlip
           partName={part.name}
           offers={offers}

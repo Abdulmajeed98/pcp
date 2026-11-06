@@ -17,19 +17,21 @@ import { CurrencySwitch } from '@/widgets/frame-header';
 
 // A Part page's square plate (DESIGN.md's A Part page and The square
 // plate), the page's first piece: a field of the Board split in half, at
-// least 88% of a screen tall. On the start side the Part's photo, or its
+// least 88% of a screen tall, its words and picture kept clear of a phone's
+// notch held sideways. On the start side the Part's photo, or its
 // Category's icon in its place (CAT-6), 40 pixels in from the field's edges,
-// the notch cut into its end edge. On the end side a column with, at its
-// top, the currency as tabs, the same choice as the frame's switch, standing
-// above the price it leads; in its middle the Part's name as the page's
-// `h1`, its manufacturer and its Category, named in the page's language and
-// leading back to its Category page, its part numbers, and its Lowest Price;
-// at its foot two cells side by side, the first of Ink leading down to its
-// Offers, the second of Sheet Paper to its Category's page. The name, the
-// manufacturer and the part numbers are English in every language (LANG-3),
-// the part numbers one left-to-right list, as a box prints them.
-// On a phone it stacks, its words first and the photograph after them, its
-// cells one above the other.
+// and from 64rem filling its half, so that the picture leads the first
+// screen of a desk, the notch cut into its end edge. On the end side a
+// column with, at its top, the currency as tabs, the same choice as the
+// frame's switch, standing above the price it leads; in its middle the
+// Part's name as the page's `h1`, its manufacturer and its Category, named
+// in the page's language and leading back to its Category page, its part
+// numbers, and its Lowest Price; at its foot two cells side by side, the
+// first of Ink leading down to its Offers, the second of Sheet Paper to its
+// Category's page. The name, the manufacturer and the part numbers are
+// English in every language (LANG-3), the part numbers one left-to-right
+// list, as a box prints them. On a phone it stacks, its words first and the
+// photograph after them, its cells one above the other.
 export async function PartPlate({
   part,
   offers,
@@ -54,7 +56,7 @@ export async function PartPlate({
     <section
       aria-labelledby="part-name"
       data-testid="part-plate"
-      className="grid min-h-[88svh] bg-secondary text-secondary-foreground md:grid-cols-2"
+      className="grid min-h-[88svh] bg-secondary px-[max(env(safe-area-inset-left),env(safe-area-inset-right))] text-secondary-foreground md:grid-cols-2"
     >
       <div className="flex min-w-0 flex-col justify-between gap-8 p-4 md:col-start-2 md:row-start-1 md:p-10">
         <CurrencySwitch
@@ -95,7 +97,7 @@ export async function PartPlate({
               </span>{' '}
               <AlwaysEnglish>
                 {part.partNumbers.map((number, place) => (
-                  <Fragment key={number}>
+                  <Fragment key={place}>
                     {place > 0 && ', '}
                     <span data-testid="part-number">{number}</span>
                   </Fragment>
@@ -130,7 +132,7 @@ export async function PartPlate({
           </a>
         </div>
       </div>
-      <div className="grid items-center p-4 md:col-start-1 md:row-start-1 md:p-10">
+      <div className="grid items-center p-4 md:col-start-1 md:row-start-1 md:p-10 lg:p-0">
         <PartPicture part={part} sizes="(min-width: 48rem) 50vw, 100vw" first />
       </div>
     </section>

@@ -30,8 +30,10 @@ export function SpecificationList({
             <AlwaysEnglish>{specification.label}</AlwaysEnglish>
           </dt>
           <dd className="max-w-[18rem] text-end font-semibold wrap-break-word">
-            {specificationText(specification).map((text) => (
-              <span key={text} className="block">
+            {/* Two rows of a list may hold the same, as two alike M.2 slots
+                do, so a line is known by its place. */}
+            {specificationText(specification).map((text, place) => (
+              <span key={place} className="block">
                 <AlwaysEnglish>{text}</AlwaysEnglish>
               </span>
             ))}

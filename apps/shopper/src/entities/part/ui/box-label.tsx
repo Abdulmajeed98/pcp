@@ -54,8 +54,8 @@ export async function BoxLabel({
                   <AlwaysEnglish>{line.label}</AlwaysEnglish>
                 </dt>
                 <dd className="font-semibold wrap-break-word">
-                  {specificationText(line).map((text) => (
-                    <span key={text} className="block">
+                  {specificationText(line).map((text, place) => (
+                    <span key={place} className="block">
                       <AlwaysEnglish>{text}</AlwaysEnglish>
                     </span>
                   ))}

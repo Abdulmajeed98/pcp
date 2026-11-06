@@ -70,7 +70,7 @@ export async function PriceSlip({
         <p className={cn('mt-1 pb-3.5 text-center', rule)}>
           <AlwaysEnglish>{partName}</AlwaysEnglish>
         </p>
-        <ul className={cn('grid gap-2.5 py-4', rule)}>
+        <ul className={cn('@container grid grid-cols-[minmax(0,1fr)] gap-2.5 py-4', rule)}>
           <Line name={t('lowestPrice')} testId="slip-lowest">
             {slip.lowest?.shownPrice ? (
               <ShownPrice price={slip.lowest.shownPrice} className="text-xl" />
@@ -120,7 +120,10 @@ export async function PriceSlip({
 }
 
 // One line of the slip: its name at the start, a dotted leader, and its
-// figure at the end, at weight 600.
+// figure at the end, at weight 600. On a slip too narrow for its own text,
+// as with a phone's text made larger, its name takes the whole line and the
+// leader runs to the figure on the next (the theme's `data-slip-line` rule,
+// break-ui, browse ticket 12).
 function Line({
   name,
   testId,
@@ -133,6 +136,7 @@ function Line({
   return (
     <li
       data-testid={testId}
+      data-slip-line=""
       className="grid grid-cols-[minmax(0,max-content)_minmax(0.5rem,1fr)_auto] items-end gap-2 md:grid-cols-[max-content_minmax(1rem,1fr)_auto]"
     >
       <span>{name}</span>
