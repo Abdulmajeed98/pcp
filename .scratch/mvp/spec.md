@@ -408,12 +408,13 @@ In development their values are the ones `.env` holds for the `pcp` user, `PCP_D
 | The API | `DATASOURCE_PASSWORD` | None | That user's password, a secret. In development, Nx gives it from `.env`, as above. |
 | The API | `OPENDB_REPOSITORY_URL` | `https://github.com/buildcores/buildcores-open-db` | Where the import fetches the pinned commit's archive from. Only the import reads it. It takes plain HTTP only from this machine, where the tests' stand-in for GitHub listens, because the import trusts the commit the archive names in its own header. |
 | The Shopper app | `API_URL` | `http://localhost:3001` | The API's address. It is read on the server when a page is requested, and is never sent to the browser. |
+| The Shopper app | `SHOPPER_PUBLIC_URL` | `http://localhost:3000` | Its own public address, its origin with no path, from which each page's canonical address, its addresses in the other languages and a preview's image are written. It is read on the server, and never sent to the browser. In development `pnpm services:up` writes it into `.env`, from which Nx gives it to the Shopper app. |
 | The dashboard | `VITE_KEYCLOAK_URL` | `http://localhost:8080` | Keycloak's address. |
 | The dashboard | `VITE_KEYCLOAK_REALM` | `pcp` | The realm. |
 | The dashboard | `VITE_KEYCLOAK_CLIENT_ID` | `dashboard` | Its login client. |
 | The dashboard | `VITE_API_URL` | `http://localhost:3001` | The API's address. |
 
-- The API checks its settings when it starts. A malformed one stops it with a message that names it.
+- The API checks its settings when it starts. A malformed one stops it with a message that names it. The Shopper app checks its two the same way, in Next's instrumentation file, when its server starts (`browse` ticket 09).
 - The dashboard's settings are fixed when it is built, and every one of them ends up in the browser.
 - Values for a server are supplied when the platform is packaged, which is later work.
 

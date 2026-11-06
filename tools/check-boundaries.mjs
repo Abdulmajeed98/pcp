@@ -60,6 +60,10 @@ const routesUseTheAlias = 'A route file reaches the layers through the `@/` alia
 const proxyTakesOnlyTheLanguages =
   "Next's proxy file takes next-intl's statement of the languages";
 const proxyUsesTheAlias = 'The proxy file reaches that segment through the `@/` alias';
+const instrumentationTakesOnlyTheSettings =
+  "Next's instrumentation file takes the check of the settings";
+const instrumentationUsesTheAlias =
+  'The instrumentation file reaches that segment through the `@/` alias';
 const testsUseTheAlias = 'A unit test reaches the layers through the `@/` alias';
 
 // A case is one planted file. `file` is its path inside the project, without
@@ -516,6 +520,42 @@ const casesInTheProxyFile = [
   ),
 ];
 
+// Next's instrumentation file, which only the Shopper app has. It sits beside
+// the routing folder, and Next calls it once when its server starts, to check
+// the settings. A planted file is named like it: the bans are for every file
+// at the app's root whose name starts with `instrumentation.`.
+const casesInTheInstrumentationFile = [
+  inTheShopperApp.refused(
+    'the instrumentation file importing a page',
+    'instrumentation.imports-a-page',
+    '@/_pages/home',
+    instrumentationTakesOnlyTheSettings,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file importing another segment of the Shared layer',
+    'instrumentation.imports-another-segment',
+    '@/shared/i18n',
+    instrumentationTakesOnlyTheSettings,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file reaching past the index file of the settings segment',
+    'instrumentation.reaches-into-the-segment',
+    '@/shared/config/settings',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file reaching the settings segment by a relative path',
+    'instrumentation.climbs-into-the-segment',
+    './src/shared/config',
+    instrumentationUsesTheAlias,
+  ),
+  inTheShopperApp.allowed(
+    'the instrumentation file importing the settings segment through its index file',
+    'instrumentation.imports-the-settings',
+    '@/shared/config',
+  ),
+];
+
 // The Shopper app's unit tests, in their folder beside `src`, outside the
 // layers. A test imports any layer, but only through its index file.
 const unitTest = 'test/boundary-proof';
@@ -599,6 +639,7 @@ const cases = [
   ...casesInAFrontend(inTheShopperApp, { app: '_app', pages: '_pages' }),
   ...casesInTheRoutingFolder,
   ...casesInTheProxyFile,
+  ...casesInTheInstrumentationFile,
   ...casesInTheUnitTests,
 ];
 

@@ -67,6 +67,9 @@ export function startTheShopperApp({
       env: {
         ...process.env,
         API_URL: apiUrl,
+        // Its pages' previews name their addresses on this port, the one the
+        // inspector opens them at.
+        SHOPPER_PUBLIC_URL: `http://localhost:${port}`,
         SHOPPER_INSPECTION_DIST_DIR: shoppersOwnFiles,
         NEXT_TELEMETRY_DISABLED: '1',
       },
