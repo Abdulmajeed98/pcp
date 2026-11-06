@@ -62,9 +62,14 @@ let alphasPhoto: string;
 // each named by its place, No01 to No21, a word no other name holds.
 let paged: MadeUpListedPart[];
 
+// The run's rows are made as the development Admin, who logs in through the
+// dashboard, so the context they are made in runs script: a context made in
+// a hook takes the options of the first line a worker runs, and that line may
+// be one with scripts switched off, as when it runs alone or after a line
+// that failed.
 test.beforeAll(async ({ browser }) => {
   test.setTimeout(120_000);
-  const context = await browser.newContext();
+  const context = await browser.newContext({ javaScriptEnabled: true });
   try {
     const { request } = context;
     const authorization = await authorizationOfTheDevelopmentAdmin(await context.newPage());
