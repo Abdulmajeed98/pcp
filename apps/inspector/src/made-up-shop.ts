@@ -12,7 +12,11 @@ import type {
   VendorsWithExpiringOffersPageResponse,
 } from '@pcp/api-client';
 
-import { type CatalogPart, offersOfTheFirstVendor } from './made-up-offers.ts';
+import {
+  type CatalogPart,
+  offersOfTheFirstVendor,
+  theShopsPlatformRate,
+} from './made-up-offers.ts';
 import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
 
 // The made-up shop's first Vendor (`made-up-vendors.ts`) as the dashboard's
@@ -33,10 +37,11 @@ import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
 // A day of 24 hours, and the rules of an Offer's expiry, as the API states
 // them in its description: an Offer is an Expired Offer when its last
 // Confirmation is more than 14 days old, and about to expire when it is not
-// expired and will be within 3 days.
+// expired and will be within 3 days. The stand-in API answers the 14 days
+// among the platform's figures.
 const aDay = 24 * 60 * 60 * 1000;
 const anHour = 60 * 60 * 1000;
-const daysAnOfferStaysCurrent = 14;
+export const daysAnOfferStaysCurrent = 14;
 const daysOfWarning = 3;
 
 // The Parts of the catalog the shop offers, which the command reads from the
@@ -97,7 +102,9 @@ export function madeUpShop(
     vendor,
     offers,
     platformRate: {
-      current: platformRate ? { iqdPerUsd: 1575, setAt: before(now, 3 * aDay) } : null,
+      current: platformRate
+        ? { iqdPerUsd: theShopsPlatformRate, setAt: before(now, 3 * aDay) }
+        : null,
     },
   };
 }
