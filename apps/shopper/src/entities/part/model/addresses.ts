@@ -2,7 +2,13 @@ import type { Language } from '@pcp/i18n';
 
 // A Part page's address, in a language: `/<language>/parts/<partId>`.
 export function partAddress(language: Language, partId: string): string {
-  return `/${language}/parts/${partId}`;
+  return `/${language}${partPath(partId)}`;
+}
+
+// The part of a Part page's address after its language, as a page's preview
+// names it in every language.
+export function partPath(partId: string): string {
+  return `/parts/${partId}`;
 }
 
 // Where the Shopper app serves a Part's photo, from the path the API names

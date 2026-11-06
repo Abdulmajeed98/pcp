@@ -103,4 +103,20 @@ describe("a page's preview", () => {
       'x-default': `${publicAddress}/categories/cpu-cooler`,
     });
   });
+
+  // A Part with a photo shows it in a chat app's preview (story 57).
+  it("gives Open Graph a page's image when it has one, and none when it has none", () => {
+    const image = `${publicAddress}/photos/00000000-0000-4000-8000-000000000001`;
+    const withAnImage = previewOf({
+      language: 'en',
+      path: '/parts/00000000-0000-4000-8000-000000000002',
+      title: 'A title',
+      description: 'A description',
+      siteName: 'A site',
+      publicAddress,
+      image,
+    });
+    expect(withAnImage.openGraph?.images).toEqual([image]);
+    expect(homePreview('en').openGraph).not.toHaveProperty('images');
+  });
 });

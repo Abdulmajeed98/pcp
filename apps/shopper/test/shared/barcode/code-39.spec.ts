@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { code39 } from '@/shared/barcode';
+import { barsOfALabel, code39 } from '@/shared/barcode';
 
 // The 43 characters Code 39 writes (ISO/IEC 16388): the digits, the capital
 // letters, the space and six signs.
@@ -91,4 +91,23 @@ describe('a Code 39 barcode', () => {
       expect(code39(text)).toBeUndefined();
     },
   );
+});
+
+// The bars a box label carries for a part number: its Code 39 barcode, when
+// it is short enough for a phone's label to hold it at four fifths of a
+// pixel a module, or more; a longer one, as some of the catalog's part
+// numbers are, would be bars too thin to read, so the label carries the
+// number alone.
+describe("a box label's bars", () => {
+  it('are the Code 39 barcode of a part number of twenty characters', () => {
+    expect(barsOfALabel('CMK32GX5M2B6000C36AB')).toEqual(code39('CMK32GX5M2B6000C36AB'));
+  });
+
+  it('are none for a part number of more than twenty characters', () => {
+    expect(barsOfALabel('CMK32GX5M2B6000C36ABC')).toBeUndefined();
+  });
+
+  it('are none for a part number Code 39 does not write', () => {
+    expect(barsOfALabel('HS01(B)')).toBeUndefined();
+  });
 });

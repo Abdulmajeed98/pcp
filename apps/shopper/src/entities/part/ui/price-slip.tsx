@@ -27,17 +27,22 @@ import { slipOf } from '../model/slip';
 //
 // It is printed below the first screen, so the page's script feeds it as it
 // comes into view, as a till feeds its slip (Motion 4), and the stamp lands
-// once it has printed (Motion 3).
+// once it has printed (Motion 3). Beside a Part's Offers it is `pinned` from
+// 64rem: it holds its place 32 pixels from the top while they scroll past,
+// and lets go where they end (Motion 7), which the page's own scrolling
+// does, nothing hijacked; below 64rem it scrolls with them.
 export async function PriceSlip({
   partName,
   offers,
   iqdPerUsd,
   onThePlate = false,
+  pinned = false,
 }: {
   partName: string;
   offers: readonly VisibleOfferResponse[];
   iqdPerUsd: number | null | undefined;
   onThePlate?: boolean;
+  pinned?: boolean;
 }) {
   const [language, t, site] = await Promise.all([
     getLocale(),
@@ -50,7 +55,10 @@ export async function PriceSlip({
 
   return (
     <PrintInView
-      frameClassName="w-full max-w-[23rem]"
+      frameClassName={cn(
+        'w-full max-w-[23rem]',
+        pinned && 'lg:sticky lg:top-8 lg:self-start',
+      )}
       testId="price-slip"
       className={cn(
         'feeds torn-foot figures relative overflow-clip px-4 pt-[26px] pb-24 md:px-6',

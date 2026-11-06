@@ -82,3 +82,17 @@ export function code39(text: string): Code39 | undefined {
   }
   return { modules: x + quietZone, bars };
 }
+
+// The longest text a box label writes as bars: twenty characters are 371
+// modules, which the label's 300 pixels on a 360-pixel phone hold at four
+// fifths of a pixel a module, more than a pixel and a half on a phone's
+// screen of twice the density, as a reader can still read. Some of the
+// catalog's part numbers are far longer, a name and a number run together.
+const longestText = 20;
+
+// The bars a box label carries for a text: its Code 39 barcode when Code 39
+// writes it and it is no longer than a label holds legibly, and none
+// otherwise, when the label carries the text alone.
+export function barsOfALabel(text: string): Code39 | undefined {
+  return text.length > longestText ? undefined : code39(text);
+}

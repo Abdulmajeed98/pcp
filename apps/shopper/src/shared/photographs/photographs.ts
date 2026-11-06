@@ -2,6 +2,8 @@ import type { StaticImageData } from 'next/image';
 
 import builtPc from './files/built-pc.webp';
 import caseConnectors from './files/case-connectors.webp';
+import handSettingMemory from './files/hand-setting-memory.webp';
+import memoryChips from './files/memory-chips.webp';
 import motherboardCloseup from './files/motherboard-closeup.webp';
 import redLitMotherboard from './files/red-lit-motherboard.webp';
 
@@ -83,6 +85,26 @@ export const photographs = {
     author: 'Lenharth Systems',
     licence: cc0,
     source: 'https://commons.wikimedia.org/w/index.php?curid=153659539',
+    changed: 'dimmed',
+  },
+  // Under a Part page's price slip and sheet of Offers, a hand setting a
+  // memory stick into a board.
+  handSettingMemory: {
+    image: handSettingMemory,
+    title:
+      'Hand holds RAM module above a computer motherboard illuminated by vibrant red and blue lighting in a dark setting',
+    author: 'Shixart1985',
+    licence: ccBy2,
+    source: 'https://commons.wikimedia.org/w/index.php?curid=186624326',
+    changed: 'dimmed',
+  },
+  // Under a Part page's specifications, the chips of a memory module.
+  memoryChips: {
+    image: memoryChips,
+    title: 'SDRAM memory module, zoomed',
+    author: 'Vitaly Zdanevich',
+    licence: cc0,
+    source: 'https://commons.wikimedia.org/wiki/File:SDRAM_memory_module,_zoomed.jpg',
     changed: 'dimmed',
   },
 } as const satisfies Record<string, Photograph>;
