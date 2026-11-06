@@ -1,5 +1,5 @@
 import type { VendorResponse } from '@pcp/api-client';
-import { googleMapsSearchFor } from '@pcp/links';
+import { googleMapsSearchFor, instagramHandleOf, instagramProfileOf } from '@pcp/links';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
@@ -9,8 +9,6 @@ import {
   coordinatesOf,
   Detail,
   DetailList,
-  instagramHandleOf,
-  instagramProfileOf,
   PhoneNumberShown,
   useVendor,
   useVendorShown,
