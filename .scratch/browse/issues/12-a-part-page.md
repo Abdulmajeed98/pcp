@@ -15,9 +15,9 @@ A link to the page pasted into WhatsApp previews the Part in the link's language
 
 **Blocked by:** 04, 10, 15 (the price slip's Platform Rate)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] **The page** at `/{language}/parts/{partId}`, built to DESIGN.md. It is rendered on the server for each request. It asks `GET v1/visible-parts/{partId}`, and `GET v1/parts/{partId}/offers` in the chosen currency, with no cache. A Part that is not visible, an unknown Part, and a visible Part whose Offers are gone by the time they are asked for, answer the not-found page with a 404 status, in the page's language.
+- [x] **The page** at `/{language}/parts/{partId}`, built to DESIGN.md. It is rendered on the server for each request. It asks `GET v1/visible-parts/{partId}`, and `GET v1/parts/{partId}/offers` in the chosen currency, with no cache. A Part that is not visible, an unknown Part, and a visible Part whose Offers are gone by the time they are asked for, answer the not-found page with a 404 status, in the page's language.
 - [x] **The Part.** Its name, manufacturer and part numbers through `AlwaysEnglish`. Its photo from ticket 10's address, or `CategoryIcon`. Its Category, named in the page's language and leading back to its Category page.
 - [x] **The specifications.** Shown in the order the API answers them, each with its English label, value and unit through `AlwaysEnglish` (LANG-3). A yes-or-no value is worded in English. Nothing the API leaves out is shown.
 - [x] **An Offer** shows:
@@ -40,7 +40,7 @@ A link to the page pasted into WhatsApp previews the Part in the link's language
   - The page's HTML holds its title, description, canonical address, the other two languages' addresses, Open Graph's tags and, for a Part with a photo, its image. There is no price, read with no cookie, as a crawler would.
   - `expectAccessible` passes in the light and the dark scheme.
   - Any motion DESIGN.md gives the page is filmed with `film` and judged by `snapsOf`, with reduced motion as well as without.
-- [ ] **Taste's inspector.** `pnpm shopper:inspect` runs on a Part page with a photo and one without, in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
+- [x] **Taste's inspector.** `pnpm shopper:inspect` runs on a Part page with a photo and one without, in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
 - [x] `break-ui` runs with a Part of 20 Offers, the longest name, a Vendor name in Arabic script and a Part with every specification. `mobile-native` runs too. What they found is fixed or recorded under Comments.
 - [x] Shown once and then reverted, each failing its own test: "2 days ago" worded with the singular; a price in the preview's description.
 - [x] `pnpm check` passes with Docker stopped.
@@ -109,3 +109,14 @@ Two questions, each shown with its pictures on a page in the session's scratchpa
 
 1. **The box label's lines.** DESIGN.md gives "six key lines (the Category's key specifications, as BRW-2 names them for its filters)", and BRW-2 names one to three. **A (recommended, as built):** BRW-2's first, then those a buyer weighs next, six at the most, each as the Part holds it: a list of six for each Category kept in the Shopper app. **B:** the first six the Part holds, in its Category's order, no list kept (a PSU's label then lacks its efficiency rating). **C:** BRW-2's alone, one to three lines.
 2. **The plate's picture on a desk.** Taste's `focal-point` failed the first screen at 1024 pixels, and at every desk width for a Part with no photo. **A (recommended, as built):** from 64rem the square fills its half of the plate, the icon drawn as one picture; below 64rem and on the home page nothing changes. **B:** keep DESIGN.md's 40-pixel inset everywhere and let the sheet allow `focal-point`.
+
+### 6 November 2026: the owner's answers
+
+The owner answered in chat, through the coordinator: "Keep both", so A for each, as built.
+
+1. **The box label's lines** are BRW-2's key specifications first, then those a buyer weighs next, six at the most, each as the Part holds it and a line it lacks left out, from a list of six for each Category kept in the Shopper app (`keyLinesOf`, `entities/part/model/key-lines.ts`), as DESIGN.md's The specifications says.
+2. **The plate's picture on a desk.** From 64rem a Part page's square fills its half of the plate, so that the photo, or the icon on its paper, leads a desk's first screen, the icon drawn as one picture at 40% of its square; below 64rem, and on the home page, the square keeps the inset it had, as DESIGN.md's The square plate says. Taste's `focal-point` passes in all eight runs.
+
+The two boxes that waited on the answers are ticked, and the ticket is resolved. DESIGN.md already said A for each; its head now also says that the owner kept both answers and that the Shopper app keeps the list of key lines, as its specifications now say too. No code changed, so `pnpm platform:check` on `b4d11a5` stands: 367 lines in 15.5 minutes.
+
+**Checks.** This record was gated on `pnpm check --skip-nx-cache` with `DOCKER_HOST` pointed at a socket that does not exist and an empty `PLAYWRIGHT_BROWSERS_PATH`, every `*.tsbuildinfo` of the worktree deleted first. `browse/integration` is still at `c816f6c`, merged into this branch with `1948e8b`.
