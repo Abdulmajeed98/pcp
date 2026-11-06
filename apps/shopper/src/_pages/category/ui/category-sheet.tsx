@@ -27,13 +27,17 @@ import { Paging } from './paging';
 
 // A Category's sheet on its page (DESIGN.md's A Category page): the printed
 // sheet, its title the Category's name as the page's `h1`, then the page's
-// one sentence of what it shows, the choices that are on, the Category's
-// drawing, and the list, in BRW-1's order as the API answers it: under "In
-// stock" the Parts some Vendor has in stock, lowest price first, then under
-// "Out of stock at every Vendor" the rest, each marked so. Paging and the
-// closing lines follow, with what "≈" means when a price on the page is
-// converted. The stamp says "Lowest price first". It is on the first
-// screen, so it prints as the page opens.
+// one sentence of what it shows, in Body large in the Ink, as the not-found
+// page's note is, since it is what the page says; the choices that are on,
+// the Category's drawing, and the list, in BRW-1's order as the API answers
+// it: under "In stock" the Parts some Vendor has in stock, lowest price
+// first, then under "Out of stock at every Vendor" the rest, each marked so.
+// Paging and the closing line follow, in Small Soft Ink, and under it, in
+// Body, what "≈" means when a price on the page is converted. The stamp says
+// "Lowest price first", in the sheet's end corner when the sheet holds 30rem
+// inside its padding, and under its title on a narrower one, as beside the
+// swing tag at 1024 pixels and on a phone, so that it never runs into a
+// long title. It is on the first screen, so it prints as the page opens.
 //
 // A sheet that lists nothing says why, and the two empty lists are told
 // apart in words (DESIGN.md's The empty states): a Category no Vendor offers
@@ -88,12 +92,12 @@ export async function CategorySheet({
   return (
     <Sheet
       print="arrival"
-      className={className}
+      className={cn('@container', className)}
       frameClassName="lg:col-span-7 lg:max-w-none"
     >
       <SheetTitle as="h1">{categoryName(category)}</SheetTitle>
       {state.kind === 'listed' && (
-        <Stamp className="static mx-auto mt-3.5 table text-[1.125rem] md:absolute md:end-[22px] md:top-[26px] md:mt-0">
+        <Stamp className="static mx-auto mt-3.5 table text-[1.125rem] @[30rem]:absolute @[30rem]:end-[22px] @[30rem]:top-[26px] @[30rem]:mt-0">
           {t('stamp')}
         </Stamp>
       )}
@@ -101,10 +105,8 @@ export async function CategorySheet({
         data-testid="sheet-says"
         data-state={state.kind}
         className={cn(
-          'block text-center',
-          state.kind === 'listed'
-            ? 'mt-2.5 text-sm text-muted-foreground'
-            : 'mx-auto mt-4 max-w-[26ch] text-lg text-balance',
+          'mx-auto mt-4 block text-center text-lg text-balance',
+          state.kind === 'listed' ? 'max-w-[34ch]' : 'max-w-[26ch]',
         )}
       >
         {sentence}
@@ -121,15 +123,15 @@ export async function CategorySheet({
         <>
           <TheList parts={state.page.content} />
           <Paging category={category} query={query} totalPages={state.page.totalPages} />
-          <SheetClose>
-            {t('close')}
-            {state.page.content.some((part) => part.lowestPrice?.converted === true) && (
-              <>
-                <br />
-                {t('approximately')}
-              </>
-            )}
-          </SheetClose>
+          <SheetClose>{t('close')}</SheetClose>
+          {state.page.content.some((part) => part.lowestPrice?.converted === true) && (
+            <p
+              data-testid="what-approximately-means"
+              className="mx-auto mt-3 max-w-[34rem] text-center text-muted-foreground"
+            >
+              {t('approximately')}
+            </p>
+          )}
         </>
       )}
       {state.kind === 'none-yet' && (
