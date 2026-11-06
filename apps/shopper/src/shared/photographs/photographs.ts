@@ -2,12 +2,13 @@ import type { StaticImageData } from 'next/image';
 
 import builtPc from './files/built-pc.webp';
 import caseConnectors from './files/case-connectors.webp';
+import motherboardCloseup from './files/motherboard-closeup.webp';
 import redLitMotherboard from './files/red-lit-motherboard.webp';
 
 // The photographs of PC hardware the Shopper app's pages lie on (DESIGN.md's
 // The photographs), each from an open collection under a licence that lets
-// it be shown with a credit, found with Taste's `assets.mjs` in browse ticket
-// 07. Only those under CC0 or CC BY are used: a dimmed copy may count as an
+// it be shown, found with Taste's `assets.mjs` in browse ticket 07. Only
+// those under CC0 or CC BY are used: a dimmed copy may count as an
 // adaptation, which CC BY-SA would ask to be shared alike. None shows a
 // place, a maker's name or logo large, or a person who could be known, and
 // none stands for a Part on sale.
@@ -36,6 +37,12 @@ const ccBy2 = {
 const ccBy4 = {
   name: 'CC BY 4.0',
   address: 'https://creativecommons.org/licenses/by/4.0/',
+};
+// A photograph given to the public domain asks for no credit, and is credited
+// all the same, as every photograph on a page is.
+const cc0 = {
+  name: 'CC0 1.0',
+  address: 'https://creativecommons.org/publicdomain/zero/1.0/',
 };
 
 export const photographs = {
@@ -68,5 +75,14 @@ export const photographs = {
     licence: ccBy2,
     source: 'https://commons.wikimedia.org/w/index.php?curid=196551757',
     changed: 'cropped',
+  },
+  // Under a Category page's swing tag and sheet, the board the Parts go on.
+  motherboardCloseup: {
+    image: motherboardCloseup,
+    title: 'Computer Motherboard Closeup',
+    author: 'Lenharth Systems',
+    licence: cc0,
+    source: 'https://commons.wikimedia.org/w/index.php?curid=153659539',
+    changed: 'dimmed',
   },
 } as const satisfies Record<string, Photograph>;

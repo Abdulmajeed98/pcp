@@ -75,6 +75,40 @@
     "confirmed": "{days, plural, =0 {Confirmed today} one {Confirmed {daysText} day ago} other {Confirmed {daysText} days ago}}",
     "stamp": "Lowest Price"
   },
+  "Part": {
+    "outOfStock": "Out of stock",
+    "vendors": "{count, plural, one {{countText} Vendor} other {{countText} Vendors}}"
+  },
+  "SearchParts": {
+    "title": "Search",
+    "label": "{category, select, cpu {Search CPUs} cpuCooler {Search CPU coolers} motherboard {Search motherboards} ram {Search RAM} storage {Search storage} gpu {Search GPUs} case {Search cases} psu {Search PSUs} other {Search Parts}}",
+    "placeholder": "Name, manufacturer or part number",
+    "show": "Show Parts",
+    "choicesOn": "The choices that are on",
+    "removeTheSearch": "Remove the search {search}",
+    "clearAll": "Clear all"
+  },
+  "CategoryPage": {
+    "note": "{count, plural, one {{countText} Part that Vendors offer now, lowest price first.} other {{countText} Parts that Vendors offer now, lowest price first.}}",
+    "found": "{count, plural, one {{countText} Part found, lowest price first.} other {{countText} Parts found, lowest price first.}}",
+    "stamp": "Lowest price first",
+    "inStock": "In stock",
+    "outOfStockEverywhere": "Out of stock at every Vendor",
+    "close": "Lowest price first. Parts every Vendor has out of stock come last.",
+    "approximately": "≈ marks a price the platform converted from the currency the Vendor quoted, at the Platform Rate.",
+    "pages": "Pages",
+    "pageOf": "Page {page} of {pages}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "noneYet": "{category, select, cpu {No Vendor offers a CPU yet.} cpuCooler {No Vendor offers a CPU cooler yet.} motherboard {No Vendor offers a motherboard yet.} ram {No Vendor offers RAM yet.} storage {No Vendor offers storage yet.} gpu {No Vendor offers a GPU yet.} case {No Vendor offers a case yet.} psu {No Vendor offers a PSU yet.} other {No Vendor offers one yet.}}",
+    "noneYetLine": "Vendors add their Offers as they stock them.",
+    "chooseAnotherCategory": "Choose another Category",
+    "noMatch": "{category, select, cpu {No CPU matches your search.} cpuCooler {No CPU cooler matches your search.} motherboard {No motherboard matches your search.} ram {No RAM matches your search.} storage {No storage matches your search.} gpu {No GPU matches your search.} case {No case matches your search.} psu {No PSU matches your search.} other {No Part matches your search.}}",
+    "pastTheEnd": "{pages, plural, one {This list has only {pagesText} page.} other {This list has only {pagesText} pages.}}",
+    "toTheFirstPage": "Go to the first page",
+    "notRead": "The list cannot be read just now. Try again in a moment.",
+    "tryAgain": "Try again"
+  },
   "NotFoundPage": {
     "title": "Page not found",
     "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped.",
@@ -89,6 +123,9 @@
     "notFound": {
       "title": "Page not found",
       "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped."
+    },
+    "category": {
+      "description": "{category, select, cpu {Every CPU the Vendors offer now, each at its lowest price, in dinars or dollars.} cpuCooler {Every CPU cooler the Vendors offer now, each at its lowest price, in dinars or dollars.} motherboard {Every motherboard the Vendors offer now, each at its lowest price, in dinars or dollars.} ram {All the RAM the Vendors offer now, each kit at its lowest price, in dinars or dollars.} storage {All the storage the Vendors offer now, each drive at its lowest price, in dinars or dollars.} gpu {Every GPU the Vendors offer now, each at its lowest price, in dinars or dollars.} case {Every case the Vendors offer now, each at its lowest price, in dinars or dollars.} psu {Every PSU the Vendors offer now, each at its lowest price, in dinars or dollars.} other {Every Part the Vendors offer now, each at its lowest price, in dinars or dollars.}}"
     }
   }
 }

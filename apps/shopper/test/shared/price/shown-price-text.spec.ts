@@ -58,4 +58,20 @@ describe('a Shown Price as it is drawn', () => {
     const { figure } = shownPriceText(price('IQD', '123456789'));
     expect(figure).toMatch(/^[0-9,]+$/);
   });
+
+  // Each currency, quoted and converted: the "≈" goes with a Converted Price
+  // alone, whichever currency it is in, and never changes the figure or the
+  // mark. The function takes no language: a Shown Price is the same on a
+  // Kurdish, an Arabic and an English page (LANG-5, `words.md`'s
+  // currencies), which `pnpm platform:check` reads on every price of a
+  // Category page in the three.
+  it.each([
+    ['IQD', '250000', false, { approximate: false, figure: '250,000', unit: 'IQD' }],
+    ['IQD', '250000', true, { approximate: true, figure: '250,000', unit: 'IQD' }],
+    ['USD', '167.00', false, { approximate: false, figure: '167', unit: '$' }],
+    ['USD', '167.00', true, { approximate: true, figure: '167', unit: '$' }],
+    ['USD', '99.95', false, { approximate: false, figure: '99.95', unit: '$' }],
+  ] as const)('writes %s %s, converted %s, as %o', (currency, amount, converted, drawn) => {
+    expect(shownPriceText(price(currency, amount, converted))).toEqual(drawn);
+  });
 });

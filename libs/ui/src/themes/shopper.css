@@ -532,6 +532,15 @@
 }
 
 /*
+ * The swing tag's punched hole: 20 pixels across, at the middle of its top,
+ * 28 pixels down, as the hole a tag hangs by.
+ */
+@utility punched-hole {
+  -webkit-mask: radial-gradient(10px at 50% 28px, #0000 97%, #000);
+  mask: radial-gradient(10px at 50% 28px, #0000 97%, #000);
+}
+
+/*
  * The tear-off tabs' perforation, dashed in Half Ink: 3 pixels along their
  * top, and 2 between them, so that one that shows where a tab is meets 3:1.
  */
@@ -555,6 +564,58 @@
   &:lang(ckb),
   &:lang(ar) {
     rotate: none;
+  }
+}
+
+/*
+ * An item with a picture on a sheet's list too narrow for its text: its name
+ * could not wrap beside its price, so it stacks (break-ui, browse ticket 10).
+ * The list is the container (`@container`), measured in its own text's em,
+ * so that a phone with its text made larger stacks as a narrow phone does,
+ * and these rules are outside the layers, so that they hold over the item's
+ * own placing. Below 17em, as a phone's at 320 pixels is, the picture and
+ * the name share the first line and the leader runs from the start to the
+ * price on the next; below 11em, as with a phone's text at twice its size,
+ * the picture takes a line of its own above the name.
+ */
+@container (width < 17em) {
+  [data-item='with-picture'] > [data-item-picture] {
+    grid-row: auto;
+  }
+
+  [data-item='with-picture'] > [data-item-name] {
+    grid-column: 2 / -1;
+  }
+
+  [data-item='with-picture'] > [data-item-leader] {
+    grid-column: 1 / 4;
+  }
+
+  [data-item='with-picture'] > [data-item-second] {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (width < 11em) {
+  [data-item='with-picture'] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  [data-item='with-picture'] > [data-item-picture] {
+    grid-column: 1 / -1;
+    margin-block-end: 0.5rem;
+  }
+
+  [data-item='with-picture'] > [data-item-name] {
+    grid-column: 1 / -1;
+  }
+
+  [data-item='with-picture'] > [data-item-leader] {
+    grid-column: 1 / 2;
+  }
+
+  [data-item='with-picture'] > [data-item-end] {
+    grid-column: 2 / 3;
   }
 }
 
@@ -587,6 +648,9 @@
  * that no piece is hidden by the stylesheet alone (`data-print` names its
  * state). A page come back to, by back or forward, is shown printed: the
  * page marks a return on the document before it draws (`data-returned`).
+ * So is a page drawn again in place, by a search or another page of its list
+ * applied with script: the page marks it before the new rows are painted
+ * (`data-drawn-again`), and they arrive as they are, their prices settled.
  * Keyboard focus, or a link to an anchor, inside a piece that is printing
  * shows it printed at once, so that nothing focused is hidden.
  */
@@ -606,7 +670,7 @@
   @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
     animation: print var(--print) var(--ease-out) both;
 
-    :root[data-returned] &,
+    :root:is([data-returned], [data-drawn-again]) &,
     &:focus-within,
     &:has(:target) {
       animation: none;
@@ -687,7 +751,7 @@
       animation-delay: calc(var(--settle-from) + min(var(--i, 0), 9) * var(--settle-apart));
     }
 
-    :root[data-returned] :where(.print-on-arrival) & {
+    :root:is([data-returned], [data-drawn-again]) :where(.print-on-arrival) & {
       animation: none;
     }
   }
@@ -745,7 +809,7 @@
       animation-delay: var(--stamp-at);
     }
 
-    :root[data-returned] :where(.print-on-arrival) & {
+    :root:is([data-returned], [data-drawn-again]) :where(.print-on-arrival) & {
       animation: none;
     }
   }
