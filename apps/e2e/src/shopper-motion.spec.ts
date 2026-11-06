@@ -299,7 +299,7 @@ test('keyboard focus that enters the sheet before it has printed shows it whole 
   expect(after.count?.opacity).toBe(1);
 });
 
-test('a page come back to by back is shown printed: the home page and the not-found page print no more', async ({
+test('a page come back to by back or forward is shown printed: the home page, a Category page and the not-found page print no more', async ({
   page,
 }) => {
   await page.goto(homePage, { waitUntil: 'networkidle' });
@@ -323,9 +323,10 @@ test('a page come back to by back is shown printed: the home page and the not-fo
   );
   expectStillAndWhole('the home page’s sheet', framesOf(home, 'sheet'));
 
-  // The not-found page, which the browser draws by script, marks a return
-  // itself: here it is come back to by forward.
-  const notFoundAgain = await filmFromTheFirstFrame(
+  // A Category page, which the server draws, is marked as a return by the
+  // line in its head before it is painted: here it is come back to by
+  // forward.
+  const categoryAgain = await filmFromTheFirstFrame(
     page,
     lookAtThePrintedPieces,
     async () => {
@@ -333,6 +334,20 @@ test('a page come back to by back is shown printed: the home page and the not-fo
     },
   );
   await expect(page).toHaveURL(addressIn(english, '/categories/cpu'));
+  expectStillAndWhole('the Category page’s sheet', framesOf(categoryAgain, 'sheet'));
+
+  // The not-found page, which the browser draws by script, marks a return
+  // itself: here it is come back to by back.
+  await page.goto(notFound, { waitUntil: 'networkidle' });
+  await page.goto(homePage, { waitUntil: 'networkidle' });
+  const notFoundAgain = await filmFromTheFirstFrame(
+    page,
+    lookAtThePrintedPieces,
+    async () => {
+      await page.goBack();
+    },
+  );
+  await expect(page).toHaveURL(notFound);
   expectStillAndWhole('the not-found page’s sheet', framesOf(notFoundAgain, 'sheet'));
 });
 

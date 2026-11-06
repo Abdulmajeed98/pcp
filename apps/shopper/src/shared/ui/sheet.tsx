@@ -14,21 +14,24 @@ import { PrintInView } from './print-in-view';
 // It prints as it arrives (Motion 1): `print` is `arrival` for a sheet on the
 // first screen, which prints from the page's first paint by CSS alone, and
 // `in-view` for one below it, which the page's script prints as it comes
-// into view.
+// into view. A sheet set in a grid's columns, as a Category page's is beside
+// its swing tag, gives its frame's own width as `frameClassName`.
 export function Sheet({
   print,
   className,
+  frameClassName,
   children,
 }: {
   print: 'arrival' | 'in-view';
   className?: string;
+  frameClassName?: string;
   children: ReactNode;
 }) {
   const sheet = cn(
     'scalloped relative overflow-clip bg-card px-sheet-phone py-10 text-card-foreground md:p-sheet',
     className,
   );
-  const frame = 'relative w-full max-w-[40rem]';
+  const frame = cn('relative w-full max-w-[40rem]', frameClassName);
 
   if (print === 'in-view') {
     return (
@@ -124,16 +127,18 @@ export function SheetNote({
 export function SheetGroup({
   heading,
   as: Heading = 'h3',
+  testId,
   children,
 }: {
   heading: ReactNode;
   as?: 'h2' | 'h3';
+  testId?: string;
   children: ReactNode;
 }) {
   return (
-    <section className="mt-group grid gap-4">
+    <section data-testid={testId} className="mt-group grid gap-4">
       <Heading className="type-label text-center">{heading}</Heading>
-      <ul className="grid gap-4">{children}</ul>
+      <ul className="@container grid gap-4">{children}</ul>
     </section>
   );
 }

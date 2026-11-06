@@ -37,7 +37,13 @@ export const aroundIt = ['gpu', 'case', 'psu'] as const satisfies readonly Categ
 
 // A Category page's address, in a language.
 export function categoryAddress(language: Language, category: Category): string {
-  return `/${language}/categories/${namesInTheAddress[category]}`;
+  return `/${language}${categoryPath(category)}`;
+}
+
+// The part of a Category page's address after its language, as a page's
+// preview names it in every language.
+export function categoryPath(category: Category): string {
+  return `/categories/${namesInTheAddress[category]}`;
 }
 
 // The Category a name in the address stands for, or none, for any other

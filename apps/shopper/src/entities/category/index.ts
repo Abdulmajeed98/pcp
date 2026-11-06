@@ -4,5 +4,6 @@ export {
   type Category,
   categoryAddress,
   categoryOfTheAddress,
+  categoryPath,
   theCore,
 } from './model/categories';

@@ -1,4 +1,5 @@
 import {
+  type APIRequestContext,
   type Browser,
   type BrowserContextOptions,
   expect,
@@ -6,7 +7,7 @@ import {
   type Page,
 } from '@playwright/test';
 
-import { shopperUrl } from './platform';
+import { apiUrl, shopperUrl } from './platform';
 
 // The two currencies a Shopper chooses between, by the code the platform
 // knows each by, which is the same in every language. Dinars are the first a
@@ -101,4 +102,19 @@ export async function expectTheChoiceKept(
   } finally {
     await anotherDay.close();
   }
+}
+
+// Sets the Platform Rate through the API as the Admin, as another screen or
+// an earlier run would have: the dinars a dollar is worth, behind every
+// Converted Price from then on.
+export async function setThePlatformRate(
+  request: APIRequestContext,
+  authorization: string,
+  iqdPerUsd: number,
+): Promise<void> {
+  const response = await request.put(`${apiUrl}/v1/platform-rate`, {
+    headers: { Authorization: authorization },
+    data: { iqdPerUsd },
+  });
+  expect(response.status()).toBe(200);
 }
