@@ -184,6 +184,14 @@
   --spacing-tab-phone: 8.125rem;
 }
 
+@theme {
+  /*
+   * A sheet's printer's marks, drawn in the bone the dimmed photograph under
+   * every sheet reads against, in both schemes.
+   */
+  --color-printers-marks: #efe7da;
+}
+
 @theme inline {
   --font-sans:
     'Public Sans Variable', 'Noto Kufi Arabic Variable', ui-sans-serif, system-ui,
@@ -385,6 +393,7 @@
   line-height: 0.8;
   letter-spacing: -0.005em;
   white-space: nowrap;
+  translate: 0 24%;
 
   @media (min-width: 48rem) {
     font-size: 26vw;
@@ -396,10 +405,32 @@
     font-size: 22vw;
     line-height: 1.2;
     letter-spacing: 0;
+    translate: 0 30%;
 
     @media (min-width: 48rem) {
       font-size: 17vw;
     }
+  }
+}
+
+/*
+ * The page's one pair of margins (DESIGN.md's The table): 16 pixels on a
+ * phone and 40 from 64rem, the same at the start and the end, and never
+ * under a phone's notch, which takes the larger of its two sides.
+ */
+@utility page-margins {
+  padding-inline: max(
+    var(--spacing-margin),
+    env(safe-area-inset-left),
+    env(safe-area-inset-right)
+  );
+
+  @media (min-width: 64rem) {
+    padding-inline: max(
+      var(--spacing-margin-desk),
+      env(safe-area-inset-left),
+      env(safe-area-inset-right)
+    );
   }
 }
 
@@ -490,6 +521,21 @@
 }
 
 /*
+ * A tear-off tab's words, read upright along the tab: from its foot to its
+ * top in Latin script, and from its top to its foot in Arabic script, which
+ * is not turned over.
+ */
+@utility reads-along-the-tab {
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+
+  &:lang(ckb),
+  &:lang(ar) {
+    rotate: none;
+  }
+}
+
+/*
  * A dotted leader in Half Ink, from an item's name to its price: it fills
  * the space between them, sits on their baseline, and shrinks to 0.75rem at
  * the least on a phone.
@@ -537,7 +583,9 @@
   @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
     animation: print var(--print) var(--ease-out) both;
 
-    :root[data-returned] & {
+    :root[data-returned] &,
+    &:focus-within,
+    &:has(:target) {
       animation: none;
     }
   }
@@ -626,6 +674,17 @@
     animation-delay: calc(var(--settle-from) + min(var(--i, 0), 9) * var(--settle-apart));
   }
 
+  /* Focus, or a link to an anchor, inside a piece shows it whole at once. */
+  :where(
+      [data-print]:focus-within,
+      [data-print]:has(:target),
+      .print-on-arrival:focus-within,
+      .print-on-arrival:has(:target)
+    )
+    & {
+    animation: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     :where([data-print]) & {
       animation: none;
@@ -635,19 +694,18 @@
 
 /*
  * 3. The stamp lands: from 1.6 times its size and 12 degrees further round, it
- * comes down to its place, 5 degrees back from true, its opacity in 120 ms,
- * once its paper has printed (`--stamp-at`, 900 ms into a sheet's print and
- * 1150 ms into the slip's). It is clipped inside its paper as it lands.
+ * comes down to its place, 5 degrees back from true, in 320 ms, its opacity
+ * in 120 ms, once its paper has printed (`--stamp-at`, 900 ms into a sheet's
+ * print and 1150 ms into the slip's). It is clipped inside its paper as it
+ * lands.
  */
 @keyframes stamp {
   from {
-    opacity: 0;
     rotate: -17deg;
     scale: 1.6;
   }
 
   to {
-    opacity: 1;
     rotate: -5deg;
     scale: 1;
   }
@@ -656,11 +714,34 @@
 @utility stamp-lands {
   rotate: -5deg;
 
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    :where(.print-on-arrival) & {
+      animation:
+        stamp var(--stamp) var(--ease-out) both,
+        stamp-ink var(--stamp-ink) ease both;
+      animation-delay: var(--stamp-at);
+    }
+
+    :root[data-returned] :where(.print-on-arrival) & {
+      animation: none;
+    }
+  }
+
   :where([data-print='printing']) & {
     animation:
       stamp var(--stamp) var(--ease-out) both,
       stamp-ink var(--stamp-ink) ease both;
     animation-delay: var(--stamp-at);
+  }
+
+  :where(
+      [data-print]:focus-within,
+      [data-print]:has(:target),
+      .print-on-arrival:focus-within,
+      .print-on-arrival:has(:target)
+    )
+    & {
+    animation: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -728,7 +809,6 @@
     text-decoration-color var(--hover) ease;
   user-select: none;
   -webkit-user-select: none;
-  -webkit-touch-callout: none;
 
   &:active {
     scale: 0.97;
@@ -739,6 +819,15 @@
       scale: none;
     }
   }
+}
+
+/*
+ * A button or a chip shows no long-press menu on a phone, so that a resting
+ * thumb does not open one. A link keeps the phone's own menu, so that a
+ * Shopper can copy where it leads.
+ */
+@utility no-callout {
+  -webkit-touch-callout: none;
 }
 
 /* 9. A link's underline under the pointer, over 150 ms on `ease`. */

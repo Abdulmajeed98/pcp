@@ -22,6 +22,7 @@ import {
   expectADifferentTextInEachLanguage,
   expectNoSidewaysScroll,
   expectPageIn,
+  expectTheSameInEveryLanguage,
   type Language,
   languages,
   languageSwitch,
@@ -46,7 +47,6 @@ import {
   theRemovalDialog,
 } from './offers';
 import { dashboardUrl, keycloakUrl } from './platform';
-import { expectTheSameInEveryLanguage } from './sample';
 import {
   aMadeUpMobileNumber,
   aMadeUpVendorThatHasLoggedIn,

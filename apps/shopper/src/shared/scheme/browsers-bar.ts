@@ -9,6 +9,17 @@ export interface BarColours {
   dark: string;
 }
 
+// The two colours a page's top can be, in each scheme, as DESIGN.md's tokens
+// name them and `@pcp/ui/themes/shopper.css` sets them: Sheet Paper under the
+// stub, and the Back Cover's colour on the home page, whose first screen is a
+// dim photograph. The browser's bar is drawn outside the page's stylesheet,
+// so they are written here as colours, and a change to either token changes
+// them too.
+export const barColours = {
+  sheetPaper: { light: '#f4f3f0', dark: '#261d17' },
+  backCover: { light: '#2a1d17', dark: '#0c0806' },
+} as const satisfies Record<string, BarColours>;
+
 // When each of a page's two colours applies: the light one in the light
 // scheme and the dark one in the dark, each by the device's setting while
 // the device's scheme is chosen, and the chosen one alone otherwise. The

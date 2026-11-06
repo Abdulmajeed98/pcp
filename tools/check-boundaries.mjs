@@ -438,7 +438,7 @@ const casesInTheRoutingFolder = [
   inTheShopperApp.refused(
     'a route file that reaches past the index file of a page',
     `${route}/reaches-into-a-page`,
-    '@/_pages/placeholder/ui/placeholder-page',
+    '@/_pages/home/ui/home-page',
     noPastAnIndex,
   ),
   inTheShopperApp.refused(
@@ -450,19 +450,19 @@ const casesInTheRoutingFolder = [
   inTheShopperApp.refused(
     'a route file that reaches a layer by a relative path',
     `${route}/climbs-into-a-layer`,
-    '../../src/_pages/placeholder',
+    '../../src/_pages/home',
     routesUseTheAlias,
   ),
   inTheShopperApp.refused(
     'a route file that reaches a layer by a relative path that starts with ./',
     `${route}/climbs-into-a-layer-the-long-way`,
-    './../../src/_pages/placeholder',
+    './../../src/_pages/home',
     shortestFormOnly,
   ),
   inTheShopperApp.allowed(
     'a route file that imports a page through its index file',
     `${route}/imports-a-page`,
-    '@/_pages/placeholder',
+    '@/_pages/home',
   ),
   inTheShopperApp.allowed(
     'a route file that imports the App layer through its index file',
@@ -484,7 +484,7 @@ const casesInTheProxyFile = [
   inTheShopperApp.refused(
     'the proxy file importing a page',
     'proxy.imports-a-page',
-    '@/_pages/placeholder',
+    '@/_pages/home',
     proxyTakesOnlyTheLanguages,
   ),
   inTheShopperApp.refused(
@@ -515,7 +515,7 @@ const casesInTheProxyFile = [
   inTheShopperApp.refused(
     'a Shared file named like the proxy file that imports a page',
     'src/shared/boundary-proof/proxy.imports-a-page',
-    '@/_pages/placeholder',
+    '@/_pages/home',
     noLayerAbove,
   ),
 ];
@@ -576,7 +576,7 @@ const casesInTheUnitTests = [
   inTheShopperApp.refused(
     'a unit test that reaches past the index file of a page',
     `${unitTest}/reaches-into-a-page`,
-    '@/_pages/placeholder/ui/placeholder-page',
+    '@/_pages/home/ui/home-page',
     noPastAnIndex,
   ),
   inTheShopperApp.refused(
@@ -599,7 +599,7 @@ const casesInTheUnitTests = [
   inTheShopperApp.allowed(
     'a unit test that imports a page through its index file',
     `${unitTest}/imports-a-page`,
-    '@/_pages/placeholder',
+    '@/_pages/home',
   ),
   inTheShopperApp.allowed(
     'a relative import between two files of the unit tests',

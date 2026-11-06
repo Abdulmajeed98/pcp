@@ -1,12 +1,14 @@
 import { expect, test } from '@playwright/test';
 
-import { expectAccessible } from './accessibility';
 import {
   choose,
+  currencies,
   expectChosen,
   expectPricesShownIn,
   expectTheChoiceKept,
 } from './currencies';
+import { authorizationOfTheDevelopmentAdmin } from './development-logins';
+import { aPartWithPricesInBothCurrencies } from './home-page';
 import { addressIn, expectPageIn, languages, linkTo } from './languages';
 import { shopperUrl } from './platform';
 
@@ -26,7 +28,19 @@ const withAQuery = `${firstPage}?search=ryzen&page=2`;
 const withAPriceRange = `${firstPage}?lowest=150000&search=ryzen&highest=900000`;
 const withThePriceRangeDropped = `${firstPage}?search=ryzen`;
 
-test('a fresh browser shows the switch with dinars chosen, and the placeholder says prices are in dinars', async ({
+// The home page shows a price in each currency, whatever earlier runs left
+// in the development database: the first CPU's Lowest Price among them.
+test.beforeAll(async ({ browser }) => {
+  const context = await browser.newContext();
+  try {
+    const authorization = await authorizationOfTheDevelopmentAdmin(await context.newPage());
+    await aPartWithPricesInBothCurrencies(context.request, authorization);
+  } finally {
+    await context.close();
+  }
+});
+
+test('a fresh browser shows the switch with dinars chosen, and every price on the home page in dinars', async ({
   page,
 }) => {
   expect(await page.context().cookies(shopperUrl)).toEqual([]);
@@ -37,7 +51,7 @@ test('a fresh browser shows the switch with dinars chosen, and the placeholder s
   await expectPricesShownIn(page, 'IQD');
 });
 
-test('choosing dollars returns to the same page with dollars chosen, and the placeholder says dollars; choosing dinars switches back', async ({
+test('choosing dollars returns to the same page with dollars chosen and every price in dollars; choosing dinars switches back', async ({
   page,
 }) => {
   await page.goto(firstPage);
@@ -49,6 +63,27 @@ test('choosing dollars returns to the same page with dollars chosen, and the pla
   await choose(page, 'IQD');
   await expectChosen(page, 'IQD');
   await expectPricesShownIn(page, 'IQD');
+});
+
+// Where a price leads a page, the same choice stands above it as the plate's
+// tabs (DESIGN.md's The currency switch): a choice there is the frame's too.
+test("the plate's tabs are the same choice: choosing dollars there returns to the home page with dollars chosen in the frame's switch and on the tabs", async ({
+  page,
+}) => {
+  await page.goto(firstPage);
+  const tabs = page.getByTestId('plate-tabs');
+  await expect(tabs.getByRole('button')).toHaveCount(currencies.length);
+  await expect(tabs.locator('button[value="IQD"]')).toHaveAttribute('aria-current', 'true');
+
+  const asked = page.waitForRequest(
+    (request) => request.isNavigationRequest() && request.method() === 'POST',
+  );
+  await tabs.locator('button[value="USD"]').click();
+  await asked;
+  await expect(tabs.locator('button[value="USD"]')).toHaveAttribute('aria-current', 'true');
+  expect(page.url()).toBe(firstPage);
+  await expectChosen(page, 'USD');
+  await expectPricesShownIn(page, 'USD');
 });
 
 test('choosing a currency returns to the same page with the same query', async ({
@@ -102,7 +137,7 @@ test.describe('after choosing dollars', () => {
 
     await choose(page, 'IQD');
     await expectChosen(page, 'IQD');
-    await expect(page.getByTestId('frame').getByRole('heading')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
   test('the browser holds the choice for about a year, and not only for the session', async ({
@@ -204,13 +239,4 @@ test('the switch never sends anyone to another site', async ({ request }) => {
       `${page} returns to a page in English`,
     ).toBe(true);
   }
-});
-
-test('the placeholder page with the switch on it meets WCAG 2.2 level AA', async ({
-  page,
-}) => {
-  await page.goto(firstPage);
-  await expectChosen(page, 'IQD');
-
-  await expectAccessible(page);
 });

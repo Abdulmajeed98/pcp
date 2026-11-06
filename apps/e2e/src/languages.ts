@@ -493,6 +493,16 @@ export function expectADifferentTextInEachLanguage(texts: Map<Language, string>)
   );
 }
 
+// The same thing, read in each of the three languages, is the same in all
+// three: a Part's name, a price or a count, which are not translations.
+export function expectTheSameInEveryLanguage(read: Map<Language, unknown>): void {
+  const [inKurdish, inArabic, inEnglish] = languages.map((language) => read.get(language));
+
+  expect(inKurdish).toBeDefined();
+  expect(inArabic).toEqual(inKurdish);
+  expect(inEnglish).toEqual(inKurdish);
+}
+
 // A link in a page: the whole address it leads to, and the text a reader
 // sees in it.
 interface Link {

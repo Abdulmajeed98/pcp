@@ -1,33 +1,94 @@
 {
-  "App": {
-    "title": "Shopper app"
+  "Site": {
+    "name": "PC Parts and Prices"
   },
   "Frame": {
     "languageSwitch": "Language",
-    "currencySwitch": "Currency",
+    "currencySwitch": "Prices in",
     "currencies": {
       "IQD": "Dinars",
       "USD": "Dollars"
-    }
-  },
-  "PlaceholderPage": {
-    "notice": "Shopper app placeholder. Libraries: <english>{libraries}</english>.",
-    "apiStartedAt": "The API started at <time>{startedAt}</time>.",
-    "apiUnreachable": "The API cannot be reached.",
-    "pricesShownIn": {
-      "IQD": "Prices are shown in dinars.",
-      "USD": "Prices are shown in dollars."
     },
-    "sample": "A sample of each kind of text follows. Every value in it is made up.",
-    "partsFound": "{count, plural, one {{countText} Part found} other {{countText} Parts found}}",
-    "readsAt": "It reads at up to <english>{speed}</english>.",
-    "partLength": "The <english>{part}</english> is <english>{length}</english> long."
+    "schemeSwitch": "Colours",
+    "schemes": {
+      "light": "Light",
+      "dark": "Dark",
+      "device": "Device"
+    },
+    "schemeTurn": "Colours: {now}. Choose {next}"
   },
-  "NotFoundPage": {
-    "title": "Page not found",
-    "description": "This address matches no page."
+  "BackCover": {
+    "invitation": "Find your Part",
+    "chooseACategory": "Choose a Category",
+    "someCategories": "Some of the Categories",
+    "photographs": "Photographs on this page",
+    "photograph": "<source><english>{title}</english></source> by <english>{author}</english>, <licenceLink><english>{licence}</english></licenceLink>{changed, select, dimmed {, dimmed} cropped {, cropped} other {}}"
   },
   "Footer": {
     "credit": "Contains information from <openDbLink><english>{openDb}</english></openDbLink> which is made available under the <licenceLink><english>{licence}</english></licenceLink>."
+  },
+  "HomePage": {
+    "titleWords": {
+      "parts": "Parts",
+      "prices": "Prices",
+      "vendors": "Vendors"
+    },
+    "eightCategories": "Eight Categories",
+    "vendorsAndOffers": "{vendors, plural, one {{vendorsText} Vendor} other {{vendorsText} Vendors}}, {offers, plural, one {{offersText} Offer} other {{offersText} Offers}}",
+    "confirmedWithin": "{days, plural, one {Confirmed within a day} other {Confirmed within {daysText} days}}",
+    "lede": "Every Vendor's price for the Part you need, lowest first, each with the day it was last confirmed.",
+    "roomCaption": "A motherboard under red light",
+    "chooseACategory": "Choose a Category",
+    "categories": {
+      "note": "Every Part, priced by the Vendors who have it",
+      "theCore": "The core",
+      "aroundIt": "Around it",
+      "parts": "{count, plural, one {{countText} Part} other {{countText} Parts}}",
+      "lowestPrice": "Lowest Price",
+      "outOfStockEverywhere": "Out of stock at every Vendor",
+      "close": "{days, plural, one {Each price confirmed by its Vendor within the last day} other {Each price confirmed by its Vendor within the last {daysText} days}}",
+      "tabs": "Take a Category"
+    },
+    "plate": {
+      "title": "{count, plural, one {One Part, {countText} Vendor} other {One Part, {countText} Vendors}}",
+      "seeItsOffers": "{count, plural, one {See its Offer} other {See its {countText} Offers}}"
+    },
+    "facts": {
+      "heading": "Nobody buys a better place",
+      "note": "Listing is free, and every list is ordered by price, with the Offers in stock first. The platform takes no orders and no payment: you call the Vendor, message it on WhatsApp, or walk to its door.",
+      "vendors": "{count, plural, one {Vendor} other {Vendors}}",
+      "offers": "{count, plural, one {Offer, in stock or not} other {Offers, in stock or not}}",
+      "rate": "to the dollar, behind every ≈",
+      "days": "{days, plural, one {{daysText} day} other {{daysText} days}}",
+      "daysLine": "before an unconfirmed Offer is hidden",
+      "photoCaption": "A PC's expansion slots and their connectors"
+    }
+  },
+  "PriceSlip": {
+    "lowestPrice": "Lowest Price",
+    "highestInStock": "Highest in stock",
+    "vendors": "Vendors",
+    "inStock": "In stock",
+    "converted": "Converted ≈",
+    "rate": "Rate",
+    "outOfStockEverywhere": "Out of stock at every Vendor",
+    "confirmed": "{days, plural, =0 {Confirmed today} one {Confirmed {daysText} day ago} other {Confirmed {daysText} days ago}}",
+    "stamp": "Lowest Price"
+  },
+  "NotFoundPage": {
+    "title": "Page not found",
+    "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped.",
+    "chooseACategory": "Choose a Category"
+  },
+  "Preview": {
+    "titleOfAPage": "{page} · {site}",
+    "home": {
+      "title": "PC Parts and Prices",
+      "description": "Compare every Vendor's price for the PC Parts you need: lowest first, each with the day it was last confirmed, in dinars or dollars."
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped."
+    }
   }
 }

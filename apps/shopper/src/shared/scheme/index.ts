@@ -1,5 +1,10 @@
 export { addressAfterChoosingScheme } from './address-after-choosing-scheme';
-export { type BarColours, browsersBar, mediaOfTheBrowsersBar } from './browsers-bar';
+export {
+  type BarColours,
+  barColours,
+  browsersBar,
+  mediaOfTheBrowsersBar,
+} from './browsers-bar';
 export {
   isScheme,
   type RequestCookies,
