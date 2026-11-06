@@ -72,12 +72,15 @@
     "converted": "گۆڕدراو ≈",
     "rate": "نرخی دۆلار",
     "outOfStockEverywhere": "لای هەموو فرۆشیارێک لە کۆگادا نییە",
-    "confirmed": "{days, plural, =0 {ئەمڕۆ پشتڕاستکرایەوە} one {{daysText} ڕۆژ لەمەوبەر پشتڕاستکرایەوە} other {{daysText} ڕۆژ لەمەوبەر پشتڕاستکرایەوە}}",
     "stamp": "کەمترین نرخ"
   },
   "Part": {
     "outOfStock": "لە کۆگادا نییە",
     "vendors": "{count, plural, one {{countText} فرۆشیار} other {{countText} فرۆشیار}}"
+  },
+  "Offer": {
+    "confirmed": "{days, plural, =0 {ئەمڕۆ پشتڕاستکرایەوە} one {{daysText} ڕۆژ لەمەوبەر پشتڕاستکرایەوە} other {{daysText} ڕۆژ لەمەوبەر پشتڕاستکرایەوە}}",
+    "warranty": "{months, plural, one {گەرەنتیی {monthsText} مانگ} other {گەرەنتیی {monthsText} مانگ}}"
   },
   "SearchParts": {
     "title": "گەڕان",

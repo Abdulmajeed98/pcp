@@ -72,12 +72,15 @@
     "converted": "محوَّل ≈",
     "rate": "سعر الصرف",
     "outOfStockEverywhere": "غير متوفرة لدى أي بائع",
-    "confirmed": "{days, plural, =0 {أُكِّد اليوم} zero {أُكِّد اليوم} one {أُكِّد قبل يوم} two {أُكِّد قبل يومين} few {أُكِّد قبل {daysText} أيام} many {أُكِّد قبل {daysText} يومًا} other {أُكِّد قبل {daysText} يوم}}",
     "stamp": "أدنى سعر"
   },
   "Part": {
     "outOfStock": "غير متوفرة",
     "vendors": "{count, plural, zero {لا باعة} one {بائع واحد} two {بائعان} few {{countText} باعة} many {{countText} بائعًا} other {{countText} بائع}}"
+  },
+  "Offer": {
+    "confirmed": "{days, plural, =0 {أُكِّد اليوم} zero {أُكِّد اليوم} one {أُكِّد قبل يوم} two {أُكِّد قبل يومين} few {أُكِّد قبل {daysText} أيام} many {أُكِّد قبل {daysText} يومًا} other {أُكِّد قبل {daysText} يوم}}",
+    "warranty": "{months, plural, zero {ضمان {monthsText} شهر} one {ضمان شهر} two {ضمان شهرين} few {ضمان {monthsText} أشهر} many {ضمان {monthsText} شهرًا} other {ضمان {monthsText} شهر}}"
   },
   "SearchParts": {
     "title": "بحث",

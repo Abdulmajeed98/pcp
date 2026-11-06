@@ -2,10 +2,11 @@ import type { VisibleOfferResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { cn } from 'cn';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
 import { currencyMarks } from '@/shared/currency';
+import { confirmationIn } from '@/shared/offer-words';
 import { ShownPrice } from '@/shared/price';
 import { PrintInView, Stamp } from '@/shared/ui';
 
@@ -38,7 +39,8 @@ export async function PriceSlip({
   iqdPerUsd: number | null | undefined;
   onThePlate?: boolean;
 }) {
-  const [t, site] = await Promise.all([
+  const [language, t, site] = await Promise.all([
+    getLocale(),
     getTranslations('PriceSlip'),
     getTranslations('Site'),
   ]);
@@ -97,11 +99,8 @@ export async function PriceSlip({
             data-testid="slip-foot"
             className="pt-3.5 text-center text-sm text-muted-foreground"
           >
-            {t('confirmed', {
-              days: slip.lowest.daysSinceConfirmation,
-              daysText: formatNumber(slip.lowest.daysSinceConfirmation),
-            })}{' '}
-            · <AsWritten>{slip.lowest.vendor.name}</AsWritten>
+            {confirmationIn(language, slip.lowest.daysSinceConfirmation)} ·{' '}
+            <AsWritten>{slip.lowest.vendor.name}</AsWritten>
           </p>
         )}
       </div>
