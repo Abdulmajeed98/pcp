@@ -16,6 +16,14 @@ export default defineConfig({
     // tests' folder too.
     tsconfigPaths: true,
   },
+  // A segment's index file can name a component beside its functions, as the
+  // Shown Price's does, so a test that imports a function through it loads
+  // the component's file too. tsconfig.json leaves JSX for Next to turn into
+  // JavaScript, which Vite cannot read, so Vite turns it with React's own
+  // runtime here. No test draws a component.
+  oxc: {
+    jsx: { runtime: 'automatic' },
+  },
   test: {
     include: ['test/**/*.spec.ts'],
     // The tests call plain functions, which need no browser.
