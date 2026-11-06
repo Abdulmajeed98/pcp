@@ -11,6 +11,7 @@ import {
   ChoicesOn,
   type CategoryQuery,
   categoryPageAddress,
+  nothingOn,
 } from '@/features/search-parts';
 import {
   buttonVariants,
@@ -145,11 +146,7 @@ export async function CategorySheet({
         </Action>
       )}
       {state.kind === 'no-match' && (
-        <Action
-          kind="primary"
-          address={addressAt({ search: '', page: 1 })}
-          testId="clear-all"
-        >
+        <Action kind="primary" address={addressAt(nothingOn)} testId="clear-all">
           {searchWords('clearAll')}
         </Action>
       )}

@@ -4,7 +4,11 @@ import Link from 'next/link';
 
 import type { Category } from '@/entities/category';
 
-import { type CategoryQuery, categoryPageAddress } from '../model/category-query';
+import {
+  type CategoryQuery,
+  categoryPageAddress,
+  nothingOn,
+} from '../model/category-query';
 
 // The choices that are on, and clearing them (DESIGN.md's The choices that
 // are on): at the head of a Category's sheet, under its note, once a choice
@@ -30,7 +34,7 @@ export async function ChoicesOn({
 }) {
   if (query.search === '') return null;
   const [language, t] = await Promise.all([getLocale(), getTranslations('SearchParts')]);
-  const nothingOn = categoryPageAddress(language, category, { search: '', page: 1 });
+  const toNothingOn = categoryPageAddress(language, category, nothingOn);
 
   return (
     <nav
@@ -39,7 +43,7 @@ export async function ChoicesOn({
       className="mt-4.5 flex flex-wrap items-center justify-center gap-1.5"
     >
       <Link
-        href={nothingOn}
+        href={toNothingOn}
         prefetch={false}
         data-testid="choice-on"
         aria-label={t('removeTheSearch', { search: query.search })}
@@ -52,7 +56,7 @@ export async function ChoicesOn({
       </Link>
       {withClearAll && (
         <Link
-          href={nothingOn}
+          href={toNothingOn}
           prefetch={false}
           data-testid="clear-all"
           className="hover-underline inline-flex min-h-control items-center px-2"
