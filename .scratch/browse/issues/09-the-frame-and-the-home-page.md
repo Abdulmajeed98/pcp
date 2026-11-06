@@ -12,7 +12,7 @@ Every page gains a title and a description in its language, with the tags that l
 
 **Blocked by:** 05, 08, 15 (for the home page's figures only: the frame can be built before 15 lands)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The frame** is built to DESIGN.md, from the components it names, with logical classes only. The language switch, the currency switch, the not-found page and the footer's credit (CAT-9) behave as `languages` and `pricing` left them. Its name slot is a way home. A third switch, for the scheme (light, dark or device), works without script as the other two do. The not-found page lists the eight Categories, as DESIGN.md draws it.
 - [x] **The home page** at `/{language}` lists the eight Categories with `CategoryIcon` and their names from `i18n`'s Shopper set. Each leads to `/{language}/categories/{category}`. The Category's name in the address is lower case with hyphens (`cpu`, `cpu-cooler`, `motherboard`, `ram`, `storage`, `gpu`, `case`, `psu`), mapped once, in the Shopper app, to the API's key. The Category pages themselves are ticket 10's. The home page is built to DESIGN.md's home page:
@@ -40,7 +40,7 @@ Every page gains a title and a description in its language, with the tags that l
   - The home page's HTML holds its title, its description, its canonical address, the other two languages' addresses and Open Graph's tags. It is read with no cookie, as a crawler would.
   - `expectAccessible` passes on the home page and the not-found page in the light and the dark scheme.
   - Any motion DESIGN.md gives the frame is filmed with `film` and judged by `snapsOf`, with reduced motion as well as without.
-- [ ] **Taste's inspector.** `pnpm shopper:inspect` runs on the home page and the not-found page, in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
+- [x] **Taste's inspector.** `pnpm shopper:inspect` runs on the home page and the not-found page, in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
 - [x] `break-ui` and `mobile-native` run on the frame and the home page, and what they found is fixed or recorded under Comments.
 - [x] `pnpm check`'s language check is seen to fail once, with the Arabic of the home page's description removed, and then reverted. A preview's canonical address pointing at another language is shown once failing its unit test, and then reverted.
 - [x] `pnpm check` passes with Docker stopped.
@@ -110,3 +110,15 @@ Three questions, each shown with its pictures on a page in the session's scratch
 1. **The "≈".** None of the three faces draws it, so the device's own sans does. **A (recommended):** keep the device's "≈", which every phone draws, and stop fetching Noto Kufi Arabic's mathematical file (22 KB) by declaring its Arabic file ourselves in place of importing the whole package: no new library. **B:** add a face that draws "≈" the same everywhere, such as Noto Sans Math from Fontsource: a library, the owner's to choose. **C:** leave it as built.
 2. **Taste's `still-page` on the not-found page,** a FAIL: one sheet prints there, and nothing else moves, as DESIGN.md's Motion keeps the paper still. **A (recommended):** let the Shopper's sheet allow `still-page`, as it allows four rules already, for the reason the Motion gives. **B:** give the page more movement, such as its eight Categories settling in, which DESIGN.md keeps for prices and counts alone.
 3. **The facts row's photograph.** The renderings' copper heat sink is CC BY-SA. **A (recommended, as built):** a PC's expansion slots and their connectors, Shixart1985, CC BY 2.0, cut to 4:3: no maker's name, and its blue and orange sit with the bone and chocolate. **B:** "RGB computer cooling system with LED lighting", SankalpSasnur, CC0, nearer a heat sink but the loudest colour on the page.
+
+### 6 November 2026: the owner's answers
+
+The owner answered in chat, through the coordinator: "Keep all three", so A for each.
+
+1. **The "≈"** is drawn in the device's own sans, and Noto Kufi Arabic's mathematical file is no longer fetched: the Shopper's theme declares the package's Arabic face itself, as the package declares it, in place of importing all five of its faces (`a10200c`). Measured again in Chrome on the home page in each language and on the not-found page in English and Kurdish, at 1440 and 390 pixels: three files, 187,044 bytes, on every page, the "≈" in San Francisco, and an Arabic letter in Noto Kufi Arabic, from the same file as before. DESIGN.md says the device's face draws the "≈", and ADR-0013 records the answer as an amendment.
+2. **Taste's `still-page`** is the sheet's fifth allowance, for the reason the Motion gives: the paper holds still once printed. It is in `direction.json`'s `allow`, which the inspector reads, in `sheet.md` as `draw.mjs` prints it, in `held-rules.md` with its reason, in `docs/agents/design-skills.md`, in ADR-0013's amendment and under DESIGN.md's The Paper Holds Still Rule.
+3. **The facts row's photograph** stays as built: a PC's expansion slots and their connectors, Shixart1985, CC BY 2.0, cut to 4:3, credited in the back cover.
+
+**Taste's inspector, run again** with the sheet's five allowances. All eight runs, at 1440, 1280, 1024, 768 and 390 pixels on `/` and `/no-such-page`, in Kurdish and in English, in both schemes (folders `.taste-skill/b09k-*`): 0 FAIL. The WARNs left are those defended above: on the home page `dashed` and `no-footage`, `grey-body` in light and `size-count` in Kurdish; on the not-found page `first-action` and `no-footage`, and `blank-gap` at 768 in Kurdish.
+
+**Checks.** `a10200c` was gated on `pnpm check --skip-nx-cache` with `DOCKER_HOST` pointed at a socket that does not exist and an empty `PLAYWRIGHT_BROWSERS_PATH`, and this record the same way. `pnpm platform:check` passes on `a10200c`, 316 tests in 11.9 minutes, under the lock, as the font change reaches every page. `browse/integration` is still at `d969e37`, merged in `3d82863`.

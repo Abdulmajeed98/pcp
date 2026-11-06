@@ -14,7 +14,7 @@
     "direction": "page-is-the-object"
   },
   "imagery": "no-product-photo",
-  "allow": ["few-pictures", "eyebrow", "off-centre", "palette-cream"],
+  "allow": ["few-pictures", "eyebrow", "off-centre", "palette-cream", "still-page"],
   "direction": {
     "id": "page-is-the-object",
     "name": "The page is the object",

@@ -30,8 +30,9 @@ The renderings in browse ticket 07 added seven tweaks and seven motions to the s
 
 - Taste's `inspect.mjs` reads a sheet from `.taste-skill/direction.json` in the folder it runs from, or else from the folder above its `--out`; the first it finds wins. To inspect Shopper pages with this sheet, copy it there at the repository root before `pnpm shopper:inspect` (`mkdir -p .taste-skill && cp apps/shopper/design/taste/direction.json .taste-skill/`), the dashboard's sheet going back there before the dashboard is inspected; or, with no sheet at the root, pass an `--out` folder inside `apps/shopper/design/taste/` and keep its pictures out of every commit. The dashboard's sheet left at the root would inspect a Shopper page as a working screen.
 - Its 360-pixel window is only 225 pixels tall, so phones are inspected at 390 and the 360-pixel rule (no page scrolling sideways) is measured by the end-to-end tests (`docs/agents/design-skills.md`).
-- Every Shopper page is inspected with Taste's rules for public pages, not `--app` (the owner's answer, browse ticket 07). The sheet allows four of them, each for a reason the direction gives:
+- Every Shopper page is inspected with Taste's rules for public pages, not `--app` (the owner's answer, browse ticket 07). The sheet allows five of them, each for a reason the direction gives:
   - `few-pictures`: a Category, Part or Vendor page is a printed list with one to three pictures; the home page carries four.
   - `eyebrow`: the frame's switches sit above the card's title, as a printed card's header line.
   - `off-centre`: the printed sheets sit off the middle on purpose, as sheets laid on a table.
   - `palette-cream`: the dark scheme's ink is the palette's own bone (`#efe7da`) on chocolate, kept by the owner; its contrast passes AA.
+  - `still-page`: the paper holds still once printed. A page's pieces print once as they arrive, and nothing on the paper moves for show (DESIGN.md's The Paper Holds Still Rule), so a page with one sheet, as the not-found page is, moves fewer than the eight things the inspector asks for. The owner gave it on 6 November 2026, in browse ticket 09.
