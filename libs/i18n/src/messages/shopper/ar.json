@@ -186,6 +186,9 @@
     },
     "part": {
       "description": "{part}، {category, select, cpu {معالج} cpuCooler {مبرّد معالج} motherboard {لوحة أم} ram {ذاكرة عشوائية} storage {وحدة تخزين} gpu {بطاقة رسومات} case {صندوق حاسوب} psu {مزوّد طاقة} other {قطعة}} من {manufacturer}. {count, plural, zero {لا يعرضها أي بائع} one {يعرضها بائع واحد} two {يعرضها بائعان} few {يعرضها {countText} باعة} many {يعرضها {countText} بائعًا} other {يعرضها {countText} بائع}}، وكل سعر أكّده بائعه."
+    },
+    "vendor": {
+      "description": "{vendor}، بائع في {city}. كيف تتصل به أو تراسله أو تجده، وكل قطع الحاسوب التي يعرضها الآن."
     }
   }
 }
