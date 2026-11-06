@@ -8,9 +8,9 @@ The page can be searched by name, manufacturer and part number, and is paged. Th
 
 **Blocked by:** 02, 09
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] **The page** at `/{language}/categories/{category}`, built to DESIGN.md. It is rendered on the server for each request, with the language from the address and the chosen currency from its cookie. It asks `GET v1/visible-parts` through `api-client`, at `API_URL`, with no cache. An unknown Category answers the not-found page with a 404 status, in the page's language.
+- [x] **The page** at `/{language}/categories/{category}`, built to DESIGN.md. It is rendered on the server for each request, with the language from the address and the chosen currency from its cookie. It asks `GET v1/visible-parts` through `api-client`, at `API_URL`, with no cache. An unknown Category answers the not-found page with a 404 status, in the page's language.
 - [x] **The query.** `search` and `page` are read from the address, and anything else is ignored. A page number that is not a whole number reads as the first. Reading and writing a Category page's query are plain functions, tested at the Shopper's unit seam, Arabic-Indic digits among them.
 - [x] **The Shown Price** is one component. It draws the amount in Western digits with the chosen currency's mark, as `languages` and `pricing` set them out, and "≈" before it when the price is converted. It is tested at the unit seam in each language and currency, with and without "≈". No Shopper code converts or rounds a price.
 - [x] **A Part on the list** shows:
@@ -37,8 +37,8 @@ The page can be searched by name, manufacturer and part number, and is paged. Th
   - An unknown Category answers the not-found page with a 404.
   - `expectAccessible` passes in the light and the dark scheme.
   - Any motion DESIGN.md gives the page is filmed with `film` and judged by `snapsOf`, with reduced motion as well as without.
-- [ ] **Taste's inspector.** `pnpm shopper:inspect` runs on a Category page, and on one with a search that finds nothing, in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
-- [ ] `break-ui` runs with the made-up shop's worst cases: the longest name, a Category with one Part and one with 400. `mobile-native` runs too. What they found is fixed or recorded under Comments.
+- [x] **Taste's inspector.** `pnpm shopper:inspect` runs on a Category page, and on one with a search that finds nothing, in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
+- [x] `break-ui` runs with the made-up shop's worst cases: the longest name, a Category with one Part and one with 400. `mobile-native` runs too. What they found is fixed or recorded under Comments.
 - [x] Shown once and then reverted, each failing its own test: a converted price drawn without "≈"; the search kept in the address but not sent to the API.
 - [x] `pnpm check` passes with Docker stopped.
 - [x] The results of the fault checks are recorded under Comments.
@@ -118,3 +118,15 @@ Three questions, each shown with its pictures on a page in the session's scratch
 1. **Each Category's drawing.** DESIGN.md drew a CPU package on a Category's sheet; the renderings drew the CPU page alone, and their build gave the case a fan, the motherboard a board's loose traces and the PSU a bundle of cables. **A (recommended, as built):** each Category drawn as what it is, in the heat sink's outline language: the renderings' CPU package, heat sink, memory stick, M.2 drive and graphics card, and, drawn new, a motherboard from above, a tower case from its front and a power supply from its fan; ticket 12's box label takes the same eight. **B:** the renderings' fan, traces and cables for those three.
 2. **A long name on a phone.** Beside its price, at 360 pixels, a name has a column of about ten letters: the 210-character name took 696 pixels, the 276-character one 1,116 in Kurdish, and "Performance" broke in two. **A (recommended, as built):** a name past 24 characters on a phone, and past 80 at every width, takes its whole line, its leader and price on the line under it, as a printed menu sets a long dish: 304 and 444 pixels, no word broken. **B:** every name beside its price, as DESIGN.md's words alone give it.
 3. **Two of Taste's warnings, left to ticket 11.** `first-action` at 768 and 390 pixels, the list's first screen holding the search field and no button, as DESIGN.md has it below 64rem until the filters' fold brings Show Parts; and `name-only-title` on the English page of a search that found nothing, "No CPU matches your search." being five words, where DESIGN.md's "and filters" makes seven. **A (recommended, as built):** keep both as DESIGN.md has them, and ticket 11 ends them. **B:** Show Parts under the field on a phone now, and a longer English sentence.
+
+### 6 November 2026: the owner's answers
+
+The owner answered in chat, through the coordinator: "Keep all three", so A for each, as built.
+
+1. **Each Category's drawing** stays as built: eight drawings, each Category drawn as what it is, the motherboard, the case and the PSU drawn new, as DESIGN.md's Printed drawings say; ticket 12's box label takes the same eight.
+2. **A long name on a phone** takes its whole line past 24 characters, and at every width past 80, its leader and price on the line under it, as DESIGN.md's Long Name Rule says.
+3. **The two WARNs** are left to ticket 11: `first-action` at 768 and 390 pixels, which the filters' fold ends by bringing Show Parts to a phone's first screen, and `name-only-title` on the English page of a search that found nothing, which DESIGN.md's "and filters" ends once there are filters to name.
+
+The three boxes that waited on the answers are ticked, and the ticket is resolved. DESIGN.md's head says the owner kept the three answers. No code changed, so `pnpm platform:check` on `5386a00` stands: 334 tests in 13.2 minutes.
+
+**Checks.** This record was gated on `pnpm check --skip-nx-cache` with `DOCKER_HOST` pointed at a socket that does not exist and an empty `PLAYWRIGHT_BROWSERS_PATH`, every `*.tsbuildinfo` of the checkout deleted first. `browse/integration` is still at `04ae39f`, this branch's base.
