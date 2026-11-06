@@ -31,7 +31,7 @@ spacing:
   control: "44px"
 ---
 
-<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any component existed. Each app's components are recorded in its own DESIGN.md: the dashboard's from 16 October 2026, and the Shopper app's footer the same day. -->
+<!-- Written with ticket 10 of the catalog module, on 15 October 2026, before any component existed. Each app's components are recorded in its own DESIGN.md: the dashboard's from 16 October 2026, and the Shopper app's from 6 November 2026, when browse ticket 08 wrote its new look. -->
 
 # Design System: the platform's shared foundations
 
@@ -39,7 +39,7 @@ spacing:
 
 **Creative North Star: "Two looks, one floor"**
 
-The platform has two looks, each in its own app's folder: [Fit Diagram](apps/shopper/DESIGN.md) for the Shopper app, and [Framed sheet](apps/dashboard/DESIGN.md) for the dashboard, which holds the Admin console and the Vendor portal (ADR-0007, ADR-0011). This file is the floor under both. Everything here comes from the accessibility standard, WCAG 2.2 level AA, from the three languages, and from the phones the platform is read on, not from either look. A page is built to its own app's DESIGN.md and to this one, and where the two seem to disagree, this one holds.
+The platform has two looks, each in its own app's folder: [the printed price list](apps/shopper/DESIGN.md), Taste's The page is the object, for the Shopper app, and [Framed sheet](apps/dashboard/DESIGN.md) for the dashboard, which holds the Admin console and the Vendor portal (ADR-0007, ADR-0011, ADR-0013). This file is the floor under both. Everything here comes from the accessibility standard, WCAG 2.2 level AA, from the three languages, and from the phones the platform is read on, not from either look. A page is built to its own app's DESIGN.md and to this one, and where the two seem to disagree, this one holds.
 
 The research behind every rule is in [docs/research/design-system.md](docs/research/design-system.md).
 
