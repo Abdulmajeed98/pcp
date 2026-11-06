@@ -8,10 +8,10 @@ The filters are in the address, like the search, and work before any script has 
 
 **Blocked by:** 01, 03, 10
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The form** is built to DESIGN.md from `GET v1/visible-parts/filters`, asked in the chosen currency. It is a plain form sent with GET, with the search, so it works before any script has loaded. With script, a choice may apply as soon as it is made, as DESIGN.md says.
-- [ ] **The choices.** Each choice is a native control, named in the page's language. Filter names are in `i18n`'s Shopper set, keyed by the parameter names the API answers. A specification's values are English through `AlwaysEnglish`, as LANG-3 has them. The words for yes-or-no values ("Air" and "Liquid" for a CPU cooler) are translated.
+- [x] **The choices.** Each choice is a native control, named in the page's language. Filter names are in `i18n`'s Shopper set, keyed by the parameter names the API answers. A specification's values are English through `AlwaysEnglish`, as LANG-3 has them. The words for yes-or-no values ("Air" and "Liquid" for a CPU cooler) are translated.
 - [x] **The address.** Several values of one filter repeat its parameter. A parameter or a value that the Category's filters do not offer is dropped, never sent, so an old link still opens. These rules are plain functions tested at the Shopper's unit seam.
 - [x] **The price range.** Two fields in the chosen currency, with the range of Lowest Prices shown as their hint. They take Western, Arabic-Indic or Eastern Arabic-Indic digits, read through ticket 01's shared reading of digits, which drops separators. A value that is not a whole number, or a lowest above the highest, is not sent, and the form says why beside the field.
 - [x] **On, and clearing.** The filters that are on are shown, each can be cleared on its own, and all can be cleared at once. A list the filters empty says so and offers to clear them.
@@ -29,8 +29,8 @@ The filters are in the address, like the search, and work before any script has 
   - An address with an unknown filter and an unknown value opens with both dropped.
   - `expectAccessible` passes with filters on, in the light and the dark scheme.
   - Any motion DESIGN.md gives the filters is filmed with `film` and judged by `snapsOf`, with reduced motion as well as without.
-- [ ] **Taste's inspector.** `pnpm shopper:inspect` runs on a Category page with filters on and with filters that empty the list, in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
-- [ ] `break-ui` runs with a filter of 40 values and with every filter on at once. `mobile-native` runs on the filters used with a thumb and the price fields with the phone's number pad. What they found is fixed or recorded under Comments.
+- [x] **Taste's inspector.** `pnpm shopper:inspect` runs on a Category page with filters on and with filters that empty the list, in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
+- [x] `break-ui` runs with a filter of 40 values and with every filter on at once. `mobile-native` runs on the filters used with a thumb and the price fields with the phone's number pad. What they found is fixed or recorded under Comments.
 - [x] Shown once and then reverted, each failing its own test: an unknown value sent to the API; the range kept through the currency switch.
 - [x] `pnpm check` passes with Docker stopped.
 - [x] The results of the fault checks are recorded under Comments.
@@ -101,3 +101,15 @@ Three questions, each shown with its pictures on a page in the session's scratch
 1. **The filters' names in Kurdish and Arabic.** The ticket and the spec name each filter in the page's language and translate "Air" and "Liquid"; DESIGN.md and the renderings give the key specifications their English names. **A (recommended, as built):** every filter named in the page's language, from the Shopper set, its values in English and yes or no worded, so that a Shopper who reads no English can tell the filters apart, and a CPU cooler's filter reads as one sentence. **B:** the key specifications' names in English, as DESIGN.md had them, over values that for a CPU cooler are Kurdish or Arabic words.
 2. **A filter with many values.** The made-up shop's 149 GPU chipsets made the unfolded tag some 6,000 pixels tall on a phone. **A (recommended, as built):** a filter of more than 16 values shows its first 12 and folds the rest behind "137 more", which works without script and opens by itself when a folded value is chosen. **B:** every value shown, as DESIGN.md's words stand.
 3. **The first phone screen of a Category page with nothing on.** Ticket 11 was to end `first-action` by Show Parts at the foot of the fold, but Show Parts is inside the folded tag: on a page with a choice on the chips that are on end it, and on the plain page nothing does. **A (recommended, as built):** keep that screen as it is, the search, the fold's bar and the list's head, and defend the warning there, since a button would only repeat what the list shows. **B:** a Show Parts button in the first phone screen, beside the search, as ticket 10's third question offered.
+
+### 6 November 2026: the owner's answers
+
+The owner answered in chat, through the coordinator: "Keep all three", so A for each, as built.
+
+1. **The filters' names** stay in the page's language, from the Shopper set, keyed by the API's parameters, their values in English and yes or no worded, a CPU cooler's "Air" and "Liquid" among them, as DESIGN.md's The filters says.
+2. **A filter with many values** shows its first 12 and folds the rest behind "137 more", which works before any script has loaded and opens by itself when a value it folds is chosen; a filter of up to 16 values shows them all, as DESIGN.md's The filters says.
+3. **The first phone screen of a Category page with nothing on** stays as it is: the search, the fold's bar and the list's head. Taste's `first-action` at 390 pixels in Kurdish is defended there, a button only repeating what the list already shows; on a page with a choice on, and on one whose filters find nothing, the chips that are on and the sheet's Clear all end it.
+
+The three boxes that waited on the answers are ticked, and the ticket is resolved. DESIGN.md already said A for each; its head now also says that the owner kept the three answers, and that Show Parts folds the tag at once, as its body does. No code changed, so `pnpm platform:check` on `dfdf64a` stands: 350 tests in 14.1 minutes.
+
+**Checks.** This record was gated on `pnpm check --skip-nx-cache` with `DOCKER_HOST` pointed at a socket that does not exist and an empty `PLAYWRIGHT_BROWSERS_PATH`, every `*.tsbuildinfo` of the worktree deleted first. `browse/integration` is still at `613cb4f`, this branch's base.
