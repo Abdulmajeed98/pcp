@@ -25,9 +25,19 @@ describe('the colour scheme on the command line', () => {
 });
 
 describe('the media a tab is shown in', () => {
-  it('asks for the colour scheme', () => {
+  // A computer set to reduce motion would otherwise show every tab still.
+  it('asks for the colour scheme, and for full motion whatever the computer is set to', () => {
     expect(emulatedMedia('light', {})).toEqual({
-      features: [{ name: 'prefers-color-scheme', value: 'light' }],
+      features: [
+        { name: 'prefers-color-scheme', value: 'light' },
+        { name: 'prefers-reduced-motion', value: 'no-preference' },
+      ],
+    });
+  });
+
+  it('leaves the colour scheme to the computer when none is asked for, and still asks for full motion', () => {
+    expect(emulatedMedia(undefined, {})).toEqual({
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
     });
   });
 
