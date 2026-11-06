@@ -6,7 +6,7 @@
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Impeccable rewrites `apps/shopper/DESIGN.md` from ticket 07's direction, replacing Fit Diagram. It covers the tokens, Overview, Colors, Typography, Layout, Elevation & Depth, Shapes, Components, and Do's and Don'ts.
 - [x] **The components this module needs**, each with its place:
@@ -27,11 +27,11 @@
   - the not-found page.
 - [x] **Motion**, led by `emil-design-eng` and `animate`: what moves and what stays still, the easing and durations, how a movement is interrupted, its direction in right to left, and what reduced motion does.
 - [x] **The feel on a phone**, led by `mobile-native`: tap highlights, the viewport and safe areas, inputs that do not zoom the page, the filters used with a thumb, and no button's words selected under a resting thumb.
-- [ ] The hard rules of the root DESIGN.md hold throughout. A rule of the direction that pulls against one was put to the owner, and the answer is recorded under Comments.
+- [x] The hard rules of the root DESIGN.md hold throughout. A rule of the direction that pulls against one was put to the owner, and the answer is recorded under Comments.
 - [x] **The ADR.** A new ADR records the Shopper app's look and the options it was chosen over, and replaces the parts of [ADR-0007](../../../docs/adr/0007-a-look-and-components-for-each-app.md) it changes. ADR-0007 says which of its parts are replaced.
 - [x] [docs/agents/design-skills.md](../../../docs/agents/design-skills.md)'s "Where the chosen directions are kept" names the Shopper app's direction, its sheet, its DESIGN.md and its ADR.
-- [ ] The owner reads the new DESIGN.md, with the Motion section's movements shown in the built-in browser, and every remark is answered before the ticket closes. The remarks and answers are recorded under Comments.
-- [ ] `pnpm check` passes, and the work is committed.
+- [x] The owner reads the new DESIGN.md, with the Motion section's movements shown in the built-in browser, and every remark is answered before the ticket closes. The remarks and answers are recorded under Comments.
+- [x] `pnpm check` passes, and the work is committed.
 
 ## Comments
 
@@ -119,3 +119,20 @@ Read DESIGN.md on the review page (`.taste-skill/browse-08/index.html`, served o
 3. **The names.** Recommended: keep the North Star "The Counter Price List", the look's name "the printed price list", and the colours' names (Bone Ground, Sheet Paper, Board, Chocolate Ink and Bone Ink, Soft Ink, Print Green, Coupon Green, Back Cover). Or: name any of them yourself.
 
 The box for the rule put to the owner, the box for the owner's reading and the last box stay open, and the Status stays, until the remarks are answered here.
+
+### 6 November 2026: the owner's answers
+
+The owner read DESIGN.md on the review page with its movements playing. The coordinator relayed the owner's words exactly: "keep all recommendations". The owner made no other remark on DESIGN.md. What follows is the coordinator's reading of those words, recorded here as the coordinator's:
+
+1. **The display sizes and the spaces.** The root DESIGN.md lets a look's display face take sizes of its own in `rem`, each at least 1.375rem (22 pixels), and lets a look space its own pieces beyond 48 pixels, in 4-pixel steps. The shared text sizes stay as they are, and the Shopper app keeps a 16-pixel body and 18 pixels for an item's name and price.
+2. **When the sheets print** (Motion 1, with 2, 3 and 4). Once a page view, when the Shopper comes to the page. A page drawn again, by a filter, a search or another page of results, or come back to by back or forward, is shown printed. Nothing moves without script.
+3. **The names.** "The Counter Price List", "the printed price list" and the colours' names are kept.
+
+**What changed for the answers.**
+
+- **The root DESIGN.md.** Its Typography now lets a look's display face take sizes of its own in `rem`, each at least 1.375rem, a size that follows the window being a `clamp()` between two `rem` ends, and keeps the shared sizes as the text face's. Its Layout's Spacing now lets a look space its own pieces beyond 48 pixels, in 4-pixel steps. Each says the owner allowed it on 6 November 2026. Its dashboard rules are otherwise unchanged.
+- **`apps/shopper/DESIGN.md`.** Typography and Layout now say the root allows the display sizes and the spaces, where they said the allowance was the owner's to give. Motion's "When a movement plays" now opens with the owner's rule in exactly those three lines, then says how each is kept. The comment at the head of the file says the owner kept every recommendation. The cropped name, at 26vw and hidden from readers, is now described as a picture of the name slot's words, since the name is read in the frame, and so sits outside the sizes in `rem`, as a picture of a word does.
+- **ADR-0013's** last consequence records the root's change.
+- **The names** stay as written.
+
+With the answer to the rule put to the owner recorded, its box is ticked. The owner's reading raised nothing beyond the three answers, so that box is ticked too, and with this commit gated on `pnpm check`, the last. Every box is ticked, so the Status is resolved.

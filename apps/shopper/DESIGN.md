@@ -192,7 +192,7 @@ components:
     height: "64px"
 ---
 
-<!-- Rewritten with browse ticket 08 on 6 November 2026, from the direction the owner chose in browse ticket 07: Taste's The page is the object, its sheet kept in design/taste/ with what the Shopper app holds against it, and the seven tweaks and seven motions of ticket 07's renderings, all kept by the owner on 6 November 2026 and written here in this file's own terms (the motions are Motion 1 to 7). It replaces Fit Diagram, written with catalog ticket 10 on 15 October 2026, with its footer recorded on 16 October 2026 (ADR-0013). It is written before the pages are built: browse tickets 09 to 13 build the frame and the four kinds of page to it, and correct it where building teaches something. -->
+<!-- Rewritten with browse ticket 08 on 6 November 2026, from the direction the owner chose in browse ticket 07: Taste's The page is the object, its sheet kept in design/taste/ with what the Shopper app holds against it, and the seven tweaks and seven motions of ticket 07's renderings, all kept by the owner on 6 November 2026 and written here in this file's own terms (the motions are Motion 1 to 7). It replaces Fit Diagram, written with catalog ticket 10 on 15 October 2026, with its footer recorded on 16 October 2026 (ADR-0013). The owner read it with its movements playing on 6 November 2026 and kept every recommendation it put to them (browse ticket 08). It is written before the pages are built: browse tickets 09 to 13 build the frame and the four kinds of page to it, and correct it where building teaches something. -->
 
 # Design System: the Shopper app, the printed price list
 
@@ -278,7 +278,7 @@ Measured, light then dark: the Ink 12.5:1 and 15.3:1 on the Bone Ground, 14.7:1 
 
 ### Hierarchy
 
-The text face keeps the root DESIGN.md's shared sizes, in `rem`. The display face takes four sizes and a cropped name of its own, in `rem` between two ends, as Taste's sheet sets them; the root lets a look set only a screen's title, its buttons' text and one board figure, so the root's allowance for the display sizes is put to the owner (browse ticket 08, question 1).
+The text face keeps the root DESIGN.md's shared sizes, in `rem`: a 16-pixel body, and 18 pixels for an item's name and price. The display face takes four sizes of its own, in `rem` between two ends, as Taste's sheet sets them, each at least 1.375rem (22 pixels), which the root DESIGN.md lets a look's display face take since the owner allowed it on 6 November 2026 (browse ticket 08). The cropped name is a picture of the name slot's words rather than text read in place (the name is read in the frame), and is sized to the window.
 
 - **Display** (800, clamp(2.75rem, 1rem + 5vw, 5.5rem), 44 to 88 pixels, line 0.95): the home page card's three words, the facts row's heading, the back cover's invitation. One a section, and two lines at most at every width.
 - **Sheet title** (800, clamp(2.25rem, 1.5rem + 2vw, 3.5rem), 36 to 56 pixels, line 1): the title of a sheet, of the square plate, of the swing tag and of the specifications, the Vendor's name on its coupon and the Part's name on its box label. A page's `h1` is the sheet title of its first piece, or the card's Display on the home page.
@@ -288,7 +288,7 @@ The text face keeps the root DESIGN.md's shared sizes, in `rem`. The display fac
 - **Body large** (400, 1.125rem, line 1.556): an item's name on a sheet, at 400, and its price, at 600; the card's sentence; the plate's tabs.
 - **Body** (400, 1rem, line 1.5): sentences, an item's second line, the credits, a tear-off tab's words, the text in buttons (600) and in every input. A reading paragraph is at most 70 characters a line, and a note beside a title 34.
 - **Small** (400, 0.875rem, line 1.429): the frame's switches and their names, a sheet's note under its title and its closing lines, a picture's caption, the slip's foot.
-- **The cropped name** (800, 26vw, 34vw on a phone, line 0.8): the back cover's wordmark, hidden from readers.
+- **The cropped name** (800, 26vw, 34vw on a phone, line 0.8): the back cover's wordmark, a picture of the name, hidden from readers.
 
 **In Kurdish and Arabic** the text sizes follow the root's Tall Script Rule (15, 17 and 19 pixels, every line looser, the body's at 1.7). The display roles are set in Noto Kufi Arabic at weight 700, which is wide where Big Shoulders is narrow, so they are set smaller and looser: the Display at its Latin size with lines at 1.35; the Sheet title at 2.25rem, line 1.4; the Facts at clamp(1.25rem, 1rem + 1vw, 1.75rem), line 1.5; the Label at 1.25rem, and the frame's name at 1.125rem; the cropped name at 17vw, and 22vw on a phone. Arabic script is never under 15 pixels, on an English page too: the language switch's names and a Vendor's words as written.
 
@@ -304,7 +304,7 @@ The text face keeps the root DESIGN.md's shared sizes, in `rem`. The display fac
 
 ## Layout
 
-**The table.** The Bone Ground is the table and each section a piece of stationery on it. The page has one pair of margins, 16 pixels on a phone and 40 from 64rem, the same at the start and the end. Sections take 120 pixels above and below on a desk and 72 on a phone, and a sheet takes 64 pixels of padding and 56 between its groups: the spaces of print around and inside a printed piece, which the root's rhythm of 4 to 48 pixels does not reach, so their allowance goes to the owner with the display sizes (browse ticket 08, question 1). Everything else keeps the root's rhythm: 16 pixels between the items of a group, 24 between the fields of a form, 8 between cells side by side.
+**The table.** The Bone Ground is the table and each section a piece of stationery on it. The page has one pair of margins, 16 pixels on a phone and 40 from 64rem, the same at the start and the end. Sections take 120 pixels above and below on a desk and 72 on a phone, and a sheet takes 64 pixels of padding and 56 between its groups: the spaces of print around and inside a printed piece, beyond the root's rhythm of 4 to 48 pixels and in its 4-pixel steps, as the root DESIGN.md lets a look space its own pieces since the owner allowed it on 6 November 2026 (browse ticket 08). Everything else keeps the root's rhythm: 16 pixels between the items of a group, 24 between the fields of a form, 8 between cells side by side.
 
 **The pieces, page by page.** Placed on a 12-column grid where they stand off the middle, as sheets laid on a table:
 
@@ -449,10 +449,17 @@ The curve is front-loaded: a sheet is three quarters uncovered 200 ms into its 9
 
 ### When a movement plays
 
-- **Once a page view, when the Shopper comes to the page.** A sheet on the first screen, a Category page's or the not-found page's, prints as the page opens, from its first paint, by CSS alone, waiting for no script and no load event. A sheet or slip below the first screen prints when its top is about nine tenths of the way down the window, started by the page's script, which is also what holds it back until then: no piece is hidden by the stylesheet alone, so a page whose script is late or blocked shows every piece printed.
-- **A page drawn again is not printed again.** A filter, a search, another page of results or a choice cleared, applied in place with script, changes the rows in place and at once, and the new rows' prices do not settle. Going back or forward shows a page as it was left, printed: from the browser's back-forward cache, or with the page marking a return before it draws.
-- **The language and currency switches open the page anew,** and its sheets print again, in the other language or currency: each is chosen once or twice a visit.
-- **Without script nothing moves** (`@media (scripting: none)`), so the filters, which are then each a page of their own, never print the list again.
+The sheets print (Motion 1, with 2, 3 and 4) as the owner decided on 6 November 2026 (browse ticket 08):
+
+- **Once a page view, when the Shopper comes to the page.**
+- **A page drawn again, by a filter, a search or another page of results, or come back to by back or forward, is shown printed.**
+- **Nothing moves without script.**
+
+How the rule is kept:
+
+- **Coming to a page.** A sheet on the first screen, a Category page's or the not-found page's, prints as the page opens, from its first paint, by CSS alone, waiting for no script and no load event. A sheet or slip below the first screen prints when its top is about nine tenths of the way down the window, started by the page's script, which is also what holds it back until then: no piece is hidden by the stylesheet alone, so a page whose script is late or blocked shows every piece printed. The language and currency switches open the page anew, so its sheets print again, in the other language or currency.
+- **Drawn again, or come back to.** A filter, a search, another page of results or a choice cleared, applied in place with script, changes the rows in place and at once, and the new rows' prices do not settle. Going back or forward shows the page as it was left, printed: from the browser's back-forward cache, or with the page marking a return before it draws.
+- **Without script** (`@media (scripting: none)`) every page is still and whole, so the filters, which are then each a page of their own, never print the list again.
 
 ### What moves
 
