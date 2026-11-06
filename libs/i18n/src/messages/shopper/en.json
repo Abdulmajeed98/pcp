@@ -76,6 +76,7 @@
   },
   "Part": {
     "outOfStock": "Out of stock",
+    "inStock": "In stock",
     "vendors": "{count, plural, one {{countText} Vendor} other {{countText} Vendors}}"
   },
   "Offer": {
@@ -162,6 +163,25 @@
     "barcode": "Part number {number}",
     "notRead": {
       "title": "This Part cannot be read just now",
+      "note": "Try again in a moment."
+    },
+    "tryAgain": "Try again"
+  },
+  "VendorPage": {
+    "openingHours": "Opening hours",
+    "contactLinks": "How to reach it",
+    "call": "Call",
+    "whatsApp": "WhatsApp",
+    "instagram": "Instagram",
+    "map": "Open in Google Maps",
+    "inANewTab": ", in a new tab",
+    "tabs": "Call the Vendor",
+    "offersTitle": "{count, plural, =0 {Offers from this Vendor} one {{countText} Offer from this Vendor} other {{countText} Offers from this Vendor}}",
+    "offersNote": "By Category, in stock first, then lowest price.",
+    "none": "This Vendor has no Offer to show now.",
+    "offersNotRead": "Its Offers cannot be read just now. Try again in a moment.",
+    "notRead": {
+      "title": "This Vendor cannot be read just now",
       "note": "Try again in a moment."
     },
     "tryAgain": "Try again"

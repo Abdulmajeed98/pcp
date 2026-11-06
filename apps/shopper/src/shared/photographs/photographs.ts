@@ -6,12 +6,14 @@ import handSettingMemory from './files/hand-setting-memory.webp';
 import memoryChips from './files/memory-chips.webp';
 import motherboardCloseup from './files/motherboard-closeup.webp';
 import redLitMotherboard from './files/red-lit-motherboard.webp';
+import waterCooledPc from './files/water-cooled-pc.webp';
 
 // The photographs of PC hardware the Shopper app's pages lie on (DESIGN.md's
 // The photographs), each from an open collection under a licence that lets
-// it be shown, found with Taste's `assets.mjs` in browse ticket 07. Only
-// those under CC0 or CC BY are used: a dimmed copy may count as an
-// adaptation, which CC BY-SA would ask to be shared alike. None shows a
+// it be shown, found with Taste's `assets.mjs` in browse tickets 07 and 13.
+// Only those in the public domain, under CC0 or under CC BY are used: a
+// dimmed copy may count as an adaptation, which CC BY-SA would ask to be
+// shared alike. None shows a
 // place, a maker's name or logo large, or a person who could be known, and
 // none stands for a Part on sale.
 //
@@ -45,6 +47,12 @@ const ccBy4 = {
 const cc0 = {
   name: 'CC0 1.0',
   address: 'https://creativecommons.org/publicdomain/zero/1.0/',
+};
+// A photograph its author released into the public domain, as Wikimedia
+// Commons marks it, which asks for no credit either.
+const publicDomain = {
+  name: 'Public domain',
+  address: 'https://creativecommons.org/publicdomain/mark/1.0/',
 };
 
 export const photographs = {
@@ -105,6 +113,16 @@ export const photographs = {
     author: 'Vitaly Zdanevich',
     licence: cc0,
     source: 'https://commons.wikimedia.org/wiki/File:SDRAM_memory_module,_zoomed.jpg',
+    changed: 'dimmed',
+  },
+  // Under a Vendor page's coupon and the sheet of its Offers, the tubes of a
+  // water-cooled PC over its board.
+  waterCooledPc: {
+    image: waterCooledPc,
+    title: 'Watercooling vue carte graphique',
+    author: 'MasterMatt',
+    licence: publicDomain,
+    source: 'https://commons.wikimedia.org/wiki/File:Watercooling_vue_carte_graphique.jpg',
     changed: 'dimmed',
   },
 } as const satisfies Record<string, Photograph>;

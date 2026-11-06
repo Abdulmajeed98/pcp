@@ -47,8 +47,8 @@
 /*
  * The light scheme. Each colour is named in DESIGN.md: Bone Ground, Sheet
  * Paper, Board and Deep Board, the Ink and Soft Ink, Print Green with its
- * ink and its pressed step, the coupon's greens, the Back Cover and the
- * barcode's black on white.
+ * ink and its pressed step, the coupon's greens and its cells' pressed
+ * steps, the Back Cover and the barcode's black on white.
  */
 :root {
   /* Square corners everywhere: paper, buttons, cells, chips and photos. */
@@ -73,6 +73,8 @@
   --coupon: #456f3a;
   --coupon-foreground: #ffffff;
   --coupon-cell: #345a2b;
+  --coupon-cell-pressed: #2a4822;
+  --coupon-call-pressed: #e9eee7;
   --back-cover: #2a1d17;
   --back-cover-foreground: #ecebe7;
   --ring: #2a1d17;
@@ -111,6 +113,8 @@
     --coupon: #2d4a25;
     --coupon-foreground: #f1eadf;
     --coupon-cell: #1f3619;
+    --coupon-cell-pressed: #192b14;
+    --coupon-call-pressed: #d9d7c9;
     --back-cover: #0c0806;
     --back-cover-foreground: #efe7da;
     --ring: #93c47d;
@@ -138,6 +142,8 @@
   --coupon: #2d4a25;
   --coupon-foreground: #f1eadf;
   --coupon-cell: #1f3619;
+  --coupon-cell-pressed: #192b14;
+  --coupon-call-pressed: #d9d7c9;
   --back-cover: #0c0806;
   --back-cover-foreground: #efe7da;
   --ring: #93c47d;
@@ -227,6 +233,8 @@
   --color-coupon: var(--coupon);
   --color-coupon-foreground: var(--coupon-foreground);
   --color-coupon-cell: var(--coupon-cell);
+  --color-coupon-cell-pressed: var(--coupon-cell-pressed);
+  --color-coupon-call-pressed: var(--coupon-call-pressed);
   --color-back-cover: var(--back-cover);
   --color-back-cover-foreground: var(--back-cover-foreground);
   --color-barcode: var(--barcode);
@@ -529,6 +537,74 @@
 
 @utility perforated-above {
   border-block-start: 5px dotted var(--background);
+}
+
+@utility perforated-before {
+  border-inline-start: 5px dotted var(--background);
+}
+
+/*
+ * The coupon's two notches, half-circles 28 pixels across, cut where its
+ * perforation runs, at the perforation's two ends: into its top and bottom
+ * edges from 48rem, where its halves lie side by side, the words' half 46%
+ * of its length, and into its sides on a phone, where the halves stand one
+ * above the other. Each half is cut by a quarter of each circle, at its two
+ * corners on the perforation, so that the notches meet the perforation
+ * wherever it runs, however much each half holds. `coupon-words` is the
+ * start half, or the upper one on a phone; `coupon-cells` the other.
+ */
+@utility coupon-words {
+  -webkit-mask:
+    radial-gradient(14px at 0 100%, #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(14px at 100% 100%, #0000 97%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(14px at 0 100%, #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(14px at 100% 100%, #0000 97%, #000) right / 51% 100% no-repeat;
+
+  @media (min-width: 48rem) {
+    -webkit-mask:
+      radial-gradient(14px at 100% 0, #0000 97%, #000) top / 100% 51% no-repeat,
+      radial-gradient(14px at 100% 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+    mask:
+      radial-gradient(14px at 100% 0, #0000 97%, #000) top / 100% 51% no-repeat,
+      radial-gradient(14px at 100% 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+
+    &:where(:dir(rtl)) {
+      -webkit-mask:
+        radial-gradient(14px at 0 0, #0000 97%, #000) top / 100% 51% no-repeat,
+        radial-gradient(14px at 0 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+      mask:
+        radial-gradient(14px at 0 0, #0000 97%, #000) top / 100% 51% no-repeat,
+        radial-gradient(14px at 0 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+    }
+  }
+}
+
+@utility coupon-cells {
+  -webkit-mask:
+    radial-gradient(14px at 0 0, #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(14px at 100% 0, #0000 97%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(14px at 0 0, #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(14px at 100% 0, #0000 97%, #000) right / 51% 100% no-repeat;
+
+  @media (min-width: 48rem) {
+    -webkit-mask:
+      radial-gradient(14px at 0 0, #0000 97%, #000) top / 100% 51% no-repeat,
+      radial-gradient(14px at 0 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+    mask:
+      radial-gradient(14px at 0 0, #0000 97%, #000) top / 100% 51% no-repeat,
+      radial-gradient(14px at 0 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+
+    &:where(:dir(rtl)) {
+      -webkit-mask:
+        radial-gradient(14px at 100% 0, #0000 97%, #000) top / 100% 51% no-repeat,
+        radial-gradient(14px at 100% 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+      mask:
+        radial-gradient(14px at 100% 0, #0000 97%, #000) top / 100% 51% no-repeat,
+        radial-gradient(14px at 100% 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+    }
+  }
 }
 
 /*
