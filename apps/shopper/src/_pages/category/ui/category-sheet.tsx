@@ -11,12 +11,14 @@ import {
   ChoicesOn,
   type CategoryQuery,
   categoryPageAddress,
+  choicesOn,
+  nothingOn,
+  type OfferedFilters,
 } from '@/features/search-parts';
 import {
   buttonVariants,
   CategoryDrawing,
   Sheet,
-  SheetClose,
   SheetGroup,
   SheetTitle,
   Stamp,
@@ -32,8 +34,11 @@ import { Paging } from './paging';
 // the Category's drawing, and the list, in BRW-1's order as the API answers
 // it: under "In stock" the Parts some Vendor has in stock, lowest price
 // first, then under "Out of stock at every Vendor" the rest, each marked so.
-// Paging and the closing line follow, in Small Soft Ink, and under it, in
-// Body, what "≈" means when a price on the page is converted. The stamp says
+// Paging and the closing line follow, and under it what "≈" means when a
+// price on the page is converted, both in Body Soft Ink and at most 34rem
+// wide: they are the sheet's running text, which a list whose filters leave
+// no converted price would otherwise set in Small alone (Taste's inspector,
+// ticket 11). The stamp says
 // "Lowest price first", in the sheet's end corner when the sheet holds 30rem
 // inside its padding, and under its title on a narrower one, as beside the
 // swing tag at 1024 pixels and on a phone, so that it never runs into a
@@ -41,9 +46,10 @@ import { Paging } from './paging';
 //
 // A sheet that lists nothing says why, and the two empty lists are told
 // apart in words (DESIGN.md's The empty states): a Category no Vendor offers
-// yet leads to the other Categories, and a search that found nothing offers
-// to clear it. A page past the last leads to the first, and a list the API
-// did not answer offers to try again.
+// yet leads to the other Categories, and a search or filters that found
+// nothing offer to clear them all. A page past the last leads to the first,
+// and a list the API did not answer offers to try again, at the same address
+// as it was asked (`asAsked`).
 //
 // The sentence under the title is where the sheet says what it shows, so it
 // is the page's status (`output`): drawn again in place with script, its new
@@ -51,12 +57,16 @@ import { Paging } from './paging';
 export async function CategorySheet({
   category,
   query,
+  offered,
   page,
+  asAsked,
   className,
 }: {
   category: Category;
   query: CategoryQuery;
+  offered: OfferedFilters | undefined;
   page: VisiblePartPageResponse | undefined;
+  asAsked: string;
   className?: string;
 }) {
   const [language, t, searchWords, categoryName] = await Promise.all([
@@ -71,7 +81,7 @@ export async function CategorySheet({
   const sentence = (() => {
     switch (state.kind) {
       case 'listed':
-        return t(query.search === '' ? 'note' : 'found', {
+        return t(choicesOn(query).length === 0 ? 'note' : 'found', {
           count: state.page.totalElements,
           countText: formatNumber(state.page.totalElements),
         });
@@ -116,14 +126,21 @@ export async function CategorySheet({
           {t('noneYetLine')}
         </p>
       )}
-      <ChoicesOn category={category} query={query} withClearAll={state.kind === 'listed'} />
+      <ChoicesOn
+        category={category}
+        query={query}
+        offered={offered}
+        withClearAll={state.kind === 'listed'}
+      />
       <CategoryDrawing category={category} />
 
       {state.kind === 'listed' && (
         <>
           <TheList parts={state.page.content} />
           <Paging category={category} query={query} totalPages={state.page.totalPages} />
-          <SheetClose>{t('close')}</SheetClose>
+          <p className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground">
+            {t('close')}
+          </p>
           {state.page.content.some((part) => part.lowestPrice?.converted === true) && (
             <p
               data-testid="what-approximately-means"
@@ -145,11 +162,7 @@ export async function CategorySheet({
         </Action>
       )}
       {state.kind === 'no-match' && (
-        <Action
-          kind="primary"
-          address={addressAt({ search: '', page: 1 })}
-          testId="clear-all"
-        >
+        <Action kind="primary" address={addressAt(nothingOn)} testId="clear-all">
           {searchWords('clearAll')}
         </Action>
       )}
@@ -163,7 +176,7 @@ export async function CategorySheet({
         </Action>
       )}
       {state.kind === 'not-read' && (
-        <Action kind="board" address={addressAt(query)} testId="try-again">
+        <Action kind="board" address={asAsked} testId="try-again">
           {t('tryAgain')}
         </Action>
       )}

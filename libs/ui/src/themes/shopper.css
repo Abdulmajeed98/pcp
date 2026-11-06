@@ -986,6 +986,74 @@
 }
 
 /*
+ * 10. The filters unfold: on a phone the swing tag's space opens over 250 ms
+ * as its contents fade in, and folds in 150 ms, so that the list below moves
+ * down rather than jumps. It is a disclosure (`details`), whose contents the
+ * browser draws in `::details-content`; where the browser can animate a
+ * disclosure's height (`interpolate-size`), it opens from nothing to its own
+ * height, and where it cannot it opens at once. A second tap while it opens
+ * folds it back from where it is. With reduced motion it opens and folds at
+ * once, and so it does when Show Parts folds it.
+ *
+ * From 64rem the swing tag stands beside the sheet, always unfolded: its
+ * contents are shown though the disclosure is folded, and its bar
+ * (`fold-bar`) is not drawn. A browser that cannot show a folded
+ * disclosure's contents keeps the bar, which unfolds the tag with a tap.
+ */
+@utility unfolds {
+  interpolate-size: allow-keywords;
+
+  /* Its own block, so that the margin above the tag is inside the height it
+   * opens over, not collapsed through it and gone at the end in one frame. */
+  &::details-content {
+    display: flow-root;
+    block-size: 0;
+    opacity: 0;
+    overflow-y: clip;
+    transition:
+      block-size var(--fold) var(--ease-out),
+      opacity var(--fold) var(--ease-out),
+      content-visibility var(--fold) allow-discrete;
+  }
+
+  &[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+    transition-duration: var(--unfold);
+  }
+
+  /* Folded by Show Parts, it folds at once, as the page then goes to the
+   * list. */
+  &[data-folding='at-once']::details-content {
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::details-content {
+      transition: none;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    &::details-content {
+      block-size: auto;
+      opacity: 1;
+      overflow-y: visible;
+      content-visibility: visible;
+      transition: none;
+    }
+  }
+}
+
+@utility fold-bar {
+  @supports selector(::details-content) {
+    @media (min-width: 64rem) {
+      display: none;
+    }
+  }
+}
+
+/*
  * A button or a chip shows no long-press menu on a phone, so that a resting
  * thumb does not open one. A link keeps the phone's own menu, so that a
  * Shopper can copy where it leads.

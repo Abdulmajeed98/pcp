@@ -5,6 +5,7 @@ import {
   addAPhotoTo,
   aPageOfTheList,
   createACpuNamed,
+  expectTheAddressToAsk,
   listedPart,
   listedParts,
   lookAtTheCategorySheet,
@@ -222,7 +223,9 @@ for (const javaScriptEnabled of [true, false]) {
           );
 
           await searchTheCategory(page, words);
-          await expect(page).toHaveURL(addressIn(language, cpus(`${listWord}+bravo`)));
+          // Sent without script, the form also sends its empty fields, which
+          // the page ignores.
+          await expectTheAddressToAsk(page, language, cpus(), [['search', words]]);
           await expect(listedParts(page)).toHaveCount(1);
           expect(await namesListed(page)).toEqual([bravo.name]);
 
