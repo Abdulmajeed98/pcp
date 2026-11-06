@@ -8,8 +8,10 @@ import type { CSSProperties } from 'react';
 // where they take rows of `perRowOnAPhone`. They are listed in the reading
 // order, and so mirror in Kurdish and Arabic. Their perforations are dashed
 // in Half Ink, 3 pixels along their top and 2 between them. A tab leans from
-// its perforation under the pointer and when pressed (Motion 5), and its
-// words are not selected under a resting thumb.
+// its perforation under the pointer and when pressed (Motion 5), and takes
+// its pressed ground while it is pressed, a step deeper than its paper, the
+// one feedback a press gives with reduced motion; its words are not
+// selected under a resting thumb.
 //
 // On a sheet they end (`on="sheet"`), they run to its edges through its
 // padding, so the sheet's own cut edge is their foot, and they are the
@@ -61,7 +63,10 @@ export function TearOffTabs({
           >
             <a
               href={address}
-              className="leans grid min-h-tab-phone place-items-center px-1 pt-3.5 pb-5.5 font-semibold select-none md:min-h-tab"
+              className={cn(
+                'leans grid min-h-tab-phone place-items-center px-1 pt-3.5 pb-5.5 font-semibold select-none md:min-h-tab',
+                on === 'sheet' ? 'active:bg-secondary' : 'active:bg-coupon-cell',
+              )}
             >
               {english ? (
                 <AlwaysEnglish className="reads-along-the-tab whitespace-nowrap">

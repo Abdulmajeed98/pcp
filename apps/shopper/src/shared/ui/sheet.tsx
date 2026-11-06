@@ -83,7 +83,10 @@ function PrintersMarks() {
 }
 
 // A sheet's title, in the Sheet title type, centred. It is the page's `h1`
-// on a page whose first piece the sheet is, and an `h2` elsewhere.
+// on a page whose first piece the sheet is, and an `h2` elsewhere. A word
+// longer than the sheet is wide, as a Kurdish one is at a phone's largest
+// text, breaks where it must rather than widening the sheet past the window
+// (break-ui, browse ticket 13).
 export function SheetTitle({
   as: Heading = 'h2',
   id,
@@ -94,7 +97,7 @@ export function SheetTitle({
   children: ReactNode;
 }) {
   return (
-    <Heading id={id} className="type-sheet-title text-center">
+    <Heading id={id} className="type-sheet-title text-center wrap-anywhere">
       {children}
     </Heading>
   );

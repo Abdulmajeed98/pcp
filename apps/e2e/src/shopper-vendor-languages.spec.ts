@@ -432,6 +432,9 @@ test('in Kurdish and English, deactivating the Vendor makes its page answer the 
         await expectPageIn(page, language);
         if (expected === 200) {
           await expect(page.getByRole('heading', { level: 1 })).toHaveText(alone.name);
+          // Its one Offer, counted as one.
+          await expect(page.locator('#offers-title')).toHaveText(theNumber(1));
+          await expect(vendorsOffers(page)).toHaveCount(1);
         } else {
           await expect(page.getByRole('heading', { level: 1 })).not.toHaveText(alone.name);
         }

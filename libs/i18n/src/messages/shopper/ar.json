@@ -169,6 +169,7 @@
   },
   "VendorPage": {
     "openingHours": "ساعات العمل",
+    "whatItIs": "بائع قطع حاسوب في <place>{city}</place>.",
     "contactLinks": "كيف تتصل به",
     "call": "اتصل",
     "whatsApp": "واتساب",

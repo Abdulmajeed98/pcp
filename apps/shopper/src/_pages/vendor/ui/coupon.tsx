@@ -24,7 +24,10 @@ function nameType(name: string): string {
 // Vendor in Iraq writes in English: its element says so, so that it keeps
 // the Latin setting of the display face on a Kurdish or an Arabic page, as a
 // Part's name does, and a screen reader reads it as English. A name in
-// Arabic script takes the page's language.
+// Arabic script keeps the page's language, Kurdish and Arabic being alike in
+// their letters, and its element marks its script instead, so that it takes
+// the Arabic-script setting on an English page too (the theme's display
+// type).
 function inLatinScript(name: string): boolean {
   return !/\p{Script=Arabic}/u.test(name);
 }
@@ -33,12 +36,17 @@ function inLatinScript(name: string): boolean {
 // their links): the Vendor's contact details as a coupon to cut out, a field
 // of Coupon Green at most 72rem wide, about 2.2 to 1 from 48rem, its notches
 // cut where its perforation runs. On its start half (46%), the Vendor's name
-// as it wrote it (LANG-4), in the Sheet title, as the page's `h1`; at its
-// foot its city, named in the page's language, and its address as it wrote
-// it, and its opening hours under "Opening hours" at 600, as it wrote them.
-// What the Vendor wrote takes its own direction, its name and each line of
-// its address and hours set from their own start, as a phone's messages
-// are; what the platform writes, the city and "Opening hours", the page's.
+// as it wrote it (LANG-4), in the Sheet title, as the page's `h1`, and under
+// it in Body large what the page is, "A Vendor of PC Parts in Erbil.", its
+// city named in the page's language, so that the first screen says what
+// the name is (Taste's inspector, `name-only-title`); at its foot its
+// address as it wrote it, and its opening hours under "Opening hours" at
+// 600, as it wrote them. What the Vendor wrote takes its own direction, its
+// name and each line of its address and hours set from their own start, as
+// a phone's messages are; what the platform writes, the page's. From 48rem
+// to 64rem each half has 32 pixels of padding, so that the name and the
+// hours keep their lines in a half of a coupon 768 pixels wide, and 48 from
+// 64rem.
 // On its end half, past the perforation, the links, each a cell 56 pixels
 // tall of Deep Green with what it does at the start and the detail at the
 // end: Call, the first, turned over in Coupon Ink with green words, a `tel:`
@@ -62,6 +70,7 @@ export async function Coupon({ vendor }: { vendor: VisibleVendorResponse }) {
   ]);
   const links = contactLinksOf(vendor);
   const [call] = links;
+  const latin = inLatinScript(vendor.name);
 
   return (
     <div className="mx-auto w-full max-w-[72rem] text-coupon-foreground [--ring:var(--coupon-foreground)]">
@@ -69,19 +78,25 @@ export async function Coupon({ vendor }: { vendor: VisibleVendorResponse }) {
         data-testid="coupon"
         className="grid grid-cols-[minmax(0,1fr)] md:aspect-[2.2/1] md:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]"
       >
-        <div className="coupon-words flex min-w-0 flex-col justify-between gap-8 bg-coupon px-5 py-6 md:p-12">
-          <h1
-            id="vendor-name"
-            lang={inLatinScript(vendor.name) ? 'en' : undefined}
-            className={cn('wrap-break-word', nameType(vendor.name))}
-          >
-            <AsWritten className="block leading-[1.4]">{vendor.name}</AsWritten>
-          </h1>
+        <div className="coupon-words flex min-w-0 flex-col justify-between gap-8 bg-coupon px-5 py-6 md:p-8 lg:p-12">
+          <div className="grid gap-3">
+            <h1
+              id="vendor-name"
+              lang={latin ? 'en' : undefined}
+              data-script={latin ? undefined : 'arabic'}
+              className={cn('wrap-break-word', nameType(vendor.name))}
+            >
+              <AsWritten className="block leading-[1.4]">{vendor.name}</AsWritten>
+            </h1>
+            <p data-testid="what-the-vendor-is" className="text-lg">
+              {t.rich('whatItIs', {
+                city: city(vendor.city),
+                place: (chunks) => <span data-testid="vendor-city">{chunks}</span>,
+              })}
+            </p>
+          </div>
           <div className="grid gap-4">
             <p data-testid="vendor-address">
-              <span data-testid="vendor-city" className="block font-semibold">
-                {city(vendor.city)}
-              </span>
               <WrittenOnLines text={vendor.address} />
             </p>
             {vendor.openingHours !== null && (
@@ -95,7 +110,7 @@ export async function Coupon({ vendor }: { vendor: VisibleVendorResponse }) {
         <ul
           aria-label={t('contactLinks')}
           data-testid="contact-links"
-          className="coupon-cells grid min-w-0 content-center gap-2.5 bg-coupon perforated-above px-5 py-6 md:border-t-0 md:perforated-before md:p-12"
+          className="coupon-cells grid min-w-0 content-center gap-2.5 bg-coupon perforated-above px-5 py-6 md:border-t-0 md:perforated-before md:p-8 lg:p-12"
         >
           {links.map((link) => (
             <li key={link.kind}>

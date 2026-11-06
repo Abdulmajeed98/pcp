@@ -329,7 +329,9 @@
  * Arabic at weight 700, which is wide where Big Shoulders is narrow, so it is
  * set smaller and looser there, with no tracking. A name in Latin script
  * inside a Kurdish page, which `AlwaysEnglish` marks as English, keeps the
- * Latin setting.
+ * Latin setting; a name in Arabic script on an English page, as a Vendor may
+ * write its own, which its element marks with `data-script="arabic"`, takes
+ * the Arabic-script setting, whatever the page's language.
  */
 @utility type-display {
   font-family: var(--font-display);
@@ -339,7 +341,8 @@
   letter-spacing: -0.005em;
 
   &:lang(ckb),
-  &:lang(ar) {
+  &:lang(ar),
+  &[data-script='arabic'] {
     font-weight: 700;
     line-height: 1.35;
     letter-spacing: 0;
@@ -354,7 +357,8 @@
   letter-spacing: -0.005em;
 
   &:lang(ckb),
-  &:lang(ar) {
+  &:lang(ar),
+  &[data-script='arabic'] {
     font-weight: 700;
     font-size: 2.25rem;
     line-height: 1.4;
@@ -370,7 +374,8 @@
   letter-spacing: -0.005em;
 
   &:lang(ckb),
-  &:lang(ar) {
+  &:lang(ar),
+  &[data-script='arabic'] {
     font-weight: 700;
     font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
     line-height: 1.5;
@@ -386,7 +391,8 @@
   letter-spacing: -0.005em;
 
   &:lang(ckb),
-  &:lang(ar) {
+  &:lang(ar),
+  &[data-script='arabic'] {
     font-weight: 700;
     font-size: 1.25rem;
     line-height: 1.4;

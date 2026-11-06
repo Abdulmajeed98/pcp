@@ -169,6 +169,7 @@
   },
   "VendorPage": {
     "openingHours": "کاتەکانی کارکردن",
+    "whatItIs": "فرۆشیارێکی پارچەی کۆمپیوتەر لە <place>{city}</place>.",
     "contactLinks": "چۆن پەیوەندی پێوە بکەیت",
     "call": "پەیوەندی بکە",
     "whatsApp": "واتسئاپ",

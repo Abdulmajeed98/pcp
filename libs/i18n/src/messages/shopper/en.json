@@ -169,6 +169,7 @@
   },
   "VendorPage": {
     "openingHours": "Opening hours",
+    "whatItIs": "A Vendor of PC Parts in <place>{city}</place>.",
     "contactLinks": "How to reach it",
     "call": "Call",
     "whatsApp": "WhatsApp",
