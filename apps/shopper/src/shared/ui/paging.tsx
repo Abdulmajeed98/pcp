@@ -1,11 +1,9 @@
 import { formatNumber } from '@pcp/i18n';
 import { cn } from 'cn';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
-import type { Category } from '@/entities/category';
-import { type CategoryQuery, categoryPageAddress } from '@/features/search-parts';
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants } from './button';
 
 // An arrow along the reading direction: forward to the end side, the right
 // in English, or back to the start side, and so mirrored in Kurdish and
@@ -32,33 +30,33 @@ function Arrow({ to }: { to: 'start' | 'end' }) {
   );
 }
 
-// Paging (DESIGN.md's Paging): at the sheet's foot, above its closing lines,
-// "Page 2 of 17" in the middle in Small Soft Ink, and Previous page and Next
-// page as two cells of the Board, 52 pixels tall, on the start and the end
-// sides, each a link with its page in the address; the first page has no
-// Previous and the last none Next, and a list of one page says "Page 1 of 1"
-// alone. On a narrow sheet the page's place takes a line of its own above
-// the two cells, each as wide as its words, so that neither wraps. With script the list is drawn again in place, shown
-// printed, and the window goes back to the page's top.
+// Paging (DESIGN.md's Paging), at the foot of a sheet whose list is paged, a
+// Category's Parts or a Vendor's Offers, above its closing lines: "Page 2 of
+// 17" in the middle in Small Soft Ink, and Previous page and Next page as two
+// cells of the Board, 52 pixels tall, on the start and the end sides, each a
+// link to its page's address, `addressOf` the page counted from 1; the first
+// page has no Previous and the last none Next, and a list of one page says
+// "Page 1 of 1" alone. On a narrow sheet the page's place takes a line of
+// its own above the two cells, each as wide as its words, so that neither
+// wraps. With script the list is drawn again in place, shown printed.
 export async function Paging({
-  category,
-  query,
+  page,
   totalPages,
+  addressOf,
 }: {
-  category: Category;
-  query: CategoryQuery;
+  page: number;
   totalPages: number;
+  addressOf: (page: number) => string;
 }) {
-  const [language, t] = await Promise.all([getLocale(), getTranslations('CategoryPage')]);
+  const t = await getTranslations('Paging');
   const pageOf = (
     <span data-testid="page-of" className="text-center text-sm text-muted-foreground">
-      {t('pageOf', { page: formatNumber(query.page), pages: formatNumber(totalPages) })}
+      {t('pageOf', { page: formatNumber(page), pages: formatNumber(totalPages) })}
     </span>
   );
   if (totalPages <= 1) return <p className="mt-12 text-center">{pageOf}</p>;
 
   const cell = buttonVariants({ kind: 'board', className: 'gap-2 px-3' });
-  const at = (page: number) => categoryPageAddress(language, category, { ...query, page });
 
   return (
     <div className="@container mt-12">
@@ -71,16 +69,16 @@ export async function Paging({
           {pageOf}
         </span>
         <span className="justify-self-start @[34rem]:order-1">
-          {query.page > 1 && (
-            <Link href={at(query.page - 1)} prefetch={false} rel="prev" className={cell}>
+          {page > 1 && (
+            <Link href={addressOf(page - 1)} prefetch={false} rel="prev" className={cell}>
               <Arrow to="start" />
               {t('previousPage')}
             </Link>
           )}
         </span>
         <span className="justify-self-end @[34rem]:order-3">
-          {query.page < totalPages && (
-            <Link href={at(query.page + 1)} prefetch={false} rel="next" className={cell}>
+          {page < totalPages && (
+            <Link href={addressOf(page + 1)} prefetch={false} rel="next" className={cell}>
               {t('nextPage')}
               <Arrow to="end" />
             </Link>

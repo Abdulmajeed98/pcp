@@ -2,6 +2,7 @@ import type { VisiblePartsFiltersResponse } from '@pcp/api-client';
 import { type Language, westernDigitsIn, westernNumberIn } from '@pcp/i18n';
 
 import { type Category, categoryAddress } from '@/entities/category';
+import { pageInTheAddress } from '@/shared/lib';
 
 // The query of a Category page's address, as Next hands it to the page: each
 // parameter's value, or its values when it is repeated.
@@ -54,11 +55,6 @@ export const nothingOn: CategoryQuery = {
   page: 1,
 };
 
-// The last page an address can name. The API pages a list to its page
-// 1,000,000, counted from 0 (`PagingRequest`), and refuses one past it; no
-// list has that many pages, so this one is past the last page of every list.
-const lastPageTheApiPagesTo = 1_000_001;
-
 // The most digits a price range's end may have: the API reads each end
 // exactly up to 15 of them, and refuses more. No price comes near.
 const mostDigitsOfAnEnd = 15;
@@ -75,8 +71,8 @@ const mostDigitsOfAnEnd = 15;
 //
 // The search is read as its words, one space between each: the API finds
 // every word in any order, in any case. A search of nothing but spaces is no
-// search. A page that is not a whole number from 1, such as 0 or 2.5, is read
-// as the first. The price range is read as `readPriceRange` reads it.
+// search. The page is read as `pageInTheAddress` reads it, and the price
+// range as `readPriceRange` reads it.
 //
 // Without the answer of the Category's filters nothing can be checked against
 // what they offer, so only the search and the page are read.
@@ -87,7 +83,6 @@ export function readCategoryQuery(
   const words = westernDigitsIn(firstOf(address.search))
     .split(/\s+/)
     .filter((word) => word !== '');
-  const page = westernDigitsIn(firstOf(address.page)).trim();
   const range = readPriceRange(address, offered);
 
   return {
@@ -105,9 +100,7 @@ export function readCategoryQuery(
           }),
     lowest: range.lowest.value,
     highest: range.highest.value,
-    page: /^\d+$/.test(page)
-      ? Math.min(Math.max(Number(page), 1), lastPageTheApiPagesTo)
-      : 1,
+    page: pageInTheAddress(address.page),
   };
 }
 
