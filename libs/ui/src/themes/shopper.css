@@ -1,88 +1,868 @@
 /*
- * The Shopper app's look, Fit Diagram, which draws a Build the way a
- * motherboard manual draws a board. apps/shopper/DESIGN.md says how each
- * colour is used. Every pair meets WCAG 2.2 level AA in both schemes: 4.5:1
- * for text, and 3:1 for an input's border and for the focus ring.
+ * The Shopper app's look, the printed price list (ADR-0013): every page is a
+ * piece of the stationery a computer shop hands over the counter, laid on a
+ * table, with every name at the start of its line and every price at the
+ * end. apps/shopper/DESIGN.md says how each colour, size, cut and movement is
+ * used. Every text colour meets WCAG 2.2 level AA's 4.5:1 on the grounds it
+ * is used on, and every control's edge and every mark that shows a state
+ * 3:1, in both schemes.
  */
 @import '../theme.css';
 
 /*
- * The fonts come from this app's own server, never from Google (ADR-0006):
- * Archivo for Latin script, with the width axis that narrows callouts, and
- * Noto Kufi Arabic for Kurdish and Arabic. A page loads only the files its
- * letters need.
+ * The fonts come from this app's own server, never from Google (ADR-0006,
+ * ADR-0013): Big Shoulders sets names and figures large, Public Sans sets
+ * everything that is read, and Noto Kufi Arabic sets every Kurdish and
+ * Arabic word. A page loads only the files its letters need.
  */
-@import '@fontsource-variable/archivo/wdth.css';
-@import '@fontsource-variable/noto-kufi-arabic';
+@import '@fontsource-variable/big-shoulders';
+@import '@fontsource-variable/public-sans';
 
-:root {
-  /* Square corners, as a manual's drawings have. */
-  --radius: 0rem;
-
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.23 0.004 106.7);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.23 0.004 106.7);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.23 0.004 106.7);
-  --primary: oklch(0.474 0.169 257.2);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.954 0.005 258.3);
-  --secondary-foreground: oklch(0.23 0.004 106.7);
-  --muted: oklch(0.967 0.003 264.5);
-  --muted-foreground: oklch(0.47 0.016 262.3);
-  --accent: oklch(0.946 0.017 256.3);
-  --accent-foreground: oklch(0.384 0.136 257);
-  --destructive: oklch(0.53 0.207 22.3);
-  --destructive-foreground: oklch(1 0 0);
-  --warning: oklch(0.574 0.139 57);
-  --warning-foreground: oklch(1 0 0);
-  --success: oklch(0.519 0.122 152.9);
-  --success-foreground: oklch(1 0 0);
-  --border: oklch(0.884 0.008 260.7);
-  --input: oklch(0.608 0.015 258.4);
-  --ring: oklch(0.474 0.169 257.2);
-
-  /*
-   * The diagram's line drawings are printed in the text's colour, and the
-   * dashed lines that join the Parts in the primary blue.
-   */
-  --drawing: var(--foreground);
-  --fit-line: var(--primary);
+/*
+ * Noto Kufi Arabic's Arabic file alone, as its package declares it, rather
+ * than the package's five: the two Latin faces cover its Latin files, no
+ * page needs its symbols, and its file for mathematical signs, which its
+ * range of characters names for the "≈", holds Arabic mathematical letters
+ * and no "≈". The device's own sans draws the "≈", and that file is not
+ * fetched for nothing (the owner, 6 November 2026, browse ticket 09).
+ */
+@font-face {
+  font-family: 'Noto Kufi Arabic Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../../node_modules/@fontsource-variable/noto-kufi-arabic/files/noto-kufi-arabic-arabic-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF,
+    U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC,
+    U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03,
+    U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39,
+    U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54,
+    U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A,
+    U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B,
+    U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
 }
 
+/*
+ * The light scheme. Each colour is named in DESIGN.md: Bone Ground, Sheet
+ * Paper, Board and Deep Board, the Ink and Soft Ink, Print Green with its
+ * ink and its pressed step, the coupon's greens, the Back Cover and the
+ * barcode's black on white.
+ */
+:root {
+  /* Square corners everywhere: paper, buttons, cells, chips and photos. */
+  --radius: 0rem;
+
+  --background: #e5e1d8;
+  --foreground: #2a1d17;
+  --card: #f4f3f0;
+  --card-foreground: #2a1d17;
+  --popover: #f4f3f0;
+  --popover-foreground: #2a1d17;
+  --primary: #456f3a;
+  --primary-foreground: #ffffff;
+  --primary-pressed: #345a2b;
+  --secondary: #dad5ca;
+  --secondary-foreground: #2a1d17;
+  --secondary-pressed: #cfc9bc;
+  --muted: #dad5ca;
+  --muted-foreground: #62534a;
+  --accent: #dad5ca;
+  --accent-foreground: #2a1d17;
+  --coupon: #456f3a;
+  --coupon-foreground: #ffffff;
+  --coupon-cell: #345a2b;
+  --back-cover: #2a1d17;
+  --back-cover-foreground: #ecebe7;
+  --ring: #2a1d17;
+  /* An input's line along its foot is in the Ink; nothing else is ruled. */
+  --input: #2a1d17;
+  --barcode: #1b1410;
+  --barcode-ground: #ffffff;
+}
+
+/*
+ * The dark scheme: bone ink on chocolate, with a lighter green of its own.
+ * The page follows the device's scheme, unless the scheme switch chose one,
+ * which `data-scheme` on the document then names. The server draws it from
+ * the Shopper's cookie, so no page flashes the other scheme. The same values
+ * are written twice, once for each way the dark scheme is chosen, as CSS has
+ * no way to join a media query and a selector in one rule.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.186 0.004 264.5);
-    --foreground: oklch(0.943 0.003 106.5);
-    --card: oklch(0.222 0.006 271.1);
-    --card-foreground: oklch(0.943 0.003 106.5);
-    --popover: oklch(0.222 0.006 271.1);
-    --popover-foreground: oklch(0.943 0.003 106.5);
-    --primary: oklch(0.729 0.12 257.4);
-    --primary-foreground: oklch(0.221 0.044 257.4);
-    --secondary: oklch(0.268 0.008 264.4);
-    --secondary-foreground: oklch(0.943 0.003 106.5);
-    --muted: oklch(0.243 0.006 258.4);
-    --muted-foreground: oklch(0.733 0.013 259.8);
-    --accent: oklch(0.283 0.046 257.8);
-    --accent-foreground: oklch(0.902 0.041 259.6);
-    --destructive: oklch(0.712 0.181 22.8);
-    --destructive-foreground: oklch(0.201 0.053 17.7);
-    --warning: oklch(0.776 0.146 70.8);
-    --warning-foreground: oklch(0.223 0.049 67.6);
-    --success: oklch(0.74 0.136 156.6);
-    --success-foreground: oklch(0.222 0.047 151);
-    --border: oklch(0.336 0.01 260.7);
-    --input: oklch(0.615 0.015 258.4);
-    --ring: oklch(0.729 0.12 257.4);
+  :root:not([data-scheme='light']) {
+    --background: #17110d;
+    --foreground: #efe7da;
+    --card: #261d17;
+    --card-foreground: #efe7da;
+    --popover: #261d17;
+    --popover-foreground: #efe7da;
+    --primary: #93c47d;
+    --primary-foreground: #13240c;
+    --primary-pressed: #7fb168;
+    --secondary: #33281f;
+    --secondary-foreground: #efe7da;
+    --secondary-pressed: #3d3127;
+    --muted: #33281f;
+    --muted-foreground: #c2b2a3;
+    --accent: #33281f;
+    --accent-foreground: #efe7da;
+    --coupon: #2d4a25;
+    --coupon-foreground: #f1eadf;
+    --coupon-cell: #1f3619;
+    --back-cover: #0c0806;
+    --back-cover-foreground: #efe7da;
+    --ring: #93c47d;
+    --input: #efe7da;
   }
+}
+
+:root[data-scheme='dark'] {
+  --background: #17110d;
+  --foreground: #efe7da;
+  --card: #261d17;
+  --card-foreground: #efe7da;
+  --popover: #261d17;
+  --popover-foreground: #efe7da;
+  --primary: #93c47d;
+  --primary-foreground: #13240c;
+  --primary-pressed: #7fb168;
+  --secondary: #33281f;
+  --secondary-foreground: #efe7da;
+  --secondary-pressed: #3d3127;
+  --muted: #33281f;
+  --muted-foreground: #c2b2a3;
+  --accent: #33281f;
+  --accent-foreground: #efe7da;
+  --coupon: #2d4a25;
+  --coupon-foreground: #f1eadf;
+  --coupon-cell: #1f3619;
+  --back-cover: #0c0806;
+  --back-cover-foreground: #efe7da;
+  --ring: #93c47d;
+  --input: #efe7da;
+}
+
+/*
+ * Half Ink, the Ink at half strength over whatever paper it is printed on:
+ * the dotted leaders and the perforations. Written from the Ink, so that it
+ * follows the scheme, and `border` is the same, as the Shopper draws no
+ * other line.
+ */
+:root {
+  --half-ink: color-mix(in srgb, var(--foreground) 50%, transparent);
+  --border: var(--half-ink);
+}
+
+/* A scheme chosen with the switch tells the browser, so that its own parts,
+ * such as form controls and scroll bars, take it too. */
+:root[data-scheme='light'] {
+  color-scheme: light;
+}
+
+:root[data-scheme='dark'] {
+  color-scheme: dark;
+}
+
+/*
+ * While the scheme switch changes the scheme in place, every colour changes
+ * in one frame: transitions are suppressed for that frame, so that nothing
+ * smears from one scheme into the other (DESIGN.md's What stays still).
+ */
+:root[data-scheme-changing] *,
+:root[data-scheme-changing] *::before,
+:root[data-scheme-changing] *::after {
+  transition: none !important;
+}
+
+@theme {
+  /*
+   * The motion's curve (DESIGN.md's Motion): every print, settle, landing,
+   * lean and press. Tailwind's own `ease-out` takes it; `ease-in` is never
+   * used.
+   */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /*
+   * The spaces of print, around and inside a printed piece, which the root
+   * DESIGN.md lets a look take beyond its rhythm (the owner, 6 November
+   * 2026): the page's margins, a sheet's padding and the gap between its
+   * groups, the space between sections, and the heights of what is tapped.
+   */
+  --spacing-margin: 1rem;
+  --spacing-margin-desk: 2.5rem;
+  --spacing-ground-edge: 0.625rem;
+  --spacing-group: 3.5rem;
+  --spacing-sheet: 4rem;
+  --spacing-sheet-phone: 1.125rem;
+  --spacing-section: 7.5rem;
+  --spacing-section-phone: 4.5rem;
+  --spacing-input: 3rem;
+  --spacing-button: 3.25rem;
+  --spacing-contact-cell: 3.5rem;
+  --spacing-plate-cell: 4.5rem;
+  --spacing-plate-cell-phone: 3.75rem;
+  --spacing-tab: 9.375rem;
+  --spacing-tab-phone: 8.125rem;
+}
+
+@theme {
+  /*
+   * A sheet's printer's marks, drawn in the bone the dimmed photograph under
+   * every sheet reads against, in both schemes.
+   */
+  --color-printers-marks: #efe7da;
 }
 
 @theme inline {
   --font-sans:
-    'Archivo Variable', 'Noto Kufi Arabic Variable', ui-sans-serif, system-ui, sans-serif;
+    'Public Sans Variable', 'Noto Kufi Arabic Variable', ui-sans-serif, system-ui,
+    sans-serif;
+  --font-display: 'Big Shoulders Variable', 'Noto Kufi Arabic Variable', sans-serif;
 
-  --color-drawing: var(--drawing);
-  --color-fit-line: var(--fit-line);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-secondary-pressed: var(--secondary-pressed);
+  --color-half-ink: var(--half-ink);
+  --color-coupon: var(--coupon);
+  --color-coupon-foreground: var(--coupon-foreground);
+  --color-coupon-cell: var(--coupon-cell);
+  --color-back-cover: var(--back-cover);
+  --color-back-cover-foreground: var(--back-cover-foreground);
+  --color-barcode: var(--barcode);
+  --color-barcode-ground: var(--barcode-ground);
+}
+
+/*
+ * The motion's durations (DESIGN.md's Motion, Tokens). Each movement below
+ * reads its own, so that a later page's movement of the same kind keeps the
+ * same time.
+ */
+:root {
+  --print: 900ms;
+  --feed: 1000ms;
+  --settle: 500ms;
+  --settle-from: 300ms;
+  --settle-apart: 45ms;
+  --stamp: 320ms;
+  --stamp-ink: 120ms;
+  --stamp-at: 900ms;
+  --scan: 700ms;
+  --unfold: 250ms;
+  --fold: 150ms;
+  --lean: 160ms;
+  --press: 140ms;
+  --hover: 150ms;
+}
+
+@layer base {
+  /*
+   * A control is 44 pixels high on a touchscreen, and 36 under a mouse on a
+   * screen as wide as a desk's, never lower. A device with any touch input
+   * keeps 44: anything tapped on a touchscreen is at least 44 by 44 (the root
+   * DESIGN.md).
+   */
+  @media (pointer: fine) and (not (any-pointer: coarse)) and (min-width: 64rem) {
+    :root {
+      --spacing-control: 2.25rem;
+    }
+  }
+
+  /*
+   * A tap leaves no grey flash: every control has its own pressed state
+   * instead (DESIGN.md's The feel on a phone). The text is the body's, at the
+   * Tall Script Rule's sizes on a Kurdish or an Arabic page, with its lines
+   * looser there.
+   */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  :root:lang(ckb) body,
+  :root:lang(ar) body {
+    line-height: 1.7;
+  }
+
+  /*
+   * Links and buttons take a tap at once, rather than waiting to see whether
+   * a second one follows.
+   */
+  a,
+  button,
+  summary,
+  label {
+    touch-action: manipulation;
+  }
+
+  /*
+   * Text selected on the page is printed in reverse, the paper's colour on
+   * the Ink, so that a selection reads on every paper, the Board's chips
+   * among them.
+   */
+  ::selection {
+    background-color: var(--foreground);
+    color: var(--card);
+  }
+
+  /* The focus ring: a 3-pixel line in the Focus colour, 2 pixels outside the
+   * control, at once and at full strength. */
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * The type of the display face, Big Shoulders, in sentence case in every
+ * language, at the four sizes DESIGN.md gives it (Typography, Hierarchy),
+ * each at least 1.375rem. In Kurdish and Arabic it is set in Noto Kufi
+ * Arabic at weight 700, which is wide where Big Shoulders is narrow, so it is
+ * set smaller and looser there, with no tracking. A name in Latin script
+ * inside a Kurdish page, which `AlwaysEnglish` marks as English, keeps the
+ * Latin setting.
+ */
+@utility type-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.75rem, 1rem + 5vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.005em;
+
+  &:lang(ckb),
+  &:lang(ar) {
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+  }
+}
+
+@utility type-sheet-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.25rem, 1.5rem + 2vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.005em;
+
+  &:lang(ckb),
+  &:lang(ar) {
+    font-weight: 700;
+    font-size: 2.25rem;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+}
+
+@utility type-facts {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 1rem + 1.4vw, 2.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.005em;
+
+  &:lang(ckb),
+  &:lang(ar) {
+    font-weight: 700;
+    font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+}
+
+@utility type-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.375rem;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+
+  &:lang(ckb),
+  &:lang(ar) {
+    font-weight: 700;
+    font-size: 1.25rem;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+}
+
+/* The frame's name, a Label, a step smaller still in Arabic script. */
+@utility type-name-slot {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.375rem;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+
+  &:lang(ckb),
+  &:lang(ar) {
+    font-weight: 700;
+    font-size: 1.125rem;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+}
+
+/*
+ * The cropped name on the back cover: a picture of the name slot's words,
+ * sized to the window, 26vw on one line and 34vw on a phone, pushed below the
+ * field's edge so that the edge cuts through its letters. In Arabic script
+ * it is set at 17vw, and 22vw on a phone.
+ */
+@utility type-cropped-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 34vw;
+  line-height: 0.8;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  translate: 0 24%;
+
+  @media (min-width: 48rem) {
+    font-size: 26vw;
+  }
+
+  &:lang(ckb),
+  &:lang(ar) {
+    font-weight: 700;
+    font-size: 22vw;
+    line-height: 1.2;
+    letter-spacing: 0;
+    translate: 0 30%;
+
+    @media (min-width: 48rem) {
+      font-size: 17vw;
+    }
+  }
+}
+
+/*
+ * The page's one pair of margins (DESIGN.md's The table): 16 pixels on a
+ * phone and 40 from 64rem, the same at the start and the end, and never
+ * under a phone's notch, which takes the larger of its two sides.
+ */
+@utility page-margins {
+  padding-inline: max(
+    var(--spacing-margin),
+    env(safe-area-inset-left),
+    env(safe-area-inset-right)
+  );
+
+  @media (min-width: 64rem) {
+    padding-inline: max(
+      var(--spacing-margin-desk),
+      env(safe-area-inset-left),
+      env(safe-area-inset-right)
+    );
+  }
+}
+
+/*
+ * Arabic script is never under 15 pixels, on an English page too: the
+ * language switch's names and a Vendor's words as written.
+ */
+@utility arabic-script-floor {
+  &:lang(ckb),
+  &:lang(ar) {
+    font-size: max(1em, 0.9375rem);
+  }
+}
+
+/*
+ * The figures of a price, a count or a specification stand in a column:
+ * tabular figures, in Western digits (the Column of Prices Rule).
+ */
+@utility figures {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The cuts in the paper (DESIGN.md's Shapes), each made with a mask, never
+ * with a border.
+ *
+ * Scallops: a sheet's top and bottom edges, half-circles of a 9-pixel radius,
+ * one every 23.4 pixels.
+ */
+@utility scalloped {
+  --scallop: 9px;
+  -webkit-mask:
+    radial-gradient(var(--scallop) at 50% 0, #0000 97%, #000) top /
+      calc(var(--scallop) * 2.6) 51% repeat-x,
+    radial-gradient(var(--scallop) at 50% 100%, #0000 97%, #000) bottom /
+      calc(var(--scallop) * 2.6) 51% repeat-x;
+  mask:
+    radial-gradient(var(--scallop) at 50% 0, #0000 97%, #000) top /
+      calc(var(--scallop) * 2.6) 51% repeat-x,
+    radial-gradient(var(--scallop) at 50% 100%, #0000 97%, #000) bottom /
+      calc(var(--scallop) * 2.6) 51% repeat-x;
+}
+
+/* The torn foot: the slip's lower edge, a zigzag 22 pixels wide. */
+@utility torn-foot {
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg)
+    50% / 22px 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    22px 100%;
+}
+
+/*
+ * The notch of a ticket's stub, 56 pixels across, cut into the middle of a
+ * piece's end edge: the right in English, the left in Kurdish and Arabic.
+ */
+@utility notched-end {
+  -webkit-mask: radial-gradient(28px at 100% 50%, #0000 97%, #000);
+  mask: radial-gradient(28px at 100% 50%, #0000 97%, #000);
+
+  &:where(:dir(rtl)) {
+    -webkit-mask: radial-gradient(28px at 0 50%, #0000 97%, #000);
+    mask: radial-gradient(28px at 0 50%, #0000 97%, #000);
+  }
+}
+
+/*
+ * A perforation: a row of round dots in the Bone Ground's colour, as if the
+ * ground showed through the holes, under or across a piece.
+ */
+@utility perforated-below {
+  border-block-end: 5px dotted var(--background);
+}
+
+@utility perforated-above {
+  border-block-start: 5px dotted var(--background);
+}
+
+/*
+ * The tear-off tabs' perforation, dashed in Half Ink: 3 pixels along their
+ * top, and 2 between them, so that one that shows where a tab is meets 3:1.
+ */
+@utility tear-off-line {
+  border-block-start: 3px dashed var(--half-ink);
+}
+
+@utility tear-off-between {
+  border-inline-start: 2px dashed var(--half-ink);
+}
+
+/*
+ * A tear-off tab's words, read upright along the tab: from its foot to its
+ * top in Latin script, and from its top to its foot in Arabic script, which
+ * is not turned over.
+ */
+@utility reads-along-the-tab {
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+
+  &:lang(ckb),
+  &:lang(ar) {
+    rotate: none;
+  }
+}
+
+/*
+ * A dotted leader in Half Ink, from an item's name to its price: it fills
+ * the space between them, sits on their baseline, and shrinks to 0.75rem at
+ * the least on a phone.
+ */
+@utility leader {
+  align-self: end;
+  height: 0.55em;
+  margin-block-end: 0.3em;
+  border-block-end: 2px dotted var(--half-ink);
+}
+
+/*
+ * The movements of DESIGN.md's Motion, each a CSS transition or animation of
+ * `transform`, `opacity` or `clip-path`, so that it runs off the main thread
+ * on a weak phone. Each has its reduced-motion variant, which gives the
+ * finished page, and none plays without script (`scripting: none`).
+ */
+
+/*
+ * 1. A sheet prints: fed out top first, uncovered from its top edge down
+ * while it slides 18 pixels down into place, once, on the strong ease-out.
+ *
+ * A piece on the first screen, `print-on-arrival`, prints from the page's
+ * first paint, by CSS alone. One below it, `print-in-view`, waits for the
+ * page's script, which holds it back and prints it as it comes into view, so
+ * that no piece is hidden by the stylesheet alone (`data-print` names its
+ * state). A page come back to, by back or forward, is shown printed: the
+ * page marks a return on the document before it draws (`data-returned`).
+ * Keyboard focus, or a link to an anchor, inside a piece that is printing
+ * shows it printed at once, so that nothing focused is hidden.
+ */
+@keyframes print {
+  from {
+    clip-path: inset(0 0 100% 0);
+    translate: 0 -18px;
+  }
+
+  to {
+    clip-path: inset(0);
+    translate: 0 0;
+  }
+}
+
+@utility print-on-arrival {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    animation: print var(--print) var(--ease-out) both;
+
+    :root[data-returned] &,
+    &:focus-within,
+    &:has(:target) {
+      animation: none;
+    }
+  }
+}
+
+@utility print-in-view {
+  &[data-print='waiting'] {
+    clip-path: inset(0 0 100% 0);
+    translate: 0 -18px;
+  }
+
+  &[data-print='printing'] {
+    clip-path: inset(0);
+    translate: 0 0;
+    transition:
+      clip-path var(--print) var(--ease-out),
+      translate var(--print) var(--ease-out);
+  }
+
+  &[data-print]:focus-within,
+  &[data-print]:has(:target) {
+    clip-path: none;
+    translate: none;
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &[data-print] {
+      clip-path: none;
+      translate: none;
+      transition: none;
+    }
+  }
+}
+
+/*
+ * 4. The slip feeds: it prints as a till does, uncovered in ten steps over one
+ * second, while its slide eases out.
+ */
+@utility feeds {
+  &[data-print='printing'] {
+    transition:
+      clip-path var(--feed) steps(10, end),
+      translate var(--feed) var(--ease-out);
+  }
+}
+
+/*
+ * 2. Prices settle into their column: from 300 ms into their sheet's print,
+ * each price at the end of a line slides 16 pixels in from the end side and
+ * fades in, 45 ms after the one above it (`--i`, its place among the first
+ * ten; the rest settle with the tenth). The names do not move.
+ */
+@keyframes settle {
+  from {
+    opacity: 0;
+    translate: var(--settle-from-side, 16px) 0;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@utility settles {
+  --settle-from-side: 16px;
+
+  &:where(:dir(rtl)) {
+    --settle-from-side: -16px;
+  }
+
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    :where(.print-on-arrival) & {
+      animation: settle var(--settle) var(--ease-out) both;
+      animation-delay: calc(var(--settle-from) + min(var(--i, 0), 9) * var(--settle-apart));
+    }
+
+    :root[data-returned] :where(.print-on-arrival) & {
+      animation: none;
+    }
+  }
+
+  :where([data-print='printing']) & {
+    animation: settle var(--settle) var(--ease-out) both;
+    animation-delay: calc(var(--settle-from) + min(var(--i, 0), 9) * var(--settle-apart));
+  }
+
+  /* Focus, or a link to an anchor, inside a piece shows it whole at once. */
+  :where(
+      [data-print]:focus-within,
+      [data-print]:has(:target),
+      .print-on-arrival:focus-within,
+      .print-on-arrival:has(:target)
+    )
+    & {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-print]) & {
+      animation: none;
+    }
+  }
+}
+
+/*
+ * 3. The stamp lands: from 1.6 times its size and 12 degrees further round, it
+ * comes down to its place, 5 degrees back from true, in 320 ms, its opacity
+ * in 120 ms, once its paper has printed (`--stamp-at`, 900 ms into a sheet's
+ * print and 1150 ms into the slip's). It is clipped inside its paper as it
+ * lands.
+ */
+@keyframes stamp {
+  from {
+    rotate: -17deg;
+    scale: 1.6;
+  }
+
+  to {
+    rotate: -5deg;
+    scale: 1;
+  }
+}
+
+@utility stamp-lands {
+  rotate: -5deg;
+
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    :where(.print-on-arrival) & {
+      animation:
+        stamp var(--stamp) var(--ease-out) both,
+        stamp-ink var(--stamp-ink) ease both;
+      animation-delay: var(--stamp-at);
+    }
+
+    :root[data-returned] :where(.print-on-arrival) & {
+      animation: none;
+    }
+  }
+
+  :where([data-print='printing']) & {
+    animation:
+      stamp var(--stamp) var(--ease-out) both,
+      stamp-ink var(--stamp-ink) ease both;
+    animation-delay: var(--stamp-at);
+  }
+
+  :where(
+      [data-print]:focus-within,
+      [data-print]:has(:target),
+      .print-on-arrival:focus-within,
+      .print-on-arrival:has(:target)
+    )
+    & {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-print]) & {
+      animation: none;
+    }
+  }
+}
+
+@keyframes stamp-ink {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * 5. A tab gives: a tear-off tab leans from its perforation, turning about
+ * the middle of its top edge, 2 degrees and 3 pixels down under a mouse, 5
+ * degrees and 6 pixels when pressed. A touch gets the press alone. With
+ * reduced motion it does not lean; a pressed tab takes its pressed ground.
+ */
+@utility leans {
+  transform-origin: 50% 0;
+  transition:
+    rotate var(--lean) var(--ease-out),
+    translate var(--lean) var(--ease-out),
+    background-color var(--hover) ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      rotate: 2deg;
+      translate: 0 3px;
+    }
+  }
+
+  &:active {
+    rotate: 5deg;
+    translate: 0 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:hover,
+    &:active {
+      rotate: none;
+      translate: none;
+    }
+  }
+}
+
+/*
+ * 8 and 9. The press, on a button, a cell, a chip and a switch's choice: it
+ * settles to 0.97 while pressed, and takes its pressed ground at once; and a
+ * colour under the pointer, over 150 ms on `ease`, only under a pointer that
+ * can hover. With reduced motion a pressed control does not scale.
+ */
+@utility pressable {
+  transition:
+    scale var(--press) var(--ease-out),
+    background-color var(--hover) ease,
+    color var(--hover) ease,
+    text-decoration-color var(--hover) ease;
+  user-select: none;
+  -webkit-user-select: none;
+
+  &:active {
+    scale: 0.97;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:active {
+      scale: none;
+    }
+  }
+}
+
+/*
+ * A button or a chip shows no long-press menu on a phone, so that a resting
+ * thumb does not open one. A link keeps the phone's own menu, so that a
+ * Shopper can copy where it leads.
+ */
+@utility no-callout {
+  -webkit-touch-callout: none;
+}
+
+/* 9. A link's underline under the pointer, over 150 ms on `ease`. */
+@utility hover-underline {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: text-decoration-thickness var(--hover) ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
 }

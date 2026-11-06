@@ -1,1 +1,1 @@
-export { PlaceholderPage as default } from '@/_pages/placeholder';
+export { HomePage as default, generateMetadata, generateViewport } from '@/_pages/home';

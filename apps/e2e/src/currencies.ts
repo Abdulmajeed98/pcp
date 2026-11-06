@@ -28,12 +28,6 @@ export function choiceOf(page: Page, currency: Currency): Locator {
   return currencySwitch(page).locator(`button[value="${currency}"]`);
 }
 
-// The line of the placeholder page that says which currency prices are shown
-// in.
-export function pricesShownIn(page: Page): Locator {
-  return page.getByTestId('prices-shown-in');
-}
-
 // The switch shows `currency` as the chosen one: its two choices are there,
 // that one alone is marked as the current one.
 export async function expectChosen(page: Page, currency: Currency): Promise<void> {
@@ -42,17 +36,20 @@ export async function expectChosen(page: Page, currency: Currency): Promise<void
   await expect(choiceOf(page, currency)).toHaveAttribute('aria-current', 'true');
 }
 
-// The placeholder's line names the chosen currency, by the name its choice has
-// in the switch, and not the other one. No test quotes a translation, so the
-// line is read against the switch's own words.
+// The mark every price carries after its figure, which is the same in every
+// language (DESIGN.md's The Shown Price).
+const marks: Record<Currency, string> = { IQD: 'IQD', USD: '$' };
+
+// Every price on the page is shown in `currency`, and there is at least one:
+// each carries that currency's mark after its figure, and none the other's.
+// The page holds prices only where the API answers them, so a test that
+// reads them makes sure there is one first.
 export async function expectPricesShownIn(page: Page, currency: Currency): Promise<void> {
-  const line = (await pricesShownIn(page).innerText()).toLocaleLowerCase();
-  for (const each of currencies) {
-    const name = (await choiceOf(page, each).innerText()).trim().toLocaleLowerCase();
-    expect(name).not.toBe('');
-    expect(line.includes(name), `the line "${line}" names "${name}"`).toBe(
-      each === currency,
-    );
+  const prices = page.getByTestId('shown-price');
+  await expect(prices.first()).toBeAttached();
+  for (const price of await prices.all()) {
+    await expect(price).toHaveAttribute('data-currency', currency);
+    expect((await price.innerText()).trim().endsWith(` ${marks[currency]}`)).toBe(true);
   }
 }
 

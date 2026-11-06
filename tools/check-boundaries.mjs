@@ -60,6 +60,10 @@ const routesUseTheAlias = 'A route file reaches the layers through the `@/` alia
 const proxyTakesOnlyTheLanguages =
   "Next's proxy file takes next-intl's statement of the languages";
 const proxyUsesTheAlias = 'The proxy file reaches that segment through the `@/` alias';
+const instrumentationTakesOnlyTheSettings =
+  "Next's instrumentation file takes the check of the settings";
+const instrumentationUsesTheAlias =
+  'The instrumentation file reaches that segment through the `@/` alias';
 const testsUseTheAlias = 'A unit test reaches the layers through the `@/` alias';
 
 // A case is one planted file. `file` is its path inside the project, without
@@ -434,7 +438,7 @@ const casesInTheRoutingFolder = [
   inTheShopperApp.refused(
     'a route file that reaches past the index file of a page',
     `${route}/reaches-into-a-page`,
-    '@/_pages/placeholder/ui/placeholder-page',
+    '@/_pages/home/ui/home-page',
     noPastAnIndex,
   ),
   inTheShopperApp.refused(
@@ -446,19 +450,19 @@ const casesInTheRoutingFolder = [
   inTheShopperApp.refused(
     'a route file that reaches a layer by a relative path',
     `${route}/climbs-into-a-layer`,
-    '../../src/_pages/placeholder',
+    '../../src/_pages/home',
     routesUseTheAlias,
   ),
   inTheShopperApp.refused(
     'a route file that reaches a layer by a relative path that starts with ./',
     `${route}/climbs-into-a-layer-the-long-way`,
-    './../../src/_pages/placeholder',
+    './../../src/_pages/home',
     shortestFormOnly,
   ),
   inTheShopperApp.allowed(
     'a route file that imports a page through its index file',
     `${route}/imports-a-page`,
-    '@/_pages/placeholder',
+    '@/_pages/home',
   ),
   inTheShopperApp.allowed(
     'a route file that imports the App layer through its index file',
@@ -480,7 +484,7 @@ const casesInTheProxyFile = [
   inTheShopperApp.refused(
     'the proxy file importing a page',
     'proxy.imports-a-page',
-    '@/_pages/placeholder',
+    '@/_pages/home',
     proxyTakesOnlyTheLanguages,
   ),
   inTheShopperApp.refused(
@@ -511,8 +515,44 @@ const casesInTheProxyFile = [
   inTheShopperApp.refused(
     'a Shared file named like the proxy file that imports a page',
     'src/shared/boundary-proof/proxy.imports-a-page',
-    '@/_pages/placeholder',
+    '@/_pages/home',
     noLayerAbove,
+  ),
+];
+
+// Next's instrumentation file, which only the Shopper app has. It sits beside
+// the routing folder, and Next calls it once when its server starts, to check
+// the settings. A planted file is named like it: the bans are for every file
+// at the app's root whose name starts with `instrumentation.`.
+const casesInTheInstrumentationFile = [
+  inTheShopperApp.refused(
+    'the instrumentation file importing a page',
+    'instrumentation.imports-a-page',
+    '@/_pages/home',
+    instrumentationTakesOnlyTheSettings,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file importing another segment of the Shared layer',
+    'instrumentation.imports-another-segment',
+    '@/shared/i18n',
+    instrumentationTakesOnlyTheSettings,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file reaching past the index file of the settings segment',
+    'instrumentation.reaches-into-the-segment',
+    '@/shared/config/settings',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file reaching the settings segment by a relative path',
+    'instrumentation.climbs-into-the-segment',
+    './src/shared/config',
+    instrumentationUsesTheAlias,
+  ),
+  inTheShopperApp.allowed(
+    'the instrumentation file importing the settings segment through its index file',
+    'instrumentation.imports-the-settings',
+    '@/shared/config',
   ),
 ];
 
@@ -536,7 +576,7 @@ const casesInTheUnitTests = [
   inTheShopperApp.refused(
     'a unit test that reaches past the index file of a page',
     `${unitTest}/reaches-into-a-page`,
-    '@/_pages/placeholder/ui/placeholder-page',
+    '@/_pages/home/ui/home-page',
     noPastAnIndex,
   ),
   inTheShopperApp.refused(
@@ -559,7 +599,7 @@ const casesInTheUnitTests = [
   inTheShopperApp.allowed(
     'a unit test that imports a page through its index file',
     `${unitTest}/imports-a-page`,
-    '@/_pages/placeholder',
+    '@/_pages/home',
   ),
   inTheShopperApp.allowed(
     'a relative import between two files of the unit tests',
@@ -599,6 +639,7 @@ const cases = [
   ...casesInAFrontend(inTheShopperApp, { app: '_app', pages: '_pages' }),
   ...casesInTheRoutingFolder,
   ...casesInTheProxyFile,
+  ...casesInTheInstrumentationFile,
   ...casesInTheUnitTests,
 ];
 

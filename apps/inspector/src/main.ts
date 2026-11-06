@@ -111,9 +111,7 @@ try {
     const page = await newPage(options);
     await answerFromTheShopIn(browser, page, shop, apiUrl);
     landOnTheDashboard(page, dashboard);
-    if (scheme !== undefined) {
-      await page.send('Emulation.setEmulatedMedia', emulatedMedia(scheme, options ?? {}));
-    }
+    await page.send('Emulation.setEmulatedMedia', emulatedMedia(scheme, options ?? {}));
     return page;
   };
   Browser.launch = async () => browser;

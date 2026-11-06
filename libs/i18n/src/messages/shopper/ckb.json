@@ -1,33 +1,94 @@
 {
-  "App": {
-    "title": "ئەپی کڕیار"
+  "Site": {
+    "name": "پارچە و نرخی کۆمپیوتەر"
   },
   "Frame": {
     "languageSwitch": "زمان",
-    "currencySwitch": "دراو",
+    "currencySwitch": "نرخ بە",
     "currencies": {
       "IQD": "دینار",
       "USD": "دۆلار"
-    }
-  },
-  "PlaceholderPage": {
-    "notice": "شوێنگرەوەی ئەپی کڕیار. کتێبخانەکان: <english>{libraries}</english>.",
-    "apiStartedAt": "API لە <time>{startedAt}</time> دەستی پێکرد.",
-    "apiUnreachable": "ناتوانرێت پەیوەندی بە API بکرێت.",
-    "pricesShownIn": {
-      "IQD": "نرخەکان بە دینار پیشان دەدرێن.",
-      "USD": "نرخەکان بە دۆلار پیشان دەدرێن."
     },
-    "sample": "نموونەیەک لە هەر جۆرە دەقێک لە خوارەوەیە. هەموو بەهاکانی ساختەن.",
-    "partsFound": "{count, plural, one {{countText} پارچە دۆزرایەوە} other {{countText} پارچە دۆزرایەوە}}",
-    "readsAt": "تا <english>{speed}</english> دەخوێنێتەوە.",
-    "partLength": "<english>{part}</english> بە درێژیی <english>{length}</english> دێت."
+    "schemeSwitch": "ڕەنگ",
+    "schemes": {
+      "light": "ڕووناک",
+      "dark": "تاریک",
+      "device": "ئامێر"
+    },
+    "schemeTurn": "ڕەنگ: {now}. {next} هەڵبژێرە"
   },
-  "NotFoundPage": {
-    "title": "پەڕە نەدۆزرایەوە",
-    "description": "ئەم ناونیشانە هیچ پەڕەیەکی نییە."
+  "BackCover": {
+    "invitation": "پارچەکەت بدۆزەرەوە",
+    "chooseACategory": "پۆلێک هەڵبژێرە",
+    "someCategories": "هەندێک لە پۆلەکان",
+    "photographs": "وێنەکانی ئەم پەڕەیە",
+    "photograph": "<source><english>{title}</english></source>، لەلایەن <english>{author}</english>، <licenceLink><english>{licence}</english></licenceLink>{changed, select, dimmed {، تاریککراوە} cropped {، بڕدراوە} other {}}"
   },
   "Footer": {
     "credit": "زانیاری لە <openDbLink><english>{openDb}</english></openDbLink> لەخۆ دەگرێت، کە بەپێی <licenceLink><english>{licence}</english></licenceLink> بەردەست خراوە."
+  },
+  "HomePage": {
+    "titleWords": {
+      "parts": "پارچە",
+      "prices": "نرخ",
+      "vendors": "فرۆشیار"
+    },
+    "eightCategories": "هەشت پۆل",
+    "vendorsAndOffers": "{vendors, plural, one {{vendorsText} فرۆشیار} other {{vendorsText} فرۆشیار}}، {offers, plural, one {{offersText} ئۆفەر} other {{offersText} ئۆفەر}}",
+    "confirmedWithin": "{days, plural, one {لە ماوەی ڕۆژێکدا پشتڕاستکراونەتەوە} other {لە ماوەی {daysText} ڕۆژدا پشتڕاستکراونەتەوە}}",
+    "lede": "نرخی هەموو فرۆشیارێک بۆ ئەو پارچەیەی پێویستتە، کەمترینیان لە پێشەوە، هەر یەکەیان لەگەڵ ڕۆژی دوایین پشتڕاستکردنەوەی.",
+    "roomCaption": "مازەربۆردێک لە ژێر ڕووناکیی سوور",
+    "chooseACategory": "پۆلێک هەڵبژێرە",
+    "categories": {
+      "note": "هەموو پارچەیەک، بە نرخی ئەو فرۆشیارانەی هەیانە",
+      "theCore": "بنەڕەت",
+      "aroundIt": "دەوروبەری",
+      "parts": "{count, plural, one {{countText} پارچە} other {{countText} پارچە}}",
+      "lowestPrice": "کەمترین نرخ",
+      "outOfStockEverywhere": "لای هەموو فرۆشیارێک لە کۆگادا نییە",
+      "close": "{days, plural, one {هەر نرخێک فرۆشیارەکەی لە ڕۆژی ڕابردوودا پشتڕاستی کردۆتەوە} other {هەر نرخێک فرۆشیارەکەی لە {daysText} ڕۆژی ڕابردوودا پشتڕاستی کردۆتەوە}}",
+      "tabs": "پۆلێک هەڵبگرە"
+    },
+    "plate": {
+      "title": "{count, plural, one {یەک پارچە، {countText} فرۆشیار} other {یەک پارچە، {countText} فرۆشیار}}",
+      "seeItsOffers": "{count, plural, one {ئۆفەرەکەی ببینە} other {{countText} ئۆفەرەکەی ببینە}}"
+    },
+    "facts": {
+      "heading": "کەس شوێنی باشتر ناکڕێت",
+      "note": "تۆمارکردن بەخۆڕاییە، و هەموو لیستێک بەپێی نرخ ڕیز دەکرێت، ئۆفەرەکانی ناو کۆگا لە پێشەوە. پلاتفۆرم هیچ داواکاری و پارەیەک وەرناگرێت: خۆت پەیوەندی بە فرۆشیارەوە دەکەیت، لە واتسئاپ نامەی بۆ دەنێریت، یان دەچیتە دووکانەکەی.",
+      "vendors": "{count, plural, one {فرۆشیار} other {فرۆشیار}}",
+      "offers": "{count, plural, one {ئۆفەر، لە کۆگادا یان نا} other {ئۆفەر، لە کۆگادا یان نا}}",
+      "rate": "بۆ هەر دۆلارێک، بنەمای نرخە گۆڕدراوەکان",
+      "days": "{days, plural, one {{daysText} ڕۆژ} other {{daysText} ڕۆژ}}",
+      "daysLine": "پێش ئەوەی ئۆفەرێکی پشتڕاستنەکراو بشاردرێتەوە",
+      "photoCaption": "شوێنی کارتەکان و گەیەنەرەکانیان لە پشتی کۆمپیوتەرێک"
+    }
+  },
+  "PriceSlip": {
+    "lowestPrice": "کەمترین نرخ",
+    "highestInStock": "زۆرترین لە کۆگادا",
+    "vendors": "فرۆشیار",
+    "inStock": "لە کۆگادا هەیە",
+    "converted": "گۆڕدراو ≈",
+    "rate": "نرخی دۆلار",
+    "outOfStockEverywhere": "لای هەموو فرۆشیارێک لە کۆگادا نییە",
+    "confirmed": "{days, plural, =0 {ئەمڕۆ پشتڕاستکرایەوە} one {{daysText} ڕۆژ لەمەوبەر پشتڕاستکرایەوە} other {{daysText} ڕۆژ لەمەوبەر پشتڕاستکرایەوە}}",
+    "stamp": "کەمترین نرخ"
+  },
+  "NotFoundPage": {
+    "title": "پەڕە نەدۆزرایەوە",
+    "description": "لەوانەیە ئەم پارچەیە یان ئەم فرۆشیارە ئیتر لەسەر پلاتفۆرمەکە نەبێت، یان ناونیشانەکە بە هەڵە نووسرابێت.",
+    "chooseACategory": "پۆلێک هەڵبژێرە"
+  },
+  "Preview": {
+    "titleOfAPage": "{page} · {site}",
+    "home": {
+      "title": "پارچە و نرخی کۆمپیوتەر",
+      "description": "نرخی هەموو فرۆشیارێک بۆ ئەو پارچانەی کۆمپیوتەر کە پێویستتن بەراورد بکە: کەمترینیان لە پێشەوە، هەر یەکەیان لەگەڵ ڕۆژی دوایین پشتڕاستکردنەوەی، بە دینار یان دۆلار."
+    },
+    "notFound": {
+      "title": "پەڕە نەدۆزرایەوە",
+      "description": "لەوانەیە ئەم پارچەیە یان ئەم فرۆشیارە ئیتر لەسەر پلاتفۆرمەکە نەبێت، یان ناونیشانەکە بە هەڵە نووسرابێت."
+    }
   }
 }

@@ -1,33 +1,94 @@
 {
-  "App": {
-    "title": "تطبيق المتسوّق"
+  "Site": {
+    "name": "قطع الحاسوب وأسعارها"
   },
   "Frame": {
     "languageSwitch": "اللغة",
-    "currencySwitch": "العملة",
+    "currencySwitch": "الأسعار بـ",
     "currencies": {
       "IQD": "دينار",
       "USD": "دولار"
-    }
-  },
-  "PlaceholderPage": {
-    "notice": "صفحة مؤقتة لتطبيق المتسوّق. المكتبات: <english>{libraries}</english>.",
-    "apiStartedAt": "بدأ تشغيل الـ API في <time>{startedAt}</time>.",
-    "apiUnreachable": "تعذّر الوصول إلى الـ API.",
-    "pricesShownIn": {
-      "IQD": "تُعرض الأسعار بالدينار.",
-      "USD": "تُعرض الأسعار بالدولار."
     },
-    "sample": "في ما يلي نموذج من كل نوع من النصوص. جميع القيم فيه غير حقيقية.",
-    "partsFound": "{count, plural, zero {لم يُعثر على أي قطعة} one {تم العثور على قطعة واحدة} two {تم العثور على قطعتين} few {تم العثور على {countText} قطع} many {تم العثور على {countText} قطعة} other {تم العثور على {countText} قطعة}}",
-    "readsAt": "يقرأ بسرعة تصل إلى <english>{speed}</english>.",
-    "partLength": "يأتي <english>{part}</english> بطول <english>{length}</english>."
+    "schemeSwitch": "الألوان",
+    "schemes": {
+      "light": "فاتح",
+      "dark": "داكن",
+      "device": "الجهاز"
+    },
+    "schemeTurn": "الألوان: {now}. اختر {next}"
   },
-  "NotFoundPage": {
-    "title": "الصفحة غير موجودة",
-    "description": "هذا العنوان لا يطابق أي صفحة."
+  "BackCover": {
+    "invitation": "اعثر على قطعتك",
+    "chooseACategory": "اختر فئة",
+    "someCategories": "بعض الفئات",
+    "photographs": "صور هذه الصفحة",
+    "photograph": "<source><english>{title}</english></source>، بعدسة <english>{author}</english>، <licenceLink><english>{licence}</english></licenceLink>{changed, select, dimmed {، معتَّمة} cropped {، مقصوصة} other {}}"
   },
   "Footer": {
     "credit": "يحتوي على معلومات من <openDbLink><english>{openDb}</english></openDbLink>، وهي متاحة بموجب <licenceLink><english>{licence}</english></licenceLink>."
+  },
+  "HomePage": {
+    "titleWords": {
+      "parts": "قطع",
+      "prices": "أسعار",
+      "vendors": "باعة"
+    },
+    "eightCategories": "ثماني فئات",
+    "vendorsAndOffers": "{vendors, plural, zero {لا باعة} one {بائع واحد} two {بائعان} few {{vendorsText} باعة} many {{vendorsText} بائعًا} other {{vendorsText} بائع}}، {offers, plural, zero {لا عروض} one {عرض واحد} two {عرضان} few {{offersText} عروض} many {{offersText} عرضًا} other {{offersText} عرض}}",
+    "confirmedWithin": "{days, plural, zero {مؤكَّدة اليوم} one {مؤكَّدة خلال يوم} two {مؤكَّدة خلال يومين} few {مؤكَّدة خلال {daysText} أيام} many {مؤكَّدة خلال {daysText} يومًا} other {مؤكَّدة خلال {daysText} يوم}}",
+    "lede": "سعر كل بائع للقطعة التي تحتاجها، الأدنى أولًا، مع يوم آخر تأكيد لكلٍّ منها.",
+    "roomCaption": "لوحة أم تحت ضوء أحمر",
+    "chooseACategory": "اختر فئة",
+    "categories": {
+      "note": "كل قطعة، بأسعار الباعة الذين يملكونها",
+      "theCore": "الأساس",
+      "aroundIt": "ما حوله",
+      "parts": "{count, plural, zero {{countText} قطعة} one {قطعة واحدة} two {قطعتان} few {{countText} قطع} many {{countText} قطعة} other {{countText} قطعة}}",
+      "lowestPrice": "أدنى سعر",
+      "outOfStockEverywhere": "غير متوفرة لدى أي بائع",
+      "close": "{days, plural, zero {أكَّد كلَّ سعر بائعُه اليوم} one {أكَّد كلَّ سعر بائعُه خلال اليوم الأخير} two {أكَّد كلَّ سعر بائعُه خلال اليومين الأخيرين} few {أكَّد كلَّ سعر بائعُه خلال آخر {daysText} أيام} many {أكَّد كلَّ سعر بائعُه خلال آخر {daysText} يومًا} other {أكَّد كلَّ سعر بائعُه خلال آخر {daysText} يوم}}",
+      "tabs": "خذ فئة"
+    },
+    "plate": {
+      "title": "{count, plural, zero {قطعة واحدة، لا باعة} one {قطعة واحدة، بائع واحد} two {قطعة واحدة، بائعان} few {قطعة واحدة، {countText} باعة} many {قطعة واحدة، {countText} بائعًا} other {قطعة واحدة، {countText} بائع}}",
+      "seeItsOffers": "{count, plural, zero {اعرض عروضها} one {اعرض عرضها} two {اعرض عرضيها} few {اعرض عروضها الـ{countText}} many {اعرض عروضها الـ{countText}} other {اعرض عروضها الـ{countText}}}"
+    },
+    "facts": {
+      "heading": "لا أحد يشتري مكانًا أفضل",
+      "note": "الإدراج مجاني، وكل قائمة مرتبة حسب السعر، والعروض المتوفرة أولًا. لا تأخذ المنصة طلبات ولا مدفوعات: أنت تتصل بالبائع، أو تراسله على واتساب، أو تذهب إلى بابه.",
+      "vendors": "{count, plural, zero {باعة} one {بائع} two {بائعان} few {باعة} many {بائعًا} other {بائع}}",
+      "offers": "{count, plural, zero {عروض، متوفرة أو لا} one {عرض، متوفر أو لا} two {عرضان، متوفران أو لا} few {عروض، متوفرة أو لا} many {عرضًا، متوفرًا أو لا} other {عرض، متوفر أو لا}}",
+      "rate": "للدولار الواحد، أساس كل سعر محوَّل",
+      "days": "{days, plural, zero {{daysText} يوم} one {يوم واحد} two {يومان} few {{daysText} أيام} many {{daysText} يومًا} other {{daysText} يوم}}",
+      "daysLine": "قبل أن يُخفى عرض لم يُؤكَّد",
+      "photoCaption": "منافذ بطاقات حاسوب وموصلاتها"
+    }
+  },
+  "PriceSlip": {
+    "lowestPrice": "أدنى سعر",
+    "highestInStock": "أعلى سعر متوفر",
+    "vendors": "الباعة",
+    "inStock": "متوفر",
+    "converted": "محوَّل ≈",
+    "rate": "سعر الصرف",
+    "outOfStockEverywhere": "غير متوفرة لدى أي بائع",
+    "confirmed": "{days, plural, =0 {أُكِّد اليوم} zero {أُكِّد اليوم} one {أُكِّد قبل يوم} two {أُكِّد قبل يومين} few {أُكِّد قبل {daysText} أيام} many {أُكِّد قبل {daysText} يومًا} other {أُكِّد قبل {daysText} يوم}}",
+    "stamp": "أدنى سعر"
+  },
+  "NotFoundPage": {
+    "title": "الصفحة غير موجودة",
+    "description": "ربما لم تعد هذه القطعة أو هذا البائع على المنصة، أو ربما كُتب العنوان خطأً.",
+    "chooseACategory": "اختر فئة"
+  },
+  "Preview": {
+    "titleOfAPage": "{page} · {site}",
+    "home": {
+      "title": "قطع الحاسوب وأسعارها",
+      "description": "قارن سعر كل بائع لقطع الحاسوب التي تحتاجها: الأدنى أولًا، مع يوم آخر تأكيد لكلٍّ منها، بالدينار أو بالدولار."
+    },
+    "notFound": {
+      "title": "الصفحة غير موجودة",
+      "description": "ربما لم تعد هذه القطعة أو هذا البائع على المنصة، أو ربما كُتب العنوان خطأً."
+    }
   }
 }

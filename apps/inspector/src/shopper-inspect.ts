@@ -178,13 +178,11 @@ try {
   }
 
   // The inspector's own launch gives it this Chrome, and every tab it opens
-  // is shown in the scheme asked for.
+  // is shown in the scheme asked for, with the motion Taste asks for.
   const newPage = browser.newPage.bind(browser);
   browser.newPage = async (options) => {
     const page = await newPage(options);
-    if (scheme !== undefined) {
-      await page.send('Emulation.setEmulatedMedia', emulatedMedia(scheme, options ?? {}));
-    }
+    await page.send('Emulation.setEmulatedMedia', emulatedMedia(scheme, options ?? {}));
     return page;
   };
   Browser.launch = async () => browser;

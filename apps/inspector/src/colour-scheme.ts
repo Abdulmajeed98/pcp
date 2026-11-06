@@ -1,6 +1,7 @@
 // The colour scheme the inspector's tabs are shown in, when the command is
 // given `--scheme light` or `--scheme dark`. Without it, Chrome follows the
-// computer's own appearance, as the dashboard does.
+// computer's own appearance, as the dashboard does. Their motion is never
+// the computer's: see `emulatedMedia`.
 
 const schemes = ['light', 'dark'] as const;
 
@@ -28,13 +29,18 @@ export function takeTheScheme(args: readonly string[]): {
 }
 
 // The parameters of the DevTools protocol's `Emulation.setEmulatedMedia` that
-// show a tab in the scheme. A call replaces every feature an earlier one set,
-// so the reduced motion Taste asks for in a tab of its own is asked again.
-export function emulatedMedia(scheme: Scheme, { reducedMotion = false }) {
+// show a tab in the scheme asked for, if one is, and with the motion Taste
+// asks for: reduced in the tab it asks that of, and full in every other.
+// Chrome would otherwise take the computer's own setting, and a computer set
+// to reduce motion would show the inspector every page still, as a Shopper
+// who asked for that sees it, and Taste's tab of its own no different. A
+// call replaces every feature an earlier one set, so the reduced motion Taste
+// asks for in its tab is asked again.
+export function emulatedMedia(scheme: Scheme | undefined, { reducedMotion = false }) {
   return {
     features: [
-      { name: 'prefers-color-scheme', value: scheme },
-      ...(reducedMotion ? [{ name: 'prefers-reduced-motion', value: 'reduce' }] : []),
+      ...(scheme === undefined ? [] : [{ name: 'prefers-color-scheme', value: scheme }]),
+      { name: 'prefers-reduced-motion', value: reducedMotion ? 'reduce' : 'no-preference' },
     ],
   };
 }

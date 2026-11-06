@@ -60,6 +60,48 @@ export async function film<Frame, Arg = undefined>(
   }
 }
 
+// Films a page from the first frame its document draws: calls `look` in the
+// page at every frame from the moment the document starts, while `open`
+// brings the page up and for `forMs` after it, with every animation and
+// transition slowed by `slowedBy`. A movement that starts as a page opens,
+// such as a sheet printing on arrival, has begun before `film` could start,
+// since that films a document that is already there. `look` is sent to the
+// page as its source, so it can use nothing but the page's own globals.
+export async function filmFromTheFirstFrame<Frame>(
+  page: Page,
+  look: () => Frame,
+  open: () => Promise<void>,
+  { slowedBy = 4, forMs = 1600 }: { slowedBy?: number; forMs?: number } = {},
+): Promise<Filmed<Frame>[]> {
+  const devtools = await page.context().newCDPSession(page);
+  await devtools.send('Animation.enable');
+  await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 / slowedBy });
+  const record = (lookAt: () => unknown) => {
+    const reel = { frames: [] as { at: number; drawn: unknown }[], on: true };
+    (window as unknown as { reel: typeof reel }).reel = reel;
+    const draw = () => {
+      reel.frames.push({ at: performance.now(), drawn: lookAt() });
+      if (reel.on) requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+  };
+  await page.addInitScript({ content: `(${record.toString()})(${look.toString()})` });
+  try {
+    await open();
+    await page.waitForTimeout(forMs);
+    return (await page.evaluate(() => {
+      const { reel } = window as unknown as {
+        reel: { frames: unknown[]; on: boolean };
+      };
+      reel.on = false;
+      return reel.frames;
+    })) as Filmed<Frame>[];
+  } finally {
+    await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 });
+    await devtools.detach();
+  }
+}
+
 // Where each filmed element was drawn in one frame, in the page's own
 // coordinates (a scroll moves none of them), by the name it was filmed by.
 export type FilmedPlaces = Record<string, { left: number; top: number } | null>;

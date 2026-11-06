@@ -24,6 +24,7 @@
   },
   "include": [
     "proxy.ts",
+    "instrumentation.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
     "src/**/*.ts",

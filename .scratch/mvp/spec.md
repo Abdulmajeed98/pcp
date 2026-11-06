@@ -408,12 +408,13 @@ In development their values are the ones `.env` holds for the `pcp` user, `PCP_D
 | The API | `DATASOURCE_PASSWORD` | None | That user's password, a secret. In development, Nx gives it from `.env`, as above. |
 | The API | `OPENDB_REPOSITORY_URL` | `https://github.com/buildcores/buildcores-open-db` | Where the import fetches the pinned commit's archive from. Only the import reads it. It takes plain HTTP only from this machine, where the tests' stand-in for GitHub listens, because the import trusts the commit the archive names in its own header. |
 | The Shopper app | `API_URL` | `http://localhost:3001` | The API's address. It is read on the server when a page is requested, and is never sent to the browser. |
+| The Shopper app | `SHOPPER_PUBLIC_URL` | `http://localhost:3000` | Its own public address, its origin with no path, from which each page's canonical address, its addresses in the other languages and a preview's image are written. It is read on the server, and never sent to the browser. In development `pnpm services:up` writes it into `.env`, from which Nx gives it to the Shopper app. |
 | The dashboard | `VITE_KEYCLOAK_URL` | `http://localhost:8080` | Keycloak's address. |
 | The dashboard | `VITE_KEYCLOAK_REALM` | `pcp` | The realm. |
 | The dashboard | `VITE_KEYCLOAK_CLIENT_ID` | `dashboard` | Its login client. |
 | The dashboard | `VITE_API_URL` | `http://localhost:3001` | The API's address. |
 
-- The API checks its settings when it starts. A malformed one stops it with a message that names it.
+- The API checks its settings when it starts. A malformed one stops it with a message that names it. The Shopper app checks its two the same way, in Next's instrumentation file, when its server starts (`browse` ticket 09).
 - The dashboard's settings are fixed when it is built, and every one of them ends up in the browser.
 - Values for a server are supplied when the platform is packaged, which is later work.
 
@@ -996,6 +997,7 @@ End-to-end tests cover the main journeys: a Shopper builds and shares a Build; a
   - the Platform Rate screen used with a thumb, a rate typed on the phone's number pad, Arabic-Indic digits among them;
   - the Shopper's currency switch used with a thumb, in Kurdish and in English, and its choice kept after the phone's browser is closed;
   - the board's change felt on a real phone, with reduced motion on and off, with no movement felt as a snap.
+- `browse`, ticket 09: the Shopper's frame and home page used with a thumb at 360 pixels, in Kurdish and in English: the three switches, the scheme's one button among them, each choice kept after the phone's browser is closed; no grey flash and no wait on a tap, no switch's words selected under a resting thumb, a link's long-press menu kept; the browser's bar in the back cover's colour on the home page and in Sheet Paper on the not-found page, in each scheme and in a chosen one; on a phone with a notch, the stub and the card's top row clear of it; the "≈" in the phone's own font beside the price's figures; and the sheets printing, the slip feeding and the stamp landing felt on a real phone, with reduced motion on and off, with no movement felt as a snap.
 
 A module that leaves another adds it here.
 

@@ -7,8 +7,9 @@ import { routing } from '@/shared/i18n';
 // language, and sends with each page its address in the other languages.
 export default createProxy(routing);
 
-// Every address is seen here, except Next's own files and an address with a
-// dot in it, which is a file.
+// Every address is seen here, except Next's own files, a Part's photo, which
+// is the same in every language, and an address with a dot in it, which is a
+// file.
 export const config = {
-  matcher: '/((?!_next|.*\\..*).*)',
+  matcher: '/((?!_next|photos/|.*\\..*).*)',
 };

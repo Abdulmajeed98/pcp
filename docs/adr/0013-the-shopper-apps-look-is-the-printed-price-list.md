@@ -6,6 +6,13 @@ The owner chose it by eye on 6 November 2026, in the `browse` module (`.scratch/
 
 The fonts change in part (below, and ADR-0006). The components are still the Shopper app's own shadcn/ui set on Base UI, created in the Lyra style when the first is needed, whose square corners the new look keeps; their look follows the new DESIGN.md.
 
+## Amended 6 November 2026: the "≈" and a fifth allowance
+
+Building the frame and the home page in browse ticket 09 showed that Noto Kufi Arabic's file for mathematical signs, which its range of characters names for the "≈", holds Arabic mathematical letters and no "≈", so none of the three faces draws it. The owner answered on 6 November 2026:
+
+- The "≈" is drawn in the device's own sans, which every phone and computer holds, beside the price's figures in Public Sans. The theme declares Noto Kufi Arabic's Arabic file itself rather than importing all five of its package's files, so the mathematical file is no longer fetched: a page with Arabic script downloads 187 KB of fonts on the first visit, with a "≈" or without one, as measured in Chrome on the home page in each language and on the not-found page.
+- The sheet allows a fifth of Taste's rules, `still-page`: the paper holds still once printed, so a page with one sheet, as the not-found page is, moves fewer than the eight things Taste's inspector asks for.
+
 ## Considered Options
 
 - **Keep Fit Diagram, with its execution fixed.** The critique's three changes on the old look: a title and a way home, prices drawn as the page's centre, a frame of one pair of margins. It would have kept a look made for a page `browse` does not build.
@@ -23,7 +30,7 @@ Each was rendered as the home page, a Category page with its filters, a Part pag
 - By the packages' listings, a page with Arabic script on it downloads about 187 KB of fonts on the first visit, where it downloaded about 214 KB: Big Shoulders' Latin file is 36 KB and Public Sans' 27 KB, against Archivo's 90 KB with its width axis, and Noto Kufi Arabic's Arabic file stays 124 KB. A page that shows a "≈" adds Noto Kufi Arabic's mathematical file, 22 KB. The sizes are measured again when the faces are installed.
 - The theme in `@pcp/ui/themes/shopper.css` is rewritten with the new tokens of both schemes and the motion's curves, and the frame is rebuilt to the new look, with the three fixes the owner took on 5 November 2026: a way home in the name slot, a plain description until the platform's name is chosen; three switches, the currency drawn as the price's own control, the language, and light, dark or the device's, each working without script; and a not-found page that lists the eight Categories (browse ticket 09). Then the four kinds of page are built to it (tickets 09 to 13).
 - The photographs are of PC hardware, under licences that allow reuse, credited on the page that shows them, and never of a place, a maker's logo or a person who could be known. A Part keeps its own photo, or its Category's icon.
-- Every Shopper page is inspected with Taste's rules for public pages, with the four allowances the owner gave the sheet: `few-pictures`, `eyebrow`, `off-centre` and `palette-cream`.
+- Every Shopper page is inspected with Taste's rules for public pages, with the four allowances the owner gave the sheet: `few-pictures`, `eyebrow`, `off-centre` and `palette-cream`, and a fifth, `still-page`, given on 6 November 2026 (above).
 - Taste's sheet breaks hard rules as dealt (Big Shoulders in capitals, 13- and 12-pixel steps, a light scheme only, faces that draw no Arabic script, a coupon that is a form) and the Shopper app holds each, as `apps/shopper/design/taste/held-rules.md` records.
 - Every movement is CSS, on `transform`, `opacity` and `clip-path`, once a page view and never on a list drawn again, with the finished page under reduced motion; no animation library is added.
 - The root DESIGN.md changes with it, as the owner decided on 6 November 2026 (browse ticket 08): a look's display face may take sizes of its own in `rem`, each at least 1.375rem (22 pixels), and a look may space its own pieces beyond 48 pixels, in 4-pixel steps. The shared text sizes stay as they are, and the Shopper app keeps them, a 16-pixel body and 18 pixels for an item's name and price; its Big Shoulders takes four sizes from 22 to 88 pixels, and its printed pieces spaces of 56 to 140 pixels. The dashboard's rules are otherwise unchanged.
