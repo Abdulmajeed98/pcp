@@ -17,7 +17,8 @@ const openGraphLocales: Record<Language, string> = {
 // address, on the Shopper app's public address, in its own language; its
 // addresses in all three languages, and the address with no language, which
 // picks one for the visitor; and Open Graph's title, description, type,
-// locale and site name. Next writes the tags into the page's head.
+// locale and site name, and its image when the page has one, such as a
+// Part's photo (story 57). Next writes the tags into the page's head.
 //
 // No description holds a price, which a chat app's copy would keep showing
 // after it changed (story 60): the words a page gives are its own.
@@ -28,6 +29,7 @@ export function previewOf({
   description,
   siteName,
   publicAddress,
+  image,
 }: {
   language: Language;
   // Nothing for the home page, or a path that starts with a slash.
@@ -36,6 +38,8 @@ export function previewOf({
   description: string;
   siteName: string;
   publicAddress: string;
+  // The whole address of the page's image, on the public address.
+  image?: string;
 }): Metadata {
   const addressIn = (each: Language) => `${publicAddress}/${each}${path}`;
 
@@ -59,6 +63,7 @@ export function previewOf({
       alternateLocale: languages
         .filter((each) => each !== language)
         .map((each) => openGraphLocales[each]),
+      ...(image === undefined ? {} : { images: [image] }),
     },
   };
 }

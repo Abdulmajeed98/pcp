@@ -1,6 +1,11 @@
-export { partAddress, photoAddress } from './model/addresses';
+export { partAddress, partPath, photoAddress } from './model/addresses';
+export { keyLinesOf } from './model/key-lines';
 export { type Slip, slipOf } from './model/slip';
+export { specificationText } from './model/specification-text';
+export { BoxLabel } from './ui/box-label';
 export { ListedPart } from './ui/listed-part';
+export { nameType } from './ui/name-type';
 export { PartPicture } from './ui/part-picture';
 export { PartSquare } from './ui/part-square';
 export { PriceSlip } from './ui/price-slip';
+export { SpecificationList } from './ui/specification-list';

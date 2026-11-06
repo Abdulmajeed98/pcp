@@ -72,12 +72,16 @@
     "converted": "Converted ≈",
     "rate": "Rate",
     "outOfStockEverywhere": "Out of stock at every Vendor",
-    "confirmed": "{days, plural, =0 {Confirmed today} one {Confirmed {daysText} day ago} other {Confirmed {daysText} days ago}}",
     "stamp": "Lowest Price"
   },
   "Part": {
     "outOfStock": "Out of stock",
     "vendors": "{count, plural, one {{countText} Vendor} other {{countText} Vendors}}"
+  },
+  "Offer": {
+    "confirmed": "{days, plural, =0 {Confirmed today} one {Confirmed {daysText} day ago} other {Confirmed {daysText} days ago}}",
+    "warranty": "{months, plural, one {{monthsText} month warranty} other {{monthsText} months warranty}}",
+    "quoted": "Quoted <english>{price}</english>"
   },
   "SearchParts": {
     "title": "Filters",
@@ -143,6 +147,23 @@
     "notRead": "The list cannot be read just now. Try again in a moment.",
     "tryAgain": "Try again"
   },
+  "PartPage": {
+    "partNumbers": "{count, plural, one {Part number} other {Part numbers}}",
+    "lowestPrice": "Lowest Price",
+    "outOfStockEverywhere": "Out of stock at every Vendor",
+    "offersTitle": "{count, plural, one {{countText} Vendor offers it} other {{countText} Vendors offer it}}",
+    "offersNote": "In stock first, then lowest price. No Vendor pays for its place.",
+    "inStock": "In stock",
+    "outOfStock": "Out of stock",
+    "specifications": "Specifications",
+    "noSpecifications": "The catalog holds no specifications of this Part yet.",
+    "barcode": "Part number {number}",
+    "notRead": {
+      "title": "This Part cannot be read just now",
+      "note": "Try again in a moment."
+    },
+    "tryAgain": "Try again"
+  },
   "NotFoundPage": {
     "title": "Page not found",
     "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped.",
@@ -160,6 +181,9 @@
     },
     "category": {
       "description": "{category, select, cpu {Every CPU the Vendors offer now, each at its lowest price, in dinars or dollars.} cpuCooler {Every CPU cooler the Vendors offer now, each at its lowest price, in dinars or dollars.} motherboard {Every motherboard the Vendors offer now, each at its lowest price, in dinars or dollars.} ram {All the RAM the Vendors offer now, each kit at its lowest price, in dinars or dollars.} storage {All the storage the Vendors offer now, each drive at its lowest price, in dinars or dollars.} gpu {Every GPU the Vendors offer now, each at its lowest price, in dinars or dollars.} case {Every case the Vendors offer now, each at its lowest price, in dinars or dollars.} psu {Every PSU the Vendors offer now, each at its lowest price, in dinars or dollars.} other {Every Part the Vendors offer now, each at its lowest price, in dinars or dollars.}}"
+    },
+    "part": {
+      "description": "{part}, {category, select, cpu {a CPU} cpuCooler {a CPU cooler} motherboard {a motherboard} ram {RAM} storage {a storage drive} gpu {a GPU} case {a case} psu {a PSU} other {a Part}} by {manufacturer}. {count, plural, one {{countText} Vendor offers it} other {{countText} Vendors offer it}}, each price confirmed by its Vendor."
     }
   }
 }

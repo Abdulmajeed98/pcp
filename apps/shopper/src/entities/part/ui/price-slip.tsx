@@ -2,10 +2,11 @@ import type { VisibleOfferResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { cn } from 'cn';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
 import { currencyMarks } from '@/shared/currency';
+import { confirmationIn } from '@/shared/offer-words';
 import { ShownPrice } from '@/shared/price';
 import { PrintInView, Stamp } from '@/shared/ui';
 
@@ -26,19 +27,25 @@ import { slipOf } from '../model/slip';
 //
 // It is printed below the first screen, so the page's script feeds it as it
 // comes into view, as a till feeds its slip (Motion 4), and the stamp lands
-// once it has printed (Motion 3).
+// once it has printed (Motion 3). Beside a Part's Offers it is `pinned` from
+// 64rem: it holds its place 32 pixels from the top while they scroll past,
+// and lets go where they end (Motion 7), which the page's own scrolling
+// does, nothing hijacked; below 64rem it scrolls with them.
 export async function PriceSlip({
   partName,
   offers,
   iqdPerUsd,
   onThePlate = false,
+  pinned = false,
 }: {
   partName: string;
   offers: readonly VisibleOfferResponse[];
   iqdPerUsd: number | null | undefined;
   onThePlate?: boolean;
+  pinned?: boolean;
 }) {
-  const [t, site] = await Promise.all([
+  const [language, t, site] = await Promise.all([
+    getLocale(),
     getTranslations('PriceSlip'),
     getTranslations('Site'),
   ]);
@@ -48,7 +55,10 @@ export async function PriceSlip({
 
   return (
     <PrintInView
-      frameClassName="w-full max-w-[23rem]"
+      frameClassName={cn(
+        'w-full max-w-[23rem]',
+        pinned && 'lg:sticky lg:top-8 lg:self-start',
+      )}
       testId="price-slip"
       className={cn(
         'feeds torn-foot figures relative overflow-clip px-4 pt-[26px] pb-24 md:px-6',
@@ -60,7 +70,7 @@ export async function PriceSlip({
         <p className={cn('mt-1 pb-3.5 text-center', rule)}>
           <AlwaysEnglish>{partName}</AlwaysEnglish>
         </p>
-        <ul className={cn('grid gap-2.5 py-4', rule)}>
+        <ul className={cn('@container grid grid-cols-[minmax(0,1fr)] gap-2.5 py-4', rule)}>
           <Line name={t('lowestPrice')} testId="slip-lowest">
             {slip.lowest?.shownPrice ? (
               <ShownPrice price={slip.lowest.shownPrice} className="text-xl" />
@@ -97,11 +107,8 @@ export async function PriceSlip({
             data-testid="slip-foot"
             className="pt-3.5 text-center text-sm text-muted-foreground"
           >
-            {t('confirmed', {
-              days: slip.lowest.daysSinceConfirmation,
-              daysText: formatNumber(slip.lowest.daysSinceConfirmation),
-            })}{' '}
-            · <AsWritten>{slip.lowest.vendor.name}</AsWritten>
+            {confirmationIn(language, slip.lowest.daysSinceConfirmation)} ·{' '}
+            <AsWritten>{slip.lowest.vendor.name}</AsWritten>
           </p>
         )}
       </div>
@@ -113,7 +120,10 @@ export async function PriceSlip({
 }
 
 // One line of the slip: its name at the start, a dotted leader, and its
-// figure at the end, at weight 600.
+// figure at the end, at weight 600. On a slip too narrow for its own text,
+// as with a phone's text made larger, its name takes the whole line and the
+// leader runs to the figure on the next (the theme's `data-slip-line` rule,
+// break-ui, browse ticket 12).
 function Line({
   name,
   testId,
@@ -126,6 +136,7 @@ function Line({
   return (
     <li
       data-testid={testId}
+      data-slip-line=""
       className="grid grid-cols-[minmax(0,max-content)_minmax(0.5rem,1fr)_auto] items-end gap-2 md:grid-cols-[max-content_minmax(1rem,1fr)_auto]"
     >
       <span>{name}</span>

@@ -123,7 +123,10 @@ export function SheetNote({
 }
 
 // A group of a sheet's items, 56 pixels below what comes before it, under a
-// centred heading in the Label type, its items 16 pixels apart.
+// centred heading in the Label type, its items 16 pixels apart. Its one
+// column may shrink to the sheet's width, so that an item too wide for its
+// text, as with a phone's text made larger, stacks inside the sheet rather
+// than running past it (break-ui, browse ticket 12).
 export function SheetGroup({
   heading,
   as: Heading = 'h3',
@@ -138,7 +141,7 @@ export function SheetGroup({
   return (
     <section data-testid={testId} className="mt-group grid gap-4">
       <Heading className="type-label text-center">{heading}</Heading>
-      <ul className="@container grid gap-4">{children}</ul>
+      <ul className="@container grid grid-cols-[minmax(0,1fr)] gap-4">{children}</ul>
     </section>
   );
 }
