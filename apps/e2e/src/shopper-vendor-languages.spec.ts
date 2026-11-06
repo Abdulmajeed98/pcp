@@ -38,6 +38,7 @@ import {
   offerOfThePart,
   partsListed,
   tearOffTabs,
+  theCityNamed,
   type TheVendorPage,
   theVendorsOffers,
   vendorsOffers,
@@ -183,9 +184,10 @@ test("in Kurdish and English, the Vendor's city is named in the page's language,
   for (const language of kurdishAndEnglish) {
     await test.step(`in ${language.name}`, async () => {
       await page.goto(addressIn(language, vendorPage(everyDetail)));
-      const city = page.getByTestId('vendor-city');
-      await expect(city).not.toBeEmpty();
-      cities.set(language, await city.innerText());
+      const city = await theCityNamed(page);
+      expect(city).not.toBe('');
+      await expect(page.getByTestId('what-the-vendor-is')).toContainText(city);
+      cities.set(language, city);
 
       const writtenAddress = page.getByTestId('vendor-address').locator('bdi');
       await expect(writtenAddress).toHaveText(address);
@@ -528,7 +530,7 @@ test("in Kurdish and English, a Vendor page's preview names the Vendor and its c
     for (const language of kurdishAndEnglish) {
       await test.step(`in ${language.name}`, async () => {
         await page.goto(addressIn(language, vendorPage(everyDetail)));
-        const city = await page.getByTestId('vendor-city').innerText();
+        const city = await theCityNamed(page);
 
         const head = await headOf(crawler, addressIn(language, vendorPage(everyDetail)));
         const [title] = tagsIn(head, /<title>([^<]*)<\/title>/g);

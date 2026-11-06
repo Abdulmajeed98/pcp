@@ -39,7 +39,8 @@ function inLatinScript(name: string): boolean {
 // as it wrote it (LANG-4), in the Sheet title, as the page's `h1`, and under
 // it in Body large what the page is, "A Vendor of PC Parts in Erbil.", its
 // city named in the page's language, so that the first screen says what
-// the name is (Taste's inspector, `name-only-title`); at its foot its
+// the name is (Taste's inspector, `name-only-title`), in one run of words,
+// which the inspector reads whole; at its foot its
 // address as it wrote it, and its opening hours under "Opening hours" at
 // 600, as it wrote them. What the Vendor wrote takes its own direction, its
 // name and each line of its address and hours set from their own start, as
@@ -88,11 +89,12 @@ export async function Coupon({ vendor }: { vendor: VisibleVendorResponse }) {
             >
               <AsWritten className="block leading-[1.4]">{vendor.name}</AsWritten>
             </h1>
-            <p data-testid="what-the-vendor-is" className="text-lg">
-              {t.rich('whatItIs', {
-                city: city(vendor.city),
-                place: (chunks) => <span data-testid="vendor-city">{chunks}</span>,
-              })}
+            <p
+              data-testid="what-the-vendor-is"
+              data-city={city(vendor.city)}
+              className="text-lg"
+            >
+              {t('whatItIs', { city: city(vendor.city) })}
             </p>
           </div>
           <div className="grid gap-4">

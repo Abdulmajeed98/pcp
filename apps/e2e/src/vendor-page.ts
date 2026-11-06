@@ -12,6 +12,12 @@ export function contactLink(page: Page, kind: ContactKind): Locator {
   return page.getByTestId(`contact-${kind}`);
 }
 
+// The Vendor's city as the coupon names it, in the page's language, in the
+// line under the Vendor's name that says what the page is.
+export async function theCityNamed(page: Page): Promise<string> {
+  return (await page.getByTestId('what-the-vendor-is').getAttribute('data-city')) ?? '';
+}
+
 // The coupon's tear-off tabs, each a call.
 export function tearOffTabs(page: Page): Locator {
   return page.getByRole('group').filter({ has: page.locator('a[href^="tel:"]') });
