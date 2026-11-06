@@ -6,6 +6,7 @@ import type {
   LabelledSpecificationResponse,
   ListVisiblePartsData,
   PartSummaryResponse,
+  PlatformFiguresResponse,
   SpecificationResponse,
   VisibleOfferOfVendorPageResponse,
   VisibleOfferOfVendorResponse,
@@ -17,6 +18,8 @@ import type {
   VisibleVendorResponse,
 } from '@pcp/api-client';
 
+import { theShopsPlatformRate } from './made-up-offers.ts';
+import { daysAnOfferStaysCurrent } from './made-up-shop.ts';
 import type { Category, ReadPart, ShopOffer, ShoppersShop } from './the-shoppers-shop.ts';
 
 // The stand-in API: the answers the made-up shop gives to the public
@@ -509,6 +512,21 @@ function offersOfPart(shop: ShoppersShop, partId: string, query: URLSearchParams
   return answer(body);
 }
 
+// The platform's figures, from the shop: every Vendor it holds, all active,
+// and every Offer, all visible, since the shop holds only Visible Offers of
+// active Vendors and the stand-in judges no visibility; the Platform Rate its
+// prices were converted at; and the days an Offer stays current, as the
+// API's description states them.
+function platformFigures(shop: ShoppersShop): StandInAnswer {
+  const body: PlatformFiguresResponse = {
+    activeVendorCount: shop.vendors.length,
+    visibleOfferCount: shop.offers.length,
+    iqdPerUsd: theShopsPlatformRate,
+    daysAnOfferStaysCurrent,
+  };
+  return answer(body);
+}
+
 // A photo, with the headers the API serves one with: it never changes at its
 // address, so it may be kept for a year, and the browser is told not to
 // guess another type.
@@ -555,6 +573,7 @@ export function answerFromTheStandIn(shop: ShoppersShop, call: ApiCall): StandIn
   if (version !== 'v1') return notAnswered;
   try {
     if (first === 'visible-parts' && second === undefined) return visibleParts(shop, query);
+    if (first === 'platform-figures' && second === undefined) return platformFigures(shop);
     if (second === undefined) return notAnswered;
     if (first === 'visible-parts' && second === 'filters' && rest.length === 0) {
       return filtersOfCategory(shop, query);

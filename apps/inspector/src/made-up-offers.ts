@@ -12,6 +12,10 @@ import type { PartSummaryResponse } from '@pcp/api-client';
 // shop's Platform Rate of 1,575 dinars to the dollar: rounded to the nearest
 // 250 dinars or whole dollar, and marked "≈".
 
+// The made-up shop's Platform Rate, in whole dinars per dollar, which every
+// price written beside a Quoted Price below was converted at.
+export const theShopsPlatformRate = 1575;
+
 // A Part of the catalog, as the shop names it.
 export interface CatalogPart {
   category: PartSummaryResponse['category'];

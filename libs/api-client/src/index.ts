@@ -30,6 +30,7 @@ export type {
   PartSummaryResponse,
   PasswordResetResponse,
   PhoneNumberResponse,
+  PlatformFiguresResponse,
   PlatformRateResponse,
   PriceRangeResponse,
   SetPlatformRateRequest,
