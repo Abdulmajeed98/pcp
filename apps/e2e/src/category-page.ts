@@ -13,21 +13,28 @@ export interface MadeUpListedPart {
 
 // Creates a made-up CPU over HTTP as the Admin, with the name the test gives,
 // which holds a word unique to the run so that the test finds its own rows on
-// a long list, and plainly test data. It stays in the development database,
-// which `pnpm services:reset` empties.
+// a long list, and plainly test data, and with the manufacturer and the
+// specifications it gives, in OpenDB's field names and nesting, such as
+// `{ socket: 'AM5', cores: { total: 8 } }`; with none, it holds no
+// specification. It stays in the development database, which
+// `pnpm services:reset` empties.
 export async function createACpuNamed(
   request: APIRequestContext,
   authorization: string,
   name: string,
+  {
+    manufacturer = 'Made-up Test Parts',
+    specifications = {},
+  }: { manufacturer?: string; specifications?: Record<string, unknown> } = {},
 ): Promise<MadeUpListedPart> {
   const created = await request.post(`${apiUrl}/v1/parts`, {
     headers: { authorization },
     data: {
       category: 'cpu',
       name,
-      manufacturer: 'Made-up Test Parts',
+      manufacturer,
       partNumbers: [`TEST-${name.replace(/\W+/g, '-')}`],
-      specifications: {},
+      specifications,
     },
   });
   expect(created.status()).toBe(201);
@@ -92,6 +99,12 @@ export async function namesListed(page: Page): Promise<string[]> {
   );
 }
 
+// The page lists these Parts, in this order, once it has drawn its list: a
+// list drawn again in place, by a choice applied with script, is waited for.
+export async function expectTheList(page: Page, names: string[]): Promise<void> {
+  await expect.poll(() => namesListed(page)).toEqual(names);
+}
+
 // The listed Part of this name.
 export function listedPart(page: Page, name: string): Locator {
   return listedParts(page).filter({
@@ -118,6 +131,126 @@ export async function searchTheCategory(page: Page, words: string): Promise<void
   await theSearchBox(page).fill(words);
   await theSearchBox(page).press('Enter');
   await page.waitForURL((url) => url.searchParams.get('search') === words);
+}
+
+// What a Category page's address asks of its list, as its query holds it: each
+// field the form sent with something in it, in its order, a repeated one in
+// each place. A form sent without script sends its empty fields too, and
+// those are left out, as the page ignores them.
+export function theQueryOf(address: string): [string, string][] {
+  return [...new URL(address).searchParams].filter(([, value]) => value.trim() !== '');
+}
+
+// The page is the Category page at `path`, in `language`, and its address
+// asks for `asked` and nothing else.
+export async function expectTheAddressToAsk(
+  page: Page,
+  language: { tag: string },
+  path: string,
+  asked: [string, string][],
+): Promise<void> {
+  await expect
+    .poll(() => {
+      const shown = new URL(page.url());
+      return { path: shown.pathname, asked: theQueryOf(page.url()) };
+    })
+    .toEqual({ path: `/${language.tag}${path}`, asked });
+}
+
+// The filters' form, the swing tag (DESIGN.md's The swing tag): the search,
+// and below 64rem the fold of the filters, a disclosure whose bar says
+// "Filters" and how many choices are on.
+export function theFiltersFold(page: Page): Locator {
+  return page.getByTestId('filters-fold');
+}
+
+export function theFiltersBar(page: Page): Locator {
+  return page.getByTestId('filters-bar');
+}
+
+// Unfolds the filters on a phone, as a Shopper does with a tap on the bar,
+// unless they are unfolded already.
+export async function unfoldTheFilters(page: Page): Promise<void> {
+  if (!(await theFiltersFold(page).evaluate((fold: HTMLDetailsElement) => fold.open))) {
+    await theFiltersBar(page).click();
+  }
+  await expect(theFiltersFold(page)).toHaveJSProperty('open', true);
+}
+
+// The native checkbox of one value of a filter, by the parameter the API
+// asks the filter by and the value as the address writes it, which are the
+// same in every language: `manufacturer` for a manufacturer.
+export function theChoiceOf(page: Page, parameter: string, value: string): Locator {
+  return page
+    .getByTestId('filters')
+    .locator(`input[type="checkbox"][name="${parameter}"][value="${value}"]`);
+}
+
+// The chip that holds it, which a thumb taps.
+export function theChipOf(page: Page, parameter: string, value: string): Locator {
+  return page.getByTestId('filters').locator('label', {
+    has: page.locator(`input[type="checkbox"][name="${parameter}"][value="${value}"]`),
+  });
+}
+
+// A field of the price range, `lowest` or `highest`.
+export function thePriceField(page: Page, end: 'lowest' | 'highest'): Locator {
+  return page.getByTestId('filters').locator(`input[name="${end}"]`);
+}
+
+// What the form says beside a price field it cannot use.
+export function whatThePriceFieldSays(page: Page, end: 'lowest' | 'highest'): Locator {
+  return page.getByTestId(`${end}-problem`);
+}
+
+// The filters' button that sends the form, Show Parts.
+export function showParts(page: Page): Locator {
+  return page.getByTestId('show-parts');
+}
+
+// Chooses values in the filters as a Shopper does, with a tap on each chip,
+// the filters unfolded first. With script each choice applies as soon as it
+// is made, and the address holds it before the next; without script the
+// choices are sent with Show Parts.
+export async function chooseInTheFilters(
+  page: Page,
+  choices: [string, string][],
+): Promise<void> {
+  const withScript = await page.evaluate(() => matchMedia('(scripting: enabled)').matches);
+  await unfoldTheFilters(page);
+  for (const [parameter, value] of choices) {
+    const asked = theQueryOf(page.url());
+    await theChipOf(page, parameter, value).click();
+    if (withScript) {
+      const before = asked.some(([name, each]) => name === parameter && each === value);
+      await page.waitForURL(
+        (url) =>
+          theQueryOf(url.href).some(
+            ([name, each]) => name === parameter && each === value,
+          ) !== before,
+      );
+    }
+  }
+  if (!withScript) await sendTheFilters(page);
+}
+
+// Sends the filters' form with Show Parts, and waits for the page it asks for.
+export async function sendTheFilters(page: Page): Promise<void> {
+  const before = page.url();
+  await unfoldTheFilters(page);
+  await showParts(page).click();
+  await page.waitForURL((url) => url.href !== before);
+}
+
+// The choices that are on, at the head of the sheet: one chip for each, a
+// link to the list without it, told apart by `data-choice`: `search`,
+// `price`, or the parameter and the value, such as `socket=AM5`.
+export function choicesOnTheSheet(page: Page): Locator {
+  return page.getByTestId('choices-on').getByTestId('choice-on');
+}
+
+export function theChoiceOnOf(page: Page, choice: string): Locator {
+  return page.getByTestId('choices-on').locator(`a[data-choice="${choice}"]`);
 }
 
 // What a film sees of a Category page's sheet in one frame (DESIGN.md's What
