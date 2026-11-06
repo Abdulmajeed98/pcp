@@ -24,7 +24,11 @@ export async function expectAccessible(page: Page): Promise<void> {
         // reach the new scheme's, and a contrast measured during it is of
         // neither scheme. A transition can be cancelled meanwhile and another
         // start in its place, as in a dialog's button, so the page is asked
-        // again until nothing with an end is still running.
+        // again until nothing with an end is still running. What the browser
+        // does not draw is left out: no contrast is measured on it, and the
+        // transitions of what it skips drawing, such as the chips of a folded
+        // disclosure (`content-visibility: hidden`), never finish while it is
+        // skipped (browse ticket 11).
         await page.evaluate(async () => {
           for (let round = 0; round < 10; round++) {
             const running = document
@@ -32,7 +36,9 @@ export async function expectAccessible(page: Page): Promise<void> {
               .filter(
                 (animation) =>
                   animation.playState === 'running' &&
-                  animation.effect?.getComputedTiming().endTime !== Infinity,
+                  animation.effect?.getComputedTiming().endTime !== Infinity &&
+                  (animation.effect as KeyframeEffect | null)?.target?.checkVisibility() !==
+                    false,
               );
             if (running.length === 0) return;
             await Promise.all(
