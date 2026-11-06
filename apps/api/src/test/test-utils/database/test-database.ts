@@ -138,7 +138,7 @@ export async function platformRateRows(): Promise<PlatformRateRow[]> {
 // never by the database's own clock: the API sets every rate by its clock
 // (`platform-rate.schema.ts`), and a rate set by another clock could fall
 // before the current one and never become current.
-export async function changeTheRateAndTheOffersWhileReading<T>(
+export function changeTheRateAndTheOffersWhileReading<T>(
   change: {
     iqdPerUsd: number;
     setAt: Date;
@@ -147,18 +147,75 @@ export async function changeTheRateAndTheOffersWhileReading<T>(
   },
   read: () => Promise<T>,
 ): Promise<T> {
+  return changeWhileReading(
+    change.lockedTable,
+    async (changing) => {
+      await addARate(changing, change.iqdPerUsd, change.setAt);
+      await changing.query('UPDATE offer SET usd_price_cents = $1', [change.usdPriceCents]);
+    },
+    read,
+  );
+}
+
+// A change to the Platform Rate and to one Vendor, made in one transaction
+// while a read waits, as `changeTheRateAndTheOffersWhileReading` makes its
+// own: a new rate, and the Vendor deactivated, so that the Vendor and its
+// Offers leave the platform's figures. A read that takes the rate and the
+// counts in two queries, or the Vendors and the Offers, takes one of them
+// before the change and the other after, while a table the first of its
+// queries does not read is the one locked; a read in one query takes all of
+// them after.
+//
+// It is the third named exception, after `changeTheRateAndTheOffersWhileReading`,
+// for the same reason: no endpoint changes the rate and a Vendor at once, or
+// holds a table locked while another request reads. The Vendor is
+// deactivated in the database alone, and its Login stays as it was, which no
+// figure reads. The rate is set at `setAt`, by the API's clock, as there.
+export function changeTheRateAndDeactivateAVendorWhileReading<T>(
+  change: {
+    iqdPerUsd: number;
+    setAt: Date;
+    vendorId: string;
+    lockedTable: 'vendor' | 'offer' | 'platform_rate';
+  },
+  read: () => Promise<T>,
+): Promise<T> {
+  return changeWhileReading(
+    change.lockedTable,
+    async (changing) => {
+      await addARate(changing, change.iqdPerUsd, change.setAt);
+      await changing.query('UPDATE vendor SET active = false WHERE id = $1', [
+        change.vendorId,
+      ]);
+    },
+    read,
+  );
+}
+
+// A setting of the Platform Rate, as a row the change adds.
+async function addARate(changing: Client, iqdPerUsd: number, setAt: Date): Promise<void> {
+  await changing.query(
+    `INSERT INTO platform_rate (iqd_per_usd, set_at, set_by) VALUES ($1, $2, 'test')`,
+    [iqdPerUsd, setAt],
+  );
+}
+
+// A change made in one transaction, which holds one table locked from its
+// start until a read has had to wait for it, and only then commits; and what
+// the read answered.
+async function changeWhileReading<T>(
+  lockedTable: string,
+  change: (changing: Client) => Promise<void>,
+  read: () => Promise<T>,
+): Promise<T> {
   const changing = new Client(connectionOf(testDatabaseSettings()));
   const watching = new Client(connectionOf(testDatabaseSettings()));
   await changing.connect();
   await watching.connect();
   try {
     await changing.query('BEGIN');
-    await changing.query(`LOCK TABLE ${change.lockedTable} IN ACCESS EXCLUSIVE MODE`);
-    await changing.query(
-      `INSERT INTO platform_rate (iqd_per_usd, set_at, set_by) VALUES ($1, $2, 'test')`,
-      [change.iqdPerUsd, change.setAt],
-    );
-    await changing.query('UPDATE offer SET usd_price_cents = $1', [change.usdPriceCents]);
+    await changing.query(`LOCK TABLE ${lockedTable} IN ACCESS EXCLUSIVE MODE`);
+    await change(changing);
 
     const reading = read();
     // Until the read waits for the lock.

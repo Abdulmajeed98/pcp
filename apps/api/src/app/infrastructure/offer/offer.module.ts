@@ -11,6 +11,7 @@ import { ListVisiblePartsQuery } from '~/domain/offer/ListVisiblePartsQuery';
 import { ReadVisiblePartsFiltersQuery } from '~/domain/offer/ReadVisiblePartsFiltersQuery';
 import { OfferStore } from '~/domain/offer/OfferStore';
 import { ReadOfferQuery } from '~/domain/offer/ReadOfferQuery';
+import { ReadPlatformFiguresQuery } from '~/domain/offer/ReadPlatformFiguresQuery';
 import { ReadVisiblePartQuery } from '~/domain/offer/ReadVisiblePartQuery';
 import { RemoveOfferCommand } from '~/domain/offer/RemoveOfferCommand';
 import { PartModule } from '~/infrastructure/part/part.module';
@@ -18,6 +19,7 @@ import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
 import { OfferController } from './endpoints/offer.controller';
 import { PartOffersController } from './endpoints/part-offers.controller';
+import { PlatformFiguresController } from './endpoints/platform-figures.controller';
 import { VisiblePartController } from './endpoints/visible-part.controller';
 import { VisiblePartsController } from './endpoints/visible-parts.controller';
 import { VisibleVendorOffersController } from './endpoints/visible-vendor-offers.controller';
@@ -35,6 +37,9 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     // the routes are matched in the order the controllers are given.
     VisiblePartController,
     VisibleVendorOffersController,
+    // The platform's figures count the visible Offers, which the Offer Store
+    // alone reads.
+    PlatformFiguresController,
   ],
   providers: [
     // The abstract class is the token the domain asks for.
@@ -51,6 +56,7 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     RemoveOfferCommand,
     ReadVisiblePartQuery,
     ListVisibleOffersOfVendorQuery,
+    ReadPlatformFiguresQuery,
   ],
 })
 export class OfferModule {}

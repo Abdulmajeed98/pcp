@@ -1219,6 +1219,25 @@ export type VisibleOfferOfVendorPageResponse = {
     content: Array<VisibleOfferOfVendorResponse>;
 };
 
+export type PlatformFiguresResponse = {
+    /**
+     * How many active Vendors the platform has, one with no Visible Offer among them. A deactivated Vendor is not counted.
+     */
+    activeVendorCount: number;
+    /**
+     * How many Visible Offers the platform lists, in stock or not: Offers that are not Expired Offers, of active Vendors.
+     */
+    visibleOfferCount: number;
+    /**
+     * The current Platform Rate, in whole dinars per dollar, or null until the Admin sets the first.
+     */
+    iqdPerUsd: number | null;
+    /**
+     * How many days an Offer stays current without a Confirmation: one last confirmed longer ago is an Expired Offer, which no Shopper sees.
+     */
+    daysAnOfferStaysCurrent: number;
+};
+
 export type CurrentPlatformRateResponse = {
     /**
      * The Platform Rate, in whole dinars per dollar.
@@ -2179,6 +2198,28 @@ export type ListVisibleOffersOfVendorResponses = {
 };
 
 export type ListVisibleOffersOfVendorResponse = ListVisibleOffersOfVendorResponses[keyof ListVisibleOffersOfVendorResponses];
+
+export type ReadPlatformFiguresData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/platform-figures';
+};
+
+export type ReadPlatformFiguresErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPlatformFiguresError = ReadPlatformFiguresErrors[keyof ReadPlatformFiguresErrors];
+
+export type ReadPlatformFiguresResponses = {
+    200: PlatformFiguresResponse;
+};
+
+export type ReadPlatformFiguresResponse = ReadPlatformFiguresResponses[keyof ReadPlatformFiguresResponses];
 
 export type ReadPlatformRateData = {
     body?: never;

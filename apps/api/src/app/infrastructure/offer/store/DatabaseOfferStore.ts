@@ -33,6 +33,7 @@ import { Part } from '~/domain/part/Part';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import { PriceRange } from '~/domain/offer/PriceRange';
 import { OfferState } from '~/domain/offer/offer-state';
+import { PlatformFigures } from '~/domain/offer/PlatformFigures';
 import { convertedPriceIn, ShownPrice, WholeNumbers } from '~/domain/offer/shown-price';
 import {
   CreateOfferParams,
@@ -1080,6 +1081,50 @@ export class DatabaseOfferStore implements OfferStore {
       this.logger.error(error, "A Vendor's visible Offers could not be listed");
       return Either.left(
         databaseErrorOf(error, "A Vendor's visible Offers could not be listed"),
+      );
+    }
+  }
+
+  async readPlatformFigures(
+    now: Date,
+  ): Promise<Either.Either<PlatformFigures, StructuredError>> {
+    const client = this.databaseProvider.getClient();
+    // How many active Vendors there are, and how many visible Offers, each
+    // as one row, since a count with no grouping always answers one, and the
+    // current Platform Rate, or no row when none has been set, joined in the
+    // one statement that reads them, so that the figures are of one moment.
+    // Each alias is a name no table in the statement has as a column.
+    const currentRate = currentPlatformRate(client).as('current_rate');
+    const activeVendors = client
+      .select({ count: sql<number>`count(*)::int`.as('active_vendor_count') })
+      .from(vendor)
+      .where(eq(vendor.active, true))
+      .as('active_vendors');
+    const visibleOffers = client
+      .select({ count: sql<number>`count(*)::int`.as('visible_offer_count') })
+      .from(offer)
+      .innerJoin(vendor, eq(vendor.id, offer.vendorId))
+      .where(visibleOffer(now))
+      .as('visible_offers');
+
+    try {
+      const [row] = await client
+        .select({
+          activeVendorCount: activeVendors.count,
+          visibleOfferCount: visibleOffers.count,
+          iqdPerUsd: currentRate.iqdPerUsd,
+        })
+        .from(activeVendors)
+        .crossJoin(visibleOffers)
+        .leftJoin(currentRate, sql`true`);
+
+      return Either.right(
+        new PlatformFigures(row.activeVendorCount, row.visibleOfferCount, row.iqdPerUsd),
+      );
+    } catch (error) {
+      this.logger.error(error, "The platform's figures could not be read");
+      return Either.left(
+        databaseErrorOf(error, "The platform's figures could not be read"),
       );
     }
   }
