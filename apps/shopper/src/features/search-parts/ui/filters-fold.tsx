@@ -87,18 +87,20 @@ export async function FiltersFold({
             t={t}
           />
         )}
-        {offered?.filters
-          .filter(({ parameter }) => isNamed(parameter, t))
-          .map((filter) => (
-            <Choices
-              key={filter.parameter}
-              legend={isNamed(filter.parameter, t) ? nameOfFilter(filter.parameter, t) : ''}
-              filter={filter}
-              values={filter.values}
-              chosen={chosen(filter.parameter)}
-              t={t}
-            />
-          ))}
+        {offered?.filters.flatMap((filter) =>
+          isNamed(filter.parameter, t)
+            ? [
+                <Choices
+                  key={filter.parameter}
+                  legend={nameOfFilter(filter.parameter, t)}
+                  filter={filter}
+                  values={filter.values}
+                  chosen={chosen(filter.parameter)}
+                  t={t}
+                />,
+              ]
+            : [],
+        )}
         {offered?.priceRange.lowest != null && offered.priceRange.highest != null && (
           <fieldset className="grid">
             <legend className="mb-2 font-semibold">

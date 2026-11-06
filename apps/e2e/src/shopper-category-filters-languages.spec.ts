@@ -10,6 +10,7 @@ import {
   type MadeUpListedPart,
   expectTheList,
   sendTheFilters,
+  showParts,
   theChoiceOf,
   theChoiceOnOf,
   theFiltersBar,
@@ -274,6 +275,35 @@ for (const javaScriptEnabled of [true, false]) {
     });
   });
 }
+
+// With script, Show Parts folds the tag at once and brings the head of the
+// list into view, the focus with it (DESIGN.md's The filters with a thumb).
+// The page is looked at as a browser without scroll anchoring shows it, as
+// Safari on a phone does, so that a list's place measured while the tag still
+// folds is seen to miss the list's head; Chrome's anchoring would hide it.
+test('in Kurdish and English, with script, Show Parts folds the filters and brings the head of the list into view, the focus with it', async ({
+  page,
+}) => {
+  for (const language of kurdishAndEnglish) {
+    await test.step(`in ${language.name}`, async () => {
+      await page.goto(addressIn(language, ofTheRun));
+      await chooseInTheFilters(page, [['socket', 'AM5']]);
+      await expectTheList(page, namesOf(alpha, bravo, echo));
+      await page.addStyleTag({ content: '* { overflow-anchor: none }' });
+      await showParts(page).scrollIntoViewIfNeeded();
+      await showParts(page).click();
+
+      await expect(theFiltersFold(page)).toHaveJSProperty('open', false);
+      const title = page.getByRole('main').getByRole('heading', { level: 1 });
+      await expect(title).toBeFocused();
+      await expect(title).toBeInViewport();
+      await expectTheAddressToAsk(page, language, cpus, [
+        ['search', word],
+        ['socket', 'AM5'],
+      ]);
+    });
+  }
+});
 
 test('in Kurdish and English, switching the currency drops the price range and keeps the filters and the search', async ({
   page,

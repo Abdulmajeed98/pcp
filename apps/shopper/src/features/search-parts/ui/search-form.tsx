@@ -102,18 +102,33 @@ export function SearchForm({
     return lowest.problem !== null || highest.problem !== null;
   };
 
-  // Folds the tag, on a phone, and brings the head of the list into view,
-  // with the focus, which would otherwise be lost in the folded tag.
+  // Folds the tag, on a phone, at once, and brings the head of the list into
+  // view where it is not, with the focus, which would otherwise be lost in
+  // the folded tag. The fold's own motion answers a tap on its bar; here the
+  // page goes to the list, whose place is measured once the tag is folded,
+  // which a browser without scroll anchoring would otherwise measure while
+  // the tag still folds. At a desk the list stands beside the tag, its head
+  // in view, and the page does not move.
   const showTheList = (filled: HTMLFormElement) => {
     const fold = filled.querySelector('details');
-    if (fold !== null) fold.open = false;
+    if (fold !== null && fold.open) {
+      fold.dataset.folding = 'at-once';
+      fold.open = false;
+      requestAnimationFrame(() => {
+        delete fold.dataset.folding;
+      });
+    }
     const sheet = document.querySelector<HTMLElement>('[data-testid="sheet"]');
-    const head = sheet?.querySelector<HTMLElement>('h1');
-    if (head !== null && head !== undefined) {
+    if (sheet === null) return;
+    const head = sheet.querySelector<HTMLElement>('h1');
+    if (head !== null) {
       head.tabIndex = -1;
       head.focus({ preventScroll: true });
     }
-    sheet?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    const top = sheet.getBoundingClientRect().top;
+    if (top < 0 || top > innerHeight / 2) {
+      sheet.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
   };
 
   return (

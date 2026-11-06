@@ -916,7 +916,7 @@
  * disclosure's height (`interpolate-size`), it opens from nothing to its own
  * height, and where it cannot it opens at once. A second tap while it opens
  * folds it back from where it is. With reduced motion it opens and folds at
- * once.
+ * once, and so it does when Show Parts folds it.
  *
  * From 64rem the swing tag stands beside the sheet, always unfolded: its
  * contents are shown though the disclosure is folded, and its bar
@@ -943,6 +943,12 @@
     block-size: auto;
     opacity: 1;
     transition-duration: var(--unfold);
+  }
+
+  /* Folded by Show Parts, it folds at once, as the page then goes to the
+   * list. */
+  &[data-folding='at-once']::details-content {
+    transition: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
