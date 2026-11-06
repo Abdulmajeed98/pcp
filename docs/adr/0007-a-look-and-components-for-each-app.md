@@ -1,6 +1,10 @@
 # Each app has a look and a set of components of its own
 
-**Partly replaced by [ADR-0011](0011-the-dashboards-look-is-framed-sheet.md)**, on 21 October 2026: the dashboard's look is no longer Rate Board but Framed sheet, with the Rate Board kept on prices and the rate only; the sentence below that names Rate Board is replaced. The rest stands: each app still has a look and a set of components of its own, the dashboard's components are still shadcn/ui on Base UI, created in the Mira style, and the Shopper app's look is still Fit Diagram.
+**Partly replaced by [ADR-0011](0011-the-dashboards-look-is-framed-sheet.md)**, on 21 October 2026: the dashboard's look is no longer Rate Board but Framed sheet, with the Rate Board kept on prices and the rate only; the sentence below that names Rate Board is replaced.
+
+**Partly replaced by [ADR-0013](0013-the-shopper-apps-look-is-the-printed-price-list.md)**, on 6 November 2026: the Shopper app's look is no longer Fit Diagram but the printed price list, Taste's The page is the object; the sentence below that names Fit Diagram is replaced.
+
+The rest stands: each app still has a look and a set of components of its own, the dashboard's components are still shadcn/ui on Base UI, created in the Mira style, and the Shopper app's are still to be created on Base UI in the Lyra style.
 
 The Shopper app and the dashboard look different, and each has its own shadcn/ui components. The Shopper app's look is Fit Diagram, built on shadcn/ui's Lyra style, and the dashboard's is Rate Board, built on its Mira style. The Admin console and the Vendor portal share the dashboard's. The owner chose this on 15 October 2026, after a second search asked whether the two could each be "tailored to them". The research is in [docs/research/design-system.md](../research/design-system.md).
 

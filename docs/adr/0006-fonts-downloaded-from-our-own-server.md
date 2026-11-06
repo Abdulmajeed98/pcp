@@ -1,5 +1,7 @@
 # Fonts are downloaded, from each app's own server
 
+**Partly replaced by [ADR-0013](0013-the-shopper-apps-look-is-the-printed-price-list.md)**, on 6 November 2026: the Shopper app's fonts are no longer Archivo and Noto Kufi Arabic but Big Shoulders and Public Sans for Latin script, with Noto Kufi Arabic kept for Kurdish and Arabic. Replaced are the sentence below that names the Shopper app's fonts and, in the first consequence, the Shopper app's figure of about 214 KB, which ADR-0013 puts at about 187 KB. The rest stands: each font still comes from a Fontsource package in the `ui` library and is served by the app itself, a page still downloads only the files its letters need, and every font that sets Kurdish still draws every letter of Sorani.
+
 The platform's pages are set in fonts it sends, not in the device's own. The Shopper app uses Archivo and Noto Kufi Arabic, and the dashboard uses Geist, Noto Sans Arabic and Geist Mono. The owner chose them on 15 October 2026, asking for "the most elegant fonts for the apps for all the three languages", and overruled the research's recommendation to download none, which `languages` had decided before. The research is in [docs/research/design-system.md](../research/design-system.md).
 
 Each font comes from a Fontsource package in the `ui` library and is served by the app itself, from its own address, with the page. A page downloads only the files that hold the letters it uses, so a page with no word in Arabic script fetches no Arabic file.
