@@ -13,7 +13,7 @@ Each Offer shows its Vendor's name as written, leading to the Vendor page, and i
 
 A link to the page pasted into WhatsApp previews the Part in the link's language, with its photo, and with no price (BRW-5, success criterion 12). A Part that is no longer visible answers the not-found page with a 404. With this page, success criterion 3 is true in a browser: a USD-only Offer, seen in IQD, shows a price marked "≈".
 
-**Blocked by:** 04, 10
+**Blocked by:** 04, 10, 15 (the price slip's Platform Rate)
 
 **Status:** ready-for-agent
 

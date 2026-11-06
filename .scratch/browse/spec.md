@@ -13,6 +13,8 @@ On 3 November 2026 the owner made two decisions for this module:
 
 On 5 November 2026 the owner added that the app will reach beyond Erbil. Its design carries nothing particular to Erbil: its pictures stand for PCs, not a place, and a Part page's preview counts the shops that offer the Part without naming a city.
 
+On 6 November 2026 the owner chose the Shopper app's look, the printed price list, in tickets 07 and 08. Its home page and a Part's price slip print figures that no public endpoint gave: how many Vendors and Visible Offers the platform holds, the Platform Rate, and how long an Offer stays listed. The owner chose to add one public endpoint for them, `GET v1/platform-figures` (ticket 15).
+
 Some words need care. A **Visible Offer** is an Offer that is not an Expired Offer and whose Vendor is active (CAT-7). A **Visible Part** is a Part with at least one Visible Offer: the only Parts a Shopper ever sees. A Part's **Lowest Price** is the lowest Shown Price among its in-stock Visible Offers, in the chosen currency. A Part whose Visible Offers are all out of stock has no Lowest Price. The three terms are new, and the first ticket adds them to CONTEXT.md before any code uses them, as the MVP spec's Boundaries ask. "Category page", "Part page" and "Vendor page" are the MVP spec's own names for the three kinds of page.
 
 ## Problem Statement
@@ -186,6 +188,7 @@ Each is marked `@Public()`, answers the same with a good token, a bad one or non
 | `GET v1/parts/{partId}/offers?currency` | As `pricing` left it: the Part's Visible Offers with their Shown Price, in OFF-11's order |
 | `GET v1/visible-vendors/{vendorId}` | An active Vendor's name, city, address, map location, phone number, WhatsApp number, Instagram name and opening hours, or 404 `NOT_FOUND` when the Vendor is deactivated or unknown |
 | `GET v1/visible-vendors/{vendorId}/offers?currency&page&size` | One page of an active Vendor's Visible Offers, each with its Part's identifier, Category, name, manufacturer and photo's path, its Shown Price, in-stock status, warranty and days since Confirmation |
+| `GET v1/platform-figures` | The platform's figures: how many active Vendors it has and how many Visible Offers it lists, the current Platform Rate or none, and how many days an Offer stays current without a Confirmation. When and by whom the rate was set stays the Admin's |
 
 - The visible-Offer rule is read through `visibleOffer(now)`, the Shown Price through `pricing`'s SQL expression for a Shown Price at the current Platform Rate, and the search through the catalog's word rule: every word, in any order and any case, in the name, the manufacturer or a part number. None of them is written a second time. Each answer reads the Platform Rate once, in the same query as the rest, so that one answer never mixes two rates.
 - **A Category's list** orders Parts with a Lowest Price first, lowest first; then in-stock Parts with no Lowest Price, which happens only with no Platform Rate; then Parts whose Visible Offers are all out of stock. Within each, ties fall to the Part's name, then its identifier. The page size and its limits are the catalog's paging, through `PagingRequest`.
@@ -274,6 +277,12 @@ Each new line is seen to fail once, by a deliberate fault that is then reverted:
 
 - The Vendor answers its contact details, with null for each one it has not given, and never its Login phone number.
 - Its Offers are grouped by the catalog's order of Categories, and are in OFF-11's order within each. Each has its Shown Price in the asked currency, and Expired Offers are left out.
+
+**The platform's figures**
+
+- With no Vendor, no Offer and no rate, it answers zero, zero, none and the days an Offer stays current.
+- A deactivated Vendor and its Offers are not counted, nor is an Expired Offer. Reactivating the Vendor, or confirming the Offer again, counts them again.
+- The rate is none until one is set, and then the latest one set. The answer never says when it was set or by whom.
 
 Prior art: `offers`' and `pricing`'s integration tests of a Part's Visible Offers, with their refusals and their orders; the catalog's tests of its search and its paging.
 
