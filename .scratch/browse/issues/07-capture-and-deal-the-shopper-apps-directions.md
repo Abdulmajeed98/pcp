@@ -11,7 +11,7 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The capture.** The Shopper app as it is (its frame, both switches, the footer's credit, the placeholder page, the not-found page) is captured with `pnpm shopper:inspect` in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels.
 - [x] **The critique.** Taste's redesign audit leads, and Impeccable's `critique` adds UX and copy. Together they cover the captured pages and the existing [apps/shopper/DESIGN.md](../../../apps/shopper/DESIGN.md), Fit Diagram, which `catalog` ticket 10 drew before any Shopper page existed. The findings are recorded under Comments. Nothing the redesign's closed tickets 14 and 15 recorded binds this plan.
@@ -28,8 +28,8 @@
 - [x] **The world of the subject.** Pictures of Erbil's bazaar, its computer shops, signs and lettering are found with Taste's `assets.mjs`, each with its credit recorded.
 - [x] **The rendering.** Each direction is drawn as four pages: the home page, a Category page with its filters, a Part page with several Offers, one converted, and a Vendor page. Each is drawn in Kurdish and in English, at 360 and 1440 pixels, filled with ticket 06's made-up shop, so that no page is empty or a placeholder. Every option keeps the hard rules, and an option that breaks one says so on its page.
 - [x] **The choosing.** The options are shown in the built-in browser on one page, one option per anchor, two columns at most, before the owner is asked. If the owner takes none, the script deals again. The owner's choice is recorded under Comments with the owner's word.
-- [ ] **Kept.** The chosen direction's sheet (its tokens and the inspector's allowances) is committed under the Shopper app's design folder, as the dashboard's is, since Git ignores `.taste-skill/`. A note under Comments says how to restore it there for the inspector.
-- [ ] `pnpm check` passes, and the work is committed.
+- [x] **Kept.** The chosen direction's sheet (its tokens and the inspector's allowances) is committed under the Shopper app's design folder, as the dashboard's is, since Git ignores `.taste-skill/`. A note under Comments says how to restore it there for the inspector.
+- [x] `pnpm check` passes, and the work is committed.
 
 ## Comments
 
@@ -324,3 +324,13 @@ The page is the scratchpad's `browse-07-chosen/index.html`, for the owner's `.ta
 2. **Which of Taste's rules inspect Shopper pages**: recommended, its rules for public pages for every page, with allowances for `few-pictures`, `eyebrow` and, with answer 1, `palette-cream`; or `--app` for the Category, Part and Vendor pages and the public rules for the home page.
 
 And which tweaks and motions to keep. The sheet-kept box waits for answer 2's allowances, and the last box and the Status stay until the work is done.
+
+### 6 November 2026: the owner's approval
+
+The owner, in their words: "now it is good, and keep all recommendations". The coordinator's reading of those words, recorded here as the coordinator's:
+
+1. **Tweaks and motions**: all seven tweaks (T1 to T7) and all seven motions (M1 to M7) are kept. Ticket 08 records the motion.
+2. **The dark ink**: the dark scheme keeps its bone ink, `#efe7da`, and the sheet allows `palette-cream`.
+3. **The inspector**: every Shopper page is inspected with Taste's rules for public pages, and the sheet allows `few-pictures` (a Category, Part or Vendor page is a printed list with one to three pictures), `eyebrow` (the frame's switches above the card's title), `off-centre` (the printed sheets sit off the middle on purpose) and `palette-cream` (the bone ink, kept).
+
+So `apps/shopper/design/taste/direction.json` now carries `"allow": ["few-pictures", "eyebrow", "off-centre", "palette-cream"]`; `sheet.md` is printed from it again, and now names them ("This direction is allowed: ..."); `held-rules.md` says what is kept and gives each allowance its reason, in place of the empty list. With the allowances in place the Kept box is ticked, and with this commit gated on `pnpm check` the last box too, so every box is ticked and the Status is resolved.

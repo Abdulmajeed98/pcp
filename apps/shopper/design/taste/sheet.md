@@ -212,5 +212,6 @@ Headlines two lines or fewer at every width. No eyebrow labels, no monospace, no
 no cream-and-terracotta, no violet. The frame: one h1 on the first screen that says what this is, equal outer margins, no
 section huddled on one side with the other half empty, no blank stretch over half a screen, a heading on every section.
 `inspect.mjs` measures all of it.
+This direction is allowed: few-pictures, eyebrow, off-centre, palette-cream (the inspector reads this from the saved sheet).
 
 Saved to apps/shopper/design/taste/direction.json · reprint with `node draw.mjs --show`

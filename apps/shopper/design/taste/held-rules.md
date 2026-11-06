@@ -18,14 +18,19 @@ The owner chose this direction on 6 November 2026, in browse ticket 07, in their
 | A coupon that is a form                                    | The platform takes no orders                           | On a Vendor page the coupon holds the Vendor's contact links.                                                                                                  |
 | "Mountain" photographs, and searches for Kurdish postcards | No place named, the pictures stand for PCs (the owner) | Photographs of PC hardware under reusable licences, credited; the Parts keep ticket 06's made-up photos and drawings of hardware.                              |
 
-## Tweaks and motion, for the owner to keep or drop
+## Tweaks and motion, kept
 
-The renderings in browse ticket 07 add seven tweaks and seven motions to the sheet, numbered there so that the owner can keep or drop each one; what is kept is recorded there, and the motion the owner accepts in ticket 08.
+The renderings in browse ticket 07 added seven tweaks and seven motions to the sheet, numbered so that the owner could keep or drop each one. On 6 November 2026 the owner kept them all ("now it is good, and keep all recommendations"); ticket 08 records the motion.
 
 - T1, the price slip: a Part's figures printed as a till slip with a torn foot. T2, tear-off tabs: the Categories sheet and the Vendor's coupon end in tabs along a perforation, each a link. T3, the box label: a Part's specifications as the label on its box, with its part number as a Code 39 barcode. T4, the stamp: the Lowest Price stamped in the green ink. T5, dot leaders from each name to its price. T6, printer's marks: crop marks and a bar of the three inks around each sheet. T7, printed drawings of hardware in the text's ink.
 - M1, a sheet prints out as it arrives. M2, prices settle into their column. M3, the stamp lands. M4, the slip feeds line by line. M5, a tear-off tab gives under the pointer. M6, the barcode is scanned once. M7, the pinned story, the sheet's own move: the slip holds its place beside a Part's Offers.
+- T5's leaders depart from the sheet's list blueprint, which links a name and its price by alignment alone ("there are no leaders"); the owner kept them with the rest.
 
 ## For the inspector
 
 - Taste's `inspect.mjs` reads a sheet from `.taste-skill/direction.json` in the folder it runs from, or from the folder above its `--out`. To inspect Shopper pages with this sheet, copy it there at the repository root before `pnpm shopper:inspect` (`mkdir -p .taste-skill && cp apps/shopper/design/taste/direction.json .taste-skill/`), the dashboard's sheet going back there before the dashboard is inspected; or pass an `--out` folder inside `apps/shopper/design/taste/`.
-- Its `allow` list stays empty until the owner says whether Shopper pages are inspected with Taste's rules for public pages or with `--app` (browse ticket 07).
+- Every Shopper page is inspected with Taste's rules for public pages, not `--app` (the owner's answer, browse ticket 07). The sheet allows four of them, each for a reason the direction gives:
+  - `few-pictures`: a Category, Part or Vendor page is a printed list with one to three pictures; the home page carries four.
+  - `eyebrow`: the frame's switches sit above the card's title, as a printed card's header line.
+  - `off-centre`: the printed sheets sit off the middle on purpose, as sheets laid on a table.
+  - `palette-cream`: the dark scheme's ink is the palette's own bone (`#efe7da`) on chocolate, kept by the owner; its contrast passes AA.
