@@ -104,6 +104,8 @@
     },
     "waterCooled": "{liquid, select, true {شل} other {هەوا}}",
     "yesOrNo": "{yes, select, true {بەڵێ} other {نەخێر}}",
+    "moreValues": "{count, plural, one {{countText} دانەی تر} other {{countText} دانەی تر}}",
+    "fewerValues": "کەمتر",
     "valueOfName": "{name} <english>{value}</english>",
     "price": "نرخ، <english>{unit}</english>",
     "lowest": "کەمترین",

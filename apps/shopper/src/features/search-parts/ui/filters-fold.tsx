@@ -160,12 +160,26 @@ export async function FiltersFold({
 // the whole tag cannot hold them on one line, as with text at twice its size.
 const atTheFoot = 'min-w-fit flex-[1_1_calc(50%-0.25rem)] px-3';
 
+// A long filter shows its first 12 values and folds the rest, so that the
+// price range and Show Parts stay within reach: the made-up shop's 400 GPUs
+// hold 149 chipsets, a tag some 6,000 pixels tall on a phone (break-ui,
+// ticket 11). A filter of up to 16 values shows them all, rather than fold
+// away a few.
+const valuesShown = 12;
+const valuesFoldedPast = 16;
+
 // One filter's field set: its legend at weight 600, and each of its values
 // a chip, a native checkbox drawn as a square of the Board, 44 pixels tall
 // on a touchscreen, its words in the Ink; a chosen one turns to Print Green
 // with Green's Ink and a check mark before its words, so that its state is in
 // a mark as well as a colour. The chips wrap in rows. Each is named by its
 // words, in the field set named by its filter.
+//
+// The values of a long filter past its first 12 are folded behind a
+// disclosure of their own, which works before any script has loaded: its
+// summary, underlined as Clear all is, says how many more there are, "137
+// more", and "Fewer" once it is open. It is open from the first when a value
+// it folds is chosen, so that no chosen chip is hidden.
 function Choices({
   legend,
   filter,
@@ -179,21 +193,47 @@ function Choices({
   chosen: readonly FilterValue[];
   t: SearchWords;
 }) {
+  const shown = values.length > valuesFoldedPast ? values.slice(0, valuesShown) : values;
+  const folded = values.slice(shown.length);
+  const chips = (some: readonly FilterValue[]) => (
+    <div className="flex flex-wrap gap-1.5">
+      {some.map((value) => (
+        <Chip
+          key={String(value)}
+          parameter={filter.parameter}
+          value={value}
+          chosen={chosen.includes(value)}
+        >
+          {wordsOfAValue(filter, value, t).words}
+        </Chip>
+      ))}
+    </div>
+  );
+
   return (
     <fieldset className="grid" data-filter={filter.parameter}>
       <legend className="mb-2 font-semibold">{legend}</legend>
-      <div className="flex flex-wrap gap-1.5">
-        {values.map((value) => (
-          <Chip
-            key={String(value)}
-            parameter={filter.parameter}
-            value={value}
-            chosen={chosen.includes(value)}
-          >
-            {wordsOfAValue(filter, value, t).words}
-          </Chip>
-        ))}
-      </div>
+      {chips(shown)}
+      {folded.length > 0 && (
+        <details
+          data-testid="more-values"
+          open={folded.some((value) => chosen.includes(value)) || undefined}
+          className="group/more mt-1.5"
+        >
+          <summary className="pressable no-callout inline-flex min-h-control cursor-pointer list-none items-center font-semibold [&::-webkit-details-marker]:hidden">
+            <span className="hover-underline group-open/more:hidden">
+              {t('moreValues', {
+                count: folded.length,
+                countText: formatNumber(folded.length),
+              })}
+            </span>
+            <span className="hover-underline hidden group-open/more:inline">
+              {t('fewerValues')}
+            </span>
+          </summary>
+          <div className="mt-1.5">{chips(folded)}</div>
+        </details>
+      )}
     </fieldset>
   );
 }

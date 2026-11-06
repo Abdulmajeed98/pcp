@@ -104,6 +104,8 @@
     },
     "waterCooled": "{liquid, select, true {Liquid} other {Air}}",
     "yesOrNo": "{yes, select, true {Yes} other {No}}",
+    "moreValues": "{count, plural, one {{countText} more} other {{countText} more}}",
+    "fewerValues": "Fewer",
     "valueOfName": "{name} <english>{value}</english>",
     "price": "Price, <english>{unit}</english>",
     "lowest": "Lowest",

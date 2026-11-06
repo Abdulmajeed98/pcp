@@ -104,6 +104,8 @@
     },
     "waterCooled": "{liquid, select, true {سائل} other {هواء}}",
     "yesOrNo": "{yes, select, true {نعم} other {لا}}",
+    "moreValues": "{count, plural, zero {لا مزيد} one {قيمة أخرى} two {قيمتان أخريان} few {{countText} قيم أخرى} many {{countText} قيمة أخرى} other {{countText} قيمة أخرى}}",
+    "fewerValues": "عرض أقل",
     "valueOfName": "{name} <english>{value}</english>",
     "price": "السعر، <english>{unit}</english>",
     "lowest": "الأدنى",
