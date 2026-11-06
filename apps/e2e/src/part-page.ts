@@ -109,9 +109,9 @@ export function specificationOn(page: Page, path: string): Locator {
 // settle still shifts it, in pixels to the right, and how opaque it is; the
 // slip's stamp, its scale and opacity; the scan's line, where it is across
 // the barcode, from 0 at its left edge to 1 at its right one, whether it is
-// inside the barcode, which clips it, and how opaque it is; and the slip's
-// top in the window. One that is not on the page is null. It runs in the
-// page, so it uses only the page's own globals.
+// inside the barcode, which clips it, and how opaque it is; the slip's top
+// in the window; and how far the page is scrolled. One that is not on the
+// page is null. It runs in the page, so it uses only the page's own globals.
 export interface ThePartPage {
   sheet: { top: number; height: number; covered: number; state: string | null } | null;
   slip: { top: number; height: number; covered: number; state: string | null } | null;
@@ -119,6 +119,7 @@ export interface ThePartPage {
   stamp: { scale: number; opacity: number } | null;
   scan: { across: number; inside: boolean; opacity: number } | null;
   slipInTheWindow: number | null;
+  scrolled: number;
 }
 
 export function lookAtThePartPage(): ThePartPage {
@@ -197,5 +198,6 @@ export function lookAtThePartPage(): ThePartPage {
           },
     scan,
     slipInTheWindow: slip?.parentElement?.getBoundingClientRect().top ?? null,
+    scrolled: scrollY,
   };
 }

@@ -265,25 +265,29 @@ test("in Kurdish and English, a Part's Offers are in the API's order, OFF-11's, 
   expect(confirmed.get(kurdish)).not.toBe(confirmed.get(english));
 });
 
-test('a USD-only Offer seen in dinars shows a price rounded to 250 and marked ≈, with what its Vendor quoted, and seen in dollars, its Quoted Price', async ({
+test('in Kurdish and English, a USD-only Offer seen in dinars shows a price rounded to 250 and marked ≈, with what its Vendor quoted, and seen in dollars, its Quoted Price', async ({
   page,
 }) => {
-  await page.goto(addressIn(english, partPage(cpu)));
-  const quotedInDollars = offerOf(page, bravo.id);
-  // 299.99 $ at 1,500 dinars is 449,985 dinars, the nearest 250 of which is
-  // 450,000.
-  await expect(quotedInDollars.getByTestId('shown-price')).toHaveText('≈ 450,000 IQD');
-  await expect(quotedInDollars.getByTestId('offer-quoted')).toContainText('299.99 $');
+  for (const language of kurdishAndEnglish) {
+    await test.step(`in ${language.name}`, async () => {
+      await page.goto(addressIn(language, partPage(cpu)));
+      const quotedInDollars = offerOf(page, bravo.id);
+      // 299.99 $ at 1,500 dinars is 449,985 dinars, the nearest 250 of which
+      // is 450,000.
+      await expect(quotedInDollars.getByTestId('shown-price')).toHaveText('≈ 450,000 IQD');
+      await expect(quotedInDollars.getByTestId('offer-quoted')).toContainText('299.99 $');
 
-  await choose(page, 'USD');
-  await expect(quotedInDollars.getByTestId('shown-price')).toHaveText('299.99 $');
-  await expect(quotedInDollars.getByTestId('offer-quoted')).toHaveCount(0);
-  // And the Offer quoted in dinars alone is now the converted one: 500,000
-  // dinars at 1,500 are 333.33 $, the nearest whole dollar of which is 333.
-  const quotedInDinars = offerOf(page, alpha.id);
-  await expect(quotedInDinars.getByTestId('shown-price')).toHaveText('≈ 333 $');
-  await expect(quotedInDinars.getByTestId('offer-quoted')).toContainText('500,000 IQD');
-  await choose(page, 'IQD');
+      await choose(page, 'USD');
+      await expect(quotedInDollars.getByTestId('shown-price')).toHaveText('299.99 $');
+      await expect(quotedInDollars.getByTestId('offer-quoted')).toHaveCount(0);
+      // And the Offer quoted in dinars alone is now the converted one:
+      // 500,000 dinars at 1,500 are 333.33 $, the nearest whole dollar 333.
+      const quotedInDinars = offerOf(page, alpha.id);
+      await expect(quotedInDinars.getByTestId('shown-price')).toHaveText('≈ 333 $');
+      await expect(quotedInDinars.getByTestId('offer-quoted')).toContainText('500,000 IQD');
+      await choose(page, 'IQD');
+    });
+  }
 });
 
 test("in Kurdish and English, an Offer's Vendor leads to the Vendor page's address", async ({
@@ -671,9 +675,13 @@ for (const { language, fromTheEnd } of [
   });
 }
 
-test('from 64rem, the price slip holds its place 32 pixels from the top beside the Offers while they scroll past, and lets go where they end', async ({
-  page,
-}) => {
+// The pinned story (Motion 7), at a desk's width: the page is scrolled
+// smoothly through the Offers, a few pixels a frame, and filmed. While the
+// Offers scroll past it the slip holds its place 32 pixels from the window's
+// top, and where they end it lets go and scrolls away with them, with
+// nothing snapping. The page's own scrolling moves it; with reduced motion it
+// is kept, as it moves nothing itself (DESIGN.md's Reduced motion).
+async function expectThePinnedStory(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(addressIn(english, partPage(cpu)), { waitUntil: 'networkidle' });
   // Where the slip and the sheet of Offers lie in the page, before any
@@ -692,20 +700,79 @@ test('from 64rem, the price slip holds its place 32 pixels from the top beside t
   const holds = { from: slipTop - 32, to: sheetBottom - slipHeight - 32 };
   expect(holds.to - holds.from, 'the Offers run on beyond the slip').toBeGreaterThan(100);
 
-  const where = async (scrolled: number) => {
-    await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), scrolled);
-    return (await page.evaluate(lookAtThePartPage)).slipInTheWindow ?? Number.NaN;
-  };
-  // It holds its place while the Offers scroll past it, as the page scrolls.
-  for (const scrolled of [holds.from + 20, (holds.from + holds.to) / 2, holds.to - 20]) {
-    expect(await where(scrolled), `scrolled to ${scrolled}`).toBeCloseTo(32, 0);
+  // The film starts where the smooth scroll does, so that it films the
+  // page's scrolling alone, and not the jump to its start.
+  await page.evaluate(
+    (top) => window.scrollTo({ top, behavior: 'instant' }),
+    holds.from - 160,
+  );
+  const frames = await film(
+    page,
+    lookAtThePartPage,
+    () =>
+      page.evaluate(
+        ({ from, to }) =>
+          new Promise<void>((done) => {
+            let y = from;
+            const step = () => {
+              y += 8;
+              window.scrollTo({ top: y, behavior: 'instant' });
+              if (y < to) requestAnimationFrame(step);
+              else done();
+            };
+            requestAnimationFrame(step);
+          }),
+        { from: holds.from - 160, to: holds.to + 160 },
+      ),
+    { forMs: 300 },
+  );
+
+  const pinned = frames.filter(
+    ({ drawn }) => drawn.scrolled > holds.from + 1 && drawn.scrolled < holds.to - 1,
+  );
+  const after = frames.filter(({ drawn }) => drawn.scrolled > holds.to + 40);
+  expect(pinned.length, 'the slip was filmed while the Offers scrolled').toBeGreaterThan(
+    10,
+  );
+  for (const { drawn } of pinned) {
+    expect(drawn.slipInTheWindow ?? Number.NaN, 'the slip holds its place').toBeCloseTo(
+      32,
+      0,
+    );
   }
-  // And lets go where they end, scrolling away with them.
-  expect(await where(holds.to + 200)).toBeCloseTo(32 - 200, 0);
+  // Where the Offers end it lets go, and scrolls away with them.
+  expect(after.length).toBeGreaterThan(3);
+  for (const { drawn } of after) {
+    expect(drawn.slipInTheWindow ?? Number.NaN).toBeCloseTo(
+      32 - (drawn.scrolled - holds.to),
+      0,
+    );
+  }
+  expect(
+    snapsOf(
+      "the slip's place in the window",
+      frames.map(({ at, drawn }) => ({ at, value: drawn.slipInTheWindow })),
+    ),
+  ).toEqual([]);
+}
+
+test('from 64rem, the price slip holds its place 32 pixels from the top beside the Offers while they scroll past, and lets go where they end, with nothing snapping', async ({
+  page,
+}) => {
+  await expectThePinnedStory(page);
 });
 
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
+
+  test('from 64rem, the price slip is still pinned beside the Offers, as the page scrolls it', async ({
+    page,
+  }) => {
+    await expectThePinnedStory(page);
+    expect(
+      await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches),
+    ).toBe(true);
+  });
 
   test('in Kurdish and English, the Part page is the finished page: the slip fed, the sheet of Offers printed, its prices settled and the stamp down from the first frame, and no line scans the barcode', async ({
     page,
