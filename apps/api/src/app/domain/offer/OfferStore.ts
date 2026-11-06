@@ -9,6 +9,7 @@ import { FilterChoice } from '../specification/filters';
 import { Offer } from './Offer';
 import { OfferDetails } from './OfferDetails';
 import { OfferState } from './offer-state';
+import { PlatformFigures } from './PlatformFigures';
 import { PriceRange } from './PriceRange';
 import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 import { VisibleOffer } from './VisibleOffer';
@@ -480,4 +481,13 @@ export abstract class OfferStore {
     pageable: PageableAttributes,
     now: Date,
   ): Promise<Either.Either<Option.Option<VisibleOffersOfVendorPage>, StructuredError>>;
+
+  // The platform's figures at now by the API's clock: how many active Vendors
+  // it has, how many visible Offers it lists, by the rule in
+  // `visibility.ts`, and the current Platform Rate's value, or none until the
+  // Admin sets the first. All three are read in one query, so that one
+  // answer never mixes two moments.
+  abstract readPlatformFigures(
+    now: Date,
+  ): Promise<Either.Either<PlatformFigures, StructuredError>>;
 }

@@ -484,6 +484,21 @@ describe('the stand-in API', () => {
     });
   });
 
+  describe("the platform's figures", () => {
+    it("are the shop's Vendors and Offers, every one counted, its Platform Rate of 1,575 and the 14 days an Offer stays current", () => {
+      const answer = get('/v1/platform-figures');
+
+      expect(answer.status).toBe(200);
+      expect(answer.body).toEqual({
+        activeVendorCount: 21,
+        visibleOfferCount: 852,
+        iqdPerUsd: 1575,
+        daysAnOfferStaysCurrent: 14,
+      });
+      expect(answer.refused).toBeUndefined();
+    });
+  });
+
   describe("a Part's photo", () => {
     it("is answered as the API serves one, at the address the Part's answer gives", () => {
       const part = get(

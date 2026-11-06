@@ -1771,6 +1771,37 @@
         "tags": ["VisibleVendorOffers"]
       }
     },
+    "/v1/platform-figures": {
+      "get": {
+        "operationId": "readPlatformFigures",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformFiguresResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "The platform's figures: how many active Vendors it has, how many Visible Offers it lists, the current Platform Rate in whole dinars per dollar or none, and how many days an Offer stays current without a Confirmation",
+        "tags": ["PlatformFigures"]
+      }
+    },
     "/v1/platform-rate": {
       "get": {
         "operationId": "readPlatformRate",
@@ -4028,6 +4059,38 @@
           "first",
           "last",
           "content"
+        ]
+      },
+      "PlatformFiguresResponse": {
+        "type": "object",
+        "properties": {
+          "activeVendorCount": {
+            "type": "number",
+            "description": "How many active Vendors the platform has, one with no Visible Offer among them. A deactivated Vendor is not counted.",
+            "example": 21
+          },
+          "visibleOfferCount": {
+            "type": "number",
+            "description": "How many Visible Offers the platform lists, in stock or not: Offers that are not Expired Offers, of active Vendors.",
+            "example": 852
+          },
+          "iqdPerUsd": {
+            "type": "number",
+            "description": "The current Platform Rate, in whole dinars per dollar, or null until the Admin sets the first.",
+            "nullable": true,
+            "example": 1575
+          },
+          "daysAnOfferStaysCurrent": {
+            "type": "number",
+            "description": "How many days an Offer stays current without a Confirmation: one last confirmed longer ago is an Expired Offer, which no Shopper sees.",
+            "example": 14
+          }
+        },
+        "required": [
+          "activeVendorCount",
+          "visibleOfferCount",
+          "iqdPerUsd",
+          "daysAnOfferStaysCurrent"
         ]
       },
       "CurrentPlatformRateResponse": {
