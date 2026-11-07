@@ -15,15 +15,6 @@
         "value": "geist",
         "createdAt": "2026-10-21T14:18:43.593Z",
         "reason": "owner decided: the fonts stay (Geist, Noto Sans Arabic, Geist Mono), .scratch/redesign/spec.md 'Settled in triage', 21 October 2026; ADR-0006"
-      },
-      {
-        "rule": "design-system-font-size",
-        "value": "*",
-        "files": [
-          "libs/ui/src/themes/shopper.css"
-        ],
-        "createdAt": "2026-11-07T17:42:19.669Z",
-        "reason": "The Shopper theme's display sizes are apps/shopper/DESIGN.md's (Display, Sheet title, Facts and Label, and their Kurdish and Arabic settings); the detector reads the root DESIGN.md, the nearest to libs/ui, whose ramp is the shared foundations' (follow-up ticket 03, 7 November 2026)"
       }
     ]
   }
