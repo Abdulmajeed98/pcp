@@ -33,4 +33,5 @@ export type {
   StorageInterface,
 } from './fixed-sets';
 export { judgeBuild } from './judge-build';
+export { neededSpecificationsOf } from './needed-specifications';
 export type { MissingSpecification, RuleOutcome } from './outcome';

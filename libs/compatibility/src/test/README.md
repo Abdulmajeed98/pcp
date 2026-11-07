@@ -20,4 +20,4 @@ With Jest's globals, `describe`, `it` and `expect`, and nothing imported from Je
 
 ## Where they live
 
-Here, under `src`, with the library's type check: `judge-build.spec.ts` for judging a Build as a whole, and `rules/` for each rule, one file each. Each file is named `<what it tests>.spec.ts`.
+Here, under `src`, with the library's type check: `judge-build.spec.ts` for judging a Build as a whole, `rules/` for each rule, one file each, and `needed-specifications.spec.ts` for the needed specifications the rules read, written out from the spec's table. Each file is named `<what it tests>.spec.ts`.
