@@ -43,3 +43,13 @@ The owner answered "Yes, try it": build it behind Next's flag, test first, and k
 **Recorded.** The MVP spec's layout of the Shopper app, its rule for the routing folder, and its line on the "not found" screen.
 
 **Checks.** The six end-to-end files that open the "not found" screen passed, 69 lines, run together under the e2e lock: `shopper-languages`, `shopper-credit-languages`, `shopper-currency`, `shopper-page`, `shopper-motion` and `shopper-scheme`. The Shopper's and the e2e tests' type check, lint and unit tests passed.
+
+### 7 November 2026: the code review
+
+- **DESIGN.md** still said that Next sends the page as a bare document the browser draws by script. Its not-found page and Motion now say which "not found" the server draws and which the browser does, and the MVP spec's line on a page that is not found says so too.
+- **An address with a dot in it.** next-intl's proxy skipped any address with a dot, so `/en/no.such.page` came back in Kurdish, the Shopper app's first language, where the catch-all route had taken English from the address. A new end-to-end line ran red on it, `ckb` where `en` was expected; the proxy now also sees every address under a language (`/(ckb|ar|en)/:path*`), no file being under one, and the line passes.
+- **One way to the language.** `GlobalNotFound` no longer reads the proxy's header and sets the language itself: next-intl gives the same header as `requestLocale`, so the request set-up takes the root parameter, then `requestLocale`, then the Shopper app's first language.
+- **The page as the server sends it.** A new line, with scripts switched off, opens `/en/no-such-page` and finds the 404, the page in English, its heading and the eight Categories' links. It passed at once. With `app/global-not-found.tsx` set aside it failed, the page having no language, Next answering with its own "404: This page could not be found."; the file was put back. Turning Next's flag off was tried first, and was no fault: Next 16.4.3 draws the file even with the flag off, which `next.config.js` now says.
+- **The script's own return.** The motion line that films a page come back to by back now comes back to an unknown Category's not-found page, which the browser still draws by script, so `MarkAReturn`'s branch for such a page stays tested.
+- **Taste's inspector**, on `/no-such-page` with the Shopper's sheet, in Kurdish and in English, in both schemes, at 1440, 1280, 1024, 768 and 390 pixels: 0 FAIL in all four runs. The WARNs are those browse ticket 09 defended for this page, `first-action` and `no-footage`, and `blank-gap` at 768 in Kurdish.
+- **Checks.** The six end-to-end files that open the not-found screen passed, 71 lines with the two new ones.

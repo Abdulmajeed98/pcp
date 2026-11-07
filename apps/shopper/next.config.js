@@ -21,7 +21,9 @@ const nextConfig = {
   // An address that matches no route is answered with `app/global-not-found`,
   // which Next draws on the server, rather than a bare document the browser
   // draws the "not found" screen from (follow-up ticket 07). Next 16.4
-  // documents it as experimental.
+  // documents it as experimental, turned on by this flag. Next 16.4.3 draws
+  // the file even with the flag off, so it is the file that does it, and the
+  // flag says that the app relies on it.
   experimental: { globalNotFound: true },
   ...forTheInspection(process.env.SHOPPER_INSPECTION_DIST_DIR),
 };

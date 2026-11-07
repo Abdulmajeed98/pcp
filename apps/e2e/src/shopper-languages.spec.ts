@@ -260,6 +260,20 @@ test.describe('in a browser set to English, with scripts switched off', () => {
 
     await expectTheChoiceIsKept(page, browser, arabic);
   });
+
+  // The server draws the "not found" screen of such an address (follow-up
+  // ticket 07), so it is read with no script: its heading and the eight
+  // Categories are in the page as the server sends it.
+  test('the "not found" screen of an address that matches no page is drawn with no script, in the language of its address, with its heading and the eight Categories', async ({
+    page,
+  }) => {
+    const response = await page.goto(addressIn(english, '/no-such-page'));
+
+    expect(response?.status()).toBe(404);
+    await expectPageIn(page, english);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    for (const { key } of categories) await expect(linkOf(page, key)).toBeVisible();
+  });
 });
 
 // The frame's switches stand in one row in DESIGN.md's order, the currency
@@ -295,9 +309,9 @@ async function expectTheCurrencyBeforeTheLanguage(
 // The currency switch, beside the language switch: named in the page's
 // language, before the language switch in the reading order, and each choice
 // within reach of a thumb, on the first page and on the "not found" screen.
-// On a phone its choices are named by the
-// marks every price carries, IQD and $, which are the same in every language
-// (DESIGN.md's The currency switch); from 48rem by their names.
+// On a phone its choices are named by the marks every price carries, IQD and
+// $, which are the same in every language (DESIGN.md's The currency switch);
+// from 48rem by their names.
 for (const { where, address } of [
   { where: 'on the first page', address: '' },
   { where: 'on the "not found" screen', address: '/no-such-page' },
@@ -426,6 +440,18 @@ test("the home page's counts, prices and figures are the same Western digits in 
   });
 
   expectTheSameInEveryLanguage(read);
+});
+
+// next-intl's proxy sees an address with a dot in it, as a file's would have,
+// only under a language, and the "not found" screen of an address that
+// matches no page takes its language from the proxy (follow-up ticket 07).
+test('an address with a dot in it, under a language, is answered 404 with the "not found" screen in that language', async ({
+  page,
+}) => {
+  const response = await page.goto(addressIn(english, '/no.such.page'));
+
+  expect(response?.status()).toBe(404);
+  await expectPageIn(page, english);
 });
 
 // The server draws the "not found" screen of such an address, with the

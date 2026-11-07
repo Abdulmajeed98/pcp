@@ -17,10 +17,16 @@ import { routing } from './routing';
 // root parameter `locale`. An address that the proxy file does not see, such
 // as one for a file, can put anything there, and it is answered "not found".
 // The "not found" screen of an address that matches no route has no root
-// parameter, and sets its language itself, which next-intl gives as
-// `requestLocale`.
+// parameter. Its language is the one next-intl's proxy found for the request,
+// which next-intl gives as `requestLocale`: the address's own, or, for an
+// address with none, the one the proxy sent it on to. An address the proxy
+// does not see carries none, and takes the Shopper app's first language.
 export default getRequestConfig(async ({ locale, requestLocale }) => {
-  const language = locale ?? (await languageOfTheAddress()) ?? (await requestLocale);
+  const language =
+    locale ??
+    (await languageOfTheAddress()) ??
+    (await requestLocale) ??
+    routing.defaultLocale;
   if (!hasLocale(routing.locales, language)) notFound();
 
   return {

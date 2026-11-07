@@ -19,6 +19,9 @@ const [kurdish, , english] = languages;
 // filmed with every animation slowed four times, and judged by `snapsOf`.
 const homePage = addressIn(english);
 const notFound = addressIn(english, '/no-such-page');
+// The not-found page of an unknown Category, which the browser draws by
+// script, unlike that of an address that matches no page.
+const anUnknownCategory = addressIn(english, '/categories/no-such-category');
 
 // How long a film runs on after what starts it, at a quarter of the speed:
 // time for every print, its prices and its stamp, which are done within
@@ -336,9 +339,9 @@ test('a page come back to by back or forward is shown printed: the home page, a 
   await expect(page).toHaveURL(addressIn(english, '/categories/cpu'));
   expectStillAndWhole('the Category page’s sheet', framesOf(categoryAgain, 'sheet'));
 
-  // The not-found page marks a return as every page does: here it is come
-  // back to by back.
-  await page.goto(notFound, { waitUntil: 'networkidle' });
+  // The not-found page of an unknown Category, which the browser draws by
+  // script, marks a return itself: here it is come back to by back.
+  await page.goto(anUnknownCategory, { waitUntil: 'networkidle' });
   await page.goto(homePage, { waitUntil: 'networkidle' });
   const notFoundAgain = await filmFromTheFirstFrame(
     page,
@@ -347,7 +350,7 @@ test('a page come back to by back or forward is shown printed: the home page, a 
       await page.goBack();
     },
   );
-  await expect(page).toHaveURL(notFound);
+  await expect(page).toHaveURL(anUnknownCategory);
   expectStillAndWhole('the not-found page’s sheet', framesOf(notFoundAgain, 'sheet'));
 });
 

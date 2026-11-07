@@ -9,7 +9,10 @@ export default createProxy(routing);
 
 // Every address is seen here, except Next's own files, a Part's photo, which
 // is the same in every language, and an address with a dot in it, which is a
-// file.
+// file, unless it starts with a language: no file is under one, and the "not
+// found" screen of an address that matches no page takes its language from
+// what this file finds (follow-up ticket 07). Next reads the matcher before
+// any code runs, so the languages are written here, as `routing` lists them.
 export const config = {
-  matcher: '/((?!_next|photos/|.*\\..*).*)',
+  matcher: ['/((?!_next|photos/|.*\\..*).*)', '/(ckb|ar|en)/:path*'],
 };
