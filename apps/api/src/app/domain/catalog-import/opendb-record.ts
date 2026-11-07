@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 
+import { gpuPowerSockets } from '@pcp/compatibility';
 import { Either, Option } from 'effect';
 
 import { Category } from '../part/Category';
@@ -194,10 +195,6 @@ function withoutRedundantSocket(
   return { ...record, cpu_sockets: sockets.filter((socket) => socket !== 'LGA 1151v2') };
 }
 
-// A GPU's four kinds of power socket, which are all its list holds under
-// `power_connectors`.
-const gpuPowerSockets = ['pcie_6_pin', 'pcie_8_pin', 'pcie_12VHPWR', 'pcie_12V_2x6'];
-
 // The most a PCIe slot supplies a GPU, in watts.
 const slotPower = 75;
 
@@ -229,7 +226,8 @@ function withoutPowerSocketsNotKnown(
   }
   return {
     // Without its sockets, the Part holds no `power_connectors`, as one whose
-    // record gives no count does.
+    // record gives no count does: the four kinds, which the compatibility
+    // library names, are all a GPU's list holds there.
     document: Object.fromEntries(
       Object.entries(document).filter(([name]) => name !== 'power_connectors'),
     ),

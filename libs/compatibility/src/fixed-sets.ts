@@ -1,8 +1,9 @@
 // The fixed sets of values that the Compatibility Rules compare or read by
-// value. The API's specification lists take them from here, so the values the
-// Admin's forms offer are the values the rules know. A new value, such as the
-// socket of a CPU released later, is added here, in code, once for the forms
-// and the rules alike.
+// value, and the kinds of a GPU's power socket, which rule 11 counts. The
+// API's specification lists take them from here, so the values the Admin's
+// forms offer are the values the rules know. A new value, such as the socket
+// of a CPU released later, is added here, in code, once for the forms and the
+// rules alike.
 
 // The sockets, the RAM types and both kinds of form factor are used by more
 // than one Category's list, because a Compatibility Rule compares one Part's
@@ -151,3 +152,18 @@ export type StorageInterface = (typeof storageInterfaces)[number];
 export const m2SlotKeys = ['B', 'E', 'M'] as const;
 
 export type M2SlotKey = (typeof m2SlotKeys)[number];
+
+// The kinds of power socket a GPU has, by the names OpenDB gives their counts
+// under a GPU's `power_connectors`. They are names, not values, and are here
+// beside the sets because rule 11 counts them, the API's list of a GPU's
+// specifications holds them, and the import reads them as not known on a GPU
+// above 75 W that holds 0 for each. A 6-pin and an 8-pin socket take a PSU's
+// 6+2-pin connectors, and a 12VHPWR and a 12V-2x6 socket its 12VHPWR cable.
+export const gpuPowerSockets = [
+  'pcie_6_pin',
+  'pcie_8_pin',
+  'pcie_12VHPWR',
+  'pcie_12V_2x6',
+] as const;
+
+export type GpuPowerSocket = (typeof gpuPowerSockets)[number];

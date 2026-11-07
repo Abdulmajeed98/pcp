@@ -1,3 +1,4 @@
+import { gpuPowerSockets } from '../fixed-sets';
 import { product, total } from './amounts';
 import { and, exceeds, not, or, problemWhen } from './findings';
 import { rule } from './statement';
@@ -14,12 +15,7 @@ import { rule } from './statement';
 export const rule11 = rule({
   number: 11,
   involves: {
-    gpu: [
-      'power_connectors.pcie_6_pin',
-      'power_connectors.pcie_8_pin',
-      'power_connectors.pcie_12VHPWR',
-      'power_connectors.pcie_12V_2x6',
-    ],
+    gpu: gpuPowerSockets.map((socket) => `power_connectors.${socket}` as const),
     psu: ['connectors.pcie_6_plus_2_pin', 'connectors.pcie_12vhpwr'],
   },
   judge: ({ gpu, psu }) => {

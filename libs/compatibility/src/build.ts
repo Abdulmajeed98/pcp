@@ -1,4 +1,5 @@
 import type {
+  GpuPowerSocket,
   M2SlotKey,
   MotherboardFormFactor,
   PowerSupplyFormFactor,
@@ -118,12 +119,8 @@ export type GpuSpecifications = {
   readonly tdp?: number;
   readonly length?: number;
   readonly total_slot_width?: number;
-  readonly power_connectors?: {
-    readonly pcie_6_pin?: number;
-    readonly pcie_8_pin?: number;
-    readonly pcie_12VHPWR?: number;
-    readonly pcie_12V_2x6?: number;
-  };
+  // How many sockets of each kind the GPU has.
+  readonly power_connectors?: { readonly [Socket in GpuPowerSocket]?: number };
 };
 
 export type CaseSpecifications = {
