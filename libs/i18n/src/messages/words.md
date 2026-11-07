@@ -51,11 +51,11 @@ Left out, because no Shopper or Vendor reads them: Specification list, Needed sp
 
 **For the owner's reading.** Added with `pricing`'s ticket 04, on 2 November 2026, as drafts like the rest. The Shopper app's currency switch names the two by these words, and its placeholder says prices are shown in one of them. A price itself is written with the code or the sign, "250 IQD" or "1 $", in every language, and not with these words.
 
-| Currency     | Code  | English  | Kurdish (Sorani) | Arabic | Notes                                                                                                                               |
-| ------------ | ----- | -------- | ---------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Iraqi dinar  | `IQD` | Dinars   | دینار            | دينار  | The switch's choice, and "in dinars": "بە دینار", "بالدينار".                                                                       |
-| US dollar    | `USD` | Dollars  | دۆلار             | دولار   | The switch's choice, and "in dollars": "بە دۆلار", "بالدولار".                                                                        |
-| (the switch) |       | Currency | دراو             | العملة | The switch's name. **To choose**: Kurdish دراو is the written word; spoken Sorani often says پارە, "money", or the English کەرەنسی. |
+| Currency     | Code  | English   | Kurdish (Sorani) | Arabic    | Notes                                                                                                                                                                             |
+| ------------ | ----- | --------- | ---------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Iraqi dinar  | `IQD` | Dinars    | دینار            | دينار     | The switch's choice, and "in dinars": "بە دینار", "بالدينار".                                                                                                                     |
+| US dollar    | `USD` | Dollars   | دۆلار             | دولار      | The switch's choice, and "in dollars": "بە دۆلار", "بالدولار".                                                                                                                      |
+| (the switch) |       | Prices in | نرخ بە           | الأسعار بـ | The switch's name, before its two choices: prices in dinars or in dollars. Browse's frame named it so, and the owner kept it on 7 November 2026 over "Currency", دراو and العملة. |
 
 ## The eight Categories
 

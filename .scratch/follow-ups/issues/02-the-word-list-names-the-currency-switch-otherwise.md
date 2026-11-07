@@ -4,7 +4,7 @@
 
 **Category:** bug
 
-**Status:** needs-triage
+**Status:** resolved
 
 **From:** browse's follow-ups list, swept on 7 November 2026: browse ticket 14.
 
@@ -13,3 +13,9 @@
 **Checked on 7 November 2026.** The word list's row "(the switch)", and `currencySwitch` in the Shopper's `en.json`, `ckb.json` and `ar.json`. Browse ticket 14 put the difference to the owner with the language check in the owner's own browser, which is still to be done.
 
 **Done when.** The word list and the frame give the switch the same name in all three languages, the one chosen for LANG-7's review.
+
+## Comments
+
+### 7 November 2026: the owner's choice, and done
+
+The owner chose the frame's names, "Prices in", نرخ بە and الأسعار بـ, over the word list's. The word list's row for the switch now gives them, says why, and no longer marks the name **To choose**; no page changed. The word list as a whole stays a draft for LANG-7's review, which can still change any word before launch.
