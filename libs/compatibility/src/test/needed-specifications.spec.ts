@@ -23,8 +23,15 @@ describe('the needed specifications', () => {
     ['ram', ['ram_type', 'modules.quantity', 'modules.capacity_gb']],
     ['storage', ['interface', 'form_factor']],
     ['gpu', []],
-    ['case', ['supported_motherboard_form_factors', 'max_cpu_cooler_height']],
-    ['psu', ['connectors.sata']],
+    [
+      'case',
+      [
+        'supported_motherboard_form_factors',
+        'max_cpu_cooler_height',
+        'supported_power_supply_form_factors',
+      ],
+    ],
+    ['psu', ['connectors.sata', 'form_factor']],
   ])('of a Category, %s, are the paths the rules read in it', (category, paths) => {
     expect(neededSpecificationsOf(category)).toEqual(paths);
   });
