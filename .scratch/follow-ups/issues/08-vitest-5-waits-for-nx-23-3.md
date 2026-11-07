@@ -21,3 +21,13 @@ The owner chose to implement every follow-up ticket.
 - **Which Nx.** 23.3.1, of 23 October 2026, the newest of Nx 23. Nx 24.0.5 is out too, but a new major version is a change of its own, and this ticket needs only 23.3 or later.
 - **How.** `pnpm exec nx migrate 23.3.1` moved `nx` and the twelve `@nx/*` packages to 23.3.1, and Vitest with them to 5.1.0, of 2 November 2026; its `@nx/vitest` accepts Vitest 5. `pnpm install` took both with no exception to the release-age rule, and `pnpm-workspace.yaml` is unchanged. `nx migrate --run-migrations` ran the one migration, `@nx/vitest`'s `migrate-to-vitest-5`, which added `.vitest`, where Vitest 5 writes its reports, and Vite's config timestamps to `.gitignore`. Its guide to the rest of Vitest 5's changes was read and checked against the Shopper's tests: no mocks, no unawaited `resolves` or `rejects`, no `sequential`, no deep imports, and one config, in the project's own folder. `migrations.json` and the guide were then removed.
 - **Checks.** Every project's unit tests passed, the Shopper's 383 in 23 files under Vitest 5.1.0, as many as under 4.1.12; no `.vitest` folder was written. The MVP spec's fourth seam and testing strategy name the new versions.
+
+### 7 November 2026: the code review
+
+The review found that `pnpm boundaries:check`, which the MVP spec asks for after an upgrade of Nx, had not been run. It failed on Nx 23.3.1: every line of the dashboard and the Shopper app, "lint gave no report", and then "lint did not look at the planted file". Three changes of Nx 23.3 were behind it, each now answered in `tools/check-boundaries.mjs`:
+
+- Nx keeps a task's output to itself unless the output is static, so the proof asks for `--output-style=static`.
+- Its oxlint executor runs Oxlint itself and prints the JSON report again, over several lines, where Oxlint wrote `{ "diagnostics"` on one; the proof finds the report whatever space follows the brace.
+- The executor runs Oxlint from the repository's root and names each file of its report from there, so the planted files are named from the root too.
+
+It then passed all 128 lines, as browse ticket 14's fresh clone did. The same first change had hidden every test's line from `pnpm platform:check`, whose full run on Nx 23.3.1 exited 0 with no count printed; `tools/check-platform.mjs` now asks for static output as `check-integration.mjs` already did. The two lines Nx's migration added to `.gitignore` now sit under their own comment.

@@ -88,8 +88,11 @@ if (!existsSync(chromium.executablePath())) {
 }
 
 // Never answered from Nx's cache: a pass has to mean that the platform ran.
-const tests = spawnSync('pnpm', ['exec', 'nx', 'e2e', '@pcp/e2e', '--skip-nx-cache'], {
-  cwd: root,
-  stdio: 'inherit',
-});
+// Each test's line is printed as it ends, as `integration:check` prints its
+// own: since 23.3, Nx otherwise keeps a task's lines to itself.
+const tests = spawnSync(
+  'pnpm',
+  ['exec', 'nx', 'e2e', '@pcp/e2e', '--skip-nx-cache', '--output-style=static'],
+  { cwd: root, stdio: 'inherit' },
+);
 process.exitCode = tests.status ?? 1;

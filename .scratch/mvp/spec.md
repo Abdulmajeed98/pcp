@@ -1102,6 +1102,7 @@ _Testing at seams 2 and 3._
 - _A serve that is killed from outside_ can leave Nx's own processes behind, and the next serve then waits for them. Their command lines contain `nx.js serve` and `run-executor.js`.
 - _Old results that pass for new._ Nx keeps one local cache under the home directory, which every checkout and worktree on the machine shares, and its cached type check once let a type error through (`browse` ticket 02); `tsc --build` also skips a project whose `*.tsbuildinfo` is newer than files put back with their old times (ticket 04). So a commit's gate deletes every `*.tsbuildinfo` outside `node_modules` and runs `pnpm check --skip-nx-cache`.
 - _Node's fetch on a reset connection_ can throw, uncaught; the design skills guide says what it means for the two inspectors (`browse`'s code review).
+- _What Nx 23.3 prints._ Since 23.3 Nx keeps a task's output to itself unless it is asked for static output, so a script that reads or shows what a task printed asks for `--output-style=static`, as `check-integration.mjs`, `check-platform.mjs` and `check-boundaries.mjs` do. Its oxlint executor runs Oxlint once from the repository's root, prints its JSON report again over several lines, and names each file from the root (follow-up ticket 08's code review).
 
 ## Testing strategy
 

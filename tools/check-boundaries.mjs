@@ -735,9 +735,11 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
 
 // Oxlint's report is one JSON value in the middle of what Nx prints. This
 // finds where it starts and reads to the brace that closes it. It answers
-// with nothing when there is no report or the report cannot be read.
+// with nothing when there is no report or the report cannot be read. Oxlint
+// writes it on one line, `{ "diagnostics": …`, and Nx's oxlint executor,
+// since 23.3, over several, so any space may come after the brace.
 function readReport(printed) {
-  const start = printed.indexOf('{ "diagnostics"');
+  const start = printed.search(/\{\s*"diagnostics"/);
   if (start === -1) return undefined;
   let depth = 0;
   let inString = false;
@@ -767,9 +769,19 @@ const lintTimeout = 120_000;
 
 // Lints one project through its Nx target, as `pnpm check` does, with the
 // cache skipped. Oxlint leaves out files that Git ignores unless they are
-// named, so the planted files are named.
+// named, so the planted files are named, from the repository's root: since
+// 23.3, Nx's oxlint executor runs Oxlint there, and names each file of its
+// report from there too. Its report is read from what Nx prints, which Nx
+// 23.3 keeps to itself unless the output is static.
 function lint(project, files) {
-  const target = ['exec', 'nx', 'run', `${project.name}:lint`, '--skip-nx-cache'];
+  const target = [
+    'exec',
+    'nx',
+    'run',
+    `${project.name}:lint`,
+    '--skip-nx-cache',
+    '--output-style=static',
+  ];
   return new Promise((resolve, reject) => {
     const nx = spawn('pnpm', [...target, '--format=json', ...files], {
       cwd: root,
@@ -843,7 +855,7 @@ for (const theCase of cases) plant(theCase);
 const results = new Map();
 try {
   for (const project of projects) {
-    results.set(project, await lint(project, casesOf(project).map(plantedName)));
+    results.set(project, await lint(project, casesOf(project).map(plantedPath)));
   }
 } finally {
   removePlanted();
@@ -859,7 +871,7 @@ for (const project of projects) {
     continue;
   }
   for (const theCase of casesOf(project)) {
-    const file = plantedName(theCase);
+    const file = plantedPath(theCase);
     judge(
       theCase,
       report.diagnostics.filter((diagnostic) => diagnostic.filename === file),
