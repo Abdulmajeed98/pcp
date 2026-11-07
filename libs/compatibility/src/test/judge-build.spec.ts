@@ -21,13 +21,16 @@ describe('judging a Build', () => {
     expect(judgeBuild(build).map((outcome) => outcome.rule)).toEqual([1, 2]);
   });
 
-  it('judges a Build with a CPU, a cooler, a motherboard, RAM and a case by rules 1 to 7', () => {
+  it('judges a Build with a CPU, a cooler, a motherboard, RAM and a case by rules 1 to 7 and 17', () => {
     const build: Build = {
       cpu: {
         id: 'the-cpu',
         specifications: { socket: 'AM5', specifications: { memory: { types: ['DDR5'] } } },
       },
-      cpuCooler: { id: 'the-cooler', specifications: { cpu_sockets: ['AM5'] } },
+      cpuCooler: {
+        id: 'the-cooler',
+        specifications: { cpu_sockets: ['AM5'], water_cooled: false, height: 155 },
+      },
       motherboard: {
         id: 'the-board',
         specifications: {
@@ -45,10 +48,15 @@ describe('judging a Build', () => {
       ],
       case: {
         id: 'the-case',
-        specifications: { supported_motherboard_form_factors: ['ATX'] },
+        specifications: {
+          supported_motherboard_form_factors: ['ATX'],
+          max_cpu_cooler_height: 165,
+        },
       },
     };
 
-    expect(judgeBuild(build).map((outcome) => outcome.rule)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(judgeBuild(build).map((outcome) => outcome.rule)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 17,
+    ]);
   });
 });

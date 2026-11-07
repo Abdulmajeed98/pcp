@@ -49,6 +49,10 @@ export function whatever<Value>(
   };
 }
 
+// The values a yes/no specification could hold, such as whether a cooler is
+// liquid cooled, for `whatever` to take a missing one to be either.
+export const yesOrNo: readonly boolean[] = [true, false];
+
 // Whether a condition holds of some of several Parts, such as a Build's RAM
 // kits. When it does, it is about those it holds of, whatever the others
 // lack. When it holds of none but may of some, it is open, naming what they

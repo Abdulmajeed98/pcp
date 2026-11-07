@@ -6,7 +6,7 @@ import { type Category, neededSpecificationsOf } from '../index';
 describe('the needed specifications', () => {
   it.each<[Category, string[]]>([
     ['cpu', ['socket', 'specifications.memory.types']],
-    ['cpuCooler', ['cpu_sockets']],
+    ['cpuCooler', ['cpu_sockets', 'water_cooled', 'height']],
     [
       'motherboard',
       [
@@ -23,7 +23,7 @@ describe('the needed specifications', () => {
     ['ram', ['ram_type', 'modules.quantity', 'modules.capacity_gb']],
     ['storage', ['interface', 'form_factor']],
     ['gpu', []],
-    ['case', ['supported_motherboard_form_factors']],
+    ['case', ['supported_motherboard_form_factors', 'max_cpu_cooler_height']],
     ['psu', ['connectors.sata']],
   ])('of a Category, %s, are the paths the rules read in it', (category, paths) => {
     expect(neededSpecificationsOf(category)).toEqual(paths);
