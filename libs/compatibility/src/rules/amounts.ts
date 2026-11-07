@@ -129,6 +129,20 @@ export function together(...values: readonly Reading<number>[]): Amount {
 // or a plain number.
 export type Countable = Amount | Reading<number> | number;
 
+// The larger of several amounts, such as a GPU's 12VHPWR and 12V-2x6 sockets,
+// which take one kind of cable: at least the largest of their leasts, and at
+// most the largest of their mosts. It is about the Parts each counts, and
+// holds the missing values each holds.
+export function larger(...countables: readonly Countable[]): Amount {
+  const amounts = countables.map(amountOf);
+  return {
+    least: Math.max(...amounts.map((amount) => amount.least)),
+    most: Math.max(...amounts.map((amount) => amount.most)),
+    about: new Set(amounts.flatMap((amount) => [...amount.about])),
+    missing: withoutRepeats(amounts.flatMap((amount) => amount.missing)),
+  };
+}
+
 // An amount times a plain number, such as thirteen times a Build's estimated
 // power draw.
 export function times(countable: Countable, factor: number): Amount {

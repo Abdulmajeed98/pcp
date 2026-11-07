@@ -113,6 +113,68 @@ describe("rule 11: the GPU's power sockets and the PSU's connectors", () => {
     });
   });
 
+  // The owner's decision of 8 November 2026: a GPU needs as many of the PSU's
+  // 12VHPWR cables as the larger of its 12VHPWR and 12V-2x6 counts.
+  describe("the 12-pin sockets, counted against the PSU's 12VHPWR cables", () => {
+    it('passes two 12VHPWR sockets with two cables', () => {
+      const build: Build = {
+        gpu: gpuWith({ pcie_6_pin: 0, pcie_8_pin: 0, pcie_12VHPWR: 2, pcie_12V_2x6: 0 }),
+        psu: psuWith({ pcie_6_plus_2_pin: 0, pcie_12vhpwr: 2 }),
+      };
+
+      expect(judgeBuild(build)).toEqual([
+        { rule: 11, outcome: 'passes', parts: ['the-gpu', 'the-psu'] },
+      ]);
+    });
+
+    it('finds a Warning in two 12VHPWR sockets with one cable and 6+2-pin connectors, for the adapter', () => {
+      const build: Build = {
+        gpu: gpuWith({ pcie_6_pin: 0, pcie_8_pin: 0, pcie_12VHPWR: 2, pcie_12V_2x6: 0 }),
+        psu: psuWith({ pcie_6_plus_2_pin: 3, pcie_12vhpwr: 1 }),
+      };
+
+      expect(judgeBuild(build)).toEqual([
+        { rule: 11, outcome: 'warning', parts: ['the-gpu', 'the-psu'] },
+      ]);
+    });
+
+    // The catalog stores no 0 for a PSU's 6+2-pin connectors, which it reads
+    // as not known, so this 0 is given to the library directly.
+    it('finds a Problem in two 12VHPWR sockets with one cable and no 6+2-pin connector', () => {
+      const build: Build = {
+        gpu: gpuWith({ pcie_6_pin: 0, pcie_8_pin: 0, pcie_12VHPWR: 2, pcie_12V_2x6: 0 }),
+        psu: psuWith({ pcie_6_plus_2_pin: 0, pcie_12vhpwr: 1 }),
+      };
+
+      expect(judgeBuild(build)).toEqual([
+        { rule: 11, outcome: 'problem', parts: ['the-gpu', 'the-psu'] },
+      ]);
+    });
+
+    it('finds a Warning in two 12V-2x6 sockets with one cable and 6+2-pin connectors', () => {
+      const build: Build = {
+        gpu: gpuWith({ pcie_6_pin: 0, pcie_8_pin: 0, pcie_12VHPWR: 0, pcie_12V_2x6: 2 }),
+        psu: psuWith({ pcie_6_plus_2_pin: 3, pcie_12vhpwr: 1 }),
+      };
+
+      expect(judgeBuild(build)).toEqual([
+        { rule: 11, outcome: 'warning', parts: ['the-gpu', 'the-psu'] },
+      ]);
+    });
+
+    // As two RTX 5070 Ti cards at the pinned commit list their one socket.
+    it('passes one socket listed under both kinds with one cable', () => {
+      const build: Build = {
+        gpu: gpuWith({ pcie_6_pin: 0, pcie_8_pin: 0, pcie_12VHPWR: 1, pcie_12V_2x6: 1 }),
+        psu: psuWith({ pcie_6_plus_2_pin: 2, pcie_12vhpwr: 1 }),
+      };
+
+      expect(judgeBuild(build)).toEqual([
+        { rule: 11, outcome: 'passes', parts: ['the-gpu', 'the-psu'] },
+      ]);
+    });
+  });
+
   it("is unchecked when the PSU's 6+2-pin connectors are missing", () => {
     const build: Build = {
       gpu: gpuWith({ pcie_6_pin: 0, pcie_8_pin: 2, pcie_12VHPWR: 0, pcie_12V_2x6: 0 }),
@@ -201,14 +263,29 @@ describe("rule 11: the GPU's power sockets and the PSU's connectors", () => {
       ]);
     });
 
-    it('passes a 12V-2x6 socket with the cable though its count of 12VHPWR sockets is missing', () => {
+    it('is unchecked for a 12V-2x6 socket with one cable when the count of 12VHPWR sockets is missing, since it could need a second cable', () => {
       const build: Build = {
         gpu: gpuWith({ pcie_6_pin: 0, pcie_8_pin: 0, pcie_12V_2x6: 1 }),
         psu: psuWith({ pcie_6_plus_2_pin: 2, pcie_12vhpwr: 1 }),
       };
 
       expect(judgeBuild(build)).toEqual([
-        { rule: 11, outcome: 'passes', parts: ['the-gpu', 'the-psu'] },
+        {
+          rule: 11,
+          outcome: 'unchecked',
+          missing: [{ part: 'the-gpu', path: 'power_connectors.pcie_12VHPWR' }],
+        },
+      ]);
+    });
+
+    it('finds a Problem in a 12V-2x6 socket with neither the cable nor a 6+2-pin connector though the count of 12VHPWR sockets is missing', () => {
+      const build: Build = {
+        gpu: gpuWith({ pcie_6_pin: 0, pcie_8_pin: 0, pcie_12V_2x6: 1 }),
+        psu: psuWith({ pcie_6_plus_2_pin: 0, pcie_12vhpwr: 0 }),
+      };
+
+      expect(judgeBuild(build)).toEqual([
+        { rule: 11, outcome: 'problem', parts: ['the-gpu', 'the-psu'] },
       ]);
     });
 
