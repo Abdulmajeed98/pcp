@@ -1,0 +1,4 @@
+{
+  "extends": ["../../.oxlintrc.json", "../../.oxlintrc.test-files.json"],
+  "plugins": ["jest"]
+}

@@ -8,5 +8,6 @@
     "types": []
   },
   "include": ["src/**/*.ts"],
-  "references": []
+  "references": [],
+  "exclude": ["jest.config.cts", "src/test/**/*.ts"]
 }

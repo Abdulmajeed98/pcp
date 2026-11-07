@@ -65,7 +65,13 @@ export const sockets = [
   'TR4',
 ] as const;
 
+// Each set's values as a type, so that a rule naming a value it compares,
+// such as "Mini-ITX", fails the type check when the value is misspelt.
+export type Socket = (typeof sockets)[number];
+
 export const ramTypes = ['DDR1', 'DDR2', 'DDR3', 'DDR4', 'DDR5'] as const;
+
+export type RamType = (typeof ramTypes)[number];
 
 export const motherboardFormFactors = [
   'ATX',
@@ -82,6 +88,8 @@ export const motherboardFormFactors = [
   'XL ATX',
 ] as const;
 
+export type MotherboardFormFactor = (typeof motherboardFormFactors)[number];
+
 export const powerSupplyFormFactors = [
   'ATX',
   'ATX/EPS',
@@ -91,6 +99,8 @@ export const powerSupplyFormFactors = [
   'SFX-L',
   'TFX',
 ] as const;
+
+export type PowerSupplyFormFactor = (typeof powerSupplyFormFactors)[number];
 
 // The values OpenDB's drives use at the commit the catalog is imported from.
 // Compatibility Rules count drives by these: SATA drives against SATA ports,
@@ -106,6 +116,8 @@ export const storageFormFactors = [
   'mSATA',
   'PCIe',
 ] as const;
+
+export type StorageFormFactor = (typeof storageFormFactors)[number];
 
 export const storageInterfaces = [
   'M.2 PCIe 2.0 x4',
@@ -131,7 +143,11 @@ export const storageInterfaces = [
   'U.2',
 ] as const;
 
+export type StorageInterface = (typeof storageInterfaces)[number];
+
 // The keys of a motherboard's M.2 slot. A slot keyed M takes any M.2 drive,
 // and one keyed B only an M.2 SATA drive. Slots keyed E are for wireless
 // cards.
 export const m2SlotKeys = ['B', 'E', 'M'] as const;
+
+export type M2SlotKey = (typeof m2SlotKeys)[number];
