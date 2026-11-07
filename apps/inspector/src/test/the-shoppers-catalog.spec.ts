@@ -6,15 +6,21 @@ import { namedParts } from '../made-up-offers.ts';
 
 // A catalog of the named Parts and 1,000 GPUs, every tenth of them made by
 // the Admin rather than imported from OpenDB, answered as the API answers
-// the Admin's searches and reads.
-function aCatalog({ missing = '', gpus = 1000 } = {}) {
-  const found = (id: string, category: PartResponse['category'], name: string) =>
+// the Admin's searches and reads. With `codes`, each named Part has part
+// numbers as OpenDB writes some: two codes, and its own name between them.
+function aCatalog({ missing = '', gpus = 1000, codes = false } = {}) {
+  const found = (
+    id: string,
+    category: PartResponse['category'],
+    name: string,
+    partNumbers: string[] = [],
+  ) =>
     ({
       id,
       category,
       name,
       manufacturer: name.split(' ')[0],
-      partNumbers: [],
+      partNumbers,
       photoPath: null,
       offerId: null,
     }) satisfies FoundPartResponse;
@@ -22,7 +28,12 @@ function aCatalog({ missing = '', gpus = 1000 } = {}) {
     ...namedParts
       .filter((wanted) => wanted.name !== missing)
       .flatMap((wanted, index) => [
-        found(`named-${index}`, wanted.category, wanted.name),
+        found(
+          `named-${index}`,
+          wanted.category,
+          wanted.name,
+          codes ? [`100-${index}WOF`, wanted.name.toUpperCase(), `100${index}WOF`] : [],
+        ),
         found(`longer-${index}`, wanted.category, `${wanted.name} (another one)`),
       ]),
     ...Array.from({ length: gpus }, (_, index) =>
@@ -90,6 +101,18 @@ describe("the Shopper's made-up shop's Parts", () => {
       });
     }
     expect(read.categories).toEqual([{ key: 'cpu', specifications: [] }]);
+  });
+
+  it('hold the part numbers each has that are codes, and not its name, which OpenDB lists among the codes of some', async () => {
+    const { catalog } = aCatalog({ codes: true });
+    const read = await readTheShoppersCatalog(catalog);
+
+    for (const [index, wanted] of namedParts.entries()) {
+      expect(read.named.get(wanted.name)?.summary.partNumbers).toEqual([
+        `100-${index}WOF`,
+        `100${index}WOF`,
+      ]);
+    }
   });
 
   it('take enough GPUs besides, read in runs spread across the Category, only those imported from OpenDB', async () => {

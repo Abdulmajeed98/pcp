@@ -81,13 +81,28 @@ async function aFewAtATime<Item, Result>(
   return results;
 }
 
+// Whether a part number is a code, one word as a box prints it, and not a
+// name: OpenDB lists a Part's own name among the codes of some, such as "AMD
+// Ryzen 7 7800X3D" beside 100-100000910WOF.
+function isACode(partNumber: string): boolean {
+  return /^\S+$/.test(partNumber);
+}
+
 // A Part as the shop holds it: what a list shows of it, without the photo
 // the development database may hold for it, since the shop serves only its
-// own made-up photos; and its specifications.
+// own made-up photos, and with only the part numbers that are codes, so that
+// a Part page shows plain codes; and its specifications.
 function heldAs(part: PartResponse): ReadPart {
   const { id, category, name, manufacturer, partNumbers, specifications } = part;
   return {
-    summary: { id, category, name, manufacturer, partNumbers, photoPath: null },
+    summary: {
+      id,
+      category,
+      name,
+      manufacturer,
+      partNumbers: partNumbers.filter(isACode),
+      photoPath: null,
+    },
     specifications,
   };
 }
