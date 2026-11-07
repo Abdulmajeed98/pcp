@@ -212,6 +212,13 @@ export function exceeds(amount: Countable, limit: Countable): Finding {
   };
 }
 
+// An amount times a plain number, such as thirteen times a Build's estimated
+// power draw.
+export function times(countable: Countable, factor: number): Amount {
+  const amount = amountOf(countable);
+  return { ...amount, least: amount.least * factor, most: amount.most * factor };
+}
+
 function amountOf(countable: Countable): Amount {
   return typeof countable === 'number' || !('least' in countable)
     ? product(countable)

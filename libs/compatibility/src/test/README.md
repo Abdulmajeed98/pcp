@@ -4,7 +4,7 @@ This folder holds the tests of `@pcp/compatibility`, the test seam the owner add
 
 ## What they test
 
-The Compatibility Rules from the outside, as `builder` will use them. A test hands the library a Build of made-up Parts, whose needed specifications are written in OpenDB's names and nesting as the catalog holds them, with each missing one left out, and judges only what the library answers: each rule's outcome, the Parts it names by the identifiers the test gave, and, for an unchecked rule, the missing specifications it names.
+The Compatibility Rules from the outside, as `builder` will use them. A test hands the library a Build of made-up Parts, whose needed specifications are written in OpenDB's names and nesting as the catalog holds them, with each missing one left out, and judges only what the library answers: each rule's outcome, the Parts it names by the identifiers the test gave, and, for an unchecked rule, the missing specifications it names; and the Build's estimated power draw, or the missing TDPs that leave it not known.
 
 For every rule, a test for each outcome it can have, a Compatibility Warning among them for a rule that can give one, and tests of each reading of OpenDB's values the spec decides, of the counts at their limit and one over, of a kit's or a drive's quantity, of a rule that does not apply, and of a rule left unchecked only when a missing value could change its outcome.
 
@@ -20,4 +20,4 @@ With Jest's globals, `describe`, `it` and `expect`, and nothing imported from Je
 
 ## Where they live
 
-Here, under `src`, with the library's type check: `judge-build.spec.ts` for judging a Build as a whole, `rules/` for each rule, one file each, and `needed-specifications.spec.ts` for the needed specifications the rules read, written out from the spec's table. Each file is named `<what it tests>.spec.ts`.
+Here, under `src`, with the library's type check: `judge-build.spec.ts` for judging a Build as a whole, `rules/` for each rule, one file each, `estimated-power-draw.spec.ts` for a Build's estimated power draw, and `needed-specifications.spec.ts` for the needed specifications the rules read, written out from the spec's table. Each file is named `<what it tests>.spec.ts`.

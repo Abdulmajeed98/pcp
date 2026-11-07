@@ -40,7 +40,7 @@ function applies(rule: Rule, build: Build): boolean {
 // order.
 function outcomeOf(rule: Rule, build: Build): RuleOutcome {
   const { problem, warning } = rule.judge(build);
-  const parts = partsInvolved(rule, build);
+  const parts = partsJudged(rule, build);
   if (problem.holds === true) {
     return {
       rule: rule.number,
@@ -67,10 +67,11 @@ function outcomeOf(rule: Rule, build: Build): RuleOutcome {
   return { rule: rule.number, outcome: 'passes', parts };
 }
 
-// The Parts of the Categories a rule involves, in the catalog's order.
-function partsInvolved(rule: Rule, build: Build): string[] {
+// The Parts a rule judges, in the catalog's order: those of the Categories it
+// involves, and those it reads when the Build holds them.
+function partsJudged(rule: Rule, build: Build): string[] {
   return categories
-    .filter((category) => category in rule.involves)
+    .filter((category) => category in rule.involves || category in rule.readsWhenHeld)
     .flatMap((category) => heldIn(build, category).map((part) => part.id));
 }
 

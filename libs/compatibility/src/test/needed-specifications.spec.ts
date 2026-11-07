@@ -1,11 +1,12 @@
 import { type Category, neededSpecificationsOf } from '../index';
 
 // Written out from the spec's table of the Compatibility Rules, rules 1 to
-// 11, and not read from the library: each Category's paths in the order the
-// rules first read them.
+// 12, and not read from the library: each Category's paths in the order the
+// rules first read them, rule 12 reading a GPU's TDP when the Build holds a
+// GPU.
 describe('the needed specifications', () => {
   it.each<[Category, string[]]>([
-    ['cpu', ['socket', 'specifications.memory.types']],
+    ['cpu', ['socket', 'specifications.memory.types', 'specifications.tdp']],
     ['cpuCooler', ['cpu_sockets']],
     [
       'motherboard',
@@ -29,13 +30,14 @@ describe('the needed specifications', () => {
         'power_connectors.pcie_8_pin',
         'power_connectors.pcie_12VHPWR',
         'power_connectors.pcie_12V_2x6',
+        'tdp',
       ],
     ],
     [
       'case',
       ['supported_motherboard_form_factors', 'max_video_card_length', 'expansion_slots'],
     ],
-    ['psu', ['connectors.pcie_6_plus_2_pin', 'connectors.pcie_12vhpwr']],
+    ['psu', ['connectors.pcie_6_plus_2_pin', 'connectors.pcie_12vhpwr', 'wattage']],
   ])('of a Category, %s, are the paths the rules read in it', (category, paths) => {
     expect(neededSpecificationsOf(category)).toEqual(paths);
   });
