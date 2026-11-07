@@ -24,7 +24,7 @@ describe('the needed specifications', () => {
     ['storage', ['interface', 'form_factor']],
     ['gpu', []],
     ['case', ['supported_motherboard_form_factors']],
-    ['psu', []],
+    ['psu', ['connectors.sata']],
   ])('of a Category, %s, are the paths the rules read in it', (category, paths) => {
     expect(neededSpecificationsOf(category)).toEqual(paths);
   });
