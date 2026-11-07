@@ -12,6 +12,7 @@ type SpecificationBody = {
   kind: string;
   unit?: string;
   values?: string[];
+  fields?: SpecificationBody[];
   needed: boolean;
   zeroMeansMissing: boolean;
 };
@@ -121,6 +122,39 @@ describe('the Categories endpoint', () => {
         needed: [...neededByTheRules[category.key]].sort(),
       });
     }
+  });
+
+  it('marks no field of a row as needed, since a rule that reads a list of rows names the list', async () => {
+    const categories = await readCategories(['admin']);
+    const rowLists = categories.flatMap((category) =>
+      category.specifications
+        .filter((each) => each.fields !== undefined)
+        .map((each) => ({
+          list: `${category.key} ${each.path}`,
+          fields: (each.fields ?? []).map((field) => field.path),
+          needed: (each.fields ?? [])
+            .filter((field) => field.needed)
+            .map((field) => field.path),
+        })),
+    );
+
+    expect(rowLists).toEqual([
+      {
+        list: 'motherboard pcie_slots',
+        fields: ['gen', 'quantity', 'lanes'],
+        needed: [],
+      },
+      {
+        list: 'motherboard m2_slots',
+        fields: ['size', 'key', 'interface'],
+        needed: [],
+      },
+      {
+        list: 'motherboard onboard_ethernet',
+        fields: ['speed', 'controller'],
+        needed: [],
+      },
+    ]);
   });
 
   it('gives every Category a specification list', async () => {
