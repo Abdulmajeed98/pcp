@@ -1,10 +1,10 @@
-import { type Category, neededSpecificationsOf } from '../index';
+import { type CategoryKey, neededSpecificationsOf } from '../index';
 
 // Written out from the spec's table of the Compatibility Rules, all 21, and
 // not read from the library: each Category's paths in the order the rules
 // first read them, rule 12 reading a GPU's TDP when the Build holds a GPU.
 describe('the needed specifications', () => {
-  it.each<[Category, string[]]>([
+  it.each<[CategoryKey, string[]]>([
     ['cpu', ['socket', 'specifications.memory.types', 'specifications.tdp']],
     ['cpuCooler', ['cpu_sockets', 'water_cooled', 'height']],
     [

@@ -1,11 +1,11 @@
-import type { Build, Category, Part, SpecificationsOf } from './build';
+import type { Build, CategoryKey, Part, SpecificationsOf } from './build';
 import { judgeBuild } from './judge-build';
 
 // A Part of a Category, as `isCompatible` takes it: with the specifications
 // a Part of its Category holds, and, a RAM kit or a drive, without its
 // quantity. Of several Categories, it is a Part of any of them.
-export type PartOf<C extends Category> = {
-  readonly [Of in Category]: Part<SpecificationsOf<Of>>;
+export type PartOf<C extends CategoryKey> = {
+  readonly [Of in CategoryKey]: Part<SpecificationsOf<Of>>;
 }[C];
 
 // Whether a Part is compatible with a Build (CMP-4): it is, unless the Build
@@ -15,7 +15,7 @@ export type PartOf<C extends Category> = {
 // name it. The answer is read from judging the Build with the Part, and no
 // rule is judged a second way for it, so the picker and the Build page give
 // one answer.
-export function isCompatible<C extends Category>(
+export function isCompatible<C extends CategoryKey>(
   category: C,
   part: PartOf<C>,
   build: Build,
@@ -30,7 +30,7 @@ export function isCompatible<C extends Category>(
 // with a quantity of one, for a RAM kit or a drive. A kit or a drive the
 // Build already holds is counted once more, and an outcome about it then
 // names its identifier twice.
-const put: { readonly [C in Category]: (build: Build, part: PartOf<C>) => Build } = {
+const put: { readonly [C in CategoryKey]: (build: Build, part: PartOf<C>) => Build } = {
   cpu: (build, cpu) => ({ ...build, cpu }),
   cpuCooler: (build, cpuCooler) => ({ ...build, cpuCooler }),
   motherboard: (build, motherboard) => ({ ...build, motherboard }),

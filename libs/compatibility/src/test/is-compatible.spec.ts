@@ -1,6 +1,6 @@
 import {
   type Build,
-  type Category,
+  type CategoryKey,
   isCompatible,
   judgeBuild,
   type MotherboardSpecifications,
@@ -178,7 +178,7 @@ describe('whether a Part is compatible with a Build', () => {
   // The picker and the Build page give one answer: a Part the picker hides is
   // one that judging the Build with it finds in a Compatibility Problem.
   describe('a Part that makes a Compatibility Problem', () => {
-    it.each<[string, Category, PartOf<Category>, Build, RuleOutcome]>([
+    it.each<[string, CategoryKey, PartOf<CategoryKey>, Build, RuleOutcome]>([
       [
         "a CPU that does not support the RAM's type",
         'cpu',

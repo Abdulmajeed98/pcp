@@ -1,4 +1,4 @@
-import type { Build, Category, Part, SpecificationsOf } from '../build';
+import type { Build, CategoryKey, Part, SpecificationsOf } from '../build';
 import type { Judgment } from './findings';
 import type { Reading } from './reading';
 
@@ -47,7 +47,7 @@ export function rule<
 // Category it involves, or those of each it reads when the Build holds a Part
 // of it.
 type PathsRead = {
-  readonly [C in Category]?: readonly PathOf<SpecificationsOf<C>>[];
+  readonly [C in CategoryKey]?: readonly PathOf<SpecificationsOf<C>>[];
 };
 
 // A specification's path, such as `specifications.memory.types`: the names
@@ -92,7 +92,9 @@ type PathIn<Paths> = Paths extends readonly (infer Path extends string)[] ? Path
 // The Parts a judgment is handed: one of each Category the rule involves,
 // and every RAM kit or drive, with its quantity.
 type PartsRead<Stated extends PathsRead> = {
-  readonly [C in keyof Stated & Category]: NonNullable<Build[C]> extends readonly unknown[]
+  readonly [C in keyof Stated & CategoryKey]: NonNullable<
+    Build[C]
+  > extends readonly unknown[]
     ? readonly (PartRead<SpecificationsOf<C>, PathIn<Stated[C]>> & {
         readonly quantity: number;
       })[]
@@ -102,7 +104,7 @@ type PartsRead<Stated extends PathsRead> = {
 // The Parts a judgment is handed of the Categories a rule reads when held:
 // each one's Part when the Build holds one, and none otherwise.
 type PartsReadWhenHeld<Stated extends PathsRead> = {
-  readonly [C in keyof Stated & Category]: PartsRead<Stated>[C] | undefined;
+  readonly [C in keyof Stated & CategoryKey]: PartsRead<Stated>[C] | undefined;
 };
 
 type HeldPart = Part<unknown> & { readonly quantity?: number };
@@ -110,7 +112,7 @@ type HeldPart = Part<unknown> & { readonly quantity?: number };
 function partsRead(build: Build, categories: readonly string[]): Record<string, unknown> {
   return Object.fromEntries(
     categories.map((category) => {
-      const held = build[category as Category] as
+      const held = build[category as CategoryKey] as
         | HeldPart
         | readonly HeldPart[]
         | undefined;

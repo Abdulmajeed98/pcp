@@ -1,4 +1,4 @@
-import { type Category as CategoryKey, neededSpecificationsOf } from '@pcp/compatibility';
+import { type CategoryKey, neededSpecificationsOf } from '@pcp/compatibility';
 
 import { LabelledSpecification } from './LabelledSpecification';
 import { Specification, SpecificationProblem } from './Specification';

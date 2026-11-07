@@ -1,4 +1,4 @@
-import type { Category } from './build';
+import type { CategoryKey } from './build';
 import { rules } from './rules/rules';
 
 // A Category's needed specifications, by their paths: the ones the
@@ -7,7 +7,7 @@ import { rules } from './rules/rules';
 // rule 12 reads a GPU's TDP, in the order the rules first read them. A rule
 // that reads a list of rows, such as a motherboard's PCIe slots, names the
 // list.
-export function neededSpecificationsOf(category: Category): readonly string[] {
+export function neededSpecificationsOf(category: CategoryKey): readonly string[] {
   return [
     ...new Set(
       rules.flatMap((rule) => [

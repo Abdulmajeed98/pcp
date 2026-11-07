@@ -1,7 +1,7 @@
 export type {
   Build,
   CaseSpecifications,
-  Category,
+  CategoryKey,
   CpuCoolerSpecifications,
   CpuSpecifications,
   GpuSpecifications,

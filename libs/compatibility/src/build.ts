@@ -23,12 +23,13 @@ export type Build = {
   readonly psu?: Part<PsuSpecifications>;
 };
 
-// The kind of a Part, by the key the API and `i18n` name it by.
-export type Category = keyof Build;
+// A Category's key, the one the API and `i18n` name it by, such as `cpu` or
+// `cpuCooler`: a key of a Build.
+export type CategoryKey = keyof Build;
 
 // The specifications a Part of a Category holds: those of a RAM kit or a
 // drive for the two Categories a Build holds a list of.
-export type SpecificationsOf<C extends Category> =
+export type SpecificationsOf<C extends CategoryKey> =
   NonNullable<Build[C]> extends readonly (infer Held)[]
     ? Held extends Part<infer Specifications>
       ? Specifications
