@@ -1,5 +1,6 @@
 import type { PartPageResponse } from '@pcp/api-client';
 
+import { askedAgainIfItDrops } from './asked-again.ts';
 import { partsOfTheCatalog } from './catalog-parts.ts';
 import {
   answerFromTheShopIn,
@@ -90,9 +91,10 @@ try {
   const authorization = await logIn(browser, address, apiUrl, login, language);
   const parts = await partsOfTheCatalog(async ({ category, search }) => {
     const query = new URLSearchParams({ category, search, page: '0', size: '50' });
-    const response = await fetch(`${apiUrl}/v1/parts?${query}`, {
-      headers: { Authorization: authorization },
-    });
+    // Asked again when its connection drops, as the Shopper's reading is.
+    const response = await askedAgainIfItDrops(() =>
+      fetch(`${apiUrl}/v1/parts?${query}`, { headers: { Authorization: authorization } }),
+    );
     if (!response.ok) {
       throw new CannotInspect(
         `The API answered ${response.status} to a search of the catalog.`,
