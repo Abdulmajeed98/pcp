@@ -10,15 +10,14 @@ import {
   type Amount,
   amountWhatever,
   counted,
-  either,
   exceeds,
   nothing,
+  or,
   problemWhen,
   together,
   total,
 } from './findings';
-import { rule } from './statement';
-import type { Reading } from './statement';
+import { type Reading, rule } from './statement';
 
 // Rule 14: the Build has more M.2 drives than the motherboard has M.2 slots
 // for them. An M.2 drive is one whose form factor is an M.2 size. A slot
@@ -40,7 +39,7 @@ export const rule14 = rule({
         ),
       );
     return problemWhen(
-      either(
+      or(
         exceeds(
           m2((drive) =>
             amountWhatever(drive.read('interface'), storageInterfaces, (iface) =>

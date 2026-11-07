@@ -68,14 +68,13 @@ export function some<Item>(items: readonly Item[], find: (item: Item) => Finding
   return { holds: false, about: aboutAll(findings) };
 }
 
-// Whether either of several conditions holds, such as each of two counts
-// against its own limit.
-export function either(...findings: readonly Finding[]): Finding {
-  return some(findings, (finding) => finding);
-}
-
 export function not(finding: Finding): Finding {
   return finding.holds === 'maybe' ? finding : { ...finding, holds: !finding.holds };
+}
+
+// Whether some of several conditions holds, as `some` judges them.
+export function or(...findings: readonly Finding[]): Finding {
+  return some(findings, (finding) => finding);
 }
 
 // Whether a list a Part holds, such as a cooler's sockets, includes a value.
