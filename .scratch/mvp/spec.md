@@ -250,7 +250,7 @@ Rules 11, 15 and 20 are the only rules that can produce a Compatibility Warning,
 
 Two rules read some of OpenDB's values in a way of their own, as the owner decided on 15 October 2026:
 
-- **Rule 1.** A motherboard socket written "2 x <socket>", on 20 dual-socket server boards, takes a CPU of that socket. A socket written "Integrated …", on 13 boards with a CPU built in, means the board brings its own CPU, and any CPU added to it is a Compatibility Problem.
+- **Rule 1.** A motherboard socket written "2 x <socket>", on 20 dual-socket server boards, takes a CPU of that socket. A socket written "Integrated …", on 13 boards with a CPU built in, means the board brings its own CPU, and any CPU added to it is a Compatibility Problem. A socket written "LGA 2011-3 Narrow", on 7 boards, or "2 x LGA 2011-3 Narrow", on 4 of the 20, takes a CPU of LGA 2011-3, as the owner decided on 8 November 2026: "Narrow" names the mounting of the board's cooler, and no CPU at the pinned commit names it.
 - **Rule 7.** A Thin Mini-ITX board fits any case that takes Mini-ITX, and a Flex ATX board any case that takes Micro ATX, because they share the mounting. No case at the pinned commit lists Thin Mini-ITX, and one lists Flex ATX.
 
 With these rules every Category takes part in at least one rule, and every pair of Categories that physically connect is covered.

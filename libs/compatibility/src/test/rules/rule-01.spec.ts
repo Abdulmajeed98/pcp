@@ -1,4 +1,4 @@
-import { type Build, judgeBuild } from '../../index';
+import { type Build, judgeBuild, type Socket } from '../../index';
 
 describe("rule 1: the CPU's socket and the motherboard's", () => {
   it("passes a CPU of the motherboard's socket", () => {
@@ -67,6 +67,36 @@ describe("rule 1: the CPU's socket and the motherboard's", () => {
         { rule: 1, outcome: 'problem', parts: ['the-cpu', 'the-board'] },
       ]);
     });
+  });
+
+  describe('a board written "LGA 2011-3 Narrow", for a narrow cooler mounting', () => {
+    it.each<[Socket]>([['LGA 2011-3 Narrow'], ['2 x LGA 2011-3 Narrow']])(
+      'takes a CPU of LGA 2011-3 when written "%s"',
+      (board) => {
+        const build: Build = {
+          cpu: { id: 'the-cpu', specifications: { socket: 'LGA 2011-3' } },
+          motherboard: { id: 'the-board', specifications: { socket: board } },
+        };
+
+        expect(judgeBuild(build)).toEqual([
+          { rule: 1, outcome: 'passes', parts: ['the-cpu', 'the-board'] },
+        ]);
+      },
+    );
+
+    it.each<[Socket]>([['LGA 2011-3 Narrow'], ['2 x LGA 2011-3 Narrow']])(
+      'takes no CPU of another socket when written "%s"',
+      (board) => {
+        const build: Build = {
+          cpu: { id: 'the-cpu', specifications: { socket: 'LGA 2011' } },
+          motherboard: { id: 'the-board', specifications: { socket: board } },
+        };
+
+        expect(judgeBuild(build)).toEqual([
+          { rule: 1, outcome: 'problem', parts: ['the-cpu', 'the-board'] },
+        ]);
+      },
+    );
   });
 
   describe('a board with its CPU built in, written "Integrated …"', () => {
