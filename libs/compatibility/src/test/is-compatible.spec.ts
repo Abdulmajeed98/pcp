@@ -9,6 +9,7 @@ import {
   type RamSpecifications,
   type RuleOutcome,
   type Socket,
+  type StorageSpecifications,
 } from '../index';
 
 function boardOf(id: string, socket: Socket): Part<MotherboardSpecifications> {
@@ -27,6 +28,18 @@ function boardWithSlots(slots: number): Part<MotherboardSpecifications> {
   return {
     id: 'the-board',
     specifications: { memory: { ram_type: 'DDR5', slots, max: 1024 } },
+  };
+}
+
+// A 2.5-inch SATA drive.
+function sataDrive(id: string): Part<StorageSpecifications> {
+  return { id, specifications: { interface: 'SATA 6.0 Gb/s', form_factor: '2.5"' } };
+}
+
+function boardWithSataPorts(ports: number): Part<MotherboardSpecifications> {
+  return {
+    id: 'the-board',
+    specifications: { storage_devices: { sata_6_gb_s: ports, sata_3_gb_s: 0 } },
   };
 }
 
@@ -77,6 +90,26 @@ describe('whether a Part is compatible with a Build', () => {
       };
 
       expect(isCompatible('ram', kitOfTwo('the-kit'), build)).toBe(false);
+    });
+  });
+
+  describe("a drive, beside the Build's others with a quantity of one", () => {
+    it("is not compatible when a SATA drive joins a SATA drive on a motherboard's one SATA port", () => {
+      const build: Build = {
+        motherboard: boardWithSataPorts(1),
+        storage: [{ ...sataDrive('the-builds-drive'), quantity: 1 }],
+      };
+
+      expect(isCompatible('storage', sataDrive('another-drive'), build)).toBe(false);
+    });
+
+    it("is compatible when a SATA drive joins a SATA drive on a motherboard's two SATA ports", () => {
+      const build: Build = {
+        motherboard: boardWithSataPorts(2),
+        storage: [{ ...sataDrive('the-builds-drive'), quantity: 1 }],
+      };
+
+      expect(isCompatible('storage', sataDrive('another-drive'), build)).toBe(true);
     });
   });
 

@@ -8,7 +8,7 @@ The Compatibility Rules from the outside, as `builder` will use them. A test han
 
 For every rule, a test for each outcome it can have, a Compatibility Warning among them for a rule that can give one, and tests of each reading of OpenDB's values the spec decides, of the counts at their limit and one over, of a kit's or a drive's quantity, of a rule that does not apply, and of a rule left unchecked only when a missing value could change its outcome.
 
-For whether a Part is compatible, tests of where the Part goes, in place of the Build's Part of its Category or beside the Build's kits with a quantity of one, and of what makes it incompatible: a Compatibility Problem that names it, and never a Compatibility Warning, an unchecked rule or a Problem the Build already had that does not name it. A Part that makes a Problem is tested against judging the Build with it, so that the picker and the Build page give one answer.
+For whether a Part is compatible, tests of where the Part goes, in place of the Build's Part of its Category or beside the Build's kits or drives with a quantity of one, and of what makes it incompatible: a Compatibility Problem that names it, and never a Compatibility Warning, an unchecked rule or a Problem the Build already had that does not name it. A Part that makes a Problem is tested against judging the Build with it, so that the picker and the Build page give one answer.
 
 A test imports only the library's entry file, `src/index.ts`, as every caller does.
 
