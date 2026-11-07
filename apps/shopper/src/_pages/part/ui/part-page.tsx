@@ -1,13 +1,15 @@
+import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
+import { partAddress } from '@/entities/part';
 import { chosenCurrency } from '@/shared/currency';
 import { photographs } from '@/shared/photographs';
+import { NotRead } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
 import { Stub } from '@/widgets/frame-header';
 
 import { readThePartPage } from '../api/read-the-part-page';
 import type { PartPageParams } from '../model/preview';
-import { NotRead } from './not-read';
 import { Offers } from './offers';
 import { PartPlate } from './part-plate';
 import { Specifications } from './specifications';
@@ -25,7 +27,12 @@ import { Specifications } from './specifications';
 // asked for answer the "not found" page with the status 404, in the page's
 // language; a Part the API did not answer says it cannot be read just now.
 export async function PartPage({ params }: PartPageParams) {
-  const [{ partId }, currency] = await Promise.all([params, chosenCurrency()]);
+  const [{ partId }, currency, language, t] = await Promise.all([
+    params,
+    chosenCurrency(),
+    getLocale(),
+    getTranslations('PartPage'),
+  ]);
   const reading = await readThePartPage(partId, currency);
   if (reading.kind === 'not-found') notFound();
 
@@ -33,7 +40,13 @@ export async function PartPage({ params }: PartPageParams) {
     <>
       <Stub />
       {reading.kind === 'not-read' ? (
-        <NotRead partId={partId} />
+        <NotRead
+          photograph={photographs.handSettingMemory}
+          title={t('notRead.title')}
+          note={t('notRead.note')}
+          tryAgain={t('tryAgain')}
+          address={partAddress(language, partId)}
+        />
       ) : (
         <main className="flex-1">
           <PartPlate part={reading.part} offers={reading.offers} />

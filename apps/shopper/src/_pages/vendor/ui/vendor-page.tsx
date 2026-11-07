@@ -1,16 +1,17 @@
+import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
+import { vendorAddress } from '@/entities/vendor';
 import { chosenCurrency } from '@/shared/currency';
 import { pageInTheAddress } from '@/shared/lib';
 import { photographs } from '@/shared/photographs';
-import { DimPhotograph, MarkADrawingAgain } from '@/shared/ui';
+import { DimPhotograph, MarkADrawingAgain, NotRead } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
 import { Stub } from '@/widgets/frame-header';
 
 import { readTheVendorPage } from '../api/read-the-vendor-page';
 import type { VendorPageParams } from '../model/preview';
 import { Coupon } from './coupon';
-import { NotRead } from './not-read';
 import { VendorOffers } from './vendor-offers';
 
 // A Vendor page, at `/<language>/vendors/<vendorId>` (DESIGN.md's A Vendor
@@ -26,10 +27,12 @@ import { VendorOffers } from './vendor-offers';
 // the "not found" page with the status 404, in the page's language (ACC-7);
 // a Vendor the API did not answer says it cannot be read just now.
 export async function VendorPage({ params, searchParams }: VendorPageParams) {
-  const [{ vendorId }, address, currency] = await Promise.all([
+  const [{ vendorId }, address, currency, language, t] = await Promise.all([
     params,
     searchParams,
     chosenCurrency(),
+    getLocale(),
+    getTranslations('VendorPage'),
   ]);
   const page = pageInTheAddress(address.page);
   const reading = await readTheVendorPage(vendorId, currency, page);
@@ -40,7 +43,13 @@ export async function VendorPage({ params, searchParams }: VendorPageParams) {
       <MarkADrawingAgain />
       <Stub />
       {reading.kind === 'not-read' ? (
-        <NotRead vendorId={vendorId} page={page} />
+        <NotRead
+          photograph={photographs.waterCooledPc}
+          title={t('notRead.title')}
+          note={t('notRead.note')}
+          tryAgain={t('tryAgain')}
+          address={vendorAddress(language, vendorId, page)}
+        />
       ) : (
         <main className="relative isolate flex-1 px-ground-edge py-section-phone md:page-margins md:py-section">
           <DimPhotograph photograph={photographs.waterCooledPc} first />

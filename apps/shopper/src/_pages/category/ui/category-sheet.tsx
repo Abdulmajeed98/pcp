@@ -2,7 +2,6 @@ import type { VisiblePartPageResponse, VisiblePartResponse } from '@pcp/api-clie
 import { formatNumber } from '@pcp/i18n';
 import { cn } from 'cn';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import type { Category } from '@/entities/category';
@@ -16,10 +15,10 @@ import {
   type OfferedFilters,
 } from '@/features/search-parts';
 import {
-  buttonVariants,
   CategoryDrawing,
   Paging,
   Sheet,
+  SheetAction,
   SheetGroup,
   SheetTitle,
   Stamp,
@@ -78,25 +77,93 @@ export async function CategorySheet({
   ]);
   const state = whatTheSheetShows(page, query);
   const addressAt = (at: CategoryQuery) => categoryPageAddress(language, category, at);
+  const listed = state.kind === 'listed';
 
-  const sentence = (() => {
+  // What the sheet says under its title, and what it holds under its
+  // drawing: the list, or the one way out of a sheet that lists nothing.
+  const { sentence, line, holds } = ((): {
+    sentence: string;
+    line?: string;
+    holds: ReactNode;
+  } => {
     switch (state.kind) {
       case 'listed':
-        return t(choicesOn(query).length === 0 ? 'note' : 'found', {
-          count: state.page.totalElements,
-          countText: formatNumber(state.page.totalElements),
-        });
+        return {
+          sentence: t(choicesOn(query).length === 0 ? 'note' : 'found', {
+            count: state.page.totalElements,
+            countText: formatNumber(state.page.totalElements),
+          }),
+          holds: (
+            <>
+              <TheList parts={state.page.content} />
+              <Paging
+                page={query.page}
+                totalPages={state.page.totalPages}
+                addressOf={(page) => addressAt({ ...query, page })}
+              />
+              <p className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground">
+                {t('close')}
+              </p>
+              {state.page.content.some((part) => part.lowestPrice?.converted === true) && (
+                <p
+                  data-testid="what-approximately-means"
+                  className="mx-auto mt-3 max-w-[34rem] text-center text-muted-foreground"
+                >
+                  {t('approximately')}
+                </p>
+              )}
+            </>
+          ),
+        };
       case 'none-yet':
-        return t('noneYet', { category });
+        return {
+          sentence: t('noneYet', { category }),
+          line: t('noneYetLine'),
+          holds: (
+            <SheetAction
+              kind="board"
+              address={`/${language}#categories`}
+              plain
+              testId="choose-another-category"
+            >
+              {t('chooseAnotherCategory')}
+            </SheetAction>
+          ),
+        };
       case 'no-match':
-        return t('noMatch', { category });
+        return {
+          sentence: t('noMatch', { category }),
+          holds: (
+            <SheetAction kind="primary" address={addressAt(nothingOn)} testId="clear-all">
+              {searchWords('clearAll')}
+            </SheetAction>
+          ),
+        };
       case 'past-the-end':
-        return paging('pastTheEnd', {
-          pages: state.totalPages,
-          pagesText: formatNumber(state.totalPages),
-        });
+        return {
+          sentence: paging('pastTheEnd', {
+            pages: state.totalPages,
+            pagesText: formatNumber(state.totalPages),
+          }),
+          holds: (
+            <SheetAction
+              kind="primary"
+              address={addressAt({ ...query, page: 1 })}
+              testId="to-the-first-page"
+            >
+              {paging('toTheFirstPage')}
+            </SheetAction>
+          ),
+        };
       case 'not-read':
-        return t('notRead');
+        return {
+          sentence: t('notRead'),
+          holds: (
+            <SheetAction kind="board" address={asAsked} testId="try-again">
+              {t('tryAgain')}
+            </SheetAction>
+          ),
+        };
     }
   })();
 
@@ -107,7 +174,7 @@ export async function CategorySheet({
       frameClassName="lg:col-span-7 lg:max-w-none"
     >
       <SheetTitle as="h1">{categoryName(category)}</SheetTitle>
-      {state.kind === 'listed' && (
+      {listed && (
         <Stamp className="static mx-auto mt-3.5 table text-[1.125rem] @[30rem]:absolute @[30rem]:end-[22px] @[30rem]:top-[26px] @[30rem]:mt-0">
           {t('stamp')}
         </Stamp>
@@ -117,74 +184,22 @@ export async function CategorySheet({
         data-state={state.kind}
         className={cn(
           'mx-auto mt-4 block text-center text-lg text-balance',
-          state.kind === 'listed' ? 'max-w-[34ch]' : 'max-w-[26ch]',
+          listed ? 'max-w-[34ch]' : 'max-w-[26ch]',
         )}
       >
         {sentence}
       </output>
-      {state.kind === 'none-yet' && (
-        <p className="mt-2.5 text-center text-sm text-muted-foreground">
-          {t('noneYetLine')}
-        </p>
+      {line !== undefined && (
+        <p className="mt-2.5 text-center text-sm text-muted-foreground">{line}</p>
       )}
       <ChoicesOn
         category={category}
         query={query}
         offered={offered}
-        withClearAll={state.kind === 'listed'}
+        withClearAll={listed}
       />
       <CategoryDrawing category={category} />
-
-      {state.kind === 'listed' && (
-        <>
-          <TheList parts={state.page.content} />
-          <Paging
-            page={query.page}
-            totalPages={state.page.totalPages}
-            addressOf={(page) => addressAt({ ...query, page })}
-          />
-          <p className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground">
-            {t('close')}
-          </p>
-          {state.page.content.some((part) => part.lowestPrice?.converted === true) && (
-            <p
-              data-testid="what-approximately-means"
-              className="mx-auto mt-3 max-w-[34rem] text-center text-muted-foreground"
-            >
-              {t('approximately')}
-            </p>
-          )}
-        </>
-      )}
-      {state.kind === 'none-yet' && (
-        <Action
-          kind="board"
-          address={`/${language}#categories`}
-          plain
-          testId="choose-another-category"
-        >
-          {t('chooseAnotherCategory')}
-        </Action>
-      )}
-      {state.kind === 'no-match' && (
-        <Action kind="primary" address={addressAt(nothingOn)} testId="clear-all">
-          {searchWords('clearAll')}
-        </Action>
-      )}
-      {state.kind === 'past-the-end' && (
-        <Action
-          kind="primary"
-          address={addressAt({ ...query, page: 1 })}
-          testId="to-the-first-page"
-        >
-          {paging('toTheFirstPage')}
-        </Action>
-      )}
-      {state.kind === 'not-read' && (
-        <Action kind="board" address={asAsked} testId="try-again">
-          {t('tryAgain')}
-        </Action>
-      )}
+      {holds}
     </Sheet>
   );
 }
@@ -219,34 +234,5 @@ async function TheList({ parts }: { parts: readonly VisiblePartResponse[] }) {
         </SheetGroup>
       )}
     </>
-  );
-}
-
-// The one way out of a sheet that lists nothing, centred under its drawing,
-// 52 pixels tall: a cell, or the sheet's primary button. A way back into the
-// list draws it again in place with script; the way to the other
-// Categories (`plain`) opens the home page anew.
-function Action({
-  kind,
-  address,
-  plain = false,
-  testId,
-  children,
-}: {
-  kind: 'primary' | 'board';
-  address: string;
-  plain?: boolean;
-  testId?: string;
-  children: ReactNode;
-}) {
-  const className = buttonVariants({ kind, className: 'mx-auto mt-8 flex w-fit' });
-  return plain ? (
-    <a href={address} data-testid={testId} className={className}>
-      {children}
-    </a>
-  ) : (
-    <Link href={address} prefetch={false} data-testid={testId} className={className}>
-      {children}
-    </Link>
   );
 }

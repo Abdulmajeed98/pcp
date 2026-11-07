@@ -6,7 +6,7 @@ import type {
 import { connection } from 'next/server';
 import { cache } from 'react';
 
-import { apiClient } from '@/shared/api';
+import { apiClient, namesNothingShown } from '@/shared/api';
 import type { Currency } from '@/shared/currency';
 
 // What a Part page shows: the Visible Part with its specifications, its
@@ -22,10 +22,6 @@ export type PartPageReading =
     }
   | { kind: 'not-found' }
   | { kind: 'not-read' };
-
-// An address that names no Part the API knows: the API answers 404, and 400
-// to an identifier it cannot read.
-const namesNoPart = (status: number | undefined) => status === 404 || status === 400;
 
 // What a Part page reads from the API, on the server, for each request, in
 // the chosen currency, with no cache (the browse spec's The Shopper app):
@@ -52,7 +48,10 @@ export const readThePartPage = cache(
       api.readPlatformFigures({ cache: 'no-store' }),
     ]);
 
-    if (namesNoPart(part.response?.status) || namesNoPart(offers.response?.status)) {
+    if (
+      namesNothingShown(part.response?.status) ||
+      namesNothingShown(offers.response?.status)
+    ) {
       return { kind: 'not-found' };
     }
     if (part.data === undefined || offers.data === undefined) return { kind: 'not-read' };

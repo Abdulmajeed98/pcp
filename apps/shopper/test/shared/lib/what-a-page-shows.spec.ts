@@ -4,7 +4,7 @@ import type {
 } from '@pcp/api-client';
 import { describe, expect, it } from 'vitest';
 
-import { whatTheOffersSheetShows } from '@/_pages/vendor';
+import { whatAPageShows } from '@/shared/lib';
 
 const anOffer: VisibleOfferOfVendorResponse = {
   usdPrice: '189.00',
@@ -40,30 +40,30 @@ function aPage(
   };
 }
 
-// What the sheet of a Vendor's Offers shows, from what the API answered
-// (DESIGN.md's Its Offers): the page of its Offers; or that the Vendor has
-// none to show now, while its contact details still show how to reach it;
-// or how many pages its list has, when the page asked is past the last; or
-// that the Offers cannot be read just now.
-describe("what the sheet of a Vendor's Offers shows", () => {
-  it('shows the Offers when the page holds some', () => {
+// What a sheet that lists a page shows, from what the API answered, here a
+// page of a Vendor's Offers (DESIGN.md's Its Offers): the page; or that
+// there is none to show, as a Vendor with no Visible Offer has, while its
+// contact details still show how to reach it; or how many pages the list
+// has, when the page asked is past the last; or that the list cannot be
+// read just now. A Category's sheet tells its empty list apart further, by
+// the Shopper's choices.
+describe('what a sheet that lists a page shows', () => {
+  it('shows the page when it holds some', () => {
     const page = aPage([anOffer]);
-    expect(whatTheOffersSheetShows(page)).toEqual({ kind: 'listed', page });
+    expect(whatAPageShows(page)).toEqual({ kind: 'listed', page });
   });
 
-  it('says the Vendor has no Offer to show now when it has no Visible Offer at all', () => {
-    expect(whatTheOffersSheetShows(aPage([]))).toEqual({ kind: 'none' });
+  it('says there is none to show when the whole list holds nothing', () => {
+    expect(whatAPageShows(aPage([]))).toEqual({ kind: 'none' });
   });
 
   it('says how many pages the list has when the page asked is past its last', () => {
     expect(
-      whatTheOffersSheetShows(
-        aPage([], { totalElements: 23, totalPages: 2, pageNumber: 4 }),
-      ),
+      whatAPageShows(aPage([], { totalElements: 23, totalPages: 2, pageNumber: 4 })),
     ).toEqual({ kind: 'past-the-end', totalPages: 2 });
   });
 
-  it('says the Offers cannot be read when the API did not answer them', () => {
-    expect(whatTheOffersSheetShows(undefined)).toEqual({ kind: 'not-read' });
+  it('says the list cannot be read when the API did not answer it', () => {
+    expect(whatAPageShows(undefined)).toEqual({ kind: 'not-read' });
   });
 });
