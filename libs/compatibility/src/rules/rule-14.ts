@@ -5,19 +5,11 @@ import {
   storageFormFactors,
   storageInterfaces,
 } from '../fixed-sets';
+import { type Amount, amountWhatever, counted, nothing, together, total } from './amounts';
 import { isM2 } from './drives';
-import {
-  type Amount,
-  amountWhatever,
-  counted,
-  exceeds,
-  nothing,
-  or,
-  problemWhen,
-  together,
-  total,
-} from './findings';
-import { type Reading, rule } from './statement';
+import { exceeds, or, problemWhen } from './findings';
+import type { Reading } from './reading';
+import { rule } from './statement';
 
 // Rule 14: the Build has more M.2 drives than the motherboard has M.2 slots
 // for them. An M.2 drive is one whose form factor is an M.2 size. A slot

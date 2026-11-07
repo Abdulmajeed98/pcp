@@ -1,5 +1,6 @@
+import { together } from './amounts';
 import { sataDrives } from './drives';
-import { exceeds, problemWhen, together } from './findings';
+import { exceeds, problemWhen } from './findings';
 import { rule } from './statement';
 
 // Rule 13: the Build has more SATA drives than the motherboard has SATA ports,

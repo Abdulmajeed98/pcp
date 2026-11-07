@@ -1,5 +1,6 @@
 import type { Build, Category, Part } from '../build';
 import type { Judgment } from './findings';
+import type { Reading } from './reading';
 
 // A Compatibility Rule, stated once: its number, the Categories it involves
 // with the specifications it reads in each, by their paths, those it reads in
@@ -41,14 +42,6 @@ export function rule<
       ),
   };
 }
-
-// One value a rule reads: a Part's value at a specification's path, or none
-// when the Part was not given it, which makes it missing.
-export type Reading<Value> = {
-  readonly part: string;
-  readonly path: string;
-  readonly value: Value | undefined;
-};
 
 type Involves = {
   readonly [C in Category]?: readonly PathOf<SpecificationsOf<C>>[];

@@ -1,4 +1,5 @@
-import { and, exceeds, not, or, problemWhen, product, total } from './findings';
+import { product, total } from './amounts';
+import { and, exceeds, not, or, problemWhen } from './findings';
 import { rule } from './statement';
 
 // Rule 11: the PSU cannot power the GPU. It is a Compatibility Problem when

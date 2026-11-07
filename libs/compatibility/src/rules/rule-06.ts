@@ -1,4 +1,5 @@
-import { exceeds, problemWhen, product, total } from './findings';
+import { product, total } from './amounts';
+import { exceeds, problemWhen } from './findings';
 import { rule } from './statement';
 
 // Rule 6: the Build's RAM adds up to more than the motherboard's maximum

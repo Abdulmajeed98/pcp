@@ -1,4 +1,5 @@
-import { exceeds, problemWhen, product } from './findings';
+import { product } from './amounts';
+import { exceeds, problemWhen } from './findings';
 import { rule } from './statement';
 
 // Rule 19: the PSU is longer than the case allows, equal fitting.

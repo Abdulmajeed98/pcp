@@ -1,17 +1,6 @@
 import { type StorageFormFactor, storageFormFactors } from '../fixed-sets';
-import {
-  type Amount,
-  amountWhatever,
-  and,
-  counted,
-  exceeds,
-  not,
-  nothing,
-  or,
-  problemWhen,
-  together,
-  total,
-} from './findings';
+import { type Amount, amountWhatever, counted, nothing, together, total } from './amounts';
+import { and, exceeds, not, or, problemWhen } from './findings';
 import { rule } from './statement';
 
 // Rule 15: the Build has more 3.5-inch or 2.5-inch drives than the case has

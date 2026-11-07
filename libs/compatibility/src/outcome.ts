@@ -21,3 +21,14 @@ export type MissingSpecification = {
   readonly part: string;
   readonly path: string;
 };
+
+// Missing specifications, each named once, where it is first named.
+export function withoutRepeats(
+  missing: readonly MissingSpecification[],
+): MissingSpecification[] {
+  return missing.filter(
+    (each, index) =>
+      missing.findIndex((other) => other.part === each.part && other.path === each.path) ===
+      index,
+  );
+}

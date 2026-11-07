@@ -3,8 +3,8 @@ import {
   type StorageInterface,
   storageInterfaces,
 } from '../fixed-sets';
-import { type Amount, amountWhatever, counted, nothing, total } from './findings';
-import type { Reading } from './statement';
+import { type Amount, amountWhatever, counted, nothing, total } from './amounts';
+import type { Reading } from './reading';
 
 // How the rules that count drives read a drive's kind (rules 13 to 16).
 

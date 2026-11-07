@@ -1,4 +1,5 @@
-import { exceeds, problemWhen, product, total } from './findings';
+import { product, total } from './amounts';
+import { exceeds, problemWhen } from './findings';
 import { rule } from './statement';
 
 // Rule 5: the Build has more RAM modules than the motherboard has memory
