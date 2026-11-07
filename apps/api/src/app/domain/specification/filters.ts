@@ -35,21 +35,18 @@ export class Filter {
     private readonly kind: FilterKind,
   ) {}
 
-  // The filter on the specification at the path of the Category's list. A
-  // path the list does not have, or a specification that holds a list, is a
-  // mistake in the statement below, and the API does not start.
-  static of(category: Category, parameter: string, path: string): Filter {
+  // The filter on the specification at the path of the Category's list, or
+  // none when the list has no specification there, or has one that holds a
+  // list, which a filter cannot choose among. The statement below names only
+  // filters, and the filters' unit test proves it whole.
+  static of(category: Category, parameter: string, path: string): Option.Option<Filter> {
     const specification = specificationListOf(category)
       .getSpecifications()
       .find((each) => each.getPath() === path);
-    if (specification === undefined) {
-      throw new Error(`The ${category.getKey()} specification list has no ${path}`);
-    }
-    const kind = kindOfValue[specification.getKind()];
-    if (kind === undefined) {
-      throw new Error(`The ${category.getKey()} ${path} cannot be a filter`);
-    }
-    return new Filter(category, parameter, specification, kind);
+    const kind = specification && kindOfValue[specification.getKind()];
+    return specification === undefined || kind === undefined
+      ? Option.none()
+      : Option.some(new Filter(category, parameter, specification, kind));
   }
 
   static kinds(): readonly FilterKind[] {
@@ -120,7 +117,9 @@ export class FilterChoice {
 // list of Visible Parts is narrowed by them, the Shopper app builds its form
 // from the answer of their values, and no other place names them. Every
 // Category is also filtered by its manufacturer, which is a Part's own and no
-// specification, and by a range of Lowest Prices.
+// specification, and by a range of Lowest Prices. A filter whose path its
+// Category's list lacks is left out, and the API still starts (ADR-0004:
+// domain code never throws); the filters' unit test proves that none is.
 const statement = new Map<Category, readonly Filter[]>(
   (
     [
@@ -182,7 +181,9 @@ const statement = new Map<Category, readonly Filter[]>(
     ] as const
   ).map(([category, filters]) => [
     category,
-    filters.map(([parameter, path]) => Filter.of(category, parameter, path)),
+    filters.flatMap(([parameter, path]) =>
+      Option.toArray(Filter.of(category, parameter, path)),
+    ),
   ]),
 );
 
@@ -194,14 +195,12 @@ export function filtersOf(category: Category): readonly Filter[] {
 // Every parameter any Category's filters are asked by, once, with the filters
 // asked by it, for a request to declare. Filters of two Categories asked by
 // the same parameter offer the same kind of value, so that the parameter has
-// one kind whatever the Category.
+// one kind whatever the Category, as the filters' unit test proves of the
+// statement.
 export function filterParameters(): ReadonlyMap<string, readonly Filter[]> {
   const byParameter = new Map<string, Filter[]>();
   for (const filter of [...statement.values()].flat()) {
     const same = byParameter.get(filter.getParameter()) ?? [];
-    if (same.some((each) => each.getKind() !== filter.getKind())) {
-      throw new Error(`The filters asked by ${filter.getParameter()} differ in kind`);
-    }
     byParameter.set(filter.getParameter(), [...same, filter]);
   }
   return byParameter;
