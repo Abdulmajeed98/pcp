@@ -3,10 +3,17 @@ import { constants } from 'node:os';
 
 import { describe, expect, it } from '@jest/globals';
 
-import {
-  ignoreARefusedTypeOfService,
-  undiciIgnoresARefusedTypeOfService,
-} from '../type-of-service.ts';
+import { ignoreARefusedTypeOfService } from '../type-of-service.ts';
+
+// Whether a release of undici ignores a refused type of service itself:
+// 7.30.2 and later in 7, and 8.8.0 and later (nodejs/undici#5547). Only the
+// line that says when the patch can go asks it.
+function undiciIgnoresARefusedTypeOfService(version: string): boolean {
+  const [major = 0, minor = 0, patch = 0] = version.split('.').map(Number);
+  if (major === 7) return minor > 30 || (minor === 30 && patch >= 2);
+  if (major === 8) return minor >= 8;
+  return major > 8;
+}
 
 // A socket whose system refuses its type of service, as macOS refuses it on a
 // connection reset as it opens: its handle answers EINVAL, and Node's own

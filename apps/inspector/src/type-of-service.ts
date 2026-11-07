@@ -23,12 +23,3 @@ export function ignoreARefusedTypeOfService(prototype: Socket = Socket.prototype
     }
   };
 }
-
-// Whether a release of undici ignores a refused type of service itself:
-// 7.30.2 and later in 7, and 8.8.0 and later.
-export function undiciIgnoresARefusedTypeOfService(version: string): boolean {
-  const [major = 0, minor = 0, patch = 0] = version.split('.').map(Number);
-  if (major === 7) return minor > 30 || (minor === 30 && patch >= 2);
-  if (major === 8) return minor >= 8;
-  return major > 8;
-}

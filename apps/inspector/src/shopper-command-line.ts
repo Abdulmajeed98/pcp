@@ -1,4 +1,7 @@
+import type { Currency } from '@pcp/api-client';
+
 import { BadScheme, type Scheme, takeTheScheme } from './colour-scheme.ts';
+import { currencies } from './currencies.ts';
 
 // The command line of `pnpm shopper:inspect`: a page's path on the Shopper
 // app, without its language, `--language` for the language its address
@@ -14,12 +17,21 @@ export class BadCommandLine extends Error {}
 // TypeScript, so they are written here.
 const languages = ['ckb', 'ar', 'en'] as const;
 
-// The two currencies a Shopper can see prices in, by the API's codes, which
-// the Shopper app keeps a Shopper's choice of in its cookie; written here for
-// the same reason.
-const currencies = ['IQD', 'USD'] as const;
-
-export type Currency = (typeof currencies)[number];
+// Takes an option and the value after it off the command line, when it is
+// there: one of the values it may take, or else the line is refused.
+function takeAChoice<Choice extends string>(
+  rest: string[],
+  option: string,
+  choices: readonly Choice[],
+  refusal: string,
+): Choice | undefined {
+  const at = rest.indexOf(option);
+  if (at === -1) return undefined;
+  const [, given] = rest.splice(at, 2);
+  const chosen = choices.find((each) => each === given);
+  if (chosen === undefined) throw new BadCommandLine(refusal);
+  return chosen;
+}
 
 export function shopperCommandLine(
   args: readonly string[],
@@ -39,23 +51,15 @@ export function shopperCommandLine(
     throw error;
   }
 
-  let currency: Currency | undefined;
-  const currencyAt = rest.indexOf('--currency');
-  if (currencyAt !== -1) {
-    const [, given] = rest.splice(currencyAt, 2);
-    currency = currencies.find((each) => each === given);
-    if (currency === undefined) throw new BadCommandLine('--currency takes IQD or USD.');
-  }
-
-  let language: string = languages[0];
-  const at = rest.indexOf('--language');
-  if (at !== -1) {
-    const [, given] = rest.splice(at, 2);
-    if (!languages.some((each) => each === given)) {
-      throw new BadCommandLine('--language takes ckb, ar or en.');
-    }
-    language = given;
-  }
+  const currency = takeAChoice(
+    rest,
+    '--currency',
+    currencies,
+    '--currency takes IQD or USD.',
+  );
+  const language =
+    takeAChoice(rest, '--language', languages, '--language takes ckb, ar or en.') ??
+    languages[0];
 
   const [path, ...options] = rest;
   if (path === undefined || !path.startsWith('/')) {

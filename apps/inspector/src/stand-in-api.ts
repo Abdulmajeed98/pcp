@@ -18,6 +18,7 @@ import type {
   VisibleVendorResponse,
 } from '@pcp/api-client';
 
+import { currencies } from './currencies.ts';
 import { theShopsPlatformRate } from './made-up-offers.ts';
 import { daysAnOfferStaysCurrent } from './made-up-shop.ts';
 import type { Category, ReadPart, ShopOffer, ShoppersShop } from './the-shoppers-shop.ts';
@@ -96,8 +97,6 @@ class Refused extends Error {
     this.answer = answer;
   }
 }
-
-const currencies: readonly Currency[] = ['USD', 'IQD'];
 
 function currencyOf(query: URLSearchParams): Currency {
   const currency = currencies.find((each) => each === query.get('currency'));

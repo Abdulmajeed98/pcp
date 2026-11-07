@@ -24,3 +24,7 @@ Looked up first: undici released the fix in 8.8.0 (20 July 2026) and, backported
 - **Test first, at the inspector's unit seam** (`apps/inspector/src/test/type-of-service.spec.ts`). A real `net.Socket` whose handle answers EINVAL makes Node's own `setTypeOfService` throw "setTypeOfService EINVAL", as the crash did. With the patch left empty, the line that expects the socket to go on failed with that error; with the patch, it passed. A subclass's prototype is patched there, so no other test sees it.
 - **When to remove it.** `undiciIgnoresARefusedTypeOfService` names the releases that ignore the refusal themselves (7.30.2 and later in 7, 8.8.0 and later), tested on a table of releases. Its last line expects Node's own undici not to be one of them; when Node bundles one, that line fails, to say that the patch can go.
 - **Recorded.** The design skills guide's note on Node's fetch, and `asked-again.ts`'s comment, now say that both commands ignore the refusal where it is thrown.
+
+### 7 November 2026: the code review
+
+The review found the release check, `undiciIgnoresARefusedTypeOfService`, in the command's code though only its test asks it. It now lives in `type-of-service.spec.ts`, beside the line that says when the patch can go; the patch module holds the patch alone.
