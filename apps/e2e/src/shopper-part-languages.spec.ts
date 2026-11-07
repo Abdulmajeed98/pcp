@@ -8,6 +8,7 @@ import {
 
 import { expectAccessible } from './accessibility';
 import { addAPhotoTo, listedPart } from './category-page';
+import { createAMadeUpPart, type MadeUpPart } from './catalog';
 import { choose, setThePlatformRate } from './currencies';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { shownPriceText, theNumber, theOffersOf } from './home-page';
@@ -25,9 +26,7 @@ import { aWordUniqueToTheRun } from './made-up';
 import { film, filmFromTheFirstFrame, snapsOf, type Filmed } from './motion-film';
 import { addAnOffer } from './offers';
 import {
-  createACpuWith,
   lookAtThePartPage,
-  type MadeUpPartOfAPage,
   offerOf,
   offersListed,
   specificationOn,
@@ -58,15 +57,15 @@ const rate = 1500;
 // rounded to 250, with a 24-month warranty; and Charlie's, the cheapest, out
 // of stock, with no warranty. And a CPU that one Vendor alone offers, for
 // that Vendor to be deactivated.
-let cpu: MadeUpPartOfAPage;
-let lonely: MadeUpPartOfAPage;
+let cpu: MadeUpPart;
+let lonely: MadeUpPart;
 let alpha: MadeUpVendor;
 let bravo: MadeUpVendor;
 let charlie: MadeUpVendor;
 let lonelysVendor: MadeUpVendor;
 let photoPath: string;
 
-const partPage = (part: MadeUpPartOfAPage) => `/parts/${part.id}`;
+const partPage = (part: MadeUpPart) => `/parts/${part.id}`;
 
 // Works with the API as the development Admin, who logs in through the
 // dashboard, in a context of its own that runs script: a context made in a
@@ -95,11 +94,10 @@ test.beforeAll(async ({ browser }) => {
       await createAMadeUpVendor(request, authorization),
       await createAMadeUpVendor(request, authorization),
     ];
-    cpu = await createACpuWith(request, authorization, {
-      name: `Made-up test CPU ${word} with Offers`,
-      // Short enough, and written in Code 39's characters, for its barcode.
-      partNumber: `T${word.slice(-12)}`,
-      specifications: {
+    cpu = await createAMadeUpPart(
+      request,
+      authorization,
+      {
         socket: 'AM5',
         series: 'Made-up 7000',
         cores: { total: 8, threads: 16 },
@@ -112,7 +110,13 @@ test.beforeAll(async ({ browser }) => {
           memory: { types: ['DDR5'] },
         },
       },
-    });
+      'cpu',
+      {
+        name: `Made-up test CPU ${word} with Offers`,
+        // Short enough, and written in Code 39's characters, for its barcode.
+        partNumber: `T${word.slice(-12)}`,
+      },
+    );
     photoPath = await addAPhotoTo(request, authorization, cpu.id);
     await addAnOffer(request, authorization, alpha.id, cpu.id, {
       iqdPrice: 500_000,
@@ -127,10 +131,9 @@ test.beforeAll(async ({ browser }) => {
       inStock: false,
     });
 
-    lonely = await createACpuWith(request, authorization, {
+    lonely = await createAMadeUpPart(request, authorization, {}, 'cpu', {
       name: `Made-up test CPU ${word} of one Vendor`,
       partNumber: `L${word.slice(-12)}`,
-      specifications: {},
     });
     await addAnOffer(request, authorization, lonelysVendor.id, lonely.id, {
       iqdPrice: 300_000,

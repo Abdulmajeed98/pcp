@@ -2,44 +2,6 @@ import { type APIRequestContext, expect, type Locator, type Page } from '@playwr
 
 import { apiUrl } from './platform';
 
-// A made-up Part a Part page's test creates, by the name and part number it
-// gives it.
-export interface MadeUpPartOfAPage {
-  id: string;
-  name: string;
-  partNumber: string;
-}
-
-// Creates a made-up CPU over HTTP as the Admin, with the name, part number
-// and specifications the test gives, the name holding a word unique to the
-// run so that the test finds it on a Category page's long list. It stays in
-// the development database, which `pnpm services:reset` empties.
-export async function createACpuWith(
-  request: APIRequestContext,
-  authorization: string,
-  {
-    name,
-    partNumber,
-    specifications,
-  }: Omit<MadeUpPartOfAPage, 'id'> & {
-    specifications: Record<string, unknown>;
-  },
-): Promise<MadeUpPartOfAPage> {
-  const created = await request.post(`${apiUrl}/v1/parts`, {
-    headers: { authorization },
-    data: {
-      category: 'cpu',
-      name,
-      manufacturer: 'Made-up Test Parts',
-      partNumbers: [partNumber],
-      specifications,
-    },
-  });
-  expect(created.status()).toBe(201);
-  const { id } = (await created.json()) as { id: string };
-  return { id, name, partNumber };
-}
-
 // Deactivates or reactivates a made-up Vendor over HTTP as the Admin, as the
 // Admin console's buttons do.
 export async function switchTheVendor(

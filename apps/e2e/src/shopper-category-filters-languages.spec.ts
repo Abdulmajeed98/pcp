@@ -5,9 +5,7 @@ import {
   aPageOfTheList,
   chooseInTheFilters,
   choicesOnTheSheet,
-  createACpuNamed,
   expectTheAddressToAsk,
-  type MadeUpListedPart,
   expectTheList,
   sendTheFilters,
   showParts,
@@ -21,6 +19,7 @@ import {
   whatThePriceFieldSays,
   whatTheSheetSays,
 } from './category-page';
+import { createAMadeUpPart, type MadeUpPart } from './catalog';
 import { choose, expectPricesShownIn, setThePlatformRate } from './currencies';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { theNumber } from './home-page';
@@ -56,11 +55,11 @@ const rivals = 'Made-up Rival Parts';
 // Bravo (AM5, 16 cores, 400,000), Delta (LGA 1700, its cores not known,
 // 520,000), and last Echo (AM5, 8 cores), which every Vendor has out of
 // stock, so it has no Lowest Price.
-let alpha: MadeUpListedPart;
-let bravo: MadeUpListedPart;
-let charlie: MadeUpListedPart;
-let delta: MadeUpListedPart;
-let echo: MadeUpListedPart;
+let alpha: MadeUpPart;
+let bravo: MadeUpPart;
+let charlie: MadeUpPart;
+let delta: MadeUpPart;
+let echo: MadeUpPart;
 
 // The run's rows are made as the development Admin, who logs in through the
 // dashboard, so the context they are made in runs script, whatever line a
@@ -74,9 +73,9 @@ test.beforeAll(async ({ browser }) => {
     await setThePlatformRate(request, authorization, rate);
     const vendor = await createAMadeUpVendor(request, authorization);
     const cpu = (letter: string, manufacturer: string, specifications: object) =>
-      createACpuNamed(request, authorization, `Made-up test CPU ${word} ${letter}`, {
+      createAMadeUpPart(request, authorization, { ...specifications }, 'cpu', {
+        name: `Made-up test CPU ${word} ${letter}`,
         manufacturer,
-        specifications: { ...specifications },
       });
 
     alpha = await cpu('Alpha', ours, { socket: 'AM5', cores: { total: 8 } });
@@ -84,7 +83,7 @@ test.beforeAll(async ({ browser }) => {
     charlie = await cpu('Charlie', rivals, { socket: 'AM4', cores: { total: 8 } });
     delta = await cpu('Delta', rivals, { socket: 'LGA 1700' });
     echo = await cpu('Echo', ours, { socket: 'AM5', cores: { total: 8 } });
-    const offer = (part: MadeUpListedPart, details: object) =>
+    const offer = (part: MadeUpPart, details: object) =>
       addAnOffer(request, authorization, vendor.id, part.id, details);
     await offer(alpha, { iqdPrice: 250_000 });
     await offer(bravo, { iqdPrice: 400_000 });
@@ -97,7 +96,7 @@ test.beforeAll(async ({ browser }) => {
 });
 
 // The names of the run's CPUs, in the order the list shows them.
-const namesOf = (...parts: MadeUpListedPart[]) => parts.map(({ name }) => name);
+const namesOf = (...parts: MadeUpPart[]) => parts.map(({ name }) => name);
 const all = () => namesOf(charlie, alpha, bravo, delta, echo);
 
 for (const javaScriptEnabled of [true, false]) {

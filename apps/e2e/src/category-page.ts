@@ -5,43 +5,6 @@ import type { CategoryKey, ListedPart } from './home-page';
 import { aMadeUpPhoto } from './made-up-photo';
 import { apiUrl } from './platform';
 
-// A made-up Part a Category page's test creates, by the name it gives it.
-export interface MadeUpListedPart {
-  id: string;
-  name: string;
-}
-
-// Creates a made-up CPU over HTTP as the Admin, with the name the test gives,
-// which holds a word unique to the run so that the test finds its own rows on
-// a long list, and plainly test data, and with the manufacturer and the
-// specifications it gives, in OpenDB's field names and nesting, such as
-// `{ socket: 'AM5', cores: { total: 8 } }`; with none, it holds no
-// specification. It stays in the development database, which
-// `pnpm services:reset` empties.
-export async function createACpuNamed(
-  request: APIRequestContext,
-  authorization: string,
-  name: string,
-  {
-    manufacturer = 'Made-up Test Parts',
-    specifications = {},
-  }: { manufacturer?: string; specifications?: Record<string, unknown> } = {},
-): Promise<MadeUpListedPart> {
-  const created = await request.post(`${apiUrl}/v1/parts`, {
-    headers: { authorization },
-    data: {
-      category: 'cpu',
-      name,
-      manufacturer,
-      partNumbers: [`TEST-${name.replace(/\W+/g, '-')}`],
-      specifications,
-    },
-  });
-  expect(created.status()).toBe(201);
-  const { id } = (await created.json()) as { id: string };
-  return { id, name };
-}
-
 // Adds a made-up photo to a Part over HTTP as the Admin, and gives back the
 // path the API serves it at, `/v1/photos/<photoId>`.
 export async function addAPhotoTo(

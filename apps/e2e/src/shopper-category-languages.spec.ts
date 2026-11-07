@@ -4,18 +4,17 @@ import { expectAccessible } from './accessibility';
 import {
   addAPhotoTo,
   aPageOfTheList,
-  createACpuNamed,
   expectTheAddressToAsk,
   listedPart,
   listedParts,
   lookAtTheCategorySheet,
-  type MadeUpListedPart,
   namesListed,
   searchTheCategory,
   type TheCategorySheet,
   theSearchBox,
   whatTheSheetSays,
 } from './category-page';
+import { createAMadeUpPart, type MadeUpPart } from './catalog';
 import { choose, expectPricesShownIn, setThePlatformRate } from './currencies';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { linkOf, shownPriceText, theNumber } from './home-page';
@@ -54,14 +53,14 @@ const rate = 1500;
 // converted (≈ 150,000 IQD at the run's rate) and the lowest; Alpha has two
 // Vendors and a photo; Charlie is quoted in both currencies; Delta is the
 // cheapest of all but every Vendor has it out of stock, so it comes last.
-let alpha: MadeUpListedPart;
-let bravo: MadeUpListedPart;
-let charlie: MadeUpListedPart;
-let delta: MadeUpListedPart;
+let alpha: MadeUpPart;
+let bravo: MadeUpPart;
+let charlie: MadeUpPart;
+let delta: MadeUpPart;
 let alphasPhoto: string;
 // The 21 CPUs of the pages, the cheapest first in the order of their names,
 // each named by its place, No01 to No21, a word no other name holds.
-let paged: MadeUpListedPart[];
+let paged: MadeUpPart[];
 
 // The run's rows are made as the development Admin, who logs in through the
 // dashboard, so the context they are made in runs script: a context made in
@@ -77,14 +76,15 @@ test.beforeAll(async ({ browser }) => {
     await setThePlatformRate(request, authorization, rate);
     const vendor = await createAMadeUpVendor(request, authorization);
     const another = await createAMadeUpVendor(request, authorization);
-    const named = (word: string) => createACpuNamed(request, authorization, word);
+    const named = (name: string) =>
+      createAMadeUpPart(request, authorization, {}, 'cpu', { name });
 
     alpha = await named(`Made-up test CPU ${listWord} Alpha`);
     bravo = await named(`Made-up test CPU ${listWord} Bravo`);
     charlie = await named(`Made-up test CPU ${listWord} Charlie`);
     delta = await named(`Made-up test CPU ${listWord} Delta`);
     alphasPhoto = await addAPhotoTo(request, authorization, alpha.id);
-    const offer = (vendorId: string, part: MadeUpListedPart, details: object) =>
+    const offer = (vendorId: string, part: MadeUpPart, details: object) =>
       addAnOffer(request, authorization, vendorId, part.id, details);
     await offer(vendor.id, alpha, { iqdPrice: 250_000 });
     await offer(another.id, alpha, { iqdPrice: 260_000 });
