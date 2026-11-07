@@ -1,4 +1,5 @@
-import { sockets } from './shared-sets';
+import { sockets } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 

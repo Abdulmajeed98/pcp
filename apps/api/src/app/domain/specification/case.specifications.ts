@@ -1,4 +1,5 @@
-import { motherboardFormFactors, powerSupplyFormFactors } from './shared-sets';
+import { motherboardFormFactors, powerSupplyFormFactors } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
