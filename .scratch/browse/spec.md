@@ -1,6 +1,6 @@
 # Spec: Browse
 
-Status: ready-for-agent
+Status: resolved
 
 This is `browse`, the sixth module in the build order of [the MVP spec](../mvp/spec.md)'s capability map, after `pricing`. It covers BRW-1 to BRW-5, and the Shopper's side of CAT-7, CAT-9, OFF-7, OFF-11 and PRC-3. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md), [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0005](../../docs/adr/0005-specifications-as-one-document-per-part.md), [ADR-0006](../../docs/adr/0006-fonts-downloaded-from-our-own-server.md), [ADR-0007](../../docs/adr/0007-a-look-and-components-for-each-app.md) and [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md). It builds on the conventions that `languages`, `catalog`, `accounts`, `offers`, the redesign and `pricing` recorded in the MVP spec.
 

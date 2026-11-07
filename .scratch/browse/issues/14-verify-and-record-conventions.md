@@ -10,7 +10,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 
 **Blocked by:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 15
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] In a fresh clone in a new directory, with no `.env` and no Docker volumes left from earlier runs, these all pass, with none of the three apps started by hand:
   - one install;
@@ -21,7 +21,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - the browser's one-time install, and then `pnpm platform:check`.
 - [x] Git reports a clean working tree after every command above. No password and no secret is committed.
 - [x] `pnpm shopper:inspect` is run from the fresh clone on the home page, a Category page, a Part page and a Vendor page, at 1440, 768 and 390 pixels in both schemes, the 360-pixel rule measured by the end-to-end tests' `expectNoSidewaysScroll`, as the owner decided on 7 November 2026. Its tables match tickets 09 to 13's.
-- [ ] The owner is asked to check these once, in the owner's own browser. What they saw, or that it is still to be done, is recorded under Comments:
+- [x] The owner is asked to check these once, in the owner's own browser. What they saw, or that it is still to be done, is recorded under Comments:
   - From the home page to a Category, a filter, a Part and its Vendor, in Kurdish and in English, the pages match DESIGN.md, and Impeccable's design hook raises nothing left unanswered.
   - A Vendor made in the Admin console adds an Offer quoted only in USD. The Shopper sees the Part with that USD price, and in IQD sees a price marked "≈", converted at the Platform Rate and rounded to 250 (success criterion 3).
   - Deactivating that Vendor removes its page and the Part at once, and reactivating it brings both back.
@@ -49,8 +49,8 @@ The services of the owner's own checkout are stopped before the fresh clone's se
   - The testing strategy's last paragraph names the Shopper app's unit-test runner.
   - The accessibility tests' list gains the Shopper's pages.
   - The note that the Shopper's design waits for `browse` is updated.
-- [ ] Whether an ADR is needed for any of the module's decisions beyond ticket 08's is decided with the owner, and the answer is recorded under Comments. One candidate is a stand-in API for inspection in place of seeded data.
-- [ ] The spec's Status becomes `resolved`, and each ticket's too.
+- [x] Whether an ADR is needed for any of the module's decisions beyond ticket 08's is decided with the owner, and the answer is recorded under Comments. One candidate is a stand-in API for inspection in place of seeded data.
+- [x] The spec's Status becomes `resolved`, and each ticket's too.
 - [x] The work is committed, leaving `pnpm check` passing.
 
 ## Comments
@@ -136,3 +136,11 @@ These wait for hosting, as the owner decided for the whole project on 16 October
 - **A fourth test seam, the Shopper app's unit tests, with Vitest** (ticket 05, the owner's choices of 3 November 2026): no ADR, as no library chosen so far has one.
 - **Every Shopper page rendered for each request, asking the API with no cache** (the spec): no ADR. Caching in front of the pages is the hosting work's decision, which may want an ADR of its own then.
 - **Every visibility rule, Lowest Price, filter and order computed in the API, in one statement with the rate** (the spec): no ADR, as the owner decided for computing Converted Prices in the database on 3 November 2026.
+
+### 7 November 2026: the owner's answers
+
+The owner answered in chat, through the coordinator.
+
+- **The ADR question: "Keep: no new ADR"**, option A. No decision of `browse` has an ADR beyond ADR-0013 and ADR-0008's amendment of 7 November 2026, the stand-in API among them: undoing any of them is a change of code that loses nothing. The MVP spec's Order of work and its conventions now say so.
+- **The four checks in the owner's own browser: "Record as to-do."** The owner has not made them. Each stays open above, under "for the owner, in the owner's own browser", still to be done, with its steps as recorded there; nothing is recorded as seen. The MVP spec's Order of work says they are still to be done.
+- **Resolved.** With both answered, this ticket's Status and the spec's are `resolved`; tickets 01 to 13 and 15 already were. The checks on a phone keep their boxes open, waiting for hosting, as the MVP spec's list under "Checks on a phone wait for hosting" records, and so do the four checks still to be done in the owner's browser.
