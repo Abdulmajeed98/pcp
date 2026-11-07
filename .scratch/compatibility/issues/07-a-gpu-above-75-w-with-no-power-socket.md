@@ -16,11 +16,11 @@
   - a GPU above 75 W with one 8-pin socket keeps all four counts;
   - the first GPU, once offered, is on Missing specifications with its four power sockets missing, and its Part, read through the API, names the same four paths.
 - [x] **The pinned commit.** The import run in memory over the pinned commit, as the catalog's fix of 7 November 2026 ran it, reads exactly 695 GPUs so and changes nothing else. The run is recorded under Comments.
-- [ ] **The development database.** One guarded SQL block, computed from a read-only export of the database, removes the four sockets from the imported GPUs that hold that pattern and from no other Part, and rolls back unless exactly the count the export found changed. It is tried first on a throwaway copy of the database loaded from the export, and run on the owner's database only after the owner's yes, which is recorded under Comments. Afterwards the imported GPUs are what the import's run of the pinned commit makes of them.
+- [x] **The development database.** One guarded SQL block, computed from a read-only export of the database, removes the four sockets from the imported GPUs that hold that pattern and from no other Part, and rolls back unless exactly the count the export found changed. It is tried first on a throwaway copy of the database loaded from the export, and run on the owner's database only after the owner's yes, which is recorded under Comments. Afterwards the imported GPUs are what the import's run of the pinned commit makes of them.
 - [x] Shown once and then reverted, failing its own test: the reading taken out of the import.
 - [x] `pnpm integration:check` and `pnpm check` pass, `pnpm check` with Docker stopped.
-- [ ] The results of the fault check and of the database's correction are recorded under Comments.
-- [ ] The work is committed in pieces, each leaving both checks passing.
+- [x] The results of the fault check and of the database's correction are recorded under Comments.
+- [x] The work is committed in pieces, each leaving both checks passing.
 
 ## Comments
 
@@ -67,3 +67,15 @@ Each was planted on `8c03ffa` with one exact edit by a script, which ran the imp
   3. *Afterwards* the copy's imported Parts were exactly what the import makes of the pinned commit with the change: 25,974, none stored otherwise.
   4. *Once more*, on the corrected copy, the block raised ("would change 0 GPUs") and changed nothing.
 - The container and its volume were removed. The block waits for the owner's yes before it runs on the owner's database.
+
+### 7 November 2026: the owner's yes, and the block on the owner's database
+
+- **The owner's yes.** Asked in the orchestrator's session "Run it on your development database now?", the owner answered "Yes, run it", as the orchestrator relayed it.
+- **Before the run**, at 20:30 UTC, the owner's database still hashed as the export, table by table.
+- **The run**, as `pcp`: `docker exec -i pc-part-pickers-postgres-1 psql -U pcp -d pcp -v ON_ERROR_STOP=1 -q < block.sql`, which answered "NOTICE: The four power sockets of 695 imported GPUs are left out." and ended with no error.
+- **Afterwards**:
+  - Only the Parts' hash changed. The made-up Parts, Offers, Offer history, photos, Platform Rates and Vendors hashed as before.
+  - Row by row against the export, exactly the 695 changed, each only in its specifications, which lost `power_connectors`, and in its time of change, 20:30:33 UTC; its name, manufacturer, part numbers and search text are as they were.
+  - The imported Parts are exactly what the import makes of the pinned commit, as it ran in memory: 25,974, none stored otherwise, and none stored that it does not make. They are the corrected copy's too, but for the time of change.
+  - No imported GPU above 75 W holds 0 for each power socket now. The 299 of 75 W or less and the 4 with no TDP keep their zeros.
+- The export, which holds every value the block changed, stays in the session's scratchpad.
