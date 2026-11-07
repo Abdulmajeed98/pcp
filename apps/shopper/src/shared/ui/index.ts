@@ -1,4 +1,4 @@
-export { Button, buttonVariants } from './button';
+export { buttonVariants } from './button';
 export { DimPhotograph } from './dim-photograph';
 export { Item, type NameAlone, whereAPartsNameStands } from './item';
 export { MarkADrawingAgain } from './mark-a-drawing-again';

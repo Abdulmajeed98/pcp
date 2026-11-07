@@ -582,9 +582,6 @@ importers:
 
   apps/shopper:
     dependencies:
-      '@base-ui/react':
-        specifier: ^1.9.0
-        version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@pcp/api-client':
         specifier: workspace:*
         version: link:../../libs/api-client
