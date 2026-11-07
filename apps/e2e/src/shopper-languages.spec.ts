@@ -406,15 +406,21 @@ test('the Part on the card, by its name, and its Lowest Price are the same chara
 // language, in what the server sent and in what the browser shows. Here the
 // page holds numbers for that to mean something: each Category's count,
 // every price and the platform's figures, which are the same digits in every
-// language.
+// language. Arabic writes a count of one or two in words, "قطعة واحدة" and
+// its dual "قطعتان", where Kurdish and English write the figure, so a
+// Category holding one or two Visible Parts is read as showing no digit.
 test("the home page's counts, prices and figures are the same Western digits in all three languages", async ({
   page,
 }) => {
   const digitsOf = (text: string) => text.match(/\d[\d,.]*/g) ?? [];
+  const countOf = (text: string) => {
+    const digits = digitsOf(text);
+    return ['1', '2'].includes(digits.join()) ? [] : digits;
+  };
   const read = await readInEveryLanguage(page, '', async () => {
     const counts = await Promise.all(
       categories.map(async ({ key }) =>
-        digitsOf(await endOf(page.getByTestId(`category-${key}`)).innerText()),
+        countOf(await endOf(page.getByTestId(`category-${key}`)).innerText()),
       ),
     );
     const prices = (await page.getByTestId('shown-price').allInnerTexts()).map(digitsOf);
