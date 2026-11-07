@@ -106,7 +106,7 @@ export async function CategoriesSheet({
     >
       {/* The home page opens here at `#categories`, from a Category with
           no Visible Part, and its photograph is then the first screen's. */}
-      <DimPhotograph photograph={photographs.builtPc} opensAt />
+      <DimPhotograph photograph={photographs.builtPc} atOnce />
       <Sheet print="in-view">
         <SheetTitle id="categories-title">{t('eightCategories')}</SheetTitle>
         <SheetNote>{t('categories.note')}</SheetNote>

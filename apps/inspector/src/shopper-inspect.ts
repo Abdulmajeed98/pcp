@@ -1,6 +1,7 @@
 import type { CategoryResponse, PartPageResponse, PartResponse } from '@pcp/api-client';
 
 import { tokenOfTheDevelopmentAdmin } from './admin-token.ts';
+import { askedAgainIfItDrops } from './asked-again.ts';
 import { type CatalogReads, readTheShoppersCatalog } from './catalog-parts.ts';
 import { CannotInspect, type Login } from './chrome.ts';
 import { emulatedMedia } from './colour-scheme.ts';
@@ -91,19 +92,13 @@ async function answers(address: string): Promise<boolean> {
     .catch(() => false);
 }
 
-// A read of the API over HTTP with the login's token, asked again, twice at
-// most, when the connection drops: the API's server can close a kept-alive
-// connection just as the next read goes out on it (ECONNRESET), and the
-// made-up shop's reading asks hundreds of them.
-async function readOfTheApi(path: string, authorization: string): Promise<Response> {
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      return await fetch(`${apiUrl}${path}`, { headers: { Authorization: authorization } });
-    } catch (error) {
-      if (attempt === 3) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
-    }
-  }
+// A read of the API over HTTP with the login's token, asked again when its
+// connection drops (`asked-again.ts`): the made-up shop's reading asks
+// hundreds of them.
+function readOfTheApi(path: string, authorization: string): Promise<Response> {
+  return askedAgainIfItDrops(() =>
+    fetch(`${apiUrl}${path}`, { headers: { Authorization: authorization } }),
+  );
 }
 
 // The Admin's reads of the catalog, over HTTP, with the login's token.

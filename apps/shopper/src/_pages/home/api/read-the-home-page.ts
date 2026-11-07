@@ -12,10 +12,11 @@ import type { Currency } from '@/shared/currency';
 import { type FirstPage, thePlatesPart } from '../model/the-plates-part';
 
 // What the home page reads from the API, on the server, for each request, in
-// the chosen currency (DESIGN.md's The home page): the first page of each of
-// the eight Categories' lists, for its count of Visible Parts and its first
-// Part, one request a Category, all at once; the Offers of the one Part on
-// the plate, for its slip; and the platform's figures. A read the API does
+// the chosen currency, with no cache (DESIGN.md's The home page, and the
+// browse spec's The Shopper app): the first page of each of the eight
+// Categories' lists, for its count of Visible Parts and its first Part, one
+// request a Category, all at once; the Offers of the one Part on the plate,
+// for its slip; and the platform's figures. A read the API does
 // not answer, or refuses, is nothing, as the API's client answers both with
 // no data, and the page shows what it has: each figure only where the API
 // answers it, and the eight Categories, which need nothing from the API.
@@ -37,11 +38,14 @@ export async function readTheHomePage(currency: Currency): Promise<HomePageReadi
   const [firstPages, figures] = await Promise.all([
     Promise.all(
       categories.map(async (category): Promise<FirstPage> => {
-        const { data } = await api.listVisibleParts({ query: { category, currency } });
+        const { data } = await api.listVisibleParts({
+          query: { category, currency },
+          cache: 'no-store',
+        });
         return { category, page: data };
       }),
     ),
-    api.readPlatformFigures().then(({ data }) => data),
+    api.readPlatformFigures({ cache: 'no-store' }).then(({ data }) => data),
   ]);
 
   const part = thePlatesPart(firstPages);
@@ -50,6 +54,7 @@ export async function readTheHomePage(currency: Currency): Promise<HomePageReadi
   const { data: offers } = await api.listVisibleOffersOfPart({
     path: { partId: part.id },
     query: { currency },
+    cache: 'no-store',
   });
   return { firstPages, plate: { part, offers }, figures };
 }
