@@ -6,6 +6,8 @@ import { rule5 } from './rule-05';
 import { rule6 } from './rule-06';
 import { rule7 } from './rule-07';
 import { rule8 } from './rule-08';
+import { rule9 } from './rule-09';
+import { rule10 } from './rule-10';
 import { rule11 } from './rule-11';
 import type { Rule } from './statement';
 
@@ -19,5 +21,7 @@ export const rules: readonly Rule[] = [
   rule6,
   rule7,
   rule8,
+  rule9,
+  rule10,
   rule11,
 ];
