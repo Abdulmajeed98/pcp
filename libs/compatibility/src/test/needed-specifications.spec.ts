@@ -29,9 +29,10 @@ describe('the needed specifications', () => {
         'supported_motherboard_form_factors',
         'max_cpu_cooler_height',
         'supported_power_supply_form_factors',
+        'max_psu_length',
       ],
     ],
-    ['psu', ['connectors.sata', 'form_factor']],
+    ['psu', ['connectors.sata', 'form_factor', 'length']],
   ])('of a Category, %s, are the paths the rules read in it', (category, paths) => {
     expect(neededSpecificationsOf(category)).toEqual(paths);
   });
