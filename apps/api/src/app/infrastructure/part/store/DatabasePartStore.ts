@@ -110,21 +110,26 @@ export class DatabasePartStore implements PartStore {
 
     try {
       // One snapshot for both, so that a Part created between them cannot make
-      // the totals disagree with the page.
+      // the totals disagree with the page. One query at a time: the
+      // transaction holds one connection, and node-postgres 9 refuses a query
+      // sent on it while another runs.
       const [rows, [{ total }]] = await this.databaseProvider.getClient().transaction(
-        (transaction) =>
-          Promise.all([
-            transaction
-              .select({ ...partWithPhoto, offerId: offer.id })
-              .from(part)
-              .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
-              .leftJoin(offer, offerOfTheVendor)
-              .where(where)
-              .orderBy(asc(part.name), asc(part.id))
-              .limit(pageable.getLimit())
-              .offset(pageable.getOffset()),
-            transaction.select({ total: count() }).from(part).where(where),
-          ]),
+        async (transaction) => {
+          const page = await transaction
+            .select({ ...partWithPhoto, offerId: offer.id })
+            .from(part)
+            .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+            .leftJoin(offer, offerOfTheVendor)
+            .where(where)
+            .orderBy(asc(part.name), asc(part.id))
+            .limit(pageable.getLimit())
+            .offset(pageable.getOffset());
+          const totals = await transaction
+            .select({ total: count() })
+            .from(part)
+            .where(where);
+          return [page, totals] as const;
+        },
         { isolationLevel: 'repeatable read', accessMode: 'read only' },
       );
 
@@ -171,29 +176,29 @@ export class DatabasePartStore implements PartStore {
 
     try {
       // One snapshot for both, as a search takes, so that the totals agree
-      // with the page.
+      // with the page, and one query at a time, as a search sends them.
       const [rows, [{ total }]] = await client.transaction(
-        (transaction) =>
-          Promise.all([
-            transaction
-              .with(offered)
-              .select()
-              .from(offered)
-              .where(lacking)
-              .orderBy(
-                placeOfCategory(offered.category),
-                desc(offered.offerCount),
-                asc(offered.name),
-                asc(offered.id),
-              )
-              .limit(pageable.getLimit())
-              .offset(pageable.getOffset()),
-            transaction
-              .with(offered)
-              .select({ total: count() })
-              .from(offered)
-              .where(lacking),
-          ]),
+        async (transaction) => {
+          const page = await transaction
+            .with(offered)
+            .select()
+            .from(offered)
+            .where(lacking)
+            .orderBy(
+              placeOfCategory(offered.category),
+              desc(offered.offerCount),
+              asc(offered.name),
+              asc(offered.id),
+            )
+            .limit(pageable.getLimit())
+            .offset(pageable.getOffset());
+          const totals = await transaction
+            .with(offered)
+            .select({ total: count() })
+            .from(offered)
+            .where(lacking);
+          return [page, totals] as const;
+        },
         { isolationLevel: 'repeatable read', accessMode: 'read only' },
       );
 

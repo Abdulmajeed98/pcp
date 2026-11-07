@@ -346,37 +346,39 @@ export class DatabaseOfferStore implements OfferStore {
 
     try {
       // One snapshot for all, so that an Offer added or confirmed between them
-      // cannot make the totals disagree with the page.
+      // cannot make the totals disagree with the page. One query at a time:
+      // the transaction holds one connection, and node-postgres 9 refuses a
+      // query sent on it while another runs.
       const [rows, [{ total }], [counts]] = await this.databaseProvider
         .getClient()
         .transaction(
-          (transaction) =>
-            Promise.all([
-              transaction
-                .select(offerWithPart)
-                .from(offer)
-                .innerJoin(part, eq(part.id, offer.partId))
-                .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
-                .where(where)
-                .orderBy(asc(offer.confirmedAt), asc(part.name), asc(offer.id))
-                .limit(pageable.getLimit())
-                .offset(pageable.getOffset()),
-              transaction
-                .select({ total: count() })
-                .from(offer)
-                .innerJoin(part, eq(part.id, offer.partId))
-                .where(where),
-              // Of all the Vendor's Offers, whatever the search and the state.
-              transaction
-                .select({
-                  offers: count(),
-                  expired: countWhere(expiredAt(now)),
-                  aboutToExpire: countWhere(aboutToExpireAt(now)),
-                  outOfStock: countWhere(outOfStock),
-                })
-                .from(offer)
-                .where(theVendors),
-            ]),
+          async (transaction) => {
+            const page = await transaction
+              .select(offerWithPart)
+              .from(offer)
+              .innerJoin(part, eq(part.id, offer.partId))
+              .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+              .where(where)
+              .orderBy(asc(offer.confirmedAt), asc(part.name), asc(offer.id))
+              .limit(pageable.getLimit())
+              .offset(pageable.getOffset());
+            const totals = await transaction
+              .select({ total: count() })
+              .from(offer)
+              .innerJoin(part, eq(part.id, offer.partId))
+              .where(where);
+            // Of all the Vendor's Offers, whatever the search and the state.
+            const allCounts = await transaction
+              .select({
+                offers: count(),
+                expired: countWhere(expiredAt(now)),
+                aboutToExpire: countWhere(aboutToExpireAt(now)),
+                outOfStock: countWhere(outOfStock),
+              })
+              .from(offer)
+              .where(theVendors);
+            return [page, totals, allCounts] as const;
+          },
           { isolationLevel: 'repeatable read', accessMode: 'read only' },
         );
 
@@ -417,9 +419,11 @@ export class DatabaseOfferStore implements OfferStore {
 
     try {
       // One snapshot for both, so that an Offer confirmed between them cannot
-      // make the total disagree with the page.
+      // make the total disagree with the page. One query at a time: the
+      // transaction holds one connection, and node-postgres 9 refuses a query
+      // sent on it while another runs.
       const [rows, [{ total }]] = await this.databaseProvider.getClient().transaction(
-        (transaction) => {
+        async (transaction) => {
           // Each active Vendor with at least one Offer expired or about to
           // expire, with its counts of all its Offers.
           const expiring = () =>
@@ -439,22 +443,23 @@ export class DatabaseOfferStore implements OfferStore {
               .groupBy(vendor.id)
               .having(gt(expiredOrAboutToExpire, 0));
 
-          return Promise.all([
-            expiring()
-              .orderBy(
-                // By the soonest expiry among the Vendor's Offers, which is
-                // that of the one confirmed longest ago. An Expired Offer
-                // counts as sooner than any other, and the same for every
-                // Vendor that has one, so those Vendors come first and the
-                // name decides among them.
-                sql`case when ${expired} > 0 then null else min(${offer.confirmedAt}) end asc nulls first`,
-                asc(vendor.name),
-                asc(vendor.id),
-              )
-              .limit(pageable.getLimit())
-              .offset(pageable.getOffset()),
-            transaction.select({ total: count() }).from(expiring().as('expiring')),
-          ]);
+          const page = await expiring()
+            .orderBy(
+              // By the soonest expiry among the Vendor's Offers, which is that
+              // of the one confirmed longest ago. An Expired Offer counts as
+              // sooner than any other, and the same for every Vendor that has
+              // one, so those Vendors come first and the name decides among
+              // them.
+              sql`case when ${expired} > 0 then null else min(${offer.confirmedAt}) end asc nulls first`,
+              asc(vendor.name),
+              asc(vendor.id),
+            )
+            .limit(pageable.getLimit())
+            .offset(pageable.getOffset());
+          const totals = await transaction
+            .select({ total: count() })
+            .from(expiring().as('expiring'));
+          return [page, totals] as const;
         },
         { isolationLevel: 'repeatable read', accessMode: 'read only' },
       );

@@ -159,22 +159,22 @@ export class DatabaseVendorStore implements VendorStore {
   ): Promise<Either.Either<VendorsPage, StructuredError>> {
     try {
       // One snapshot for both, so that a Vendor created between them cannot
-      // make the totals disagree with the page.
-      const [rows, [{ total }]] = await this.databaseProvider
-        .getClient()
-        .transaction(
-          (transaction) =>
-            Promise.all([
-              transaction
-                .select()
-                .from(vendor)
-                .orderBy(asc(vendor.name), asc(vendor.id))
-                .limit(pageable.getLimit())
-                .offset(pageable.getOffset()),
-              transaction.select({ total: count() }).from(vendor),
-            ]),
-          { isolationLevel: 'repeatable read', accessMode: 'read only' },
-        );
+      // make the totals disagree with the page. One query at a time: the
+      // transaction holds one connection, and node-postgres 9 refuses a query
+      // sent on it while another runs.
+      const [rows, [{ total }]] = await this.databaseProvider.getClient().transaction(
+        async (transaction) => {
+          const page = await transaction
+            .select()
+            .from(vendor)
+            .orderBy(asc(vendor.name), asc(vendor.id))
+            .limit(pageable.getLimit())
+            .offset(pageable.getOffset());
+          const totals = await transaction.select({ total: count() }).from(vendor);
+          return [page, totals] as const;
+        },
+        { isolationLevel: 'repeatable read', accessMode: 'read only' },
+      );
 
       return Either.map(
         Either.all(rows.map(toDomain)),
