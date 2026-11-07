@@ -259,6 +259,24 @@ test("the browser is given a position in Erbil, and the location button fills th
   );
 });
 
+// A Kurdish or an Arabic keyboard writes a place's coordinates in
+// Arabic-Indic digits, with its own decimal separator and comma: here a place
+// in Erbil, 36.1897, 44.0127 in Western digits.
+test('the Vendor types its map location as a Kurdish or an Arabic keyboard writes it, in Arabic-Indic digits with the Arabic decimal separator and comma, and the details screen shows the place it saved', async ({
+  page,
+}) => {
+  await openTheForm(page);
+  await formField(page, 'mapLocation').fill('٣٦٫١٨٩٧، ٤٤٫٠١٢٧');
+  const saved = page.waitForRequest(isTheSave);
+  await saveButton(page).click();
+
+  await expect(page).toHaveURL(detailsUrl);
+  expect((await saved).postDataJSON()).toMatchObject({
+    mapLocation: { latitude: 36.1897, longitude: 44.0127 },
+  });
+  await expect(detailOf(page, 'mapLocation')).toContainText('36.1897, 44.0127');
+});
+
 test('a phone number that is not Iraqi is refused beside its field, which takes the focus, and the refusal follows the language switch, different in Kurdish and English', async ({
   page,
 }) => {

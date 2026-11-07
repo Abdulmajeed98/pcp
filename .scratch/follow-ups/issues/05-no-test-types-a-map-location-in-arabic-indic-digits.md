@@ -4,7 +4,7 @@
 
 **Category:** enhancement
 
-**Status:** needs-triage
+**Status:** resolved
 
 **From:** browse's follow-ups list, swept on 7 November 2026: browse ticket 01. The gap is older than `browse`.
 
@@ -13,3 +13,16 @@
 **Checked on 7 November 2026.** No spec names `mapLocationIn`, and the dashboard has no unit tests. The end-to-end lines fill the map location from the browser's position or clear it; they type Arabic-Indic digits only into other fields, such as an address, prices and a warranty.
 
 **Done when.** An end-to-end line types a map location in Arabic-Indic digits with the Arabic comma, and the Vendor then holds that location.
+
+## Comments
+
+### 7 November 2026: done
+
+The owner chose to implement every follow-up ticket. A new line in `apps/e2e/src/vendor-contact-details.spec.ts`, at seam 3, has the Vendor type "٣٦٫١٨٩٧، ٤٤٫٠١٢٧", a place in Erbil in Arabic-Indic digits with the Arabic decimal separator and comma, and save. The form sends 36.1897 and 44.0127, and the details screen then shows "36.1897, 44.0127".
+
+The reading already worked, so the line passed on its first run (run alone, with `-g`, under the e2e lock). Two faults were then planted in `mapLocationIn`, one at a time, each taken out by the inverse edit, the file left as committed:
+
+| Fault | What failed |
+|---|---|
+| The digits and the decimal separator left as typed | The line: the form refused the location and stayed open, `/details/contact-details` where `/details` was expected |
+| The Arabic comma left as typed | The same |
