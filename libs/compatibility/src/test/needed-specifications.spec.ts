@@ -1,9 +1,8 @@
 import { type Category, neededSpecificationsOf } from '../index';
 
-// Written out from the spec's table of the Compatibility Rules, rules 1 to
-// 14, 16 to 19 and 21, and not read from the library: each Category's paths
-// in the order the rules first read them, rule 12 reading a GPU's TDP when
-// the Build holds a GPU.
+// Written out from the spec's table of the Compatibility Rules, all 21, and
+// not read from the library: each Category's paths in the order the rules
+// first read them, rule 12 reading a GPU's TDP when the Build holds a GPU.
 describe('the needed specifications', () => {
   it.each<[Category, string[]]>([
     ['cpu', ['socket', 'specifications.memory.types', 'specifications.tdp']],
@@ -20,6 +19,7 @@ describe('the needed specifications', () => {
         'storage_devices.sata_6_gb_s',
         'storage_devices.sata_3_gb_s',
         'm2_slots',
+        'power_connectors.cpu_power',
         'back_connect_connectors',
       ],
     ],
@@ -60,6 +60,7 @@ describe('the needed specifications', () => {
         'connectors.sata',
         'form_factor',
         'length',
+        'connectors.eps_8_pin',
       ],
     ],
   ])('of a Category, %s, are the paths the rules read in it', (category, paths) => {
