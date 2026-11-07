@@ -1,4 +1,5 @@
-import { powerSupplyFormFactors } from './shared-sets';
+import { powerSupplyFormFactors } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 

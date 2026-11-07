@@ -1,4 +1,5 @@
-import { motherboardFormFactors, ramTypes, sockets } from './shared-sets';
+import { m2SlotKeys, motherboardFormFactors, ramTypes, sockets } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
@@ -42,9 +43,7 @@ export const motherboardSpecifications = new SpecificationList([
     'M.2 slots',
     [
       Specification.text('size', 'Sizes'),
-      // A drive goes only in a slot keyed M. Slots keyed E are for wireless
-      // cards.
-      Specification.oneOf('key', 'Key', ['B', 'E', 'M']),
+      Specification.oneOf('key', 'Key', m2SlotKeys),
       Specification.text('interface', 'Interface'),
     ],
     { needed: true },
