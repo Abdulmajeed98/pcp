@@ -26,6 +26,17 @@ export type Build = {
 // The kind of a Part, by the key the API and `i18n` name it by.
 export type Category = keyof Build;
 
+// The specifications a Part of a Category holds: those of a RAM kit or a
+// drive for the two Categories a Build holds a list of.
+export type SpecificationsOf<C extends Category> =
+  NonNullable<Build[C]> extends readonly (infer Held)[]
+    ? Held extends Part<infer Specifications>
+      ? Specifications
+      : never
+    : NonNullable<Build[C]> extends Part<infer Specifications>
+      ? Specifications
+      : never;
+
 // A Part of a Build. Its identifier is the caller's, its Part's identifier,
 // and the outcomes name the Part by it. Its specifications are its needed
 // specifications, in OpenDB's names and nesting, as the catalog holds them

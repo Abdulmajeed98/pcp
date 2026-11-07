@@ -1,17 +1,11 @@
-import type { Build, Category, Part } from './build';
+import type { Build, Category, Part, SpecificationsOf } from './build';
 import { judgeBuild } from './judge-build';
 
 // A Part of a Category, as `isCompatible` takes it: with the specifications
 // a Part of its Category holds, and, a RAM kit or a drive, without its
 // quantity. Of several Categories, it is a Part of any of them.
 export type PartOf<C extends Category> = {
-  readonly [Of in Category]: Part<
-    NonNullable<Build[Of]> extends readonly Part<infer Specifications>[]
-      ? Specifications
-      : NonNullable<Build[Of]> extends Part<infer Specifications>
-        ? Specifications
-        : never
-  >;
+  readonly [Of in Category]: Part<SpecificationsOf<Of>>;
 }[C];
 
 // Whether a Part is compatible with a Build (CMP-4): it is, unless the Build
