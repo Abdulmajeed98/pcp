@@ -29,9 +29,14 @@ const withAPriceRange = `${firstPage}?lowest=150000&search=ryzen&highest=900000`
 const withThePriceRangeDropped = `${firstPage}?search=ryzen`;
 
 // The home page shows a price in each currency, whatever earlier runs left
-// in the development database: the first CPU's Lowest Price among them.
+// in the development database: the first CPU's Lowest Price among them. The
+// rows are made as the development Admin, who logs in through the
+// dashboard, so the context they are made in runs script: a context made in
+// a hook takes the options of the first line a worker runs, and that line
+// may be one with scripts switched off, as when it runs alone or after a
+// line that failed.
 test.beforeAll(async ({ browser }) => {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ javaScriptEnabled: true });
   try {
     const authorization = await authorizationOfTheDevelopmentAdmin(await context.newPage());
     await aPartWithPricesInBothCurrencies(context.request, authorization);
