@@ -1,12 +1,17 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PagingRequest } from '@pcp/core';
 import { Transform, TransformFnParams } from 'class-transformer';
-import { IsIn, IsOptional, IsString, Matches } from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
 
-import { type Currency, currencies } from '~/domain/currency/currency';
+import { type Currency } from '~/domain/currency/currency';
 import { ListVisiblePartsQueryInput } from '~/domain/offer/ListVisiblePartsQuery';
-import { Category } from '~/domain/part/Category';
 import { filterParameters, type FilterKind } from '~/domain/specification/filters';
+
+import {
+  CategoryAsked,
+  ChosenCurrencyAsked,
+  theCategoryAsked,
+} from './category-and-currency';
 
 // A parameter given once is read as a list of one, and one repeated as the
 // list of its values, as the address's query gives them.
@@ -23,23 +28,12 @@ const wholeNumber = /^\d{1,15}$/;
 // parameter for each filter of the Category, the price range, and the page. The Category and
 // the currency are required, so that no page can forget to send them.
 export class ListVisiblePartsRequest extends PagingRequest {
-  @ApiProperty({
-    description: 'The Category whose Visible Parts are listed.',
-    enum: Category.keys(),
-    example: 'cpu',
-  })
-  @IsIn(Category.keys())
+  @CategoryAsked('The Category whose Visible Parts are listed.')
   readonly category!: string;
 
-  @ApiProperty({
-    description:
-      "The chosen currency, which each Part's Lowest Price is in and the Parts are ordered by.",
-    enum: currencies,
-    // Named, so that the generated client gives the frontends one `Currency`.
-    enumName: 'Currency',
-    example: 'IQD',
-  })
-  @IsIn(currencies)
+  @ChosenCurrencyAsked(
+    "The chosen currency, which each Part's Lowest Price is in and the Parts are ordered by.",
+  )
   readonly currency!: Currency;
 
   @ApiPropertyOptional({
@@ -94,8 +88,7 @@ export class ListVisiblePartsRequest extends PagingRequest {
     }
 
     return new ListVisiblePartsQueryInput(
-      // The check above lets through only the keys of the eight.
-      Category.withKey(this.category) as Category,
+      theCategoryAsked(this.category),
       this.currency,
       this.search ?? '',
       this.manufacturer ?? [],
