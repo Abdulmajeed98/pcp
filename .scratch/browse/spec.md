@@ -313,7 +313,7 @@ Prior art: `offers`' and `pricing`'s integration tests of a Part's Visible Offer
 
 **Taste's inspector**
 
-- `pnpm shopper:inspect` on each of the four pages, in both schemes, in Kurdish and English, at 1440, 768 and 360 pixels. The results go in the ticket's Comments as the MVP spec's redesign conventions ask: every FAIL fixed, every WARN fixed or defended.
+- `pnpm shopper:inspect` on each of the four pages, in both schemes, in Kurdish and English, at 1440, 768 and 360 pixels. The results go in the ticket's Comments as the MVP spec's redesign conventions ask: every FAIL fixed, every WARN fixed or defended. On 7 November 2026, at the code review, the owner decided that phones are inspected at 390 pixels, since the inspector draws its 360-pixel window only 225 pixels tall, and that the 360-pixel rule is measured by the end-to-end tests' `expectNoSidewaysScroll`; the MVP spec's conventions say so.
 
 The existing `shopper-page.spec.ts` of the placeholder is rewritten for the home page. `shopper-currency.spec.ts`, `shopper-languages.spec.ts` and `shopper-credit-languages.spec.ts` keep passing against the rebuilt frame.
 
