@@ -6,78 +6,52 @@ import {
   ServerError,
   StructuredError,
 } from '@pcp/core';
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  gt,
-  gte,
-  inArray,
-  lt,
-  lte,
-  sql,
-  SQL,
-} from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { and, asc, count, eq, gt, gte, lt, sql, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import {
   aboutToExpireIfConfirmedBefore,
   expiredIfConfirmedBefore,
 } from '~/domain/offer/expiry';
-import { Currency, currencyFacts } from '~/domain/currency/currency';
+import { Currency } from '~/domain/currency/currency';
 import { Offer } from '~/domain/offer/Offer';
-import { Part } from '~/domain/part/Part';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
-import { PriceRange } from '~/domain/offer/PriceRange';
 import { OfferState } from '~/domain/offer/offer-state';
-import { PlatformFigures } from '~/domain/offer/PlatformFigures';
-import { convertedPriceIn, ShownPrice, WholeNumbers } from '~/domain/offer/shown-price';
+import { ShownPrice } from '~/domain/offer/shown-price';
 import {
   CreateOfferParams,
   EditOfferParams,
   ListVendorsOffersParams,
   ListVendorsWithExpiringOffersParams,
-  ListVisiblePartsParams,
   OfferCounts,
   OfferStore,
-  ReadVisiblePartsFiltersParams,
   RemoveOfferParams,
   VendorsOfferCounts,
   VendorsOffersPage,
   VendorsWithExpiringOffersPage,
-  VisiblePartsPage,
 } from '~/domain/offer/OfferStore';
 import { VendorWithExpiringOffers } from '~/domain/offer/VendorWithExpiringOffers';
 import { PhoneNumber } from '~/domain/phone-number/PhoneNumber';
-import { visibleOfferRuleAt } from '~/domain/offer/visibility';
 import { VisibleOffer } from '~/domain/offer/VisibleOffer';
 import { VisibleOffersOfVendorPage } from '~/domain/offer/VisibleOffersOfVendorPage';
-import { VisiblePart } from '~/domain/offer/VisiblePart';
-import { FilterValues, VisiblePartsFilters } from '~/domain/offer/VisiblePartsFilters';
-import { Category } from '~/domain/part/Category';
-import {
-  Filter,
-  FilterChoice,
-  FilterValue,
-  filtersOf,
-} from '~/domain/specification/filters';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
-import type { Schema } from '~/infrastructure/database/schema';
+import { onePageOf } from '~/infrastructure/database/paging';
 import { brokeUniqueRule } from '~/infrastructure/database/unique-rule';
-import { placeOfCategory } from '~/infrastructure/part/category-order';
 import { part, PartRow } from '~/infrastructure/part/part.schema';
-import { partOf, partWithPhoto } from '~/infrastructure/part/part-of-row';
+import { partOf } from '~/infrastructure/part/part-of-row';
 import { holdingEveryWord } from '~/infrastructure/part/search-text';
-import { isMissingAt, specificationAt } from '~/infrastructure/part/specification-at';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
 import { currentPlatformRate } from '~/infrastructure/platform-rate/current-platform-rate';
 import { vendor } from '~/infrastructure/vendor/vendor.schema';
 
 import { offer, offerHistory, OfferRow, oneOfferForAPart } from '../offer.schema';
+import { shownPriceIn } from '../shown-price-in-the-database';
+import { visibleOffer } from '../visible-offer';
+import {
+  inTheOrderOfAPartsOffers,
+  inTheOrderOfAVendorsOffers,
+} from '../visible-offers-order';
 
 // An Offer's row with its Part's row and its photo's identifier, as a read
 // gives them.
@@ -86,98 +60,6 @@ const offerWithPart = { offer, part, photoId: partPhoto.id };
 // How many rows meet a condition, as a number.
 function countWhere(condition: SQL | undefined): SQL<number> {
   return sql<number>`count(*) filter (where ${condition})`.mapWith(Number);
-}
-
-// The rule for a visible Offer, as the database asks it, at now by the API's
-// clock: of an active Vendor, and not an Expired Offer (`visibility.ts`). A
-// query that uses it joins the Vendor. Every query of visible Offers uses it,
-// and no other.
-function visibleOffer(now: Date): SQL | undefined {
-  const rule = visibleOfferRuleAt(now);
-  return and(
-    eq(vendor.active, rule.vendorActive),
-    gte(offer.confirmedAt, rule.confirmedFrom),
-  );
-}
-
-// The rule for a Visible Part, as the database asks it of a Part, at now by
-// the API's clock: a Part with at least one visible Offer, by
-// `visibleOffer(now)` (CAT-7). Every query of Parts for Shoppers asks it of
-// `part`, and no other: a Category's list here, and a Visible Part's own read,
-// its Category's filters and the picker (`browse` and `builder`).
-function visiblePart(now: Date): SQL {
-  return sql`exists (select 1 from ${offer} inner join ${vendor} on ${eq(vendor.id, offer.vendorId)} where ${and(eq(offer.partId, part.id), visibleOffer(now))})`;
-}
-
-// OFF-11's order of visible Offers (PRC-4), given their Shown Price: in stock
-// first, then the lowest Shown Price as answered, after rounding, with none
-// after the others; then the most recent Confirmation. Each list of them
-// adds what tells its Offers apart, so that the order is the same at every
-// read.
-function inOff11sOrder(shownAmount: SQL): SQL[] {
-  return [desc(offer.inStock), sql`${shownAmount} asc nulls last`, desc(offer.confirmedAt)];
-}
-
-// The order of a Part's visible Offers: OFF-11's, then the Vendor's name and
-// the Offer's identifier. A query that uses it joins the Vendor.
-function inTheOrderOfAPartsOffers(shownAmount: SQL): SQL[] {
-  return [...inOff11sOrder(shownAmount), asc(vendor.name), asc(offer.id)];
-}
-
-// The order of a Vendor's visible Offers: by their Parts' Categories, in the
-// catalog's order, and within each Category OFF-11's, then the Part's name
-// and the Offer's identifier. A query that uses it joins the Part.
-function inTheOrderOfAVendorsOffers(shownAmount: SQL): SQL[] {
-  return [
-    placeOfCategory(part.category),
-    ...inOff11sOrder(shownAmount),
-    asc(part.name),
-    asc(offer.id),
-  ];
-}
-
-// A Category's Visible Parts, as the database asks it of a Part, at now by
-// the API's clock, by `visiblePart(now)`.
-function theVisiblePartsOf(category: Category, now: Date): SQL | undefined {
-  return and(eq(part.category, category.getKey()), visiblePart(now));
-}
-
-// A Part of one of the manufacturers, as the database asks it, or of any when
-// none is given.
-function ofAnyManufacturer(manufacturers: readonly string[]): SQL | undefined {
-  return manufacturers.length === 0
-    ? undefined
-    : inArray(part.manufacturer, [...manufacturers]);
-}
-
-// A Part matching a choice among its Category's filters, as the database asks
-// it: one whose value of the filter's specification is any of those chosen,
-// compared as JSON, so that a number matches a number and text matches text.
-// A Part missing the specification, or holding a value that stands for "not
-// known", holds none of them: a value chosen is one the specification could
-// hold (`filters.ts`).
-function matching(choice: FilterChoice): SQL {
-  const values = choice.getValues().map((value) => sql`${JSON.stringify(value)}::jsonb`);
-  return sql`${specificationAt(choice.getFilter().getSpecification())} in (${sql.join(values, sql`, `)})`;
-}
-
-// A Lowest Price within a price range, as the database asks it of the amount
-// as answered, after rounding (PRC-4), in the currency's unit: at or above
-// the lowest end and at or below the highest, each a whole number of ones of
-// the currency. An amount that is null, for a Part with no Lowest Price, is
-// within no range that has an end.
-function within(range: PriceRange, currency: Currency, lowestAmount: SQL): SQL[] {
-  const inItsUnit = (end: number) =>
-    inTheDatabase.times(
-      inTheDatabase.of(end),
-      inTheDatabase.of(currencyFacts[currency].unitsInOne),
-    );
-  const lowest = range.getLowest();
-  const highest = range.getHighest();
-  return [
-    ...(lowest === undefined ? [] : [sql`${lowestAmount} >= ${inItsUnit(lowest)}`]),
-    ...(highest === undefined ? [] : [sql`${lowestAmount} <= ${inItsUnit(highest)}`]),
-  ];
 }
 
 // An Expired Offer, and one about to expire, as the database asks them, at now
@@ -191,92 +73,6 @@ function aboutToExpireAt(now: Date): SQL | undefined {
     gte(offer.confirmedAt, expiredIfConfirmedBefore(now)),
     lt(offer.confirmedAt, aboutToExpireIfConfirmedBefore(now)),
   );
-}
-
-// Whole numbers as the database computes them, in `bigint`, so that a price
-// at the top of the Offers' limits times the highest rate cannot overflow.
-// Its division of two positive whole numbers rounds down.
-const inTheDatabase: WholeNumbers<SQL> = {
-  of: (value) => sql`${value}::bigint`,
-  plus: (a, b) => sql`(${a} + ${b})`,
-  times: (a, b) => sql`(${a} * ${b})`,
-  over: (a, b) => sql`(${a} / ${b})`,
-  greatest: (a, b) => sql`greatest(${a}, ${b})`,
-};
-
-// An Offer's Quoted Price in each currency, in its unit, or null.
-const quotedPrice = {
-  USD: offer.usdPriceCents,
-  IQD: offer.iqdPrice,
-} satisfies Record<Currency, unknown>;
-function quotedPriceIn(currency: Currency): SQL {
-  return sql`${quotedPrice[currency]}`;
-}
-
-// An Offer's Shown Price in a currency, in its unit, as the database asks it
-// at a Platform Rate: its Quoted Price in that currency if it has one, else
-// its Converted Price by the rule in `shown-price.ts`, else null when there
-// is no rate. A query that uses it joins the current rate, read in the same
-// query as its Offers.
-function shownPriceIn(
-  currency: Currency,
-  iqdPerUsd: SQL,
-): {
-  amount: SQL<number | null>;
-  converted: SQL<boolean>;
-} {
-  const quoted = quotedPriceIn(currency);
-  const other = quotedPriceIn(currencyFacts[currency].other);
-  const converted = convertedPriceIn(
-    inTheDatabase,
-    currency,
-    sql`${other}::bigint`,
-    sql`${iqdPerUsd}::bigint`,
-  );
-  return {
-    amount: sql<
-      number | null
-    >`coalesce(${quoted}::bigint, case when ${iqdPerUsd} is not null and ${other} is not null then ${converted} end)`.mapWith(
-      Number,
-    ),
-    converted: sql<boolean>`${quoted} is null`,
-  };
-}
-
-// What each Part's visible Offers say of it in a currency, at now by the
-// API's clock, at the current Platform Rate, for a query of Parts for
-// Shoppers, which joins `currentRate` once and `offered` laterally after
-// `part`: how many there are, which is how many Vendors offer it, since a
-// Vendor has one Offer for a Part at most; whether any is in stock; and its
-// Lowest Price, the Shown Price of the first in stock as a Part's page lists
-// them, the lowest, with whether it is converted. It describes the Part, and
-// the rule for a Visible Part alone decides whether the Part is read. Drizzle
-// names a subquery's field by its alias alone, so each alias here, and in a
-// query that uses it, is one no table in the same statement has as a column.
-function whatTheirOffersSay(client: NodePgDatabase<Schema>, currency: Currency, now: Date) {
-  const currentRate = currentPlatformRate(client).as('current_rate');
-  const shownPrice = shownPriceIn(currency, sql`${currentRate.iqdPerUsd}`);
-  const inTheirOrder = sql.join(inTheOrderOfAPartsOffers(shownPrice.amount), sql`, `);
-  // The first of them in stock, in the order a Part's page lists them.
-  function firstInStock<T>(value: SQL): SQL<T | null> {
-    return sql<T | null>`(array_agg(${value} order by ${inTheirOrder}) filter (where ${offer.inStock}))[1]`;
-  }
-
-  const offered = client
-    .select({
-      vendorCount: sql<number>`count(*)::int`.as('vendor_count'),
-      inStock: sql<boolean>`coalesce(bool_or(${offer.inStock}), false)`.as('any_in_stock'),
-      lowestAmount: firstInStock<number>(shownPrice.amount)
-        .mapWith(Number)
-        .as('lowest_amount'),
-      lowestConverted: firstInStock<boolean>(shownPrice.converted).as('lowest_converted'),
-    })
-    .from(offer)
-    .innerJoin(vendor, eq(vendor.id, offer.vendorId))
-    .where(and(eq(offer.partId, part.id), visibleOffer(now)))
-    .as('offered');
-
-  return { currentRate, offered };
 }
 
 // An Offer out of stock.
@@ -751,168 +547,6 @@ export class DatabaseOfferStore implements OfferStore {
     }
   }
 
-  async listVisibleParts(
-    params: ListVisiblePartsParams,
-  ): Promise<Either.Either<VisiblePartsPage, StructuredError>> {
-    const client = this.databaseProvider.getClient();
-    const now = params.getNow();
-    const currency = params.getCurrency();
-    const pageable = params.getPageable();
-    // The current Platform Rate, read once, in the one statement that reads
-    // the Parts, their page and their total, so that every Lowest Price, the
-    // order and the total are at one rate.
-    const { currentRate, offered } = whatTheirOffersSay(client, currency, now);
-
-    // Every Visible Part asked for, with what its Offers say of it and its
-    // place in the list's order (BRW-1): a Lowest Price first, the lowest
-    // first; then in stock with none; then all out of stock; then by name and
-    // identifier.
-    const listed = client.$with('listed').as(
-      client
-        .select({
-          partId: sql<string>`${part.id}`.as('visible_part_id'),
-          vendorCount: offered.vendorCount,
-          inStock: offered.inStock,
-          lowestAmount: offered.lowestAmount,
-          lowestConverted: offered.lowestConverted,
-          place:
-            sql<number>`row_number() over (order by ${offered.lowestAmount} asc nulls last, ${offered.inStock} desc, ${part.name} asc, ${part.id} asc)`
-              .mapWith(Number)
-              .as('place_in_list'),
-        })
-        .from(part)
-        .leftJoin(currentRate, sql`true`)
-        .crossJoinLateral(offered)
-        .where(
-          and(
-            theVisiblePartsOf(params.getCategory(), now),
-            ...holdingEveryWord(params.getWords()),
-            ofAnyManufacturer(params.getManufacturers()),
-            ...params.getChoices().map(matching),
-            ...within(params.getPriceRange(), currency, sql`${offered.lowestAmount}`),
-          ),
-        ),
-    );
-    // How many there are, as one row, which the page is joined to, so that a
-    // page past the end still answers the total.
-    const counted = client
-      .select({ total: sql<number>`count(*)::int`.as('total') })
-      .from(listed)
-      .as('counted');
-    const offset = pageable.getOffset();
-
-    try {
-      const rows = await client
-        .with(listed)
-        .select({
-          total: counted.total,
-          part,
-          photoId: partPhoto.id,
-          vendorCount: listed.vendorCount,
-          inStock: listed.inStock,
-          lowestAmount: listed.lowestAmount,
-          lowestConverted: listed.lowestConverted,
-        })
-        .from(counted)
-        .leftJoin(
-          listed,
-          and(gt(listed.place, offset), lte(listed.place, offset + pageable.getLimit())),
-        )
-        .leftJoin(part, eq(part.id, listed.partId))
-        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
-        .orderBy(asc(listed.place));
-
-      const parts = Either.all(
-        rows.flatMap((row) =>
-          row.part === null
-            ? []
-            : [
-                Either.map(
-                  partOf(row.part, row.photoId),
-                  (found) =>
-                    new VisiblePart(
-                      found,
-                      row.lowestAmount === null
-                        ? null
-                        : new ShownPrice(
-                            currency,
-                            row.lowestAmount,
-                            row.lowestConverted === true,
-                          ),
-                      row.vendorCount ?? 0,
-                      row.inStock === true,
-                    ),
-                ),
-              ],
-        ),
-      );
-      return Either.map(
-        parts,
-        (found) => new VisiblePartsPage(found, PageAttributes.of(pageable, rows[0].total)),
-      );
-    } catch (error) {
-      this.logger.error(error, "A Category's Visible Parts could not be listed");
-      return Either.left(
-        databaseErrorOf(error, "A Category's Visible Parts could not be listed"),
-      );
-    }
-  }
-
-  async readVisiblePartsFilters(
-    params: ReadVisiblePartsFiltersParams,
-  ): Promise<Either.Either<VisiblePartsFilters, StructuredError>> {
-    const client = this.databaseProvider.getClient();
-    const category = params.getCategory();
-    const currency = params.getCurrency();
-    const filters = filtersOf(category);
-    // The current Platform Rate, read once, in the one statement that reads
-    // the Parts, so that both ends of the range are at one rate.
-    const { currentRate, offered } = whatTheirOffersSay(client, currency, params.getNow());
-    // A filter's distinct values among the Parts, leaving out what stands for
-    // "not known", in the order of their JSON: numbers by size, and text by
-    // the database's collation, as names are ordered; or null when no Part
-    // holds one.
-    function valuesOf(filter: Filter): SQL {
-      const value = specificationAt(filter.getSpecification());
-      return sql`jsonb_agg(distinct ${value} order by ${value}) filter (where not ${isMissingAt(filter.getSpecification())})`;
-    }
-
-    try {
-      const [row] = await client
-        .select({
-          manufacturers: sql<
-            string[] | null
-          >`array_agg(distinct ${part.manufacturer} order by ${part.manufacturer})`,
-          values: sql<(FilterValue[] | null)[]>`jsonb_build_array(${sql.join(
-            filters.map(valuesOf),
-            sql`, `,
-          )})`,
-          lowestPrice: sql<number | null>`min(${offered.lowestAmount})`.mapWith(Number),
-          highestPrice: sql<number | null>`max(${offered.lowestAmount})`.mapWith(Number),
-        })
-        .from(part)
-        .leftJoin(currentRate, sql`true`)
-        .crossJoinLateral(offered)
-        .where(theVisiblePartsOf(category, params.getNow()));
-
-      return Either.right(
-        new VisiblePartsFilters(
-          row.manufacturers ?? [],
-          filters.flatMap((filter, index) => {
-            const values = row.values[index];
-            return values === null ? [] : [new FilterValues(filter, values)];
-          }),
-          currency,
-          row.lowestPrice,
-          row.highestPrice,
-        ),
-      );
-    } catch (error) {
-      this.logger.error(error, "A Category's filters could not be read");
-      return Either.left(databaseErrorOf(error, "A Category's filters could not be read"));
-    }
-  }
-
   async readById(
     vendorId: string,
     offerId: string,
@@ -955,28 +589,6 @@ export class DatabaseOfferStore implements OfferStore {
     }
   }
 
-  async readVisiblePart(
-    partId: string,
-    now: Date,
-  ): Promise<Either.Either<Option.Option<Part>, StructuredError>> {
-    if (!couldBeIdentifier(partId)) return Either.right(Option.none());
-
-    try {
-      const [row] = await this.databaseProvider
-        .getClient()
-        .select(partWithPhoto)
-        .from(part)
-        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
-        .where(and(eq(part.id, partId), visiblePart(now)));
-
-      if (row === undefined) return Either.right(Option.none());
-      return Either.map(partOf(row.part, row.photoId), Option.some);
-    } catch (error) {
-      this.logger.error(error, 'A Visible Part could not be read');
-      return Either.left(databaseErrorOf(error, 'A Visible Part could not be read'));
-    }
-  }
-
   async listVisibleByVendor(
     vendorId: string,
     currency: Currency,
@@ -1013,13 +625,7 @@ export class DatabaseOfferStore implements OfferStore {
         .leftJoin(currentRate, sql`true`)
         .where(and(eq(offer.vendorId, vendorId), visibleOffer(now))),
     );
-    // How many there are, as one row, which the page is joined to, so that a
-    // page past the end still answers the total.
-    const counted = client
-      .select({ total: sql<number>`count(*)::int`.as('total') })
-      .from(listed)
-      .as('counted');
-    const offset = pageable.getOffset();
+    const { counted, onThePage } = onePageOf(client, listed, pageable);
 
     try {
       // The Vendor's row, which there is none of when it is deactivated or
@@ -1038,10 +644,7 @@ export class DatabaseOfferStore implements OfferStore {
         })
         .from(vendor)
         .innerJoin(counted, sql`true`)
-        .leftJoin(
-          listed,
-          and(gt(listed.place, offset), lte(listed.place, offset + pageable.getLimit())),
-        )
+        .leftJoin(listed, onThePage)
         .leftJoin(offer, eq(offer.id, listed.offerId))
         .leftJoin(part, eq(part.id, offer.partId))
         .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
@@ -1081,50 +684,6 @@ export class DatabaseOfferStore implements OfferStore {
       this.logger.error(error, "A Vendor's visible Offers could not be listed");
       return Either.left(
         databaseErrorOf(error, "A Vendor's visible Offers could not be listed"),
-      );
-    }
-  }
-
-  async readPlatformFigures(
-    now: Date,
-  ): Promise<Either.Either<PlatformFigures, StructuredError>> {
-    const client = this.databaseProvider.getClient();
-    // How many active Vendors there are, and how many visible Offers, each
-    // as one row, since a count with no grouping always answers one, and the
-    // current Platform Rate, or no row when none has been set, joined in the
-    // one statement that reads them, so that the figures are of one moment.
-    // Each alias is a name no table in the statement has as a column.
-    const currentRate = currentPlatformRate(client).as('current_rate');
-    const activeVendors = client
-      .select({ count: sql<number>`count(*)::int`.as('active_vendor_count') })
-      .from(vendor)
-      .where(eq(vendor.active, true))
-      .as('active_vendors');
-    const visibleOffers = client
-      .select({ count: sql<number>`count(*)::int`.as('visible_offer_count') })
-      .from(offer)
-      .innerJoin(vendor, eq(vendor.id, offer.vendorId))
-      .where(visibleOffer(now))
-      .as('visible_offers');
-
-    try {
-      const [row] = await client
-        .select({
-          activeVendorCount: activeVendors.count,
-          visibleOfferCount: visibleOffers.count,
-          iqdPerUsd: currentRate.iqdPerUsd,
-        })
-        .from(activeVendors)
-        .crossJoin(visibleOffers)
-        .leftJoin(currentRate, sql`true`);
-
-      return Either.right(
-        new PlatformFigures(row.activeVendorCount, row.visibleOfferCount, row.iqdPerUsd),
-      );
-    } catch (error) {
-      this.logger.error(error, "The platform's figures could not be read");
-      return Either.left(
-        databaseErrorOf(error, "The platform's figures could not be read"),
       );
     }
   }

@@ -4,7 +4,7 @@ import { Either } from 'effect';
 
 import { Currency } from '../currency/currency';
 import { Category } from '../part/Category';
-import { OfferStore, ReadVisiblePartsFiltersParams } from './OfferStore';
+import { ReadVisiblePartsFiltersParams, VisiblePartStore } from './VisiblePartStore';
 import { VisiblePartsFilters } from './VisiblePartsFilters';
 
 class Input {
@@ -44,12 +44,12 @@ export { Output as ReadVisiblePartsFiltersQueryOutput };
 // Parts before any filter or search is applied.
 @Injectable()
 export class ReadVisiblePartsFiltersQuery {
-  constructor(private readonly offerStore: OfferStore) {}
+  constructor(private readonly visiblePartStore: VisiblePartStore) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     // Read once, so that every Offer's visibility is judged at one moment.
     const now = new Date();
-    const filters = await this.offerStore.readVisiblePartsFilters(
+    const filters = await this.visiblePartStore.readVisiblePartsFilters(
       new ReadVisiblePartsFiltersParams(input.getCategory(), input.getCurrency(), now),
     );
 

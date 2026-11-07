@@ -4,7 +4,7 @@ import { Either, Option } from 'effect';
 
 import { Part } from '../part/Part';
 import { partNotFound } from '../part/part-errors';
-import { OfferStore } from './OfferStore';
+import { VisiblePartStore } from './VisiblePartStore';
 
 class Input {
   constructor(private readonly partId: string) {}
@@ -36,11 +36,11 @@ export { Output as ReadVisiblePartQueryOutput };
 // does not exist, whoever asks, so that an old link finds nothing.
 @Injectable()
 export class ReadVisiblePartQuery {
-  constructor(private readonly offerStore: OfferStore) {}
+  constructor(private readonly visiblePartStore: VisiblePartStore) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const partId = input.getPartId();
-    const found = await this.offerStore.readVisiblePart(partId, new Date());
+    const found = await this.visiblePartStore.readVisiblePart(partId, new Date());
 
     return Either.flatMap(found, (part) =>
       Option.match(part, {

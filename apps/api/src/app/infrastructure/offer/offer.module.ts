@@ -10,10 +10,12 @@ import { ListVisibleOffersOfVendorQuery } from '~/domain/offer/ListVisibleOffers
 import { ListVisiblePartsQuery } from '~/domain/offer/ListVisiblePartsQuery';
 import { ReadVisiblePartsFiltersQuery } from '~/domain/offer/ReadVisiblePartsFiltersQuery';
 import { OfferStore } from '~/domain/offer/OfferStore';
+import { PlatformFiguresStore } from '~/domain/offer/PlatformFiguresStore';
 import { ReadOfferQuery } from '~/domain/offer/ReadOfferQuery';
 import { ReadPlatformFiguresQuery } from '~/domain/offer/ReadPlatformFiguresQuery';
 import { ReadVisiblePartQuery } from '~/domain/offer/ReadVisiblePartQuery';
 import { RemoveOfferCommand } from '~/domain/offer/RemoveOfferCommand';
+import { VisiblePartStore } from '~/domain/offer/VisiblePartStore';
 import { PartModule } from '~/infrastructure/part/part.module';
 import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
@@ -24,6 +26,8 @@ import { VisiblePartController } from './endpoints/visible-part.controller';
 import { VisiblePartsController } from './endpoints/visible-parts.controller';
 import { VisibleVendorOffersController } from './endpoints/visible-vendor-offers.controller';
 import { DatabaseOfferStore } from './store/DatabaseOfferStore';
+import { DatabasePlatformFiguresStore } from './store/DatabasePlatformFiguresStore';
+import { DatabaseVisiblePartStore } from './store/DatabaseVisiblePartStore';
 
 @Module({
   // The rule for which Vendor a request acts for, and the Parts offered.
@@ -37,13 +41,15 @@ import { DatabaseOfferStore } from './store/DatabaseOfferStore';
     // the routes are matched in the order the controllers are given.
     VisiblePartController,
     VisibleVendorOffersController,
-    // The platform's figures count the visible Offers, which the Offer Store
-    // alone reads.
+    // The platform's figures count the visible Offers, by the rule the Offer
+    // module's Stores share (`visible-offer.ts`).
     PlatformFiguresController,
   ],
   providers: [
-    // The abstract class is the token the domain asks for.
+    // Each abstract class is the token the domain asks for.
     { provide: OfferStore, useClass: DatabaseOfferStore },
+    { provide: VisiblePartStore, useClass: DatabaseVisiblePartStore },
+    { provide: PlatformFiguresStore, useClass: DatabasePlatformFiguresStore },
     CreateOfferCommand,
     ReadOfferQuery,
     ListVendorsOffersQuery,

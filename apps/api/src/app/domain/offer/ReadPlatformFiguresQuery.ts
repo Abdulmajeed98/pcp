@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
-import { OfferStore } from './OfferStore';
+import { PlatformFiguresStore } from './PlatformFiguresStore';
 import { PlatformFigures } from './PlatformFigures';
 
 // The read asks for nothing: the figures are the whole platform's.
@@ -31,11 +31,11 @@ export { Output as ReadPlatformFiguresQueryOutput };
 // stay the Admin's.
 @Injectable()
 export class ReadPlatformFiguresQuery {
-  constructor(private readonly offerStore: OfferStore) {}
+  constructor(private readonly platformFiguresStore: PlatformFiguresStore) {}
 
   async execute(_input: Input): Promise<Either.Either<Output, StructuredError>> {
     // Read once, so that every Offer's visibility is judged at one moment.
-    const figures = await this.offerStore.readPlatformFigures(new Date());
+    const figures = await this.platformFiguresStore.readPlatformFigures(new Date());
 
     return Either.map(figures, Output.of);
   }
