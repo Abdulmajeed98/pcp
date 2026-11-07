@@ -5,6 +5,11 @@ import { rule4 } from './rule-04';
 import { rule5 } from './rule-05';
 import { rule6 } from './rule-06';
 import { rule7 } from './rule-07';
+import { rule8 } from './rule-08';
+import { rule9 } from './rule-09';
+import { rule10 } from './rule-10';
+import { rule11 } from './rule-11';
+import { rule12 } from './rule-12';
 import { rule13 } from './rule-13';
 import { rule14 } from './rule-14';
 import { rule16 } from './rule-16';
@@ -23,6 +28,11 @@ export const rules: readonly Rule[] = [
   rule5,
   rule6,
   rule7,
+  rule8,
+  rule9,
+  rule10,
+  rule11,
+  rule12,
   rule13,
   rule14,
   rule16,
