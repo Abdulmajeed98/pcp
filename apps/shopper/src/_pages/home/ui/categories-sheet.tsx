@@ -104,7 +104,9 @@ export async function CategoriesSheet({
       aria-labelledby="categories-title"
       className="relative isolate grid scroll-mt-4 justify-items-center px-ground-edge py-section-phone md:page-margins md:py-section"
     >
-      <DimPhotograph photograph={photographs.builtPc} />
+      {/* The home page opens here at `#categories`, from a Category with
+          no Visible Part, and its photograph is then the first screen's. */}
+      <DimPhotograph photograph={photographs.builtPc} opensAt />
       <Sheet print="in-view">
         <SheetTitle id="categories-title">{t('eightCategories')}</SheetTitle>
         <SheetNote>{t('categories.note')}</SheetNote>
