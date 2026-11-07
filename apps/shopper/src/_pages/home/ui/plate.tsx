@@ -21,7 +21,8 @@ import { CurrencySwitch } from '@/widgets/frame-header';
 // price slip; at its foot two cells side by side, 72 pixels tall, the first
 // of Ink and the second of Sheet Paper, to the Part's page and its
 // Category's. On a phone it stacks, the photograph first, its cells one
-// above the other.
+// above the other. A word wider than its column, as at a phone's largest
+// text, breaks where it must rather than widen the plate past the window.
 export async function Plate({
   part,
   offers,
@@ -45,7 +46,7 @@ export async function Plate({
       aria-labelledby="plate-title"
       data-testid="plate"
       data-part={part.id}
-      className="grid min-h-[88svh] bg-secondary text-secondary-foreground md:grid-cols-2"
+      className="grid min-h-[88svh] bg-secondary text-secondary-foreground wrap-anywhere md:grid-cols-2"
     >
       <div className="grid items-center p-4 md:p-10">
         <PartPicture part={part} sizes="(min-width: 48rem) 50vw, 100vw" />

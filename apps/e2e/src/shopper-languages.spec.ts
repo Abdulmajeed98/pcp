@@ -6,6 +6,7 @@ import {
   addressIn,
   alternateAddresses,
   expectADifferentTextInEachLanguage,
+  expectNoSidewaysScroll,
   expectPageIn,
   expectTheSameInEveryLanguage,
   expectTheSwitchInWhatTheServerSent,
@@ -482,4 +483,77 @@ test("the tab's title is different in each language", async ({ page }) => {
   const titles = await readInEveryLanguage(page, '', () => page.title());
 
   expectADifferentTextInEachLanguage(titles);
+});
+
+// The pieces of the page within `piece`, the piece among them, that reach
+// past either edge of the window, each named by its tag, its test id and the
+// start of its words, with how far it reaches past. What is hidden from
+// readers is left out: the back cover's cropped name is cut by the window's
+// edge on purpose (DESIGN.md's The back cover).
+async function piecesPastTheWindow(piece: Locator): Promise<string[]> {
+  return piece.evaluate((root) => {
+    const width = document.documentElement.clientWidth;
+    const past: string[] = [];
+    for (const element of [root, ...root.querySelectorAll('*')]) {
+      if (element.closest('[aria-hidden="true"]') !== null) continue;
+      const box = element.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0) continue;
+      const by = Math.max(box.right - width, -box.left);
+      if (by > 0.5) {
+        const name = element.getAttribute('data-testid') ?? '';
+        const words = (element.textContent ?? '').trim().slice(0, 24);
+        past.push(
+          `${element.tagName.toLowerCase()}[${name}] "${words}" ${Math.round(by)} px`,
+        );
+      }
+    }
+    return past;
+  });
+}
+
+// A Shopper may make the browser's text larger, to 200% (WCAG 1.4.4), and
+// on a phone 390 pixels wide, in Kurdish, whose words run longest, the
+// frame's header with its switches, and the back cover, still lie within the
+// window, and the page does not scroll sideways (a follow-up of browse's code
+// review: ticket 09's stub scrolled the page 22 pixels, and its switches and
+// back cover reached about 42 pixels past the edge).
+test.describe("with the browser's text at 200% on a phone 390 pixels wide", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("in Kurdish, the frame's header, its switches and the back cover lie within the window on the home page, a Category page and the not-found page", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    const devtools = await page.context().newCDPSession(page);
+    try {
+      // The browser's own text size, as its settings set it.
+      await devtools.send('Page.setFontSizes', { fontSizes: { standard: 32, fixed: 26 } });
+      for (const [name, address] of [
+        ['the home page', ''],
+        ['a Category page', '/categories/cpu'],
+        ['the not-found page', '/no-such-page'],
+      ]) {
+        await test.step(name, async () => {
+          await page.goto(addressIn(kurdish, address));
+          await expect(page.getByTestId('frame')).toBeVisible();
+          await page.evaluate(() => document.fonts.ready);
+          expect(
+            await page.evaluate(() => getComputedStyle(document.documentElement).fontSize),
+            'the page takes the browser’s text size',
+          ).toBe('32px');
+
+          for (const piece of [
+            page.getByTestId('frame-header'),
+            page.getByTestId('back-cover'),
+          ]) {
+            expect(await piecesPastTheWindow(piece)).toEqual([]);
+          }
+          await expectNoSidewaysScroll(page);
+        });
+      }
+    } finally {
+      await devtools.send('Page.setFontSizes', { fontSizes: { standard: 16, fixed: 13 } });
+      await devtools.detach();
+    }
+  });
 });
