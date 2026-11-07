@@ -49,11 +49,11 @@ export class SpecificationResponse {
   })
   readonly zeroMeansMissing: boolean;
 
-  private constructor(specification: Specification) {
+  private constructor(specification: Specification, needed: boolean) {
     this.path = specification.getPath();
     this.label = specification.getLabel();
     this.kind = specification.getKind();
-    this.needed = specification.isNeeded();
+    this.needed = needed;
     this.zeroMeansMissing = specification.isZeroMissing();
 
     const unit = specification.getUnit();
@@ -61,10 +61,15 @@ export class SpecificationResponse {
     const values = specification.getValues();
     if (values !== undefined) this.values = [...values];
     const fields = specification.getFields();
-    if (fields !== undefined) this.fields = fields.map(SpecificationResponse.of);
+    if (fields !== undefined) {
+      this.fields = fields.map((field) => SpecificationResponse.of(field, false));
+    }
   }
 
-  static of(specification: Specification): SpecificationResponse {
-    return new SpecificationResponse(specification);
+  // A specification of a Category's list, with whether a Compatibility Rule
+  // reads it, as the list says. A field of a row never is: a rule names the
+  // list of rows.
+  static of(specification: Specification, needed: boolean): SpecificationResponse {
+    return new SpecificationResponse(specification, needed);
   }
 }

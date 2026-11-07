@@ -53,14 +53,14 @@ export type ValueCheck = {
 
 export type SpecificationOptions = {
   unit?: string;
-  needed?: boolean;
   zeroMeansMissing?: boolean;
 };
 
 // One named property of a Part, defined for its Category, such as a CPU's
 // socket. Its path is its place in a Part's specifications, in OpenDB's field
-// names and nesting: `socket`, or `specifications.memory.types`. A needed
-// specification is one that a Compatibility Rule reads.
+// names and nesting: `socket`, or `specifications.memory.types`. Whether it is
+// a needed specification, one that a Compatibility Rule reads, is not its own
+// to say: its Category's list reads it from the rules.
 export class Specification {
   private constructor(
     private readonly path: string,
@@ -69,7 +69,6 @@ export class Specification {
     private readonly unit: string | undefined,
     private readonly values: readonly string[] | undefined,
     private readonly fields: readonly Specification[] | undefined,
-    private readonly needed: boolean,
     private readonly zeroMeansMissing: boolean,
   ) {}
 
@@ -160,7 +159,6 @@ export class Specification {
       options.unit,
       values,
       fields,
-      options.needed ?? false,
       options.zeroMeansMissing ?? false,
     );
   }
@@ -193,10 +191,6 @@ export class Specification {
   // The fields of each row, for a list of rows.
   getFields(): readonly Specification[] | undefined {
     return this.fields;
-  }
-
-  isNeeded(): boolean {
-    return this.needed;
   }
 
   // Whether 0 stands for "not known" rather than for nothing, because 0 cannot

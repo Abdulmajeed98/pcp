@@ -589,7 +589,7 @@ test.describe('choosing a Category', () => {
     const categories = page.getByRole('list', { name: 'Categories' }).getByRole('listitem');
     await expect(categories).toHaveCount(8);
     await expect(categories.filter({ hasText: 'CPU cooler' })).toContainText(
-      '13 specifications, 2 needed',
+      '13 specifications, 3 needed',
     );
     await expect(
       categories.filter({ has: page.getByRole('link', { name: 'CPU', exact: true }) }),

@@ -57,10 +57,12 @@ describe('the Categories endpoint', () => {
   // table of Compatibility Rules and not read from the platform. Where the
   // table names an object, the specifications in it that a rule counts are
   // listed: a motherboard's SATA ports (rule 13), a GPU's power sockets
-  // (rule 11) and a PSU's connectors (rules 11, 16 and 20).
+  // (rule 11) and a PSU's connectors (rules 11, 16 and 20). A CPU cooler's
+  // "Liquid cooled" is listed too, which rule 17 reads to tell an air cooler
+  // from a liquid one.
   const neededByTheRules: Record<string, string[]> = {
     cpu: ['socket', 'specifications.memory.types', 'specifications.tdp'],
-    cpuCooler: ['cpu_sockets', 'height'],
+    cpuCooler: ['cpu_sockets', 'water_cooled', 'height'],
     motherboard: [
       'socket',
       'form_factor',

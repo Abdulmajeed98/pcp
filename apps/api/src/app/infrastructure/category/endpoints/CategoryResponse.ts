@@ -27,7 +27,9 @@ export class CategoryResponse {
   static of(category: Category, specifications: SpecificationList): CategoryResponse {
     return new CategoryResponse(
       category.getKey(),
-      specifications.getSpecifications().map(SpecificationResponse.of),
+      specifications
+        .getSpecifications()
+        .map((each) => SpecificationResponse.of(each, specifications.isNeeded(each))),
     );
   }
 }

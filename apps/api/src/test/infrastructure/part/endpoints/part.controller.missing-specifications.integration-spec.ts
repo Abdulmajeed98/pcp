@@ -275,6 +275,52 @@ describe('the Parts missing specifications', () => {
     ).toEqual(['specifications.tdp']);
   });
 
+  // Rule 17 reads a cooler's "Liquid cooled" to tell an air cooler, whose
+  // height it judges against the case's, from a liquid one.
+  describe('a CPU cooler that does not say whether it is liquid cooled', () => {
+    // A made-up cooler with every other needed specification, offered by a
+    // made-up Vendor.
+    async function anOfferedCooler(): Promise<string> {
+      const vendor = await aVendor();
+      return anOfferedPart(
+        {
+          category: 'cpuCooler',
+          name: 'Made-up Tower Cooler',
+          manufacturer: 'Made-up Cooling',
+          specifications: { cpu_sockets: ['AM5'], height: 155 },
+        },
+        [vendor.id],
+      );
+    }
+
+    it('is listed, once offered, with "Liquid cooled" missing', async () => {
+      const partId = await anOfferedCooler();
+
+      expect((await theList()).content).toEqual([
+        {
+          id: partId,
+          category: 'cpuCooler',
+          name: 'Made-up Tower Cooler',
+          manufacturer: 'Made-up Cooling',
+          missingSpecifications: [{ path: 'water_cooled', label: 'Liquid cooled' }],
+          offerCount: 1,
+          photoPath: null,
+        },
+      ]);
+    });
+
+    it('has the same path among the missing needed specifications its Part names', async () => {
+      const partId = await anOfferedCooler();
+
+      const read = await asTheAdmin('GET', `/v1/parts/${partId}`);
+      expect(read.status).toBe(200);
+      expect(
+        ((await read.json()) as { missingNeededSpecifications: string[] })
+          .missingNeededSpecifications,
+      ).toEqual(['water_cooled']);
+    });
+  });
+
   it('counts every Offer, from a deactivated Vendor and an expired one among them', async () => {
     const [active, leaving, longAgo] = [await aVendor(), await aVendor(), await aVendor()];
     const partId = await aPart({ specifications: aCpuWithoutTdp });

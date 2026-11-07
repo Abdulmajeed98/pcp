@@ -11,7 +11,7 @@ import { SpecificationList } from './SpecificationList';
 // imported without the four, as not known, so that Missing specifications
 // asks for them. The Admin may still give any GPU any counts, 0 for each
 // among them.
-export const gpuSpecifications = new SpecificationList([
+export const gpuSpecifications = new SpecificationList('gpu', [
   Specification.text('chipset_manufacturer', 'Chipset manufacturer'),
   Specification.text('chipset', 'Chipset'),
   Specification.wholeNumber('memory', 'Memory', { unit: 'GB', zeroMeansMissing: true }),
@@ -33,19 +33,10 @@ export const gpuSpecifications = new SpecificationList([
     unit: 'bit',
     zeroMeansMissing: true,
   }),
-  Specification.wholeNumber('tdp', 'TDP', {
-    unit: 'W',
-    needed: true,
-    zeroMeansMissing: true,
-  }),
+  Specification.wholeNumber('tdp', 'TDP', { unit: 'W', zeroMeansMissing: true }),
   Specification.text('interface', 'Interface'),
-  Specification.decimalNumber('length', 'Length', {
-    unit: 'mm',
-    needed: true,
-    zeroMeansMissing: true,
-  }),
+  Specification.decimalNumber('length', 'Length', { unit: 'mm', zeroMeansMissing: true }),
   Specification.decimalNumber('total_slot_width', 'Slots it occupies', {
-    needed: true,
     zeroMeansMissing: true,
   }),
   Specification.decimalNumber(
@@ -55,18 +46,10 @@ export const gpuSpecifications = new SpecificationList([
       zeroMeansMissing: true,
     },
   ),
-  Specification.wholeNumber('power_connectors.pcie_6_pin', 'PCIe 6-pin power sockets', {
-    needed: true,
-  }),
-  Specification.wholeNumber('power_connectors.pcie_8_pin', 'PCIe 8-pin power sockets', {
-    needed: true,
-  }),
-  Specification.wholeNumber('power_connectors.pcie_12VHPWR', '12VHPWR power sockets', {
-    needed: true,
-  }),
-  Specification.wholeNumber('power_connectors.pcie_12V_2x6', '12V-2x6 power sockets', {
-    needed: true,
-  }),
+  Specification.wholeNumber('power_connectors.pcie_6_pin', 'PCIe 6-pin power sockets'),
+  Specification.wholeNumber('power_connectors.pcie_8_pin', 'PCIe 8-pin power sockets'),
+  Specification.wholeNumber('power_connectors.pcie_12VHPWR', '12VHPWR power sockets'),
+  Specification.wholeNumber('power_connectors.pcie_12V_2x6', '12V-2x6 power sockets'),
   Specification.text('cooling', 'Cooling'),
   Specification.wholeNumber('radiator_size', 'External radiator size', {
     unit: 'mm',

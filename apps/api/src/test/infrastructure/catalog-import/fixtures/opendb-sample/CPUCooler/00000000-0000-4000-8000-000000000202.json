@@ -5,6 +5,7 @@
     "LGA 1151",
     "LGA 1151v2"
   ],
+  "water_cooled": false,
   "height": 47,
   "metadata": {
     "name": "Made-up Low Profile Cooler",
