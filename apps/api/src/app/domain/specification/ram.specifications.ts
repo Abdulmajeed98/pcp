@@ -1,4 +1,5 @@
-import { ramTypes } from './shared-sets';
+import { ramTypes } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
