@@ -35,9 +35,10 @@ export { Output as ListPartsMissingSpecificationsQueryOutput };
 
 // The Admin lists, a page at a time, every Part that has an Offer and lacks a
 // needed specification, so that compatibility checking stays whole (CAT-8).
-// The needed specifications are read from each Category's list in code at
-// every request, so that a change to a list changes the answer at once. A
-// Part on the list is still shown to Shoppers.
+// The needed specifications are read from each Category's list at every
+// request, and the list reads them from the Compatibility Rules' statements,
+// so that the list asks for what the rules read and a change to a rule
+// changes the answer at once. A Part on the list is still shown to Shoppers.
 @Injectable()
 export class ListPartsMissingSpecificationsQuery {
   constructor(private readonly partStore: PartStore) {}

@@ -6,14 +6,10 @@ import { SpecificationList } from './SpecificationList';
 // Every specification of a CPU cooler that OpenDB defines, apart from retailer
 // and identity data. A 0 means "not known" for a size, a speed or a level of
 // noise. A 0 fans is true: some liquid coolers come without them.
-export const cpuCoolerSpecifications = new SpecificationList([
-  Specification.severalOf('cpu_sockets', 'Sockets', sockets, { needed: true }),
+export const cpuCoolerSpecifications = new SpecificationList('cpuCooler', [
+  Specification.severalOf('cpu_sockets', 'Sockets', sockets),
   Specification.yesNo('water_cooled', 'Liquid cooled'),
-  Specification.decimalNumber('height', 'Height', {
-    unit: 'mm',
-    needed: true,
-    zeroMeansMissing: true,
-  }),
+  Specification.decimalNumber('height', 'Height', { unit: 'mm', zeroMeansMissing: true }),
   Specification.wholeNumber('radiator_size', 'Radiator size', {
     unit: 'mm',
     zeroMeansMissing: true,

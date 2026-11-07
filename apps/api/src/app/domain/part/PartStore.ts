@@ -124,8 +124,8 @@ export class PartsPage {
 }
 
 // What the list of Parts missing specifications asks for: the needed
-// specifications of each Category, as its list in code names them, and the
-// page.
+// specifications of each Category, as its list reads them from the
+// Compatibility Rules, and the page.
 export class ListPartsMissingSpecificationsParams {
   constructor(
     private readonly needed: ReadonlyMap<Category, readonly Specification[]>,
