@@ -61,7 +61,10 @@ export async function Offers({
       aria-labelledby="offers-title"
       className="relative isolate px-ground-edge py-section-phone md:page-margins md:py-section"
     >
-      <DimPhotograph photograph={photographs.handSettingMemory} />
+      {/* On a desk its top shows at the foot of the first screen, below the
+          plate of 88% of the window, where it is the largest picture of a
+          Part with no photo. */}
+      <DimPhotograph photograph={photographs.handSettingMemory} atOnce />
       <div className="mx-auto grid w-full max-w-[40rem] grid-cols-[minmax(0,1fr)] justify-items-center gap-y-10 lg:max-w-none lg:grid-cols-[minmax(0,23rem)_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
         <PriceSlip
           partName={part.name}
