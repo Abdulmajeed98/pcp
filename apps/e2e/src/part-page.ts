@@ -2,6 +2,70 @@ import { type APIRequestContext, expect, type Locator, type Page } from '@playwr
 
 import { apiUrl } from './platform';
 
+// A specification of a Category's list, as the API's list of Categories
+// answers it to the Admin, as far as a test fills one in.
+interface ListedSpecification {
+  path: string;
+  kind: string;
+  values?: string[];
+  fields?: ListedSpecification[];
+}
+
+// The Categories and the specifications each Part of one can hold, as the
+// API lists them to the Admin now.
+export async function theSpecificationLists(
+  request: APIRequestContext,
+  authorization: string,
+): Promise<{ key: string; specifications: ListedSpecification[] }[]> {
+  const answer = await request.get(`${apiUrl}/v1/categories`, {
+    headers: { authorization },
+  });
+  expect(answer.status()).toBe(200);
+  return (await answer.json()) as { key: string; specifications: ListedSpecification[] }[];
+}
+
+// A value of a specification of the kind it holds, one the API takes: no 0,
+// which some take for "not known", and the first of a fixed set.
+function aValueOf(specification: ListedSpecification): unknown {
+  switch (specification.kind) {
+    case 'wholeNumber':
+      return 8;
+    case 'decimalNumber':
+      return 4.5;
+    case 'yesNo':
+      return true;
+    case 'oneOf':
+      return specification.values?.[0];
+    case 'severalOf':
+      return specification.values?.slice(0, 1);
+    case 'listOfText':
+      return ['Made-up item'];
+    case 'listOfRows':
+      return [aDocumentHolding(specification.fields ?? [])];
+    default:
+      return 'Made-up text';
+  }
+}
+
+// A Part's specifications holding a value of every specification of a list,
+// each at its place in the document, as the list names it: `cores.total` is
+// `total` within `cores`, in OpenDB's field names and nesting.
+export function aDocumentHolding(
+  list: readonly ListedSpecification[],
+): Record<string, unknown> {
+  const document: Record<string, unknown> = {};
+  for (const specification of list) {
+    const names = specification.path.split('.');
+    let held = document;
+    for (const name of names.slice(0, -1)) {
+      held[name] ??= {};
+      held = held[name] as Record<string, unknown>;
+    }
+    held[names[names.length - 1]] = aValueOf(specification);
+  }
+  return document;
+}
+
 // Deactivates or reactivates a made-up Vendor over HTTP as the Admin, as the
 // Admin console's buttons do.
 export async function switchTheVendor(

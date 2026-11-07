@@ -26,12 +26,14 @@ import { aWordUniqueToTheRun } from './made-up';
 import { film, filmFromTheFirstFrame, snapsOf, type Filmed } from './motion-film';
 import { addAnOffer } from './offers';
 import {
+  aDocumentHolding,
   lookAtThePartPage,
   offerOf,
   offersListed,
   specificationOn,
   switchTheVendor,
   type ThePartPage,
+  theSpecificationLists,
   theVisiblePart,
   vendorsListed,
 } from './part-page';
@@ -139,6 +141,43 @@ test.beforeAll(async ({ browser }) => {
       iqdPrice: 300_000,
     });
   });
+});
+
+// The box label reads its Category's key specifications by their places in
+// a Part's specifications, from a list the Shopper app keeps, so a place the
+// API renamed would leave a line out unseen. A Part of each Category that
+// holds every specification of its list, as the API lists them now, shows
+// all six of its key lines (a follow-up of browse's code review).
+test('in every Category, a Part holding every specification of its list shows the six key lines of its box label', async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const parts: { category: string; id: string }[] = [];
+  await asTheAdmin(browser, async (request, authorization) => {
+    const vendor = await createAMadeUpVendor(request, authorization);
+    for (const { key, specifications } of await theSpecificationLists(
+      request,
+      authorization,
+    )) {
+      const part = await createAMadeUpPart(
+        request,
+        authorization,
+        aDocumentHolding(specifications),
+        key,
+      );
+      await addAnOffer(request, authorization, vendor.id, part.id, { iqdPrice: 100_000 });
+      parts.push({ category: key, id: part.id });
+    }
+  });
+
+  expect(parts.length).toBe(8);
+  for (const { category, id } of parts) {
+    await test.step(`a ${category}`, async () => {
+      await page.goto(addressIn(english, `/parts/${id}`));
+      await expect(page.getByTestId('key-line')).toHaveCount(6);
+    });
+  }
 });
 
 test("in Kurdish and English, a Part reached from its Category page shows its name, its part numbers and its specifications in English, its box label's key lines first", async ({
