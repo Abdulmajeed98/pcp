@@ -497,6 +497,57 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     }
   });
 
+  it("keeps no part number that is the Part's own name, in any case, and keeps the codes around it in their order", async () => {
+    const folder = await aCopyOfTheSample();
+    // OpenDB lists the name of some Parts among their part numbers, such as
+    // "AMD Ryzen 7 7800X3D" between two of its codes, and among their
+    // identifiers too.
+    const ryzen = join(folder, 'CPU', '00000000-0000-4000-8000-000000000101.json');
+    const record = JSON.parse(await readFile(ryzen, 'utf8')) as {
+      metadata: { part_numbers: string[] };
+      identifiers: { identifiers: { type: string; value: string }[] };
+    };
+    record.metadata.part_numbers = ['100-000000001', 'MADE-UP RYZEN 5 7600'];
+    record.identifiers.identifiers.push({ type: 'mpn', value: 'Made-up Ryzen 5 7600' });
+    await writeFile(ryzen, JSON.stringify(record));
+
+    await runTheImport(folder);
+
+    expect((await theOnePart({ search: 'Made-up Ryzen 5 7600' })).partNumbers).toEqual([
+      '100-000000001',
+      '100-000000001BOX',
+    ]);
+  });
+
+  it("still leaves out a record with no manufacturer as a copy when the part number it shares is the complete record's own name", async () => {
+    const folder = await aCopyOfTheSample();
+    async function givePartNumbers(file: string, partNumbers: string[]) {
+      const path = join(folder, 'PSU', file);
+      const record = JSON.parse(await readFile(path, 'utf8')) as {
+        metadata: { part_numbers: string[] };
+      };
+      record.metadata.part_numbers = partNumbers;
+      await writeFile(path, JSON.stringify(record));
+    }
+    // The complete power supply lists its own name among its part numbers,
+    // and the thinner copy has only that name, in capitals. At the pinned
+    // commit, "GIGABYTE TRYX50 AERO D" copies "TRX50 AERO D" so.
+    await givePartNumbers('00000000-0000-4000-8000-000000000801.json', [
+      'MU-650',
+      'Made-up 650 W',
+    ]);
+    await givePartNumbers('00000000-0000-4000-8000-000000000803.json', ['MADE-UP 650 W']);
+
+    const run = await runTheImport(folder);
+
+    expect(linesUnder('Records left out:', run.printed)).toContain(
+      'PSU/00000000-0000-4000-8000-000000000803.json: it has no manufacturer, and another record has its part number',
+    );
+    expect(await namesFound({ search: 'Made-up Power 650 W Gold' })).toEqual([]);
+    // The name it shares is not one of the complete Part's part numbers.
+    expect((await theOnePart({ search: 'Made-up 650 W' })).partNumbers).toEqual(['MU-650']);
+  });
+
   it('imports nothing on a second run, and reports every Part as already there', async () => {
     const first = await runTheImport(sample);
     const second = await runTheImport(sample);

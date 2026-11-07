@@ -66,6 +66,16 @@ function partNumbersOf(partNumbers: unknown, identifiers: unknown): string[] {
   return cleanPartNumbers([...listed, ...identified]);
 }
 
+// The part numbers a Part keeps. OpenDB lists the name of some Parts among
+// their part numbers, such as "AMD Ryzen 7 7800X3D" between two of its codes,
+// and a Part keeps none that is its own name, in any case, since the name says
+// it already. At the pinned commit 81 Parts list it, among them 18 motherboards
+// whose makers use the model's name as its code, which keep no part number.
+function partNumbersKept(partNumbers: readonly string[], name: string): string[] {
+  const ownName = name.toLowerCase();
+  return partNumbers.filter((partNumber) => partNumber.toLowerCase() !== ownName);
+}
+
 // What a folder's records say of their manufacturers and part numbers.
 export function folderRecordsOf(files: readonly OpenDbFile[]): FolderRecords {
   const counts = new Map<string, Map<string, number>>();
@@ -184,7 +194,10 @@ export function partOfRecord(
       category,
       name,
       manufacturer,
-      partNumbers,
+      // The copy check above reads the whole list, the name among it, because
+      // a record with no manufacturer may share only a complete record's name
+      // with it: at the pinned commit, one does.
+      partNumbersKept(partNumbers, name),
       document,
     ),
     valuesLeftOut: problems.filter((problem) => problem.reason !== 'unknown'),
