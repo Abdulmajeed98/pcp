@@ -6,18 +6,8 @@ import type {
   StorageInterface,
   StorageSpecifications,
 } from '../../index';
+import { drive } from '../made-up-parts';
 import { outcomeOf } from '../outcome-of';
-
-// A drive of a form factor and an interface, of which the Build holds
-// `quantity`.
-function drive(
-  id: string,
-  formFactor: StorageFormFactor | undefined,
-  iface: StorageInterface | undefined,
-  quantity = 1,
-): PartAndQuantity<StorageSpecifications> {
-  return { id, quantity, specifications: { form_factor: formFactor, interface: iface } };
-}
 
 function nvmeDrive(id: string, quantity = 1): PartAndQuantity<StorageSpecifications> {
   return drive(id, 'M.2-2280', 'M.2 PCIe 4.0 x4', quantity);

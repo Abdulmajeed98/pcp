@@ -1,12 +1,5 @@
-import { type Build, estimatedPowerDrawOf } from '../index';
-
-function cpuOf(tdp: number | undefined): Build['cpu'] {
-  return { id: 'the-cpu', specifications: { socket: 'AM5', specifications: { tdp } } };
-}
-
-function gpuOf(tdp: number | undefined): Build['gpu'] {
-  return { id: 'the-gpu', specifications: { tdp } };
-}
+import { estimatedPowerDrawOf } from '../index';
+import { cpuOf, gpuOf } from './made-up-parts';
 
 describe('the estimated power draw', () => {
   it("adds the CPU's TDP, the GPU's TDP and 100 W for everything else", () => {
