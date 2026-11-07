@@ -1,6 +1,5 @@
 import { Category } from '../part/Category';
-import { SpecificationProblemReason } from '../specification/Specification';
-import { RecordLeftOutReason } from './opendb-record';
+import { RecordLeftOutReason, ValueLeftOutReason } from './opendb-record';
 
 // A record the import left out: its file, as `CPU/<opendb_id>.json`, and why.
 export class RecordLeftOut {
@@ -23,7 +22,7 @@ export class RecordLeftOut {
 export class ValuesLeftOut {
   constructor(
     private readonly specification: string,
-    private readonly reason: SpecificationProblemReason,
+    private readonly reason: ValueLeftOutReason,
     private readonly count: number,
   ) {}
 
@@ -31,7 +30,7 @@ export class ValuesLeftOut {
     return this.specification;
   }
 
-  getReason(): SpecificationProblemReason {
+  getReason(): ValueLeftOutReason {
     return this.reason;
   }
 

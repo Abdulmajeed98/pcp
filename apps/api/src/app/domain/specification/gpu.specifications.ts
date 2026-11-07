@@ -4,8 +4,13 @@ import { SpecificationList } from './SpecificationList';
 // Every specification of a GPU that OpenDB defines, apart from retailer and
 // identity data. A 0 means "not known" for a size, a clock, a memory figure,
 // the TDP and the number of cores. The radiator and its fans are only those of
-// a hybrid or liquid-cooled card, and a 0 there stands for none. A 0 power connector or
-// video output of one kind is true: a card has none of that kind.
+// a hybrid or liquid-cooled card, and a 0 there stands for none. A 0 power
+// connector or video output of one kind is true: a card has none of that kind.
+// Only the import reads such zeros otherwise: a GPU above 75 W, the most a
+// PCIe slot supplies, that holds 0 for each of its four power sockets is
+// imported without the four, as not known, so that Missing specifications
+// asks for them. The Admin may still give any GPU any counts, 0 for each
+// among them.
 export const gpuSpecifications = new SpecificationList([
   Specification.text('chipset_manufacturer', 'Chipset manufacturer'),
   Specification.text('chipset', 'Chipset'),
