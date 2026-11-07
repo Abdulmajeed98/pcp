@@ -13,15 +13,16 @@ import { buttonVariants } from '@/shared/ui';
 import { CurrencySwitch } from '@/widgets/frame-header';
 
 // One Part, on the plate (DESIGN.md's The square plate): a field of the Board
-// split in half, at least 88% of a screen tall. On the start side one square,
-// the Part's photo or its Category's icon, 40 pixels in from the field's
-// edges, the notch cut into its end edge; on the end side a column with, at
-// its top, the currency as tabs, the same choice as the frame's switch,
-// standing above the price it leads; in its middle the title and the Part's
-// price slip; at its foot two cells side by side, 72 pixels tall, the first
-// of Ink and the second of Sheet Paper, to the Part's page and its
-// Category's. On a phone it stacks, the photograph first, its cells one
-// above the other. A word wider than its column, as at a phone's largest
+// split in half, at least 88% of a screen tall, its words and picture kept
+// clear of a phone's notch held sideways, as a Part page's plate keeps them.
+// On the start side one square, the Part's photo or its Category's icon, 40
+// pixels in from the field's edges, the notch cut into its end edge; on the
+// end side a column with, at its top, the currency as tabs, the same choice
+// as the frame's switch, standing above the price it leads; in its middle
+// the title and the Part's price slip; at its foot two cells side by side,
+// 72 pixels tall, the first of Ink and the second of Sheet Paper, to the
+// Part's page and its Category's. On a phone it stacks, the photograph
+// first, its cells one above the other. A word wider than its column, as at a phone's largest
 // text, breaks where it must rather than widen the plate past the window.
 export async function Plate({
   part,
@@ -46,7 +47,7 @@ export async function Plate({
       aria-labelledby="plate-title"
       data-testid="plate"
       data-part={part.id}
-      className="grid min-h-[88svh] bg-secondary text-secondary-foreground wrap-anywhere md:grid-cols-2"
+      className="grid min-h-[88svh] bg-secondary px-[max(env(safe-area-inset-left),env(safe-area-inset-right))] text-secondary-foreground wrap-anywhere md:grid-cols-2"
     >
       <div className="grid items-center p-4 md:p-10">
         <PartPicture part={part} sizes="(min-width: 48rem) 50vw, 100vw" />
