@@ -4,8 +4,12 @@ import { Either, Option } from 'effect';
 
 import { Category } from '../part/Category';
 import { cleanPartNumbers } from '../part/part-numbers';
-import { SpecificationProblem } from '../specification/Specification';
-import { isPlainObject } from '../specification/specification-document';
+import { SpecificationProblemReason } from '../specification/Specification';
+import {
+  isPlainObject,
+  SpecificationDocument,
+  valueAt,
+} from '../specification/specification-document';
 import { specificationListOf } from '../specification/specification-lists';
 import { isUuid } from '../uuid';
 import { ImportPartParams } from './CatalogImportStore';
@@ -29,12 +33,23 @@ export type RecordLeftOutReason =
   | 'knownCopy'
   | 'sameAsAnotherRecord';
 
-// The Part a record makes, the values in the record that did not fit their
-// specifications and were left out of the Part, and whether its manufacturer
-// was taken from its name.
+// Why a value in one of OpenDB's records was left out of its Part: it did not
+// fit its specification, or it is a power socket of a GPU above 75 W that
+// holds 0 for each of its four, which the import reads as not known.
+export type ValueLeftOutReason = SpecificationProblemReason | 'noPowerSocketAbove75W';
+
+// A value left out of a Part, by its path, as a specification problem names
+// it, and why.
+export type ValueLeftOut = {
+  path: string;
+  reason: ValueLeftOutReason;
+};
+
+// The Part a record makes, the values in the record that were left out of the
+// Part, and whether its manufacturer was taken from its name.
 export type PartOfRecord = {
   part: ImportPartParams;
-  valuesLeftOut: readonly SpecificationProblem[];
+  valuesLeftOut: readonly ValueLeftOut[];
   manufacturerFromName: boolean;
 };
 
@@ -179,6 +194,52 @@ function withoutRedundantSocket(
   return { ...record, cpu_sockets: sockets.filter((socket) => socket !== 'LGA 1151v2') };
 }
 
+// A GPU's four kinds of power socket, which are all its list holds under
+// `power_connectors`.
+const gpuPowerSockets = ['pcie_6_pin', 'pcie_8_pin', 'pcie_12VHPWR', 'pcie_12V_2x6'];
+
+// The most a PCIe slot supplies a GPU, in watts.
+const slotPower = 75;
+
+// A GPU that draws more than a PCIe slot supplies needs a power cable, yet
+// OpenDB holds 0 for each of the four kinds of power socket of many such GPUs,
+// where it does not know them: at the pinned commit 695 GPUs above 75 W, such
+// as the Asus ROG STRIX GeForce RTX 3080 Ti at 350 W. Read as true, the zeros
+// would let rule 11 pass such a GPU with any PSU. So the four are left out, as
+// not known, and counted with a reason of their own, and Missing
+// specifications asks for them once a Vendor offers the GPU. A GPU of 75 W or
+// less with no socket keeps its zeros, since a slot powers it (299 GPUs at the
+// pinned commit), and so does one whose TDP is missing (4). A GPU with any
+// socket keeps all four counts as given. The reading is the import's alone:
+// the Admin may give a GPU any counts.
+function withoutPowerSocketsNotKnown(
+  document: SpecificationDocument,
+  category: Category,
+): { document: SpecificationDocument; leftOut: ValueLeftOut[] } {
+  const tdp = valueAt(document, 'tdp');
+  if (
+    category !== Category.GPU ||
+    typeof tdp !== 'number' ||
+    tdp <= slotPower ||
+    !gpuPowerSockets.every(
+      (socket) => valueAt(document, `power_connectors.${socket}`) === 0,
+    )
+  ) {
+    return { document, leftOut: [] };
+  }
+  return {
+    // Without its sockets, the Part holds no `power_connectors`, as one whose
+    // record gives no count does.
+    document: Object.fromEntries(
+      Object.entries(document).filter(([name]) => name !== 'power_connectors'),
+    ),
+    leftOut: gpuPowerSockets.map((socket) => ({
+      path: `power_connectors.${socket}`,
+      reason: 'noPowerSocketAbove75W',
+    })),
+  };
+}
+
 // The Part of a Category that one of OpenDB's records makes, or why it is
 // left out. A record makes a Part when it has an OpenDB ID that is its file's
 // name, a name and a manufacturer. A record that names no manufacturer takes
@@ -220,10 +281,12 @@ export function partOfRecord(
   // The whole record is checked against the Category's list, which keeps what
   // it names. The metadata, the identifiers and the retailer data are not on
   // it, and neither is anything else the list does not name. Those are
-  // ignored, and only a value that is on the list and does not fit is counted.
-  const { document, problems } = specificationListOf(category).check(
+  // ignored, and only a value that is on the list and does not fit is counted,
+  // beside a GPU's power sockets that are read as not known.
+  const { document: checked, problems } = specificationListOf(category).check(
     withoutRedundantSocket(record, category),
   );
+  const { document, leftOut } = withoutPowerSocketsNotKnown(checked, category);
 
   return Either.right({
     part: new ImportPartParams(
@@ -238,7 +301,10 @@ export function partOfRecord(
       partNumbersKept(partNumbers, name),
       document,
     ),
-    valuesLeftOut: problems.filter((problem) => problem.reason !== 'unknown'),
+    valuesLeftOut: [
+      ...problems.filter((problem) => problem.reason !== 'unknown'),
+      ...leftOut,
+    ],
     manufacturerFromName,
   });
 }
