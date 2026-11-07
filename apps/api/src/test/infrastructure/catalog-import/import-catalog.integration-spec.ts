@@ -519,6 +519,34 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     ]);
   });
 
+  it('keeps no invisible mark in a part number, so that a code listed with one and without it is kept once', async () => {
+    const folder = await aCopyOfTheSample();
+    // OpenDB lists some codes with a left-to-right mark or a zero-width space
+    // in them, as a web page they were copied from held them, often beside
+    // the same code without one. The record's identifiers list the two codes
+    // without marks.
+    const leftToRightMark = String.fromCharCode(0x200e);
+    const zeroWidthSpace = String.fromCharCode(0x200b);
+    const ryzen = join(folder, 'CPU', '00000000-0000-4000-8000-000000000101.json');
+    const record = JSON.parse(await readFile(ryzen, 'utf8')) as {
+      metadata: { part_numbers: string[] };
+    };
+    record.metadata.part_numbers = [
+      `${leftToRightMark}100-000000001`,
+      `100-000000001BOX${zeroWidthSpace}`,
+      `MU${zeroWidthSpace}-0001`,
+    ];
+    await writeFile(ryzen, JSON.stringify(record));
+
+    await runTheImport(folder);
+
+    expect((await theOnePart({ search: 'Made-up Ryzen 5 7600' })).partNumbers).toEqual([
+      '100-000000001',
+      '100-000000001BOX',
+      'MU-0001',
+    ]);
+  });
+
   it("still leaves out a record with no manufacturer as a copy when the part number it shares is the complete record's own name", async () => {
     const folder = await aCopyOfTheSample();
     async function givePartNumbers(file: string, partNumbers: string[]) {
