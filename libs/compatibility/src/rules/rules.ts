@@ -6,6 +6,7 @@ import { rule5 } from './rule-05';
 import { rule6 } from './rule-06';
 import { rule7 } from './rule-07';
 import { rule13 } from './rule-13';
+import { rule14 } from './rule-14';
 import type { Rule } from './statement';
 
 // Every Compatibility Rule, in rule order (CMP-1).
@@ -18,4 +19,5 @@ export const rules: readonly Rule[] = [
   rule6,
   rule7,
   rule13,
+  rule14,
 ];
