@@ -1,6 +1,6 @@
 import { type MissingSpecification, withoutRepeats } from '../outcome';
 import { amountOf, type Countable } from './amounts';
-import type { Reading } from './reading';
+import { type Reading, rowsOf } from './reading';
 
 // What a rule finds of a condition, such as "the CPU's socket differs from
 // the motherboard's": that it holds or that it does not, about the Parts
@@ -121,24 +121,18 @@ export function equals<Value>(reading: Reading<Value>, value: Value): Finding {
 }
 
 // Whether a condition holds of some row of a list a Part holds, such as a
-// motherboard's PCIe slots, each row read at one of its fields. A row's field
-// is named by the list's path, the row's place and the field's name, such as
-// `pcie_slots.0.lanes`, as the API names it. An empty list holds no row, and
-// a missing list could hold any, so it leaves the condition open, naming the
-// list.
+// motherboard's PCIe slots, each row read at one of its fields, as `rowsOf`
+// names it. An empty list holds no row, and a missing list could hold any, so
+// it leaves the condition open, naming the list.
 export function someRow<Row, Field extends keyof Row & string>(
   list: Reading<readonly Row[]>,
   field: Field,
   find: (value: Reading<NonNullable<Row[Field]>>) => Finding,
 ): Finding {
-  if (list.value === undefined) {
+  const rows = rowsOf(list, field);
+  if (rows === undefined) {
     return { holds: 'maybe', missing: [{ part: list.part, path: list.path }] };
   }
-  const rows = list.value.map((row, place) => ({
-    part: list.part,
-    path: `${list.path}.${place}.${field}`,
-    value: row[field] ?? undefined,
-  }));
   return alsoAbout(some(rows, find), list.part);
 }
 

@@ -1,5 +1,6 @@
-import { type StorageFormFactor, storageFormFactors } from '../fixed-sets';
-import { type Amount, amountWhatever, counted, nothing, together, total } from './amounts';
+import type { StorageFormFactor } from '../fixed-sets';
+import { type Amount, together } from './amounts';
+import { drivesWhose } from './drives';
 import { and, exceeds, not, or, problemWhen } from './findings';
 import { rule } from './statement';
 
@@ -15,14 +16,10 @@ export const rule15 = rule({
   number: 15,
   involves: { storage: ['form_factor'], case: ['internal_3_5_bays', 'internal_2_5_bays'] },
   judge: ({ storage, case: pcCase }) => {
-    // The drives of the sizes, each as many times as the Build holds it. A
-    // drive whose form factor is missing may be of them or not.
+    // The drives of the sizes. A drive whose form factor is missing may be of
+    // them or not.
     const drivesOf = (sizes: readonly StorageFormFactor[]): Amount =>
-      total(storage, (drive) =>
-        amountWhatever(drive.read('form_factor'), storageFormFactors, (formFactor) =>
-          sizes.includes(formFactor) ? counted(drive) : nothing,
-        ),
-      );
+      drivesWhose(storage, 'form_factor', (formFactor) => sizes.includes(formFactor));
     const bays35 = pcCase.read('internal_3_5_bays');
     const bays = together(bays35, pcCase.read('internal_2_5_bays'));
     const someBay = exceeds(bays, 0);

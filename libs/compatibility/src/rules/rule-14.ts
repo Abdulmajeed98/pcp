@@ -1,12 +1,7 @@
 import type { M2Slot } from '../build';
-import {
-  type M2SlotKey,
-  m2SlotKeys,
-  storageFormFactors,
-  storageInterfaces,
-} from '../fixed-sets';
-import { type Amount, amountWhatever, counted, nothing, together, total } from './amounts';
-import { isM2 } from './drives';
+import { type M2SlotKey, m2SlotKeys } from '../fixed-sets';
+import { type Amount, amountWhatever, nothing, totalOfRows } from './amounts';
+import { m2Drives, m2DrivesNotSata } from './drives';
 import { exceeds, or, problemWhen } from './findings';
 import type { Reading } from './reading';
 import { rule } from './statement';
@@ -22,25 +17,10 @@ export const rule14 = rule({
   involves: { motherboard: ['m2_slots'], storage: ['form_factor', 'interface'] },
   judge: ({ motherboard, storage }) => {
     const slots = motherboard.read('m2_slots');
-    // What the rule counts of each drive whose form factor is an M.2 size, and
-    // nothing of a drive of another.
-    const m2 = (count: (drive: (typeof storage)[number]) => Amount): Amount =>
-      total(storage, (drive) =>
-        amountWhatever(drive.read('form_factor'), storageFormFactors, (formFactor) =>
-          isM2(formFactor) ? count(drive) : nothing,
-        ),
-      );
     return problemWhen(
       or(
-        exceeds(
-          m2((drive) =>
-            amountWhatever(drive.read('interface'), storageInterfaces, (iface) =>
-              iface === 'M.2 SATA' ? nothing : counted(drive),
-            ),
-          ),
-          slotsKeyed(slots, ['M']),
-        ),
-        exceeds(m2(counted), slotsKeyed(slots, ['M', 'B'])),
+        exceeds(m2DrivesNotSata(storage), slotsKeyed(slots, ['M'])),
+        exceeds(m2Drives(storage), slotsKeyed(slots, ['M', 'B'])),
       ),
     );
   },
@@ -49,21 +29,11 @@ export const rule14 = rule({
 // How many of the motherboard's M.2 slots have one of the keys: a limit about
 // the board. A slot with no key may have one of them or not, and is named by
 // its place among the slots, such as `m2_slots.1.key`, as the API names it. A
-// missing list of slots may hold any number of them, as a missing count may.
+// missing list of slots may hold any number of them.
 function slotsKeyed(slots: Reading<readonly M2Slot[]>, keys: readonly M2SlotKey[]): Amount {
-  if (slots.value === undefined) {
-    return together({ part: slots.part, path: slots.path, value: undefined });
-  }
-  const keyed = total(
-    slots.value.map((slot, index) => ({
-      part: slots.part,
-      path: `${slots.path}.${index}.key`,
-      value: slot.key,
-    })),
-    (key) =>
-      amountWhatever(key, m2SlotKeys, (each) => (keys.includes(each) ? aSlot : nothing)),
+  return totalOfRows(slots, 'key', (key) =>
+    amountWhatever(key, m2SlotKeys, (each) => (keys.includes(each) ? aSlot : nothing)),
   );
-  return { ...keyed, about: new Set([slots.part]) };
 }
 
 const aSlot: Amount = { least: 1, most: 1, about: new Set(), missing: [] };

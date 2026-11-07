@@ -1,5 +1,5 @@
 import { type MissingSpecification, withoutRepeats } from '../outcome';
-import type { Reading } from './reading';
+import { type Reading, rowsOf } from './reading';
 
 // An amount a rule counts, such as the memory modules of a Build's RAM kits:
 // at least `least` and at most `most`, one number when every value in it is
@@ -89,6 +89,23 @@ export function total<Item>(items: readonly Item[], count: (item: Item) => Amoun
     about: new Set(amounts.flatMap((amount) => [...amount.about])),
     missing: withoutRepeats(amounts.flatMap((amount) => amount.missing)),
   };
+}
+
+// The sum of an amount counted for each row of a list a Part holds, such as a
+// motherboard's M.2 slots of some keys, each row read at one of its fields as
+// `someRow` reads it: a limit about that Part. An empty list holds no row,
+// and a missing one could hold any number, as a missing count could, so it
+// has no most, and is named.
+export function totalOfRows<Row, Field extends keyof Row & string>(
+  list: Reading<readonly Row[]>,
+  field: Field,
+  count: (value: Reading<NonNullable<Row[Field]>>) => Amount,
+): Amount {
+  const rows = rowsOf(list, field);
+  if (rows === undefined) {
+    return together({ part: list.part, path: list.path, value: undefined });
+  }
+  return { ...total(rows, count), about: new Set([list.part]) };
 }
 
 // A limit that values of one Part make together, such as a motherboard's SATA
