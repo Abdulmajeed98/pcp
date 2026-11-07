@@ -4,10 +4,20 @@
 
 **Category:** enhancement
 
-**Status:** needs-triage
+**Status:** resolved
 
 **From:** browse's follow-ups list, swept on 7 November 2026: browse ticket 05.
 
 **What happens.** The Shopper app's unit tests run on Vitest 4.1.12 with `@nx/vitest` 23.2.1, both pinned exactly (the MVP spec's fourth seam). Vitest 5 (5.1.0, out on 2 November 2026) can come only after Nx is at 23.3 or later, and the workspace is on Nx 23.2.1.
 
 **Done when.** Nx is on a release of 23.3 or later old enough for pnpm's minimum release age, then Vitest on 5, with no exception to the release-age rule and every check passing.
+
+## Comments
+
+### 7 November 2026: done
+
+The owner chose to implement every follow-up ticket.
+
+- **Which Nx.** 23.3.1, of 23 October 2026, the newest of Nx 23. Nx 24.0.5 is out too, but a new major version is a change of its own, and this ticket needs only 23.3 or later.
+- **How.** `pnpm exec nx migrate 23.3.1` moved `nx` and the twelve `@nx/*` packages to 23.3.1, and Vitest with them to 5.1.0, of 2 November 2026; its `@nx/vitest` accepts Vitest 5. `pnpm install` took both with no exception to the release-age rule, and `pnpm-workspace.yaml` is unchanged. `nx migrate --run-migrations` ran the one migration, `@nx/vitest`'s `migrate-to-vitest-5`, which added `.vitest`, where Vitest 5 writes its reports, and Vite's config timestamps to `.gitignore`. Its guide to the rest of Vitest 5's changes was read and checked against the Shopper's tests: no mocks, no unawaited `resolves` or `rejects`, no `sequential`, no deep imports, and one config, in the project's own folder. `migrations.json` and the guide were then removed.
+- **Checks.** Every project's unit tests passed, the Shopper's 383 in 23 files under Vitest 5.1.0, as many as under 4.1.12; no `.vitest` folder was written. The MVP spec's fourth seam and testing strategy name the new versions.
