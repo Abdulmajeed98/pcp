@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from 'node:util';
+
 import { Either, Option } from 'effect';
 
 import { Category } from '../part/Category';
@@ -14,7 +16,8 @@ import { OpenDbFile } from './OpenDbSource';
 // taken when another record read before it has the same one. A record with
 // no manufacturer copies another when a record of the manufacturer its name
 // begins with has one of its part numbers: at the pinned commit, 20 such
-// records are thinner copies of a complete one.
+// records are thinner copies of a complete one. A record that makes the same
+// Part as one read before it in its folder gives that Part its part numbers.
 export type RecordLeftOutReason =
   | 'notARecord'
   | 'noOpenDbId'
@@ -23,7 +26,8 @@ export type RecordLeftOutReason =
   | 'noName'
   | 'noManufacturer'
   | 'copiesAnotherRecord'
-  | 'knownCopy';
+  | 'knownCopy'
+  | 'sameAsAnotherRecord';
 
 // The Part a record makes, the values in the record that did not fit their
 // specifications and were left out of the Part, and whether its manufacturer
@@ -64,6 +68,50 @@ function partNumbersOf(partNumbers: unknown, identifiers: unknown): string[] {
           .filter(isString)
       : [];
   return cleanPartNumbers([...listed, ...identified]);
+}
+
+// The part numbers a Part keeps. OpenDB lists the name of some Parts among
+// their part numbers, such as "AMD Ryzen 7 7800X3D" between two of its codes,
+// and a Part keeps none that is its own name, in any case, since the name says
+// it already. At the pinned commit 81 Parts list it, among them 18 motherboards
+// whose makers use the model's name as its code, which keep no part number.
+function partNumbersKept(partNumbers: readonly string[], name: string): string[] {
+  const ownName = name.toLowerCase();
+  return partNumbers.filter((partNumber) => partNumber.toLowerCase() !== ownName);
+}
+
+// Whether two records of a folder make the same Part: the same name and
+// manufacturer, in any case, and the same specifications as a Part keeps them.
+// OpenDB lists some Parts more than once, such as a CPU under its boxed codes
+// in one record and its tray code in another, and no Shopper could tell such
+// Parts apart: at the pinned commit 476 records make 234 Parts so. Records with
+// one name whose specifications differ, by a timing, a colour or a cooler in
+// the box, stay apart.
+export function makeTheSamePart(one: ImportPartParams, other: ImportPartParams): boolean {
+  return (
+    one.getName().toLowerCase() === other.getName().toLowerCase() &&
+    one.getManufacturer().toLowerCase() === other.getManufacturer().toLowerCase() &&
+    isDeepStrictEqual(one.getSpecifications(), other.getSpecifications())
+  );
+}
+
+// A Part with the part numbers of another record that makes the same Part,
+// after its own, so that a Vendor finds it by any of them.
+export function withPartNumbersOf(
+  part: ImportPartParams,
+  other: ImportPartParams,
+): ImportPartParams {
+  return new ImportPartParams(
+    part.getOpenDbId(),
+    part.getCategory(),
+    part.getName(),
+    part.getManufacturer(),
+    partNumbersKept(
+      cleanPartNumbers([...part.getPartNumbers(), ...other.getPartNumbers()]),
+      part.getName(),
+    ),
+    part.getSpecifications(),
+  );
 }
 
 // What a folder's records say of their manufacturers and part numbers.
@@ -184,7 +232,10 @@ export function partOfRecord(
       category,
       name,
       manufacturer,
-      partNumbers,
+      // The copy check above reads the whole list, the name among it, because
+      // a record with no manufacturer may share only a complete record's name
+      // with it: at the pinned commit, one does.
+      partNumbersKept(partNumbers, name),
       document,
     ),
     valuesLeftOut: problems.filter((problem) => problem.reason !== 'unknown'),
