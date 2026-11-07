@@ -54,11 +54,13 @@ const kurdishAndEnglish = [kurdish, english] as const;
 const rate = 1500;
 
 // What the run's Vendor with every contact detail wrote, as a Vendor in
-// Erbil may: its address in Sorani on two lines, its opening hours in
-// English, a WhatsApp number, an Instagram name, typed with an @ and capitals
-// as a Vendor may type it, and a place in Erbil. Its name is in Latin
-// script, so that it runs left to right inside a Kurdish page.
-const address = 'شەقامی نموونە، ژمارە 12\nبازاڕی خەیاڵی، هەولێر';
+// Erbil may: its address in Sorani on two lines, its shop's number in
+// Arabic-Indic digits, as it typed them, which the page shows as written
+// (LANG-4); its opening hours in English, a WhatsApp number, an Instagram
+// name, typed with an @ and capitals as a Vendor may type it, and a place in
+// Erbil. Its name is in Latin script, so that it runs left to right inside a
+// Kurdish page.
+const address = 'شەقامی نموونە، ژمارە ١٢\nبازاڕی خەیاڵی، هەولێر';
 const openingHours = 'Saturday to Thursday, 10:00 to 21:00\nFriday closed';
 const whatsAppNumber = aMadeUpMobileNumber();
 const instagramName = `made_up.v${Date.now().toString().slice(-8)}`;
