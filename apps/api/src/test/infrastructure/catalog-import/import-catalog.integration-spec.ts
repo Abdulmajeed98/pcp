@@ -547,6 +547,80 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     ]);
   });
 
+  // The sample's complete CPU, for a test to list again under another OpenDB
+  // ID, as OpenDB lists some Parts twice.
+  type CpuRecord = {
+    opendb_id: string;
+    metadata: { name: string; part_numbers: string[] };
+    specifications: Record<string, unknown>;
+  };
+  async function theRyzenIn(folder: string): Promise<CpuRecord> {
+    const path = join(folder, 'CPU', '00000000-0000-4000-8000-000000000101.json');
+    return JSON.parse(await readFile(path, 'utf8')) as CpuRecord;
+  }
+
+  it('makes one Part of two records with the same name, manufacturer and specifications, with the part numbers of both, and names the second as left out', async () => {
+    const folder = await aCopyOfTheSample();
+    // A CPU under its boxed codes in one record and its tray code in another,
+    // its name in capitals there, as OpenDB lists some Parts twice.
+    const ryzen = await theRyzenIn(folder);
+    const twin = '00000000-0000-4000-8000-000000000103';
+    await writeFile(
+      join(folder, 'CPU', `${twin}.json`),
+      JSON.stringify({
+        ...ryzen,
+        opendb_id: twin,
+        metadata: {
+          ...ryzen.metadata,
+          name: 'MADE-UP RYZEN 5 7600',
+          part_numbers: ['100-000000001MPK', '100-000000001'],
+        },
+        identifiers: { version: 1, identifiers: [] },
+      }),
+    );
+
+    const run = await runTheImport(folder);
+
+    expect(await theOnePart({ search: 'Made-up Ryzen 5 7600' })).toMatchObject({
+      openDbId: '00000000-0000-4000-8000-000000000101',
+      name: 'Made-up Ryzen 5 7600',
+      partNumbers: ['100-000000001', '100-000000001BOX', '100-000000001MPK'],
+    });
+    expect(linesUnder('Records left out:', run.printed)).toContain(
+      `CPU/${twin}.json: it has the name, manufacturer and specifications of another record, whose Part takes its part numbers`,
+    );
+  });
+
+  it('keeps two Parts of records with the same name and manufacturer whose specifications differ, such as a boxed CPU with a cooler and a tray one without', async () => {
+    const folder = await aCopyOfTheSample();
+    const ryzen = await theRyzenIn(folder);
+    const tray = '00000000-0000-4000-8000-000000000103';
+    await writeFile(
+      join(folder, 'CPU', `${tray}.json`),
+      JSON.stringify({
+        ...ryzen,
+        opendb_id: tray,
+        metadata: { ...ryzen.metadata, part_numbers: ['100-000000001MPK'] },
+        identifiers: { version: 1, identifiers: [] },
+        specifications: { ...ryzen.specifications, includesCooler: false },
+      }),
+    );
+
+    const run = await runTheImport(folder);
+
+    const found = await partsFound({ search: 'Made-up Ryzen 5 7600' });
+    const read = await Promise.all(
+      found.map(async (part) => (await (await readPart(part.id)).json()) as ReadPart),
+    );
+    expect(
+      Object.fromEntries(read.map((part) => [part.openDbId, part.partNumbers])),
+    ).toEqual({
+      '00000000-0000-4000-8000-000000000101': ['100-000000001', '100-000000001BOX'],
+      [tray]: ['100-000000001MPK'],
+    });
+    expect(linesUnder('Records left out:', run.printed).join('\n')).not.toContain(tray);
+  });
+
   it("still leaves out a record with no manufacturer as a copy when the part number it shares is the complete record's own name", async () => {
     const folder = await aCopyOfTheSample();
     async function givePartNumbers(file: string, partNumbers: string[]) {
