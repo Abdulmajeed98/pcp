@@ -34,6 +34,8 @@ export type {
 } from './fixed-sets';
 export { estimatedPowerDrawOf } from './estimated-power-draw';
 export type { EstimatedPowerDraw } from './estimated-power-draw';
+export { isCompatible } from './is-compatible';
+export type { PartOf } from './is-compatible';
 export { judgeBuild } from './judge-build';
 export { neededSpecificationsOf } from './needed-specifications';
 export type { MissingSpecification, RuleOutcome } from './outcome';
