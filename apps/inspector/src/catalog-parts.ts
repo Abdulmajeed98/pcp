@@ -6,12 +6,8 @@ import type {
   PartSummaryResponse,
 } from '@pcp/api-client';
 
-import {
-  type CatalogPart,
-  namedParts,
-  theCategoryOfManyParts,
-  visiblePartsOfThatCategory,
-} from './made-up-offers.ts';
+import { theOtherGpus } from './made-up-gpus.ts';
+import { type CatalogPart, namedParts, theCategoryOfManyParts } from './made-up-offers.ts';
 import { partsTheShopOffers } from './made-up-shop.ts';
 import type { ReadPart, TheShoppersCatalog } from './the-shoppers-shop.ts';
 
@@ -23,12 +19,13 @@ export type SearchOfTheCatalog = (
 
 // The real Parts the made-up shop offers, read from the catalog by their
 // Category and exact name (ADR-0001: no Part is invented). A name the
-// catalog does not hold once and once only stops the command, and says which.
-// The dashboard's shop reads its own Vendor's Parts, and the Shopper's every
-// named Part.
+// catalog does not hold once and once only stops the command, and says which
+// and in which of the shop's files, `file`. The dashboard's shop reads its
+// own Vendor's Parts, and the Shopper's every Part it offers.
 export async function partsOfTheCatalog(
   searchTheCatalog: SearchOfTheCatalog,
   wanted: readonly CatalogPart[] = partsTheShopOffers,
+  file = 'made-up-offers.ts',
 ): Promise<Map<string, PartSummaryResponse>> {
   const parts = await Promise.all(
     wanted.map(async (each): Promise<[string, PartSummaryResponse]> => {
@@ -39,7 +36,7 @@ export async function partsOfTheCatalog(
       if (named.length !== 1) {
         const howMany = named.length === 0 ? 'no' : String(named.length);
         throw new Error(
-          `The catalog holds ${howMany} ${each.category} Part${named.length > 1 ? 's' : ''} named "${each.name}", which the made-up shop offers. Change the shop's Part in apps/inspector/src/made-up-offers.ts.`,
+          `The catalog holds ${howMany} ${each.category} Part${named.length > 1 ? 's' : ''} named "${each.name}", which the made-up shop offers. Change the shop's Part in apps/inspector/src/${file}.`,
         );
       }
       const { id, category, name, manufacturer, partNumbers, photoPath } = named[0];
@@ -62,12 +59,6 @@ export interface CatalogReads {
   part(partId: string): Promise<PartResponse>;
   categories(): Promise<CategoryResponse[]>;
 }
-
-// The largest page the catalog's search answers, and how many runs of it are
-// read across the Category of many Parts, so that its manufacturers and
-// specifications vary as the whole catalog's do.
-const largestPage = 100;
-const runs = 5;
 
 // Runs `work` on each item, a few at a time, in the items' order.
 async function aFewAtATime<Item, Result>(
@@ -107,12 +98,41 @@ function heldAs(part: PartResponse): ReadPart {
   };
 }
 
+// Real Parts of the catalog, each read by its Category and exact name, with
+// its specifications, in the order they are wanted. A name the catalog does
+// not hold once, and a Part made on the platform rather than imported from
+// OpenDB, which is not a real Part (ADR-0001), stop the command and say
+// which, and in which file of the shop to change it.
+async function readEachOf(
+  catalog: CatalogReads,
+  wanted: readonly CatalogPart[],
+  file: string,
+): Promise<ReadPart[]> {
+  const found = await partsOfTheCatalog(
+    async ({ category, search }) =>
+      (await catalog.search({ category, search, page: 0, size: 50 })).content,
+    wanted,
+    file,
+  );
+  return aFewAtATime(
+    wanted.map((each) => found.get(each.name)),
+    async (summary) => {
+      if (summary === undefined) throw new Error('A wanted Part was not found.');
+      const part = await catalog.part(summary.id);
+      if (part.openDbId === null) {
+        throw new Error(
+          `The catalog's ${summary.category} Part named "${summary.name}" was made on the platform, not imported from OpenDB, so the made-up shop cannot offer it. Change the shop's Part in apps/inspector/src/${file}.`,
+        );
+      }
+      return heldAs(part);
+    },
+  );
+}
+
 // What the Shopper's made-up shop reads from the catalog when the command
-// starts: each named Part by its Category and exact name, each with its
-// specifications; other Parts of the Category of many Parts, read in runs
-// spread across the whole Category and kept only when imported from OpenDB,
-// since a Part the Admin or a test made is not a real Part (ADR-0001); and
-// the Categories' specification lists.
+// starts: each named Part, and the 396 other GPUs that make the Category of
+// many Parts, each by its Category and exact name, with its specifications;
+// and the Categories' specification lists.
 export async function readTheShoppersCatalog(
   catalog: CatalogReads,
 ): Promise<TheShoppersCatalog> {
@@ -125,45 +145,8 @@ export async function readTheShoppersCatalog(
     throw new Error('The catalog holds no Parts. Import it with "pnpm catalog:import".');
   }
   const categories = await catalog.categories();
-  const found = await partsOfTheCatalog(
-    async ({ category, search }) =>
-      (await catalog.search({ category, search, page: 0, size: 50 })).content,
-    namedParts,
-  );
-  const named = await aFewAtATime([...found.values()], async (summary) => {
-    const part = await catalog.part(summary.id);
-    if (part.openDbId === null) {
-      throw new Error(
-        `The catalog's ${summary.category} Part named "${summary.name}" was made on the platform, not imported from OpenDB, so the made-up shop cannot offer it. Change the shop's Part in apps/inspector/src/made-up-offers.ts.`,
-      );
-    }
-    return heldAs(part);
-  });
-
-  // Runs of the largest page, at pages spread evenly across the Category.
-  const pages = Math.ceil(first.totalElements / largestPage);
-  const runPages = [
-    ...new Set(Array.from({ length: runs }, (_, run) => Math.floor((run * pages) / runs))),
-  ];
-  const namedIds = new Set(named.map((read) => read.summary.id));
-  const candidates = (
-    await aFewAtATime(runPages, async (page) =>
-      (
-        await catalog.search({ category: theCategoryOfManyParts, page, size: largestPage })
-      ).content.filter((part) => !namedIds.has(part.id)),
-    )
-  ).flat();
-  const others = (await aFewAtATime(candidates, (part) => catalog.part(part.id)))
-    .filter((part) => part.openDbId !== null)
-    .map(heldAs);
-  const ownOfThatCategory = named.filter(
-    (read) => read.summary.category === theCategoryOfManyParts,
-  ).length;
-  if (others.length + ownOfThatCategory < visiblePartsOfThatCategory) {
-    throw new Error(
-      `The catalog holds ${others.length} other ${theCategoryOfManyParts} Parts imported from OpenDB, too few to make ${visiblePartsOfThatCategory} with the made-up shop's own.`,
-    );
-  }
+  const named = await readEachOf(catalog, namedParts, 'made-up-offers.ts');
+  const others = await readEachOf(catalog, theOtherGpus, 'made-up-gpus.ts');
 
   return {
     named: new Map(named.map((read) => [read.summary.name, read])),
