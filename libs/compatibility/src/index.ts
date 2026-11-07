@@ -32,6 +32,8 @@ export type {
   StorageFormFactor,
   StorageInterface,
 } from './fixed-sets';
+export { estimatedPowerDrawOf } from './estimated-power-draw';
+export type { EstimatedPowerDraw } from './estimated-power-draw';
 export { judgeBuild } from './judge-build';
 export { neededSpecificationsOf } from './needed-specifications';
 export type { MissingSpecification, RuleOutcome } from './outcome';

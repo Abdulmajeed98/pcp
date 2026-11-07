@@ -9,17 +9,39 @@ export type Finding =
   | { readonly holds: boolean; readonly about: ReadonlySet<string> }
   | { readonly holds: 'maybe'; readonly missing: readonly MissingSpecification[] };
 
-// What a rule finds of a Build: whether it has a Compatibility Problem.
-export type Judgment = { readonly problem: Finding };
+// What a rule finds of a Build: whether it has a Compatibility Problem, and
+// whether it has a Compatibility Warning, which only rules 11, 15 and 20 can
+// find. A Problem comes first: the Warning's finding counts only when the
+// Problem's does not hold.
+export type Judgment = { readonly problem: Finding; readonly warning: Finding };
 
-export function problemWhen(problem: Finding): Judgment {
-  return { problem };
+// A Problem when a condition holds, and otherwise, for a rule that can give
+// one, a Warning when another does.
+export function problemWhen(
+  problem: Finding,
+  { warningWhen: warning = fact(false) }: { readonly warningWhen?: Finding } = {},
+): Judgment {
+  return { problem, warning };
+}
+
+// The missing values that leave any of several findings open, such as a
+// judgment's Problem and Warning, each named once.
+export function missingIn(...findings: readonly Finding[]): MissingSpecification[] {
+  return withoutRepeats(
+    findings.flatMap((finding) => (finding.holds === 'maybe' ? finding.missing : [])),
+  );
 }
 
 // A condition decided by values a rule has in hand. The readings they came
 // from add their Parts.
 export function fact(holds: boolean): Finding {
   return { holds, about: new Set() };
+}
+
+// That the Build holds a Part, for a rule that reads none of its values but
+// whose Problem is about it, such as the GPU of rule 8.
+export function theBuildHolds(part: { readonly id: string }): Finding {
+  return { holds: true, about: new Set([part.id]) };
 }
 
 // What a rule finds whatever a value is. A value the Part holds decides it,
@@ -70,6 +92,49 @@ export function some<Item>(items: readonly Item[], find: (item: Item) => Finding
 
 export function not(finding: Finding): Finding {
   return finding.holds === 'maybe' ? finding : { ...finding, holds: !finding.holds };
+}
+
+// Whether some of several conditions holds, as `some` judges them.
+export function or(...findings: readonly Finding[]): Finding {
+  return some(findings, (finding) => finding);
+}
+
+// Whether every one of several conditions holds, such as a GPU having a
+// 12VHPWR socket and its PSU having no such cable. When one does not, it does
+// not, about the Parts that decide that one, whatever the others lack.
+export function and(...findings: readonly Finding[]): Finding {
+  return not(or(...findings.map(not)));
+}
+
+// Whether a value a Part holds is the one given, such as a PCIe slot's 16
+// lanes. A missing value could be it or not.
+export function equals<Value>(reading: Reading<Value>, value: Value): Finding {
+  if (reading.value === undefined) {
+    return { holds: 'maybe', missing: [{ part: reading.part, path: reading.path }] };
+  }
+  return alsoAbout(fact(reading.value === value), reading.part);
+}
+
+// Whether a condition holds of some row of a list a Part holds, such as a
+// motherboard's PCIe slots, each row read at one of its fields. A row's field
+// is named by the list's path, the row's place and the field's name, such as
+// `pcie_slots.0.lanes`, as the API names it. An empty list holds no row, and
+// a missing list could hold any, so it leaves the condition open, naming the
+// list.
+export function someRow<Row, Field extends keyof Row & string>(
+  list: Reading<readonly Row[]>,
+  field: Field,
+  find: (value: Reading<NonNullable<Row[Field]>>) => Finding,
+): Finding {
+  if (list.value === undefined) {
+    return { holds: 'maybe', missing: [{ part: list.part, path: list.path }] };
+  }
+  const rows = list.value.map((row, place) => ({
+    part: list.part,
+    path: `${list.path}.${place}.${field}`,
+    value: row[field] ?? undefined,
+  }));
+  return alsoAbout(some(rows, find), list.part);
 }
 
 // Whether a list a Part holds, such as a cooler's sockets, includes a value.
@@ -125,24 +190,39 @@ export function total<Item>(items: readonly Item[], count: (item: Item) => Amoun
   };
 }
 
-// Whether an amount is more than a limit a Part holds, such as a
-// motherboard's memory slots. It is decided when the amount's least is more
-// than the limit's most, or its most no more than the limit's least, and is
-// about the Parts counted and the limit's. Otherwise it is open, naming the
-// missing values on either side.
-export function exceeds(amount: Amount, limit: Reading<number>): Finding {
-  const limitLeast = limit.value ?? 0;
-  const limitMost = limit.value ?? Infinity;
-  const about = new Set([...amount.about, limit.part]);
-  if (amount.least > limitMost) return { holds: true, about };
-  if (amount.most <= limitLeast) return { holds: false, about };
+// What `exceeds` compares: an amount counted, a value a Part holds, or a
+// plain number.
+type Countable = Amount | Reading<number> | number;
+
+// Whether an amount is more than a limit, such as a Build's RAM modules and a
+// motherboard's memory slots, or a GPU's 12VHPWR sockets and none. It is
+// decided when the amount's least is more than the limit's most, or its most
+// no more than the limit's least, and is about the Parts whose known values
+// either side counts. Otherwise it is open, naming the missing values on
+// either side.
+export function exceeds(amount: Countable, limit: Countable): Finding {
+  const counted = amountOf(amount);
+  const bound = amountOf(limit);
+  const about = new Set([...counted.about, ...bound.about]);
+  if (counted.least > bound.most) return { holds: true, about };
+  if (counted.most <= bound.least) return { holds: false, about };
   return {
     holds: 'maybe',
-    missing: [
-      ...amount.missing,
-      ...(limit.value === undefined ? [{ part: limit.part, path: limit.path }] : []),
-    ],
+    missing: withoutRepeats([...counted.missing, ...bound.missing]),
   };
+}
+
+// An amount times a plain number, such as thirteen times a Build's estimated
+// power draw.
+export function times(countable: Countable, factor: number): Amount {
+  const amount = amountOf(countable);
+  return { ...amount, least: amount.least * factor, most: amount.most * factor };
+}
+
+function amountOf(countable: Countable): Amount {
+  return typeof countable === 'number' || !('least' in countable)
+    ? product(countable)
+    : countable;
 }
 
 function alsoAbout(finding: Finding, part: string): Finding {
