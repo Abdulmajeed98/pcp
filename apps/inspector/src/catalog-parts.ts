@@ -98,22 +98,44 @@ function heldAs(part: PartResponse): ReadPart {
   };
 }
 
-// Real Parts of the catalog, each read by its Category and exact name, with
-// its specifications, in the order they are wanted. A name the catalog does
-// not hold once, and a Part made on the platform rather than imported from
-// OpenDB, which is not a real Part (ADR-0001), stop the command and say
-// which, and in which file of the shop to change it.
+// The largest page the catalog's search answers.
+const largestPage = 100;
+
+// A search of the catalog for the words of one Part's name, as the Admin's
+// catalog search answers it: its first 50 Parts.
+function searchedFor(catalog: CatalogReads): SearchOfTheCatalog {
+  return async ({ category, search }) =>
+    (await catalog.search({ category, search, page: 0, size: 50 })).content;
+}
+
+// Every Part of one Category, as the Admin's catalog lists them, a page of
+// the largest size at a time: one read for each hundred Parts, rather than
+// one search for each name, when many of a Category are wanted.
+async function everyPartOf(
+  catalog: CatalogReads,
+  category: CatalogPart['category'],
+): Promise<FoundPartResponse[]> {
+  const parts: FoundPartResponse[] = [];
+  for (let page = 0; ; page += 1) {
+    const answer = await catalog.search({ category, page, size: largestPage });
+    parts.push(...answer.content);
+    if (answer.last || answer.content.length === 0) return parts;
+  }
+}
+
+// Real Parts of the catalog, each found by its Category and exact name in
+// what `search` answers, and read with its specifications, in the order they
+// are wanted. A name the catalog does not hold once, and a Part made on the
+// platform rather than imported from OpenDB, which is not a real Part
+// (ADR-0001), stop the command and say which, and in which file of the shop
+// to change it.
 async function readEachOf(
   catalog: CatalogReads,
   wanted: readonly CatalogPart[],
   file: string,
+  search: SearchOfTheCatalog,
 ): Promise<ReadPart[]> {
-  const found = await partsOfTheCatalog(
-    async ({ category, search }) =>
-      (await catalog.search({ category, search, page: 0, size: 50 })).content,
-    wanted,
-    file,
-  );
+  const found = await partsOfTheCatalog(search, wanted, file);
   return aFewAtATime(
     wanted.map((each) => found.get(each.name)),
     async (summary) => {
@@ -145,8 +167,20 @@ export async function readTheShoppersCatalog(
     throw new Error('The catalog holds no Parts. Import it with "pnpm catalog:import".');
   }
   const categories = await catalog.categories();
-  const named = await readEachOf(catalog, namedParts, 'made-up-offers.ts');
-  const others = await readEachOf(catalog, theOtherGpus, 'made-up-gpus.ts');
+  const named = await readEachOf(
+    catalog,
+    namedParts,
+    'made-up-offers.ts',
+    searchedFor(catalog),
+  );
+  // The other GPUs are found in the Category's whole list, read once.
+  const gpus = await everyPartOf(catalog, theCategoryOfManyParts);
+  const others = await readEachOf(
+    catalog,
+    theOtherGpus,
+    'made-up-gpus.ts',
+    async () => gpus,
+  );
 
   return {
     named: new Map(named.map((read) => [read.summary.name, read])),

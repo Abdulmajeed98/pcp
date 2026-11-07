@@ -91,12 +91,25 @@ async function answers(address: string): Promise<boolean> {
     .catch(() => false);
 }
 
+// A read of the API over HTTP with the login's token, asked again, twice at
+// most, when the connection drops: the API's server can close a kept-alive
+// connection just as the next read goes out on it (ECONNRESET), and the
+// made-up shop's reading asks hundreds of them.
+async function readOfTheApi(path: string, authorization: string): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await fetch(`${apiUrl}${path}`, { headers: { Authorization: authorization } });
+    } catch (error) {
+      if (attempt === 3) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+    }
+  }
+}
+
 // The Admin's reads of the catalog, over HTTP, with the login's token.
 function catalogOfTheApi(authorization: string): CatalogReads {
   const read = async <Body>(path: string, what: string): Promise<Body> => {
-    const response = await fetch(`${apiUrl}${path}`, {
-      headers: { Authorization: authorization },
-    });
+    const response = await readOfTheApi(path, authorization);
     if (!response.ok) {
       throw new CannotInspect(
         `The API answered ${response.status} to ${what}${response.status >= 500 ? '. Are the services running ("pnpm services:up")?' : '.'}`,

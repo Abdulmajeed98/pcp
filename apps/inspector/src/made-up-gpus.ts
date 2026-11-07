@@ -7,9 +7,9 @@ import type { CatalogPart } from './made-up-offers.ts';
 // catalog import is pinned to (`@pcp/opendb`), so that every import gives
 // the same ones. They were chosen on 7 November 2026, spread across the
 // Category in the order of their names, so that their manufacturers,
-// chipsets and memory vary as the whole catalog's do: each a name no other
-// GPU holds, imported from OpenDB, and found among the first 50 Parts of a
-// search for its own words, as the command searches the catalog.
+// chipsets and memory vary as the whole catalog's do, each a name no other
+// GPU holds, imported from OpenDB. The command finds them in the Category's
+// whole list.
 const names = [
   'Acer Arc A770 Predator BiFrost OC 16GB GDDR6 Black / Silver',
   'Acer Nitro OC Radeon RX 9070 XT 16GB GDDR6 Black / Silver',
