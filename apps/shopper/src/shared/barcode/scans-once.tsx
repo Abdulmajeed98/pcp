@@ -2,6 +2,8 @@
 
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 
+import { aMovementMayPlay, whenInView } from '@/shared/lib';
+
 // A barcode that is scanned once (Motion 6): when it comes into view, its
 // top about nine tenths of the way down the window, a 3-pixel line of Print
 // Green crosses it from its start edge to its end edge, 700 ms at a constant
@@ -17,20 +19,9 @@ export function ScansOnce({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const element = watched.current;
-    if (element === null) return;
-    if (document.documentElement.hasAttribute('data-returned')) return;
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (element === null || !aMovementMayPlay()) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        setScanning(true);
-        observer.disconnect();
-      },
-      { rootMargin: '0px 0px -10% 0px' },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
+    return whenInView(element, () => setScanning(true));
   }, []);
 
   return (

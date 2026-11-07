@@ -3,7 +3,6 @@ export { keyLinesOf } from './model/key-lines';
 export { type Slip, slipOf } from './model/slip';
 export { specificationText } from './model/specification-text';
 export { BoxLabel } from './ui/box-label';
-export { nameType } from './ui/name-type';
 export { PartPicture } from './ui/part-picture';
 export { PartSquare } from './ui/part-square';
 export { PriceSlip } from './ui/price-slip';

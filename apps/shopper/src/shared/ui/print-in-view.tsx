@@ -3,6 +3,8 @@
 import { cn } from 'cn';
 import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 
+import { aMovementMayPlay, whenInView } from '@/shared/lib';
+
 // What a printed piece below the first screen is doing (DESIGN.md's When a
 // movement plays): held back, waiting to be reached, or printing as it comes
 // into view. With no state it is shown printed, which is how the server
@@ -45,22 +47,11 @@ export function PrintInView({
   // sight is held back before anyone could see it.
   useLayoutEffect(() => {
     const watched = frame.current;
-    if (watched === null) return;
-    if (document.documentElement.hasAttribute('data-returned')) return;
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (watched === null || !aMovementMayPlay()) return;
     if (watched.getBoundingClientRect().top < innerHeight * 0.9) return;
 
     setState('waiting');
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        setState('printing');
-        observer.disconnect();
-      },
-      { rootMargin: '0px 0px -10% 0px' },
-    );
-    observer.observe(watched);
-    return () => observer.disconnect();
+    return whenInView(watched, () => setState('printing'));
   }, []);
 
   return (

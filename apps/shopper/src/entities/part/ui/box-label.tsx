@@ -4,11 +4,10 @@ import { cn } from 'cn';
 import { getTranslations } from 'next-intl/server';
 
 import { Barcode } from '@/shared/barcode';
-import { CategoryDrawing } from '@/shared/ui';
+import { CategoryDrawing, nameType } from '@/shared/ui';
 
 import { keyLinesOf } from '../model/key-lines';
 import { specificationText } from '../model/specification-text';
-import { nameType } from './name-type';
 
 // The box label (DESIGN.md's The specifications): the label on a Part's box,
 // which opens its specifications. On its start side the Part's name, in the

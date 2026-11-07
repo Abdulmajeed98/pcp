@@ -9,10 +9,10 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Fragment } from 'react';
 
 import { categoryAddress } from '@/entities/category';
-import { nameType, PartPicture, slipOf } from '@/entities/part';
+import { PartPicture, slipOf } from '@/entities/part';
 import { chosenCurrency, currencies, currencyMarks } from '@/shared/currency';
 import { ShownPrice } from '@/shared/price';
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, nameType } from '@/shared/ui';
 import { CurrencySwitch } from '@/widgets/frame-header';
 
 // A Part page's square plate (DESIGN.md's A Part page and The square
