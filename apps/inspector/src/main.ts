@@ -13,6 +13,7 @@ import { BadScheme, emulatedMedia, type Scheme, takeTheScheme } from './colour-s
 import { developmentAdmin } from './development-admin.ts';
 import { madeUpShop } from './made-up-shop.ts';
 import { runTheInspector, tastesBrowser } from './taste.ts';
+import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 
 // Runs Taste's inspector on a screen of the dashboard as the development
 // Admin sees it, with the calls about Vendors and Offers answered from a
@@ -40,6 +41,10 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 
 const usage =
   'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--widths 1440,768,390] [--out DIR] [--app] [other options of inspect.mjs]';
+
+// Before any read: a refused type of service would stop the command where
+// nothing can catch it (`type-of-service.ts`).
+ignoreARefusedTypeOfService();
 
 // Where the API is during development, as the dashboard's settings have it.
 const apiUrl = process.env.VITE_API_URL ?? 'http://localhost:3001';

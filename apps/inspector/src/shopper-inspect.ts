@@ -18,6 +18,7 @@ import { BadCommandLine, shopperCommandLine } from './shopper-command-line.ts';
 import { type StandIn, startTheStandIn } from './stand-in-server.ts';
 import { runTheInspector, tastesBrowser } from './taste.ts';
 import { theShoppersShop } from './the-shoppers-shop.ts';
+import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 
 // Runs Taste's inspector on a page of the Shopper app, filled from the
 // made-up shop rather than the development database. Run it from the
@@ -47,6 +48,10 @@ import { theShoppersShop } from './the-shoppers-shop.ts';
 
 const usage =
   'usage: pnpm shopper:inspect <path without the language> [--language ckb|ar|en] [--scheme light|dark] [--widths 1440,768,390] [--out DIR] [other options of inspect.mjs]';
+
+// Before any read: a refused type of service would stop the command where
+// nothing can catch it (`type-of-service.ts`).
+ignoreARefusedTypeOfService();
 
 const shopperPort = 3100;
 const standInPort = 3101;

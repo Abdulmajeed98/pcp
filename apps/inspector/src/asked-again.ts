@@ -7,11 +7,10 @@
 // macOS. An answer is never asked again, whatever it says, and only reads,
 // which asking twice cannot change, are asked through it.
 //
-// Nothing here can catch that EINVAL when undici throws it from a socket's
-// own event, as for a connection reset as it opens (browse's code review):
-// it is thrown where no promise holds it, and the command stops, to be run
-// again. undici fixed it in nodejs/undici#5547, which Node 24.21.0 does not
-// hold yet.
+// No retry can catch that EINVAL when undici throws it from a socket's own
+// event, as for a connection reset as it opens (browse's code review), where
+// no promise holds it; both commands ignore it where it is thrown instead
+// (`type-of-service.ts`), until Node holds undici's fix, nodejs/undici#5547.
 export async function askedAgainIfItDrops(
   read: () => Promise<Response>,
   wait: (ms: number) => Promise<void> = (ms) =>

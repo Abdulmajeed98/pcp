@@ -4,7 +4,7 @@
 
 **Category:** bug
 
-**Status:** needs-triage
+**Status:** resolved
 
 **From:** browse's follow-ups list, swept on 7 November 2026: the code review's fixes, and the question the loose-ends session left open.
 
@@ -13,3 +13,14 @@
 **Checked on 7 November 2026.** `e06daad` has both commands ask a dropped read of the API again, which reaches what fetch rejects with (`ECONNRESET`, or `EINVAL` from a kept-alive connection already reset) but not this throw. Its message names undici's fix as nodejs/undici#5547, and says a run that stops on it is run again until Node holds that fix. The repository pins Node 24.21.0 in `.node-version`.
 
 **To decide.** Wait for the Node release that carries undici's fix and move the pinned version to it, or patch around the throw until then.
+
+## Comments
+
+### 7 November 2026: the owner's choice, and done
+
+Looked up first: undici released the fix in 8.8.0 (20 July 2026) and, backported, in 7.30.2 (5 November 2026). No Node 24 release carries it yet: 24.22.2, the newest, bundles undici 7.30.1. Node 26 LTS bundles 8.12.2. The owner chose to patch the two inspect commands rather than wait or move to Node 26.
+
+- **The patch.** `apps/inspector/src/type-of-service.ts`: `ignoreARefusedTypeOfService` wraps a socket's `setTypeOfService` so that a refusal is ignored and the socket goes on, as undici's fix does. Both commands call it before any read, in `main.ts` and `shopper-inspect.ts`. A type of service only asks the networks between for a priority, and the commands ask servers on this computer alone.
+- **Test first, at the inspector's unit seam** (`apps/inspector/src/test/type-of-service.spec.ts`). A real `net.Socket` whose handle answers EINVAL makes Node's own `setTypeOfService` throw "setTypeOfService EINVAL", as the crash did. With the patch left empty, the line that expects the socket to go on failed with that error; with the patch, it passed. A subclass's prototype is patched there, so no other test sees it.
+- **When to remove it.** `undiciIgnoresARefusedTypeOfService` names the releases that ignore the refusal themselves (7.30.2 and later in 7, 8.8.0 and later), tested on a table of releases. Its last line expects Node's own undici not to be one of them; when Node bundles one, that line fails, to say that the patch can go.
+- **Recorded.** The design skills guide's note on Node's fetch, and `asked-again.ts`'s comment, now say that both commands ignore the refusal where it is thrown.
