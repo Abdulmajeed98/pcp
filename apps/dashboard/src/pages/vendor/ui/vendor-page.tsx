@@ -1,4 +1,5 @@
 import type { VendorResponse } from '@pcp/api-client';
+import { googleMapsSearchFor, instagramHandleOf, instagramProfileOf } from '@pcp/links';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { PencilIcon } from 'lucide-react';
 import { useState } from 'react';
@@ -10,9 +11,6 @@ import {
   DeactivatedMark,
   Detail,
   DetailList,
-  googleMapsSearchFor,
-  instagramHandleOf,
-  instagramProfileOf,
   PhoneNumberShown,
   useVendor,
   WrittenOnLines,

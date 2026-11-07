@@ -145,7 +145,8 @@ async function readInEachLanguage<Shown, Read>(
 
 // A page as the server sent it, fetched with no browser: it declares its
 // language and its direction, it holds the switch's three links, and it holds
-// no Arabic-Indic digit.
+// no Arabic-Indic digit, but for what someone wrote, as the page in the
+// browser does (`expectWesternDigitsOnly`).
 async function expectWhatTheServerSent(
   page: Page,
   language: Language,
@@ -158,7 +159,7 @@ async function expectWhatTheServerSent(
   );
   expectTheSwitchInWhatTheServerSent(sent.links, address);
   expect(
-    arabicIndicDigitsIn(sent.text),
+    arabicIndicDigitsIn(sent.textButWhatSomeoneWrote),
     'the server sends the page with no Arabic-Indic digit',
   ).toEqual([]);
 }
@@ -493,6 +494,16 @@ export function expectADifferentTextInEachLanguage(texts: Map<Language, string>)
   );
 }
 
+// The same thing, read in each of the three languages, is the same in all
+// three: a Part's name, a price or a count, which are not translations.
+export function expectTheSameInEveryLanguage(read: Map<Language, unknown>): void {
+  const [inKurdish, inArabic, inEnglish] = languages.map((language) => read.get(language));
+
+  expect(inKurdish).toBeDefined();
+  expect(inArabic).toEqual(inKurdish);
+  expect(inEnglish).toEqual(inKurdish);
+}
+
 // A link in a page: the whole address it leads to, and the text a reader
 // sees in it.
 interface Link {
@@ -511,6 +522,7 @@ export async function fetchWithNoBrowser(
   language?: string;
   direction?: string;
   text: string;
+  textButWhatSomeoneWrote: string;
   links: Link[];
 }> {
   const response = await request.get(address);
@@ -522,6 +534,7 @@ export async function fetchWithNoBrowser(
     language: /\blang="([^"]*)"/.exec(openingTag)?.[1],
     direction: /\bdir="([^"]*)"/.exec(openingTag)?.[1],
     text: readableText(html),
+    textButWhatSomeoneWrote: readableText(html.replace(writtenAsSomeoneWroteIt, '')),
     links: linksIn(html, address),
   };
 }
@@ -566,6 +579,12 @@ const entities: Record<string, string> = {
   '&#39;': "'",
 };
 const anEntity = new RegExp(Object.keys(entities).join('|'), 'g');
+
+// What someone wrote, in a page's HTML: the text the platform shows as it
+// was written, a Vendor's name, address and opening hours, each in an
+// element whose direction comes from its text, as `AsWritten` draws it. It
+// holds what was written, Arabic-Indic digits and all (LANG-4).
+const writtenAsSomeoneWroteIt = /<bdi\b[^>]*\bdir="auto"[^>]*>[\s\S]*?<\/bdi>/g;
 
 // The elements that sit inside a line of text: the ones the HTML Standard
 // lists as text-level, but for the line break. A reader sees no gap where one

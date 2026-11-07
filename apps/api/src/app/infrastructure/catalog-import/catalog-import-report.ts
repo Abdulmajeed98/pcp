@@ -12,6 +12,8 @@ const recordReasons: Record<RecordLeftOutReason, string> = {
   noManufacturer: 'it has no manufacturer',
   copiesAnotherRecord: 'it has no manufacturer, and another record has its part number',
   knownCopy: 'it copies another record, as the list of known copies says',
+  sameAsAnotherRecord:
+    'it has the name, manufacturer and specifications of another record, whose Part takes its part numbers',
 };
 
 const valueReasons: Record<SpecificationProblemReason, string> = {

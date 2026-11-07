@@ -24,10 +24,12 @@
   },
   "include": [
     "proxy.ts",
+    "instrumentation.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "test/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts"
   ],
@@ -38,6 +40,9 @@
     },
     {
       "path": "../../libs/i18n"
+    },
+    {
+      "path": "../../libs/links"
     },
     {
       "path": "../../libs/compatibility"

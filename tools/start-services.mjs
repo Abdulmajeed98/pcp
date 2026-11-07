@@ -15,10 +15,12 @@ const root = join(import.meta.dirname, '..');
 const envFile = join(root, '.env');
 
 // A setting whose name ends in _PASSWORD or _SECRET gets a random value. Any
-// other setting needs a value here.
+// other setting needs a value here. An app's setting gets its development
+// value, the one the app takes when the setting is not set.
 const fixedValues = {
   KEYCLOAK_ADMINISTRATOR_NAME: 'keycloak-administrator',
   DEVELOPMENT_ADMIN_NAME: 'development-admin',
+  SHOPPER_PUBLIC_URL: 'http://localhost:3000',
 };
 
 function valueFor(name) {

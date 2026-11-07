@@ -1,33 +1,215 @@
 {
-  "App": {
-    "title": "Shopper app"
+  "Site": {
+    "name": "PC Parts and Prices"
   },
   "Frame": {
     "languageSwitch": "Language",
-    "currencySwitch": "Currency",
+    "currencySwitch": "Prices in",
     "currencies": {
       "IQD": "Dinars",
       "USD": "Dollars"
-    }
-  },
-  "PlaceholderPage": {
-    "notice": "Shopper app placeholder. Libraries: <english>{libraries}</english>.",
-    "apiStartedAt": "The API started at <time>{startedAt}</time>.",
-    "apiUnreachable": "The API cannot be reached.",
-    "pricesShownIn": {
-      "IQD": "Prices are shown in dinars.",
-      "USD": "Prices are shown in dollars."
     },
-    "sample": "A sample of each kind of text follows. Every value in it is made up.",
-    "partsFound": "{count, plural, one {{countText} Part found} other {{countText} Parts found}}",
-    "readsAt": "It reads at up to <english>{speed}</english>.",
-    "partLength": "The <english>{part}</english> is <english>{length}</english> long."
+    "schemeSwitch": "Colours",
+    "schemes": {
+      "light": "Light",
+      "dark": "Dark",
+      "device": "Device"
+    },
+    "schemeTurn": "Colours: {now}. Choose {next}"
   },
-  "NotFoundPage": {
-    "title": "Page not found",
-    "description": "This address matches no page."
+  "BackCover": {
+    "invitation": "Find your Part",
+    "chooseACategory": "Choose a Category",
+    "someCategories": "Some of the Categories",
+    "photographs": "Photographs on this page",
+    "photograph": "<source><english>{title}</english></source> by <english>{author}</english>, <licenceLink><english>{licence}</english></licenceLink>{changed, select, dimmed {, dimmed} cropped {, cropped} other {}}"
   },
   "Footer": {
     "credit": "Contains information from <openDbLink><english>{openDb}</english></openDbLink> which is made available under the <licenceLink><english>{licence}</english></licenceLink>."
+  },
+  "HomePage": {
+    "titleWords": {
+      "parts": "Parts",
+      "prices": "Prices",
+      "vendors": "Vendors"
+    },
+    "eightCategories": "Eight Categories",
+    "vendorsAndOffers": "{vendors, plural, one {{vendorsText} Vendor} other {{vendorsText} Vendors}}, {offers, plural, one {{offersText} Offer} other {{offersText} Offers}}",
+    "confirmedWithin": "{days, plural, one {Confirmed within a day} other {Confirmed within {daysText} days}}",
+    "lede": "Every Vendor's price for the Part you need, lowest first, each with the day it was last confirmed.",
+    "roomCaption": "A motherboard under red light",
+    "chooseACategory": "Choose a Category",
+    "categories": {
+      "note": "Every Part, priced by the Vendors who have it",
+      "theCore": "The core",
+      "aroundIt": "Around it",
+      "parts": "{count, plural, one {{countText} Part} other {{countText} Parts}}",
+      "lowestPrice": "Lowest Price",
+      "outOfStockEverywhere": "Out of stock at every Vendor",
+      "close": "{days, plural, one {Each price confirmed by its Vendor within the last day} other {Each price confirmed by its Vendor within the last {daysText} days}}",
+      "tabs": "Take a Category"
+    },
+    "plate": {
+      "title": "{count, plural, one {One Part, {countText} Vendor} other {One Part, {countText} Vendors}}",
+      "seeItsOffers": "{count, plural, one {See its Offer} other {See its {countText} Offers}}"
+    },
+    "facts": {
+      "heading": "Nobody buys a better place",
+      "note": "Listing is free, and every list is ordered by price, with the Offers in stock first. The platform takes no orders and no payment: you call the Vendor, message it on WhatsApp, or walk to its door.",
+      "vendors": "{count, plural, one {Vendor} other {Vendors}}",
+      "offers": "{count, plural, one {Offer, in stock or not} other {Offers, in stock or not}}",
+      "rate": "to the dollar, behind every ≈",
+      "days": "{days, plural, one {{daysText} day} other {{daysText} days}}",
+      "daysLine": "before an unconfirmed Offer is hidden",
+      "photoCaption": "A PC's expansion slots and their connectors"
+    }
+  },
+  "PriceSlip": {
+    "lowestPrice": "Lowest Price",
+    "highestInStock": "Highest in stock",
+    "vendors": "Vendors",
+    "inStock": "In stock",
+    "converted": "Converted ≈",
+    "rate": "Rate",
+    "outOfStockEverywhere": "Out of stock at every Vendor",
+    "stamp": "Lowest Price"
+  },
+  "Part": {
+    "outOfStock": "Out of stock",
+    "inStock": "In stock",
+    "vendors": "{count, plural, one {{countText} Vendor} other {{countText} Vendors}}"
+  },
+  "Offer": {
+    "confirmed": "{days, plural, =0 {Confirmed today} one {Confirmed {daysText} day ago} other {Confirmed {daysText} days ago}}",
+    "warranty": "{months, plural, one {{monthsText} month warranty} other {{monthsText} months warranty}}",
+    "quoted": "Quoted <english>{price}</english>"
+  },
+  "Paging": {
+    "pages": "Pages",
+    "pageOf": "Page {page} of {pages}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "pastTheEnd": "{pages, plural, one {This list has only {pagesText} page.} other {This list has only {pagesText} pages.}}",
+    "toTheFirstPage": "Go to the first page"
+  },
+  "SearchParts": {
+    "title": "Filters",
+    "label": "{category, select, cpu {Search CPUs} cpuCooler {Search CPU coolers} motherboard {Search motherboards} ram {Search RAM} storage {Search storage} gpu {Search GPUs} case {Search cases} psu {Search PSUs} other {Search Parts}}",
+    "placeholder": "Name, manufacturer or part number",
+    "show": "Show Parts",
+    "choicesOnCount": "{count, plural, one {{countText} choice on} other {{countText} choices on}}",
+    "manufacturer": "Manufacturer",
+    "filterNames": {
+      "socket": "Socket",
+      "cores": "Cores",
+      "waterCooled": "Air or liquid",
+      "radiatorSize": "Radiator size",
+      "formFactor": "Form factor",
+      "ramType": "RAM type",
+      "capacity": "Capacity",
+      "speed": "Speed",
+      "driveType": "SSD or HDD",
+      "interface": "Interface",
+      "chipset": "Chipset",
+      "memory": "Memory",
+      "wattage": "Wattage",
+      "efficiencyRating": "Efficiency rating"
+    },
+    "waterCooled": "{liquid, select, true {Liquid} other {Air}}",
+    "yesOrNo": "{yes, select, true {Yes} other {No}}",
+    "moreValues": "{count, plural, one {{countText} more} other {{countText} more}}",
+    "fewerValues": "Fewer",
+    "valueOfName": "{name} <english>{value}</english>",
+    "price": "Price, <english>{unit}</english>",
+    "lowest": "Lowest",
+    "highest": "Highest",
+    "priceProblems": {
+      "notAWholeNumber": "Not a whole number, so not used.",
+      "tooLarge": "Too large, so not used.",
+      "aboveTheHighest": "Above the highest, so not used."
+    },
+    "priceRange": "{ends, select, both {<english>{lowest}</english> to <english>{highest} {unit}</english>} lowest {From <english>{lowest} {unit}</english>} other {Up to <english>{highest} {unit}</english>}}",
+    "removeChoice": "Remove {choice}",
+    "removeThePriceRange": "Remove the price range {range}",
+    "choicesOn": "The choices that are on",
+    "removeTheSearch": "Remove the search {search}",
+    "clearAll": "Clear all"
+  },
+  "CategoryPage": {
+    "note": "{count, plural, one {{countText} Part that Vendors offer now, lowest price first.} other {{countText} Parts that Vendors offer now, lowest price first.}}",
+    "found": "{count, plural, one {{countText} Part found, lowest price first.} other {{countText} Parts found, lowest price first.}}",
+    "stamp": "Lowest price first",
+    "inStock": "In stock",
+    "outOfStockEverywhere": "Out of stock at every Vendor",
+    "close": "Lowest price first. Parts every Vendor has out of stock come last.",
+    "approximately": "≈ marks a price the platform converted from the currency the Vendor quoted, at the Platform Rate.",
+    "noneYet": "{category, select, cpu {No Vendor offers a CPU yet.} cpuCooler {No Vendor offers a CPU cooler yet.} motherboard {No Vendor offers a motherboard yet.} ram {No Vendor offers RAM yet.} storage {No Vendor offers storage yet.} gpu {No Vendor offers a GPU yet.} case {No Vendor offers a case yet.} psu {No Vendor offers a PSU yet.} other {No Vendor offers one yet.}}",
+    "noneYetLine": "Vendors add their Offers as they stock them.",
+    "chooseAnotherCategory": "Choose another Category",
+    "noMatch": "{category, select, cpu {No CPU matches your search and filters.} cpuCooler {No CPU cooler matches your search and filters.} motherboard {No motherboard matches your search and filters.} ram {No RAM matches your search and filters.} storage {No storage matches your search and filters.} gpu {No GPU matches your search and filters.} case {No case matches your search and filters.} psu {No PSU matches your search and filters.} other {No Part matches your search and filters.}}",
+    "notRead": "The list cannot be read just now. Try again in a moment.",
+    "tryAgain": "Try again"
+  },
+  "PartPage": {
+    "partNumbers": "{count, plural, one {Part number} other {Part numbers}}",
+    "lowestPrice": "Lowest Price",
+    "outOfStockEverywhere": "Out of stock at every Vendor",
+    "offersTitle": "{count, plural, one {{countText} Vendor offers it} other {{countText} Vendors offer it}}",
+    "offersNote": "In stock first, then lowest price. No Vendor pays for its place.",
+    "inStock": "In stock",
+    "outOfStock": "Out of stock",
+    "specifications": "Specifications",
+    "noSpecifications": "The catalog holds no specifications of this Part yet.",
+    "barcode": "Part number {number}",
+    "notRead": {
+      "title": "This Part cannot be read just now",
+      "note": "Try again in a moment."
+    },
+    "tryAgain": "Try again"
+  },
+  "VendorPage": {
+    "openingHours": "Opening hours",
+    "whatItIs": "A Vendor of PC Parts in {city}.",
+    "contactLinks": "How to reach it",
+    "call": "Call",
+    "whatsApp": "WhatsApp",
+    "instagram": "Instagram",
+    "map": "Open in Google Maps",
+    "inANewTab": ", in a new tab",
+    "tabs": "Call the Vendor",
+    "offersTitle": "{count, plural, =0 {Offers from this Vendor} one {{countText} Offer from this Vendor} other {{countText} Offers from this Vendor}}",
+    "offersNote": "By Category, in stock first, then lowest price.",
+    "none": "This Vendor has no Offer to show now.",
+    "offersNotRead": "Its Offers cannot be read just now. Try again in a moment.",
+    "notRead": {
+      "title": "This Vendor cannot be read just now",
+      "note": "Try again in a moment."
+    },
+    "tryAgain": "Try again"
+  },
+  "NotFoundPage": {
+    "title": "Page not found",
+    "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped.",
+    "chooseACategory": "Choose a Category"
+  },
+  "Preview": {
+    "titleOfAPage": "{page} · {site}",
+    "home": {
+      "title": "PC Parts and Prices",
+      "description": "Compare every Vendor's price for the PC Parts you need: lowest first, each with the day it was last confirmed, in dinars or dollars."
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped."
+    },
+    "category": {
+      "description": "{category, select, cpu {Every CPU the Vendors offer now, each at its lowest price, in dinars or dollars.} cpuCooler {Every CPU cooler the Vendors offer now, each at its lowest price, in dinars or dollars.} motherboard {Every motherboard the Vendors offer now, each at its lowest price, in dinars or dollars.} ram {All the RAM the Vendors offer now, each kit at its lowest price, in dinars or dollars.} storage {All the storage the Vendors offer now, each drive at its lowest price, in dinars or dollars.} gpu {Every GPU the Vendors offer now, each at its lowest price, in dinars or dollars.} case {Every case the Vendors offer now, each at its lowest price, in dinars or dollars.} psu {Every PSU the Vendors offer now, each at its lowest price, in dinars or dollars.} other {Every Part the Vendors offer now, each at its lowest price, in dinars or dollars.}}"
+    },
+    "part": {
+      "description": "{part}, {category, select, cpu {a CPU} cpuCooler {a CPU cooler} motherboard {a motherboard} ram {RAM} storage {a storage drive} gpu {a GPU} case {a case} psu {a PSU} other {a Part}} by {manufacturer}. {count, plural, one {{countText} Vendor offers it} other {{countText} Vendors offer it}}, each price confirmed by its Vendor."
+    },
+    "vendor": {
+      "description": "{vendor}, a Vendor in {city}. How to call, message or find it, and every PC Part it offers now."
+    }
   }
 }

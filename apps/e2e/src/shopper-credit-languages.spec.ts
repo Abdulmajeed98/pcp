@@ -97,7 +97,75 @@ test('the credit\'s two names keep their own direction in each language, and lin
   );
 });
 
-test('the first page, with its credit, meets the automated part of WCAG 2.2 level AA in each language, in light and in dark', async ({
+// The photographs a page shows, each credited on that page (DESIGN.md's The
+// photographs, and The footer's credit): by its title and its author, kept in
+// English and apart from the sentence around them, its title a link to its
+// source, and by its licence, a link to the licence. They are written out
+// here, and not read from the platform's code, so that a credit that points
+// elsewhere fails here. The home page shows three, and the not-found page
+// one.
+const ccBy2 = 'https://creativecommons.org/licenses/by/2.0/';
+const ccBy4 = 'https://creativecommons.org/licenses/by/4.0/';
+const redLitMotherboard = {
+  source: 'https://commons.wikimedia.org/w/index.php?curid=186624319',
+  licence: ccBy2,
+};
+const builtPc = {
+  source: 'https://commons.wikimedia.org/w/index.php?curid=147760057',
+  licence: ccBy4,
+};
+const caseConnectors = {
+  source: 'https://commons.wikimedia.org/w/index.php?curid=196551757',
+  licence: ccBy2,
+};
+
+// The photographs' credits on the page, each by where its two links lead,
+// once each is checked to keep its English apart.
+async function readThePhotographsCredits(
+  page: Page,
+): Promise<{ source: string; licence: string }[]> {
+  const credits = page
+    .getByRole('contentinfo')
+    .getByTestId('photograph-credits')
+    .getByRole('listitem');
+  await expect(credits.first()).toBeVisible();
+
+  const read: { source: string; licence: string }[] = [];
+  for (const credit of await credits.all()) {
+    for (const kept of await credit.locator('bdi').all()) {
+      expect(await layoutOf(kept), 'its English keeps its own direction').toEqual({
+        direction: 'ltr',
+        keptApart: true,
+      });
+    }
+    const [source, licence] = await credit
+      .getByRole('link')
+      .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).href));
+    read.push({ source, licence });
+  }
+  return read;
+}
+
+test('each photograph a page shows is credited on it, in each language: its title and author kept in English, its title a link to its source, and its licence a link to the licence', async ({
+  page,
+}) => {
+  const onTheFirstPage = await readInEveryLanguage(page, '', () =>
+    readThePhotographsCredits(page),
+  );
+  for (const credits of onTheFirstPage.values()) {
+    expect(credits).toEqual([redLitMotherboard, builtPc, caseConnectors]);
+  }
+
+  const onTheMissingPage = await readInEveryLanguage(
+    page,
+    '/no-such-page',
+    () => readThePhotographsCredits(page),
+    { drawnByScript: true },
+  );
+  for (const credits of onTheMissingPage.values()) expect(credits).toEqual([builtPc]);
+});
+
+test('the first page, with its credits, meets the automated part of WCAG 2.2 level AA in each language, in light and in dark', async ({
   page,
 }) => {
   await readInEveryLanguage(page, '', async () => {

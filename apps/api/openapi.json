@@ -842,6 +842,46 @@
         "tags": ["Vendor"]
       }
     },
+    "/v1/visible-vendors/{vendorId}": {
+      "get": {
+        "operationId": "readVisibleVendor",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisibleVendorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "An active Vendor's name, city and contact details, as it writes them, with null for each detail it has not given; a deactivated Vendor is answered as one that does not exist",
+        "tags": ["VisibleVendors"]
+      }
+    },
     "/v1/vendors/{vendorId}/offers": {
       "post": {
         "operationId": "createOffer",
@@ -1257,6 +1297,509 @@
         "security": [],
         "summary": "A Part's visible Offers: not Expired Offers, of active Vendors only, each with its Shown Price in the chosen currency and how many days ago it was confirmed, in-stock first and then the lowest Shown Price first, with Offers that have none after the others",
         "tags": ["PartOffers"]
+      }
+    },
+    "/v1/visible-parts": {
+      "get": {
+        "operationId": "listVisibleParts",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "description": "The Category whose Visible Parts are listed.",
+            "schema": {
+              "example": "cpu",
+              "type": "string",
+              "enum": [
+                "cpu",
+                "cpuCooler",
+                "motherboard",
+                "ram",
+                "storage",
+                "gpu",
+                "case",
+                "psu"
+              ]
+            }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which each Part's Lowest Price is in and the Parts are ordered by.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Words a Part must hold, in any order and any case, in its name, its manufacturer or a part number. Left out or empty, every Visible Part of the Category is found.",
+            "schema": {
+              "example": "ryzen 7600",
+              "type": "string"
+            }
+          },
+          {
+            "name": "manufacturer",
+            "required": false,
+            "in": "query",
+            "description": "Manufacturers, repeated for several: a Part of any of them is found. Left out, a Part of any manufacturer is.",
+            "schema": {
+              "example": ["AMD", "Intel"],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "lowest",
+            "required": false,
+            "in": "query",
+            "description": "The price range's lowest end, in whole ones of the chosen currency, whole dollars or whole dinars, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out. Refused when it is above the highest end.",
+            "schema": {
+              "minimum": 0,
+              "example": 250000,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "highest",
+            "required": false,
+            "in": "query",
+            "description": "The price range's highest end, in whole ones of the chosen currency, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out.",
+            "schema": {
+              "minimum": 0,
+              "example": 500000,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "socket",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for CPUs, the Socket at `socket`; for motherboards, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "cores",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for CPUs, the Cores at `cores.total`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "waterCooled",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for CPU coolers, the Liquid cooled at `water_cooled`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "name": "radiatorSize",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for CPU coolers, the Radiator size at `radiator_size`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "formFactor",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for motherboards, the Form factor at `form_factor`; for cases, the Form factor at `form_factor`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "ramType",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for motherboards, the Memory type at `memory.ram_type`; for RAM, the Memory type at `ram_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "capacity",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for RAM, the Total capacity at `capacity`; for storage, the Capacity at `capacity`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "speed",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for RAM, the Speed at `speed`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "driveType",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for storage, the Drive type at `storage_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "interface",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for storage, the Interface at `interface`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "chipset",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for GPUs, the Chipset at `chipset`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "memory",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for GPUs, the Memory at `memory`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "wattage",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for PSUs, the Wattage at `wattage`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "efficiencyRating",
+            "required": false,
+            "in": "query",
+            "description": "A filter: for PSUs, the Efficiency rating at `efficiency_rating`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisiblePartPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last",
+        "tags": ["VisibleParts"]
+      }
+    },
+    "/v1/visible-parts/filters": {
+      "get": {
+        "operationId": "readVisiblePartsFilters",
+        "parameters": [
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "description": "The Category whose filters are answered.",
+            "schema": {
+              "example": "cpu",
+              "type": "string",
+              "enum": [
+                "cpu",
+                "cpuCooler",
+                "motherboard",
+                "ram",
+                "storage",
+                "gpu",
+                "case",
+                "psu"
+              ]
+            }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which the range of Lowest Prices is in.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisiblePartsFiltersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied",
+        "tags": ["VisibleParts"]
+      }
+    },
+    "/v1/visible-parts/{partId}": {
+      "get": {
+        "operationId": "readVisiblePart",
+        "parameters": [
+          {
+            "name": "partId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisiblePartWithSpecificationsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Visible Part, a Part with at least one Visible Offer, with its specifications labelled in English; a Part that is not visible is answered as one that does not exist",
+        "tags": ["VisiblePart"]
+      }
+    },
+    "/v1/visible-vendors/{vendorId}/offers": {
+      "get": {
+        "operationId": "listVisibleOffersOfVendor",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which each Offer's Shown Price is in and the Offers of each Category are ordered by.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisibleOfferOfVendorPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "One page of an active Vendor's visible Offers: not Expired Offers, each with its Part, its Shown Price in the chosen currency and how many days ago it was confirmed, grouped by Category in the catalog's order, and within each in stock first and then the lowest Shown Price first; a deactivated Vendor is answered as one that does not exist",
+        "tags": ["VisibleVendorOffers"]
+      }
+    },
+    "/v1/platform-figures": {
+      "get": {
+        "operationId": "readPlatformFigures",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformFiguresResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "The platform's figures: how many active Vendors it has, how many Visible Offers it lists, the current Platform Rate in whole dinars per dollar or none, and how many days an Offer stays current without a Confirmation",
+        "tags": ["PlatformFigures"]
       }
     },
     "/v1/platform-rate": {
@@ -2383,6 +2926,83 @@
         },
         "required": ["temporaryPassword"]
       },
+      "VisibleVendorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "5c2a9e1f-7d3b-4e8a-9f60-1b2c3d4e5f6a"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as it writes it.",
+            "example": "Made-up Computer Shop"
+          },
+          "city": {
+            "type": "string",
+            "description": "The city the Vendor is in.",
+            "enum": ["erbil"],
+            "example": "erbil"
+          },
+          "address": {
+            "type": "string",
+            "description": "The Vendor's address, as it writes it, on one or more lines.",
+            "example": "Made-up Street, Erbil"
+          },
+          "mapLocation": {
+            "description": "Where the Vendor is, or null when it has not been given.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MapLocationResponse"
+              }
+            ]
+          },
+          "phoneNumber": {
+            "description": "The Vendor's phone number, a mobile number or a landline.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberResponse"
+              }
+            ]
+          },
+          "whatsAppNumber": {
+            "description": "The Vendor's WhatsApp number, or null when it has none.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberResponse"
+              }
+            ]
+          },
+          "instagramName": {
+            "type": "string",
+            "description": "The Vendor's Instagram name, bare and in lower case, or null when it has none.",
+            "nullable": true,
+            "example": "made_up.shop"
+          },
+          "openingHours": {
+            "type": "string",
+            "description": "The Vendor's opening hours, as it writes them, on one or more lines, or null when it has not given them.",
+            "nullable": true,
+            "example": "Saturday to Thursday, 9 to 9"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "city",
+          "address",
+          "mapLocation",
+          "phoneNumber",
+          "whatsAppNumber",
+          "instagramName",
+          "openingHours"
+        ]
+      },
       "CreateOfferRequest": {
         "type": "object",
         "properties": {
@@ -2853,22 +3473,6 @@
         "type": "string",
         "enum": ["USD", "IQD"]
       },
-      "VisibleOfferVendorResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The Vendor's identifier on the platform.",
-            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
-          },
-          "name": {
-            "type": "string",
-            "description": "The Vendor's name, as the Vendor writes it.",
-            "example": "Made-up Computer Shop"
-          }
-        },
-        "required": ["id", "name"]
-      },
       "ShownPriceResponse": {
         "type": "object",
         "properties": {
@@ -2894,17 +3498,25 @@
         },
         "required": ["currency", "amount", "converted"]
       },
+      "VisibleOfferVendorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as the Vendor writes it.",
+            "example": "Made-up Computer Shop"
+          }
+        },
+        "required": ["id", "name"]
+      },
       "VisibleOfferResponse": {
         "type": "object",
         "properties": {
-          "vendor": {
-            "description": "The Vendor.",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/VisibleOfferVendorResponse"
-              }
-            ]
-          },
           "usdPrice": {
             "type": "string",
             "description": "The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.",
@@ -2946,17 +3558,539 @@
             "type": "number",
             "description": "The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.",
             "example": 3
+          },
+          "vendor": {
+            "description": "The Vendor.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisibleOfferVendorResponse"
+              }
+            ]
           }
         },
         "required": [
-          "vendor",
           "usdPrice",
           "iqdPrice",
           "shownPrice",
           "inStock",
           "warrantyMonths",
           "confirmedAt",
-          "daysSinceConfirmation"
+          "daysSinceConfirmation",
+          "vendor"
+        ]
+      },
+      "VisiblePartResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Part's identifier on the platform.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "category": {
+            "type": "string",
+            "description": "The Part's Category.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Part's name.",
+            "example": "AMD Ryzen 5 7600"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "The Part's manufacturer.",
+            "example": "AMD"
+          },
+          "partNumbers": {
+            "description": "The manufacturer's part numbers.",
+            "example": ["100-100001015BOX"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          },
+          "lowestPrice": {
+            "description": "The Lowest Price: the lowest Shown Price among the Part's in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is. Null when no Visible Offer is in stock, and when none in stock has a Shown Price, which happens only when no Platform Rate has been set.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "vendorCount": {
+            "type": "number",
+            "description": "How many Vendors have a Visible Offer for the Part, in stock or not.",
+            "example": 3
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether any Visible Offer for the Part is in stock. False when every Vendor has it out of stock."
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "name",
+          "manufacturer",
+          "partNumbers",
+          "photoPath",
+          "lowestPrice",
+          "vendorCount",
+          "inStock"
+        ]
+      },
+      "VisiblePartPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Visible Parts: those with a Lowest Price first, the lowest first; then those in stock with none; then those every Vendor has out of stock; then by name.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VisiblePartResponse"
+            }
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content"
+        ]
+      },
+      "FilterKind": {
+        "type": "string",
+        "enum": ["number", "text", "yesNo"],
+        "description": "The kind of value it offers: a whole number, text, or yes or no."
+      },
+      "FilterResponse": {
+        "type": "object",
+        "properties": {
+          "parameter": {
+            "type": "string",
+            "description": "The parameter a Category's list of Visible Parts is narrowed by it with, repeated for several values.",
+            "example": "socket"
+          },
+          "kind": {
+            "description": "The kind of value it offers: a whole number, text, or yes or no.",
+            "example": "text",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FilterKind"
+              }
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit of a number.",
+            "example": "GB"
+          },
+          "values": {
+            "type": "array",
+            "description": "The distinct values the Visible Parts hold, numbers by size and text alphabetically, as a Part's specifications hold them: never one that stands for \"not known\".",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "example": ["AM4", "AM5"]
+          }
+        },
+        "required": ["parameter", "kind", "values"]
+      },
+      "PriceRangeResponse": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "description": "The chosen currency.",
+            "example": "IQD",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "lowest": {
+            "type": "string",
+            "description": "The lowest of the Visible Parts' Lowest Prices, as decimal text, as a Lowest Price's amount is. Null when none has a Lowest Price.",
+            "nullable": true,
+            "example": "410000"
+          },
+          "highest": {
+            "type": "string",
+            "description": "The highest of the Visible Parts' Lowest Prices, as decimal text. Null when none has a Lowest Price.",
+            "nullable": true,
+            "example": "1250000"
+          }
+        },
+        "required": ["currency", "lowest", "highest"]
+      },
+      "VisiblePartsFiltersResponse": {
+        "type": "object",
+        "properties": {
+          "manufacturers": {
+            "description": "The Visible Parts' manufacturers, alphabetically.",
+            "example": ["AMD", "Intel"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filters": {
+            "description": "The Category's filters that some Visible Part holds a value of, in the order a form shows them, each with its values.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FilterResponse"
+            }
+          },
+          "priceRange": {
+            "description": "The range of the Visible Parts' Lowest Prices.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceRangeResponse"
+              }
+            ]
+          }
+        },
+        "required": ["manufacturers", "filters", "priceRange"]
+      },
+      "LabelledSpecificationResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The specification's place in a Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it. For a field of a row, its name in the row.",
+            "example": "specifications.tdp"
+          },
+          "label": {
+            "type": "string",
+            "description": "The specification's English label.",
+            "example": "TDP"
+          },
+          "kind": {
+            "type": "string",
+            "description": "The kind of value it holds, which says how to show it.",
+            "enum": [
+              "wholeNumber",
+              "decimalNumber",
+              "text",
+              "yesNo",
+              "oneOf",
+              "severalOf",
+              "listOfText",
+              "listOfRows"
+            ],
+            "example": "wholeNumber"
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit of a number, or null when it has none.",
+            "nullable": true,
+            "example": "W"
+          },
+          "value": {
+            "description": "What the Part holds: a number, in the unit; a text; true or false, for yes or no; a list of texts, for a choice of several or a list of text; or, for a list of rows, each row as the list of the fields it holds, answered as a specification is, and no rows when the Part has none.",
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LabelledSpecificationResponse"
+                  }
+                }
+              }
+            ],
+            "example": 65
+          }
+        },
+        "required": ["path", "label", "kind", "unit", "value"]
+      },
+      "VisiblePartWithSpecificationsResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Part's identifier on the platform.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "category": {
+            "type": "string",
+            "description": "The Part's Category.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Part's name.",
+            "example": "AMD Ryzen 5 7600"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "The Part's manufacturer.",
+            "example": "AMD"
+          },
+          "partNumbers": {
+            "description": "The manufacturer's part numbers.",
+            "example": ["100-100001015BOX"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          },
+          "specifications": {
+            "description": "The specifications the Part holds, in the order of its Category's specification list, each with its English label and unit. One it lacks is left out, and so is a 0 where 0 stands for \"not known\".",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LabelledSpecificationResponse"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "name",
+          "manufacturer",
+          "partNumbers",
+          "photoPath",
+          "specifications"
+        ]
+      },
+      "VisibleOfferOfVendorResponse": {
+        "type": "object",
+        "properties": {
+          "usdPrice": {
+            "type": "string",
+            "description": "The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": "349.99"
+          },
+          "iqdPrice": {
+            "type": "number",
+            "description": "The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.",
+            "nullable": true,
+            "example": 525000
+          },
+          "shownPrice": {
+            "description": "The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether the Vendor has the Part in stock."
+          },
+          "warrantyMonths": {
+            "type": "number",
+            "description": "The warranty, in whole months, or null when the Vendor states none.",
+            "nullable": true,
+            "example": 12
+          },
+          "confirmedAt": {
+            "type": "string",
+            "description": "When the Vendor last confirmed the Offer.",
+            "format": "date-time"
+          },
+          "daysSinceConfirmation": {
+            "type": "number",
+            "description": "The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.",
+            "example": 3
+          },
+          "part": {
+            "description": "The Part offered.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartSummaryResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "usdPrice",
+          "iqdPrice",
+          "shownPrice",
+          "inStock",
+          "warrantyMonths",
+          "confirmedAt",
+          "daysSinceConfirmation",
+          "part"
+        ]
+      },
+      "VisibleOfferOfVendorPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Offers, grouped by their Parts' Categories in the catalog's order, and within each Category in stock first, then the lowest Shown Price, with Offers that have none after the others, then the most recent Confirmation, then the Part's name.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VisibleOfferOfVendorResponse"
+            }
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content"
+        ]
+      },
+      "PlatformFiguresResponse": {
+        "type": "object",
+        "properties": {
+          "activeVendorCount": {
+            "type": "number",
+            "description": "How many active Vendors the platform has, one with no Visible Offer among them. A deactivated Vendor is not counted.",
+            "example": 21
+          },
+          "visibleOfferCount": {
+            "type": "number",
+            "description": "How many Visible Offers the platform lists, in stock or not: Offers that are not Expired Offers, of active Vendors.",
+            "example": 852
+          },
+          "iqdPerUsd": {
+            "type": "number",
+            "description": "The current Platform Rate, in whole dinars per dollar, or null until the Admin sets the first.",
+            "nullable": true,
+            "example": 1575
+          },
+          "daysAnOfferStaysCurrent": {
+            "type": "number",
+            "description": "How many days an Offer stays current without a Confirmation: one last confirmed longer ago is an Expired Offer, which no Shopper sees.",
+            "example": 14
+          }
+        },
+        "required": [
+          "activeVendorCount",
+          "visibleOfferCount",
+          "iqdPerUsd",
+          "daysAnOfferStaysCurrent"
         ]
       },
       "CurrentPlatformRateResponse": {

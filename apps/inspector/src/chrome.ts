@@ -1,5 +1,6 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
+import { askedAgainIfItDrops } from './asked-again.ts';
 import {
   answerFromTheMadeUpShop,
   catalogSearchOfTheShop,
@@ -34,7 +35,7 @@ function header(request: PausedRequest['request'], name: string): string | undef
 // Waits until an expression is true in the page, at most `timeoutMs`. A page
 // on its way to another address cannot be asked, and counts as not yet. It
 // asks at least once.
-async function until(
+export async function until(
   page: TastePage,
   expression: string,
   timeoutMs: number,
@@ -261,12 +262,15 @@ export async function answerFromTheShopIn(
           .catch(() => {});
 
       // The list of Vendors: the API's own page, read here with the tab's
-      // Authorization, and the shop's Vendor put among them.
+      // Authorization, asked again when its connection drops, and the shop's
+      // Vendor put among them.
       if (listsTheVendors(call)) {
         const authorization = header(request, 'Authorization');
-        void fetch(request.url, {
-          headers: authorization === undefined ? {} : { Authorization: authorization },
-        })
+        void askedAgainIfItDrops(() =>
+          fetch(request.url, {
+            headers: authorization === undefined ? {} : { Authorization: authorization },
+          }),
+        )
           .then(async (response) => ({
             status: response.status,
             body: (await response.json()) as unknown,
@@ -278,14 +282,17 @@ export async function answerFromTheShopIn(
       }
 
       // A search of the catalog for the shop's Vendor: the API's own search,
-      // read here with the tab's Authorization, without the Vendor, and the
-      // Parts the shop offers marked with its Offers.
+      // read here with the tab's Authorization, asked again when its
+      // connection drops, without the Vendor, and the Parts the shop offers
+      // marked with its Offers.
       const search = catalogSearchOfTheShop(shop, call);
       if (search !== undefined) {
         const authorization = header(request, 'Authorization');
-        void fetch(`${apiUrl}${search}`, {
-          headers: authorization === undefined ? {} : { Authorization: authorization },
-        })
+        void askedAgainIfItDrops(() =>
+          fetch(`${apiUrl}${search}`, {
+            headers: authorization === undefined ? {} : { Authorization: authorization },
+          }),
+        )
           .then(async (response) => ({
             status: response.status,
             body: (await response.json()) as unknown,

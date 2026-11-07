@@ -1,7 +1,14 @@
 import type { Locator, Page } from '@playwright/test';
 
-// One frame of a film: when the page drew it, by its own clock, and what the
-// film's `look` saw in it.
+// One frame of a film: when the page drew it, and what the film's `look`
+// saw in it. The time is the frame's own, which the browser hands every
+// callback of a frame and samples every animation at, and not the moment the
+// callback ran: while a page is busy, as one that prints as it opens is while
+// its script takes over, callbacks run late and bunched, and a frame's whole
+// step would seem to take a millisecond or two. Slowed by DevTools, a
+// frame's own time runs as slowly as the animations, so it is multiplied by
+// the slowing, and a film's times are those a person would see at the
+// slowed speed, as the page's own clock tells them.
 export interface Filmed<Frame> {
   at: number;
   drawn: Frame;
@@ -30,19 +37,19 @@ export async function film<Frame, Arg = undefined>(
   const looking = await page.evaluateHandle(`(${look.toString()})`);
   try {
     await page.evaluate(
-      ([lookAt, given]) => {
+      ([lookAt, given, slowing]) => {
         const reel = { frames: [] as { at: number; drawn: unknown }[], on: true };
         (window as unknown as { reel: typeof reel }).reel = reel;
-        const draw = () => {
+        const draw = (frameTime: number) => {
           reel.frames.push({
-            at: performance.now(),
+            at: frameTime * slowing,
             drawn: (lookAt as unknown as (arg: unknown) => unknown)(given),
           });
           if (reel.on) requestAnimationFrame(draw);
         };
         requestAnimationFrame(draw);
       },
-      [looking, arg] as const,
+      [looking, arg, slowedBy] as const,
     );
     await act();
     await page.waitForTimeout(forMs);
@@ -55,6 +62,50 @@ export async function film<Frame, Arg = undefined>(
     })) as Filmed<Frame>[];
   } finally {
     await looking.dispose();
+    await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 });
+    await devtools.detach();
+  }
+}
+
+// Films a page from the first frame its document draws: calls `look` in the
+// page at every frame from the moment the document starts, while `open`
+// brings the page up and for `forMs` after it, with every animation and
+// transition slowed by `slowedBy`. A movement that starts as a page opens,
+// such as a sheet printing on arrival, has begun before `film` could start,
+// since that films a document that is already there. `look` is sent to the
+// page as its source, so it can use nothing but the page's own globals.
+export async function filmFromTheFirstFrame<Frame>(
+  page: Page,
+  look: () => Frame,
+  open: () => Promise<void>,
+  { slowedBy = 4, forMs = 1600 }: { slowedBy?: number; forMs?: number } = {},
+): Promise<Filmed<Frame>[]> {
+  const devtools = await page.context().newCDPSession(page);
+  await devtools.send('Animation.enable');
+  await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 / slowedBy });
+  const record = (lookAt: () => unknown, slowing: number) => {
+    const reel = { frames: [] as { at: number; drawn: unknown }[], on: true };
+    (window as unknown as { reel: typeof reel }).reel = reel;
+    const draw = (frameTime: number) => {
+      reel.frames.push({ at: frameTime * slowing, drawn: lookAt() });
+      if (reel.on) requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+  };
+  await page.addInitScript({
+    content: `(${record.toString()})(${look.toString()}, ${slowedBy})`,
+  });
+  try {
+    await open();
+    await page.waitForTimeout(forMs);
+    return (await page.evaluate(() => {
+      const { reel } = window as unknown as {
+        reel: { frames: unknown[]; on: boolean };
+      };
+      reel.on = false;
+      return reel.frames;
+    })) as Filmed<Frame>[];
+  } finally {
     await devtools.send('Animation.setPlaybackRate', { playbackRate: 1 });
     await devtools.detach();
   }

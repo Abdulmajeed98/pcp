@@ -1,17 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { databaseErrorOf, PageAttributes, ServerError, StructuredError } from '@pcp/core';
-import { and, asc, count, desc, eq, gt, gte, lt, sql, SQL } from 'drizzle-orm';
+import {
+  databaseErrorOf,
+  PageableAttributes,
+  PageAttributes,
+  ServerError,
+  StructuredError,
+} from '@pcp/core';
+import { and, asc, count, eq, gt, gte, lt, sql, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import {
   aboutToExpireIfConfirmedBefore,
   expiredIfConfirmedBefore,
 } from '~/domain/offer/expiry';
-import { Currency, currencyFacts } from '~/domain/currency/currency';
+import { Currency } from '~/domain/currency/currency';
 import { Offer } from '~/domain/offer/Offer';
 import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import { OfferState } from '~/domain/offer/offer-state';
-import { convertedPriceIn, ShownPrice, WholeNumbers } from '~/domain/offer/shown-price';
+import { ShownPrice } from '~/domain/offer/shown-price';
 import {
   CreateOfferParams,
   EditOfferParams,
@@ -26,10 +32,11 @@ import {
 } from '~/domain/offer/OfferStore';
 import { VendorWithExpiringOffers } from '~/domain/offer/VendorWithExpiringOffers';
 import { PhoneNumber } from '~/domain/phone-number/PhoneNumber';
-import { visibleOfferRuleAt } from '~/domain/offer/visibility';
 import { VisibleOffer } from '~/domain/offer/VisibleOffer';
+import { VisibleOffersOfVendorPage } from '~/domain/offer/VisibleOffersOfVendorPage';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
+import { onePageOf } from '~/infrastructure/database/paging';
 import { brokeUniqueRule } from '~/infrastructure/database/unique-rule';
 import { part, PartRow } from '~/infrastructure/part/part.schema';
 import { partOf } from '~/infrastructure/part/part-of-row';
@@ -39,6 +46,12 @@ import { currentPlatformRate } from '~/infrastructure/platform-rate/current-plat
 import { vendor } from '~/infrastructure/vendor/vendor.schema';
 
 import { offer, offerHistory, OfferRow, oneOfferForAPart } from '../offer.schema';
+import { shownPriceIn } from '../shown-price-in-the-database';
+import { visibleOffer } from '../visible-offer';
+import {
+  inTheOrderOfAPartsOffers,
+  inTheOrderOfAVendorsOffers,
+} from '../visible-offers-order';
 
 // An Offer's row with its Part's row and its photo's identifier, as a read
 // gives them.
@@ -47,18 +60,6 @@ const offerWithPart = { offer, part, photoId: partPhoto.id };
 // How many rows meet a condition, as a number.
 function countWhere(condition: SQL | undefined): SQL<number> {
   return sql<number>`count(*) filter (where ${condition})`.mapWith(Number);
-}
-
-// The rule for a visible Offer, as the database asks it, at now by the API's
-// clock: of an active Vendor, and not an Expired Offer (`visibility.ts`). A
-// query that uses it joins the Vendor. Every query of visible Offers uses it,
-// and no other.
-function visibleOffer(now: Date): SQL | undefined {
-  const rule = visibleOfferRuleAt(now);
-  return and(
-    eq(vendor.active, rule.vendorActive),
-    gte(offer.confirmedAt, rule.confirmedFrom),
-  );
 }
 
 // An Expired Offer, and one about to expire, as the database asks them, at now
@@ -72,56 +73,6 @@ function aboutToExpireAt(now: Date): SQL | undefined {
     gte(offer.confirmedAt, expiredIfConfirmedBefore(now)),
     lt(offer.confirmedAt, aboutToExpireIfConfirmedBefore(now)),
   );
-}
-
-// Whole numbers as the database computes them, in `bigint`, so that a price
-// at the top of the Offers' limits times the highest rate cannot overflow.
-// Its division of two positive whole numbers rounds down.
-const inTheDatabase: WholeNumbers<SQL> = {
-  of: (value) => sql`${value}::bigint`,
-  plus: (a, b) => sql`(${a} + ${b})`,
-  times: (a, b) => sql`(${a} * ${b})`,
-  over: (a, b) => sql`(${a} / ${b})`,
-  greatest: (a, b) => sql`greatest(${a}, ${b})`,
-};
-
-// An Offer's Quoted Price in each currency, in its unit, or null.
-const quotedPrice = {
-  USD: offer.usdPriceCents,
-  IQD: offer.iqdPrice,
-} satisfies Record<Currency, unknown>;
-function quotedPriceIn(currency: Currency): SQL {
-  return sql`${quotedPrice[currency]}`;
-}
-
-// An Offer's Shown Price in a currency, in its unit, as the database asks it
-// at a Platform Rate: its Quoted Price in that currency if it has one, else
-// its Converted Price by the rule in `shown-price.ts`, else null when there
-// is no rate. A query that uses it joins the current rate, read in the same
-// query as its Offers.
-function shownPriceIn(
-  currency: Currency,
-  iqdPerUsd: SQL,
-): {
-  amount: SQL<number | null>;
-  converted: SQL<boolean>;
-} {
-  const quoted = quotedPriceIn(currency);
-  const other = quotedPriceIn(currencyFacts[currency].other);
-  const converted = convertedPriceIn(
-    inTheDatabase,
-    currency,
-    sql`${other}::bigint`,
-    sql`${iqdPerUsd}::bigint`,
-  );
-  return {
-    amount: sql<
-      number | null
-    >`coalesce(${quoted}::bigint, case when ${iqdPerUsd} is not null and ${other} is not null then ${converted} end)`.mapWith(
-      Number,
-    ),
-    converted: sql<boolean>`${quoted} is null`,
-  };
 }
 
 // An Offer out of stock.
@@ -395,37 +346,39 @@ export class DatabaseOfferStore implements OfferStore {
 
     try {
       // One snapshot for all, so that an Offer added or confirmed between them
-      // cannot make the totals disagree with the page.
+      // cannot make the totals disagree with the page. One query at a time:
+      // the transaction holds one connection, and node-postgres 9 refuses a
+      // query sent on it while another runs.
       const [rows, [{ total }], [counts]] = await this.databaseProvider
         .getClient()
         .transaction(
-          (transaction) =>
-            Promise.all([
-              transaction
-                .select(offerWithPart)
-                .from(offer)
-                .innerJoin(part, eq(part.id, offer.partId))
-                .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
-                .where(where)
-                .orderBy(asc(offer.confirmedAt), asc(part.name), asc(offer.id))
-                .limit(pageable.getLimit())
-                .offset(pageable.getOffset()),
-              transaction
-                .select({ total: count() })
-                .from(offer)
-                .innerJoin(part, eq(part.id, offer.partId))
-                .where(where),
-              // Of all the Vendor's Offers, whatever the search and the state.
-              transaction
-                .select({
-                  offers: count(),
-                  expired: countWhere(expiredAt(now)),
-                  aboutToExpire: countWhere(aboutToExpireAt(now)),
-                  outOfStock: countWhere(outOfStock),
-                })
-                .from(offer)
-                .where(theVendors),
-            ]),
+          async (transaction) => {
+            const page = await transaction
+              .select(offerWithPart)
+              .from(offer)
+              .innerJoin(part, eq(part.id, offer.partId))
+              .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+              .where(where)
+              .orderBy(asc(offer.confirmedAt), asc(part.name), asc(offer.id))
+              .limit(pageable.getLimit())
+              .offset(pageable.getOffset());
+            const totals = await transaction
+              .select({ total: count() })
+              .from(offer)
+              .innerJoin(part, eq(part.id, offer.partId))
+              .where(where);
+            // Of all the Vendor's Offers, whatever the search and the state.
+            const allCounts = await transaction
+              .select({
+                offers: count(),
+                expired: countWhere(expiredAt(now)),
+                aboutToExpire: countWhere(aboutToExpireAt(now)),
+                outOfStock: countWhere(outOfStock),
+              })
+              .from(offer)
+              .where(theVendors);
+            return [page, totals, allCounts] as const;
+          },
           { isolationLevel: 'repeatable read', accessMode: 'read only' },
         );
 
@@ -466,9 +419,11 @@ export class DatabaseOfferStore implements OfferStore {
 
     try {
       // One snapshot for both, so that an Offer confirmed between them cannot
-      // make the total disagree with the page.
+      // make the total disagree with the page. One query at a time: the
+      // transaction holds one connection, and node-postgres 9 refuses a query
+      // sent on it while another runs.
       const [rows, [{ total }]] = await this.databaseProvider.getClient().transaction(
-        (transaction) => {
+        async (transaction) => {
           // Each active Vendor with at least one Offer expired or about to
           // expire, with its counts of all its Offers.
           const expiring = () =>
@@ -488,22 +443,23 @@ export class DatabaseOfferStore implements OfferStore {
               .groupBy(vendor.id)
               .having(gt(expiredOrAboutToExpire, 0));
 
-          return Promise.all([
-            expiring()
-              .orderBy(
-                // By the soonest expiry among the Vendor's Offers, which is
-                // that of the one confirmed longest ago. An Expired Offer
-                // counts as sooner than any other, and the same for every
-                // Vendor that has one, so those Vendors come first and the
-                // name decides among them.
-                sql`case when ${expired} > 0 then null else min(${offer.confirmedAt}) end asc nulls first`,
-                asc(vendor.name),
-                asc(vendor.id),
-              )
-              .limit(pageable.getLimit())
-              .offset(pageable.getOffset()),
-            transaction.select({ total: count() }).from(expiring().as('expiring')),
-          ]);
+          const page = await expiring()
+            .orderBy(
+              // By the soonest expiry among the Vendor's Offers, which is that
+              // of the one confirmed longest ago. An Expired Offer counts as
+              // sooner than any other, and the same for every Vendor that has
+              // one, so those Vendors come first and the name decides among
+              // them.
+              sql`case when ${expired} > 0 then null else min(${offer.confirmedAt}) end asc nulls first`,
+              asc(vendor.name),
+              asc(vendor.id),
+            )
+            .limit(pageable.getLimit())
+            .offset(pageable.getOffset());
+          const totals = await transaction
+            .select({ total: count() })
+            .from(expiring().as('expiring'));
+          return [page, totals] as const;
         },
         { isolationLevel: 'repeatable read', accessMode: 'read only' },
       );
@@ -571,15 +527,7 @@ export class DatabaseOfferStore implements OfferStore {
         .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
         .leftJoin(currentRate, sql`true`)
         .where(and(eq(offer.partId, partId), visibleOffer(now)))
-        // In stock first, then the lowest Shown Price as answered, after
-        // rounding, with none after the others (OFF-11, PRC-4).
-        .orderBy(
-          desc(offer.inStock),
-          sql`${shownPrice.amount} asc nulls last`,
-          desc(offer.confirmedAt),
-          asc(vendor.name),
-          asc(offer.id),
-        );
+        .orderBy(...inTheOrderOfAPartsOffers(shownPrice.amount));
 
       return Either.all(
         rows.map((row) =>
@@ -643,6 +591,105 @@ export class DatabaseOfferStore implements OfferStore {
     } catch (error) {
       this.logger.error(error, 'An Offer could not be read');
       return Either.left(databaseErrorOf(error, 'An Offer could not be read'));
+    }
+  }
+
+  async listVisibleByVendor(
+    vendorId: string,
+    currency: Currency,
+    pageable: PageableAttributes,
+    now: Date,
+  ): Promise<Either.Either<Option.Option<VisibleOffersOfVendorPage>, StructuredError>> {
+    if (!couldBeIdentifier(vendorId)) return Either.right(Option.none());
+
+    const client = this.databaseProvider.getClient();
+    // The current Platform Rate, read once, in the one statement that reads
+    // the Vendor, its Offers, their page and their total, so that every Shown
+    // Price, the order and the total are at one rate.
+    const currentRate = currentPlatformRate(client).as('current_rate');
+    const shownPrice = shownPriceIn(currency, sql`${currentRate.iqdPerUsd}`);
+    const inTheirOrder = sql.join(inTheOrderOfAVendorsOffers(shownPrice.amount), sql`, `);
+
+    // Every visible Offer of the Vendor, with its Shown Price and its place in
+    // the order of a Vendor's Offers. Drizzle names a subquery's field by its
+    // alias alone, so each alias here and below is one no table in the same
+    // statement has as a column.
+    const listed = client.$with('listed').as(
+      client
+        .select({
+          offerId: sql<string>`${offer.id}`.as('listed_offer_id'),
+          shownAmount: shownPrice.amount.as('shown_amount'),
+          shownConverted: shownPrice.converted.as('shown_converted'),
+          place: sql<number>`row_number() over (order by ${inTheirOrder})`
+            .mapWith(Number)
+            .as('place_in_list'),
+        })
+        .from(offer)
+        .innerJoin(vendor, eq(vendor.id, offer.vendorId))
+        .innerJoin(part, eq(part.id, offer.partId))
+        .leftJoin(currentRate, sql`true`)
+        .where(and(eq(offer.vendorId, vendorId), visibleOffer(now))),
+    );
+    const { counted, onThePage } = onePageOf(client, listed, pageable);
+
+    try {
+      // The Vendor's row, which there is none of when it is deactivated or
+      // unknown, since Shoppers see only active Vendors (ACC-7), with the
+      // total and the page's Offers.
+      const rows = await client
+        .with(listed)
+        .select({
+          vendorName: vendor.name,
+          total: counted.total,
+          offer,
+          part,
+          photoId: partPhoto.id,
+          shownAmount: listed.shownAmount,
+          shownConverted: listed.shownConverted,
+        })
+        .from(vendor)
+        .innerJoin(counted, sql`true`)
+        .leftJoin(listed, onThePage)
+        .leftJoin(offer, eq(offer.id, listed.offerId))
+        .leftJoin(part, eq(part.id, offer.partId))
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .where(and(eq(vendor.id, vendorId), eq(vendor.active, true)))
+        .orderBy(asc(listed.place));
+      if (rows.length === 0) return Either.right(Option.none());
+
+      const offers = Either.all(
+        rows.flatMap((row) =>
+          row.offer === null || row.part === null
+            ? []
+            : [
+                Either.map(
+                  toDomain(row.offer, row.part, row.photoId),
+                  (found) =>
+                    new VisibleOffer(
+                      found,
+                      row.vendorName,
+                      row.shownAmount === null
+                        ? null
+                        : new ShownPrice(
+                            currency,
+                            row.shownAmount,
+                            row.shownConverted === true,
+                          ),
+                    ),
+                ),
+              ],
+        ),
+      );
+      return Either.map(offers, (found) =>
+        Option.some(
+          new VisibleOffersOfVendorPage(found, PageAttributes.of(pageable, rows[0].total)),
+        ),
+      );
+    } catch (error) {
+      this.logger.error(error, "A Vendor's visible Offers could not be listed");
+      return Either.left(
+        databaseErrorOf(error, "A Vendor's visible Offers could not be listed"),
+      );
     }
   }
 }

@@ -127,6 +127,19 @@ describe('the Part endpoints', () => {
       expect((await partOf(created)).partNumbers).toEqual(['MT-100', 'MT-100-WHT']);
     });
 
+    it('drops the invisible marks a code copied from a web page may carry, such as a left-to-right mark', async () => {
+      const leftToRightMark = String.fromCharCode(0x200e);
+      const created = await createPart({
+        category: 'case',
+        name: 'Made-up Mesh Tower',
+        manufacturer: 'Made-up Cases',
+        partNumbers: [`${leftToRightMark}MT-100`, 'MT-100', `MT-100-WHT${leftToRightMark}`],
+      });
+
+      expect(created.status).toBe(201);
+      expect((await partOf(created)).partNumbers).toEqual(['MT-100', 'MT-100-WHT']);
+    });
+
     it('creates a Part with no part numbers when none are given', async () => {
       const created = await createPart({
         category: 'psu',

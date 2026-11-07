@@ -1,14 +1,9 @@
-import {
-  type APIRequestContext,
-  expect,
-  type Locator,
-  type Page,
-  test,
-} from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
 import { openTheSection } from './admin-vendors';
 import { catalogHeading } from './catalog';
+import { setThePlatformRate } from './currencies';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { expectTheEmptyState } from './empty-state';
 import { expectNoSidewaysScroll, narrowWindow } from './languages';
@@ -113,20 +108,6 @@ async function today(page: Page): Promise<string> {
   );
 }
 
-// Sets the Platform Rate through the API as the Admin, as another screen or
-// an earlier run would have.
-async function setTheRate(
-  request: APIRequestContext,
-  authorization: string,
-  iqdPerUsd: number,
-): Promise<void> {
-  const response = await request.put(rateEndpoint, {
-    headers: { Authorization: authorization },
-    data: { iqdPerUsd },
-  });
-  expect(response.status()).toBe(200);
-}
-
 // Answers the page's every read of the rate as the API does before the
 // first rate is set. A save still goes to the API.
 async function answerNoRate(page: Page): Promise<void> {
@@ -186,7 +167,7 @@ test('the Admin sets a rate, and the plate shows it with today’s date, with no
   request,
 }) => {
   const before = aRateOfOurOwn(4);
-  await setTheRate(request, authorization, before);
+  await setThePlatformRate(request, authorization, before);
   await page.goto(platformRateUrl);
   await expectTheBoardToShow(page, before);
   await markThePage(page);
@@ -235,7 +216,7 @@ test('a rate out of range is refused beside the field, and the plate keeps the c
   request,
 }) => {
   const rate = aRateOfOurOwn(4);
-  await setTheRate(request, authorization, rate);
+  await setThePlatformRate(request, authorization, rate);
   await page.goto(platformRateUrl);
   await expectTheBoardToShow(page, rate);
 
@@ -271,7 +252,7 @@ test('an empty field is sent for the API to judge, and its refusal is said besid
   request,
 }) => {
   const rate = aRateOfOurOwn(4);
-  await setTheRate(request, authorization, rate);
+  await setThePlatformRate(request, authorization, rate);
   await page.goto(platformRateUrl);
   await expectTheBoardToShow(page, rate);
 
@@ -339,7 +320,7 @@ test('the screen meets the automated part of WCAG 2.2 level AA, in light and in 
   page,
   request,
 }) => {
-  await setTheRate(request, authorization, aRateOfOurOwn(4));
+  await setThePlatformRate(request, authorization, aRateOfOurOwn(4));
   await page.goto(platformRateUrl);
   await expect(theBoard(page)).toBeVisible();
   await theField(page).fill('20000');
@@ -430,7 +411,7 @@ for (const [reducedMotion, window] of [
     await page.setViewportSize(window);
     await page.emulateMedia({ reducedMotion });
     const [before, rate] = twoRatesForAFilm();
-    await setTheRate(request, authorization, before);
+    await setThePlatformRate(request, authorization, before);
     await page.goto(platformRateUrl);
     await expectTheBoardToShow(page, before);
     await theField(page).fill(String(rate));
@@ -614,7 +595,7 @@ test('at a desk the board lies inside its field, with the room the field has, an
   request,
 }) => {
   const rate = aRateOfOurOwn(4);
-  await setTheRate(request, authorization, rate);
+  await setThePlatformRate(request, authorization, rate);
   await page.setViewportSize({ width: 1024, height: 900 });
   await page.goto(platformRateUrl);
   await expectTheBoardToShow(page, rate);
@@ -636,7 +617,7 @@ test('the board lies inside its field at every width from 320 to 1920 pixels, wi
   // Eighty-two windows, each looked at in full.
   test.setTimeout(180_000);
   const rate = aRateOfOurOwn(4);
-  await setTheRate(request, authorization, rate);
+  await setThePlatformRate(request, authorization, rate);
   const devtools = await page.context().newCDPSession(page);
   try {
     for (const standard of [16, 32]) {
@@ -688,7 +669,7 @@ test('crossing 64rem as the window changes leaves the board as it is: it is not 
   request,
 }) => {
   const rate = aRateOfOurOwn(4);
-  await setTheRate(request, authorization, rate);
+  await setThePlatformRate(request, authorization, rate);
   await page.setViewportSize({ width: 1222, height: 900 });
   await page.goto(platformRateUrl);
   await expectTheBoardToShow(page, rate);
@@ -722,7 +703,7 @@ test('coming back to the Platform Rate shows the board at once, with no fade, as
   request,
 }) => {
   const rate = aRateOfOurOwn(4);
-  await setTheRate(request, authorization, rate);
+  await setThePlatformRate(request, authorization, rate);
   await page.goto(platformRateUrl);
   await expectTheBoardToShow(page, rate);
   await openTheSection(page, 'Catalog');

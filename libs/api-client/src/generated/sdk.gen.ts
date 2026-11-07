@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadPlatformRateData, ReadPlatformRateErrors, ReadPlatformRateResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses, SetPlatformRateData, SetPlatformRateErrors, SetPlatformRateResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ListVisibleOffersOfVendorData, ListVisibleOffersOfVendorErrors, ListVisibleOffersOfVendorResponses, ListVisiblePartsData, ListVisiblePartsErrors, ListVisiblePartsResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadPlatformFiguresData, ReadPlatformFiguresErrors, ReadPlatformFiguresResponses, ReadPlatformRateData, ReadPlatformRateErrors, ReadPlatformRateResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ReadVisiblePartData, ReadVisiblePartErrors, ReadVisiblePartResponses, ReadVisiblePartsFiltersData, ReadVisiblePartsFiltersErrors, ReadVisiblePartsFiltersResponses, ReadVisibleVendorData, ReadVisibleVendorErrors, ReadVisibleVendorResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses, SetPlatformRateData, SetPlatformRateErrors, SetPlatformRateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -207,6 +207,11 @@ export const readCallersVendor = <ThrowOnError extends boolean = false>(options?
 });
 
 /**
+ * An active Vendor's name, city and contact details, as it writes them, with null for each detail it has not given; a deactivated Vendor is answered as one that does not exist
+ */
+export const readVisibleVendor = <ThrowOnError extends boolean = false>(options: Options<ReadVisibleVendorData, ThrowOnError>): RequestResult<ReadVisibleVendorResponses, ReadVisibleVendorErrors, ThrowOnError> => (options.client ?? client).get<ReadVisibleVendorResponses, ReadVisibleVendorErrors, ThrowOnError>({ url: '/v1/visible-vendors/{vendorId}', ...options });
+
+/**
  * One page of a Vendor's Offers, Expired Offers among them, oldest Confirmation first, with each one's expiry and the Vendor's counts, for the Admin or for the Vendor's own Login
  */
 export const listVendorsOffers = <ThrowOnError extends boolean = false>(options: Options<ListVendorsOffersData, ThrowOnError>): RequestResult<ListVendorsOffersResponses, ListVendorsOffersErrors, ThrowOnError> => (options.client ?? client).get<ListVendorsOffersResponses, ListVendorsOffersErrors, ThrowOnError>({
@@ -281,6 +286,31 @@ export const editOffer = <ThrowOnError extends boolean = false>(options: Options
  * A Part's visible Offers: not Expired Offers, of active Vendors only, each with its Shown Price in the chosen currency and how many days ago it was confirmed, in-stock first and then the lowest Shown Price first, with Offers that have none after the others
  */
 export const listVisibleOffersOfPart = <ThrowOnError extends boolean = false>(options: Options<ListVisibleOffersOfPartData, ThrowOnError>): RequestResult<ListVisibleOffersOfPartResponses, ListVisibleOffersOfPartErrors, ThrowOnError> => (options.client ?? client).get<ListVisibleOffersOfPartResponses, ListVisibleOffersOfPartErrors, ThrowOnError>({ url: '/v1/parts/{partId}/offers', ...options });
+
+/**
+ * One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last
+ */
+export const listVisibleParts = <ThrowOnError extends boolean = false>(options: Options<ListVisiblePartsData, ThrowOnError>): RequestResult<ListVisiblePartsResponses, ListVisiblePartsErrors, ThrowOnError> => (options.client ?? client).get<ListVisiblePartsResponses, ListVisiblePartsErrors, ThrowOnError>({ url: '/v1/visible-parts', ...options });
+
+/**
+ * A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied
+ */
+export const readVisiblePartsFilters = <ThrowOnError extends boolean = false>(options: Options<ReadVisiblePartsFiltersData, ThrowOnError>): RequestResult<ReadVisiblePartsFiltersResponses, ReadVisiblePartsFiltersErrors, ThrowOnError> => (options.client ?? client).get<ReadVisiblePartsFiltersResponses, ReadVisiblePartsFiltersErrors, ThrowOnError>({ url: '/v1/visible-parts/filters', ...options });
+
+/**
+ * A Visible Part, a Part with at least one Visible Offer, with its specifications labelled in English; a Part that is not visible is answered as one that does not exist
+ */
+export const readVisiblePart = <ThrowOnError extends boolean = false>(options: Options<ReadVisiblePartData, ThrowOnError>): RequestResult<ReadVisiblePartResponses, ReadVisiblePartErrors, ThrowOnError> => (options.client ?? client).get<ReadVisiblePartResponses, ReadVisiblePartErrors, ThrowOnError>({ url: '/v1/visible-parts/{partId}', ...options });
+
+/**
+ * One page of an active Vendor's visible Offers: not Expired Offers, each with its Part, its Shown Price in the chosen currency and how many days ago it was confirmed, grouped by Category in the catalog's order, and within each in stock first and then the lowest Shown Price first; a deactivated Vendor is answered as one that does not exist
+ */
+export const listVisibleOffersOfVendor = <ThrowOnError extends boolean = false>(options: Options<ListVisibleOffersOfVendorData, ThrowOnError>): RequestResult<ListVisibleOffersOfVendorResponses, ListVisibleOffersOfVendorErrors, ThrowOnError> => (options.client ?? client).get<ListVisibleOffersOfVendorResponses, ListVisibleOffersOfVendorErrors, ThrowOnError>({ url: '/v1/visible-vendors/{vendorId}/offers', ...options });
+
+/**
+ * The platform's figures: how many active Vendors it has, how many Visible Offers it lists, the current Platform Rate in whole dinars per dollar or none, and how many days an Offer stays current without a Confirmation
+ */
+export const readPlatformFigures = <ThrowOnError extends boolean = false>(options?: Options<ReadPlatformFiguresData, ThrowOnError>): RequestResult<ReadPlatformFiguresResponses, ReadPlatformFiguresErrors, ThrowOnError> => (options?.client ?? client).get<ReadPlatformFiguresResponses, ReadPlatformFiguresErrors, ThrowOnError>({ url: '/v1/platform-figures', ...options });
 
 /**
  * The current Platform Rate, in whole dinars per dollar, and when it was set, or none until the Admin sets the first

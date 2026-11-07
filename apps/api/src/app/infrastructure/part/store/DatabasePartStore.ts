@@ -15,34 +15,17 @@ import {
   PartStore,
   SearchPartsParams,
 } from '~/domain/part/PartStore';
-import { Specification } from '~/domain/specification/Specification';
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { offer } from '~/infrastructure/offer/offer.schema';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
 
+import { placeOfCategory } from '../category-order';
 import { part } from '../part.schema';
 import { columnsOf } from '../part-columns';
 import { partOf, partWithPhoto } from '../part-of-row';
 import { holdingEveryWord } from '../search-text';
-
-// Whether a Part's specifications lack one specification, asked of its
-// document as `Specification.isMissingIn` asks it of a value: nothing at the
-// path, null, an empty text, an empty choice of several or list of text, and
-// 0 where 0 stands for "not known".
-function isMissingAt(specification: Specification): SQL {
-  const path = `{${specification.getPath().split('.').join(',')}}`;
-  const value = sql`(${part.specifications} #> ${path}::text[])`;
-  const empty = ['null', '""'];
-  const kind = specification.getKind();
-  if (kind === 'severalOf' || kind === 'listOfText') empty.push('[]');
-  if (specification.isZeroMissing()) empty.push('0');
-
-  return sql`(${value} IS NULL OR ${value} IN (${sql.join(
-    empty.map((each) => sql`${each}::jsonb`),
-    sql`, `,
-  )}))`;
-}
+import { isMissingAt } from '../specification-at';
 
 // The paths of the needed specifications a Part lacks, in its list's order,
 // as a list of text: for each Category, the paths of its needed ones that
@@ -64,12 +47,6 @@ function missingPathsOf(params: ListPartsMissingSpecificationsParams): SQL {
 
   return sql`CASE ${part.category} ${sql.join(byCategory, sql` `)} END`;
 }
-
-// The place of a Category among the eight, for ordering by it.
-const categoryOrder = sql`ARRAY[${sql.join(
-  Category.keys().map((key) => sql`${key}`),
-  sql`, `,
-)}]::part_category[]`;
 
 @Injectable()
 export class DatabasePartStore implements PartStore {
@@ -133,21 +110,26 @@ export class DatabasePartStore implements PartStore {
 
     try {
       // One snapshot for both, so that a Part created between them cannot make
-      // the totals disagree with the page.
+      // the totals disagree with the page. One query at a time: the
+      // transaction holds one connection, and node-postgres 9 refuses a query
+      // sent on it while another runs.
       const [rows, [{ total }]] = await this.databaseProvider.getClient().transaction(
-        (transaction) =>
-          Promise.all([
-            transaction
-              .select({ ...partWithPhoto, offerId: offer.id })
-              .from(part)
-              .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
-              .leftJoin(offer, offerOfTheVendor)
-              .where(where)
-              .orderBy(asc(part.name), asc(part.id))
-              .limit(pageable.getLimit())
-              .offset(pageable.getOffset()),
-            transaction.select({ total: count() }).from(part).where(where),
-          ]),
+        async (transaction) => {
+          const page = await transaction
+            .select({ ...partWithPhoto, offerId: offer.id })
+            .from(part)
+            .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+            .leftJoin(offer, offerOfTheVendor)
+            .where(where)
+            .orderBy(asc(part.name), asc(part.id))
+            .limit(pageable.getLimit())
+            .offset(pageable.getOffset());
+          const totals = await transaction
+            .select({ total: count() })
+            .from(part)
+            .where(where);
+          return [page, totals] as const;
+        },
         { isolationLevel: 'repeatable read', accessMode: 'read only' },
       );
 
@@ -194,29 +176,29 @@ export class DatabasePartStore implements PartStore {
 
     try {
       // One snapshot for both, as a search takes, so that the totals agree
-      // with the page.
+      // with the page, and one query at a time, as a search sends them.
       const [rows, [{ total }]] = await client.transaction(
-        (transaction) =>
-          Promise.all([
-            transaction
-              .with(offered)
-              .select()
-              .from(offered)
-              .where(lacking)
-              .orderBy(
-                sql`array_position(${categoryOrder}, ${offered.category})`,
-                desc(offered.offerCount),
-                asc(offered.name),
-                asc(offered.id),
-              )
-              .limit(pageable.getLimit())
-              .offset(pageable.getOffset()),
-            transaction
-              .with(offered)
-              .select({ total: count() })
-              .from(offered)
-              .where(lacking),
-          ]),
+        async (transaction) => {
+          const page = await transaction
+            .with(offered)
+            .select()
+            .from(offered)
+            .where(lacking)
+            .orderBy(
+              placeOfCategory(offered.category),
+              desc(offered.offerCount),
+              asc(offered.name),
+              asc(offered.id),
+            )
+            .limit(pageable.getLimit())
+            .offset(pageable.getOffset());
+          const totals = await transaction
+            .with(offered)
+            .select({ total: count() })
+            .from(offered)
+            .where(lacking);
+          return [page, totals] as const;
+        },
         { isolationLevel: 'repeatable read', accessMode: 'read only' },
       );
 

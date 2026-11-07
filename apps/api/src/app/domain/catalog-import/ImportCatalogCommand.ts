@@ -15,9 +15,11 @@ import {
 import { openDbFolders } from './opendb';
 import {
   folderRecordsOf,
+  makeTheSamePart,
   PartOfRecord,
   partOfRecord,
   RecordLeftOutReason,
+  withPartNumbersOf,
 } from './opendb-record';
 import { OpenDbSource } from './OpenDbSource';
 
@@ -76,7 +78,9 @@ function valuesLeftOutOf(problems: readonly SpecificationProblem[]): ValuesLeftO
 // The owner fills the catalog from OpenDB at the pinned commit, and the
 // import refuses any other. Each record of the eight Categories' folders
 // becomes a Part, unless the catalog already holds a Part with its OpenDB ID,
-// which is left as it is. Everything is written at once, or nothing is.
+// which is left as it is, or a record read before it in its folder makes the
+// same Part, which then takes its part numbers. Everything is written at
+// once, or nothing is.
 //
 // It has no Input: what it reads is the source it is given, a folder or the
 // pinned commit fetched from GitHub, and it takes nothing else.
@@ -126,6 +130,9 @@ export class ImportCatalogCommand {
         byText(one.getName(), other.getName()),
       );
       const folderRecords = folderRecordsOf(byName);
+      // The Parts made so far in the folder, by their name and manufacturer in
+      // lower case, among which a record may make the same Part again.
+      const namesakes = new Map<string, CategoryFolder['parts']>();
       for (const file of byName) {
         const path = `${folderName}/${file.getName()}`;
         const leftOut = (reason: RecordLeftOutReason) =>
@@ -136,10 +143,22 @@ export class ImportCatalogCommand {
             const openDbId = made.part.getOpenDbId();
             if (openDbIds.has(openDbId)) {
               leftOut('openDbIdTaken');
-            } else {
-              openDbIds.add(openDbId);
-              folder.parts.push({ ...made, file: path });
+              return;
             }
+            const key = `${made.part.getName().toLowerCase()}\n${made.part.getManufacturer().toLowerCase()}`;
+            const sameName = namesakes.get(key) ?? [];
+            const same = sameName.find((earlier) =>
+              makeTheSamePart(earlier.part, made.part),
+            );
+            if (same !== undefined) {
+              same.part = withPartNumbersOf(same.part, made.part);
+              leftOut('sameAsAnotherRecord');
+              return;
+            }
+            openDbIds.add(openDbId);
+            const kept = { ...made, file: path };
+            folder.parts.push(kept);
+            namesakes.set(key, [...sameName, kept]);
           },
         });
       }

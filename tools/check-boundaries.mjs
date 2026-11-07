@@ -60,6 +60,11 @@ const routesUseTheAlias = 'A route file reaches the layers through the `@/` alia
 const proxyTakesOnlyTheLanguages =
   "Next's proxy file takes next-intl's statement of the languages";
 const proxyUsesTheAlias = 'The proxy file reaches that segment through the `@/` alias';
+const instrumentationTakesOnlyTheSettings =
+  "Next's instrumentation file takes the check of the settings";
+const instrumentationUsesTheAlias =
+  'The instrumentation file reaches that segment through the `@/` alias';
+const testsUseTheAlias = 'A unit test reaches the layers through the `@/` alias';
 
 // A case is one planted file. `file` is its path inside the project, without
 // the suffix, and `specifier` is what its one import names. `form` says how
@@ -154,6 +159,13 @@ const casesBetweenProjects = [
     'an import of @pcp/compatibility',
     'src/shared/boundary-proof/imports-compatibility',
     '@pcp/compatibility',
+  ),
+  // Both frontends may import the addresses they link out to. The dashboard
+  // imports them already, so its lint shows its half; this shows the other.
+  inTheShopperApp.allowed(
+    'an import of @pcp/links',
+    'src/shared/boundary-proof/imports-links',
+    '@pcp/links',
   ),
 ];
 
@@ -426,7 +438,7 @@ const casesInTheRoutingFolder = [
   inTheShopperApp.refused(
     'a route file that reaches past the index file of a page',
     `${route}/reaches-into-a-page`,
-    '@/_pages/placeholder/ui/placeholder-page',
+    '@/_pages/home/ui/home-page',
     noPastAnIndex,
   ),
   inTheShopperApp.refused(
@@ -438,19 +450,19 @@ const casesInTheRoutingFolder = [
   inTheShopperApp.refused(
     'a route file that reaches a layer by a relative path',
     `${route}/climbs-into-a-layer`,
-    '../../src/_pages/placeholder',
+    '../../src/_pages/home',
     routesUseTheAlias,
   ),
   inTheShopperApp.refused(
     'a route file that reaches a layer by a relative path that starts with ./',
     `${route}/climbs-into-a-layer-the-long-way`,
-    './../../src/_pages/placeholder',
+    './../../src/_pages/home',
     shortestFormOnly,
   ),
   inTheShopperApp.allowed(
     'a route file that imports a page through its index file',
     `${route}/imports-a-page`,
-    '@/_pages/placeholder',
+    '@/_pages/home',
   ),
   inTheShopperApp.allowed(
     'a route file that imports the App layer through its index file',
@@ -472,7 +484,7 @@ const casesInTheProxyFile = [
   inTheShopperApp.refused(
     'the proxy file importing a page',
     'proxy.imports-a-page',
-    '@/_pages/placeholder',
+    '@/_pages/home',
     proxyTakesOnlyTheLanguages,
   ),
   inTheShopperApp.refused(
@@ -503,8 +515,96 @@ const casesInTheProxyFile = [
   inTheShopperApp.refused(
     'a Shared file named like the proxy file that imports a page',
     'src/shared/boundary-proof/proxy.imports-a-page',
-    '@/_pages/placeholder',
+    '@/_pages/home',
     noLayerAbove,
+  ),
+];
+
+// Next's instrumentation file, which only the Shopper app has. It sits beside
+// the routing folder, and Next calls it once when its server starts, to check
+// the settings. A planted file is named like it: the bans are for every file
+// at the app's root whose name starts with `instrumentation.`.
+const casesInTheInstrumentationFile = [
+  inTheShopperApp.refused(
+    'the instrumentation file importing a page',
+    'instrumentation.imports-a-page',
+    '@/_pages/home',
+    instrumentationTakesOnlyTheSettings,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file importing another segment of the Shared layer',
+    'instrumentation.imports-another-segment',
+    '@/shared/i18n',
+    instrumentationTakesOnlyTheSettings,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file reaching past the index file of the settings segment',
+    'instrumentation.reaches-into-the-segment',
+    '@/shared/config/settings',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'the instrumentation file reaching the settings segment by a relative path',
+    'instrumentation.climbs-into-the-segment',
+    './src/shared/config',
+    instrumentationUsesTheAlias,
+  ),
+  inTheShopperApp.allowed(
+    'the instrumentation file importing the settings segment through its index file',
+    'instrumentation.imports-the-settings',
+    '@/shared/config',
+  ),
+];
+
+// The Shopper app's unit tests, in their folder beside `src`, outside the
+// layers. A test imports any layer, but only through its index file.
+const unitTest = 'test/boundary-proof';
+
+const casesInTheUnitTests = [
+  inTheShopperApp.refused(
+    'a unit test that reaches past the index file of a Shared segment',
+    `${unitTest}/reaches-into-a-segment`,
+    '@/shared/currency/chosen-currency',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'a unit test that reaches past the index file of the App layer',
+    `${unitTest}/reaches-into-the-app-layer`,
+    '@/_app/routes/choose-currency',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'a unit test that reaches past the index file of a page',
+    `${unitTest}/reaches-into-a-page`,
+    '@/_pages/home/ui/home-page',
+    noPastAnIndex,
+  ),
+  inTheShopperApp.refused(
+    'a unit test that imports a folder that is not a layer',
+    `${unitTest}/imports-outside-the-layers`,
+    '@/i18n/request',
+    aliasReachesOnlyLayers,
+  ),
+  inTheShopperApp.refused(
+    'a unit test that reaches a layer by a relative path',
+    `${unitTest}/climbs-into-a-layer`,
+    '../../src/shared/currency',
+    testsUseTheAlias,
+  ),
+  inTheShopperApp.allowed(
+    'a unit test that imports a Shared segment through its index file',
+    `${unitTest}/imports-a-segment`,
+    '@/shared/currency',
+  ),
+  inTheShopperApp.allowed(
+    'a unit test that imports a page through its index file',
+    `${unitTest}/imports-a-page`,
+    '@/_pages/home',
+  ),
+  inTheShopperApp.allowed(
+    'a relative import between two files of the unit tests',
+    `${unitTest}/imports-a-neighbour`,
+    '../helpers',
   ),
 ];
 
@@ -539,6 +639,8 @@ const cases = [
   ...casesInAFrontend(inTheShopperApp, { app: '_app', pages: '_pages' }),
   ...casesInTheRoutingFolder,
   ...casesInTheProxyFile,
+  ...casesInTheInstrumentationFile,
+  ...casesInTheUnitTests,
 ];
 
 // A planted file's name, as the project's lint target is given it and as the

@@ -8,6 +8,7 @@ import { OfferDetails } from './OfferDetails';
 import { OfferState } from './offer-state';
 import { VendorWithExpiringOffers } from './VendorWithExpiringOffers';
 import { VisibleOffer } from './VisibleOffer';
+import { VisibleOffersOfVendorPage } from './VisibleOffersOfVendorPage';
 
 // A new Offer: the Vendor and the Part, its details, the time of its first
 // Confirmation, and the Caller who adds it, whom its history records.
@@ -324,4 +325,21 @@ export abstract class OfferStore {
     vendorId: string,
     partId: string,
   ): Promise<Either.Either<Option.Option<Offer>, StructuredError>>;
+
+  // One page of the Vendor's visible Offers at now by the API's clock, by
+  // the rule in `visibility.ts`, each with its Part and its Shown Price in the
+  // currency at the current Platform Rate, which is read in the same query as
+  // the Vendor, the Offers, the page and the total, so that one answer never
+  // mixes two rates. They are grouped by their Parts' Categories in the
+  // catalog's order, and within each come in the order of a Part's visible
+  // Offers (OFF-11, PRC-4): in stock first, then the lowest Shown Price, then
+  // the most recent Confirmation; then by the Part's name and the Offer's
+  // identifier, so that moving between pages never skips or repeats one.
+  // None when the Vendor is deactivated, or there is no such Vendor.
+  abstract listVisibleByVendor(
+    vendorId: string,
+    currency: Currency,
+    pageable: PageableAttributes,
+    now: Date,
+  ): Promise<Either.Either<Option.Option<VisibleOffersOfVendorPage>, StructuredError>>;
 }

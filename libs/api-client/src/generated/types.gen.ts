@@ -588,6 +588,45 @@ export type PasswordResetResponse = {
     temporaryPassword: string;
 };
 
+export type VisibleVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as it writes it.
+     */
+    name: string;
+    /**
+     * The city the Vendor is in.
+     */
+    city: 'erbil';
+    /**
+     * The Vendor's address, as it writes it, on one or more lines.
+     */
+    address: string;
+    /**
+     * Where the Vendor is, or null when it has not been given.
+     */
+    mapLocation: MapLocationResponse | null;
+    /**
+     * The Vendor's phone number, a mobile number or a landline.
+     */
+    phoneNumber: PhoneNumberResponse;
+    /**
+     * The Vendor's WhatsApp number, or null when it has none.
+     */
+    whatsAppNumber: PhoneNumberResponse | null;
+    /**
+     * The Vendor's Instagram name, bare and in lower case, or null when it has none.
+     */
+    instagramName: string | null;
+    /**
+     * The Vendor's opening hours, as it writes them, on one or more lines, or null when it has not given them.
+     */
+    openingHours: string | null;
+};
+
 export type CreateOfferRequest = {
     /**
      * The Quoted Price in USD, as a decimal number in Western digits, with at most two decimal places, more than 0 and at most 100000.00. It or the IQD price, or both, must be given.
@@ -875,17 +914,6 @@ export type EditOfferRequest = {
 
 export type Currency = 'USD' | 'IQD';
 
-export type VisibleOfferVendorResponse = {
-    /**
-     * The Vendor's identifier on the platform.
-     */
-    id: string;
-    /**
-     * The Vendor's name, as the Vendor writes it.
-     */
-    name: string;
-};
-
 export type ShownPriceResponse = {
     /**
      * The chosen currency.
@@ -901,11 +929,18 @@ export type ShownPriceResponse = {
     converted: boolean;
 };
 
-export type VisibleOfferResponse = {
+export type VisibleOfferVendorResponse = {
     /**
-     * The Vendor.
+     * The Vendor's identifier on the platform.
      */
-    vendor: VisibleOfferVendorResponse;
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+};
+
+export type VisibleOfferResponse = {
     /**
      * The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.
      */
@@ -934,6 +969,273 @@ export type VisibleOfferResponse = {
      * The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.
      */
     daysSinceConfirmation: number;
+    /**
+     * The Vendor.
+     */
+    vendor: VisibleOfferVendorResponse;
+};
+
+export type VisiblePartResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+    /**
+     * The Lowest Price: the lowest Shown Price among the Part's in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is. Null when no Visible Offer is in stock, and when none in stock has a Shown Price, which happens only when no Platform Rate has been set.
+     */
+    lowestPrice: ShownPriceResponse | null;
+    /**
+     * How many Vendors have a Visible Offer for the Part, in stock or not.
+     */
+    vendorCount: number;
+    /**
+     * Whether any Visible Offer for the Part is in stock. False when every Vendor has it out of stock.
+     */
+    inStock: boolean;
+};
+
+export type VisiblePartPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Visible Parts: those with a Lowest Price first, the lowest first; then those in stock with none; then those every Vendor has out of stock; then by name.
+     */
+    content: Array<VisiblePartResponse>;
+};
+
+/**
+ * The kind of value it offers: a whole number, text, or yes or no.
+ */
+export type FilterKind = 'number' | 'text' | 'yesNo';
+
+export type FilterResponse = {
+    /**
+     * The parameter a Category's list of Visible Parts is narrowed by it with, repeated for several values.
+     */
+    parameter: string;
+    /**
+     * The kind of value it offers: a whole number, text, or yes or no.
+     */
+    kind: FilterKind;
+    /**
+     * The unit of a number.
+     */
+    unit?: string;
+    /**
+     * The distinct values the Visible Parts hold, numbers by size and text alphabetically, as a Part's specifications hold them: never one that stands for "not known".
+     */
+    values: Array<number | string | boolean>;
+};
+
+export type PriceRangeResponse = {
+    /**
+     * The chosen currency.
+     */
+    currency: Currency;
+    /**
+     * The lowest of the Visible Parts' Lowest Prices, as decimal text, as a Lowest Price's amount is. Null when none has a Lowest Price.
+     */
+    lowest: string | null;
+    /**
+     * The highest of the Visible Parts' Lowest Prices, as decimal text. Null when none has a Lowest Price.
+     */
+    highest: string | null;
+};
+
+export type VisiblePartsFiltersResponse = {
+    /**
+     * The Visible Parts' manufacturers, alphabetically.
+     */
+    manufacturers: Array<string>;
+    /**
+     * The Category's filters that some Visible Part holds a value of, in the order a form shows them, each with its values.
+     */
+    filters: Array<FilterResponse>;
+    /**
+     * The range of the Visible Parts' Lowest Prices.
+     */
+    priceRange: PriceRangeResponse;
+};
+
+export type LabelledSpecificationResponse = {
+    /**
+     * The specification's place in a Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it. For a field of a row, its name in the row.
+     */
+    path: string;
+    /**
+     * The specification's English label.
+     */
+    label: string;
+    /**
+     * The kind of value it holds, which says how to show it.
+     */
+    kind: 'wholeNumber' | 'decimalNumber' | 'text' | 'yesNo' | 'oneOf' | 'severalOf' | 'listOfText' | 'listOfRows';
+    /**
+     * The unit of a number, or null when it has none.
+     */
+    unit: string | null;
+    /**
+     * What the Part holds: a number, in the unit; a text; true or false, for yes or no; a list of texts, for a choice of several or a list of text; or, for a list of rows, each row as the list of the fields it holds, answered as a specification is, and no rows when the Part has none.
+     */
+    value: number | string | boolean | Array<string> | Array<Array<LabelledSpecificationResponse>>;
+};
+
+export type VisiblePartWithSpecificationsResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+    /**
+     * The specifications the Part holds, in the order of its Category's specification list, each with its English label and unit. One it lacks is left out, and so is a 0 where 0 stands for "not known".
+     */
+    specifications: Array<LabelledSpecificationResponse>;
+};
+
+export type VisibleOfferOfVendorResponse = {
+    /**
+     * The Quoted Price in USD, as a decimal number with two decimal places, or null when the Vendor quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, or null when the Vendor quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * The price the Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price. Null only when the Offer has no Quoted Price in the chosen currency and no Platform Rate has been set.
+     */
+    shownPrice: ShownPriceResponse | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor last confirmed the Offer.
+     */
+    confirmedAt: string;
+    /**
+     * The whole days of 24 hours since the last Confirmation, rounded down: 0 on the day it was confirmed.
+     */
+    daysSinceConfirmation: number;
+    /**
+     * The Part offered.
+     */
+    part: PartSummaryResponse;
+};
+
+export type VisibleOfferOfVendorPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Offers, grouped by their Parts' Categories in the catalog's order, and within each Category in stock first, then the lowest Shown Price, with Offers that have none after the others, then the most recent Confirmation, then the Part's name.
+     */
+    content: Array<VisibleOfferOfVendorResponse>;
+};
+
+export type PlatformFiguresResponse = {
+    /**
+     * How many active Vendors the platform has, one with no Visible Offer among them. A deactivated Vendor is not counted.
+     */
+    activeVendorCount: number;
+    /**
+     * How many Visible Offers the platform lists, in stock or not: Offers that are not Expired Offers, of active Vendors.
+     */
+    visibleOfferCount: number;
+    /**
+     * The current Platform Rate, in whole dinars per dollar, or null until the Admin sets the first.
+     */
+    iqdPerUsd: number | null;
+    /**
+     * How many days an Offer stays current without a Confirmation: one last confirmed longer ago is an Expired Offer, which no Shopper sees.
+     */
+    daysAnOfferStaysCurrent: number;
 };
 
 export type CurrentPlatformRateResponse = {
@@ -1443,6 +1745,30 @@ export type ReadCallersVendorResponses = {
 
 export type ReadCallersVendorResponse = ReadCallersVendorResponses[keyof ReadCallersVendorResponses];
 
+export type ReadVisibleVendorData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/visible-vendors/{vendorId}';
+};
+
+export type ReadVisibleVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVisibleVendorError = ReadVisibleVendorErrors[keyof ReadVisibleVendorErrors];
+
+export type ReadVisibleVendorResponses = {
+    200: VisibleVendorResponse;
+};
+
+export type ReadVisibleVendorResponse = ReadVisibleVendorResponses[keyof ReadVisibleVendorResponses];
+
 export type ListVendorsOffersData = {
     body?: never;
     path: {
@@ -1669,6 +1995,231 @@ export type ListVisibleOffersOfPartResponses = {
 };
 
 export type ListVisibleOffersOfPartResponse = ListVisibleOffersOfPartResponses[keyof ListVisibleOffersOfPartResponses];
+
+export type ListVisiblePartsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+        /**
+         * The Category whose Visible Parts are listed.
+         */
+        category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+        /**
+         * The chosen currency, which each Part's Lowest Price is in and the Parts are ordered by.
+         */
+        currency: Currency;
+        /**
+         * Words a Part must hold, in any order and any case, in its name, its manufacturer or a part number. Left out or empty, every Visible Part of the Category is found.
+         */
+        search?: string;
+        /**
+         * Manufacturers, repeated for several: a Part of any of them is found. Left out, a Part of any manufacturer is.
+         */
+        manufacturer?: Array<string>;
+        /**
+         * The price range's lowest end, in whole ones of the chosen currency, whole dollars or whole dinars, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out. Refused when it is above the highest end.
+         */
+        lowest?: number;
+        /**
+         * The price range's highest end, in whole ones of the chosen currency, compared with each Lowest Price as answered and included. Given, a Part with no Lowest Price is left out.
+         */
+        highest?: number;
+        /**
+         * A filter: for CPUs, the Socket at `socket`; for motherboards, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        socket?: Array<string>;
+        /**
+         * A filter: for CPUs, the Cores at `cores.total`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        cores?: Array<number>;
+        /**
+         * A filter: for CPU coolers, the Liquid cooled at `water_cooled`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        waterCooled?: Array<boolean>;
+        /**
+         * A filter: for CPU coolers, the Radiator size at `radiator_size`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        radiatorSize?: Array<number>;
+        /**
+         * A filter: for motherboards, the Form factor at `form_factor`; for cases, the Form factor at `form_factor`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        formFactor?: Array<string>;
+        /**
+         * A filter: for motherboards, the Memory type at `memory.ram_type`; for RAM, the Memory type at `ram_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        ramType?: Array<string>;
+        /**
+         * A filter: for RAM, the Total capacity at `capacity`; for storage, the Capacity at `capacity`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        capacity?: Array<number>;
+        /**
+         * A filter: for RAM, the Speed at `speed`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        speed?: Array<number>;
+        /**
+         * A filter: for storage, the Drive type at `storage_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        driveType?: Array<string>;
+        /**
+         * A filter: for storage, the Interface at `interface`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        interface?: Array<string>;
+        /**
+         * A filter: for GPUs, the Chipset at `chipset`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        chipset?: Array<string>;
+        /**
+         * A filter: for GPUs, the Memory at `memory`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        memory?: Array<number>;
+        /**
+         * A filter: for PSUs, the Wattage at `wattage`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        wattage?: Array<number>;
+        /**
+         * A filter: for PSUs, the Efficiency rating at `efficiency_rating`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         */
+        efficiencyRating?: Array<string>;
+    };
+    url: '/v1/visible-parts';
+};
+
+export type ListVisiblePartsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVisiblePartsError = ListVisiblePartsErrors[keyof ListVisiblePartsErrors];
+
+export type ListVisiblePartsResponses = {
+    200: VisiblePartPageResponse;
+};
+
+export type ListVisiblePartsResponse = ListVisiblePartsResponses[keyof ListVisiblePartsResponses];
+
+export type ReadVisiblePartsFiltersData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The Category whose filters are answered.
+         */
+        category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+        /**
+         * The chosen currency, which the range of Lowest Prices is in.
+         */
+        currency: Currency;
+    };
+    url: '/v1/visible-parts/filters';
+};
+
+export type ReadVisiblePartsFiltersErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVisiblePartsFiltersError = ReadVisiblePartsFiltersErrors[keyof ReadVisiblePartsFiltersErrors];
+
+export type ReadVisiblePartsFiltersResponses = {
+    200: VisiblePartsFiltersResponse;
+};
+
+export type ReadVisiblePartsFiltersResponse = ReadVisiblePartsFiltersResponses[keyof ReadVisiblePartsFiltersResponses];
+
+export type ReadVisiblePartData = {
+    body?: never;
+    path: {
+        partId: string;
+    };
+    query?: never;
+    url: '/v1/visible-parts/{partId}';
+};
+
+export type ReadVisiblePartErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVisiblePartError = ReadVisiblePartErrors[keyof ReadVisiblePartErrors];
+
+export type ReadVisiblePartResponses = {
+    200: VisiblePartWithSpecificationsResponse;
+};
+
+export type ReadVisiblePartResponse = ReadVisiblePartResponses[keyof ReadVisiblePartResponses];
+
+export type ListVisibleOffersOfVendorData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+        /**
+         * The chosen currency, which each Offer's Shown Price is in and the Offers of each Category are ordered by.
+         */
+        currency: Currency;
+    };
+    url: '/v1/visible-vendors/{vendorId}/offers';
+};
+
+export type ListVisibleOffersOfVendorErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVisibleOffersOfVendorError = ListVisibleOffersOfVendorErrors[keyof ListVisibleOffersOfVendorErrors];
+
+export type ListVisibleOffersOfVendorResponses = {
+    200: VisibleOfferOfVendorPageResponse;
+};
+
+export type ListVisibleOffersOfVendorResponse = ListVisibleOffersOfVendorResponses[keyof ListVisibleOffersOfVendorResponses];
+
+export type ReadPlatformFiguresData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/platform-figures';
+};
+
+export type ReadPlatformFiguresErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPlatformFiguresError = ReadPlatformFiguresErrors[keyof ReadPlatformFiguresErrors];
+
+export type ReadPlatformFiguresResponses = {
+    200: PlatformFiguresResponse;
+};
+
+export type ReadPlatformFiguresResponse = ReadPlatformFiguresResponses[keyof ReadPlatformFiguresResponses];
 
 export type ReadPlatformRateData = {
     body?: never;

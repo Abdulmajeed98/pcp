@@ -497,6 +497,159 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     }
   });
 
+  it("keeps no part number that is the Part's own name, in any case, and keeps the codes around it in their order", async () => {
+    const folder = await aCopyOfTheSample();
+    // OpenDB lists the name of some Parts among their part numbers, such as
+    // "AMD Ryzen 7 7800X3D" between two of its codes, and among their
+    // identifiers too.
+    const ryzen = join(folder, 'CPU', '00000000-0000-4000-8000-000000000101.json');
+    const record = JSON.parse(await readFile(ryzen, 'utf8')) as {
+      metadata: { part_numbers: string[] };
+      identifiers: { identifiers: { type: string; value: string }[] };
+    };
+    record.metadata.part_numbers = ['100-000000001', 'MADE-UP RYZEN 5 7600'];
+    record.identifiers.identifiers.push({ type: 'mpn', value: 'Made-up Ryzen 5 7600' });
+    await writeFile(ryzen, JSON.stringify(record));
+
+    await runTheImport(folder);
+
+    expect((await theOnePart({ search: 'Made-up Ryzen 5 7600' })).partNumbers).toEqual([
+      '100-000000001',
+      '100-000000001BOX',
+    ]);
+  });
+
+  it('keeps no invisible mark in a part number, so that a code listed with one and without it is kept once', async () => {
+    const folder = await aCopyOfTheSample();
+    // OpenDB lists some codes with a left-to-right mark or a zero-width space
+    // in them, as a web page they were copied from held them, often beside
+    // the same code without one. The record's identifiers list the two codes
+    // without marks.
+    const leftToRightMark = String.fromCharCode(0x200e);
+    const zeroWidthSpace = String.fromCharCode(0x200b);
+    const ryzen = join(folder, 'CPU', '00000000-0000-4000-8000-000000000101.json');
+    const record = JSON.parse(await readFile(ryzen, 'utf8')) as {
+      metadata: { part_numbers: string[] };
+    };
+    record.metadata.part_numbers = [
+      `${leftToRightMark}100-000000001`,
+      `100-000000001BOX${zeroWidthSpace}`,
+      `MU${zeroWidthSpace}-0001`,
+    ];
+    await writeFile(ryzen, JSON.stringify(record));
+
+    await runTheImport(folder);
+
+    expect((await theOnePart({ search: 'Made-up Ryzen 5 7600' })).partNumbers).toEqual([
+      '100-000000001',
+      '100-000000001BOX',
+      'MU-0001',
+    ]);
+  });
+
+  // The sample's complete CPU, for a test to list again under another OpenDB
+  // ID, as OpenDB lists some Parts twice.
+  type CpuRecord = {
+    opendb_id: string;
+    metadata: { name: string; part_numbers: string[] };
+    specifications: Record<string, unknown>;
+  };
+  async function theRyzenIn(folder: string): Promise<CpuRecord> {
+    const path = join(folder, 'CPU', '00000000-0000-4000-8000-000000000101.json');
+    return JSON.parse(await readFile(path, 'utf8')) as CpuRecord;
+  }
+
+  it('makes one Part of two records with the same name, manufacturer and specifications, with the part numbers of both, and names the second as left out', async () => {
+    const folder = await aCopyOfTheSample();
+    // A CPU under its boxed codes in one record and its tray code in another,
+    // its name in capitals there, as OpenDB lists some Parts twice.
+    const ryzen = await theRyzenIn(folder);
+    const twin = '00000000-0000-4000-8000-000000000103';
+    await writeFile(
+      join(folder, 'CPU', `${twin}.json`),
+      JSON.stringify({
+        ...ryzen,
+        opendb_id: twin,
+        metadata: {
+          ...ryzen.metadata,
+          name: 'MADE-UP RYZEN 5 7600',
+          part_numbers: ['100-000000001MPK', '100-000000001'],
+        },
+        identifiers: { version: 1, identifiers: [] },
+      }),
+    );
+
+    const run = await runTheImport(folder);
+
+    expect(await theOnePart({ search: 'Made-up Ryzen 5 7600' })).toMatchObject({
+      openDbId: '00000000-0000-4000-8000-000000000101',
+      name: 'Made-up Ryzen 5 7600',
+      partNumbers: ['100-000000001', '100-000000001BOX', '100-000000001MPK'],
+    });
+    expect(linesUnder('Records left out:', run.printed)).toContain(
+      `CPU/${twin}.json: it has the name, manufacturer and specifications of another record, whose Part takes its part numbers`,
+    );
+  });
+
+  it('keeps two Parts of records with the same name and manufacturer whose specifications differ, such as a boxed CPU with a cooler and a tray one without', async () => {
+    const folder = await aCopyOfTheSample();
+    const ryzen = await theRyzenIn(folder);
+    const tray = '00000000-0000-4000-8000-000000000103';
+    await writeFile(
+      join(folder, 'CPU', `${tray}.json`),
+      JSON.stringify({
+        ...ryzen,
+        opendb_id: tray,
+        metadata: { ...ryzen.metadata, part_numbers: ['100-000000001MPK'] },
+        identifiers: { version: 1, identifiers: [] },
+        specifications: { ...ryzen.specifications, includesCooler: false },
+      }),
+    );
+
+    const run = await runTheImport(folder);
+
+    const found = await partsFound({ search: 'Made-up Ryzen 5 7600' });
+    const read = await Promise.all(
+      found.map(async (part) => (await (await readPart(part.id)).json()) as ReadPart),
+    );
+    expect(
+      Object.fromEntries(read.map((part) => [part.openDbId, part.partNumbers])),
+    ).toEqual({
+      '00000000-0000-4000-8000-000000000101': ['100-000000001', '100-000000001BOX'],
+      [tray]: ['100-000000001MPK'],
+    });
+    expect(linesUnder('Records left out:', run.printed).join('\n')).not.toContain(tray);
+  });
+
+  it("still leaves out a record with no manufacturer as a copy when the part number it shares is the complete record's own name", async () => {
+    const folder = await aCopyOfTheSample();
+    async function givePartNumbers(file: string, partNumbers: string[]) {
+      const path = join(folder, 'PSU', file);
+      const record = JSON.parse(await readFile(path, 'utf8')) as {
+        metadata: { part_numbers: string[] };
+      };
+      record.metadata.part_numbers = partNumbers;
+      await writeFile(path, JSON.stringify(record));
+    }
+    // The complete power supply lists its own name among its part numbers,
+    // and the thinner copy has only that name, in capitals. At the pinned
+    // commit, "GIGABYTE TRYX50 AERO D" copies "TRX50 AERO D" so.
+    await givePartNumbers('00000000-0000-4000-8000-000000000801.json', [
+      'MU-650',
+      'Made-up 650 W',
+    ]);
+    await givePartNumbers('00000000-0000-4000-8000-000000000803.json', ['MADE-UP 650 W']);
+
+    const run = await runTheImport(folder);
+
+    expect(linesUnder('Records left out:', run.printed)).toContain(
+      'PSU/00000000-0000-4000-8000-000000000803.json: it has no manufacturer, and another record has its part number',
+    );
+    expect(await namesFound({ search: 'Made-up Power 650 W Gold' })).toEqual([]);
+    // The name it shares is not one of the complete Part's part numbers.
+    expect((await theOnePart({ search: 'Made-up 650 W' })).partNumbers).toEqual(['MU-650']);
+  });
+
   it('imports nothing on a second run, and reports every Part as already there', async () => {
     const first = await runTheImport(sample);
     const second = await runTheImport(sample);

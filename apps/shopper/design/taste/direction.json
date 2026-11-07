@@ -1,0 +1,446 @@
+{
+  "version": 1,
+  "at": "2026-11-04T00:14:30.380Z",
+  "seed": 2092360077,
+  "redraws": 0,
+  "input": {
+    "brief": "The Shopper app compares the prices that computer shops charge for PC parts, for people who build their own PCs, on a phone first, in Kurdish, Arabic and English, in dinars and dollars; prices and the ≈ mark of a converted price are the page's centre; hard rules hold: WCAG 2.2 AA in both schemes with a switch between them, 44-pixel controls on a touchscreen, no text under 14 pixels (15 in Kurdish and Arabic), 360 pixels wide, right to left, self-hosted fonts that draw all of Sorani",
+    "sector": "ecommerce",
+    "tone": null,
+    "have": [],
+    "keep": [],
+    "avoid": [],
+    "sections": ["list", "showcase", "intro", "contact", "footer"],
+    "direction": "page-is-the-object"
+  },
+  "imagery": "no-product-photo",
+  "allow": ["few-pictures", "eyebrow", "off-centre", "palette-cream", "still-page"],
+  "direction": {
+    "id": "page-is-the-object",
+    "name": "The page is the object",
+    "sectors": [
+      "restaurant",
+      "event",
+      "hospitality",
+      "culture",
+      "music",
+      "physical-product",
+      "ecommerce",
+      "nonprofit",
+      "education",
+      "personal-portfolio",
+      "consumer-app",
+      "other"
+    ],
+    "tones": ["warm", "playful", "editorial"],
+    "needs": [],
+    "idea": "Find the printed or physical artefact that already exists in the subject's world and build the page as that thing. A wedding site is the invitation card. A restaurant is its menu. A conference is the ticket; a record is its sleeve; a shop is the receipt or the swing tag; an archive is a stack of tabbed folders; a course is the syllabus sheet. The artefact supplies everything a template would otherwise invent: its proportions, its typographic manners, its way of grouping information. Visitors recognise the object instantly, which is why these pages feel specific.",
+    "composition": "The first screen shows the artefact as a single filled panel (paper colour on a contrasting ground) centred or offset, with believable proportions: a card at 5:7, a ticket at about 2.2:1 with a notch cut by `clip-path`, a menu as a tall sheet. All primary content lives on it, set the way that object is set: centred and symmetrical for an invitation, in tidy aligned columns for a menu or ticket. The ground behind is a flat colour or one full-bleed photograph. As the page continues, each section is another piece of the same stationery: a second card, a tear-off stub, a folded panel, always filled shapes with real edges (straight, notched, scalloped, perforated by a dotted `border` of round dots at 4px or more), never outlined boxes. The footer is the back of the object.",
+    "typography": "Take the manners of the artefact: a bookish serif with small caps avoided, or a blunt condensed face for tickets and posters. Sizes stay within what print would use relative to the panel; the name is large on the panel, details are small and exact.",
+    "typeClasses": [
+      "serif-text",
+      "serif-display",
+      "slab",
+      "condensed-heavy",
+      "grotesk-tight"
+    ],
+    "colour": "Paper and ink plus the ground the paper sits on. Two or three flat colours in total, like a two-colour print job.",
+    "paletteTags": ["two-tone", "earth", "light-neutral"],
+    "imagery": "Optional. One photograph behind the object, or small photographs placed on it like tipped-in plates. The object itself is the image.",
+    "sectionTags": ["object-led", "type-led", "colour-field"],
+    "motion": "curtain-footer",
+    "richness": "Recognition. The shaped edges, the print-like alignment and the limited inks make a familiar object out of plain HTML.",
+    "pitfalls": "Choose an artefact that truly belongs to the subject, or it becomes costume. Shape the edges with fills and `clip-path`; an outlined rectangle with a thin border is not an object. Keep text sizes readable on a phone, where the object becomes full width with its shaped edge kept at top and bottom.",
+    "seenIn": [
+      "opl-sarah-matt-wedding",
+      "aww-mosbys-files",
+      "opl-the-deep-end",
+      "opl-weeksync",
+      "opl-le-petit-bleu",
+      "opl-archiv"
+    ],
+    "allow": []
+  },
+  "hero": {
+    "id": "card-over-dim-room",
+    "name": "Card over a dim room",
+    "archetype": "artefact",
+    "directions": ["page-is-the-object", "pinned-poster", "dark-room"],
+    "needs": [],
+    "blueprint": "A full-bleed, low-key photograph of the room fills the viewport, darkened with `filter: brightness(0.7)` so it reads as atmosphere. Centred over it is one square-cornered panel in a flat warm tone taken from the photograph: columns 4–10, about 55% of the width and 62% of the height, a filled programme card with 32px padding. Along its top edge the three words of the title are spread to the left, centre and right in bold condensed capitals at clamp(28px, 2.5vw, 38px); that line is the headline. Under it sit two left-aligned blocks in the same face and size, line-height 1.0: the facts (date, time, place) as three short lines, then one supporting sentence held to 30ch. Along the card's bottom edge: a credit at left in 14px, the single action as a solid rectangular button in the centre, one text link at right. There is no navigation outside the card. The card is `position: sticky`: as the page scrolls it shrinks with `transform: scale` toward the bottom-left corner and stays there as a ticket-sized stub while photographs of differing sizes pass on a flat ground.",
+    "mobile": "The photograph fills 100svh and the card sits centred at full width minus 16px margins, 70svh tall. The title words stack as a two-line heading at 9vw at the card's top-left. The facts and the supporting sentence follow at 5.2vw in the condensed face. The action button spans the card's bottom edge. On scroll the card shrinks to a 120px stub pinned bottom-left.",
+    "headline": "The event or venue name, three words at most and up to about 8 characters each, spread across the card's top edge; two lines on a phone.",
+    "motion": "pinned-story",
+    "seenIn": ["opl-the-deep-end"]
+  },
+  "type": {
+    "id": "big-shoulders-public",
+    "name": "Big Shoulders / Public Sans",
+    "class": "condensed-heavy",
+    "display": {
+      "family": "Big Shoulders",
+      "source": "google",
+      "weights": [800],
+      "italic": false,
+      "settings": "weight 800 · tracking -0.005em · leading 0.88 · uppercase",
+      "css": "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@800&family=Public+Sans:wght@400;600&display=swap\" rel=\"stylesheet\">"
+    },
+    "text": {
+      "family": "Public Sans",
+      "source": "google",
+      "weights": [400, 600],
+      "italic": false,
+      "settings": "400 for body, 600 for emphasis · leading 1.5 · tracking 0",
+      "css": "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@800&family=Public+Sans:wght@400;600&display=swap\" rel=\"stylesheet\">"
+    },
+    "standsInFor": ["Founders Grotesk Condensed", "PP Neue York", "Knockout"],
+    "note": "A tall American gothic taken from city signage, blunt and civic, over a plain public-service sans. Suits culture indexes, community projects, bars, sport clubs and local campaigns.",
+    "seenIn": [
+      "aww-mosbys-files",
+      "opl-the-sapphic-bar-index",
+      "opl-the-deep-end",
+      "aww-colonia-zacamil"
+    ],
+    "links": [
+      "https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@800&family=Public+Sans:wght@400;600&display=swap"
+    ],
+    "scale": {
+      "step-small": "clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem)",
+      "step-body": "clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem)",
+      "step-lead": "clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem)",
+      "step-head": "clamp(2.5rem, 1.2rem + 5vw, 5.5rem)"
+    }
+  },
+  "palette": {
+    "id": "green-mat-chocolate",
+    "name": "Bone, green, chocolate",
+    "tags": ["light-neutral", "earth"],
+    "bg": "#e5e1d8",
+    "surface": "#dad5ca",
+    "ink": "#2a1d17",
+    "muted": "#6b5b51",
+    "accent": "#456f3a",
+    "accentInk": "#ffffff",
+    "fields": [
+      {
+        "bg": "#456f3a",
+        "ink": "#ffffff"
+      }
+    ],
+    "note": "Bone ground with chocolate-brown text takes most of the page. The green is spent on one large flat block, about a third of a screen, and on the button; all other colour comes from photographs.",
+    "seenIn": ["opl-davesocozy", "opl-mat"]
+  },
+  "photos": {
+    "set": "mountain",
+    "title": "Mountain",
+    "note": "peaks, alpine valleys, snow and rock",
+    "treatment": null,
+    "others": ["architecture", "hands-and-making", "coast", "city-day"],
+    "photos": [
+      {
+        "id": 235,
+        "alt": "Snow-covered peak rising above dark forested slopes and a lake",
+        "tone": "mid",
+        "colours": ["slate blue", "white", "dark green"],
+        "mono": false,
+        "calm": "top",
+        "quality": 5,
+        "ratio": 1.5,
+        "by": "Paul E. Harrer",
+        "page": "https://unsplash.com/photos/TI-B-TNYJMU"
+      },
+      {
+        "id": 260,
+        "alt": "Snowy mountain peak framed by dark pine trees in mist",
+        "tone": "light",
+        "colours": ["white", "pale grey", "dark green"],
+        "mono": false,
+        "calm": "centre",
+        "quality": 5,
+        "ratio": 0.67,
+        "by": "Sylwia Bartyzel",
+        "page": "https://unsplash.com/photos/OdAqbedkfiA"
+      },
+      {
+        "id": 931,
+        "alt": "Layered mountain slopes fading into blue haze",
+        "tone": "mid",
+        "colours": ["steel blue", "pale blue", "dark teal"],
+        "mono": false,
+        "calm": "top",
+        "quality": 5,
+        "ratio": 1.51,
+        "by": "Paul Earle",
+        "page": "https://unsplash.com/photos/xJ2tjuUHD9M"
+      },
+      {
+        "id": 906,
+        "alt": "Sunlit snowy pyramid peak against a clear blue sky",
+        "tone": "mid",
+        "colours": ["sky blue", "white", "dark slate"],
+        "mono": false,
+        "calm": "top",
+        "quality": 5,
+        "ratio": 1.33,
+        "by": "Andras Toth",
+        "page": "https://unsplash.com/photos/E9CrQou9K0Y"
+      },
+      {
+        "id": 830,
+        "alt": "Layered blue mountain ridges receding into haze",
+        "tone": "mid",
+        "colours": ["cobalt blue", "pale blue", "navy"],
+        "mono": false,
+        "calm": "top",
+        "quality": 5,
+        "ratio": 1.5,
+        "by": "Luca Zanon",
+        "page": "https://unsplash.com/photos/X0OoHrPvgXE"
+      },
+      {
+        "id": 29,
+        "alt": "Rocky ridges and snow-covered peaks in a high mountain range",
+        "tone": "mid",
+        "colours": ["slate grey", "white", "blue"],
+        "mono": false,
+        "calm": "none",
+        "quality": 4,
+        "ratio": 1.5,
+        "by": "Go Wild",
+        "page": "https://unsplash.com/photos/V0yAek6BgGk"
+      },
+      {
+        "id": 296,
+        "alt": "Snow-capped mountain range beneath a deep blue sky",
+        "tone": "mid",
+        "colours": ["deep blue", "white", "dark brown"],
+        "mono": false,
+        "calm": "top",
+        "quality": 4,
+        "ratio": 1.5,
+        "by": "Greg Shield",
+        "page": "https://unsplash.com/photos/Du30R57aCyM"
+      },
+      {
+        "id": 538,
+        "alt": "Bird soaring above snowy mountain ridges in black and white",
+        "tone": "mid",
+        "colours": ["grey", "white", "black"],
+        "mono": true,
+        "calm": "top",
+        "quality": 4,
+        "ratio": 1.51,
+        "by": "Julia Revitt",
+        "page": "https://unsplash.com/photos/yypv2Tu-mxU"
+      }
+    ]
+  },
+  "motion": {
+    "id": "pinned-story",
+    "name": "Pinned story",
+    "description": "One element holds its place with `position: sticky` (a title, a frame, a product fragment) while the items that belong to it scroll past or swap inside it. The page's ordinary scrolling does the work; nothing is hijacked. Hold it for about one screen per step and three screens at most, two held stages per page at most, with a line of text on every held screen. Recipe: 'Pinned story' in references/motion.md."
+  },
+  "sections": [
+    {
+      "id": "list-printed-menu-sheet",
+      "role": "list",
+      "name": "The printed menu sheet",
+      "shape": "band",
+      "tags": ["object-led", "type-led", "colour-field"],
+      "directions": [
+        "page-is-the-object",
+        "place-carries-it",
+        "split-stage",
+        "borrowed-category"
+      ],
+      "needs": [],
+      "blueprint": "The list is one tall sheet of paper. A filled paper-colour panel 640px wide sits centred, or offset to columns 7–12, on a contrasting flat ground or a full-bleed photograph, with square corners and its top and bottom edges cut into shallow scallops by `clip-path` or an SVG `mask`. Inside, 64px padding and a centred, symmetrical setting like a printed card: the venue or section name at 40–48px, a one-line note at 15px, then three or four groups 56px apart. Each group opens with its name at 22px, centred. Items follow at 17px with 16px between them: the dish or service at the left of a 420px measure, the price at the right with tabular figures, and a one-line description at 14px in the soft ink under the name. Alignment alone links name and price; there are no leaders. The sheet ends with the opening hours as two centred lines. Holds 12–24 items.",
+      "mobile": "The sheet spans the screen with 10px of ground showing at each side and 28px padding; the scalloped edges stay at top and bottom. The measure is the full inner width and prices stay right-aligned. Group names at 20px, items at 16px.",
+      "seenIn": ["opl-le-petit-bleu", "opl-madie", "opl-sarah-matt-wedding"]
+    },
+    {
+      "id": "showcase-square-plate-spare-text",
+      "role": "showcase",
+      "name": "Square plate, spare text",
+      "shape": "split",
+      "tags": ["colour-field", "photo-led"],
+      "directions": [
+        "split-stage",
+        "page-is-the-object",
+        "colour-chapters",
+        "editorial-report",
+        "one-motif",
+        "name-as-monument"
+      ],
+      "needs": [],
+      "blueprint": "One flat field split 50/50, at least 88svh tall. Left half: a single square photograph filling the half's width minus 40px margins, vertically centred, square corners. A large simple shape may be laid over it to turn the photograph into the object it stands for: a ring 86% of its width with a 6px stroke and a small solid dot at the centre makes a record; a notch cut by clip-path makes a ticket stub. Right half, a flex column with space-between: at the top a row of three plain text tabs at 18px (editions, years, variants), the active one in full ink and the others at 40%; in the middle the title, two to four words at 32–40px bold, with a 34ch description 48px below; along the bottom two filled rectangular cells side by side, each half the column wide and 72px tall, acting as the two actions, one in ink and one a tone off the field.",
+      "mobile": "The square photograph comes first at full width with 16px margins. The tabs sit under it as one row at 17px. Then the title at 28px, the description, and the two action cells stacked, each full width and 60px tall.",
+      "seenIn": ["aww-paul-kalkbrenner"]
+    },
+    {
+      "id": "intro-title-note-facts",
+      "role": "intro",
+      "name": "Title, note, facts row",
+      "shape": "split",
+      "tags": ["type-led", "quiet"],
+      "directions": [
+        "page-is-the-object",
+        "editorial-report",
+        "name-as-monument",
+        "uneven-photographs",
+        "type-only-statement"
+      ],
+      "needs": [],
+      "blueprint": "First row: a heading of two to four words in a light weight at clamp(44px, 5vw, 76px) sits on the left margin in columns 1–6; a three-line paragraph at 16px, 260px wide, sits in columns 10–12 with its last line on the heading's baseline. Columns 7–9 stay empty. 120px lower, a second row sets three or four facts (a date, a time, a place, a price) as large light text at clamp(28px, 3vw, 44px), spread across the 12 columns with `justify-content: space-between`. Each fact has a one-line explanation at 14px directly under it in the soft ink, left-aligned to the fact. Facts are separated only by the space between them, so the row reads like the line of times on a printed programme. A photograph may start under the right half of the facts row, 5 columns wide at 4:3. Padding 140px top, 120px bottom.",
+      "mobile": "Heading at 11vw on the left margin; the note follows directly under it at 16px, full width. The facts become a two-column grid with a 32px row gap, each fact at 26px with its explanation beneath. Any photograph goes last, full width.",
+      "seenIn": ["opl-sarah-matt-wedding", "aww-no-art"]
+    },
+    {
+      "id": "contact-clip-out-coupon",
+      "role": "contact",
+      "name": "Clip-out coupon form",
+      "shape": "split",
+      "tags": ["object-led", "colour-field"],
+      "directions": [
+        "page-is-the-object",
+        "one-motif",
+        "borrowed-category",
+        "loud-flat-poster",
+        "specimen-catalogue"
+      ],
+      "needs": [],
+      "blueprint": "The form is a coupon to cut out. One filled card in a strong flat colour, about 2.2:1, spans columns 2–11 with a 14px radius, with 120px of ground above and below. Semicircular notches 28px across are cut into its top and bottom edges at the 46% mark with `clip-path` or an SVG `mask`, and a vertical row of round dots (a dotted `border-left` 5px thick in the ground colour) joins the two notches as the perforation. Left of the perforation, with 48px padding: a two-line heading of three to five words at clamp(28px, 3vw, 44px) in heavy capitals at the top, and one sentence at 16px at the bottom. Right of it: four inputs stacked with 10px gaps, each a filled block 52px tall in a lighter tone of the card with its placeholder at 16px, then a full-width solid submit bar 56px tall in the darkest ink. Inputs keep visually hidden `label` elements.",
+      "mobile": "The card turns upright and spans the width with 12px margins. The perforation becomes horizontal: notches on the left and right edges, dots across. Heading and sentence sit above it; the four inputs and the submit bar sit below, each 54px tall.",
+      "seenIn": ["opl-the-sapphic-bar-index", "opl-rafael-derolez-2026"]
+    },
+    {
+      "id": "footer-invitation-over-cropped-wordmark",
+      "role": "footer",
+      "name": "Invitation over a cropped name",
+      "shape": "statement",
+      "tags": ["type-led", "poster"],
+      "directions": [
+        "loud-flat-poster",
+        "name-as-monument",
+        "borrowed-category",
+        "pinned-poster",
+        "type-only-statement",
+        "sentence-as-layout"
+      ],
+      "needs": [],
+      "blueprint": "Close and footer in one full-viewport field of the inverse colour. Upper third, columns 1–7: a two-line invitation at about 5vw, three to five words, with one filled rectangular button beneath it. At columns 10–12, top-aligned with the invitation, three or four social or contact links stacked at 16px. The wordmark fills the bottom of the screen at 26–30vw on one line, `white-space: nowrap`, heavier and larger than the viewport can hold: it is pushed down with `transform: translateY(30%)` so the bottom edge cuts through the letters, and a long name also runs off the right edge. `overflow: hidden` on the footer does the cropping. One row of credits and legal links at 13px sits directly above the wordmark's cap line, spread left and right. The cropped name must be recognisable from its upper two-thirds alone; test that it is.",
+      "mobile": "Invitation at 11vw on two lines at the top with a full-width button. Links follow as one row of words at 15px. The wordmark sits at 34vw at the bottom, cropped by both the bottom and the right edge, with the legal row above it at 12px.",
+      "seenIn": ["aww-nothin", "opl-goodgoodgreat", "opl-marina-rachello", "aww-butter"]
+    }
+  ],
+  "references": [
+    {
+      "id": "opl-the-deep-end",
+      "name": "The Deep End",
+      "url": "https://thedeepend.space",
+      "source": "One Page Love",
+      "kind": "event",
+      "score": 7.5,
+      "idea": "The whole site is one invitation card floating over ambient footage, which shrinks into a pinned corner ticket as scattered stills scroll past.",
+      "mood": ["warm", "intimate", "hushed", "analog"],
+      "archetype": "fullbleed-media-overlay",
+      "hero": "Full-bleed, dim, amber-toned video of a listening room: a modular synth and speaker at top, a person lying on a silk cushion in soft focus. Centred over it is a square-cornered panel about 55% of the viewport wide and 62% tall, a blurred brown-to-taupe wash. Inside, the three words of the title are spread along the top edge at left, centre and right in bold condensed caps. A small line-diagram logo sits below. Two left-aligned text blocks at 2.5vw in the same heavy condensed face, tightly leaded: five lines of event details, four of description. Bottom edge: credits left, an RSVP box centre, a small link right. No navigation.",
+      "type": "PP Neue York extra-bold condensed is the only face, used at essentially one size, 36px, in white with very tight leading; credits drop to about 12px. Mixed case with occasional all-caps lines and a raised underlined ordinal. Hierarchy comes from spacing and position alone.",
+      "colour": "#2b2216 #bda38b #c8874a #f1f1e9 #181818 — Warm browns and ambers lifted straight from the footage: dark walnut video, a taupe translucent card, then a flat tan page with honey-lit photos. White type only; no accent colour.",
+      "imagery": "Low-light cinematic video and stills of people lying with eyes closed, shallow focus, amber backlight, wood panelling. Square-cornered and at very different sizes, from small thumbnails to near full-height frames, placed off-grid on flat tan.",
+      "layout": "After the full-bleed opener the page becomes a flat tan field where photos are placed irregularly, one small at left, one mid-size near centre, one tall at right, with wide gaps. The invitation card stays pinned top-left. About four screens, no headings or sections.",
+      "sections": [
+        {
+          "role": "gallery",
+          "description": "Flat tan background. Images sit at irregular positions and scales with no shared grid: a small landscape still about 14% wide near the left edge, a mid-sized one about 16% wide lower and nearer the centre, then a large portrait frame about 26% wide and a full viewport tall near the right. One video frame returns nearly full-bleed between them. No captions; all text lives in the pinned card, which partly overlaps the images."
+        },
+        {
+          "role": "contact",
+          "description": "On scroll the invitation panel collapses to a card pinned in the top-left corner, about half the viewport wide and 22% tall, flush with the edges. It keeps the three-word title spread along its top, the logo, five lines of date and address, and the RSVP box centred on its bottom edge. Its fill is semi-transparent taupe with a blurred dark vignette, so photos passing beneath tint it."
+        }
+      ],
+      "steal": [
+        "Spread the words of a short title to the left, centre and right of a card's top edge so the name becomes its frame.",
+        "Set every line of an invitation in one heavy condensed face at one size and let line breaks and gaps create the hierarchy.",
+        "Shrink the hero card into a pinned corner ticket that keeps date, place and the RSVP button visible for the whole scroll."
+      ]
+    },
+    {
+      "id": "opl-weeksync",
+      "name": "WeekSync",
+      "url": "https://weeksync.app/",
+      "source": "One Page Love",
+      "kind": "saas",
+      "score": 7.1,
+      "idea": "The page is a paper coupon: a dotted cut line with a scissors icon frames the viewport, and on scroll the navigation rail is cut free while the rest of the sheet tilts and falls away.",
+      "mood": ["playful", "utilitarian", "dry", "hand-made"],
+      "archetype": "other: fixed-rail-and-top-statement",
+      "hero": "Taupe-grey field wrapped by a black dotted rounded-rectangle border inset 16px from every edge. A left rail about 26% wide holds, centred on its own axis, a small black logo glyph at the top, a two-line mono tagline and a text link in braces; four nav labels, each under a small empty circle, stack at the bottom of the rail. A scissors icon sits on the bottom dotted line where rail meets main area. The main area carries one four-line statement in medium grotesk at 3vw, flush left and flush top, ending in the first quarter of the height. The remaining three quarters are empty.",
+      "type": "Inter Medium at 43px with -0.05em tracking is used once, for the opening statement. Everything else (nav, card copy, counters, FAQ) is Red Hat Mono at 12 to 19px, centred in cards, with braces and italic underlines as state marks.",
+      "colour": "#cdc8c2 #000000 #f8f6f3 #dfe296 — Flat warm grey ground with black ink throughout. Cards alternate off-white and a pale acid yellow-green, the only colour, which appears solely as a card fill.",
+      "imagery": "Loose black brush-and-ink cartoons of anthropomorphic calendars, charts and buildings, scratchy and energetic, each placed alone in the centre of a pale yellow-green near-square card with large rounded corners.",
+      "layout": "A dotted-outline rail stays pinned in the left quarter for the whole page; content scrolls in the remaining three quarters as a two-column grid of near-square cards with 8px gaps, then becomes a single mono list for FAQ. Section titles are only tiny mono labels.",
+      "sections": [
+        {
+          "role": "other",
+          "description": "Scroll transition after the hero. The single dotted frame splits along a new vertical dotted line at the rail edge as the scissors travel up it; the right-hand piece of the sheet then rotates a few degrees and drops out of view, leaving the rail as its own dotted rectangle. The rail stays pinned while the first row of cards rises from the bottom edge into the vacated area."
+        },
+        {
+          "role": "features",
+          "description": "Two-column checkerboard of near-square cards about 510px wide with 24px corner radius and 8px gutters. An off-white card holds three centred lines of 13px mono copy with a small '1 of 3' counter beneath; its neighbour is a yellow-green card with one ink cartoon. The next row flips the order, so text and drawing swap sides all the way down. No icons, titles or buttons inside cards."
+        },
+        {
+          "role": "faq",
+          "description": "FAQ as a plain mono list across the right three quarters: a tiny centred label, then questions at 14px, each preceded by a small hollow circle with about 35px between rows. The open item gets a filled dot, an italic underlined question and an indented three-line answer. No dividers, boxes or chevrons; the same hollow and filled circles mark the active item in the rail."
+        }
+      ],
+      "steal": [
+        "Give the page a physical metaphor that also does layout work: a dotted cut line frames the viewport, then separates the nav rail on scroll.",
+        "Alternate text-only and illustration-only cards in a checkerboard, flipping sides each row, instead of packing icon, title and copy into every card.",
+        "Use hollow and filled circles as the only state marker for both navigation and accordion items."
+      ]
+    },
+    {
+      "id": "aww-aardvark-book-club",
+      "name": "Aardvark Book Club",
+      "url": "https://aardvarkbookclub.com",
+      "source": "Awwwards Site of the Day",
+      "kind": "ecommerce",
+      "score": 7.7,
+      "idea": "A book club dressed as a sweet shop: fat black type, tumbling 3D books and boxes on wavy colour fields, annotated with handwritten asides.",
+      "mood": ["playful", "loud", "bookish", "warm"],
+      "archetype": "split-text-media",
+      "hero": "A saturated yellow field with two large wavy blobs, pale yellow then orange, rising from the bottom. A three-line headline in Champ Bold, black, at about 8.3vw with leading under 0.85, is flush to a 15px left margin and reaches 60% across. Beneath it: a four-line paragraph 310px wide and a magenta split button (label plus arrow square). Right of centre a 3D hardback in navy and pink tilts 20 degrees, 600px tall; another book is cropped by the top-left corner, a third by the bottom edge. A purple handwritten note sits rotated at far right. Nav: pale-yellow pill links centred, an orange login button, black round social icons.",
+      "type": "Champ Bold, an ultra-heavy wide sans with a looped g, for headings at 120px with tight tracking and leading; Degular for 18px body and pill labels; a purple handwritten script (Hello Organichand) for rotated margin notes and step labels. Three distinct voices.",
+      "colour": "#ffd249 #faed8f #f9a21f #ffdbfd #a4f6f8 #fd48f2 — Each section owns one flat candy colour: yellow hero, white shelf, pink steps, cyan unboxing, deep violet footer. Type stays black; buttons are magenta.",
+      "imagery": "3D-rendered hardbacks and a patterned shipping box, cut out and tilted, floating over flat wavy vector shapes; real book covers on tilted coloured cards; black line drawings of figures on step cards. Nothing sits square to the grid.",
+      "layout": "Sections are full-width panels with roughly 80px corner radius inset about 20px from the viewport, each a different colour. Headings alternate left and centre; cards overlap and rotate a few degrees; handwritten notes are tucked beside headings at an angle.",
+      "sections": [
+        {
+          "role": "showcase",
+          "description": "White band. A centred black heading at 5.5vw over a two-line subline, with a rotated handwritten note at its upper left. Below, a horizontal row of book covers, each on a rounded colour-matched card with a small tag pill at top-left; cards tilt alternately by 3 degrees at staggered heights, the last cropped by the right edge, with two round arrow buttons above at right. Later, covers give way to same-coloured info cards with genre pills, heavy title and blurb."
+        },
+        {
+          "role": "how-it-works",
+          "description": "A pale-pink rounded panel with lighter wavy shapes inside. Heavy black heading at left with a handwritten aside beside it; a small round logo stamp and a magenta split button at right. Along the bottom, four portrait cards about 250px wide in cyan, magenta, yellow and violet overlap like a fanned hand, each rotated a few degrees, with a handwritten step label at top, a black line drawing in the middle and a heavy caption at the foot."
+        },
+        {
+          "role": "other",
+          "description": "A full-viewport cyan rounded panel containing only a 3D shipping box wrapped in a wavy magenta, violet and black pattern, centred. Across the scroll it goes from closed and tilted to lid open, growing to about 57% of the viewport width, with a single handwritten note at its right. No heading and no button."
+        },
+        {
+          "role": "footer",
+          "description": "The preceding white section ends in large rounded bottom corners over a deep violet footer. Left: white logo, two store badges, two magenta round social icons. Centre: the patterned box again, cropped by the bottom edge. Right: a small heavy heading, a white rounded email field and a magenta split button. A black legal strip closes the page."
+        }
+      ],
+      "steal": [
+        "Give each section one flat saturated colour inside a large-radius inset panel and keep the type black across all of them.",
+        "Add rotated handwritten margin notes beside headings to carry secondary facts in a second voice.",
+        "Fan step cards so they overlap and tilt instead of sitting in an even grid."
+      ],
+      "media": "About 60% of the first screen is picture: a 3D book and cropped book corners over a full-bleed illustrated wave field. Below come a sticky image-sequence of a box opening inside a rounded panel, a slider of tilted cards bleeding off the right edge, covers fanned like a hand of cards, a sticker collage round a circular badge and a cut-out box rising out of the footer: 37 images and two scroll-scrubbed canvases, no video.",
+      "motion": "An indigo transition panel wipes away by 1.2s while the headline arrives word by word (515 split characters), and Lenis then drives the scrubbed scenes: the hero book turns through an image sequence, a sticky stage scrubs the box opening over 2745px, a headline slides along a curved path at scrub 0.5, and the footer is uncovered from under the rounded page. Buttons squash to 0.955 by 0.925 in 0.15s on press, the main ease is cubic-bezier(0.32,0.72,0,1), and the bounce overshoots are ones the house motion layer does not use, though the site ships 32 reduced-motion rules."
+    }
+  ],
+  "scenes": []
+}

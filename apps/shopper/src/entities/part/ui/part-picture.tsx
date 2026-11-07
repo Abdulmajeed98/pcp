@@ -1,0 +1,62 @@
+import type { VisiblePartResponse } from '@pcp/api-client';
+import { CategoryIcon } from '@pcp/ui';
+import { cn } from 'cn';
+import Image from 'next/image';
+
+import { photoAddress } from '../model/addresses';
+
+// A Part's photo, and its Category's icon in its place (DESIGN.md's A Part's
+// photo): the photo fills its square, its whole shown on white, as a
+// product shot has it, square-cornered, with the plate's notch cut into its
+// end edge; a Part with no photo shows its Category's icon in its place,
+// drawn in the Ink at 40% of the square, on Sheet Paper, so that it stands
+// off the plate's Board (CAT-6). The icon is drawn as one picture as large
+// as the square, its 24 units at the middle of 60, so that the square is a
+// picture as the photo is. Neither is ever mirrored. The Shopper app serves
+// the photo from its own address, at the width it is drawn at, at once when
+// it is on the page's first screen (`first`), as on a Part page, and
+// otherwise once it is near the window. The Part's name is printed beside
+// it, so a reader is not told it again.
+export function PartPicture({
+  part,
+  sizes,
+  first = false,
+  className,
+}: {
+  part: Pick<VisiblePartResponse, 'category' | 'photoPath'>;
+  sizes: string;
+  first?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      data-testid="part-picture"
+      className={cn(
+        'notched-end relative aspect-square w-full',
+        part.photoPath === null
+          ? 'grid place-items-center bg-card text-foreground'
+          : 'bg-white',
+        className,
+      )}
+    >
+      {part.photoPath === null ? (
+        <CategoryIcon
+          category={part.category}
+          viewBox="-18 -18 60 60"
+          className="size-full"
+          strokeWidth={1.25}
+        />
+      ) : (
+        <Image
+          src={photoAddress(part.photoPath)}
+          alt=""
+          fill
+          sizes={sizes}
+          loading={first ? 'eager' : 'lazy'}
+          fetchPriority={first ? 'high' : 'auto'}
+          className="object-contain"
+        />
+      )}
+    </div>
+  );
+}

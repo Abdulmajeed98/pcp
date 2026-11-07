@@ -1,33 +1,215 @@
 {
-  "App": {
-    "title": "ئەپی کڕیار"
+  "Site": {
+    "name": "پارچە و نرخی کۆمپیوتەر"
   },
   "Frame": {
     "languageSwitch": "زمان",
-    "currencySwitch": "دراو",
+    "currencySwitch": "نرخ بە",
     "currencies": {
       "IQD": "دینار",
       "USD": "دۆلار"
-    }
-  },
-  "PlaceholderPage": {
-    "notice": "شوێنگرەوەی ئەپی کڕیار. کتێبخانەکان: <english>{libraries}</english>.",
-    "apiStartedAt": "API لە <time>{startedAt}</time> دەستی پێکرد.",
-    "apiUnreachable": "ناتوانرێت پەیوەندی بە API بکرێت.",
-    "pricesShownIn": {
-      "IQD": "نرخەکان بە دینار پیشان دەدرێن.",
-      "USD": "نرخەکان بە دۆلار پیشان دەدرێن."
     },
-    "sample": "نموونەیەک لە هەر جۆرە دەقێک لە خوارەوەیە. هەموو بەهاکانی ساختەن.",
-    "partsFound": "{count, plural, one {{countText} پارچە دۆزرایەوە} other {{countText} پارچە دۆزرایەوە}}",
-    "readsAt": "تا <english>{speed}</english> دەخوێنێتەوە.",
-    "partLength": "<english>{part}</english> بە درێژیی <english>{length}</english> دێت."
+    "schemeSwitch": "ڕەنگ",
+    "schemes": {
+      "light": "ڕووناک",
+      "dark": "تاریک",
+      "device": "ئامێر"
+    },
+    "schemeTurn": "ڕەنگ: {now}. {next} هەڵبژێرە"
   },
-  "NotFoundPage": {
-    "title": "پەڕە نەدۆزرایەوە",
-    "description": "ئەم ناونیشانە هیچ پەڕەیەکی نییە."
+  "BackCover": {
+    "invitation": "پارچەکەت بدۆزەرەوە",
+    "chooseACategory": "پۆلێک هەڵبژێرە",
+    "someCategories": "هەندێک لە پۆلەکان",
+    "photographs": "وێنەکانی ئەم پەڕەیە",
+    "photograph": "<source><english>{title}</english></source>، لەلایەن <english>{author}</english>، <licenceLink><english>{licence}</english></licenceLink>{changed, select, dimmed {، تاریککراوە} cropped {، بڕدراوە} other {}}"
   },
   "Footer": {
     "credit": "زانیاری لە <openDbLink><english>{openDb}</english></openDbLink> لەخۆ دەگرێت، کە بەپێی <licenceLink><english>{licence}</english></licenceLink> بەردەست خراوە."
+  },
+  "HomePage": {
+    "titleWords": {
+      "parts": "پارچە",
+      "prices": "نرخ",
+      "vendors": "فرۆشیار"
+    },
+    "eightCategories": "هەشت پۆل",
+    "vendorsAndOffers": "{vendors, plural, one {{vendorsText} فرۆشیار} other {{vendorsText} فرۆشیار}}، {offers, plural, one {{offersText} ئۆفەر} other {{offersText} ئۆفەر}}",
+    "confirmedWithin": "{days, plural, one {لە ماوەی ڕۆژێکدا پشتڕاستکراونەتەوە} other {لە ماوەی {daysText} ڕۆژدا پشتڕاستکراونەتەوە}}",
+    "lede": "نرخی هەموو فرۆشیارێک بۆ ئەو پارچەیەی پێویستتە، کەمترینیان لە پێشەوە، هەر یەکەیان لەگەڵ ڕۆژی دوایین پشتڕاستکردنەوەی.",
+    "roomCaption": "مازەربۆردێک لە ژێر ڕووناکیی سوور",
+    "chooseACategory": "پۆلێک هەڵبژێرە",
+    "categories": {
+      "note": "هەموو پارچەیەک، بە نرخی ئەو فرۆشیارانەی هەیانە",
+      "theCore": "بنەڕەت",
+      "aroundIt": "دەوروبەری",
+      "parts": "{count, plural, one {{countText} پارچە} other {{countText} پارچە}}",
+      "lowestPrice": "کەمترین نرخ",
+      "outOfStockEverywhere": "لای هەموو فرۆشیارێک لە کۆگادا نییە",
+      "close": "{days, plural, one {هەر نرخێک فرۆشیارەکەی لە ڕۆژی ڕابردوودا پشتڕاستی کردۆتەوە} other {هەر نرخێک فرۆشیارەکەی لە {daysText} ڕۆژی ڕابردوودا پشتڕاستی کردۆتەوە}}",
+      "tabs": "پۆلێک هەڵبگرە"
+    },
+    "plate": {
+      "title": "{count, plural, one {یەک پارچە، {countText} فرۆشیار} other {یەک پارچە، {countText} فرۆشیار}}",
+      "seeItsOffers": "{count, plural, one {ئۆفەرەکەی ببینە} other {{countText} ئۆفەرەکەی ببینە}}"
+    },
+    "facts": {
+      "heading": "کەس شوێنی باشتر ناکڕێت",
+      "note": "تۆمارکردن بەخۆڕاییە، و هەموو لیستێک بەپێی نرخ ڕیز دەکرێت، ئۆفەرەکانی ناو کۆگا لە پێشەوە. پلاتفۆرم هیچ داواکاری و پارەیەک وەرناگرێت: خۆت پەیوەندی بە فرۆشیارەوە دەکەیت، لە واتسئاپ نامەی بۆ دەنێریت، یان دەچیتە دووکانەکەی.",
+      "vendors": "{count, plural, one {فرۆشیار} other {فرۆشیار}}",
+      "offers": "{count, plural, one {ئۆفەر، لە کۆگادا یان نا} other {ئۆفەر، لە کۆگادا یان نا}}",
+      "rate": "بۆ هەر دۆلارێک، بنەمای نرخە گۆڕدراوەکان",
+      "days": "{days, plural, one {{daysText} ڕۆژ} other {{daysText} ڕۆژ}}",
+      "daysLine": "پێش ئەوەی ئۆفەرێکی پشتڕاستنەکراو بشاردرێتەوە",
+      "photoCaption": "شوێنی کارتەکان و گەیەنەرەکانیان لە پشتی کۆمپیوتەرێک"
+    }
+  },
+  "PriceSlip": {
+    "lowestPrice": "کەمترین نرخ",
+    "highestInStock": "زۆرترین لە کۆگادا",
+    "vendors": "فرۆشیار",
+    "inStock": "لە کۆگادا هەیە",
+    "converted": "گۆڕدراو ≈",
+    "rate": "نرخی دۆلار",
+    "outOfStockEverywhere": "لای هەموو فرۆشیارێک لە کۆگادا نییە",
+    "stamp": "کەمترین نرخ"
+  },
+  "Part": {
+    "outOfStock": "لە کۆگادا نییە",
+    "inStock": "لە کۆگادا هەیە",
+    "vendors": "{count, plural, one {{countText} فرۆشیار} other {{countText} فرۆشیار}}"
+  },
+  "Offer": {
+    "confirmed": "{days, plural, =0 {ئەمڕۆ پشتڕاستکرایەوە} one {{daysText} ڕۆژ لەمەوبەر پشتڕاستکرایەوە} other {{daysText} ڕۆژ لەمەوبەر پشتڕاستکرایەوە}}",
+    "warranty": "{months, plural, one {گەرەنتیی {monthsText} مانگ} other {گەرەنتیی {monthsText} مانگ}}",
+    "quoted": "نرخی دیاریکراو <english>{price}</english>"
+  },
+  "Paging": {
+    "pages": "پەڕەکان",
+    "pageOf": "پەڕەی {page} لە {pages}",
+    "previousPage": "پەڕەی پێشوو",
+    "nextPage": "پەڕەی دواتر",
+    "pastTheEnd": "{pages, plural, one {ئەم لیستە تەنها {pagesText} پەڕەی هەیە.} other {ئەم لیستە تەنها {pagesText} پەڕەی هەیە.}}",
+    "toTheFirstPage": "بڕۆ بۆ پەڕەی یەکەم"
+  },
+  "SearchParts": {
+    "title": "فلتەرەکان",
+    "label": "{category, select, cpu {گەڕان لە پرۆسێسەرەکان} cpuCooler {گەڕان لە ساردکەرەوەکانی پرۆسێسەر} motherboard {گەڕان لە مازەربۆردەکان} ram {گەڕان لە ڕامەکان} storage {گەڕان لە بیرگەکانی هەڵگرتن} gpu {گەڕان لە کارتە گرافیکەکان} case {گەڕان لە کەیسەکان} psu {گەڕان لە پاوەر سەپلایەکان} other {گەڕان لە پارچەکان}}",
+    "placeholder": "ناو، دروستکەر یان ژمارەی پارچە",
+    "show": "پارچەکان پیشان بدە",
+    "choicesOnCount": "{count, plural, one {{countText} هەڵبژاردن کارە} other {{countText} هەڵبژاردن کارن}}",
+    "manufacturer": "دروستکەر",
+    "filterNames": {
+      "socket": "سۆکێت",
+      "cores": "ناوکەکان",
+      "waterCooled": "هەوا یان شل",
+      "radiatorSize": "قەبارەی ڕادیاتۆر",
+      "formFactor": "فۆرم فاکتەر",
+      "ramType": "جۆری ڕام",
+      "capacity": "قەبارە",
+      "speed": "خێرایی",
+      "driveType": "جۆری بیرگە",
+      "interface": "ڕووکار",
+      "chipset": "چیپسێت",
+      "memory": "بیرگە",
+      "wattage": "وات",
+      "efficiencyRating": "پلەی کارایی"
+    },
+    "waterCooled": "{liquid, select, true {شل} other {هەوا}}",
+    "yesOrNo": "{yes, select, true {بەڵێ} other {نەخێر}}",
+    "moreValues": "{count, plural, one {{countText} دانەی تر} other {{countText} دانەی تر}}",
+    "fewerValues": "کەمتر",
+    "valueOfName": "{name} <english>{value}</english>",
+    "price": "نرخ، <english>{unit}</english>",
+    "lowest": "کەمترین",
+    "highest": "زۆرترین",
+    "priceProblems": {
+      "notAWholeNumber": "ژمارەیەکی تەواو نییە، بۆیە بەکارنەهات.",
+      "tooLarge": "زۆر گەورەیە، بۆیە بەکارنەهات.",
+      "aboveTheHighest": "لە زۆرترین زیاترە، بۆیە بەکارنەهات."
+    },
+    "priceRange": "{ends, select, both {<english>{lowest}</english> تا <english>{highest} {unit}</english>} lowest {لە <english>{lowest} {unit}</english> بەرەو سەرەوە} other {تا <english>{highest} {unit}</english>}}",
+    "removeChoice": "لابردنی {choice}",
+    "removeThePriceRange": "لابردنی مەودای نرخی {range}",
+    "choicesOn": "ئەو هەڵبژاردنانەی ئێستا کارن",
+    "removeTheSearch": "لابردنی گەڕانی {search}",
+    "clearAll": "هەمووی لابدە"
+  },
+  "CategoryPage": {
+    "note": "{count, plural, one {{countText} پارچە کە فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، کەمترین نرخ لە پێشەوە.} other {{countText} پارچە کە فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، کەمترین نرخ لە پێشەوە.}}",
+    "found": "{count, plural, one {{countText} پارچە دۆزرایەوە، کەمترین نرخ لە پێشەوە.} other {{countText} پارچە دۆزرانەوە، کەمترین نرخ لە پێشەوە.}}",
+    "stamp": "کەمترین نرخ لە پێشەوە",
+    "inStock": "لە کۆگادا هەیە",
+    "outOfStockEverywhere": "لای هەموو فرۆشیارێک لە کۆگادا نییە",
+    "close": "کەمترین نرخ لە پێشەوە. ئەو پارچانەی لای هەموو فرۆشیارێک لە کۆگادا نین لە کۆتاییدان.",
+    "approximately": "≈ نیشانەی نرخێکە کە پلاتفۆرمەکە لە دراوی نرخی فرۆشیارەکەوە، بە نرخی دۆلاری پلاتفۆرم، گۆڕیویەتی.",
+    "noneYet": "{category, select, cpu {هێشتا هیچ فرۆشیارێک ئۆفەری پرۆسێسەری نییە.} cpuCooler {هێشتا هیچ فرۆشیارێک ئۆفەری ساردکەرەوەی پرۆسێسەری نییە.} motherboard {هێشتا هیچ فرۆشیارێک ئۆفەری مازەربۆردی نییە.} ram {هێشتا هیچ فرۆشیارێک ئۆفەری ڕامی نییە.} storage {هێشتا هیچ فرۆشیارێک ئۆفەری بیرگەی هەڵگرتنی نییە.} gpu {هێشتا هیچ فرۆشیارێک ئۆفەری کارتی گرافیکی نییە.} case {هێشتا هیچ فرۆشیارێک ئۆفەری کەیسی نییە.} psu {هێشتا هیچ فرۆشیارێک ئۆفەری پاوەر سەپلای نییە.} other {هێشتا هیچ فرۆشیارێک ئۆفەری لەم پۆلەدا نییە.}}",
+    "noneYetLine": "فرۆشیاران ئۆفەرەکانیان زیاد دەکەن کاتێک دەیانهێننە کۆگاوە.",
+    "chooseAnotherCategory": "پۆلێکی تر هەڵبژێرە",
+    "noMatch": "{category, select, cpu {هیچ پرۆسێسەرێک لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.} cpuCooler {هیچ ساردکەرەوەیەکی پرۆسێسەر لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.} motherboard {هیچ مازەربۆردێک لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.} ram {هیچ ڕامێک لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.} storage {هیچ بیرگەیەکی هەڵگرتن لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.} gpu {هیچ کارتێکی گرافیک لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.} case {هیچ کەیسێک لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.} psu {هیچ پاوەر سەپلایەک لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.} other {هیچ پارچەیەک لەگەڵ گەڕان و فلتەرەکانت ناگونجێت.}}",
+    "notRead": "ئێستا لیستەکە ناخوێنرێتەوە. دوای کەمێک دووبارە هەوڵ بدەرەوە.",
+    "tryAgain": "دووبارە هەوڵ بدەرەوە"
+  },
+  "PartPage": {
+    "partNumbers": "{count, plural, one {ژمارەی پارچە} other {ژمارەکانی پارچە}}",
+    "lowestPrice": "کەمترین نرخ",
+    "outOfStockEverywhere": "لای هەموو فرۆشیارێک لە کۆگادا نییە",
+    "offersTitle": "{count, plural, one {{countText} فرۆشیار ئۆفەری بۆ هەیە} other {{countText} فرۆشیار ئۆفەریان بۆ هەیە}}",
+    "offersNote": "سەرەتا ئەوانەی لە کۆگادا هەن، پاشان کەمترین نرخ. هیچ فرۆشیارێک پارە بۆ شوێنەکەی نادات.",
+    "inStock": "لە کۆگادا هەیە",
+    "outOfStock": "لە کۆگادا نییە",
+    "specifications": "تایبەتمەندییەکان",
+    "noSpecifications": "کاتالۆگەکە هێشتا هیچ تایبەتمەندییەکی ئەم پارچەیەی تێدا نییە.",
+    "barcode": "ژمارەی پارچە {number}",
+    "notRead": {
+      "title": "ئێستا ئەم پارچەیە ناخوێنرێتەوە",
+      "note": "دوای کەمێک دووبارە هەوڵ بدەرەوە."
+    },
+    "tryAgain": "دووبارە هەوڵ بدەرەوە"
+  },
+  "VendorPage": {
+    "openingHours": "کاتەکانی کارکردن",
+    "whatItIs": "فرۆشیارێکی پارچەی کۆمپیوتەر لە {city}.",
+    "contactLinks": "چۆن پەیوەندی پێوە بکەیت",
+    "call": "پەیوەندی بکە",
+    "whatsApp": "واتسئاپ",
+    "instagram": "ئینستاگرام",
+    "map": "لە گووگڵ ماپس بیکەرەوە",
+    "inANewTab": "، لە تابێکی نوێدا",
+    "tabs": "پەیوەندی بە فرۆشیارەکەوە بکە",
+    "offersTitle": "{count, plural, =0 {ئۆفەرەکانی ئەم فرۆشیارە} one {{countText} ئۆفەری ئەم فرۆشیارە} other {{countText} ئۆفەری ئەم فرۆشیارە}}",
+    "offersNote": "بەپێی پۆل، سەرەتا ئەوانەی لە کۆگادا هەن، پاشان کەمترین نرخ.",
+    "none": "ئەم فرۆشیارە ئێستا هیچ ئۆفەرێکی نییە بۆ نیشاندان.",
+    "offersNotRead": "ئێستا ئۆفەرەکانی ناخوێنرێنەوە. دوای کەمێک دووبارە هەوڵ بدەرەوە.",
+    "notRead": {
+      "title": "ئێستا ئەم فرۆشیارە ناخوێنرێتەوە",
+      "note": "دوای کەمێک دووبارە هەوڵ بدەرەوە."
+    },
+    "tryAgain": "دووبارە هەوڵ بدەرەوە"
+  },
+  "NotFoundPage": {
+    "title": "پەڕە نەدۆزرایەوە",
+    "description": "لەوانەیە ئەم پارچەیە یان ئەم فرۆشیارە ئیتر لەسەر پلاتفۆرمەکە نەبێت، یان ناونیشانەکە بە هەڵە نووسرابێت.",
+    "chooseACategory": "پۆلێک هەڵبژێرە"
+  },
+  "Preview": {
+    "titleOfAPage": "{page} · {site}",
+    "home": {
+      "title": "پارچە و نرخی کۆمپیوتەر",
+      "description": "نرخی هەموو فرۆشیارێک بۆ ئەو پارچانەی کۆمپیوتەر کە پێویستتن بەراورد بکە: کەمترینیان لە پێشەوە، هەر یەکەیان لەگەڵ ڕۆژی دوایین پشتڕاستکردنەوەی، بە دینار یان دۆلار."
+    },
+    "notFound": {
+      "title": "پەڕە نەدۆزرایەوە",
+      "description": "لەوانەیە ئەم پارچەیە یان ئەم فرۆشیارە ئیتر لەسەر پلاتفۆرمەکە نەبێت، یان ناونیشانەکە بە هەڵە نووسرابێت."
+    },
+    "category": {
+      "description": "{category, select, cpu {هەموو ئەو پرۆسێسەرانەی فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.} cpuCooler {هەموو ئەو ساردکەرەوانەی پرۆسێسەر کە فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.} motherboard {هەموو ئەو مازەربۆردانەی فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.} ram {هەموو ئەو ڕامانەی فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.} storage {هەموو ئەو بیرگانەی هەڵگرتن کە فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.} gpu {هەموو ئەو کارتە گرافیکانەی فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.} case {هەموو ئەو کەیسانەی فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.} psu {هەموو ئەو پاوەر سەپلایانەی فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.} other {هەموو ئەو پارچانەی فرۆشیاران ئێستا ئۆفەریان بۆ هەیە، هەر یەکەیان بە کەمترین نرخی، بە دینار یان دۆلار.}}"
+    },
+    "part": {
+      "description": "{part}، {category, select, cpu {پرۆسێسەرێکی} cpuCooler {ساردکەرەوەیەکی پرۆسێسەری} motherboard {مازەربۆردێکی} ram {ڕامێکی} storage {بیرگەیەکی هەڵگرتنی} gpu {کارتێکی گرافیکی} case {کەیسێکی} psu {پاوەر سەپلایەکی} other {پارچەیەکی}} {manufacturer}. {count, plural, one {{countText} فرۆشیار ئۆفەری بۆ هەیە} other {{countText} فرۆشیار ئۆفەریان بۆ هەیە}}، هەر نرخێک فرۆشیارەکەی پشتڕاستی کردۆتەوە."
+    },
+    "vendor": {
+      "description": "{vendor}، فرۆشیارێک لە {city}. چۆن پەیوەندی پێوە بکەیت، نامەی بۆ بنێریت یان بیدۆزیتەوە، و هەموو ئەو پارچانەی کۆمپیوتەر کە ئێستا ئۆفەری بۆیان هەیە."
+    }
   }
 }

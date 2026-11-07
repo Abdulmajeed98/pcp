@@ -10,6 +10,10 @@ Helps people in Iraq plan a desktop PC from parts that local vendors actually st
 A specific model of PC component, defined once by the platform together with its specifications (for example "Ryzen 5 7600").
 _Avoid_: Product, item, component, listing
 
+**Visible Part**:
+A Part with at least one Visible Offer: the only Parts a Shopper ever sees, in stock or not.
+_Avoid_: Offered part, available part, listed part, active part
+
 **Category**:
 The kind of Part: CPU, CPU cooler, motherboard, RAM, storage, GPU, case or PSU.
 _Avoid_: Type, group, section
@@ -60,6 +64,10 @@ _Avoid_: Update, refresh, sync
 An Offer hidden from Shoppers because its last Confirmation is too old.
 _Avoid_: Stale offer, outdated offer, inactive offer
 
+**Visible Offer**:
+An Offer a Shopper may see: one that is not an Expired Offer and whose Vendor is active.
+_Avoid_: Live offer, active offer, current offer, published offer
+
 **Referral**:
 One tap by a Shopper on the button that sends their Build to a Vendor over WhatsApp.
 _Avoid_: Lead, order, enquiry, click
@@ -103,6 +111,10 @@ _Avoid_: Selected currency, display currency, user currency
 **Shown Price**:
 The price an Offer shows in the chosen currency: its Quoted Price in that currency if there is one, else its Converted Price.
 _Avoid_: Display price, final price, effective price
+
+**Lowest Price**:
+The lowest Shown Price among a Part's in-stock Visible Offers, in the chosen currency; a Part whose Visible Offers are all out of stock has none.
+_Avoid_: Best price, cheapest price, starting price, from price
 
 **Platform Rate**:
 The single USD-to-IQD rate behind every Converted Price, set by hand to follow the Erbil market rate.

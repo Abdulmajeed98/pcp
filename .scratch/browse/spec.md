@@ -1,6 +1,6 @@
 # Spec: Browse
 
-Status: ready-for-agent
+Status: resolved
 
 This is `browse`, the sixth module in the build order of [the MVP spec](../mvp/spec.md)'s capability map, after `pricing`. It covers BRW-1 to BRW-5, and the Shopper's side of CAT-7, CAT-9, OFF-7, OFF-11 and PRC-3. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md), [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0005](../../docs/adr/0005-specifications-as-one-document-per-part.md), [ADR-0006](../../docs/adr/0006-fonts-downloaded-from-our-own-server.md), [ADR-0007](../../docs/adr/0007-a-look-and-components-for-each-app.md) and [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md). It builds on the conventions that `languages`, `catalog`, `accounts`, `offers`, the redesign and `pricing` recorded in the MVP spec.
 
@@ -10,6 +10,10 @@ On 3 November 2026 the owner made two decisions for this module:
 
 - **The test seams** are the same three as `catalog`'s, `accounts'`, `offers'` and `pricing`'s, plus a fourth: unit tests of the Shopper app's own functions. It is the first unit seam in a frontend, and its runner is chosen when that work begins, as the MVP spec says of each app's libraries.
 - **The made-up data for design and inspection comes from a stand-in API.** `pnpm shopper:inspect` starts the Shopper app against a stand-in API that answers the public endpoints from a made-up shop and refuses every write. The development database is not touched.
+
+On 5 November 2026 the owner added that the app will reach beyond Erbil. Its design carries nothing particular to Erbil: its pictures stand for PCs, not a place, and a Part page's preview counts the shops that offer the Part without naming a city.
+
+On 6 November 2026 the owner chose the Shopper app's look, the printed price list, in tickets 07 and 08. Its home page and a Part's price slip print figures that no public endpoint gave: how many Vendors and Visible Offers the platform holds, the Platform Rate, and how long an Offer stays listed. The owner chose to add one public endpoint for them, `GET v1/platform-figures` (ticket 15).
 
 Some words need care. A **Visible Offer** is an Offer that is not an Expired Offer and whose Vendor is active (CAT-7). A **Visible Part** is a Part with at least one Visible Offer: the only Parts a Shopper ever sees. A Part's **Lowest Price** is the lowest Shown Price among its in-stock Visible Offers, in the chosen currency. A Part whose Visible Offers are all out of stock has no Lowest Price. The three terms are new, and the first ticket adds them to CONTEXT.md before any code uses them, as the MVP spec's Boundaries ask. "Category page", "Part page" and "Vendor page" are the MVP spec's own names for the three kinds of page.
 
@@ -184,6 +188,7 @@ Each is marked `@Public()`, answers the same with a good token, a bad one or non
 | `GET v1/parts/{partId}/offers?currency` | As `pricing` left it: the Part's Visible Offers with their Shown Price, in OFF-11's order |
 | `GET v1/visible-vendors/{vendorId}` | An active Vendor's name, city, address, map location, phone number, WhatsApp number, Instagram name and opening hours, or 404 `NOT_FOUND` when the Vendor is deactivated or unknown |
 | `GET v1/visible-vendors/{vendorId}/offers?currency&page&size` | One page of an active Vendor's Visible Offers, each with its Part's identifier, Category, name, manufacturer and photo's path, its Shown Price, in-stock status, warranty and days since Confirmation |
+| `GET v1/platform-figures` | The platform's figures: how many active Vendors it has and how many Visible Offers it lists, the current Platform Rate or none, and how many days an Offer stays current without a Confirmation. When and by whom the rate was set stays the Admin's |
 
 - The visible-Offer rule is read through `visibleOffer(now)`, the Shown Price through `pricing`'s SQL expression for a Shown Price at the current Platform Rate, and the search through the catalog's word rule: every word, in any order and any case, in the name, the manufacturer or a part number. None of them is written a second time. Each answer reads the Platform Rate once, in the same query as the rest, so that one answer never mixes two rates.
 - **A Category's list** orders Parts with a Lowest Price first, lowest first; then in-stock Parts with no Lowest Price, which happens only with no Platform Rate; then Parts whose Visible Offers are all out of stock. Within each, ties fall to the Part's name, then its identifier. The page size and its limits are the catalog's paging, through `PagingRequest`.
@@ -209,7 +214,7 @@ Each is marked `@Public()`, answers the same with a good token, a bad one or non
 - **The Vendor's contact details** are drawn through the as-written component `languages` built, with the text's own direction (LANG-4). Phone numbers are `tel:` links. The WhatsApp number opens WhatsApp's chat address. The Instagram name opens its profile. The map location opens Google Maps' search for the coordinates, in a new tab. Nothing from Google is loaded on the page (BRW-4). The rules for WhatsApp's chat address and Google Maps' address are written once for both frontends, in a shared library the boundary rules allow, moved there from the dashboard. A detail the Vendor has not given is left out.
 - **The search and the filters are a plain form sent with GET**, so they work before any script has loaded. Each choice is a native control, named in the page's language. With script, the design may apply a choice as soon as it is made. A price range is typed in Western or Arabic-Indic digits, read through the same reading of digits the dashboard uses, which moves to a shared library.
 - **Labels.** Category names, filter names, the words for yes-or-no values, "Air" and "Liquid", and every other new text are in `i18n`'s Shopper set in all three languages, using `words.md`'s terms. The Kurdish and Arabic drafts stay for the owner's review under LANG-7. A specification's own label and value are English (LANG-3), drawn through `AlwaysEnglish`, and so are Part and manufacturer names and part numbers.
-- **Previews (BRW-5).** Every page has a title and a description in its language, its canonical address, its addresses in the other two languages, and Open Graph's title, description, type, locale and, for a Part with a photo, its image. A Part page's description names the Part, its manufacturer and Category, and how many shops in Erbil offer it. A Vendor page's names the shop and its city. A Category page's names the Category. No description holds a price.
+- **Previews (BRW-5).** Every page has a title and a description in its language, its canonical address, its addresses in the other two languages, and Open Graph's title, description, type, locale and, for a Part with a photo, its image. A Part page's description names the Part, its manufacturer and Category, and how many shops offer it. A Vendor page's names the shop and its city. A Category page's names the Category. No description holds a price.
 - **Not found.** An unknown Category, a Part that is not visible and a Vendor that is deactivated or unknown answer the Shopper app's existing not-found page with a 404 status, in the page's language.
 - **The frame** keeps the language switch, the currency switch and the footer's credit (CAT-9), rebuilt to the new design.
 
@@ -273,6 +278,12 @@ Each new line is seen to fail once, by a deliberate fault that is then reverted:
 - The Vendor answers its contact details, with null for each one it has not given, and never its Login phone number.
 - Its Offers are grouped by the catalog's order of Categories, and are in OFF-11's order within each. Each has its Shown Price in the asked currency, and Expired Offers are left out.
 
+**The platform's figures**
+
+- With no Vendor, no Offer and no rate, it answers zero, zero, none and the days an Offer stays current.
+- A deactivated Vendor and its Offers are not counted, nor is an Expired Offer. Reactivating the Vendor, or confirming the Offer again, counts them again.
+- The rate is none until one is set, and then the latest one set. The answer never says when it was set or by whom.
+
 Prior art: `offers`' and `pricing`'s integration tests of a Part's Visible Offers, with their refusals and their orders; the catalog's tests of its search and its paging.
 
 ### Seam 3: the running platform, from the outside
@@ -302,7 +313,7 @@ Prior art: `offers`' and `pricing`'s integration tests of a Part's Visible Offer
 
 **Taste's inspector**
 
-- `pnpm shopper:inspect` on each of the four pages, in both schemes, in Kurdish and English, at 1440, 768 and 360 pixels. The results go in the ticket's Comments as the MVP spec's redesign conventions ask: every FAIL fixed, every WARN fixed or defended.
+- `pnpm shopper:inspect` on each of the four pages, in both schemes, in Kurdish and English, at 1440, 768 and 360 pixels. The results go in the ticket's Comments as the MVP spec's redesign conventions ask: every FAIL fixed, every WARN fixed or defended. On 7 November 2026, at the code review, the owner decided that phones are inspected at 390 pixels, since the inspector draws its 360-pixel window only 225 pixels tall, and that the 360-pixel rule is measured by the end-to-end tests' `expectNoSidewaysScroll`; the MVP spec's conventions say so.
 
 The existing `shopper-page.spec.ts` of the placeholder is rewritten for the home page. `shopper-currency.spec.ts`, `shopper-languages.spec.ts` and `shopper-credit-languages.spec.ts` keep passing against the rebuilt frame.
 
