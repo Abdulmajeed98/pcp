@@ -6,6 +6,10 @@ Two decisions of the `languages` module, which are costly to undo once pages, li
 
 **The Shopper app uses next-intl, and the dashboard uses react-i18next with i18next.** Each reads its text in its own library's own format: the Shopper app's in ICU, which is next-intl's, and the dashboard's in i18next's. All of it is in the `i18n` library, as one set of files for each frontend, and a third set, the shared terms, holds the text both show alike in plain text, which both libraries read the same way. A step of `pnpm check` holds each set to its format.
 
+## Amended 7 November 2026: a Part's photo has no language
+
+A Part's photo is served by the Shopper app at `/photos/{photoId}` (browse ticket 09), outside the language that starts every other Shopper address, and next-intl's proxy leaves it alone. The decision above is about pages, and a photo is not one: it is the same picture in every language, with nothing in it to read, so it has no language to carry, and a language in its address would only make three addresses of one picture. With one address a preview's Open Graph image names the same picture whatever the page's language, and a browser or a cache in front of the platform keeps it once. Every page's address still starts with its language. The browse module's code review raised it, and kept the address (Standards 4).
+
 ## Considered Options
 
 For the Shopper's address:
