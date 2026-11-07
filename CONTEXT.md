@@ -145,3 +145,11 @@ _Avoid_: Conflict, error, incompatibility
 **Compatibility Warning**:
 A Compatibility Rule finding that the Parts in a Build work only if a stated condition holds, such as using an adapter supplied with the Part.
 _Avoid_: Note, notice, caution
+
+**Compatible**:
+Said of a Part and a Build: adding the Part to the Build would cause no Compatibility Problem. Neither a Compatibility Warning nor an unchecked Compatibility Rule makes a Part incompatible.
+_Avoid_: Fits, suitable, supported, valid
+
+**Estimated power draw**:
+What a Build is reckoned to draw: its CPU's TDP, plus its GPU's TDP when it has one, plus 100 W for everything else.
+_Avoid_: Power consumption, total TDP, wattage, load
