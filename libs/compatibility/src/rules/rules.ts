@@ -12,6 +12,7 @@ import { rule11 } from './rule-11';
 import { rule12 } from './rule-12';
 import { rule13 } from './rule-13';
 import { rule14 } from './rule-14';
+import { rule15 } from './rule-15';
 import { rule16 } from './rule-16';
 import { rule17 } from './rule-17';
 import { rule18 } from './rule-18';
@@ -35,6 +36,7 @@ export const rules: readonly Rule[] = [
   rule12,
   rule13,
   rule14,
+  rule15,
   rule16,
   rule17,
   rule18,

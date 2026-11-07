@@ -43,6 +43,8 @@ describe('the needed specifications', () => {
         'supported_motherboard_form_factors',
         'max_video_card_length',
         'expansion_slots',
+        'internal_3_5_bays',
+        'internal_2_5_bays',
         'max_cpu_cooler_height',
         'supported_power_supply_form_factors',
         'max_psu_length',
