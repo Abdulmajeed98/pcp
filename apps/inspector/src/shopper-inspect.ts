@@ -46,7 +46,7 @@ import { theShoppersShop } from './the-shoppers-shop.ts';
 // Shopper app not answering.
 
 const usage =
-  'usage: pnpm shopper:inspect <path without the language> [--language ckb|ar|en] [--scheme light|dark] [--widths 1440,768,360] [--out DIR] [other options of inspect.mjs]';
+  'usage: pnpm shopper:inspect <path without the language> [--language ckb|ar|en] [--scheme light|dark] [--widths 1440,768,390] [--out DIR] [other options of inspect.mjs]';
 
 const shopperPort = 3100;
 const standInPort = 3101;

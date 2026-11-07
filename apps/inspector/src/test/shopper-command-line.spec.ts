@@ -30,14 +30,14 @@ describe("the Shopper's inspection's command line", () => {
 
   it("takes the scheme, and passes the inspector's own options through after the address", () => {
     expect(
-      read('/ --scheme dark --widths 1440,768,360 --out .taste-skill/x --language en'),
+      read('/ --scheme dark --widths 1440,768,390 --out .taste-skill/x --language en'),
     ).toEqual({
       address: 'http://localhost:3100/en',
       scheme: 'dark',
       inspectorArgs: [
         'http://localhost:3100/en',
         '--widths',
-        '1440,768,360',
+        '1440,768,390',
         '--out',
         '.taste-skill/x',
       ],

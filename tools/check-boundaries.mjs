@@ -98,7 +98,7 @@ const inALibrary = casesFor(ui, 'A library');
 const inCompatibility = casesFor(compatibility, '@pcp/compatibility');
 const inTheEndToEndTests = casesFor(endToEnd, 'The end-to-end tests');
 
-// Between the nine projects. The API's case is planted in its domain layer,
+// Between the projects. The API's case is planted in its domain layer,
 // where its own ban applies as well, to show that both hold on one file.
 const casesBetweenProjects = [
   inTheDashboard.refused(

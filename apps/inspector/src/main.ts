@@ -39,7 +39,7 @@ import { runTheInspector, tastesBrowser } from './taste.ts';
 // though the screen was opened twice.
 
 const usage =
-  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--widths 1440,768,360] [--out DIR] [--app] [other options of inspect.mjs]';
+  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--widths 1440,768,390] [--out DIR] [--app] [other options of inspect.mjs]';
 
 // Where the API is during development, as the dashboard's settings have it.
 const apiUrl = process.env.VITE_API_URL ?? 'http://localhost:3001';

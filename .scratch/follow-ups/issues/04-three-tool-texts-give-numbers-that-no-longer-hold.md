@@ -4,7 +4,7 @@
 
 **Category:** bug
 
-**Status:** needs-triage
+**Status:** resolved
 
 **From:** browse's follow-ups list, swept on 7 November 2026: browse ticket 01, and what the sweep found beside it.
 
@@ -14,3 +14,9 @@
 - The usage lines of `pnpm shopper:inspect` and `pnpm dashboard:inspect` show `--widths 1440,768,360`. The owner decided on 7 November 2026 that phones are inspected at 390, since the inspector draws a 360-pixel window only 225 pixels tall, and that the end-to-end tests measure the 360-pixel rule. The design skills guide and the MVP spec say so.
 
 **Done when.** The comment names no count that changes with the workspace, or the right one, and both usage lines show 390.
+
+## Comments
+
+### 7 November 2026: done
+
+The owner chose to implement every follow-up ticket. The comment in `tools/check-boundaries.mjs` now heads its cases "Between the projects", naming no count. The usage lines of `pnpm dashboard:inspect` and `pnpm shopper:inspect` show `--widths 1440,768,390`, and so does the Shopper command line's test, which passes the widths through.
