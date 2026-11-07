@@ -1,6 +1,6 @@
 import type { VendorWithExpiringOffersResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
-import { whatsAppChatWith } from '@pcp/links';
+import { callTo, whatsAppChatWith } from '@pcp/links';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { cn } from 'cn';
 import {
@@ -22,8 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/ui';
-
-import { callTo } from '../model/links';
 
 // A Vendor to remind, as the dashboard's DESIGN.md lays it out (redesign
 // ticket 10): its name as it writes it, why it is on the list, in Action Red
