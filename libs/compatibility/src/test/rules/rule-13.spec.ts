@@ -114,6 +114,27 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
     },
   );
 
+  // The owner's decision of 8 November 2026: an M.2 drive whose interface is
+  // SATA, as OpenDB gives 3 drives' at the pinned commit, is an M.2 SATA drive.
+  it.each<[StorageInterface]>([['SATA 1.5 Gb/s'], ['SATA 3.0 Gb/s'], ['SATA 6.0 Gb/s']])(
+    'does not count an M.2 drive whose interface is %s, an M.2 SATA drive, as a SATA drive',
+    (iface) => {
+      const build: Build = {
+        motherboard: boardWithPorts(1, 0),
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('an-m2-sata-drive', 'M.2-2280', iface),
+        ],
+      };
+
+      expect(outcomeOf(13, build)).toEqual({
+        rule: 13,
+        outcome: 'passes',
+        parts: ['the-board', 'a-sata-drive', 'an-m2-sata-drive'],
+      });
+    },
+  );
+
   it('counts two of one drive as two drives', () => {
     const build: Build = {
       motherboard: boardWithPorts(1, 0),
@@ -157,6 +178,38 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
         rule: 13,
         outcome: 'passes',
         parts: ['the-board', 'a-sata-drive', 'a-drive-of-no-interface'],
+      });
+    });
+
+    it('is unchecked when a drive of a SATA interface whose form factor is missing could tip the count, since it may be an M.2 SATA drive', () => {
+      const build: Build = {
+        motherboard: boardWithPorts(1, 0),
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-form-factor', undefined, 'SATA 6.0 Gb/s'),
+        ],
+      };
+
+      expect(outcomeOf(13, build)).toEqual({
+        rule: 13,
+        outcome: 'unchecked',
+        missing: [{ part: 'a-drive-of-no-form-factor', path: 'form_factor' }],
+      });
+    });
+
+    it('judges a drive of a SATA interface whose form factor is missing when it could not tip the count', () => {
+      const build: Build = {
+        motherboard: boardWithPorts(2, 0),
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-form-factor', undefined, 'SATA 6.0 Gb/s'),
+        ],
+      };
+
+      expect(outcomeOf(13, build)).toEqual({
+        rule: 13,
+        outcome: 'passes',
+        parts: ['the-board', 'a-sata-drive', 'a-drive-of-no-form-factor'],
       });
     });
 

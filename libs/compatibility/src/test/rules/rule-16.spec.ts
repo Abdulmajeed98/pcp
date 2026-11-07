@@ -98,6 +98,27 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
     });
   });
 
+  // The owner's decision of 8 November 2026: an M.2 drive whose interface is
+  // SATA is an M.2 SATA drive, which its slot powers.
+  it.each<[StorageInterface]>([['SATA 1.5 Gb/s'], ['SATA 3.0 Gb/s'], ['SATA 6.0 Gb/s']])(
+    'needs no SATA power for an M.2 drive whose interface is %s, an M.2 SATA drive',
+    (iface) => {
+      const build: Build = {
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('an-m2-sata-drive', 'M.2-2280', iface),
+        ],
+        psu: psuWithConnectors(1),
+      };
+
+      expect(outcomeOf(16, build)).toEqual({
+        rule: 16,
+        outcome: 'passes',
+        parts: ['a-sata-drive', 'an-m2-sata-drive', 'the-psu'],
+      });
+    },
+  );
+
   it("is unchecked when the PSU's SATA power connectors are missing", () => {
     const build: Build = {
       storage: [drive('the-drive', '2.5"', 'SATA 6.0 Gb/s')],
@@ -154,6 +175,22 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
         rule: 16,
         outcome: 'passes',
         parts: ['a-sata-drive', 'a-drive-of-no-interface', 'the-psu'],
+      });
+    });
+
+    it('is unchecked when a drive of a SATA interface whose form factor is missing could tip the count, since it may be an M.2 SATA drive', () => {
+      const build: Build = {
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-form-factor', undefined, 'SATA 6.0 Gb/s'),
+        ],
+        psu: psuWithConnectors(1),
+      };
+
+      expect(outcomeOf(16, build)).toEqual({
+        rule: 16,
+        outcome: 'unchecked',
+        missing: [{ part: 'a-drive-of-no-form-factor', path: 'form_factor' }],
       });
     });
   });

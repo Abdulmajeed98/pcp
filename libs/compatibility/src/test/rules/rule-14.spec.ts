@@ -137,6 +137,37 @@ describe("rule 14: the M.2 drives and the motherboard's M.2 slots", () => {
       });
     });
 
+    // The owner's decision of 8 November 2026: an M.2 drive whose interface
+    // is SATA is an M.2 SATA drive.
+    it.each<[StorageInterface]>([['SATA 1.5 Gb/s'], ['SATA 3.0 Gb/s'], ['SATA 6.0 Gb/s']])(
+      'passes an M.2 drive whose interface is %s, an M.2 SATA drive, in a slot keyed B',
+      (iface) => {
+        const build: Build = {
+          motherboard: boardWithSlots(['B']),
+          storage: [drive('the-drive', 'M.2-2280', iface)],
+        };
+
+        expect(outcomeOf(14, build)).toEqual({
+          rule: 14,
+          outcome: 'passes',
+          parts: ['the-board', 'the-drive'],
+        });
+      },
+    );
+
+    it('finds a Problem in an M.2 drive whose interface is SATA 6.0 Gb/s in a slot keyed E', () => {
+      const build: Build = {
+        motherboard: boardWithSlots(['E']),
+        storage: [drive('the-drive', 'M.2-2280', 'SATA 6.0 Gb/s')],
+      };
+
+      expect(outcomeOf(14, build)).toEqual({
+        rule: 14,
+        outcome: 'problem',
+        parts: ['the-board', 'the-drive'],
+      });
+    });
+
     it('passes an NVMe drive and an M.2 SATA drive in a slot keyed M and one keyed B', () => {
       const build: Build = {
         motherboard: boardWithSlots(['M', 'B']),

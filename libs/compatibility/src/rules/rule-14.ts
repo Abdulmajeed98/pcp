@@ -7,11 +7,13 @@ import type { Reading } from './reading';
 import { rule } from './statement';
 
 // Rule 14: the Build has more M.2 drives than the motherboard has M.2 slots
-// for them. An M.2 drive is one whose form factor is an M.2 size. A slot
-// keyed M takes any M.2 drive, one keyed B only an M.2 SATA drive, and one
-// keyed E none, since it is for a wireless card. So the M.2 drives that are
-// not SATA, which only a slot keyed M takes, may outnumber those slots, or
-// all the M.2 drives the slots keyed M or B.
+// for them. An M.2 drive is one whose form factor is an M.2 size, and an M.2
+// SATA drive one whose interface is M.2 SATA, or SATA 1.5, 3.0 or 6.0 Gb/s
+// (the owner's decision of 8 November 2026). A slot keyed M takes any M.2
+// drive, one keyed B only an M.2 SATA drive, and one keyed E none, since it
+// is for a wireless card. So the M.2 drives that are not SATA, which only a
+// slot keyed M takes, may outnumber those slots, or all the M.2 drives the
+// slots keyed M or B.
 export const rule14 = rule({
   number: 14,
   involves: { motherboard: ['m2_slots'], storage: ['form_factor', 'interface'] },

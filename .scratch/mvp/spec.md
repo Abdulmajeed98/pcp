@@ -248,10 +248,11 @@ Rules 11, 15 and 20 are the only rules that can produce a Compatibility Warning,
 - **Rule 15.** A 2.5-inch drive may take a free 3.5-inch bay when no 2.5-inch bay is left, because 466 of the 498 cases that give 0 internal 2.5-inch bays have 3.5-inch bays, which usually take one. It is a Compatibility Problem when the drives outnumber the bays that way. It is a Compatibility Warning when the case gives no internal bays at all and the Build has a 2.5-inch drive: test benches and small cases such as the FormD T1 mount an SSD somewhere OpenDB does not count as a bay.
 - **Rule 20.** It is a Compatibility Problem when the PSU has no EPS connector at all. It is a Compatibility Warning when the PSU has at least one EPS connector but fewer than the motherboard has CPU power sockets: the extra socket is often optional.
 
-Two rules read some of OpenDB's values in a way of their own, as the owner decided on 15 October 2026:
+Some rules read some of OpenDB's values in a way of their own, as the owner decided on 15 October 2026, and on 8 November 2026 where a note says so:
 
 - **Rule 1.** A motherboard socket written "2 x <socket>", on 20 dual-socket server boards, takes a CPU of that socket. A socket written "Integrated …", on 13 boards with a CPU built in, means the board brings its own CPU, and any CPU added to it is a Compatibility Problem. A socket written "LGA 2011-3 Narrow", on 7 boards, or "2 x LGA 2011-3 Narrow", on 4 of the 20, takes a CPU of LGA 2011-3, as the owner decided on 8 November 2026: "Narrow" names the mounting of the board's cooler, and no CPU at the pinned commit names it.
 - **Rule 7.** A Thin Mini-ITX board fits any case that takes Mini-ITX, and a Flex ATX board any case that takes Micro ATX, because they share the mounting. No case at the pinned commit lists Thin Mini-ITX, and one lists Flex ATX.
+- **Rules 13, 14 and 16.** A drive of an M.2 size whose interface is SATA 1.5, 3.0 or 6.0 Gb/s, as 3 drives at the pinned commit give it, is an M.2 SATA drive, as one whose interface is M.2 SATA is, as the owner decided on 8 November 2026: rules 13 and 16 do not count it as a SATA drive, and in rule 14 a slot keyed B takes it.
 
 With these rules every Category takes part in at least one rule, and every pair of Categories that physically connect is covered.
 
