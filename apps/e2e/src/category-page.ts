@@ -1,7 +1,7 @@
 import { type APIRequestContext, expect, type Locator, type Page } from '@playwright/test';
 
 import type { Currency } from './currencies';
-import type { CategoryKey, ListedPart } from './home-page';
+import type { CategoryKey, VisiblePart } from './home-page';
 import { aMadeUpPhoto } from './made-up-photo';
 import { apiUrl } from './platform';
 
@@ -32,7 +32,7 @@ export async function aPageOfTheList(
     search,
     page = 0,
   }: { category: CategoryKey; currency: Currency; search?: string; page?: number },
-): Promise<{ totalElements: number; totalPages: number; content: ListedPart[] }> {
+): Promise<{ totalElements: number; totalPages: number; content: VisiblePart[] }> {
   const answer = await request.get(`${apiUrl}/v1/visible-parts`, {
     params: {
       category,
@@ -46,18 +46,18 @@ export async function aPageOfTheList(
   return (await answer.json()) as {
     totalElements: number;
     totalPages: number;
-    content: ListedPart[];
+    content: VisiblePart[];
   };
 }
 
-// The Parts the Category page lists, in the order it shows them.
-export function listedParts(page: Page): Locator {
-  return page.getByTestId('listed-part');
+// The Visible Parts the Category page shows, in the order it shows them.
+export function visibleParts(page: Page): Locator {
+  return page.getByTestId('visible-part');
 }
 
 // The names of the Parts listed, in their order, each as its link says it.
 export async function namesListed(page: Page): Promise<string[]> {
-  return (await listedParts(page).getByRole('link').allInnerTexts()).map((name) =>
+  return (await visibleParts(page).getByRole('link').allInnerTexts()).map((name) =>
     name.trim(),
   );
 }
@@ -68,9 +68,9 @@ export async function expectTheList(page: Page, names: string[]): Promise<void> 
   await expect.poll(() => namesListed(page)).toEqual(names);
 }
 
-// The listed Part of this name.
-export function listedPart(page: Page, name: string): Locator {
-  return listedParts(page).filter({
+// The Visible Part of this name on the Category page.
+export function visiblePart(page: Page, name: string): Locator {
+  return visibleParts(page).filter({
     has: page.getByRole('link', { name, exact: true }),
   });
 }
@@ -234,7 +234,7 @@ export interface TheCategorySheet {
 export function lookAtTheCategorySheet(): TheCategorySheet {
   const sheet = document.querySelector('[data-testid="sheet"]');
   const price = document.querySelector(
-    '[data-testid="listed-part"] [data-testid="item-end"]',
+    '[data-testid="visible-part"] [data-testid="item-end"]',
   );
   const stamp = document.querySelector('[data-testid="sheet"] [data-testid="stamp"]');
   // How much a clip `inset(top right bottom left)` covers from the foot: its

@@ -5,13 +5,13 @@ import {
   addAPhotoTo,
   aPageOfTheList,
   expectTheAddressToAsk,
-  listedPart,
-  listedParts,
   lookAtTheCategorySheet,
   namesListed,
   searchTheCategory,
   type TheCategorySheet,
   theSearchBox,
+  visiblePart,
+  visibleParts,
   whatTheSheetSays,
 } from './category-page';
 import { createAMadeUpPart, type MadeUpPart } from './catalog';
@@ -143,7 +143,7 @@ async function expectTheListTheApiAnswers(
   expect(await namesListed(page)).toEqual(answered.content.map(({ name }) => name));
   expect(answered.content.map(({ name }) => name)).toEqual(inTheirOrder());
   for (const part of answered.content) {
-    const listed = listedPart(page, part.name);
+    const listed = visiblePart(page, part.name);
     await expect(listed.getByRole('link')).toHaveAttribute(
       'href',
       `/${language.tag}/parts/${part.id}`,
@@ -167,28 +167,28 @@ test("in Kurdish and English, a Category page lists the run's Parts in the API's
       await expectTheListTheApiAnswers(page, request, language, 'IQD');
 
       // Bravo is quoted in dollars alone: its price in dinars is converted.
-      await expect(listedPart(page, bravo.name).getByTestId('shown-price')).toHaveText(
+      await expect(visiblePart(page, bravo.name).getByTestId('shown-price')).toHaveText(
         `≈ ${(100 * rate).toLocaleString('en-US')} IQD`,
       );
       // Delta comes last, under its own heading, with words in its price's
       // place and no price.
       const outOfStock = page.getByTestId('out-of-stock-everywhere');
       expect(
-        await outOfStock.getByTestId('listed-part').getByRole('link').allInnerTexts(),
+        await outOfStock.getByTestId('visible-part').getByRole('link').allInnerTexts(),
       ).toEqual([delta.name]);
       await expect(
-        listedPart(page, delta.name).getByTestId('out-of-stock'),
+        visiblePart(page, delta.name).getByTestId('out-of-stock'),
       ).not.toBeEmpty();
       expect(
         await page
           .getByTestId('in-stock')
-          .getByTestId('listed-part')
+          .getByTestId('visible-part')
           .getByRole('link')
           .allInnerTexts(),
       ).toEqual([bravo, alpha, charlie].map(({ name }) => name));
       // Each Part's second line names its manufacturer and counts its
       // Vendors in Western digits.
-      const alphasLine = listedPart(page, alpha.name).getByTestId('item-second');
+      const alphasLine = visiblePart(page, alpha.name).getByTestId('item-second');
       await expect(alphasLine).toContainText('Made-up Test Parts');
       await expect(alphasLine).toContainText(theNumber(2));
     });
@@ -226,7 +226,7 @@ for (const javaScriptEnabled of [true, false]) {
           // Sent without script, the form also sends its empty fields, which
           // the page ignores.
           await expectTheAddressToAsk(page, language, cpus(), [['search', words]]);
-          await expect(listedParts(page)).toHaveCount(1);
+          await expect(visibleParts(page)).toHaveCount(1);
           expect(await namesListed(page)).toEqual([bravo.name]);
 
           await page.reload();
@@ -235,7 +235,7 @@ for (const javaScriptEnabled of [true, false]) {
 
           await page.getByTestId('choice-on').click();
           await expect(page).toHaveURL(addressIn(language, cpus()));
-          await expect(listedParts(page)).toHaveCount(firstPage.content.length);
+          await expect(visibleParts(page)).toHaveCount(firstPage.content.length);
           expect(await namesListed(page)).toEqual(
             firstPage.content.map(({ name }) => name),
           );
@@ -258,7 +258,7 @@ test('in Kurdish and English, a search that finds nothing says so, in other word
 
       await searchTheCategory(page, `${listWord} nothing${listWord}`);
       await expect(whatTheSheetSays(page)).toHaveAttribute('data-state', 'no-match');
-      await expect(listedParts(page)).toHaveCount(0);
+      await expect(visibleParts(page)).toHaveCount(0);
       const nothing = await whatTheSheetSays(page).innerText();
       expect(nothing).not.toBe(aList);
       sentences.set(language, nothing);
@@ -295,7 +295,7 @@ test('in Kurdish and English, the list is in pages: the next page and the previo
       await page.goto(addressIn(language, `${cpus(pagesWord)}&page=7`));
       await expect(whatTheSheetSays(page)).toHaveAttribute('data-state', 'past-the-end');
       await expect(whatTheSheetSays(page)).toContainText(theNumber(2));
-      await expect(listedParts(page)).toHaveCount(0);
+      await expect(visibleParts(page)).toHaveCount(0);
       await page.getByTestId('to-the-first-page').click();
       await expect(page).toHaveURL(addressIn(language, cpus(pagesWord)));
       expect(await namesListed(page)).toEqual(names().slice(0, 20));
@@ -349,7 +349,7 @@ test("a Part's photo is drawn from the Shopper app's own address, which passes t
   request,
 }) => {
   await page.goto(addressIn(english, cpus(`${listWord}+alpha`)));
-  const picture = listedPart(page, alpha.name).getByTestId('part-square').locator('img');
+  const picture = visiblePart(page, alpha.name).getByTestId('part-square').locator('img');
   await picture.scrollIntoViewIfNeeded();
   await expect
     .poll(() =>

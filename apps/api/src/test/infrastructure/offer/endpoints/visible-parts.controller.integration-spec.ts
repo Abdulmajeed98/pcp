@@ -259,12 +259,12 @@ describe("a Category's Visible Parts", () => {
     return (await theVisibleParts(query)).content.map(({ name }) => name);
   }
 
-  // The listed Part of that name.
-  async function theListed(
+  // The Visible Part of that name on the first page.
+  async function theVisiblePart(
     name: string,
     query: Record<string, string> = {},
   ): Promise<VisiblePartBody | undefined> {
-    return (await theVisibleParts(query)).content.find((listed) => listed.name === name);
+    return (await theVisibleParts(query)).content.find((part) => part.name === name);
   }
 
   describe('the answer', () => {
@@ -448,16 +448,24 @@ describe("a Category's Visible Parts", () => {
       await anOffer(shop.id, fromDinars.id, { iqdPrice: 150000, inStock: true });
       await anOffer(store.id, fromDinars.id, { usdPrice: '101.00', inStock: true });
 
-      expect(await theListed('Made-up Ryzen 5 7600', { currency: 'IQD' })).toMatchObject({
+      expect(
+        await theVisiblePart('Made-up Ryzen 5 7600', { currency: 'IQD' }),
+      ).toMatchObject({
         lowestPrice: converted('IQD', '150000'),
       });
-      expect(await theListed('Made-up Ryzen 5 7600', { currency: 'USD' })).toMatchObject({
+      expect(
+        await theVisiblePart('Made-up Ryzen 5 7600', { currency: 'USD' }),
+      ).toMatchObject({
         lowestPrice: quoted('USD', '100.00'),
       });
-      expect(await theListed('Made-up Ryzen 7 7700', { currency: 'IQD' })).toMatchObject({
+      expect(
+        await theVisiblePart('Made-up Ryzen 7 7700', { currency: 'IQD' }),
+      ).toMatchObject({
         lowestPrice: quoted('IQD', '150000'),
       });
-      expect(await theListed('Made-up Ryzen 7 7700', { currency: 'USD' })).toMatchObject({
+      expect(
+        await theVisiblePart('Made-up Ryzen 7 7700', { currency: 'USD' }),
+      ).toMatchObject({
         lowestPrice: converted('USD', '100.00'),
       });
     });
@@ -487,7 +495,7 @@ describe("a Category's Visible Parts", () => {
         );
         const [first] = (await offers.json()) as { shownPrice: ShownPriceBody }[];
         expect(first.shownPrice).toEqual(lowestPrice);
-        expect(await theListed('Made-up Ryzen 5 7600', { currency })).toMatchObject({
+        expect(await theVisiblePart('Made-up Ryzen 5 7600', { currency })).toMatchObject({
           lowestPrice,
         });
       }
@@ -501,15 +509,21 @@ describe("a Category's Visible Parts", () => {
       await anOffer(shop.id, outOfStock.id, { iqdPrice: 100000, inStock: false });
       await anOffer(shop.id, inDollars.id, { usdPrice: '10.00', inStock: true });
 
-      expect(await theListed('Made-up Ryzen 5 7600', { currency: 'IQD' })).toMatchObject({
+      expect(
+        await theVisiblePart('Made-up Ryzen 5 7600', { currency: 'IQD' }),
+      ).toMatchObject({
         lowestPrice: null,
         inStock: false,
       });
-      expect(await theListed('Made-up Ryzen 7 7700', { currency: 'IQD' })).toMatchObject({
+      expect(
+        await theVisiblePart('Made-up Ryzen 7 7700', { currency: 'IQD' }),
+      ).toMatchObject({
         lowestPrice: null,
         inStock: true,
       });
-      expect(await theListed('Made-up Ryzen 7 7700', { currency: 'USD' })).toMatchObject({
+      expect(
+        await theVisiblePart('Made-up Ryzen 7 7700', { currency: 'USD' }),
+      ).toMatchObject({
         lowestPrice: quoted('USD', '10.00'),
         inStock: true,
       });

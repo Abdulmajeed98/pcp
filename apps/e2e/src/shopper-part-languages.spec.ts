@@ -7,7 +7,7 @@ import {
 } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
-import { addAPhotoTo, listedPart } from './category-page';
+import { addAPhotoTo, visiblePart } from './category-page';
 import { createAMadeUpPart, type MadeUpPart } from './catalog';
 import { choose, setThePlatformRate } from './currencies';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
@@ -151,7 +151,7 @@ test("in Kurdish and English, a Part reached from its Category page shows its na
   for (const language of kurdishAndEnglish) {
     await test.step(`in ${language.name}`, async () => {
       await page.goto(addressIn(language, `/categories/cpu?search=${word}`));
-      await listedPart(page, cpu.name).getByRole('link').click();
+      await visiblePart(page, cpu.name).getByRole('link').click();
       await expect(page).toHaveURL(addressIn(language, partPage(cpu)));
       await expectPageIn(page, language);
 

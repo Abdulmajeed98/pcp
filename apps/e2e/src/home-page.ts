@@ -80,7 +80,7 @@ export function shownPriceText(price: ShownPrice): string {
 }
 
 // A Visible Part as a Category's list answers it, as far as the tests read it.
-export interface ListedPart {
+export interface VisiblePart {
   id: string;
   name: string;
   vendorCount: number;
@@ -94,12 +94,12 @@ export async function theFirstPageOf(
   request: APIRequestContext,
   category: CategoryKey,
   currency: Currency,
-): Promise<{ totalElements: number; content: ListedPart[] }> {
+): Promise<{ totalElements: number; content: VisiblePart[] }> {
   const answer = await request.get(`${apiUrl}/v1/visible-parts`, {
     params: { category, currency },
   });
   expect(answer.status()).toBe(200);
-  return (await answer.json()) as { totalElements: number; content: ListedPart[] };
+  return (await answer.json()) as { totalElements: number; content: VisiblePart[] };
 }
 
 // The Part the home page's plate shows, worked out from the first pages of
@@ -107,9 +107,9 @@ export async function theFirstPageOf(
 // plate): the Visible Part with the most Vendors, the first of them in the
 // catalog's order and its list's when several have as many.
 export function thePartForThePlate(
-  firstPages: readonly { content: ListedPart[] }[],
-): ListedPart | undefined {
-  let chosen: ListedPart | undefined;
+  firstPages: readonly { content: VisiblePart[] }[],
+): VisiblePart | undefined {
+  let chosen: VisiblePart | undefined;
   for (const { content } of firstPages) {
     for (const part of content) {
       if (chosen === undefined || part.vendorCount > chosen.vendorCount) chosen = part;

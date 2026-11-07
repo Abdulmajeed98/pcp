@@ -6,7 +6,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import type { Category } from '@/entities/category';
-import { ListedPart } from '@/entities/part';
+import { VisiblePartItem } from '@/entities/part';
 import {
   ChoicesOn,
   type CategoryQuery,
@@ -203,7 +203,7 @@ async function TheList({ parts }: { parts: readonly VisiblePartResponse[] }) {
       {inStock.length > 0 && (
         <SheetGroup heading={t('inStock')} as="h2" testId="in-stock">
           {inStock.map((part, place) => (
-            <ListedPart key={part.id} part={part} place={place} />
+            <VisiblePartItem key={part.id} part={part} place={place} />
           ))}
         </SheetGroup>
       )}
@@ -214,7 +214,7 @@ async function TheList({ parts }: { parts: readonly VisiblePartResponse[] }) {
           testId="out-of-stock-everywhere"
         >
           {outOfStock.map((part, place) => (
-            <ListedPart key={part.id} part={part} place={inStock.length + place} />
+            <VisiblePartItem key={part.id} part={part} place={inStock.length + place} />
           ))}
         </SheetGroup>
       )}

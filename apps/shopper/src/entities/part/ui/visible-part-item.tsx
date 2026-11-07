@@ -9,14 +9,14 @@ import { Item, whereAPartsNameStands } from '@/shared/ui';
 import { partAddress } from '../model/addresses';
 import { PartSquare } from './part-square';
 
-// A Part on a Category page (DESIGN.md's A Part on a Category page): an item
-// of the Category's sheet, with its photo or its Category's icon in a small
-// square on the start side; its name, in English in every language (LANG-3),
-// as a link to its Part page; the leader; and at the end its Lowest Price,
-// drawn by the one component that draws a Shown Price, or, when every Vendor
-// has it out of stock, "Out of stock" in words in the price's place, never a
-// colour alone. On its second line, its manufacturer in English and how many
-// Vendors offer it. An in-stock Part with no Lowest Price, which only happens
+// A Visible Part on a Category page (DESIGN.md's A Part on a Category
+// page): an item of the Category's sheet, with its photo or its Category's
+// icon in a small square on the start side; its name, in English in every
+// language (LANG-3), as a link to its Part page; the leader; and at the end
+// its Lowest Price, drawn by the one component that draws a Shown Price, or,
+// when every Vendor has it out of stock, "Out of stock" in words in the
+// price's place, never a colour alone. On its second line, its manufacturer
+// in English and how many Vendors offer it. An in-stock Part with no Lowest Price, which only happens
 // before the Admin sets the first Platform Rate, has nothing at its end.
 //
 // A long name keeps its words whole by taking the whole line, its leader and
@@ -25,7 +25,7 @@ import { PartSquare } from './part-square';
 //
 // Its end settles into the sheet's column of prices as the sheet prints
 // (Motion 2), `place` being its place on the sheet.
-export async function ListedPart({
+export async function VisiblePartItem({
   part,
   place,
 }: {
@@ -36,7 +36,7 @@ export async function ListedPart({
 
   return (
     <Item
-      testId="listed-part"
+      testId="visible-part"
       data={{ 'data-part': part.id }}
       place={place}
       nameAlone={whereAPartsNameStands(part.name)}
