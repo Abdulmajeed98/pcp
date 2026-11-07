@@ -18,8 +18,8 @@ import { choice } from './choice';
 // It is a component for the browser only because it asks for the address of
 // the page that is shown. The server renders it as well, so the three links
 // are in the page as it arrives, and a tap on one works before any script
-// has loaded. The "not found" screen is the exception, because the browser
-// draws that whole screen by script.
+// has loaded. The "not found" screen of an unknown Category, Part or Vendor
+// is the exception, because the browser draws that whole screen by script.
 //
 // They are plain links, and neither Next's nor next-intl's. A tap therefore
 // asks the server for the page, and it is the server's answer that writes the

@@ -16,8 +16,11 @@ import { routing } from './routing';
 // The language is the first part of the address, which Next knows as the
 // root parameter `locale`. An address that the proxy file does not see, such
 // as one for a file, can put anything there, and it is answered "not found".
-export default getRequestConfig(async ({ locale }) => {
-  const language = locale ?? (await languageOfTheAddress());
+// The "not found" screen of an address that matches no route has no root
+// parameter, and sets its language itself, which next-intl gives as
+// `requestLocale`.
+export default getRequestConfig(async ({ locale, requestLocale }) => {
+  const language = locale ?? (await languageOfTheAddress()) ?? (await requestLocale);
   if (!hasLocale(routing.locales, language)) notFound();
 
   return {

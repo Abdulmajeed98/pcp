@@ -131,8 +131,8 @@ test.describe('after choosing dollars', () => {
     await expectPricesShownIn(tab, 'USD');
   });
 
-  // Next answers such an address with the status 404 and a bare document, and
-  // the browser draws the "not found" screen from it, the switch with it.
+  // The server answers such an address with the status 404 and the "not
+  // found" screen, the switch with it (follow-up ticket 07).
   test('the "not found" screen keeps dollars, and a choice made there returns to it', async ({
     page,
   }) => {
@@ -182,8 +182,8 @@ test('a browser that holds anything but one of the two currencies is shown dinar
 // A page on a weak connection is read before its scripts have loaded, and
 // some browsers run none. The switch is a form in the page as the server sends
 // it, so it works in both, and the choice is read on the server. The "not
-// found" screen is the exception: the browser draws that screen by script,
-// the switch with it.
+// found" screen of an unknown Category, Part or Vendor is the exception: the
+// browser draws that screen by script, the switch with it.
 test.describe('with scripts switched off', () => {
   test.use({ javaScriptEnabled: false });
 

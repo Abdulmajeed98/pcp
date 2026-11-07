@@ -4,7 +4,7 @@
 
 **Category:** enhancement
 
-**Status:** needs-triage
+**Status:** resolved
 
 **From:** browse's follow-ups list, swept on 7 November 2026: the code review's fixes.
 
@@ -13,3 +13,33 @@
 **The idea.** Next's experimental `global-not-found.js` might let the server draw the not-found page for an address that matches no route. The Category, Part and Vendor pages' own 404s are a different case. Not tried.
 
 **To decide.** Whether an experimental Next feature is acceptable here. If it is, try it, and keep it only if the page then comes from the server with its 404.
+
+## Comments
+
+### 7 November 2026: tried, and kept
+
+The owner answered "Yes, try it": build it behind Next's flag, test first, and keep it only if the server then draws the page with its 404 in every language.
+
+**How it works.**
+
+- `experimental.globalNotFound` is on in `apps/shopper/next.config.js`. `app/global-not-found.tsx` re-exports the App layer's `GlobalNotFound`, which draws the root layout around the not-found page, with a preview made of the site's and the not-found page's, and the root's viewport.
+- Next uses it only for an address that no route catches, so the catch-all route `app/[locale]/[...rest]` and its `UnknownAddress` are gone; they had asked for "not found" from inside the language segment.
+- Its language: there is no root parameter there, so `GlobalNotFound` takes the language next-intl's proxy names in the request's `X-NEXT-INTL-LOCALE` header (the address's own, or, for an address with none, the one the proxy sends it on to) and sets it with `setRequestLocale`. The request set-up takes it as `requestLocale`, after the root parameter.
+
+**Test first.** The language test of the not-found screen, in `shopper-languages.spec.ts`, read only what the browser drew (`drawnByScript`). With what the server sent read as well, it failed in Kurdish, "the server sends the page with its language": `ckb` expected, nothing received, Next's bare document having no language. With the page in place it passed. Every other line that read the not-found screen as drawn by script now reads what the server sent too, and the option is gone from the e2e helpers.
+
+**Seen.** A Shopper development server of its own, on port 3200 with its own Next folder and no API, was asked for unknown addresses before the change and after it:
+
+| Address | Before | After |
+|---|---|---|
+| `/en/no-such-page` | 404, Next's bare error document | 404, the page in English, `<html lang="en" dir="ltr">`, both switches, its title |
+| `/ckb/no-such-page` | 404, bare | 404, in Kurdish, right to left |
+| `/ar/no-such-page` | 404, bare | 404, in Arabic, right to left |
+| `/no-such-page` | redirected to `/ckb/no-such-page`, 404, bare | redirected, 404, in Kurdish |
+| `/en/categories/no-such-category` | 404, bare | 404, bare, as before |
+
+**What it does not change.** An unknown Category, a Part that is not visible and a Vendor that is not still answer 404 with the bare document that the browser draws from: their pages say "not found" themselves, which Next 16.4 sends that way, and `global-not-found` serves only an address that matches no route. The comments that said the "not found" screen is drawn by script now say which one is.
+
+**Recorded.** The MVP spec's layout of the Shopper app, its rule for the routing folder, and its line on the "not found" screen.
+
+**Checks.** The six end-to-end files that open the "not found" screen passed, 69 lines, run together under the e2e lock: `shopper-languages`, `shopper-credit-languages`, `shopper-currency`, `shopper-page`, `shopper-motion` and `shopper-scheme`. The Shopper's and the e2e tests' type check, lint and unit tests passed.

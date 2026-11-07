@@ -176,7 +176,7 @@ test('with script, a choice changes the scheme in place, without leaving the pag
   await expectTheChoiceKept(page, browser, 'dark', true);
   expect(left, 'the page was not left').toEqual([]);
 
-  // The not-found page, which the browser draws by script, is dark too.
+  // The not-found page is dark too.
   await page.goto(notFound);
   await expectDrawnIn(page, 'dark');
   await expectTheColoursOf(page, 'dark');

@@ -42,14 +42,10 @@ test('the first page and the "not found" screen credit BuildCores OpenDB in thei
   });
   expectADifferentTextInEachLanguage(credits);
 
-  // Next sends an address that matches no page as a bare document, and the
-  // browser draws the "not found" screen, frame and footer, by script. That
-  // screen's credit is read in the browser only (`languages`, ticket 02).
-  const onTheMissingPage = await readInEveryLanguage(
-    page,
-    '/no-such-page',
-    () => readTheCredit(page),
-    { drawnByScript: true },
+  // The server draws the "not found" screen of an address that matches no
+  // page, frame and footer, as it draws the first page (follow-up ticket 07).
+  const onTheMissingPage = await readInEveryLanguage(page, '/no-such-page', () =>
+    readTheCredit(page),
   );
   expectADifferentTextInEachLanguage(onTheMissingPage);
 });
@@ -89,11 +85,8 @@ test('the credit\'s two names keep their own direction in each language, and lin
     await expectTheNamesKeptApartAndLinked(page);
   });
 
-  await readInEveryLanguage(
-    page,
-    '/no-such-page',
-    () => expectTheNamesKeptApartAndLinked(page),
-    { drawnByScript: true },
+  await readInEveryLanguage(page, '/no-such-page', () =>
+    expectTheNamesKeptApartAndLinked(page),
   );
 });
 
@@ -156,11 +149,8 @@ test('each photograph a page shows is credited on it, in each language: its titl
     expect(credits).toEqual([redLitMotherboard, builtPc, caseConnectors]);
   }
 
-  const onTheMissingPage = await readInEveryLanguage(
-    page,
-    '/no-such-page',
-    () => readThePhotographsCredits(page),
-    { drawnByScript: true },
+  const onTheMissingPage = await readInEveryLanguage(page, '/no-such-page', () =>
+    readThePhotographsCredits(page),
   );
   for (const credits of onTheMissingPage.values()) expect(credits).toEqual([builtPc]);
 });

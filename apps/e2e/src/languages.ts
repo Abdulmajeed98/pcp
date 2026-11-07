@@ -48,16 +48,6 @@ export function addressIn(language: Language, address = ''): string {
   return `${shopperUrl}/${language.tag}${address}`;
 }
 
-// What a test says about the page it checks. `drawnByScript` is for the one
-// screen the server does not send whole: Next answers an address that matches
-// no page with a bare document, and the browser draws the "not found" screen
-// from it. That screen is checked as the browser shows it. Every other page
-// has to declare its language and its direction in what the server sends,
-// and to hold the switch's three links there.
-interface About {
-  drawnByScript?: boolean;
-}
-
 // Opens a page of the Shopper app in each of the three languages, in a window
 // as wide as a narrow phone, and checks what holds for every page: the
 // language it declares, its direction, that the server sent it with both and
@@ -69,12 +59,8 @@ interface About {
 // It confirms that the page came back in the language it asked for before it
 // reads anything else. Kurdish and Arabic are both right to left, so a check
 // of the direction alone passes on the wrong one of the two.
-export async function checkInEveryLanguage(
-  page: Page,
-  address = '',
-  about: About = {},
-): Promise<void> {
-  await readInEveryLanguage(page, address, async () => {}, about);
+export async function checkInEveryLanguage(page: Page, address = ''): Promise<void> {
+  await readInEveryLanguage(page, address, async () => {});
 }
 
 // The same checks, and then what the test reads from the page in each
@@ -83,7 +69,6 @@ export async function readInEveryLanguage<Read>(
   page: Page,
   address: string,
   read: (language: Language, response: Response) => Promise<Read>,
-  { drawnByScript = false }: About = {},
 ): Promise<Map<Language, Read>> {
   return readInEachLanguage(
     page,
@@ -93,9 +78,7 @@ export async function readInEveryLanguage<Read>(
         if (response === null) throw new Error('The address was answered with no page.');
         return response;
       },
-      expectAlso: drawnByScript
-        ? undefined
-        : (language) => expectWhatTheServerSent(page, language, address),
+      expectAlso: (language) => expectWhatTheServerSent(page, language, address),
       expectTheSwitch: (language) => expectTheSwitchOnThePage(page, language, address),
     },
     read,

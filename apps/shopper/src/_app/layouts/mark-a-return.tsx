@@ -13,8 +13,9 @@ const markAReturn =
 // browser runs it before it draws anything. In the browser the component
 // draws nothing: the line has already run, and React leaves a script it did
 // not draw in the head alone. A page the browser draws by script, as the
-// "not found" screen is, arrives with no line, so the component marks it
-// itself, after it is drawn and before it is painted.
+// "not found" screen of an unknown Category, Part or Vendor is, arrives with
+// no line, so the component marks it itself, after it is drawn and before it
+// is painted.
 export function MarkAReturn() {
   useLayoutEffect(() => {
     const [navigation] = performance.getEntriesByType('navigation');

@@ -336,8 +336,8 @@ test('a page come back to by back or forward is shown printed: the home page, a 
   await expect(page).toHaveURL(addressIn(english, '/categories/cpu'));
   expectStillAndWhole('the Category page’s sheet', framesOf(categoryAgain, 'sheet'));
 
-  // The not-found page, which the browser draws by script, marks a return
-  // itself: here it is come back to by back.
+  // The not-found page marks a return as every page does: here it is come
+  // back to by back.
   await page.goto(notFound, { waitUntil: 'networkidle' });
   await page.goto(homePage, { waitUntil: 'networkidle' });
   const notFoundAgain = await filmFromTheFirstFrame(

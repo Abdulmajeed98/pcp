@@ -238,8 +238,9 @@ test.describe('in a browser set to English, after a switch to Arabic', () => {
 
 // A page on a weak connection is read before its scripts have loaded, and
 // some browsers run none. The switch is three links in the page as the server
-// sends it, so it works in both. The "not found" screen is the exception:
-// the browser draws that screen by script, the switch with it.
+// sends it, so it works in both. The "not found" screen of an unknown
+// Category, Part or Vendor is the exception: the browser draws that screen
+// by script, the switch with it.
 test.describe('in a browser set to English, with scripts switched off', () => {
   test.use({ locale: browserSetTo, javaScriptEnabled: false });
 
@@ -293,34 +294,29 @@ async function expectTheCurrencyBeforeTheLanguage(
 
 // The currency switch, beside the language switch: named in the page's
 // language, before the language switch in the reading order, and each choice
-// within reach of a thumb, on the first page and on the "not found" screen,
-// which the browser draws by script. On a phone its choices are named by the
+// within reach of a thumb, on the first page and on the "not found" screen.
+// On a phone its choices are named by the
 // marks every price carries, IQD and $, which are the same in every language
 // (DESIGN.md's The currency switch); from 48rem by their names.
-for (const { where, address, drawnByScript } of [
-  { where: 'on the first page', address: '', drawnByScript: false },
-  { where: 'on the "not found" screen', address: '/no-such-page', drawnByScript: true },
+for (const { where, address } of [
+  { where: 'on the first page', address: '' },
+  { where: 'on the "not found" screen', address: '/no-such-page' },
 ]) {
   test(`the currency switch is named in the page's language, comes before the language switch, and each of its choices, named by its mark on a phone, is large enough to tap, ${where}`, async ({
     page,
   }) => {
-    const names = await readInEveryLanguage(
-      page,
-      address,
-      async (language) => {
-        const label = (await currencySwitch(page).getAttribute('aria-label')) ?? '';
-        await expect(page.getByRole('form', { name: label, exact: true })).toHaveCount(1);
-        await expectTheCurrencyBeforeTheLanguage(page, language);
+    const names = await readInEveryLanguage(page, address, async (language) => {
+      const label = (await currencySwitch(page).getAttribute('aria-label')) ?? '';
+      await expect(page.getByRole('form', { name: label, exact: true })).toHaveCount(1);
+      await expectTheCurrencyBeforeTheLanguage(page, language);
 
-        const choices: string[] = [];
-        for (const currency of currencies) {
-          await expectWithinReach(choiceOf(page, currency), `the choice of ${currency}`);
-          choices.push((await choiceOf(page, currency).innerText()).trim());
-        }
-        return { label, choices };
-      },
-      { drawnByScript },
-    );
+      const choices: string[] = [];
+      for (const currency of currencies) {
+        await expectWithinReach(choiceOf(page, currency), `the choice of ${currency}`);
+        choices.push((await choiceOf(page, currency).innerText()).trim());
+      }
+      return { label, choices };
+    });
 
     expectADifferentTextInEachLanguage(
       new Map([...names].map(([language, { label }]) => [language, label])),
@@ -432,9 +428,9 @@ test("the home page's counts, prices and figures are the same Western digits in 
   expectTheSameInEveryLanguage(read);
 });
 
-// Next answers such an address with the status 404 and a bare document, and
-// the browser draws the "not found" screen from it. The screen is therefore
-// checked as the browser shows it, and what the server sent is not read.
+// The server draws the "not found" screen of such an address, with the
+// status 404 (follow-up ticket 07), so what it sent is read as well as what
+// the browser shows: the language, the direction and the switch.
 test("an address that matches no page is answered 404, with the frame and the switch, in the visitor's language, and lists the eight Categories, each leading to its Category's address", async ({
   page,
 }) => {
@@ -458,7 +454,6 @@ test("an address that matches no page is answered 404, with the frame and the sw
         names: names.join(', '),
       };
     },
-    { drawnByScript: true },
   );
 
   expectADifferentTextInEachLanguage(

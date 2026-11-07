@@ -26,7 +26,8 @@ import { choice } from './choice';
 // Shopper page is drawn for each request, since the frame reads the chosen
 // currency from it, so the server knows the query too. The server renders it
 // as well, so the form is in the page as it arrives. The "not found" screen
-// is the exception, because the browser draws that whole screen by script.
+// of an unknown Category, Part or Vendor is the exception, because the
+// browser draws that whole screen by script.
 //
 // The server hands it the two choices, each with its name in the page's
 // language, and which one is chosen. It reads no cookie itself. `testId`

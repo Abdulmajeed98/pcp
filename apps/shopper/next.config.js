@@ -18,6 +18,11 @@ const nextConfig = {
   // `AGENTS.md` into this folder. This repository keeps its instructions for
   // agents in `CLAUDE.md` and `docs/agents`, so that is switched off.
   agentRules: false,
+  // An address that matches no route is answered with `app/global-not-found`,
+  // which Next draws on the server, rather than a bare document the browser
+  // draws the "not found" screen from (follow-up ticket 07). Next 16.4
+  // documents it as experimental.
+  experimental: { globalNotFound: true },
   ...forTheInspection(process.env.SHOPPER_INSPECTION_DIST_DIR),
 };
 

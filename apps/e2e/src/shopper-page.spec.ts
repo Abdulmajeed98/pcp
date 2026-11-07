@@ -302,9 +302,9 @@ test("the home page's HTML holds its title, its description, its canonical addre
   }
 });
 
-// Next sends an address that matches no page as a bare document, and the
-// browser draws the screen by script; its head is the server's all the same.
-// A page that is not there has no address of its own to name.
+// The server draws the not-found page of an address that matches no page,
+// its head with it (follow-up ticket 07). A page that is not there has no
+// address of its own to name.
 test("the not-found page's HTML holds its title, its description and Open Graph's, with no canonical address, and answers 404", async ({
   playwright,
 }) => {

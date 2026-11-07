@@ -44,9 +44,11 @@ export async function generateViewport(): Promise<Viewport> {
 // return is marked by one line in the head (`MarkAReturn`), so React is told
 // not to mind either. Every page is shown inside the frame.
 //
-// The "not found" screen is the exception. Next answers an address that
-// matches no page with a bare document, and the browser draws this layout
-// and that screen from it, by script.
+// The "not found" screen of an address that matches no route is drawn on
+// the server too, by `global-not-found.tsx` (follow-up ticket 07). That of an
+// unknown Category, Part or Vendor is the exception: Next answers a page that
+// says it is not found with a bare document, and the browser draws this
+// layout and that screen from it, by script.
 export async function RootLayout({ children }: { children: ReactNode }) {
   const [language, scheme] = await Promise.all([
     getLocale(),
