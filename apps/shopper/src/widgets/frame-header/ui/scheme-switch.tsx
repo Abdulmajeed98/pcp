@@ -89,7 +89,7 @@ export function SchemeSwitch({
       >
         {words.label}
       </span>
-      <ul className="hidden md:flex">
+      <ul className="hidden md:flex md:flex-wrap">
         {schemes.map((scheme) => (
           <li key={scheme}>
             <button

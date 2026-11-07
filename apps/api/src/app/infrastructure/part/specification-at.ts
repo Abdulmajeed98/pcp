@@ -8,15 +8,16 @@ import { part } from './part.schema';
 // document: the JSON at the specification's path, or null when there is
 // nothing there. The path is written into the statement, not passed with it,
 // so that the same value asked twice in one statement is the same expression,
-// as an aggregate of distinct values ordered by them needs. A path is a
-// specification list's, in OpenDB's field names, which are letters, digits
-// and underscores.
+// as an aggregate of distinct values ordered by them needs. Each name of the
+// path is written as an SQL string, its quotes doubled, so that any path is
+// written whole; a specification list's are OpenDB's field names, letters,
+// digits and underscores.
 export function specificationAt(specification: Specification): SQL {
-  const names = specification.getPath().split('.');
-  if (!names.every((name) => /^\w+$/.test(name))) {
-    throw new Error(`A specification's path cannot be written: ${specification.getPath()}`);
-  }
-  return sql`(${part.specifications} #> ${sql.raw(`'{${names.join(',')}}'`)})`;
+  const names = specification
+    .getPath()
+    .split('.')
+    .map((name) => `'${name.replaceAll("'", "''")}'`);
+  return sql`(${part.specifications} #> ${sql.raw(`array[${names.join(', ')}]`)})`;
 }
 
 // Whether a Part's specifications lack one specification, asked of its

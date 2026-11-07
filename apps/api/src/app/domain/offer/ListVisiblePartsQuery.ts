@@ -6,8 +6,12 @@ import { Currency } from '../currency/currency';
 import { Category } from '../part/Category';
 import { searchWordsOf } from '../part/search-words';
 import { choicesOf } from '../specification/filters';
-import { ListVisiblePartsParams, OfferStore, VisiblePartsPage } from './OfferStore';
 import { PriceRange } from './PriceRange';
+import {
+  ListVisiblePartsParams,
+  VisiblePartsPage,
+  VisiblePartStore,
+} from './VisiblePartStore';
 
 class Input {
   constructor(
@@ -92,7 +96,7 @@ export { Output as ListVisiblePartsQueryOutput };
 // answered, after rounding, is within both ends.
 @Injectable()
 export class ListVisiblePartsQuery {
-  constructor(private readonly offerStore: OfferStore) {}
+  constructor(private readonly visiblePartStore: VisiblePartStore) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const choices = choicesOf(input.getCategory(), input.getFilters());
@@ -102,7 +106,7 @@ export class ListVisiblePartsQuery {
 
     // Read once, so that every Offer's visibility is judged at one moment.
     const now = new Date();
-    const page = await this.offerStore.listVisibleParts(
+    const page = await this.visiblePartStore.listVisibleParts(
       new ListVisiblePartsParams(
         input.getCategory(),
         input.getCurrency(),

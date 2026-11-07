@@ -4,21 +4,12 @@ import { cn } from 'cn';
 import { getTranslations } from 'next-intl/server';
 
 import { type ContactLink, contactLinksOf, WrittenOnLines } from '@/entities/vendor';
-import { TearOffTabs } from '@/shared/ui';
+import { nameType, TearOffTabs } from '@/shared/ui';
 
 // How many tear-off tabs the coupon's foot is cut into, each a call: two rows
 // of three on a phone, and one row from 48rem.
 const tabs = 6;
 const tabsAPhoneRowHolds = 3;
-
-// The type of the Vendor's name on its coupon, the page's `h1`: the Sheet
-// title while it is short, and the Facts size past 40 characters, so that a
-// long name, up to the 100 characters a Vendor may write, reads as a name and
-// not as a poster beside its contact details. Lines are 1.4 apart whatever
-// the script, as Kurdish and Arabic need and the renderings had them.
-function nameType(name: string): string {
-  return name.length > 40 ? 'type-facts' : 'type-sheet-title';
-}
 
 // A name written in Latin script, with no letter of Arabic script, which a
 // Vendor in Iraq writes in English: its element says so, so that it keeps
@@ -85,8 +76,10 @@ export async function Coupon({ vendor }: { vendor: VisibleVendorResponse }) {
               id="vendor-name"
               lang={latin ? 'en' : undefined}
               data-script={latin ? undefined : 'arabic'}
-              className={cn('wrap-break-word', nameType(vendor.name))}
+              className={cn('wrap-break-word', nameType(vendor.name, 'facts'))}
             >
+              {/* Lines 1.4 apart whatever the script, as Kurdish and Arabic
+                  need and the renderings had them. */}
               <AsWritten className="block leading-[1.4]">{vendor.name}</AsWritten>
             </h1>
             <p

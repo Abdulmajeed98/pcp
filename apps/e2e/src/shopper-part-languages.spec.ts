@@ -7,7 +7,8 @@ import {
 } from '@playwright/test';
 
 import { expectAccessible } from './accessibility';
-import { addAPhotoTo, listedPart } from './category-page';
+import { addAPhotoTo, visiblePart } from './category-page';
+import { createAMadeUpPart, type MadeUpPart } from './catalog';
 import { choose, setThePlatformRate } from './currencies';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { shownPriceText, theNumber, theOffersOf } from './home-page';
@@ -25,14 +26,14 @@ import { aWordUniqueToTheRun } from './made-up';
 import { film, filmFromTheFirstFrame, snapsOf, type Filmed } from './motion-film';
 import { addAnOffer } from './offers';
 import {
-  createACpuWith,
+  aDocumentHolding,
   lookAtThePartPage,
-  type MadeUpPartOfAPage,
   offerOf,
   offersListed,
   specificationOn,
   switchTheVendor,
   type ThePartPage,
+  theSpecificationLists,
   theVisiblePart,
   vendorsListed,
 } from './part-page';
@@ -58,15 +59,15 @@ const rate = 1500;
 // rounded to 250, with a 24-month warranty; and Charlie's, the cheapest, out
 // of stock, with no warranty. And a CPU that one Vendor alone offers, for
 // that Vendor to be deactivated.
-let cpu: MadeUpPartOfAPage;
-let lonely: MadeUpPartOfAPage;
+let cpu: MadeUpPart;
+let lonely: MadeUpPart;
 let alpha: MadeUpVendor;
 let bravo: MadeUpVendor;
 let charlie: MadeUpVendor;
 let lonelysVendor: MadeUpVendor;
 let photoPath: string;
 
-const partPage = (part: MadeUpPartOfAPage) => `/parts/${part.id}`;
+const partPage = (part: MadeUpPart) => `/parts/${part.id}`;
 
 // Works with the API as the development Admin, who logs in through the
 // dashboard, in a context of its own that runs script: a context made in a
@@ -95,11 +96,10 @@ test.beforeAll(async ({ browser }) => {
       await createAMadeUpVendor(request, authorization),
       await createAMadeUpVendor(request, authorization),
     ];
-    cpu = await createACpuWith(request, authorization, {
-      name: `Made-up test CPU ${word} with Offers`,
-      // Short enough, and written in Code 39's characters, for its barcode.
-      partNumber: `T${word.slice(-12)}`,
-      specifications: {
+    cpu = await createAMadeUpPart(
+      request,
+      authorization,
+      {
         socket: 'AM5',
         series: 'Made-up 7000',
         cores: { total: 8, threads: 16 },
@@ -112,7 +112,13 @@ test.beforeAll(async ({ browser }) => {
           memory: { types: ['DDR5'] },
         },
       },
-    });
+      'cpu',
+      {
+        name: `Made-up test CPU ${word} with Offers`,
+        // Short enough, and written in Code 39's characters, for its barcode.
+        partNumber: `T${word.slice(-12)}`,
+      },
+    );
     photoPath = await addAPhotoTo(request, authorization, cpu.id);
     await addAnOffer(request, authorization, alpha.id, cpu.id, {
       iqdPrice: 500_000,
@@ -127,15 +133,51 @@ test.beforeAll(async ({ browser }) => {
       inStock: false,
     });
 
-    lonely = await createACpuWith(request, authorization, {
+    lonely = await createAMadeUpPart(request, authorization, {}, 'cpu', {
       name: `Made-up test CPU ${word} of one Vendor`,
       partNumber: `L${word.slice(-12)}`,
-      specifications: {},
     });
     await addAnOffer(request, authorization, lonelysVendor.id, lonely.id, {
       iqdPrice: 300_000,
     });
   });
+});
+
+// The box label reads its Category's key specifications by their places in
+// a Part's specifications, from a list the Shopper app keeps, so a place the
+// API renamed would leave a line out unseen. A Part of each Category that
+// holds every specification of its list, as the API lists them now, shows
+// all six of its key lines (a follow-up of browse's code review).
+test('in every Category, a Part holding every specification of its list shows the six key lines of its box label', async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const parts: { category: string; id: string }[] = [];
+  await asTheAdmin(browser, async (request, authorization) => {
+    const vendor = await createAMadeUpVendor(request, authorization);
+    for (const { key, specifications } of await theSpecificationLists(
+      request,
+      authorization,
+    )) {
+      const part = await createAMadeUpPart(
+        request,
+        authorization,
+        aDocumentHolding(specifications),
+        key,
+      );
+      await addAnOffer(request, authorization, vendor.id, part.id, { iqdPrice: 100_000 });
+      parts.push({ category: key, id: part.id });
+    }
+  });
+
+  expect(parts.length).toBe(8);
+  for (const { category, id } of parts) {
+    await test.step(`a ${category}`, async () => {
+      await page.goto(addressIn(english, `/parts/${id}`));
+      await expect(page.getByTestId('key-line')).toHaveCount(6);
+    });
+  }
 });
 
 test("in Kurdish and English, a Part reached from its Category page shows its name, its part numbers and its specifications in English, its box label's key lines first", async ({
@@ -148,7 +190,7 @@ test("in Kurdish and English, a Part reached from its Category page shows its na
   for (const language of kurdishAndEnglish) {
     await test.step(`in ${language.name}`, async () => {
       await page.goto(addressIn(language, `/categories/cpu?search=${word}`));
-      await listedPart(page, cpu.name).getByRole('link').click();
+      await visiblePart(page, cpu.name).getByRole('link').click();
       await expect(page).toHaveURL(addressIn(language, partPage(cpu)));
       await expectPageIn(page, language);
 

@@ -134,8 +134,9 @@ const focusGx750 = psu(
 const purePower12M = psu('be quiet! Pure Power 12 M 750W Fully Modular 80+ Gold Certified');
 const a650bn = psu('MSI MAG A650BN Black ATX 650W Non-Modular 80+ Bronze Certified');
 
-// The Category whose Visible Parts are many: these GPUs, and enough others
-// read from the catalog by Category to make 400 (`theShoppersShop`).
+// The Category whose Visible Parts are many: these GPUs, and the 396 others
+// of `made-up-gpus.ts`, read from the catalog by Category and exact name too,
+// to make 400 (`theShoppersShop`).
 export const theCategoryOfManyParts = 'gpu' satisfies CatalogPart['category'];
 export const visiblePartsOfThatCategory = 400;
 

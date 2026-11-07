@@ -13,7 +13,9 @@ import { photographs } from '@/shared/photographs';
 // heading's baseline; 120 pixels below, four facts spread across the row,
 // each a figure in the Facts size with one line under it in Small Soft Ink;
 // a photograph at 4:3 under its end half, with its caption. On a phone the
-// facts take two columns.
+// facts take two columns. A word wider than its column, as a Kurdish one is
+// at a phone's largest text, breaks where it must rather than run past the
+// window.
 //
 // Each fact is true and comes from the platform's own figures, as the API
 // answers them (`GET v1/platform-figures`): how many active Vendors and
@@ -30,7 +32,7 @@ export async function FactsRow({
   return (
     <section
       aria-labelledby="facts-title"
-      className="page-margins pt-[8.75rem] pb-section-phone md:pb-section"
+      className="page-margins pt-[8.75rem] pb-section-phone wrap-anywhere md:pb-section"
     >
       <div className="grid gap-6 md:grid-cols-12 md:items-end">
         <h2 id="facts-title" className="type-display md:col-span-6">

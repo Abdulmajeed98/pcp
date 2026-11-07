@@ -1,5 +1,6 @@
 import type { VisibleVendorResponse } from '@pcp/api-client';
 import {
+  callTo,
   googleMapsSearchFor,
   instagramHandleOf,
   instagramProfileOf,
@@ -20,12 +21,6 @@ export interface ContactLink {
   detail: string | null;
 }
 
-// The address that calls a phone number, from its international form, which
-// the API answers with no spaces (RFC 3966): `tel:+9647501234567`.
-function callAddress(internationalNumber: string): string {
-  return `tel:${internationalNumber}`;
-}
-
 // The links a Vendor page makes of a Vendor's contact details (DESIGN.md's A
 // Vendor's contact details and their links, BRW-4), in the coupon's order:
 // its phone number calls the shop; its WhatsApp number opens WhatsApp's chat
@@ -43,7 +38,7 @@ export function contactLinksOf(
   return [
     {
       kind: 'call',
-      address: callAddress(phoneNumber.international),
+      address: callTo(phoneNumber.international),
       detail: phoneNumber.national,
     },
     ...(whatsAppNumber === null

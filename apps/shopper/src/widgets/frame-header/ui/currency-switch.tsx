@@ -72,7 +72,9 @@ export function CurrencySwitch({
           {label}
         </span>
       )}
-      <ul className={look === 'tabs' ? 'flex gap-2' : 'flex'}>
+      {/* Its choices wrap onto another row where they do not fit, as with a
+          phone's text at 200%. */}
+      <ul className={look === 'tabs' ? 'flex flex-wrap gap-2' : 'flex flex-wrap'}>
         {choices.map(({ currency, name, mark }) => (
           <li key={currency}>
             <button

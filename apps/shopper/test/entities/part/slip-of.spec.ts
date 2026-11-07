@@ -62,10 +62,33 @@ describe("a Part's price slip", () => {
     expect(slip.inStock).toBe(4);
   });
 
-  it('has no prices when every Vendor has the Part out of stock', () => {
+  it('has no prices when every Vendor has the Part out of stock, and says so', () => {
     const slip = slipOf(offers.slice(3));
     expect(slip.lowest).toBeUndefined();
     expect(slip.highestInStock).toBeUndefined();
-    expect(slip).toMatchObject({ vendors: 2, inStock: 0, converted: 1 });
+    expect(slip).toMatchObject({
+      vendors: 2,
+      inStock: 0,
+      converted: 1,
+      outOfStockEverywhere: true,
+    });
+  });
+
+  // With no Platform Rate, a Part whose Offers in stock are all quoted in the
+  // other currency has no Lowest Price, and is still in stock: the browse
+  // spec's order of a Category's list puts it between the priced Parts and
+  // those every Vendor has out of stock.
+  it('has no Lowest Price, and is not out of stock everywhere, when its Offers in stock have no Shown Price', () => {
+    const slip = slipOf([
+      anOffer('No Rate Yet', { shownPrice: null, usdPrice: '314.00', iqdPrice: null }),
+      anOffer('Pretend Parts', { shownPrice: null, inStock: false }),
+    ]);
+    expect(slip.lowest).toBeUndefined();
+    expect(slip.highestInStock).toBeUndefined();
+    expect(slip).toMatchObject({ vendors: 2, inStock: 1, outOfStockEverywhere: false });
+  });
+
+  it('is not out of stock everywhere when an Offer is in stock', () => {
+    expect(slipOf(offers).outOfStockEverywhere).toBe(false);
   });
 });

@@ -5,7 +5,7 @@ import type {
 import { connection } from 'next/server';
 import { cache } from 'react';
 
-import { apiClient } from '@/shared/api';
+import { apiClient, namesNothingShown } from '@/shared/api';
 import type { Currency } from '@/shared/currency';
 
 // How many Offers a page of a Vendor's list holds: as many as a page of a
@@ -23,10 +23,6 @@ export type VendorPageReading =
     }
   | { kind: 'not-found' }
   | { kind: 'not-read' };
-
-// An address that names no Vendor the API shows: a deactivated or unknown
-// one, which the API answers 404, and an identifier it cannot read, 400.
-const namesNoVendor = (status: number | undefined) => status === 404 || status === 400;
 
 // What a Vendor page reads from the API, on the server, for each request,
 // with no cache (the browse spec's The Shopper app): `GET
@@ -59,7 +55,10 @@ export const readTheVendorPage = cache(
       }),
     ]);
 
-    if (namesNoVendor(vendor.response?.status) || namesNoVendor(offers.response?.status)) {
+    if (
+      namesNothingShown(vendor.response?.status) ||
+      namesNothingShown(offers.response?.status)
+    ) {
       return { kind: 'not-found' };
     }
     if (vendor.data === undefined) return { kind: 'not-read' };

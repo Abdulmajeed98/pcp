@@ -1,24 +1,16 @@
 import type { VisibleOfferOfVendorPageResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { OfferOfAVendor } from '@/entities/offer';
 import { partAddress, PartSquare } from '@/entities/part';
 import { vendorAddress } from '@/entities/vendor';
 import type { Currency } from '@/shared/currency';
-import {
-  buttonVariants,
-  Paging,
-  Sheet,
-  SheetGroup,
-  SheetNote,
-  SheetTitle,
-} from '@/shared/ui';
+import { whatAPageShows } from '@/shared/lib';
+import { Paging, Sheet, SheetAction, SheetGroup, SheetNote, SheetTitle } from '@/shared/ui';
 
 import { offersByCategory } from '../model/offers-by-category';
-import { whatTheOffersSheetShows } from '../model/what-the-offers-sheet-shows';
 
 // The sheet of a Vendor's Offers (DESIGN.md's Its Offers and An Offer, on a
 // Vendor page), centred under its coupon: titled by how many Visible Offers
@@ -54,9 +46,99 @@ export async function VendorOffers({
     getTranslations('CategoryPage'),
     getTranslations('Paging'),
   ]);
-  const state = whatTheOffersSheetShows(offers);
+  const state = whatAPageShows(offers);
   const addressOf = (at: number) => `${vendorAddress(language, vendorId, at)}#offers`;
   const count = offers?.totalElements ?? 0;
+
+  // What the sheet says under its title, and what it holds: the page of
+  // Offers, or why it lists none and, but for a Vendor with none, the one
+  // way out.
+  const { note, holds } = ((): { note: ReactNode; holds: ReactNode } => {
+    // Why the sheet lists no Offer, in Body large, as what the page says.
+    const saying = (words: string) => (
+      <SheetNote lead>
+        <span data-testid="offers-say" data-state={state.kind}>
+          {words}
+        </span>
+      </SheetNote>
+    );
+    switch (state.kind) {
+      case 'listed':
+        return {
+          note: <SheetNote>{t('offersNote')}</SheetNote>,
+          holds: (
+            <>
+              {offersByCategory(state.page.content).map(({ category, offers: ofIt }) => {
+                const before = state.page.content.indexOf(ofIt[0]);
+                return (
+                  <SheetGroup
+                    key={category}
+                    heading={categoryName(category)}
+                    testId={`offers-of-${category}`}
+                  >
+                    {ofIt.map((offer, place) => (
+                      <OfferOfAVendor
+                        key={offer.part.id}
+                        offer={offer}
+                        currency={currency}
+                        partAddress={partAddress(language, offer.part.id)}
+                        picture={<PartSquare part={offer.part} />}
+                        place={before + place}
+                      />
+                    ))}
+                  </SheetGroup>
+                );
+              })}
+              <Paging
+                page={page}
+                totalPages={state.page.totalPages}
+                addressOf={addressOf}
+              />
+              {state.page.content.some((offer) => offer.shownPrice?.converted === true) && (
+                <p
+                  data-testid="what-approximately-means"
+                  className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground"
+                >
+                  {categoryPage('approximately')}
+                </p>
+              )}
+            </>
+          ),
+        };
+      case 'none':
+        return {
+          note: saying(t('none')),
+          holds: (
+            <p className="mt-2.5 text-center text-sm text-muted-foreground">
+              {categoryPage('noneYetLine')}
+            </p>
+          ),
+        };
+      case 'past-the-end':
+        return {
+          note: saying(
+            paging('pastTheEnd', {
+              pages: state.totalPages,
+              pagesText: formatNumber(state.totalPages),
+            }),
+          ),
+          holds: (
+            <SheetAction kind="primary" address={addressOf(1)} testId="to-the-first-page">
+              {paging('toTheFirstPage')}
+            </SheetAction>
+          ),
+        };
+      case 'not-read':
+        return {
+          note: saying(t('offersNotRead')),
+          holds: (
+            <SheetAction kind="board" address={addressOf(page)} testId="try-again">
+              {t('tryAgain')}
+            </SheetAction>
+          ),
+        };
+    }
+  })();
 
   return (
     <section
@@ -68,99 +150,9 @@ export async function VendorOffers({
         <SheetTitle id="offers-title">
           {t('offersTitle', { count, countText: formatNumber(count) })}
         </SheetTitle>
-        {state.kind === 'listed' ? (
-          <SheetNote>{t('offersNote')}</SheetNote>
-        ) : (
-          <SheetNote lead>
-            <span data-testid="offers-say" data-state={state.kind}>
-              {state.kind === 'none'
-                ? t('none')
-                : state.kind === 'past-the-end'
-                  ? paging('pastTheEnd', {
-                      pages: state.totalPages,
-                      pagesText: formatNumber(state.totalPages),
-                    })
-                  : t('offersNotRead')}
-            </span>
-          </SheetNote>
-        )}
-        {state.kind === 'none' && (
-          <p className="mt-2.5 text-center text-sm text-muted-foreground">
-            {categoryPage('noneYetLine')}
-          </p>
-        )}
-
-        {state.kind === 'listed' && (
-          <>
-            {offersByCategory(state.page.content).map(({ category, offers: ofIt }) => {
-              const before = state.page.content.indexOf(ofIt[0]);
-              return (
-                <SheetGroup
-                  key={category}
-                  heading={categoryName(category)}
-                  testId={`offers-of-${category}`}
-                >
-                  {ofIt.map((offer, place) => (
-                    <OfferOfAVendor
-                      key={offer.part.id}
-                      offer={offer}
-                      currency={currency}
-                      partAddress={partAddress(language, offer.part.id)}
-                      picture={<PartSquare part={offer.part} />}
-                      place={before + place}
-                    />
-                  ))}
-                </SheetGroup>
-              );
-            })}
-            <Paging page={page} totalPages={state.page.totalPages} addressOf={addressOf} />
-            {state.page.content.some((offer) => offer.shownPrice?.converted === true) && (
-              <p
-                data-testid="what-approximately-means"
-                className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground"
-              >
-                {categoryPage('approximately')}
-              </p>
-            )}
-          </>
-        )}
-        {state.kind === 'past-the-end' && (
-          <Action kind="primary" address={addressOf(1)} testId="to-the-first-page">
-            {paging('toTheFirstPage')}
-          </Action>
-        )}
-        {state.kind === 'not-read' && (
-          <Action kind="board" address={addressOf(page)} testId="try-again">
-            {t('tryAgain')}
-          </Action>
-        )}
+        {note}
+        {holds}
       </Sheet>
     </section>
-  );
-}
-
-// The one way out of a sheet that lists nothing, centred, 52 pixels tall: a
-// cell, or the sheet's primary button. It draws the list again in place with
-// script.
-function Action({
-  kind,
-  address,
-  testId,
-  children,
-}: {
-  kind: 'primary' | 'board';
-  address: string;
-  testId: string;
-  children: ReactNode;
-}) {
-  return (
-    <Link
-      href={address}
-      prefetch={false}
-      data-testid={testId}
-      className={buttonVariants({ kind, className: 'mx-auto mt-8 flex w-fit' })}
-    >
-      {children}
-    </Link>
   );
 }

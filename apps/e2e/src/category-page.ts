@@ -1,46 +1,9 @@
 import { type APIRequestContext, expect, type Locator, type Page } from '@playwright/test';
 
 import type { Currency } from './currencies';
-import type { CategoryKey, ListedPart } from './home-page';
+import type { CategoryKey, VisiblePart } from './home-page';
 import { aMadeUpPhoto } from './made-up-photo';
 import { apiUrl } from './platform';
-
-// A made-up Part a Category page's test creates, by the name it gives it.
-export interface MadeUpListedPart {
-  id: string;
-  name: string;
-}
-
-// Creates a made-up CPU over HTTP as the Admin, with the name the test gives,
-// which holds a word unique to the run so that the test finds its own rows on
-// a long list, and plainly test data, and with the manufacturer and the
-// specifications it gives, in OpenDB's field names and nesting, such as
-// `{ socket: 'AM5', cores: { total: 8 } }`; with none, it holds no
-// specification. It stays in the development database, which
-// `pnpm services:reset` empties.
-export async function createACpuNamed(
-  request: APIRequestContext,
-  authorization: string,
-  name: string,
-  {
-    manufacturer = 'Made-up Test Parts',
-    specifications = {},
-  }: { manufacturer?: string; specifications?: Record<string, unknown> } = {},
-): Promise<MadeUpListedPart> {
-  const created = await request.post(`${apiUrl}/v1/parts`, {
-    headers: { authorization },
-    data: {
-      category: 'cpu',
-      name,
-      manufacturer,
-      partNumbers: [`TEST-${name.replace(/\W+/g, '-')}`],
-      specifications,
-    },
-  });
-  expect(created.status()).toBe(201);
-  const { id } = (await created.json()) as { id: string };
-  return { id, name };
-}
 
 // Adds a made-up photo to a Part over HTTP as the Admin, and gives back the
 // path the API serves it at, `/v1/photos/<photoId>`.
@@ -69,7 +32,7 @@ export async function aPageOfTheList(
     search,
     page = 0,
   }: { category: CategoryKey; currency: Currency; search?: string; page?: number },
-): Promise<{ totalElements: number; totalPages: number; content: ListedPart[] }> {
+): Promise<{ totalElements: number; totalPages: number; content: VisiblePart[] }> {
   const answer = await request.get(`${apiUrl}/v1/visible-parts`, {
     params: {
       category,
@@ -83,18 +46,18 @@ export async function aPageOfTheList(
   return (await answer.json()) as {
     totalElements: number;
     totalPages: number;
-    content: ListedPart[];
+    content: VisiblePart[];
   };
 }
 
-// The Parts the Category page lists, in the order it shows them.
-export function listedParts(page: Page): Locator {
-  return page.getByTestId('listed-part');
+// The Visible Parts the Category page shows, in the order it shows them.
+export function visibleParts(page: Page): Locator {
+  return page.getByTestId('visible-part');
 }
 
 // The names of the Parts listed, in their order, each as its link says it.
 export async function namesListed(page: Page): Promise<string[]> {
-  return (await listedParts(page).getByRole('link').allInnerTexts()).map((name) =>
+  return (await visibleParts(page).getByRole('link').allInnerTexts()).map((name) =>
     name.trim(),
   );
 }
@@ -105,9 +68,9 @@ export async function expectTheList(page: Page, names: string[]): Promise<void> 
   await expect.poll(() => namesListed(page)).toEqual(names);
 }
 
-// The listed Part of this name.
-export function listedPart(page: Page, name: string): Locator {
-  return listedParts(page).filter({
+// The Visible Part of this name on the Category page.
+export function visiblePart(page: Page, name: string): Locator {
+  return visibleParts(page).filter({
     has: page.getByRole('link', { name, exact: true }),
   });
 }
@@ -271,7 +234,7 @@ export interface TheCategorySheet {
 export function lookAtTheCategorySheet(): TheCategorySheet {
   const sheet = document.querySelector('[data-testid="sheet"]');
   const price = document.querySelector(
-    '[data-testid="listed-part"] [data-testid="item-end"]',
+    '[data-testid="visible-part"] [data-testid="item-end"]',
   );
   const stamp = document.querySelector('[data-testid="sheet"] [data-testid="stamp"]');
   // How much a clip `inset(top right bottom left)` covers from the foot: its

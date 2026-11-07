@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PagingResponse } from '@pcp/core';
 
-import { VisiblePartsPage } from '~/domain/offer/OfferStore';
+import { VisiblePartsPage } from '~/domain/offer/VisiblePartStore';
 
 import { VisiblePartResponse } from './VisiblePartResponse';
 

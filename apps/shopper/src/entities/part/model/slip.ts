@@ -16,15 +16,24 @@ export interface Slip {
   inStock: number;
   // How many of the Offers show a Converted Price, marked "≈".
   converted: number;
+  // Whether every Vendor has the Part out of stock, which the slip and the
+  // plate then say in the Lowest Price's place. A Part in stock with no
+  // Lowest Price is not: its Offers in stock are all quoted in the other
+  // currency, which happens only before the Admin sets the first Platform
+  // Rate, and the Lowest Price is then left out, as a Category page leaves
+  // it out.
+  outOfStockEverywhere: boolean;
 }
 
 export function slipOf(offers: readonly VisibleOfferResponse[]): Slip {
   const priced = offers.filter((offer) => offer.inStock && offer.shownPrice !== null);
+  const inStock = offers.filter((offer) => offer.inStock).length;
   return {
     lowest: priced.at(0),
     highestInStock: priced.at(-1)?.shownPrice ?? undefined,
     vendors: offers.length,
-    inStock: offers.filter((offer) => offer.inStock).length,
+    inStock,
     converted: offers.filter((offer) => offer.shownPrice?.converted === true).length,
+    outOfStockEverywhere: inStock === 0,
   };
 }

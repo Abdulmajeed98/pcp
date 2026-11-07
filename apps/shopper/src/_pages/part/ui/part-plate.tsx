@@ -9,10 +9,10 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Fragment } from 'react';
 
 import { categoryAddress } from '@/entities/category';
-import { nameType, PartPicture, slipOf } from '@/entities/part';
+import { PartPicture, slipOf } from '@/entities/part';
 import { chosenCurrency, currencies, currencyMarks } from '@/shared/currency';
 import { ShownPrice } from '@/shared/price';
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, nameType } from '@/shared/ui';
 import { CurrencySwitch } from '@/widgets/frame-header';
 
 // A Part page's square plate (DESIGN.md's A Part page and The square
@@ -26,12 +26,14 @@ import { CurrencySwitch } from '@/widgets/frame-header';
 // frame's switch, standing above the price it leads; in its middle the
 // Part's name as the page's `h1`, its manufacturer and its Category, named
 // in the page's language and leading back to its Category page, its part
-// numbers, and its Lowest Price; at its foot two cells side by side, the
-// first of Ink leading down to its Offers, the second of Sheet Paper to its
-// Category's page. The name, the manufacturer and the part numbers are
-// English in every language (LANG-3), the part numbers one left-to-right
-// list, as a box prints them. On a phone it stacks, its words first and the
-// photograph after them, its cells one above the other.
+// numbers, and its Lowest Price, or that every Vendor has it out of stock
+// (nothing for a Part in stock with no Lowest Price, as before the first
+// Platform Rate, as a Category page shows none); at its foot two cells side
+// by side, the first of Ink leading down to its Offers, the second of Sheet
+// Paper to its Category's page. The name, the manufacturer and the part
+// numbers are English in every language (LANG-3), the part numbers one
+// left-to-right list, as a box prints them. On a phone it stacks, its words
+// first and the photograph after them, its cells one above the other.
 export async function PartPlate({
   part,
   offers,
@@ -46,7 +48,7 @@ export async function PartPlate({
     getTranslations('Frame'),
     getTranslations('Category'),
   ]);
-  const { lowest } = slipOf(offers);
+  const { lowest, outOfStockEverywhere } = slipOf(offers);
   const vendors = { count: offers.length, countText: formatNumber(offers.length) };
   // The cells hold their words on one line beside each other in half the
   // plate at 768 pixels, so they take a cell's narrower padding.
@@ -105,16 +107,18 @@ export async function PartPlate({
               </AlwaysEnglish>
             </p>
           )}
-          <p data-testid="plate-lowest" className="text-xl font-semibold">
-            {t('lowestPrice')}{' '}
-            {lowest?.shownPrice ? (
-              <ShownPrice price={lowest.shownPrice} />
-            ) : (
-              <span className="font-normal text-muted-foreground">
-                {t('outOfStockEverywhere')}
-              </span>
-            )}
-          </p>
+          {(lowest?.shownPrice || outOfStockEverywhere) && (
+            <p data-testid="plate-lowest" className="text-xl font-semibold">
+              {t('lowestPrice')}{' '}
+              {lowest?.shownPrice ? (
+                <ShownPrice price={lowest.shownPrice} />
+              ) : (
+                <span className="font-normal text-muted-foreground">
+                  {t('outOfStockEverywhere')}
+                </span>
+              )}
+            </p>
+          )}
         </div>
         <div className="grid gap-2 md:grid-cols-2">
           <a

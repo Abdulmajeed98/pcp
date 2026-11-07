@@ -11,33 +11,49 @@ export const catalogUrl = `${dashboardUrl}/catalog`;
 export interface MadeUpPart {
   id: string;
   name: string;
-  // A word of its name that no other Part has.
+  // A word no other Part has, which its name holds unless the test named it,
+  // and its part number unless the test gave one.
   word: string;
   partNumber: string;
 }
 
+// What a test may give a made-up Part in place of what it is given: a name,
+// which then holds a word of the test's own, unique to the run, so that the
+// test finds its own rows on a long list; a manufacturer; and a part number.
+export interface MadeUpPartNamed {
+  name?: string;
+  manufacturer?: string;
+  partNumber?: string;
+}
+
 // Creates a made-up Part over HTTP as the Admin, a CPU unless another
 // Category is given, with a name and a part number unique to the run, and
-// plainly test data, and any specifications given. It stays in the
-// development database, which `pnpm services:reset` empties. The name does
-// not hold the part number, so that a search for the one does not find it by
-// the other.
+// plainly test data, and any specifications given, in OpenDB's field names
+// and nesting, such as `{ socket: 'AM5', cores: { total: 8 } }`. A test may
+// name it, its manufacturer and its part number itself. It stays in the
+// development database, which `pnpm services:reset` empties. The name it is
+// given does not hold the part number, so that a search for the one does not
+// find it by the other. Every test Part is made here.
 export async function createAMadeUpPart(
   request: APIRequestContext,
   authorization: string,
   specifications: Record<string, unknown> = {},
   category = 'cpu',
+  named: MadeUpPartNamed = {},
 ): Promise<MadeUpPart> {
   const word = aWordUniqueToTheRun();
-  const name = `Made-up test Part ${word}`;
-  const partNumber = `TEST-${word}`;
+  const {
+    name = `Made-up test Part ${word}`,
+    manufacturer = 'Made-up Test Parts',
+    partNumber = `TEST-${word}`,
+  } = named;
 
   const created = await request.post(`${apiUrl}/v1/parts`, {
     headers: { authorization },
     data: {
       category,
       name,
-      manufacturer: 'Made-up Test Parts',
+      manufacturer,
       partNumbers: [partNumber],
       specifications,
     },

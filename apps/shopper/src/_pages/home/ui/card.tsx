@@ -38,9 +38,12 @@ export async function Card({
       className="page-margins relative isolate grid min-h-svh place-items-center pt-[max(2.5rem,env(safe-area-inset-top))] pb-10"
     >
       <DimPhotograph photograph={photographs.redLitMotherboard} dimmedTo={62} first />
+      {/* A word wider than the card, as a Kurdish one is at a phone's
+          largest text, breaks where it must rather than widen the card past
+          the window, as a sheet's title does. */}
       <div
         data-testid="card"
-        className="grid min-h-[70svh] w-full max-w-[52rem] grid-rows-[auto_auto_1fr_auto] gap-7 bg-card p-5 text-card-foreground md:min-h-[62svh] md:p-8"
+        className="grid min-h-[70svh] w-full max-w-[52rem] grid-rows-[auto_auto_1fr_auto] gap-7 bg-card p-5 text-card-foreground wrap-anywhere md:min-h-[62svh] md:p-8"
       >
         <header
           data-testid="frame-header"

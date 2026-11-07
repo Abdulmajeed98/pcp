@@ -26,8 +26,10 @@ const someCategories: readonly Category[] = ['cpu', 'gpu', 'motherboard', 'ram']
 // licence, each a link, with what the page did to it. Each line wraps, and
 // is as tall as a control, so that each link is 44 pixels high.
 //
-// The focus ring is drawn in the cover's own ink. It is rendered on the
-// server with the rest of the page, and needs no script.
+// The focus ring is drawn in the cover's own ink. A word wider than the
+// window, as a Kurdish one is at a phone's largest text, breaks where it
+// must rather than run past the window's edge. It is rendered on the server
+// with the rest of the page, and needs no script.
 export async function BackCover({ photographs }: { photographs: readonly Photograph[] }) {
   const [language, t, site, categoryName, credit] = await Promise.all([
     getLocale(),
@@ -41,7 +43,7 @@ export async function BackCover({ photographs }: { photographs: readonly Photogr
   return (
     <footer
       data-testid="back-cover"
-      className="page-margins flex min-h-svh flex-col overflow-hidden bg-back-cover pt-section-phone text-back-cover-foreground [--ring:var(--back-cover-foreground)] md:pt-[4.5rem]"
+      className="page-margins flex min-h-svh flex-col overflow-hidden bg-back-cover pt-section-phone text-back-cover-foreground wrap-anywhere [--ring:var(--back-cover-foreground)] md:pt-[4.5rem]"
     >
       <div className="grid gap-x-6 gap-y-10 md:grid-cols-12">
         <div className="grid justify-items-start gap-7 md:col-span-7">

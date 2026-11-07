@@ -23,7 +23,10 @@ import { slipOf } from '../model/slip';
 //
 // Each figure is the API's: a line whose figure the API did not answer is
 // left out, as the rate is before the Admin sets the first. A Part every
-// Vendor has out of stock has no Lowest Price, and says so in its place.
+// Vendor has out of stock has no Lowest Price, and says so in its place; a
+// Part in stock with none, whose Offers in stock are all quoted in the other
+// currency before the first rate is set, leaves the line out, as a Category
+// page leaves its price out.
 //
 // It is printed below the first screen, so the page's script feeds it as it
 // comes into view, as a till feeds its slip (Motion 4), and the stamp lands
@@ -71,15 +74,19 @@ export async function PriceSlip({
           <AlwaysEnglish>{partName}</AlwaysEnglish>
         </p>
         <ul className={cn('@container grid grid-cols-[minmax(0,1fr)] gap-2.5 py-4', rule)}>
-          <Line name={t('lowestPrice')} testId="slip-lowest">
-            {slip.lowest?.shownPrice ? (
+          {slip.lowest?.shownPrice ? (
+            <Line name={t('lowestPrice')} testId="slip-lowest">
               <ShownPrice price={slip.lowest.shownPrice} className="text-xl" />
-            ) : (
-              <span className="font-normal text-muted-foreground">
-                {t('outOfStockEverywhere')}
-              </span>
-            )}
-          </Line>
+            </Line>
+          ) : (
+            slip.outOfStockEverywhere && (
+              <Line name={t('lowestPrice')} testId="slip-lowest">
+                <span className="font-normal text-muted-foreground">
+                  {t('outOfStockEverywhere')}
+                </span>
+              </Line>
+            )
+          )}
           {slip.highestInStock !== undefined && (
             <Line name={t('highestInStock')} testId="slip-highest">
               <ShownPrice price={slip.highestInStock} />

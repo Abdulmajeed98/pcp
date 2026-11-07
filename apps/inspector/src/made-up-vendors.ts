@@ -10,6 +10,10 @@ import type { VisibleVendorResponse } from '@pcp/api-client';
 // Most have every contact detail. "Pretend Tech" has only its phone number,
 // beside the address and city every Vendor gives, and "Imaginary Gaming
 // Corner" has no Visible Offer.
+//
+// Erbil is the API's only city, so every city and address names it; no
+// Vendor's name or Instagram name does, since the app will reach beyond
+// Erbil (the owner, 5 November 2026).
 
 // Identifiers that say they are made up: zeros, and a counter.
 export function madeUpIdentifier(counter: number): string {
@@ -106,7 +110,7 @@ export const madeUpVendors: readonly VisibleVendorResponse[] = [
   withEveryDetail(7, 'تەکنەلۆجیای نموونە', 'sample.technology', kurdish),
   withEveryDetail(8, 'عالم الحاسوب الافتراضي', 'virtual.computer.world', arabic),
   withEveryDetail(9, 'Placeholder Computers', 'placeholder.computers', latin),
-  withEveryDetail(10, 'Mock Hardware Erbil', 'mock.hardware.erbil', latin),
+  withEveryDetail(10, 'Mock Hardware House', 'mock.hardware.house', latin),
   withEveryDetail(11, 'ئەلیکترۆنیاتی خەیاڵ', 'imagination.electronics', kurdish),
   withEveryDetail(12, 'متجر التجربة للإلكترونيات', 'trial.electronics', arabic),
   withEveryDetail(13, 'Not-a-Real PC Shop', 'not.a.real.pc.shop', latin),
@@ -120,7 +124,7 @@ export const madeUpVendors: readonly VisibleVendorResponse[] = [
   ),
   withEveryDetail(17, 'Fictional Circuits', 'fictional.circuits', latin),
   withEveryDetail(18, 'Example Electronics Bazaar', 'example.electronics.bazaar', latin),
-  withEveryDetail(19, 'دووکانی تاقیکردنەوە', 'test.shop.erbil', kurdish),
+  withEveryDetail(19, 'دووکانی تاقیکردنەوە', 'test.shop.sample', kurdish),
   withEveryDetail(20, 'Dummy Digital', 'dummy.digital', latin),
   withEveryDetail(
     21,

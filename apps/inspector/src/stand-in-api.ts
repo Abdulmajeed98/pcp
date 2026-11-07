@@ -24,13 +24,19 @@ import type { Category, ReadPart, ShopOffer, ShoppersShop } from './the-shoppers
 
 // The stand-in API: the answers the made-up shop gives to the public
 // endpoints the Shopper app reads, as the API's description shapes them.
-// It is a stand-in for looking at pages, never a second statement of the
-// API's rules, and no test of the platform relies on it. It converts no
-// price, since every price is fixed in both currencies, and judges no
-// visibility, since the shop holds only Visible Offers of active Vendors. It
-// only picks and pages its fixed Parts plainly. Every answer is typed by the
-// API client's own types, so a change to the API's description that the
-// shop does not follow fails the type-check.
+// It is a stand-in for looking at pages, and no test of the platform relies
+// on it. It states as little of the API's rules as the shop's fixed data
+// allows: it converts no price, since every price is fixed in both
+// currencies, and judges no visibility, since the shop holds only Visible
+// Offers of active Vendors. Two rules it must state, since no fixed data can
+// carry them, as docs/agents/design-skills.md says: OFF-11's order of Offers
+// (`inOff11sOrder`), which gives a Part's Lowest Price too, as its first
+// Offer in stock, and BRW-1's order of a Category's Parts by it, since every
+// price is fixed in both currencies and their orders can differ; and what a
+// Part lacks of a specification (`lacks`), since the API labels the
+// specifications of a Visible Part alone. Every answer is typed by the API
+// client's own types, so a change to the API's description that the shop
+// does not follow fails the type-check.
 
 // One request, as the Shopper app's server sends it: its method, and its
 // path with its query.
@@ -147,9 +153,12 @@ function amountIn(offer: ShopOffer, currency: Currency): number {
   return Number(offer.shownPrices[currency].amount);
 }
 
-// In stock first, then the lowest Shown Price, then the most recent
-// Confirmation.
-function inStockThenCheapest(currency: Currency) {
+// OFF-11's order of Offers, in the currency asked: in stock first, then the
+// lowest Shown Price, then the most recent Confirmation. The shop's prices
+// are fixed in both currencies, and its Offers of a Part can be in one order
+// in dinars and another in dollars, as its AMD Ryzen 7 7800X3D's are, so no
+// order written into the shop could hold for both.
+function inOff11sOrder(currency: Currency) {
   return (a: ShopOffer, b: ShopOffer) =>
     Number(b.inStock) - Number(a.inStock) ||
     amountIn(a, currency) - amountIn(b, currency) ||
@@ -180,7 +189,7 @@ function offersOfVendor(
       (a, b) =>
         categoriesInOrder.indexOf(partOf(a).category) -
           categoriesInOrder.indexOf(partOf(b).category) ||
-        inStockThenCheapest(currency)(a, b) ||
+        inOff11sOrder(currency)(a, b) ||
         partOf(a).name.localeCompare(partOf(b).name) ||
         a.id.localeCompare(b.id),
     )
@@ -226,7 +235,11 @@ export function valueAt(
 
 // Whether a Part holds nothing for a specification, as the API's description
 // of a Part's specifications has it: no value, an empty text or list, or a
-// 0 where the Category's list says 0 stands for "not known".
+// 0 where the Category's list says 0 stands for "not known". The API labels
+// a Part's specifications only for a Visible Part, and the shop's Parts are
+// not visible in the development database, whose Offers they lack, so the
+// stand-in labels the document the Admin's read of each gave, by the lists
+// the API answers with each specification's `zeroMeansMissing`.
 function lacks(specification: SpecificationResponse, value: unknown): boolean {
   if (value === undefined || value === null || value === '') return true;
   if (Array.isArray(value) && specification.kind !== 'listOfRows')
@@ -336,31 +349,34 @@ function categoryOf(query: URLSearchParams): Category {
   return category;
 }
 
-// A Visible Part as a Category's list shows it.
-interface Listed {
+// A Visible Part of the shop, as the catalog gave it and as a Category's
+// list answers it.
+interface VisiblePartAnswered {
   read: ReadPart;
   response: VisiblePartResponse;
 }
 
-// Every Part of a Category the shop offers, with its Lowest Price, the
-// lowest Shown Price of its in-stock Offers, in BRW-1's order: a Lowest
-// Price first, the lowest first, then those every Vendor has out of stock,
-// then by name.
-function listedParts(shop: ShoppersShop, category: Category, currency: Currency): Listed[] {
+// Every Part of a Category the shop offers, with its Lowest Price, the Shown
+// Price of the first of its Offers in stock as a Part page lists them, as
+// the Shopper's price slip takes it, in BRW-1's order: a Lowest Price first,
+// the lowest first, then those every Vendor has out of stock, then by name.
+function visiblePartsOf(
+  shop: ShoppersShop,
+  category: Category,
+  currency: Currency,
+): VisiblePartAnswered[] {
   return [...shop.parts.values()]
     .filter((read) => read.summary.category === category)
-    .map((read): Listed => {
-      const offers = shop.offers.filter((offer) => offer.partId === read.summary.id);
-      const [cheapest] = offers
-        .filter((offer) => offer.inStock)
-        .sort(inStockThenCheapest(currency));
+    .map((read): VisiblePartAnswered => {
+      const offers = aPartsOffers(shop, read.summary.id, currency);
+      const lowest = offers.find((offer) => offer.inStock);
       return {
         read,
         response: {
           ...read.summary,
-          lowestPrice: cheapest === undefined ? null : cheapest.shownPrices[currency],
+          lowestPrice: lowest === undefined ? null : lowest.shownPrices[currency],
           vendorCount: offers.length,
-          inStock: cheapest !== undefined,
+          inStock: lowest !== undefined,
         },
       };
     })
@@ -404,7 +420,7 @@ function visibleParts(shop: ShoppersShop, query: URLSearchParams): StandInAnswer
     .map((filter) => ({ ...filter, asked: query.getAll(filter.parameter) }))
     .filter((filter) => filter.asked.length > 0);
 
-  const picked = listedParts(shop, category, currency).filter(({ read, response }) => {
+  const picked = visiblePartsOf(shop, category, currency).filter(({ read, response }) => {
     const amount =
       response.lowestPrice === null ? undefined : Number(response.lowestPrice.amount);
     const inRange =
@@ -421,7 +437,7 @@ function visibleParts(shop: ShoppersShop, query: URLSearchParams): StandInAnswer
   });
   const body: VisiblePartPageResponse = aPageOf(
     query,
-    picked.map((listed) => listed.response),
+    picked.map((visible) => visible.response),
   );
   return answer(body);
 }
@@ -447,7 +463,7 @@ function inOrder(a: FilterResponse['values'][number], b: FilterResponse['values'
 function filtersOfCategory(shop: ShoppersShop, query: URLSearchParams): StandInAnswer {
   const category = categoryOf(query);
   const currency = currencyOf(query);
-  const listed = listedParts(shop, category, currency);
+  const visible = visiblePartsOf(shop, category, currency);
   const list = shop.categories.get(category)?.specifications ?? [];
   const filters = filtersOf[category].flatMap(({ parameter, path }): FilterResponse[] => {
     const specification = list.find((each) => each.path === path);
@@ -455,7 +471,7 @@ function filtersOfCategory(shop: ShoppersShop, query: URLSearchParams): StandInA
     if (specification === undefined || kind === undefined) return [];
     const values = [
       ...new Set(
-        listed
+        visible
           .map(({ read }) => valueAt(read.specifications, path))
           .filter((value) => !lacks(specification, value))
           .map((value) => value as FilterResponse['values'][number]),
@@ -471,12 +487,12 @@ function filtersOfCategory(shop: ShoppersShop, query: URLSearchParams): StandInA
       },
     ];
   });
-  const prices = listed
+  const prices = visible
     .map(({ response }) => response.lowestPrice)
     .filter((price) => price !== null)
     .sort((a, b) => Number(a.amount) - Number(b.amount));
   const body: VisiblePartsFiltersResponse = {
-    manufacturers: [...new Set(listed.map(({ response }) => response.manufacturer))].sort(
+    manufacturers: [...new Set(visible.map(({ response }) => response.manufacturer))].sort(
       (a, b) => a.localeCompare(b),
     ),
     filters,
@@ -489,26 +505,32 @@ function filtersOfCategory(shop: ShoppersShop, query: URLSearchParams): StandInA
   return answer(body);
 }
 
-// A Part's Offers, in stock first, then the lowest Shown Price, the most
-// recent Confirmation, and the Vendor's name.
-function offersOfPart(shop: ShoppersShop, partId: string, query: URLSearchParams) {
-  const currency = currencyOf(query);
-  if (!shop.parts.has(partId)) return partNotFound;
-  const vendorOf = (offer: ShopOffer) => {
-    const vendor = shop.vendors.find((each) => each.id === offer.vendorId);
-    if (vendor === undefined)
-      throw new Error(`The shop holds no Vendor ${offer.vendorId}.`);
-    return { id: vendor.id, name: vendor.name };
-  };
-  const body: VisibleOfferResponse[] = shop.offers
+// The Vendor of one of the shop's Offers, as a Part's Offers name it.
+function vendorOf(shop: ShoppersShop, offer: ShopOffer) {
+  const vendor = shop.vendors.find((each) => each.id === offer.vendorId);
+  if (vendor === undefined) throw new Error(`The shop holds no Vendor ${offer.vendorId}.`);
+  return { id: vendor.id, name: vendor.name };
+}
+
+// A Part's Offers as a Part page lists them: in OFF-11's order in the
+// currency asked, then by the Vendor's name.
+function aPartsOffers(shop: ShoppersShop, partId: string, currency: Currency): ShopOffer[] {
+  return shop.offers
     .filter((offer) => offer.partId === partId)
     .sort(
       (a, b) =>
-        inStockThenCheapest(currency)(a, b) ||
-        vendorOf(a).name.localeCompare(vendorOf(b).name) ||
+        inOff11sOrder(currency)(a, b) ||
+        vendorOf(shop, a).name.localeCompare(vendorOf(shop, b).name) ||
         a.id.localeCompare(b.id),
-    )
-    .map((offer) => ({ ...detailsOf(offer, currency), vendor: vendorOf(offer) }));
+    );
+}
+
+function offersOfPart(shop: ShoppersShop, partId: string, query: URLSearchParams) {
+  const currency = currencyOf(query);
+  if (!shop.parts.has(partId)) return partNotFound;
+  const body: VisibleOfferResponse[] = aPartsOffers(shop, partId, currency).map(
+    (offer) => ({ ...detailsOf(offer, currency), vendor: vendorOf(shop, offer) }),
+  );
   return answer(body);
 }
 

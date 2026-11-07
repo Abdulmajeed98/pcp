@@ -12,7 +12,8 @@ import { choice } from './choice';
 // not lost (story 29). Each is named in its own language and script, on
 // every page, so that a Shopper can find theirs on a page they cannot read,
 // and its names in Arabic script are 15 pixels at the least, on an English
-// page too. The one the page is in is marked as the current one.
+// page too. The one the page is in is marked as the current one. They wrap
+// onto another row where they do not fit, as with a phone's text at 200%.
 //
 // It is a component for the browser only because it asks for the address of
 // the page that is shown. The server renders it as well, so the three links
@@ -31,7 +32,7 @@ export function LanguageSwitch({ current, label }: { current: Language; label: s
 
   return (
     <nav aria-label={label} data-testid="language-switch" className="flex">
-      <ul className="flex">
+      <ul className="flex flex-wrap">
         {languages.map((language) => (
           <li key={language}>
             <a

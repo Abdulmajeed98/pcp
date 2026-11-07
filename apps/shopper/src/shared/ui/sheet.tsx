@@ -1,6 +1,8 @@
 import { cn } from 'cn';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { buttonVariants } from './button';
 import { PrintInView } from './print-in-view';
 
 // The printed sheet (DESIGN.md's The printed sheet): every list is one,
@@ -152,4 +154,35 @@ export function SheetGroup({
 // A sheet's closing lines, in Small Soft Ink, centred.
 export function SheetClose({ children }: { children: ReactNode }) {
   return <p className="mt-group text-center text-sm text-muted-foreground">{children}</p>;
+}
+
+// The one way out of a sheet that lists nothing, centred under what the
+// sheet holds, 52 pixels tall (DESIGN.md's The empty states): a cell of the
+// Board, or the sheet's primary button. A way back into the sheet's list
+// draws the list again in place with script, by Next's link, never
+// prefetched; a way to another page (`plain`) opens it anew, as every way
+// does before the page's script has loaded.
+export function SheetAction({
+  kind,
+  address,
+  plain = false,
+  testId,
+  children,
+}: {
+  kind: 'primary' | 'board';
+  address: string;
+  plain?: boolean;
+  testId: string;
+  children: ReactNode;
+}) {
+  const className = buttonVariants({ kind, className: 'mx-auto mt-8 flex w-fit' });
+  return plain ? (
+    <a href={address} data-testid={testId} className={className}>
+      {children}
+    </a>
+  ) : (
+    <Link href={address} prefetch={false} data-testid={testId} className={className}>
+      {children}
+    </Link>
+  );
 }
