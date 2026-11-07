@@ -1405,7 +1405,7 @@
             "name": "socket",
             "required": false,
             "in": "query",
-            "description": "A filter: in `cpu`, the Socket at `socket`; in `motherboard`, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for CPUs, the Socket at `socket`; for motherboards, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1417,7 +1417,7 @@
             "name": "cores",
             "required": false,
             "in": "query",
-            "description": "A filter: in `cpu`, the Cores at `cores.total`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for CPUs, the Cores at `cores.total`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1429,7 +1429,7 @@
             "name": "waterCooled",
             "required": false,
             "in": "query",
-            "description": "A filter: in `cpuCooler`, the Liquid cooled at `water_cooled`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for CPU coolers, the Liquid cooled at `water_cooled`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1441,7 +1441,7 @@
             "name": "radiatorSize",
             "required": false,
             "in": "query",
-            "description": "A filter: in `cpuCooler`, the Radiator size at `radiator_size`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for CPU coolers, the Radiator size at `radiator_size`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1453,7 +1453,7 @@
             "name": "formFactor",
             "required": false,
             "in": "query",
-            "description": "A filter: in `motherboard`, the Form factor at `form_factor`; in `case`, the Form factor at `form_factor`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for motherboards, the Form factor at `form_factor`; for cases, the Form factor at `form_factor`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1465,7 +1465,7 @@
             "name": "ramType",
             "required": false,
             "in": "query",
-            "description": "A filter: in `motherboard`, the Memory type at `memory.ram_type`; in `ram`, the Memory type at `ram_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for motherboards, the Memory type at `memory.ram_type`; for RAM, the Memory type at `ram_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1477,7 +1477,7 @@
             "name": "capacity",
             "required": false,
             "in": "query",
-            "description": "A filter: in `ram`, the Total capacity at `capacity`; in `storage`, the Capacity at `capacity`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for RAM, the Total capacity at `capacity`; for storage, the Capacity at `capacity`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1489,7 +1489,7 @@
             "name": "speed",
             "required": false,
             "in": "query",
-            "description": "A filter: in `ram`, the Speed at `speed`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for RAM, the Speed at `speed`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1501,7 +1501,7 @@
             "name": "driveType",
             "required": false,
             "in": "query",
-            "description": "A filter: in `storage`, the Drive type at `storage_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for storage, the Drive type at `storage_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1513,7 +1513,7 @@
             "name": "interface",
             "required": false,
             "in": "query",
-            "description": "A filter: in `storage`, the Interface at `interface`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for storage, the Interface at `interface`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1525,7 +1525,7 @@
             "name": "chipset",
             "required": false,
             "in": "query",
-            "description": "A filter: in `gpu`, the Chipset at `chipset`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for GPUs, the Chipset at `chipset`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1537,7 +1537,7 @@
             "name": "memory",
             "required": false,
             "in": "query",
-            "description": "A filter: in `gpu`, the Memory at `memory`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for GPUs, the Memory at `memory`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1549,7 +1549,7 @@
             "name": "wattage",
             "required": false,
             "in": "query",
-            "description": "A filter: in `psu`, the Wattage at `wattage`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for PSUs, the Wattage at `wattage`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {
@@ -1561,7 +1561,7 @@
             "name": "efficiencyRating",
             "required": false,
             "in": "query",
-            "description": "A filter: in `psu`, the Efficiency rating at `efficiency_rating`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
+            "description": "A filter: for PSUs, the Efficiency rating at `efficiency_rating`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.",
             "schema": {
               "type": "array",
               "items": {

@@ -5,6 +5,7 @@ import { IsOptional, IsString, Matches } from 'class-validator';
 
 import { type Currency } from '~/domain/currency/currency';
 import { ListVisiblePartsQueryInput } from '~/domain/offer/ListVisiblePartsQuery';
+import { Category } from '~/domain/part/Category';
 import { filterParameters, type FilterKind } from '~/domain/specification/filters';
 
 import {
@@ -100,6 +101,18 @@ export class ListVisiblePartsRequest extends PagingRequest {
   }
 }
 
+// Each Category's Parts, as the description names them in words.
+const partsOf = new Map<Category, string>([
+  [Category.CPU, 'CPUs'],
+  [Category.CPU_COOLER, 'CPU coolers'],
+  [Category.MOTHERBOARD, 'motherboards'],
+  [Category.RAM, 'RAM'],
+  [Category.STORAGE, 'storage'],
+  [Category.GPU, 'GPUs'],
+  [Category.CASE, 'cases'],
+  [Category.PSU, 'PSUs'],
+]);
+
 // The type each kind of filter's values have in the description.
 const typeOfKind: Record<FilterKind, 'integer' | 'string' | 'boolean'> = {
   number: 'integer',
@@ -122,7 +135,8 @@ for (const [parameter, filters] of filterParameters()) {
   const ofCategories = filters
     .map((filter) => {
       const specification = filter.getSpecification();
-      return `in \`${filter.getCategory().getKey()}\`, the ${specification.getLabel()} at \`${specification.getPath()}\``;
+      const category = filter.getCategory();
+      return `for ${partsOf.get(category) ?? category.getKey()}, the ${specification.getLabel()} at \`${specification.getPath()}\``;
     })
     .join('; ');
   ApiPropertyOptional({

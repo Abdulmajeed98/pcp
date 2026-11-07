@@ -2033,59 +2033,59 @@ export type ListVisiblePartsData = {
          */
         highest?: number;
         /**
-         * A filter: in `cpu`, the Socket at `socket`; in `motherboard`, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for CPUs, the Socket at `socket`; for motherboards, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         socket?: Array<string>;
         /**
-         * A filter: in `cpu`, the Cores at `cores.total`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for CPUs, the Cores at `cores.total`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         cores?: Array<number>;
         /**
-         * A filter: in `cpuCooler`, the Liquid cooled at `water_cooled`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for CPU coolers, the Liquid cooled at `water_cooled`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         waterCooled?: Array<boolean>;
         /**
-         * A filter: in `cpuCooler`, the Radiator size at `radiator_size`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for CPU coolers, the Radiator size at `radiator_size`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         radiatorSize?: Array<number>;
         /**
-         * A filter: in `motherboard`, the Form factor at `form_factor`; in `case`, the Form factor at `form_factor`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for motherboards, the Form factor at `form_factor`; for cases, the Form factor at `form_factor`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         formFactor?: Array<string>;
         /**
-         * A filter: in `motherboard`, the Memory type at `memory.ram_type`; in `ram`, the Memory type at `ram_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for motherboards, the Memory type at `memory.ram_type`; for RAM, the Memory type at `ram_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         ramType?: Array<string>;
         /**
-         * A filter: in `ram`, the Total capacity at `capacity`; in `storage`, the Capacity at `capacity`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for RAM, the Total capacity at `capacity`; for storage, the Capacity at `capacity`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         capacity?: Array<number>;
         /**
-         * A filter: in `ram`, the Speed at `speed`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for RAM, the Speed at `speed`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         speed?: Array<number>;
         /**
-         * A filter: in `storage`, the Drive type at `storage_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for storage, the Drive type at `storage_type`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         driveType?: Array<string>;
         /**
-         * A filter: in `storage`, the Interface at `interface`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for storage, the Interface at `interface`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         interface?: Array<string>;
         /**
-         * A filter: in `gpu`, the Chipset at `chipset`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for GPUs, the Chipset at `chipset`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         chipset?: Array<string>;
         /**
-         * A filter: in `gpu`, the Memory at `memory`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for GPUs, the Memory at `memory`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         memory?: Array<number>;
         /**
-         * A filter: in `psu`, the Wattage at `wattage`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for PSUs, the Wattage at `wattage`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         wattage?: Array<number>;
         /**
-         * A filter: in `psu`, the Efficiency rating at `efficiency_rating`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
+         * A filter: for PSUs, the Efficiency rating at `efficiency_rating`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         efficiencyRating?: Array<string>;
     };
