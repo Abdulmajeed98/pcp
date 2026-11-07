@@ -10,4 +10,14 @@ describe('judging a Build', () => {
 
     expect(judgeBuild(build)).toEqual([]);
   });
+
+  it('answers the outcome of each rule that applies, in rule order', () => {
+    const build: Build = {
+      cpu: { id: 'the-cpu', specifications: { socket: 'AM5' } },
+      cpuCooler: { id: 'the-cooler', specifications: { cpu_sockets: ['AM4', 'AM5'] } },
+      motherboard: { id: 'the-board', specifications: { socket: 'AM5' } },
+    };
+
+    expect(judgeBuild(build).map((outcome) => outcome.rule)).toEqual([1, 2]);
+  });
 });

@@ -16,7 +16,7 @@ A rule's own helper, or how a rule is put together: no test imports a file behin
 
 ## How they are written
 
-With Jest's globals, `describe`, `it` and `expect`, and nothing imported from Jest or from any other package: the library's ban on npm packages covers its test files. They are held to the test files' eight lint rules, among them `it` and not `test`, a `describe` around every test, and an assertion in every test. A helper that asserts counts as one only when those rules name it in their list of assertions.
+With Jest's globals, `describe`, `it` and `expect`, and nothing imported from Jest or from any other package: the library's ban on npm packages covers its test files. They are held to the test files' eight lint rules, among them `it` and not `test`, a `describe` around every test, and an assertion in every test. A helper that asserts counts as one only when those rules name it in their list of assertions. `outcomeOf` asserts nothing: it picks one rule's outcome from a Build's, for the rules that share their Parts with others.
 
 ## Where they live
 

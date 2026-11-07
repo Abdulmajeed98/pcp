@@ -49,6 +49,38 @@ export function whatever<Value>(
   };
 }
 
+// Whether a condition holds of some of several Parts, such as a Build's RAM
+// kits. When it does, it is about those it holds of, whatever the others
+// lack. When it holds of none but may of some, it is open, naming what they
+// lack.
+export function some<Item>(items: readonly Item[], find: (item: Item) => Finding): Finding {
+  const findings = items.map(find);
+  const holding = findings.filter((finding) => finding.holds === true);
+  if (holding.length > 0) return { holds: true, about: aboutAll(holding) };
+
+  const open = findings.flatMap((finding) => (finding.holds === 'maybe' ? [finding] : []));
+  if (open.length > 0) {
+    return {
+      holds: 'maybe',
+      missing: withoutRepeats(open.flatMap((each) => each.missing)),
+    };
+  }
+  return { holds: false, about: aboutAll(findings) };
+}
+
+export function not(finding: Finding): Finding {
+  return finding.holds === 'maybe' ? finding : { ...finding, holds: !finding.holds };
+}
+
+// Whether a list a Part holds, such as a cooler's sockets, includes a value.
+// A missing list could include it or not.
+export function includes<Value>(list: Reading<readonly Value[]>, value: Value): Finding {
+  if (list.value === undefined) {
+    return { holds: 'maybe', missing: [{ part: list.part, path: list.path }] };
+  }
+  return alsoAbout(fact(list.value.includes(value)), list.part);
+}
+
 function alsoAbout(finding: Finding, part: string): Finding {
   if (finding.holds === 'maybe') return finding;
   return { holds: finding.holds, about: new Set([...finding.about, part]) };
