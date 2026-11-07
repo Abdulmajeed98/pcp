@@ -38,6 +38,12 @@ export function fact(holds: boolean): Finding {
   return { holds, about: new Set() };
 }
 
+// That the Build holds a Part, for a rule that reads none of its values but
+// whose Problem is about it, such as the GPU of rule 8.
+export function theBuildHolds(part: { readonly id: string }): Finding {
+  return { holds: true, about: new Set([part.id]) };
+}
+
 // What a rule finds whatever a value is. A value the Part holds decides it,
 // and the finding is about that Part too. A missing value is taken to be any
 // of the values it could hold, the values of its fixed set, so the condition
@@ -98,6 +104,37 @@ export function or(...findings: readonly Finding[]): Finding {
 // not, about the Parts that decide that one, whatever the others lack.
 export function and(...findings: readonly Finding[]): Finding {
   return not(or(...findings.map(not)));
+}
+
+// Whether a value a Part holds is the one given, such as a PCIe slot's 16
+// lanes. A missing value could be it or not.
+export function equals<Value>(reading: Reading<Value>, value: Value): Finding {
+  if (reading.value === undefined) {
+    return { holds: 'maybe', missing: [{ part: reading.part, path: reading.path }] };
+  }
+  return alsoAbout(fact(reading.value === value), reading.part);
+}
+
+// Whether a condition holds of some row of a list a Part holds, such as a
+// motherboard's PCIe slots, each row read at one of its fields. A row's field
+// is named by the list's path, the row's place and the field's name, such as
+// `pcie_slots.0.lanes`, as the API names it. An empty list holds no row, and
+// a missing list could hold any, so it leaves the condition open, naming the
+// list.
+export function someRow<Row, Field extends keyof Row & string>(
+  list: Reading<readonly Row[]>,
+  field: Field,
+  find: (value: Reading<NonNullable<Row[Field]>>) => Finding,
+): Finding {
+  if (list.value === undefined) {
+    return { holds: 'maybe', missing: [{ part: list.part, path: list.path }] };
+  }
+  const rows = list.value.map((row, place) => ({
+    part: list.part,
+    path: `${list.path}.${place}.${field}`,
+    value: row[field] ?? undefined,
+  }));
+  return alsoAbout(some(rows, find), list.part);
 }
 
 // Whether a list a Part holds, such as a cooler's sockets, includes a value.

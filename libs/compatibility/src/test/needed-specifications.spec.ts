@@ -1,6 +1,6 @@
 import { type Category, neededSpecificationsOf } from '../index';
 
-// Written out from the spec's table of the Compatibility Rules, rules 1 to 7
+// Written out from the spec's table of the Compatibility Rules, rules 1 to 8
 // and 11, and not read from the library: each Category's paths in the order
 // the rules first read them.
 describe('the needed specifications', () => {
@@ -9,7 +9,14 @@ describe('the needed specifications', () => {
     ['cpuCooler', ['cpu_sockets']],
     [
       'motherboard',
-      ['socket', 'memory.ram_type', 'memory.slots', 'memory.max', 'form_factor'],
+      [
+        'socket',
+        'memory.ram_type',
+        'memory.slots',
+        'memory.max',
+        'form_factor',
+        'pcie_slots',
+      ],
     ],
     ['ram', ['ram_type', 'modules.quantity', 'modules.capacity_gb']],
     ['storage', []],
