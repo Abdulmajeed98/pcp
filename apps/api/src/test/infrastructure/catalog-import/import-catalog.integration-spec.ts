@@ -186,6 +186,48 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
     return (await response.json()) as ReadPart;
   }
 
+  function asTheAdmin(method: string, address: string, body?: unknown): Promise<Response> {
+    return fetch(`${testApp.baseUrl}${address}`, {
+      method,
+      headers: { ...bearerHeader(adminToken), 'content-type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  }
+
+  // An Offer for the Part from a made-up Vendor, both added by the Admin. The
+  // Vendor's Login outlasts the database's rows, so a test that makes one
+  // empties the realm after it.
+  async function anOfferFor(partId: string): Promise<void> {
+    const created = await asTheAdmin('POST', '/v1/vendors', {
+      name: 'Made-up Computer Shop',
+      city: 'erbil',
+      address: 'Made-up Street, Erbil',
+      phoneNumber: '066 223 4567',
+      loginPhoneNumber: '0750 123 4501',
+    });
+    expect(created.status).toBe(201);
+    const { vendor } = (await created.json()) as { vendor: { id: string } };
+    const offered = await asTheAdmin('POST', `/v1/vendors/${vendor.id}/offers`, {
+      partId,
+      usdPrice: '1199.99',
+      inStock: true,
+    });
+    expect(offered.status).toBe(201);
+  }
+
+  // The Parts on Missing specifications, each with what it lacks, read as the
+  // Admin.
+  async function missingSpecificationsListed(): Promise<
+    { id: string; missingSpecifications: { path: string; label: string }[] }[]
+  > {
+    const listed = await asTheAdmin('GET', '/v1/parts/missing-specifications');
+    expect(listed.status).toBe(200);
+    const { content } = (await listed.json()) as {
+      content: { id: string; missingSpecifications: { path: string; label: string }[] }[];
+    };
+    return content.map(({ id, missingSpecifications }) => ({ id, missingSpecifications }));
+  }
+
   it('makes a Part of each record that has an OpenDB ID, a name and a manufacturer, which a search finds', async () => {
     const run = await runTheImport(sample);
 
@@ -463,37 +505,6 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
       );
     }
 
-    function asTheAdmin(
-      method: string,
-      address: string,
-      body?: unknown,
-    ): Promise<Response> {
-      return fetch(`${testApp.baseUrl}${address}`, {
-        method,
-        headers: { ...bearerHeader(adminToken), 'content-type': 'application/json' },
-        body: body === undefined ? undefined : JSON.stringify(body),
-      });
-    }
-
-    // An Offer for the Part from a made-up Vendor, both added by the Admin.
-    async function anOfferFor(partId: string): Promise<void> {
-      const created = await asTheAdmin('POST', '/v1/vendors', {
-        name: 'Made-up Computer Shop',
-        city: 'erbil',
-        address: 'Made-up Street, Erbil',
-        phoneNumber: '066 223 4567',
-        loginPhoneNumber: '0750 123 4501',
-      });
-      expect(created.status).toBe(201);
-      const { vendor } = (await created.json()) as { vendor: { id: string } };
-      const offered = await asTheAdmin('POST', `/v1/vendors/${vendor.id}/offers`, {
-        partId,
-        usdPrice: '1199.99',
-        inStock: true,
-      });
-      expect(offered.status).toBe(201);
-    }
-
     it('leaves out the four power sockets of a GPU above 75 W that holds 0 for each, and counts them with a reason of their own', async () => {
       const folder = await aCopyOfTheSample();
       // A PCIe slot supplies 75 W at most, so a GPU that draws more has a
@@ -602,14 +613,7 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
 
       await anOfferFor(gpu.id);
 
-      const listed = await asTheAdmin('GET', '/v1/parts/missing-specifications');
-      expect(listed.status).toBe(200);
-      const { content } = (await listed.json()) as {
-        content: { id: string; missingSpecifications: { path: string; label: string }[] }[];
-      };
-      expect(
-        content.map(({ id, missingSpecifications }) => ({ id, missingSpecifications })),
-      ).toEqual([
+      expect(await missingSpecificationsListed()).toEqual([
         {
           id: gpu.id,
           missingSpecifications: [
@@ -626,6 +630,101 @@ describe('importing the catalog from a folder shaped like OpenDB', () => {
         'power_connectors.pcie_12VHPWR',
         'power_connectors.pcie_12V_2x6',
       ]);
+    });
+  });
+
+  describe("a motherboard's M.2 slots", () => {
+    // A Vendor that offers a motherboard has a Login, which outlasts the
+    // database's rows.
+    afterEach(async () => {
+      await emptyTheRealm();
+    });
+
+    // The sample's motherboard, of AM5, given the socket, or none, and the
+    // list of M.2 slots a test asks for.
+    async function giveTheBoard(
+      folder: string,
+      socket: string | undefined,
+      m2Slots: readonly Record<string, unknown>[],
+    ): Promise<void> {
+      const path = join(folder, 'Motherboard', '00000000-0000-4000-8000-000000000301.json');
+      const record = JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
+      await writeFile(path, JSON.stringify({ ...record, socket, m2_slots: m2Slots }));
+    }
+
+    it('leaves out an empty list of M.2 slots on a motherboard of a socket of 2017 or later, and counts it with a reason of its own', async () => {
+      const folder = await aCopyOfTheSample();
+      // OpenDB lists no M.2 slot for some boards of such sockets that have
+      // them, as for the ASRock X570 Taichi, of AM4.
+      await giveTheBoard(folder, 'AM5', []);
+
+      const run = await runTheImport(folder);
+
+      const board = await theOnePart({ search: 'Made-up B650M Board' });
+      expect(board.specifications).not.toHaveProperty('m2_slots');
+      expect(board.missingNeededSpecifications).toEqual(['m2_slots']);
+      expect(
+        linesUnder('Values left out:', run.printed).filter((line) =>
+          line.startsWith('motherboard, '),
+        ),
+      ).toEqual([
+        "motherboard, m2_slots, an empty list, where the board's socket came in 2017 or later: 1",
+      ]);
+      expect(tableIn(run.printed).motherboard).toEqual([1, 0, 1, 1]);
+    });
+
+    it('keeps an empty list of M.2 slots on a motherboard of a socket older than 2017, as a board with no slot', async () => {
+      const folder = await aCopyOfTheSample();
+      await giveTheBoard(folder, 'LGA 1151', []);
+
+      const run = await runTheImport(folder);
+
+      const board = await theOnePart({ search: 'Made-up B650M Board' });
+      expect(board.specifications.m2_slots).toEqual([]);
+      expect(board.missingNeededSpecifications).toEqual([]);
+      expect(tableIn(run.printed).motherboard).toEqual([1, 0, 1, 0]);
+    });
+
+    it('keeps an empty list of M.2 slots on a motherboard whose socket is missing', async () => {
+      const folder = await aCopyOfTheSample();
+      await giveTheBoard(folder, undefined, []);
+
+      const run = await runTheImport(folder);
+
+      const board = await theOnePart({ search: 'Made-up B650M Board' });
+      expect(board.specifications.m2_slots).toEqual([]);
+      expect(board.missingNeededSpecifications).toEqual(['socket']);
+      expect(tableIn(run.printed).motherboard).toEqual([1, 0, 1, 0]);
+    });
+
+    it('keeps a list with M.2 slots on a motherboard of a socket of 2017 or later', async () => {
+      const folder = await aCopyOfTheSample();
+      const slots = [
+        { size: '2280', key: 'M', interface: 'PCIe 4.0 x4' },
+        { size: '2230', key: 'E', interface: 'PCIe 3.0 x1' },
+      ];
+      await giveTheBoard(folder, 'AM5', slots);
+
+      const run = await runTheImport(folder);
+
+      const board = await theOnePart({ search: 'Made-up B650M Board' });
+      expect(board.specifications.m2_slots).toEqual(slots);
+      expect(board.missingNeededSpecifications).toEqual([]);
+      expect(tableIn(run.printed).motherboard).toEqual([1, 0, 1, 0]);
+    });
+
+    it('lists a motherboard of a socket of 2017 or later with an empty list of M.2 slots, once offered, on Missing specifications with its M.2 slots, which its Part names too', async () => {
+      const folder = await aCopyOfTheSample();
+      await giveTheBoard(folder, 'AM5', []);
+      await runTheImport(folder);
+      const board = await theOnePart({ search: 'Made-up B650M Board' });
+
+      await anOfferFor(board.id);
+
+      expect(await missingSpecificationsListed()).toEqual([
+        { id: board.id, missingSpecifications: [{ path: 'm2_slots', label: 'M.2 slots' }] },
+      ]);
+      expect(board.missingNeededSpecifications).toEqual(['m2_slots']);
     });
   });
 
