@@ -9,7 +9,6 @@ export {
   vendorsKey,
 } from './api/vendor';
 export { cityName } from './model/city';
-export { instagramHandleOf, instagramProfileOf } from './model/instagram';
 export { longest } from './model/longest';
 export { coordinatesOf, mapLocationIn } from './model/map-location';
 export { useVendorShown, type VendorShown } from './model/vendor-shown';

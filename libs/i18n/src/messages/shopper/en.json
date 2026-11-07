@@ -76,12 +76,21 @@
   },
   "Part": {
     "outOfStock": "Out of stock",
+    "inStock": "In stock",
     "vendors": "{count, plural, one {{countText} Vendor} other {{countText} Vendors}}"
   },
   "Offer": {
     "confirmed": "{days, plural, =0 {Confirmed today} one {Confirmed {daysText} day ago} other {Confirmed {daysText} days ago}}",
     "warranty": "{months, plural, one {{monthsText} month warranty} other {{monthsText} months warranty}}",
     "quoted": "Quoted <english>{price}</english>"
+  },
+  "Paging": {
+    "pages": "Pages",
+    "pageOf": "Page {page} of {pages}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "pastTheEnd": "{pages, plural, one {This list has only {pagesText} page.} other {This list has only {pagesText} pages.}}",
+    "toTheFirstPage": "Go to the first page"
   },
   "SearchParts": {
     "title": "Filters",
@@ -134,16 +143,10 @@
     "outOfStockEverywhere": "Out of stock at every Vendor",
     "close": "Lowest price first. Parts every Vendor has out of stock come last.",
     "approximately": "≈ marks a price the platform converted from the currency the Vendor quoted, at the Platform Rate.",
-    "pages": "Pages",
-    "pageOf": "Page {page} of {pages}",
-    "previousPage": "Previous page",
-    "nextPage": "Next page",
     "noneYet": "{category, select, cpu {No Vendor offers a CPU yet.} cpuCooler {No Vendor offers a CPU cooler yet.} motherboard {No Vendor offers a motherboard yet.} ram {No Vendor offers RAM yet.} storage {No Vendor offers storage yet.} gpu {No Vendor offers a GPU yet.} case {No Vendor offers a case yet.} psu {No Vendor offers a PSU yet.} other {No Vendor offers one yet.}}",
     "noneYetLine": "Vendors add their Offers as they stock them.",
     "chooseAnotherCategory": "Choose another Category",
     "noMatch": "{category, select, cpu {No CPU matches your search and filters.} cpuCooler {No CPU cooler matches your search and filters.} motherboard {No motherboard matches your search and filters.} ram {No RAM matches your search and filters.} storage {No storage matches your search and filters.} gpu {No GPU matches your search and filters.} case {No case matches your search and filters.} psu {No PSU matches your search and filters.} other {No Part matches your search and filters.}}",
-    "pastTheEnd": "{pages, plural, one {This list has only {pagesText} page.} other {This list has only {pagesText} pages.}}",
-    "toTheFirstPage": "Go to the first page",
     "notRead": "The list cannot be read just now. Try again in a moment.",
     "tryAgain": "Try again"
   },
@@ -160,6 +163,26 @@
     "barcode": "Part number {number}",
     "notRead": {
       "title": "This Part cannot be read just now",
+      "note": "Try again in a moment."
+    },
+    "tryAgain": "Try again"
+  },
+  "VendorPage": {
+    "openingHours": "Opening hours",
+    "whatItIs": "A Vendor of PC Parts in {city}.",
+    "contactLinks": "How to reach it",
+    "call": "Call",
+    "whatsApp": "WhatsApp",
+    "instagram": "Instagram",
+    "map": "Open in Google Maps",
+    "inANewTab": ", in a new tab",
+    "tabs": "Call the Vendor",
+    "offersTitle": "{count, plural, =0 {Offers from this Vendor} one {{countText} Offer from this Vendor} other {{countText} Offers from this Vendor}}",
+    "offersNote": "By Category, in stock first, then lowest price.",
+    "none": "This Vendor has no Offer to show now.",
+    "offersNotRead": "Its Offers cannot be read just now. Try again in a moment.",
+    "notRead": {
+      "title": "This Vendor cannot be read just now",
       "note": "Try again in a moment."
     },
     "tryAgain": "Try again"
@@ -184,6 +207,9 @@
     },
     "part": {
       "description": "{part}, {category, select, cpu {a CPU} cpuCooler {a CPU cooler} motherboard {a motherboard} ram {RAM} storage {a storage drive} gpu {a GPU} case {a case} psu {a PSU} other {a Part}} by {manufacturer}. {count, plural, one {{countText} Vendor offers it} other {{countText} Vendors offer it}}, each price confirmed by its Vendor."
+    },
+    "vendor": {
+      "description": "{vendor}, a Vendor in {city}. How to call, message or find it, and every PC Part it offers now."
     }
   }
 }

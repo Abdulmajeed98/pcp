@@ -5,6 +5,17 @@ import type { CSSProperties, ReactNode } from 'react';
 // on the line under it, on a phone (below 48rem) or at every width.
 export type NameAlone = 'on-a-phone' | 'always';
 
+// Where a Part's name stands on an item that starts with its picture, as on
+// a Category page or among a Vendor's Offers (DESIGN.md's The Long Name
+// Rule): beside its price while it is short; on a phone past 24 characters,
+// more than two lines of the 10 to 12 a phone's column beside a picture and
+// a price holds at 360 pixels; and at every width past 80.
+export function whereAPartsNameStands(name: string): NameAlone | undefined {
+  if (name.length > 80) return 'always';
+  if (name.length > 24) return 'on-a-phone';
+  return undefined;
+}
+
 // An item of a printed sheet (DESIGN.md's The printed sheet): a line, with
 // what it names at the start, in Body large, a dotted leader in Half Ink that
 // runs to the end, what it is worth at the end, at weight 600 in tabular

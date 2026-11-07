@@ -4,7 +4,7 @@ import { AlwaysEnglish } from '@pcp/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { ShownPrice } from '@/shared/price';
-import { Item, type NameAlone } from '@/shared/ui';
+import { Item, whereAPartsNameStands } from '@/shared/ui';
 
 import { partAddress } from '../model/addresses';
 import { PartSquare } from './part-square';
@@ -20,10 +20,8 @@ import { PartSquare } from './part-square';
 // before the Admin sets the first Platform Rate, has nothing at its end.
 //
 // A long name keeps its words whole by taking the whole line, its leader and
-// price on the line under it (`nameAlone`): on a phone past 24 characters,
-// more than two lines of the 10 to 12 a phone's column beside a price holds
-// at 360 pixels, and at every width past 80, the Long Name Rule's second
-// band.
+// price on the line under it, as the Long Name Rule has it
+// (`whereAPartsNameStands`).
 //
 // Its end settles into the sheet's column of prices as the sheet prints
 // (Motion 2), `place` being its place on the sheet.
@@ -35,15 +33,13 @@ export async function ListedPart({
   place: number;
 }) {
   const [language, t] = await Promise.all([getLocale(), getTranslations('Part')]);
-  const nameAlone: NameAlone | undefined =
-    part.name.length > 80 ? 'always' : part.name.length > 24 ? 'on-a-phone' : undefined;
 
   return (
     <Item
       testId="listed-part"
       data={{ 'data-part': part.id }}
       place={place}
-      nameAlone={nameAlone}
+      nameAlone={whereAPartsNameStands(part.name)}
       picture={<PartSquare part={part} />}
       name={
         <a href={partAddress(language, part.id)} className="hover-underline">

@@ -18,6 +18,7 @@ import {
 import {
   buttonVariants,
   CategoryDrawing,
+  Paging,
   Sheet,
   SheetGroup,
   SheetTitle,
@@ -25,7 +26,6 @@ import {
 } from '@/shared/ui';
 
 import { whatTheSheetShows } from '../model/what-the-sheet-shows';
-import { Paging } from './paging';
 
 // A Category's sheet on its page (DESIGN.md's A Category page): the printed
 // sheet, its title the Category's name as the page's `h1`, then the page's
@@ -69,11 +69,12 @@ export async function CategorySheet({
   asAsked: string;
   className?: string;
 }) {
-  const [language, t, searchWords, categoryName] = await Promise.all([
+  const [language, t, searchWords, categoryName, paging] = await Promise.all([
     getLocale(),
     getTranslations('CategoryPage'),
     getTranslations('SearchParts'),
     getTranslations('Category'),
+    getTranslations('Paging'),
   ]);
   const state = whatTheSheetShows(page, query);
   const addressAt = (at: CategoryQuery) => categoryPageAddress(language, category, at);
@@ -90,7 +91,7 @@ export async function CategorySheet({
       case 'no-match':
         return t('noMatch', { category });
       case 'past-the-end':
-        return t('pastTheEnd', {
+        return paging('pastTheEnd', {
           pages: state.totalPages,
           pagesText: formatNumber(state.totalPages),
         });
@@ -137,7 +138,11 @@ export async function CategorySheet({
       {state.kind === 'listed' && (
         <>
           <TheList parts={state.page.content} />
-          <Paging category={category} query={query} totalPages={state.page.totalPages} />
+          <Paging
+            page={query.page}
+            totalPages={state.page.totalPages}
+            addressOf={(page) => addressAt({ ...query, page })}
+          />
           <p className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground">
             {t('close')}
           </p>
@@ -172,7 +177,7 @@ export async function CategorySheet({
           address={addressAt({ ...query, page: 1 })}
           testId="to-the-first-page"
         >
-          {t('toTheFirstPage')}
+          {paging('toTheFirstPage')}
         </Action>
       )}
       {state.kind === 'not-read' && (

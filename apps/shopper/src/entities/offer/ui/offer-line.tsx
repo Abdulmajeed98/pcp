@@ -47,12 +47,22 @@ function quotedInTheOtherCurrency(
 // its warranty in months when the Vendor states one; and how many days ago
 // it was confirmed (OFF-7), each apart by a middle dot. The price the Vendor
 // quoted is one left-to-right unit in every language.
+//
+// On a Part page the Offers in stock and out of stock lie under headings of
+// their own, so the line says only "Out of stock". On a Vendor page they lie
+// under their Categories, so the line says either, "In stock" or "Out of
+// stock" (`saysInStock`), and starts with what `first` gives, such as its
+// Part's manufacturer.
 export async function OfferLine({
   offer,
   currency,
+  saysInStock = false,
+  first,
 }: {
   offer: OfferDetails;
   currency: Currency;
+  saysInStock?: boolean;
+  first?: ReactNode;
 }) {
   const [language, t, part] = await Promise.all([
     getLocale(),
@@ -63,7 +73,12 @@ export async function OfferLine({
   const warranty = warrantyIn(language, offer.warrantyMonths);
 
   const pieces: { testId: string; words: ReactNode }[] = [
-    ...(offer.inStock ? [] : [{ testId: 'offer-out-of-stock', words: part('outOfStock') }]),
+    ...(first === undefined ? [] : [{ testId: 'offer-first', words: first }]),
+    ...(offer.inStock
+      ? saysInStock
+        ? [{ testId: 'offer-in-stock', words: part('inStock') }]
+        : []
+      : [{ testId: 'offer-out-of-stock', words: part('outOfStock') }]),
     ...(quoted === undefined
       ? []
       : [
