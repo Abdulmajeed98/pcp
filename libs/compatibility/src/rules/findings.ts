@@ -81,6 +81,70 @@ export function includes<Value>(list: Reading<readonly Value[]>, value: Value): 
   return alsoAbout(fact(list.value.includes(value)), list.part);
 }
 
+// An amount a rule counts, such as the memory modules of a Build's RAM kits:
+// at least `least` and at most `most`, one number when every value in it is
+// known. A missing value could be any number, 0 among them, so an amount
+// that holds one has no most. It is about the Parts whose known values it
+// counts, and names the missing values it holds.
+export type Amount = {
+  readonly least: number;
+  readonly most: number;
+  readonly about: ReadonlySet<string>;
+  readonly missing: readonly MissingSpecification[];
+};
+
+// The product of a Part's values and plain numbers, such as a kit's modules
+// times how many of the kit the Build holds. A known 0 makes it 0, whatever
+// the rest are. A missing value makes it any number, the Part's own count
+// unknown, so the Part is not among those it counts.
+export function product(...factors: readonly (Reading<number> | number)[]): Amount {
+  const readings = factors.filter((factor) => typeof factor !== 'number');
+  const known = factors
+    .map((factor) => (typeof factor === 'number' ? factor : factor.value))
+    .filter((value) => value !== undefined)
+    .reduce((count, value) => count * value, 1);
+  const missing = readings
+    .filter((reading) => reading.value === undefined)
+    .map((reading) => ({ part: reading.part, path: reading.path }));
+  const about = new Set(readings.map((reading) => reading.part));
+
+  if (missing.length === 0 || known === 0) {
+    return { least: known, most: known, about, missing: [] };
+  }
+  return { least: 0, most: Infinity, about: new Set(), missing };
+}
+
+// The sum of an amount counted for each of several Parts, such as every kit.
+export function total<Item>(items: readonly Item[], count: (item: Item) => Amount): Amount {
+  const amounts = items.map(count);
+  return {
+    least: amounts.reduce((sum, amount) => sum + amount.least, 0),
+    most: amounts.reduce((sum, amount) => sum + amount.most, 0),
+    about: new Set(amounts.flatMap((amount) => [...amount.about])),
+    missing: withoutRepeats(amounts.flatMap((amount) => amount.missing)),
+  };
+}
+
+// Whether an amount is more than a limit a Part holds, such as a
+// motherboard's memory slots. It is decided when the amount's least is more
+// than the limit's most, or its most no more than the limit's least, and is
+// about the Parts counted and the limit's. Otherwise it is open, naming the
+// missing values on either side.
+export function exceeds(amount: Amount, limit: Reading<number>): Finding {
+  const limitLeast = limit.value ?? 0;
+  const limitMost = limit.value ?? Infinity;
+  const about = new Set([...amount.about, limit.part]);
+  if (amount.least > limitMost) return { holds: true, about };
+  if (amount.most <= limitLeast) return { holds: false, about };
+  return {
+    holds: 'maybe',
+    missing: [
+      ...amount.missing,
+      ...(limit.value === undefined ? [{ part: limit.part, path: limit.path }] : []),
+    ],
+  };
+}
+
 function alsoAbout(finding: Finding, part: string): Finding {
   if (finding.holds === 'maybe') return finding;
   return { holds: finding.holds, about: new Set([...finding.about, part]) };
