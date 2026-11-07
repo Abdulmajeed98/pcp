@@ -44,6 +44,17 @@ describe("the Shopper's inspection's command line", () => {
     });
   });
 
+  it('takes the currency every tab shows prices in, and keeps it from the inspector', () => {
+    expect(read('/categories/cpu --currency USD --language en')).toEqual({
+      address: 'http://localhost:3100/en/categories/cpu',
+      scheme: undefined,
+      currency: 'USD',
+      inspectorArgs: ['http://localhost:3100/en/categories/cpu'],
+    });
+    expect(read('/ --currency IQD').currency).toBe('IQD');
+    expect(read('/').currency).toBeUndefined();
+  });
+
   it('refuses a line it cannot read', () => {
     for (const line of [
       '',
@@ -55,6 +66,9 @@ describe("the Shopper's inspection's command line", () => {
       '/ --language fr',
       '/ --language',
       '/ --scheme blue',
+      '/ --currency EUR',
+      '/ --currency usd',
+      '/ --currency',
     ]) {
       expect(() => read(line)).toThrow(BadCommandLine);
     }

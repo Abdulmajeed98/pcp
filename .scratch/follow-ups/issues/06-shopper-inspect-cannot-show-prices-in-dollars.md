@@ -4,7 +4,7 @@
 
 **Category:** enhancement
 
-**Status:** needs-triage
+**Status:** resolved
 
 **From:** browse's follow-ups list, swept on 7 November 2026: browse ticket 06.
 
@@ -13,3 +13,14 @@
 **Checked on 7 November 2026.** The command's usage line and options name no currency.
 
 **Done when.** The command takes a currency as it takes a scheme, and the conventions say when a page is inspected in dollars.
+
+## Comments
+
+### 7 November 2026: done
+
+The owner chose to implement every follow-up ticket.
+
+- **The option.** `pnpm shopper:inspect` takes `--currency IQD` or `--currency USD`, by the API's codes, and refuses any other value, as it refuses a scheme it does not know. Every tab the inspector opens then holds the choice in the cookie the Shopper app keeps it in, `currency`, set through the DevTools protocol before the tab opens its page, as the frame's switch holds a Shopper's choice. Without it, prices show in dinars, as before.
+- **Test first, at the inspector's unit seam** (`shopper-command-line.spec.ts`): two new lines failed first, the currency passed through to the inspector's own options and a currency it does not know taken without a word, then passed.
+- **Seen once for real.** With the API started for it alone under the e2e lock, `pnpm shopper:inspect /categories/cpu --language en --currency USD --scheme light --widths 1440,390` exited 0: 0 FAIL, and the three WARNs every Shopper page defends (`dashed`, `grey-body`, `no-footage`). Its desk picture shows Dollars chosen in the frame's switch, the filters' price fields in dollars and the list's first CPU at "≈ 73 $". It also ran with follow-up ticket 01's patch on. The API, the lock and the inspector's sheet were left as found.
+- **The conventions.** The design skills guide and the MVP spec's commands table name the option, and both say when to use it: a ticket that changes how a page writes its prices also inspects it in dollars, in Kurdish and in English at 1440 and 390 pixels. One correction to the ticket's words: the dollar view has "≈" too, on the Offers quoted in dinars.

@@ -2,8 +2,9 @@ import { BadScheme, type Scheme, takeTheScheme } from './colour-scheme.ts';
 
 // The command line of `pnpm shopper:inspect`: a page's path on the Shopper
 // app, without its language, `--language` for the language its address
-// starts with, `--scheme` for the colour scheme, and the inspector's own
-// options, passed through as they are.
+// starts with, `--scheme` for the colour scheme, `--currency` for the
+// currency its prices show in, and the inspector's own options, passed
+// through as they are.
 
 // A line the command cannot read.
 export class BadCommandLine extends Error {}
@@ -13,10 +14,22 @@ export class BadCommandLine extends Error {}
 // TypeScript, so they are written here.
 const languages = ['ckb', 'ar', 'en'] as const;
 
+// The two currencies a Shopper can see prices in, by the API's codes, which
+// the Shopper app keeps a Shopper's choice of in its cookie; written here for
+// the same reason.
+const currencies = ['IQD', 'USD'] as const;
+
+export type Currency = (typeof currencies)[number];
+
 export function shopperCommandLine(
   args: readonly string[],
   origin: string,
-): { address: string; scheme: Scheme | undefined; inspectorArgs: string[] } {
+): {
+  address: string;
+  scheme: Scheme | undefined;
+  currency: Currency | undefined;
+  inspectorArgs: string[];
+} {
   let scheme: Scheme | undefined;
   let rest: string[];
   try {
@@ -24,6 +37,14 @@ export function shopperCommandLine(
   } catch (error) {
     if (error instanceof BadScheme) throw new BadCommandLine(error.message);
     throw error;
+  }
+
+  let currency: Currency | undefined;
+  const currencyAt = rest.indexOf('--currency');
+  if (currencyAt !== -1) {
+    const [, given] = rest.splice(currencyAt, 2);
+    currency = currencies.find((each) => each === given);
+    if (currency === undefined) throw new BadCommandLine('--currency takes IQD or USD.');
   }
 
   let language: string = languages[0];
@@ -46,5 +67,5 @@ export function shopperCommandLine(
     throw new BadCommandLine('The path leaves out the language, which --language gives.');
   }
   const address = `${origin}/${language}${page.pathname === '/' ? '' : page.pathname}${page.search}`;
-  return { address, scheme, inspectorArgs: [address, ...options] };
+  return { address, scheme, currency, inspectorArgs: [address, ...options] };
 }
