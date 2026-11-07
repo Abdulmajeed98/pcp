@@ -13,9 +13,9 @@ A detail the Vendor has not given is left out. Below them are all its Visible Of
 
 **Blocked by:** 01, 12
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] **The page** at `/{language}/vendors/{vendorId}`, built to DESIGN.md. It is rendered on the server for each request. It asks `GET v1/visible-vendors/{vendorId}`, and its Offers in the chosen currency, with no cache. A deactivated or unknown Vendor answers the not-found page with a 404 status, in the page's language.
+- [x] **The page** at `/{language}/vendors/{vendorId}`, built to DESIGN.md. It is rendered on the server for each request. It asks `GET v1/visible-vendors/{vendorId}`, and its Offers in the chosen currency, with no cache. A deactivated or unknown Vendor answers the not-found page with a 404 status, in the page's language.
 - [x] **The Vendor.** Its name, city, address and opening hours through the as-written component, with the text's own direction.
 - [x] **The links.**
   - The phone number is a `tel:` link.
@@ -38,7 +38,7 @@ A detail the Vendor has not given is left out. Below them are all its Visible Of
   - The page's HTML holds its title, description, canonical address, the other two languages' addresses and Open Graph's tags, and no price.
   - `expectAccessible` passes in the light and the dark scheme.
   - Any motion DESIGN.md gives the page is filmed with `film` and judged by `snapsOf`, with reduced motion as well as without.
-- [ ] **Taste's inspector.** `pnpm shopper:inspect` runs on a Vendor page with every detail, on the one with only its phone number, and on the one with no Visible Offers. Each is run in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
+- [x] **Taste's inspector.** `pnpm shopper:inspect` runs on a Vendor page with every detail, on the one with only its phone number, and on the one with no Visible Offers. Each is run in both schemes, in Kurdish and in English, at 1440, 768 and 360 pixels. Every FAIL is fixed, and every WARN is fixed or defended, with the results under Comments.
 - [x] `break-ui` runs with a Vendor name in Arabic script, a long address, and a Vendor with 400 Offers. `mobile-native` runs on the contact links used with a thumb. What they found is fixed or recorded under Comments.
 - [x] Shown once and then reverted, each failing its own test: an empty Instagram link shown for a Vendor with none; the Offers drawn in one list without their Categories.
 - [x] `pnpm check` passes with Docker stopped.
@@ -103,3 +103,15 @@ Three questions, each shown with its pictures on a page in the session's scratch
 1. **The photograph under the Vendor page.** The renderings' water-cooled PC is CC BY-SA 2.0, which a dimmed copy would have to share alike. **A (recommended, as built):** "Watercooling vue carte graphique", MasterMatt, public domain, the tubes of a water-cooled PC over its board: the subject DESIGN.md names, its blue and amber dimmed as the renderings' were. **B:** "NexXxos-XP Makro DSCF3762", Fritzchens Fritz, CC0, the copper base of a water block, close up: the most elegant, but a part, and its pale ground dims lighter than the other tables. **C:** "computer case with RGB fans", Ajith R N, CC0, a built PC lit purple: cooled by air, a maker's name small on its front.
 2. **Where the photograph lies.** **A (recommended, as built):** under the coupon and the sheet of Offers, as every sheet lies over a photograph and its printer's marks read against one. **B:** under the coupon alone, as the renderings had it, the sheet on the bare table, its marks barely seen in the light scheme.
 3. **The line under the Vendor's name.** Taste's inspector warned `name-only-title`: nothing on the first screen said what the name is. **A (recommended, as built):** "A Vendor of PC Parts in Erbil." under the name, in Body large, the city named there; the address and hours at the coupon's foot. **B:** DESIGN.md's coupon as it was, the city at its foot, and the sheet allows `name-only-title`.
+
+### 7 November 2026: the owner's answers
+
+The owner answered in chat, through the coordinator: "Keep all three", so A for each, as built.
+
+1. **The photograph under the Vendor page** is "Watercooling vue carte graphique", MasterMatt, public domain: the tubes of a water-cooled PC looping over its board, dimmed to 50% and credited in the back cover, since the renderings' "Water Cooled PC" is CC BY-SA 2.0.
+2. **Where it lies.** One photograph lies under the coupon and the sheet of Offers, so that the sheet lies on a photograph as every sheet does and its printer's marks read, as DESIGN.md's layout of a Vendor page says.
+3. **The line under the Vendor's name.** "A Vendor of PC Parts in {city}." stands under the name in Body large, its city named in the page's language, one run of words, so that the first screen says what the page is; the address and the opening hours stay at the coupon's foot, as DESIGN.md's A Vendor's contact details and their links says.
+
+The two boxes that waited on the answers are ticked, and the ticket is resolved. DESIGN.md already said A for the second and the third; its layout of a Vendor page now names the photograph, a water-cooled PC's tubes over its board in the public domain, and its head says that the owner kept all three answers. No code changed, so `pnpm platform:check` on `d83e5cd` stands: 385 lines in 16.5 minutes.
+
+**Checks.** This record was gated on `pnpm check --skip-nx-cache` with `DOCKER_HOST` pointed at a socket that does not exist and an empty `PLAYWRIGHT_BROWSERS_PATH`, every `*.tsbuildinfo` of the worktree deleted first. `browse/integration` is still at `a99fa92`, this branch's base.
