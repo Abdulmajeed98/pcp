@@ -8,6 +8,8 @@ Three families of design skills are installed at user level, and each **leads** 
 
 The owner chose this set on 21 October 2026 because the dashboard, built with Impeccable alone, read as cold, rigid and templated.
 
+Impeccable's detector, which its hook runs on every edit, judges a file against the `DESIGN.md` nearest to it, going up the folders. So the themes in `libs/ui/src/themes/` are judged against the root DESIGN.md, the platform's shared foundations. The dashboard's theme keeps the root's sizes and passes. The Shopper's takes the display sizes of `apps/shopper/DESIGN.md`, so its size rule, `design-system-font-size`, is turned off for that one file in `.impeccable/config.json`, with the reason (follow-up ticket 03). Its sizes are checked against the Shopper's DESIGN.md instead: the four display roles in its front matter, and their Kurdish and Arabic settings in its Typography.
+
 ## Who leads what
 
 The skill that leads an area decides it. The others contribute only inside that decision, and Impeccable writes every decision into the app's `DESIGN.md` (and an ADR when it replaces one).

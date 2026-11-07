@@ -4,7 +4,7 @@
 
 **Category:** bug
 
-**Status:** needs-triage
+**Status:** resolved
 
 **From:** browse's follow-ups list, swept on 7 November 2026: browse ticket 14.
 
@@ -13,3 +13,21 @@
 **Checked on 7 November 2026.** `libs/ui` has no DESIGN.md of its own. The nearest one above it is the root DESIGN.md, "The platform's shared foundations", which sets its own typography. It is probably the one the detector read; that is not yet proven.
 
 **Done when.** The detector reads the Shopper theme against the Shopper app's DESIGN.md, or the design skills guide records why it reads another and that these notes are to be defended.
+
+## Comments
+
+### 7 November 2026: proven, and done
+
+The owner chose to implement every follow-up ticket.
+
+**Proven.** `impeccable detect libs/ui/src/themes/shopper.css` gave the 7 advisories, all `design-system-font-size`. The detector judges a file against the DESIGN.md nearest to it, going up the folders, wherever it is run from. Copies of the theme in the scratchpad showed it:
+
+| The DESIGN.md beside the copy | Size advisories |
+|---|---|
+| The root's | 7, as in the repository |
+| The Shopper app's | 1 |
+| None | 0 |
+
+The one left beside the Shopper's DESIGN.md is the Facts' Kurdish and Arabic setting, `clamp(1.25rem, 1rem + 1vw, 1.75rem)`, which that DESIGN.md gives in its Typography's words but not in its front matter, the only part the detector reads. Every size the detector flags is the Shopper DESIGN.md's. The dashboard's theme, judged by the root's too, has no finding, since its sizes are the root's.
+
+**Done.** The theme cannot be judged against the Shopper's DESIGN.md where it lives, beside the dashboard's in `libs/ui`, so the size rule is turned off for that one file. Impeccable's own command wrote it into `.impeccable/config.json`, with the reason: `impeccable hooks ignore-value design-system-font-size "*" --file libs/ui/src/themes/shopper.css`. This is the narrowest waiver Impeccable's guide offers for a rule with no value of its own, and the config already held one for the dashboard's fonts. `impeccable detect libs/ui` now finds nothing. The design skills guide says how the detector chooses a DESIGN.md, why this file is waived, and that its sizes are checked against the Shopper's DESIGN.md by hand.
