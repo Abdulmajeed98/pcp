@@ -25,7 +25,7 @@ export class BuildPartResponse extends PartSummaryResponse {
 
   @ApiProperty({
     description:
-      'Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price and is left out of every total.',
+      "Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price, is left out of every total and is in no Vendor's list.",
   })
   readonly unstocked: boolean;
 

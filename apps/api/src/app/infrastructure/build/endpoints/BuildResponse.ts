@@ -7,6 +7,7 @@ import { Category } from '~/domain/part/Category';
 import { ShownPriceResponse } from '~/infrastructure/offer/endpoints/VisibleOfferResponse';
 
 import { BuildPartResponse } from './BuildPartResponse';
+import { BuildVendorResponse } from './BuildVendorResponse';
 
 // A Build as it is read: its Parts as the catalog holds them, whether it is a
 // Complete Build, and its price views in the chosen currency.
@@ -50,12 +51,20 @@ export class BuildResponse {
   })
   readonly totalAcrossVendors: ShownPriceResponse | null;
 
+  @ApiProperty({
+    description:
+      "The second price view (BLD-8): each active Vendor with at least one of the Build's Parts in stock among its Visible Offers, with its total, the Parts it has and the Parts it lacks. They come by how many Parts they lack, fewest first, then by their total, lowest first, with none after any, then by name, then by identifier. An Unstocked Part is in no Vendor's list.",
+    type: [BuildVendorResponse],
+  })
+  readonly vendors: BuildVendorResponse[];
+
   private constructor(build: Build, completeness: Completeness, priceViews: PriceViews) {
     this.parts = build.getParts().map(BuildPartResponse.ofBuildPart);
     this.complete = completeness.isComplete();
     this.stillNeeded = completeness.getStillNeeded().map((category) => category.getKey());
     this.cpuValuesNotKnown = [...completeness.getCpuValuesNotKnown()];
     this.totalAcrossVendors = ShownPriceResponse.of(priceViews.getTotalAcrossVendors());
+    this.vendors = priceViews.getVendors().map(BuildVendorResponse.of);
   }
 
   static of(

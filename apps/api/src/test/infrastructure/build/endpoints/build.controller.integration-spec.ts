@@ -209,6 +209,7 @@ describe('a Build', () => {
         stillNeeded: everyCategory,
         cpuValuesNotKnown: [],
         totalAcrossVendors: null,
+        vendors: [],
       });
     });
   });

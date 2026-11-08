@@ -8,7 +8,7 @@ import { BuildAsked } from './build-asked';
 // currency and the Build.
 export class ReadBuildRequest {
   @ChosenCurrencyAsked(
-    "The chosen currency, which each Part's Lowest Price and the total across Vendors are in.",
+    "The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.",
   )
   readonly currency!: Currency;
 

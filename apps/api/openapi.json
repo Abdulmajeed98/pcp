@@ -1878,7 +1878,7 @@
             "name": "currency",
             "required": true,
             "in": "query",
-            "description": "The chosen currency, which each Part's Lowest Price and the total across Vendors are in.",
+            "description": "The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.",
             "schema": {
               "$ref": "#/components/schemas/Currency"
             }
@@ -1923,7 +1923,7 @@
           }
         },
         "security": [],
-        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; and its total across Vendors, every price read at one Platform Rate",
+        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; and its two price views, its total across Vendors and each Vendor that has any of its Parts in stock, with its total, the Parts it has and the Parts it lacks, every price read at one Platform Rate",
         "tags": ["Build"]
       }
     }
@@ -4282,7 +4282,7 @@
           },
           "unstocked": {
             "type": "boolean",
-            "description": "Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price and is left out of every total."
+            "description": "Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price, is left out of every total and is in no Vendor's list."
           },
           "priceNotShown": {
             "type": "boolean",
@@ -4312,6 +4312,78 @@
           "priceNotShown",
           "lowestPrice"
         ]
+      },
+      "BuildPartInStockResponse": {
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "description": "The Part's identifier, as the Build's Parts name it.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "shownPrice": {
+            "description": "The Vendor's Shown Price for one of the Part, in the chosen currency. Null only when its Offer has no Quoted Price in the chosen currency and no Platform Rate has been set: the Part is then left out of the Vendor's total.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "timesQuantity": {
+            "description": "The Shown Price times the Part's quantity, as the Vendor's total adds it up, or null with it.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          }
+        },
+        "required": ["partId", "shownPrice", "timesQuantity"]
+      },
+      "BuildVendorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as the Vendor writes it.",
+            "example": "Made-up Computer Shop"
+          },
+          "total": {
+            "description": "The Vendor's total: each Shown Price of the Parts it has in stock times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. Null when none of them has a Shown Price, which happens only when no Platform Rate has been set.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "partsInStock": {
+            "description": "The Build's Parts the Vendor has in stock among its Visible Offers, in the order of the Build's Parts.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildPartInStockResponse"
+            }
+          },
+          "partsLacked": {
+            "description": "The identifiers of the Build's Parts that other Vendors have in stock and this one does not, in the order of the Build's Parts. An Unstocked Part is never among them.",
+            "example": ["3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["id", "name", "total", "partsInStock", "partsLacked"]
       },
       "BuildResponse": {
         "type": "object",
@@ -4363,6 +4435,13 @@
                 "$ref": "#/components/schemas/ShownPriceResponse"
               }
             ]
+          },
+          "vendors": {
+            "description": "The second price view (BLD-8): each active Vendor with at least one of the Build's Parts in stock among its Visible Offers, with its total, the Parts it has and the Parts it lacks. They come by how many Parts they lack, fewest first, then by their total, lowest first, with none after any, then by name, then by identifier. An Unstocked Part is in no Vendor's list.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildVendorResponse"
+            }
           }
         },
         "required": [
@@ -4370,7 +4449,8 @@
           "complete",
           "stillNeeded",
           "cpuValuesNotKnown",
-          "totalAcrossVendors"
+          "totalAcrossVendors",
+          "vendors"
         ]
       }
     }

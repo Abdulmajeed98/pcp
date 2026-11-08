@@ -55,10 +55,27 @@ type BuildPartBody = {
   lowestPrice: LowestPriceBody | null;
 };
 
+// A Part a Vendor of the second view has in stock, as the API answers it.
+type PartInStockBody = {
+  partId: string;
+  shownPrice: ShownPriceBody | null;
+  timesQuantity: ShownPriceBody | null;
+};
+
+// A Vendor of the second view, as the API answers it.
+type BuildVendorBody = {
+  id: string;
+  name: string;
+  total: ShownPriceBody | null;
+  partsInStock: PartInStockBody[];
+  partsLacked: string[];
+};
+
 // A Build as the API answers it, as far as these tests read it.
 type BuildBody = {
   parts: BuildPartBody[];
   totalAcrossVendors: ShownPriceBody | null;
+  vendors: BuildVendorBody[];
 };
 
 // A Part, a Vendor and one of a Part's Offers as the API answers them, as far
@@ -555,6 +572,219 @@ describe("a Build's price views", () => {
     });
   });
 
+  describe('the second price view', () => {
+    // The names of the Vendors the second view lists, in its order.
+    async function theVendorsListedFor(
+      values: readonly string[],
+      currency: Currency = 'IQD',
+    ): Promise<string[]> {
+      return (await theBuild(values, currency)).vendors.map(({ name }) => name);
+    }
+
+    it("lists only the active Vendors with one of the Build's Parts in stock among their Visible Offers", async () => {
+      const ryzen = await aPart();
+      const board = await aPart({ category: 'motherboard', name: 'Made-up B650 board' });
+      const elsewhere = await aPart({ category: 'gpu', name: 'Made-up GPU' });
+      const inStock = await aVendor('Made-up In Stock Shop');
+      const outOfStock = await aVendor('Made-up Out of Stock Shop');
+      const expired = await aVendor('Made-up Expired Shop');
+      const deactivated = await aVendor('Made-up Deactivated Shop');
+      const otherPart = await aVendor('Made-up Other Part Shop');
+      moveTheClockTo(aMovedMoment);
+      await anOffer(expired.id, ryzen.id, { iqdPrice: 410000, inStock: true });
+      moveTheClockTo(after(aMovedMoment, 10 * aDay));
+      await anOffer(inStock.id, board.id, { iqdPrice: 300000, inStock: true });
+      await anOffer(outOfStock.id, ryzen.id, { iqdPrice: 400000, inStock: false });
+      await anOffer(deactivated.id, ryzen.id, { iqdPrice: 420000, inStock: true });
+      await anOffer(otherPart.id, elsewhere.id, { iqdPrice: 900000, inStock: true });
+      letTheClockRun();
+      await admin('deactivate', deactivated.id);
+
+      // 15 days after the first Offer's Confirmation, 5 after the others'.
+      moveTheClockTo(after(aMovedMoment, 15 * aDay));
+      expect(await theVendorsListedFor([ryzen.id, board.id])).toEqual([
+        'Made-up In Stock Shop',
+      ]);
+    });
+
+    it('gives each Vendor its total, its Shown Prices times their quantities, marked converted when any is, with the Parts it has and the Parts it lacks, and never an Unstocked Part', async () => {
+      const ryzen = await aPart();
+      const kit = await aPart({ category: 'ram', name: 'Made-up 32 GB kit' });
+      const drive = await aPart({ category: 'storage', name: 'Made-up 1 TB drive' });
+      const gpu = await aPart({ category: 'gpu', name: 'Made-up GPU' });
+      const pcCase = await aPart({ category: 'case', name: 'Made-up case' });
+      const shop = await aVendor('Made-up Computer Shop');
+      const store = await aVendor('Made-up Computer Store');
+      await setThePlatformRate(1500);
+      await anOffer(shop.id, ryzen.id, { usdPrice: '350.00', inStock: true });
+      await anOffer(shop.id, drive.id, { iqdPrice: 90000, inStock: true });
+      await anOffer(shop.id, gpu.id, { iqdPrice: 700000, inStock: false });
+      await anOffer(store.id, kit.id, { iqdPrice: 60000, inStock: true });
+      await anOffer(store.id, drive.id, { iqdPrice: 85000, inStock: true });
+
+      const build = await theBuild([
+        pcCase.id,
+        gpu.id,
+        `${drive.id}:3`,
+        `${kit.id}:2`,
+        ryzen.id,
+      ]);
+
+      expect(build.vendors).toEqual([
+        {
+          id: store.id,
+          name: 'Made-up Computer Store',
+          // 2 × 60,000 + 3 × 85,000.
+          total: quoted('IQD', '375000'),
+          partsInStock: [
+            {
+              partId: kit.id,
+              shownPrice: quoted('IQD', '60000'),
+              timesQuantity: quoted('IQD', '120000'),
+            },
+            {
+              partId: drive.id,
+              shownPrice: quoted('IQD', '85000'),
+              timesQuantity: quoted('IQD', '255000'),
+            },
+          ],
+          partsLacked: [ryzen.id],
+        },
+        {
+          id: shop.id,
+          name: 'Made-up Computer Shop',
+          // 350 $ at 1,500 is 525,000 IQD; 525,000 + 3 × 90,000.
+          total: converted('IQD', '795000'),
+          partsInStock: [
+            {
+              partId: ryzen.id,
+              shownPrice: converted('IQD', '525000'),
+              timesQuantity: converted('IQD', '525000'),
+            },
+            {
+              partId: drive.id,
+              shownPrice: quoted('IQD', '90000'),
+              timesQuantity: quoted('IQD', '270000'),
+            },
+          ],
+          partsLacked: [kit.id],
+        },
+      ]);
+      expect(
+        build.parts
+          .filter(({ unstocked }) => unstocked)
+          .map(({ id }) => id)
+          .sort(),
+      ).toEqual([gpu.id, pcCase.id].sort());
+    });
+
+    it('orders the Vendors by how many Parts they lack, fewest first, then by their total, lowest first, then by name, then by identifier', async () => {
+      const ryzen = await aPart();
+      const board = await aPart({ category: 'motherboard', name: 'Made-up B650 board' });
+      // Each Vendor and what it has in stock, in thousands of dinars.
+      const offered: [string, Record<string, number>][] = [
+        ['Made-up Delta Computers', { [board.id]: 300 }],
+        ['Made-up Charlie Computers', { [ryzen.id]: 300 }],
+        ['Made-up Whole Shop', { [ryzen.id]: 600, [board.id]: 600 }],
+        ['Made-up Alpha Computers', { [ryzen.id]: 200 }],
+        ['Made-up Delta Computers', { [board.id]: 300 }],
+        ['Made-up Bravo Computers', { [board.id]: 300 }],
+        ['Made-up Zed Computers', { [ryzen.id]: 100 }],
+      ];
+      const made: VendorBody[] = [];
+      for (const [name, prices] of offered) {
+        const vendor = await aVendor(name);
+        made.push(vendor);
+        for (const [partId, thousands] of Object.entries(prices)) {
+          await anOffer(vendor.id, partId, { iqdPrice: thousands * 1000, inStock: true });
+        }
+      }
+      const deltas = made
+        .filter(({ name }) => name === 'Made-up Delta Computers')
+        .map(({ id }) => id)
+        .sort();
+
+      const { vendors } = await theBuild([ryzen.id, board.id]);
+      expect(
+        vendors.map(({ id, name }) => (name === 'Made-up Delta Computers' ? id : name)),
+      ).toEqual([
+        // Lacks none.
+        'Made-up Whole Shop',
+        // Each lacks one: the lowest total first, whatever the name.
+        'Made-up Zed Computers',
+        'Made-up Alpha Computers',
+        // Each lacks one and asks 300,000: by name, whatever it has.
+        'Made-up Bravo Computers',
+        'Made-up Charlie Computers',
+        // The same name: by identifier.
+        ...deltas,
+      ]);
+    });
+
+    it('orders the Vendors by their totals in the chosen currency, which can differ between the two', async () => {
+      const ryzen = await aPart();
+      const alpha = await aVendor('Made-up Alpha Computers');
+      const bravo = await aVendor('Made-up Bravo Computers');
+      await setThePlatformRate(1500);
+      await anOffer(alpha.id, ryzen.id, { iqdPrice: 150240, inStock: true });
+      await anOffer(bravo.id, ryzen.id, { usdPrice: '100.05', inStock: true });
+
+      // 100.05 $ at 1,500 is 150,075 IQD, shown as 150,000; 150,240 IQD at
+      // 1,500 is 100.16 $, shown as 100 $.
+      const inDinars = (await theBuild([ryzen.id], 'IQD')).vendors;
+      expect(inDinars.map(({ name, total }) => [name, total])).toEqual([
+        ['Made-up Bravo Computers', converted('IQD', '150000')],
+        ['Made-up Alpha Computers', quoted('IQD', '150240')],
+      ]);
+      const inDollars = (await theBuild([ryzen.id], 'USD')).vendors;
+      expect(inDollars.map(({ name, total }) => [name, total])).toEqual([
+        ['Made-up Alpha Computers', converted('USD', '100.00')],
+        ['Made-up Bravo Computers', quoted('USD', '100.05')],
+      ]);
+    });
+
+    it('with no Platform Rate, gives a Part a Vendor has in stock only in the other currency no Shown Price, leaves it out of its total, and puts a Vendor with no total after those with one', async () => {
+      const ryzen = await aPart();
+      const alpha = await aVendor('Made-up Alpha Computers');
+      const bravo = await aVendor('Made-up Bravo Computers');
+      const charlie = await aVendor('Made-up Charlie Computers');
+      await anOffer(alpha.id, ryzen.id, { usdPrice: '350.00', inStock: true });
+      await anOffer(bravo.id, ryzen.id, { iqdPrice: 600000, inStock: true });
+      await anOffer(charlie.id, ryzen.id, { usdPrice: '340.00', inStock: true });
+
+      const notShown = { partId: ryzen.id, shownPrice: null, timesQuantity: null };
+      expect((await theBuild([ryzen.id], 'IQD')).vendors).toEqual([
+        {
+          id: bravo.id,
+          name: 'Made-up Bravo Computers',
+          total: quoted('IQD', '600000'),
+          partsInStock: [
+            {
+              partId: ryzen.id,
+              shownPrice: quoted('IQD', '600000'),
+              timesQuantity: quoted('IQD', '600000'),
+            },
+          ],
+          partsLacked: [],
+        },
+        {
+          id: alpha.id,
+          name: 'Made-up Alpha Computers',
+          total: null,
+          partsInStock: [notShown],
+          partsLacked: [],
+        },
+        {
+          id: charlie.id,
+          name: 'Made-up Charlie Computers',
+          total: null,
+          partsInStock: [notShown],
+          partsLacked: [],
+        },
+      ]);
+    });
+  });
+
   describe('one answer', () => {
     // A read that took the rate and the Offers at different moments would
     // answer 20 $ at 1,500, 30,000 IQD, or 10 $ at 2,000, 20,000 IQD, where
@@ -582,6 +812,12 @@ describe("a Build's price views", () => {
           converted('IQD', '80000'),
         ]);
         expect(answer.totalAcrossVendors).toEqual(converted('IQD', '120000'));
+        expect(
+          answer.vendors.map(({ id, total, partsLacked }) => ({ id, total, partsLacked })),
+        ).toEqual([
+          { id: shop.id, total: converted('IQD', '40000'), partsLacked: [kit.id] },
+          { id: store.id, total: converted('IQD', '80000'), partsLacked: [ryzen.id] },
+        ]);
       });
     }
 
@@ -623,6 +859,9 @@ describe("a Build's price views", () => {
           { visible: false, unstocked: true, lowest: null, vendor: null },
         ]);
         expect(answer.totalAcrossVendors).toEqual(converted('IQD', '24000'));
+        expect(
+          answer.vendors.map(({ id, total, partsLacked }) => ({ id, total, partsLacked })),
+        ).toEqual([{ id: store.id, total: converted('IQD', '24000'), partsLacked: [] }]);
       });
     }
   });

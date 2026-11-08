@@ -5,7 +5,7 @@ import { ShownPrice } from '../offer/shown-price';
 import { Category } from '../part/Category';
 import { Part } from '../part/Part';
 import { partNotValid } from './build-errors';
-import { InStockOffers, LowestPrice } from './in-stock-offers';
+import { InStockOffer, InStockOffers, LowestPrice } from './in-stock-offers';
 import { timesQuantity } from './totals';
 
 // The Categories a Build holds several of, each with a quantity: RAM kits
@@ -50,6 +50,12 @@ export class BuildPart {
   // stays in the Build, and is left out of every total.
   isUnstocked(): boolean {
     return this.inStockOffers.getOffers().length === 0;
+  }
+
+  // Its in-stock Visible Offers, one for each Vendor that has it in stock,
+  // with each Shown Price in the chosen currency, in no order.
+  getInStockOffers(): readonly InStockOffer[] {
+    return this.inStockOffers.getOffers();
   }
 
   // Whether some Vendor has it in stock but its price cannot be shown: the

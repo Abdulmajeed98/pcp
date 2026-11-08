@@ -16,7 +16,7 @@ export class BuildController {
 
   @ApiOperation({
     summary:
-      'A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; and its total across Vendors, every price read at one Platform Rate',
+      'A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; and its two price views, its total across Vendors and each Vendor that has any of its Parts in stock, with its total, the Parts it has and the Parts it lacks, every price read at one Platform Rate',
     security: [],
   })
   @ApiOkResponse({ type: BuildResponse })
