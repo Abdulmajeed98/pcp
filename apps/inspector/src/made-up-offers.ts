@@ -83,16 +83,16 @@ const psu = (name: string): CatalogPart => ({ category: 'psu', name });
 // The Parts, by name. The two cooler names are the longest the catalog holds,
 // 276 and 210 characters; the GPU's is the longest of its Category.
 export const ryzen7800X3D = cpu('AMD Ryzen 7 7800X3D');
-const ryzen7600X = cpu('AMD Ryzen 5 7600X');
-const ryzen9800X3D = cpu('AMD Ryzen 7 9800X3D');
-const ryzen7950X3D = cpu('AMD Ryzen 9 7950X3D');
-const ryzen5600 = cpu('AMD Ryzen 5 5600');
-const core14600K = cpu('Intel Core i5 14600K');
-const core14700K = cpu('Intel Core i7 14700K');
-const core12100F = cpu('Intel Core i3 12100F');
-const ultra265K = cpu('Intel Core Ultra 7 265K');
-const nhD15 = cpuCooler('Noctua NH-D15 chromax.black Air 165mm Black');
-const peerlessAssassin = cpuCooler(
+export const ryzen7600X = cpu('AMD Ryzen 5 7600X');
+export const ryzen9800X3D = cpu('AMD Ryzen 7 9800X3D');
+export const ryzen7950X3D = cpu('AMD Ryzen 9 7950X3D');
+export const ryzen5600 = cpu('AMD Ryzen 5 5600');
+export const core14600K = cpu('Intel Core i5 14600K');
+export const core14700K = cpu('Intel Core i7 14700K');
+export const core12100F = cpu('Intel Core i3 12100F');
+export const ultra265K = cpu('Intel Core Ultra 7 265K');
+export const nhD15 = cpuCooler('Noctua NH-D15 chromax.black Air 165mm Black');
+export const peerlessAssassin = cpuCooler(
   'Thermalright Peerless Assassin 120 SE Air 155mm Black/Silver',
 );
 export const theLongestName = cpuCooler(
@@ -101,38 +101,46 @@ export const theLongestName = cpuCooler(
 export const theNextLongestName = cpuCooler(
   'DeepCool LS720 SE Liquid Cooler 360mm 4th Gen Dual-Chamber Pump 3100RPM 300w TDP AIO Cooler Anti-Leak Tech with ARGB Fans CPU Water Cooler Narrow Frame Infinity Mirror Block for AMD AM4/AM5 LGA 1700/1200, Black',
 );
-const liquidFreezer = cpuCooler('ARCTIC Liquid Freezer III Pro 360mm Black');
-const ak620 = cpuCooler('Deepcool AK620 Air 160mm Black / Silver');
-const b650Tomahawk = motherboard('MSI MAG B650 TOMAHAWK WIFI AM5 DDR5 ATX');
-const b650Elite = motherboard('GIGABYTE B650 AORUS ELITE AX AM5 DDR5 ATX');
-const b760mDs3h = motherboard('Gigabyte B760M DS3H DDR4 Micro ATX');
-const b550mPro4 = motherboard('ASRock B550M Pro4 AM4 DDR4 Micro ATX');
-const z790Tomahawk = motherboard('MSI MAG Z790 TOMAHAWK WIFI DDR5 ATX');
-const vengeance = ram('CORSAIR Vengeance 32GB (2x16GB) DDR5 6000 CL30 Black');
-const tridentZ5 = ram('G.Skill Trident Z5 Neo RGB 32GB (2x16GB) DDR5 6400 CL30 Black');
-const furyBeast16 = ram('Kingston FURY Beast 16GB (2x8GB) DDR4 3200 CL16 Black');
-const furyBeast32 = ram('Kingston FURY Beast 32GB (2x16GB) DDR4 3200 CL16 Black');
-const sn850x = storage('Western Digital WD_Black SN850X 1TB SSD M.2 PCIe 4.0 NVMe');
-const samsung990Pro = storage('Samsung 990 Pro 2TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
-const p3Plus = storage('Crucial P3 Plus 1TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
-const samsung870Evo = storage('Samsung 870 Evo 1TB 2.5" SSD SATA');
-const barraCuda = storage('Seagate BarraCuda 2TB 3.5" HDD 7200RPM SATA');
-const palit4070Super = gpu('Palit Dual OC GeForce RTX 4070 SUPER 12GB GDDR6X Black');
-const foundersEdition = gpu('NVIDIA GeForce RTX 4070 SUPER 12GB GDDR6X Founders Edition');
-const tuf7800XT = gpu('Asus TUF GAMING OC Radeon RX 7800 XT 16GB GDDR6 Black');
-const dual2060Super = gpu(
+export const liquidFreezer = cpuCooler('ARCTIC Liquid Freezer III Pro 360mm Black');
+export const ak620 = cpuCooler('Deepcool AK620 Air 160mm Black / Silver');
+export const b650Tomahawk = motherboard('MSI MAG B650 TOMAHAWK WIFI AM5 DDR5 ATX');
+export const b650Elite = motherboard('GIGABYTE B650 AORUS ELITE AX AM5 DDR5 ATX');
+export const b760mDs3h = motherboard('Gigabyte B760M DS3H DDR4 Micro ATX');
+export const b550mPro4 = motherboard('ASRock B550M Pro4 AM4 DDR4 Micro ATX');
+export const z790Tomahawk = motherboard('MSI MAG Z790 TOMAHAWK WIFI DDR5 ATX');
+export const vengeance = ram('CORSAIR Vengeance 32GB (2x16GB) DDR5 6000 CL30 Black');
+export const tridentZ5 = ram(
+  'G.Skill Trident Z5 Neo RGB 32GB (2x16GB) DDR5 6400 CL30 Black',
+);
+export const furyBeast16 = ram('Kingston FURY Beast 16GB (2x8GB) DDR4 3200 CL16 Black');
+export const furyBeast32 = ram('Kingston FURY Beast 32GB (2x16GB) DDR4 3200 CL16 Black');
+export const sn850x = storage('Western Digital WD_Black SN850X 1TB SSD M.2 PCIe 4.0 NVMe');
+export const samsung990Pro = storage('Samsung 990 Pro 2TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
+export const p3Plus = storage('Crucial P3 Plus 1TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
+export const samsung870Evo = storage('Samsung 870 Evo 1TB 2.5" SSD SATA');
+export const barraCuda = storage('Seagate BarraCuda 2TB 3.5" HDD 7200RPM SATA');
+export const palit4070Super = gpu('Palit Dual OC GeForce RTX 4070 SUPER 12GB GDDR6X Black');
+export const foundersEdition = gpu(
+  'NVIDIA GeForce RTX 4070 SUPER 12GB GDDR6X Founders Edition',
+);
+export const tuf7800XT = gpu('Asus TUF GAMING OC Radeon RX 7800 XT 16GB GDDR6 Black');
+export const dual2060Super = gpu(
   'ASUS DUAL GeForce RTX 2060 SUPER EVO V2 OC Edition Gaming Graphics Card (PCIe 3.0, 8GB GDDR6, HDMI, DisplayPort, DVI-D, Axial-Tech Fan, 0dB Technology, DirectCU II, Auto-Extreme) (DUAL-RTX2060S-O8G-EVO-V2)',
 );
 // The Category's one Part.
 export const theOnlyCase = pcCase(
   'Corsair 4000D AIRFLOW Tempered Glass Mid-Tower ATX Case - Black',
 );
-const rm850e = psu('Corsair RM850e (2022) Black 850W Fully Modular 80+ Gold Certified');
-const focusGx750 = psu(
+export const rm850e = psu(
+  'Corsair RM850e (2022) Black 850W Fully Modular 80+ Gold Certified',
+);
+export const focusGx750 = psu(
   'SeaSonic FOCUS GX-750 Black ATX 3.0 750W Fully Modular 80+ Gold Certified',
 );
-const purePower12M = psu('be quiet! Pure Power 12 M 750W Fully Modular 80+ Gold Certified');
-const a650bn = psu('MSI MAG A650BN Black ATX 650W Non-Modular 80+ Bronze Certified');
+export const purePower12M = psu(
+  'be quiet! Pure Power 12 M 750W Fully Modular 80+ Gold Certified',
+);
+export const a650bn = psu('MSI MAG A650BN Black ATX 650W Non-Modular 80+ Bronze Certified');
 
 // The Category whose Visible Parts are many: these GPUs, and the 396 others
 // of `made-up-gpus.ts`, read from the catalog by Category and exact name too,

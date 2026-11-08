@@ -1,4 +1,9 @@
 import type {
+  BuildMissingSpecificationResponse,
+  BuildPartInStockResponse,
+  BuildPartResponse,
+  BuildResponse,
+  BuildVendorResponse,
   Currency,
   ErrorResponse,
   FilterKind,
@@ -7,6 +12,9 @@ import type {
   ListVisiblePartsData,
   PartSummaryResponse,
   PlatformFiguresResponse,
+  ReadBuildData,
+  RuleOutcomeResponse,
+  ShownPriceResponse,
   SpecificationResponse,
   VisibleOfferOfVendorPageResponse,
   VisibleOfferOfVendorResponse,
@@ -17,12 +25,26 @@ import type {
   VisiblePartWithSpecificationsResponse,
   VisibleVendorResponse,
 } from '@pcp/api-client';
+import {
+  type CategoryKey,
+  estimatedPowerDrawOf,
+  judgeBuild,
+  type MissingSpecification,
+  type PartOf,
+  type Build as RulesBuild,
+} from '@pcp/compatibility';
 
 import { currencies } from './currencies.ts';
 import { theShopsPlatformRate } from './made-up-offers.ts';
 import { daysAnOfferStaysCurrent } from './made-up-shop.ts';
 import { valueAt } from './specification-document.ts';
-import type { Category, ReadPart, ShopOffer, ShoppersShop } from './the-shoppers-shop.ts';
+import type {
+  Category,
+  CpuValue,
+  ReadPart,
+  ShopOffer,
+  ShoppersShop,
+} from './the-shoppers-shop.ts';
 
 // The stand-in API: the answers the made-up shop gives to the public
 // endpoints the Shopper app reads, as the API's description shapes them.
@@ -36,9 +58,19 @@ import type { Category, ReadPart, ShopOffer, ShoppersShop } from './the-shoppers
 // Offer in stock, and BRW-1's order of a Category's Parts by it, since every
 // price is fixed in both currencies and their orders can differ; and what a
 // Part lacks of a specification (`lacks`), since the API labels the
-// specifications of a Visible Part alone. Every answer is typed by the API
-// client's own types, so a change to the API's description that the shop
-// does not follow fails the type-check.
+// specifications of a Visible Part alone.
+//
+// A Build is judged by `@pcp/compatibility` itself, `judgeBuild`,
+// `isCompatible` and `estimatedPowerDrawOf`, so the stand-in copies no
+// Compatibility Rule, and the rules are handed the needed specifications the
+// reading of the catalog left them. What no fixed data can carry it states
+// plainly, each beside a comment naming the API's statement as the one that
+// counts: its fixed prices added up into both price views' totals
+// (`totalOf`), the second view's order (`inTheSecondViewsOrder`) and the rule
+// for a Complete Build (`completenessOf`).
+//
+// Every answer is typed by the API client's own types, so a change to the
+// API's description that the shop does not follow fails the type-check.
 
 // One request, as the Shopper app's server sends it: its method, and its
 // path with its query.
@@ -555,6 +587,319 @@ function partIn(shop: ShoppersShop, partId: string): PartSummaryResponse {
   return read.summary;
 }
 
+// The parameter that gives a Build, as reading a Build and the picker's list
+// name it.
+const theBuild = 'part' satisfies keyof ReadBuildData['query'] &
+  keyof ListVisiblePartsData['query'];
+
+// The two Categories a Build holds several of, each with its quantity.
+const heldWithAQuantity: readonly Category[] = ['ram', 'storage'];
+
+// A Part of a Build: the shop's Part, and how many of it the Build holds, a
+// RAM kit or a drive.
+interface PartOfABuild {
+  read: ReadPart;
+  quantity: number | null;
+}
+
+// The Build a request gives, each value of `part` a Part's identifier,
+// followed for a RAM kit or a drive by `:` and its quantity, in the
+// catalog's order of Categories and then in the order given. A Part the shop
+// does not offer is left out, as the API leaves out one the catalog does not
+// hold; a value whose quantity is not a number is refused. The Shopper app
+// sends nothing else the API refuses, so nothing else is checked.
+function theBuildAsked(shop: ShoppersShop, query: URLSearchParams): PartOfABuild[] {
+  const parts = query.getAll(theBuild).flatMap((value): PartOfABuild[] => {
+    const [partId, quantity, ...more] = value.split(':');
+    if (more.length > 0 || (quantity !== undefined && !/^\d+$/.test(quantity))) {
+      throw new Refused(notValid(theBuild));
+    }
+    const read = shop.parts.get(partId);
+    if (read === undefined) return [];
+    const withAQuantity = heldWithAQuantity.includes(read.summary.category);
+    return [{ read, quantity: withAQuantity ? Number(quantity ?? 1) : null }];
+  });
+  return parts.sort(
+    (a, b) =>
+      categoriesInOrder.indexOf(a.read.summary.category) -
+      categoriesInOrder.indexOf(b.read.summary.category),
+  );
+}
+
+// A price in its currency's smallest unit, cents or dinars, in which every
+// price of the shop is exact.
+function unitsOf(price: ShownPriceResponse): number {
+  return price.currency === 'USD'
+    ? Math.round(Number(price.amount) * 100)
+    : Number(price.amount);
+}
+
+function priceOf(
+  currency: Currency,
+  units: number,
+  converted: boolean,
+): ShownPriceResponse {
+  return {
+    currency,
+    amount: currency === 'USD' ? (units / 100).toFixed(2) : String(units),
+    converted,
+  };
+}
+
+// A Shown Price times a Part's quantity, multiplied plainly, as `totalOf`
+// adds up: one of a Part a Build holds one of.
+function timesQuantity(price: ShownPriceResponse, quantity: number | null) {
+  return priceOf(price.currency, unitsOf(price) * (quantity ?? 1), price.converted);
+}
+
+// Prices in one currency added up plainly, marked converted when any is:
+// none when there is none to add. The API adds up its own in `totals.ts`,
+// whose totals are the ones that count (PRC-5); the shop's prices are fixed,
+// so no total written into the shop could follow a Build.
+function totalOf(prices: readonly ShownPriceResponse[]): ShownPriceResponse | null {
+  const [first] = prices;
+  if (first === undefined) return null;
+  return priceOf(
+    first.currency,
+    prices.reduce((total, price) => total + unitsOf(price), 0),
+    prices.some((price) => price.converted),
+  );
+}
+
+// A Part of a Build as the answer gives it: its summary and quantity, and
+// its Lowest Price, the Shown Price of the first of its Offers in stock as a
+// Part page lists them, times its quantity, with that Offer's Vendor; or
+// none for an Unstocked Part. Every Part the shop offers is a Visible Part,
+// and every price is shown, since the shop holds a Platform Rate.
+function buildPartOf(
+  shop: ShoppersShop,
+  { read, quantity }: PartOfABuild,
+  currency: Currency,
+): BuildPartResponse {
+  const lowest = aPartsOffers(shop, read.summary.id, currency).find(
+    (offer) => offer.inStock,
+  );
+  return {
+    ...read.summary,
+    quantity,
+    visible: true,
+    unstocked: lowest === undefined,
+    priceNotShown: false,
+    lowestPrice:
+      lowest === undefined
+        ? null
+        : {
+            shownPrice: lowest.shownPrices[currency],
+            timesQuantity: timesQuantity(lowest.shownPrices[currency], quantity),
+            vendor: vendorOf(shop, lowest),
+          },
+  };
+}
+
+// A Part as the Compatibility Rules read it: its identifier, by which every
+// outcome names it, and its needed specifications, as the reading of the
+// catalog left them (`catalog-parts.ts`). The rules judge them as the
+// catalog checked them, so they are typed for the rules by one cast.
+function forTheRules(read: ReadPart): PartOf<CategoryKey> {
+  return {
+    id: read.summary.id,
+    specifications: read.neededSpecifications,
+  } as PartOf<CategoryKey>;
+}
+
+// A Build as the Compatibility Rules read it: each Part under its Category's
+// key, and each RAM kit and drive in a list in the Build's order, with its
+// quantity.
+function buildForTheRules(build: readonly PartOfABuild[]): RulesBuild {
+  const held: Record<string, unknown> = {};
+  for (const { read, quantity } of build) {
+    const key = read.summary.category;
+    held[key] =
+      quantity === null
+        ? forTheRules(read)
+        : [
+            ...((held[key] as readonly unknown[] | undefined) ?? []),
+            { ...forTheRules(read), quantity },
+          ];
+  }
+  return held as RulesBuild;
+}
+
+// A needed specification a Part of the Build lacks, labelled in English as
+// the API labels it, from the Part's Specification list: by its own label,
+// or, for a field of a row, such as `pcie_slots.1.lanes`, by the list's and
+// the field's; a path the list does not hold stands for its label.
+function labelledIn(
+  shop: ShoppersShop,
+  build: readonly PartOfABuild[],
+): (missing: MissingSpecification) => BuildMissingSpecificationResponse {
+  return ({ part, path }) => {
+    const read = build.find((each) => each.read.summary.id === part)?.read;
+    const list = (read && shop.categories.get(read.summary.category)?.specifications) ?? [];
+    const own = list.find((each) => each.path === path);
+    if (own !== undefined) return { part, path, label: own.label, fieldLabel: null };
+
+    const rows = list.find(
+      (each) => each.kind === 'listOfRows' && path.startsWith(`${each.path}.`),
+    );
+    // After the list's path come the row's place and the field's name.
+    const [, fieldName] = rows ? path.slice(rows.path.length + 1).split('.') : [];
+    const field = rows?.fields?.find((each) => each.path === fieldName);
+    return rows === undefined || field === undefined
+      ? { part, path, label: path, fieldLabel: null }
+      : { part, path, label: rows.label, fieldLabel: field.label };
+  };
+}
+
+// What the Compatibility Rules find in a Build, judged by the library itself,
+// passes included, in rule order, and its Estimated power draw, as the
+// library adds it up, each missing specification labelled.
+function judgmentOf(shop: ShoppersShop, build: readonly PartOfABuild[]) {
+  const judged = buildForTheRules(build);
+  const labelled = labelledIn(shop, build);
+  const draw = estimatedPowerDrawOf(judged);
+  return {
+    outcomes: judgeBuild(judged).map((outcome): RuleOutcomeResponse =>
+      outcome.outcome === 'unchecked'
+        ? { ...outcome, parts: [], missing: outcome.missing.map(labelled) }
+        : { ...outcome, parts: [...outcome.parts], missing: [] },
+    ),
+    estimatedPowerDraw:
+      draw === undefined
+        ? null
+        : draw.known
+          ? { watts: draw.watts, missing: [] }
+          : { watts: null, missing: draw.missing.map(labelled) },
+  };
+}
+
+// What a CPU provides in place of a Part of another Category, by the value
+// that says so, and whether a value it holds provides it.
+const provisions: Readonly<
+  Record<CpuValue, { insteadOf: Category; provides: (value: unknown) => boolean }>
+> = {
+  integratedGraphics: { insteadOf: 'gpu', provides: (value) => value !== 'None' },
+  includesCooler: { insteadOf: 'cpuCooler', provides: (value) => value === true },
+};
+
+// The rule for a Complete Build, as the API states it in `complete-build.ts`,
+// whose rule is the one that counts (BLD-5): a CPU, a motherboard, at least
+// one RAM kit, at least one drive, a case and a PSU, with a GPU unless the
+// CPU has integrated graphics, held and not "None", and a CPU cooler unless
+// it includes one. A CPU that does not hold either value counts as not
+// providing it, and the answer says the value is not known. Without a CPU,
+// the GPU and the CPU cooler are needed.
+function completenessOf(build: readonly PartOfABuild[]) {
+  const cpuValues = build.find((part) => part.read.summary.category === 'cpu')?.read
+    .cpuValues;
+  const values = Object.keys(provisions) as CpuValue[];
+  const provided = values.flatMap((value) => {
+    const held = cpuValues?.[value];
+    return held !== undefined && provisions[value].provides(held)
+      ? [provisions[value].insteadOf]
+      : [];
+  });
+  const stillNeeded = categoriesInOrder.filter(
+    (category) =>
+      !provided.includes(category) &&
+      !build.some((part) => part.read.summary.category === category),
+  );
+  return {
+    complete: stillNeeded.length === 0,
+    stillNeeded,
+    cpuValuesNotKnown:
+      cpuValues === undefined
+        ? []
+        : values.filter((value) => cpuValues[value] === undefined),
+  };
+}
+
+// Names compared in English collation, as the API compares them.
+const byName = new Intl.Collator('en').compare;
+
+// The second price view's order, as the API states it in `price-views.ts`,
+// whose order is the one that counts: the Vendors that lack the fewest Parts
+// first, then the lowest total, none after any, then by name, then by
+// identifier. The shop's prices are fixed in both currencies, and its
+// Vendors' order can differ between them, so no order written into the shop
+// could hold for both.
+function inTheSecondViewsOrder(one: BuildVendorResponse, other: BuildVendorResponse) {
+  const byTotal =
+    one.total === null || other.total === null
+      ? Number(one.total === null) - Number(other.total === null)
+      : unitsOf(one.total) - unitsOf(other.total);
+  return (
+    one.partsLacked.length - other.partsLacked.length ||
+    byTotal ||
+    byName(one.name, other.name) ||
+    Number(one.id > other.id) - Number(one.id < other.id)
+  );
+}
+
+// The second price view (BLD-8): each Vendor with at least one of the
+// Build's Parts in stock, the Parts it has so, each Shown Price times its
+// quantity added up plainly into its total, and the Parts it lacks: those
+// other Vendors have in stock. An Unstocked Part is in no Vendor's list.
+function theSecondView(
+  shop: ShoppersShop,
+  build: readonly PartOfABuild[],
+  currency: Currency,
+): BuildVendorResponse[] {
+  const inStock = (part: PartOfABuild) =>
+    shop.offers.filter((offer) => offer.partId === part.read.summary.id && offer.inStock);
+  const stocked = build.filter((part) => inStock(part).length > 0);
+  const vendorIds = new Set(
+    stocked.flatMap((part) => inStock(part).map((offer) => offer.vendorId)),
+  );
+  return shop.vendors
+    .filter((vendor) => vendorIds.has(vendor.id))
+    .map((vendor): BuildVendorResponse => {
+      const partsInStock = stocked.flatMap((part): BuildPartInStockResponse[] => {
+        const offer = inStock(part).find((each) => each.vendorId === vendor.id);
+        if (offer === undefined) return [];
+        const shownPrice = offer.shownPrices[currency];
+        return [
+          {
+            partId: part.read.summary.id,
+            shownPrice,
+            timesQuantity: timesQuantity(shownPrice, part.quantity),
+          },
+        ];
+      });
+      return {
+        id: vendor.id,
+        name: vendor.name,
+        total: totalOf(partsInStock.flatMap((has) => has.timesQuantity ?? [])),
+        partsInStock,
+        partsLacked: stocked
+          .map((part) => part.read.summary.id)
+          .filter((partId) => !partsInStock.some((has) => has.partId === partId)),
+      };
+    })
+    .sort(inTheSecondViewsOrder);
+}
+
+// A Build, as `GET v1/build` reads it (BLD-1 to BLD-9): its Parts, whether
+// it is a Complete Build, every rule's outcome, its Estimated power draw and
+// both price views.
+function aBuild(shop: ShoppersShop, query: URLSearchParams): StandInAnswer {
+  const currency = currencyOf(query);
+  const build = theBuildAsked(shop, query);
+  const parts = build.map((part) => buildPartOf(shop, part, currency));
+  const body: BuildResponse = {
+    parts,
+    ...completenessOf(build),
+    ...judgmentOf(shop, build),
+    // The first price view's total (BLD-7, PRC-5), leaving out each Part
+    // with no Lowest Price.
+    totalAcrossVendors: totalOf(
+      parts.flatMap((part) => part.lowestPrice?.timesQuantity ?? []),
+    ),
+    vendors: theSecondView(shop, build, currency),
+  };
+  return answer(body);
+}
+
 // Nothing is ever written: the shop is not in the database.
 const aWrite: StandInAnswer = {
   ...refusal(405, 'MADE_UP_SHOP_IS_READ_ONLY'),
@@ -579,6 +924,7 @@ export function answerFromTheStandIn(shop: ShoppersShop, call: ApiCall): StandIn
   try {
     if (first === 'visible-parts' && second === undefined) return visibleParts(shop, query);
     if (first === 'platform-figures' && second === undefined) return platformFigures(shop);
+    if (first === 'build' && second === undefined) return aBuild(shop, query);
     if (second === undefined) return notAnswered;
     if (first === 'visible-parts' && second === 'filters' && rest.length === 0) {
       return filtersOfCategory(shop, query);
