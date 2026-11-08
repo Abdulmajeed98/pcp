@@ -33,11 +33,11 @@ The Build is kept in the Shopper's browser for a year and is still there when th
   - A Part the API left out, because the catalog no longer holds it, shows its Category as not chosen.
 - [x] **The status.** A Complete Build, or the Categories still needed, each linking to its picker, with the line saying the CPU's graphics or cooler is not known when the API says so.
 - [x] **An API that does not answer** shows the frame and the sheet saying the page cannot be read just now, with Try again, as the other Shopper pages do. The cookie is left as it is.
-- [ ] **The frame** gains a way to the Build page on every page, with how many Parts the Build holds, read from the cookie and counting a kit or a drive by its quantity. It is a small, additive change to the frame.
+- [x] **The frame** gains a way to the Build page on every page, with how many Parts the Build holds, read from the cookie and counting a kit or a drive by its quantity. It is a small, additive change to the frame.
 - [x] **The preview.** A title in the page's language, with no Part and no price, and the page marked for search engines not to index.
 - [x] **The motion** DESIGN.md gives the Build page, filmed with `film` and judged by `snapsOf`, with reduced motion and without it.
 - [x] **The words.** Every new text is in `i18n`'s Shopper set in all three languages, as drafts under LANG-7.
-- [ ] **`pnpm shopper:inspect`** gains an option that puts one of ticket 05's made-up Builds in the inspected page's cookie. The option is added to the commands table and the design skills guide.
+- [x] **`pnpm shopper:inspect`** gains an option that puts one of ticket 05's made-up Builds in the inspected page's cookie. The option is added to the commands table and the design skills guide.
   - The Build page is inspected with each made-up Build, in both schemes, in Kurdish and in English, at 1440, 1280, 1024, 768 and 390 pixels.
   - Every FAIL is fixed, and every WARN fixed or defended under Comments, against `browse` ticket 14's reference.
   - `break-ui`'s worst cases are looked at with the worst-case Build.
@@ -133,4 +133,13 @@ Defended as browse ticket 14's reference defends them: `dashed` (the slip's dash
 - `da827fe` fix(shopper): keep the Build's controls whole at a phone's largest text
 - `2adcfac` test(e2e): read the Build page's head as a search engine would
 - `ef7c3fe` fix(shopper): place the way to the Build by its row's width, not fonts
-- this record
+- `d434d13` docs(shopper): record the Build page, its tests and its fault checks
+
+### 9 November 2026: the owner's answers
+
+The coordinator relayed the owner's answers to both questions, each the recommended option, given after the owner had seen the inspection's pictures in `.taste-skill/builder-07/`:
+
+1. **The frame's count**: "Each Part once (Recommended)". The owner chose to count each Part once, whatever its quantity, over this ticket's box, which counts a kit or a drive by its quantity; the box's wording stays as it was, and `partsCountedIn` stays as built. The frame's box is ticked, and DESIGN.md's The way to the Build names the choice.
+2. **`first-action` at 1440 on a Build that holds Parts**: "Keep it, defend it (Recommended)". It is defended by the owner, beside `dashed`, `no-footage` and `blank-gap` at 768, which browse ticket 14's reference defends. As a Category page's `first-action` is held in DESIGN.md's The swing tag rather than in the sheet's allowances (`held-rules.md` and `direction.json` allow five other rules), this one is held in DESIGN.md's The Build's till slip. The inspection's box is ticked.
+
+The box for the checks on a phone stays open, waiting for hosting.
