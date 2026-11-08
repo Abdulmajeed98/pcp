@@ -53,36 +53,39 @@ export async function BuildSheet({
     <Sheet print="arrival">
       <SheetTitle as="h1">{t('title')}</SheetTitle>
       {/* The page's status, read to a screen reader when a change in place
-          alters it. */}
-      <output
-        data-testid="build-status"
-        className="mx-auto mt-4 block max-w-[34ch] text-center text-lg text-balance"
-      >
-        {status.sentence.map((piece) =>
-          typeof piece === 'string' ? (
-            piece
-          ) : (
-            <a
-              key={piece.category}
-              href={pickerAddress(language, piece.category)}
-              data-testid="still-needed"
-              data-category={piece.category}
-              className="hover-underline"
-            >
-              {piece.words}
-            </a>
-          ),
-        )}
-      </output>
-      {status.lines.map((line) => (
-        <p
-          key={line}
-          data-testid="cpu-line"
-          className="mx-auto mt-2.5 max-w-[34rem] text-center text-base text-muted-foreground"
+          alters it, its space moving with what it says. */}
+      <div data-space="status" className="grid grid-cols-[minmax(0,1fr)]">
+        <output
+          data-testid="build-status"
+          className="mx-auto mt-4 block max-w-[34ch] text-center text-lg text-balance"
         >
-          {line}
-        </p>
-      ))}
+          {status.sentence.map((piece) =>
+            typeof piece === 'string' ? (
+              piece
+            ) : (
+              <a
+                key={piece.category}
+                href={pickerAddress(language, piece.category)}
+                data-testid="still-needed"
+                data-category={piece.category}
+                className="hover-underline"
+              >
+                {piece.words}
+              </a>
+            ),
+          )}
+        </output>
+        {status.lines.map((line) => (
+          <p
+            key={line}
+            data-testid="cpu-line"
+            data-line={line}
+            className="mx-auto mt-2.5 max-w-[34rem] text-center text-base text-muted-foreground"
+          >
+            {line}
+          </p>
+        ))}
+      </div>
 
       <section className="mt-group grid grid-cols-[minmax(0,1fr)] gap-6">
         <h2 className="type-label text-center">{groups('theCore')}</h2>
@@ -93,18 +96,21 @@ export async function BuildSheet({
         <ul className="grid grid-cols-[minmax(0,1fr)] gap-6">{places(aroundIt)}</ul>
       </section>
 
-      {count > 0 && (
-        <EmptyTheBuild
-          action={`/${language}/build/empty`}
-          buildAddress={buildAddress(language)}
-          words={{
-            cell: t('empty.cell'),
-            warning: t('empty.warning', { count, countText: formatNumber(count) }),
-            confirm: t('empty.confirm', { count, countText: formatNumber(count) }),
-            keep: t('empty.keep', { count, countText: formatNumber(count) }),
-          }}
-        />
-      )}
+      {/* Its space folds when a Remove in place leaves the Build empty. */}
+      <div data-space="empty" className="grid grid-cols-[minmax(0,1fr)]">
+        {count > 0 && (
+          <EmptyTheBuild
+            action={`/${language}/build/empty`}
+            buildAddress={buildAddress(language)}
+            words={{
+              cell: t('empty.cell'),
+              warning: t('empty.warning', { count, countText: formatNumber(count) }),
+              confirm: t('empty.confirm', { count, countText: formatNumber(count) }),
+              keep: t('empty.keep', { count, countText: formatNumber(count) }),
+            }}
+          />
+        )}
+      </div>
     </Sheet>
   );
 }

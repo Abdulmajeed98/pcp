@@ -47,7 +47,10 @@ export async function BuildSlip({
         <p data-testid="slip-heading" className={`mt-1 pb-3.5 text-center ${rule}`}>
           {t('slip.yourBuild', { count: parts, countText: formatNumber(parts) })}
         </p>
-        <ul className={`@container grid grid-cols-[minmax(0,1fr)] gap-2.5 py-4 ${rule}`}>
+        <ul
+          data-space="slip"
+          className={`@container grid grid-cols-[minmax(0,1fr)] gap-2.5 py-4 ${rule}`}
+        >
           <Line name={t('slip.parts')} figure="parts">
             {formatNumber(parts)}
           </Line>
@@ -63,7 +66,7 @@ export async function BuildSlip({
         {stamped && (
           <Stamp
             className="end-5 bottom-[34px] [--stamp-at:1150ms]"
-            data={{ 'data-line': 'stamp', 'data-lands': '' }}
+            data={{ 'data-line': 'stamp' }}
           >
             {t('stamp')}
           </Stamp>

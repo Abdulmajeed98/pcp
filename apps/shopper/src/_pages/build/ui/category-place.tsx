@@ -40,7 +40,8 @@ import { buttonVariants, Item } from '@/shared/ui';
 // catalog no longer holds, leaves its Category not chosen.
 //
 // Each line the Build may gain or lose is named for the page's script
-// (`data-line`), which moves it when a change applies in place (Motion 11).
+// (`data-line`), and so is the place's space (`data-space`), which the
+// script moves when a change applies in place (Motion 11).
 export async function CategoryPlace({
   category,
   parts,
@@ -69,6 +70,7 @@ export async function CategoryPlace({
   return (
     <li
       id={place}
+      data-space={category}
       data-testid={`build-category-${category}`}
       className="@container grid scroll-mt-6 grid-cols-[minmax(0,1fr)] gap-2"
     >
