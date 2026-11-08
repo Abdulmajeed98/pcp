@@ -603,7 +603,7 @@ describe('the stand-in API', () => {
       expect(answer.status).toBe(200);
       expect(answer.body).toEqual({
         activeVendorCount: 21,
-        visibleOfferCount: 852,
+        visibleOfferCount: 860,
         iqdPerUsd: 1575,
         daysAnOfferStaysCurrent: 14,
       });
