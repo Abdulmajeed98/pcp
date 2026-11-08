@@ -12,7 +12,7 @@ export class ReadBuildRequest {
   )
   readonly currency!: Currency;
 
-  @BuildAsked('The Build that is read.')
+  @BuildAsked('The Build that is read. Left out, the Build is empty.')
   readonly part?: string[];
 
   toQueryInput(): ReadBuildQueryInput {

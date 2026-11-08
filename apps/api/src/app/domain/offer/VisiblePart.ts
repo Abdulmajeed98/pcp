@@ -3,14 +3,15 @@ import { ShownPrice } from './shown-price';
 
 // A Visible Part (CAT-7), as a Category's list shows it to Shoppers: the Part,
 // which has at least one Visible Offer, with what its Visible Offers say of it
-// in the chosen currency. It holds nothing of their Vendors but how many there
-// are.
+// in the chosen currency, and, in the picker, whether it is Compatible with
+// the Build. It holds nothing of their Vendors but how many there are.
 export class VisiblePart {
   constructor(
     private readonly part: Part,
     private readonly lowestPrice: ShownPrice | null,
     private readonly vendorCount: number,
     private readonly inStock: boolean,
+    private readonly compatible?: boolean,
   ) {}
 
   getPart(): Part {
@@ -35,5 +36,22 @@ export class VisiblePart {
   // Whether any of its Visible Offers is in stock.
   isInStock(): boolean {
     return this.inStock;
+  }
+
+  // Whether it is Compatible with the Build the picker lists it for (CMP-4),
+  // or none when the list was asked for without a Build.
+  isCompatible(): boolean | undefined {
+    return this.compatible;
+  }
+
+  // The same Visible Part, judged Compatible with a Build or not.
+  judged(compatible: boolean): VisiblePart {
+    return new VisiblePart(
+      this.part,
+      this.lowestPrice,
+      this.vendorCount,
+      this.inStock,
+      compatible,
+    );
   }
 }

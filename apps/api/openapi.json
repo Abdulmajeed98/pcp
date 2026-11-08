@@ -1402,6 +1402,42 @@
             }
           },
           {
+            "name": "inStockOnly",
+            "required": false,
+            "in": "query",
+            "description": "In stock only, as the picker lists a Category (BLD-2): on, only the Visible Parts with at least one in-stock Visible Offer are listed, in the same order.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "part",
+            "required": false,
+            "in": "query",
+            "description": "The Build so far, as the picker lists a Category for it (BLD-3), taken as reading a Build takes it. Given, each Part answers whether it is Compatible with it. Left out, no Part answers it, as on a Category page. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.",
+            "schema": {
+              "example": [
+                "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+                "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "keepNotCompatible",
+            "required": false,
+            "in": "query",
+            "description": "The picker's switch (BLD-3): on, the Parts that are not Compatible with the Build are kept, in their place in the order, each answering that it is not. Off, they are left out. It changes nothing without a Build.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
             "name": "socket",
             "required": false,
             "in": "query",
@@ -1593,7 +1629,7 @@
           }
         },
         "security": [],
-        "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last",
+        "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only, and, given a Build, each with whether it is Compatible with it, those that are not left out unless the switch keeps them",
         "tags": ["VisibleParts"]
       }
     },
@@ -1629,6 +1665,16 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             }
+          },
+          {
+            "name": "inStockOnly",
+            "required": false,
+            "in": "query",
+            "description": "In stock only, as the picker asks for a Category's filters (BLD-2): on, every value is read from the Visible Parts with at least one in-stock Visible Offer alone.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -1654,7 +1700,7 @@
           }
         },
         "security": [],
-        "summary": "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied",
+        "summary": "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied; for the picker, read from those in stock only",
         "tags": ["VisibleParts"]
       }
     },
@@ -1802,6 +1848,63 @@
         "tags": ["PlatformFigures"]
       }
     },
+    "/v1/build": {
+      "get": {
+        "operationId": "readBuild",
+        "parameters": [
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          },
+          {
+            "name": "part",
+            "required": false,
+            "in": "query",
+            "description": "The Build that is read. Left out, the Build is empty. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.",
+            "schema": {
+              "example": [
+                "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+                "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; the outcome of every Compatibility Rule that applies to it, and its Estimated power draw; and its two price views, its total across Vendors and each Vendor that has any of its Parts in stock, with its total, the Parts it has and the Parts it lacks, every price read at one Platform Rate",
+        "tags": ["Build"]
+      }
+    },
     "/v1/platform-rate": {
       "get": {
         "operationId": "readPlatformRate",
@@ -1868,63 +1971,6 @@
         },
         "summary": "Set the Platform Rate, in whole dinars per dollar, as a new setting, also when it equals the current one, and answer it as the current one",
         "tags": ["PlatformRate"]
-      }
-    },
-    "/v1/build": {
-      "get": {
-        "operationId": "readBuild",
-        "parameters": [
-          {
-            "name": "currency",
-            "required": true,
-            "in": "query",
-            "description": "The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.",
-            "schema": {
-              "$ref": "#/components/schemas/Currency"
-            }
-          },
-          {
-            "name": "part",
-            "required": false,
-            "in": "query",
-            "description": "The Build that is read. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. Left out, the Build is empty. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.",
-            "schema": {
-              "example": [
-                "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
-                "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
-              ],
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BuildResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "The request was refused, or it failed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [],
-        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; the outcome of every Compatibility Rule that applies to it, and its Estimated power draw; and its two price views, its total across Vendors and each Vendor that has any of its Parts in stock, with its total, the Parts it has and the Parts it lacks, every price read at one Platform Rate",
-        "tags": ["Build"]
       }
     }
   },
@@ -3701,6 +3747,10 @@
           "inStock": {
             "type": "boolean",
             "description": "Whether any Visible Offer for the Part is in stock. False when every Vendor has it out of stock."
+          },
+          "compatible": {
+            "type": "boolean",
+            "description": "Whether the Part is Compatible with the Build the list was asked for: adding it would cause no Compatibility Problem, a Compatibility Warning and an unchecked rule leaving it Compatible (CMP-4). Left out when the list was asked for without a Build."
           }
         },
         "required": [
@@ -4150,49 +4200,6 @@
           "daysAnOfferStaysCurrent"
         ]
       },
-      "CurrentPlatformRateResponse": {
-        "type": "object",
-        "properties": {
-          "iqdPerUsd": {
-            "type": "number",
-            "description": "The Platform Rate, in whole dinars per dollar.",
-            "example": 1575
-          },
-          "setAt": {
-            "type": "string",
-            "description": "When the Admin set it.",
-            "format": "date-time"
-          }
-        },
-        "required": ["iqdPerUsd", "setAt"]
-      },
-      "PlatformRateResponse": {
-        "type": "object",
-        "properties": {
-          "current": {
-            "description": "The current Platform Rate, the newest setting, or null until the Admin sets the first.",
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/CurrentPlatformRateResponse"
-              }
-            ]
-          }
-        },
-        "required": ["current"]
-      },
-      "SetPlatformRateRequest": {
-        "type": "object",
-        "properties": {
-          "iqdPerUsd": {
-            "type": "number",
-            "description": "The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.",
-            "example": 1575
-          }
-        },
-        "required": ["iqdPerUsd"]
-      },
       "BuildLowestPriceResponse": {
         "type": "object",
         "properties": {
@@ -4552,6 +4559,49 @@
           "totalAcrossVendors",
           "vendors"
         ]
+      },
+      "CurrentPlatformRateResponse": {
+        "type": "object",
+        "properties": {
+          "iqdPerUsd": {
+            "type": "number",
+            "description": "The Platform Rate, in whole dinars per dollar.",
+            "example": 1575
+          },
+          "setAt": {
+            "type": "string",
+            "description": "When the Admin set it.",
+            "format": "date-time"
+          }
+        },
+        "required": ["iqdPerUsd", "setAt"]
+      },
+      "PlatformRateResponse": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "description": "The current Platform Rate, the newest setting, or null until the Admin sets the first.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CurrentPlatformRateResponse"
+              }
+            ]
+          }
+        },
+        "required": ["current"]
+      },
+      "SetPlatformRateRequest": {
+        "type": "object",
+        "properties": {
+          "iqdPerUsd": {
+            "type": "number",
+            "description": "The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.",
+            "example": 1575
+          }
+        },
+        "required": ["iqdPerUsd"]
       }
     }
   },

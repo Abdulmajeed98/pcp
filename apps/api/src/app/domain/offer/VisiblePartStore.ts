@@ -10,12 +10,12 @@ import { PriceRange } from './PriceRange';
 import { VisiblePart } from './VisiblePart';
 import { VisiblePartsFilters } from './VisiblePartsFilters';
 
-// What a Category's list of Visible Parts asks for: the Category, the chosen
-// currency every Lowest Price is in, the words every Part holds, the
-// manufacturers one of which every Part's is, the choices among the
-// Category's filters every Part matches, the range every Part's Lowest Price
-// is within, the page, and now, by the API's clock, which every Offer's
-// visibility is judged by.
+// What a Category's list of Visible Parts asks for, on any page: the
+// Category, the chosen currency every Lowest Price is in, the words every
+// Part holds, the manufacturers one of which every Part's is, the choices
+// among the Category's filters every Part matches, the range every Part's
+// Lowest Price is within, whether every Part has an in-stock Visible Offer,
+// and now, by the API's clock, which every Offer's visibility is judged by.
 export class ListVisiblePartsParams {
   constructor(
     private readonly category: Category,
@@ -24,7 +24,7 @@ export class ListVisiblePartsParams {
     private readonly manufacturers: readonly string[],
     private readonly choices: readonly FilterChoice[],
     private readonly priceRange: PriceRange,
-    private readonly pageable: PageableAttributes,
+    private readonly inStockOnly: boolean,
     private readonly now: Date,
   ) {}
 
@@ -53,8 +53,8 @@ export class ListVisiblePartsParams {
     return this.priceRange;
   }
 
-  getPageable(): PageableAttributes {
-    return this.pageable;
+  isInStockOnly(): boolean {
+    return this.inStockOnly;
   }
 
   getNow(): Date {
@@ -79,12 +79,14 @@ export class VisiblePartsPage {
 }
 
 // What a Category's filters ask for: the Category, the chosen currency the
-// range of Lowest Prices is in, and now, by the API's clock, which every
+// range of Lowest Prices is in, whether only the Parts with an in-stock
+// Visible Offer give the values, and now, by the API's clock, which every
 // Offer's visibility is judged by.
 export class ReadVisiblePartsFiltersParams {
   constructor(
     private readonly category: Category,
     private readonly currency: Currency,
+    private readonly inStockOnly: boolean,
     private readonly now: Date,
   ) {}
 
@@ -94,6 +96,10 @@ export class ReadVisiblePartsFiltersParams {
 
   getCurrency(): Currency {
     return this.currency;
+  }
+
+  isInStockOnly(): boolean {
+    return this.inStockOnly;
   }
 
   getNow(): Date {
@@ -106,29 +112,40 @@ export class ReadVisiblePartsFiltersParams {
 // a Part with at least one Visible Offer. It is the port: the domain says
 // what it needs, and infrastructure provides it.
 export abstract class VisiblePartStore {
-  // The Category's Visible Parts that hold every word, whose manufacturer is
-  // one of those asked, if any, and that match every choice among the
-  // Category's filters, by holding any of the values chosen of it; judged at
-  // the params' now by the rule for a Visible Part: a Part with at least one
-  // Visible Offer, by the rule in `visibility.ts`. A Part missing a filter's
-  // specification, or holding a value that stands for "not known", matches no
-  // value of that filter. A price range with an end leaves out a Part with no
-  // Lowest Price, and keeps those whose Lowest Price, as answered, after
-  // rounding, is within both ends. Each has its Lowest Price in the
-  // currency, from the Shown Prices of its in-stock Visible Offers at the
-  // current Platform Rate, which is read in the same query as the Parts, the
-  // page and the total, so that one answer never mixes two rates. Parts with
-  // a Lowest Price come first, the lowest first, compared as answered, after
-  // rounding (BRW-1, PRC-4); then the in-stock Parts with none, which happens
-  // only with no Platform Rate; then the Parts whose Visible Offers are all
-  // out of stock; then by name and identifier, so that moving between pages
-  // never skips or repeats one.
+  // One page of the Category's Visible Parts that hold every word, whose
+  // manufacturer is one of those asked, if any, and that match every choice
+  // among the Category's filters, by holding any of the values chosen of it;
+  // judged at the params' now by the rule for a Visible Part: a Part with at
+  // least one Visible Offer, by the rule in `visibility.ts`. A Part missing a
+  // filter's specification, or holding a value that stands for "not known",
+  // matches no value of that filter. A price range with an end leaves out a
+  // Part with no Lowest Price, and keeps those whose Lowest Price, as
+  // answered, after rounding, is within both ends. In stock only leaves out
+  // a Part none of whose Visible Offers is in stock. Each has its Lowest
+  // Price in the currency, from the Shown Prices of its in-stock Visible
+  // Offers at the current Platform Rate, which is read in the same query as
+  // the Parts, the page and the total, so that one answer never mixes two
+  // rates. Parts with a Lowest Price come first, the lowest first, compared
+  // as answered, after rounding (BRW-1, PRC-4); then the in-stock Parts with
+  // none, which happens only with no Platform Rate; then the Parts whose
+  // Visible Offers are all out of stock; then by name and identifier, so that
+  // moving between pages never skips or repeats one.
   abstract listVisibleParts(
     params: ListVisiblePartsParams,
+    pageable: PageableAttributes,
   ): Promise<Either.Either<VisiblePartsPage, StructuredError>>;
 
+  // Every one of the Visible Parts `listVisibleParts` pages, by the same rules
+  // and in the same order, read in one query with the current Platform Rate,
+  // each with its Part's specifications, for the picker to judge each before
+  // it is paged (BLD-3).
+  abstract listEveryVisiblePart(
+    params: ListVisiblePartsParams,
+  ): Promise<Either.Either<readonly VisiblePart[], StructuredError>>;
+
   // The Category's filters, read from all its Visible Parts at the params'
-  // now, by the same rule as its list, before any filter or search: the
+  // now, by the same rule as its list, before any filter or search, and in
+  // stock only from those with an in-stock Visible Offer alone: the
   // manufacturers they have; for each filter in `filters.ts`, the distinct
   // values they hold, numbers by size and text alphabetically, leaving out a
   // value that stands for "not known" and a filter none holds a value of;

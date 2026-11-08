@@ -1,24 +1,21 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PagingRequest } from '@pcp/core';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsOptional, IsString, Matches } from 'class-validator';
 
 import { type Currency } from '~/domain/currency/currency';
 import { ListVisiblePartsQueryInput } from '~/domain/offer/ListVisiblePartsQuery';
 import { Category } from '~/domain/part/Category';
 import { filterParameters, type FilterKind } from '~/domain/specification/filters';
+import { BuildAsked } from '~/infrastructure/build/endpoints/build-asked';
 
+import { asAList } from './as-a-list';
 import {
   CategoryAsked,
   ChosenCurrencyAsked,
   theCategoryAsked,
 } from './category-and-currency';
-
-// A parameter given once is read as a list of one, and one repeated as the
-// list of its values, as the address's query gives them.
-function asAList({ value }: TransformFnParams): unknown {
-  return typeof value === 'string' ? [value] : value;
-}
+import { isOn, SwitchAsked } from './switch-asked';
 
 // A whole number in Western digits, as a Shopper app sends one, short enough
 // to be read exactly.
@@ -26,8 +23,12 @@ const wholeNumber = /^\d{1,15}$/;
 
 // What a Category's list of Visible Parts asks for, from the address's query:
 // the Category, the chosen currency, the search, the manufacturers, a
-// parameter for each filter of the Category, the price range, and the page. The Category and
-// the currency are required, so that no page can forget to send them.
+// parameter for each filter of the Category, the price range, the picker's
+// conditions, and the page. The Category and the currency are required, so
+// that no page can forget to send them. The picker's conditions are in stock
+// only, the Build so far, in `part` as reading a Build takes it, and the
+// switch that keeps the Parts that are not Compatible with it; a Category
+// page sends none of them.
 export class ListVisiblePartsRequest extends PagingRequest {
   @CategoryAsked('The Category whose Visible Parts are listed.')
   readonly category!: string;
@@ -79,6 +80,21 @@ export class ListVisiblePartsRequest extends PagingRequest {
   @Matches(wholeNumber)
   readonly highest?: string;
 
+  @SwitchAsked(
+    'In stock only, as the picker lists a Category (BLD-2): on, only the Visible Parts with at least one in-stock Visible Offer are listed, in the same order.',
+  )
+  readonly inStockOnly?: string;
+
+  @BuildAsked(
+    'The Build so far, as the picker lists a Category for it (BLD-3), taken as reading a Build takes it. Given, each Part answers whether it is Compatible with it. Left out, no Part answers it, as on a Category page.',
+  )
+  readonly part?: string[];
+
+  @SwitchAsked(
+    "The picker's switch (BLD-3): on, the Parts that are not Compatible with the Build are kept, in their place in the order, each answering that it is not. Off, they are left out. It changes nothing without a Build.",
+  )
+  readonly keepNotCompatible?: string;
+
   toQueryInput(): ListVisiblePartsQueryInput {
     // Each filter's parameter, as declared below, with the texts given it.
     const given = this as unknown as Record<string, string[] | undefined>;
@@ -96,6 +112,9 @@ export class ListVisiblePartsRequest extends PagingRequest {
       filters,
       this.lowest === undefined ? undefined : Number(this.lowest),
       this.highest === undefined ? undefined : Number(this.highest),
+      isOn(this.inStockOnly),
+      this.part ?? [],
+      isOn(this.keepNotCompatible),
       this.toDomain(),
     );
   }

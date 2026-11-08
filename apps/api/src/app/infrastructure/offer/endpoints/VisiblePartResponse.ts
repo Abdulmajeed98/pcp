@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { VisiblePart } from '~/domain/offer/VisiblePart';
 import { PartSummaryResponse } from '~/infrastructure/part/endpoints/PartSummaryResponse';
@@ -28,11 +28,18 @@ export class VisiblePartResponse extends PartSummaryResponse {
   })
   readonly inStock: boolean;
 
+  @ApiPropertyOptional({
+    description:
+      'Whether the Part is Compatible with the Build the list was asked for: adding it would cause no Compatibility Problem, a Compatibility Warning and an unchecked rule leaving it Compatible (CMP-4). Left out when the list was asked for without a Build.',
+  })
+  readonly compatible?: boolean;
+
   private constructor(visible: VisiblePart) {
     super(visible.getPart());
     this.lowestPrice = ShownPriceResponse.of(visible.getLowestPrice());
     this.vendorCount = visible.getVendorCount();
     this.inStock = visible.isInStock();
+    this.compatible = visible.isCompatible();
   }
 
   static ofVisible(visible: VisiblePart): VisiblePartResponse {

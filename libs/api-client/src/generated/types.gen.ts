@@ -1012,6 +1012,10 @@ export type VisiblePartResponse = {
      * Whether any Visible Offer for the Part is in stock. False when every Vendor has it out of stock.
      */
     inStock: boolean;
+    /**
+     * Whether the Part is Compatible with the Build the list was asked for: adding it would cause no Compatibility Problem, a Compatibility Warning and an unchecked rule leaving it Compatible (CMP-4). Left out when the list was asked for without a Build.
+     */
+    compatible?: boolean;
 };
 
 export type VisiblePartPageResponse = {
@@ -1238,31 +1242,6 @@ export type PlatformFiguresResponse = {
     daysAnOfferStaysCurrent: number;
 };
 
-export type CurrentPlatformRateResponse = {
-    /**
-     * The Platform Rate, in whole dinars per dollar.
-     */
-    iqdPerUsd: number;
-    /**
-     * When the Admin set it.
-     */
-    setAt: string;
-};
-
-export type PlatformRateResponse = {
-    /**
-     * The current Platform Rate, the newest setting, or null until the Admin sets the first.
-     */
-    current: CurrentPlatformRateResponse | null;
-};
-
-export type SetPlatformRateRequest = {
-    /**
-     * The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.
-     */
-    iqdPerUsd: number;
-};
-
 export type BuildLowestPriceResponse = {
     /**
      * The Lowest Price of one of the Part: the lowest Shown Price among its in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is.
@@ -1445,6 +1424,31 @@ export type BuildResponse = {
      * The second price view (BLD-8): each active Vendor with at least one of the Build's Parts in stock among its Visible Offers, with its total, the Parts it has and the Parts it lacks. They come by how many Parts they lack, fewest first, then by their total, lowest first, with none after any, then by name, then by identifier. An Unstocked Part is in no Vendor's list.
      */
     vendors: Array<BuildVendorResponse>;
+};
+
+export type CurrentPlatformRateResponse = {
+    /**
+     * The Platform Rate, in whole dinars per dollar.
+     */
+    iqdPerUsd: number;
+    /**
+     * When the Admin set it.
+     */
+    setAt: string;
+};
+
+export type PlatformRateResponse = {
+    /**
+     * The current Platform Rate, the newest setting, or null until the Admin sets the first.
+     */
+    current: CurrentPlatformRateResponse | null;
+};
+
+export type SetPlatformRateRequest = {
+    /**
+     * The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.
+     */
+    iqdPerUsd: number;
 };
 
 export type GetCallerData = {
@@ -2217,6 +2221,18 @@ export type ListVisiblePartsData = {
          */
         highest?: number;
         /**
+         * In stock only, as the picker lists a Category (BLD-2): on, only the Visible Parts with at least one in-stock Visible Offer are listed, in the same order.
+         */
+        inStockOnly?: boolean;
+        /**
+         * The Build so far, as the picker lists a Category for it (BLD-3), taken as reading a Build takes it. Given, each Part answers whether it is Compatible with it. Left out, no Part answers it, as on a Category page. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.
+         */
+        part?: Array<string>;
+        /**
+         * The picker's switch (BLD-3): on, the Parts that are not Compatible with the Build are kept, in their place in the order, each answering that it is not. Off, they are left out. It changes nothing without a Build.
+         */
+        keepNotCompatible?: boolean;
+        /**
          * A filter: for CPUs, the Socket at `socket`; for motherboards, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         socket?: Array<string>;
@@ -2303,6 +2319,10 @@ export type ReadVisiblePartsFiltersData = {
          * The chosen currency, which the range of Lowest Prices is in.
          */
         currency: Currency;
+        /**
+         * In stock only, as the picker asks for a Category's filters (BLD-2): on, every value is read from the Visible Parts with at least one in-stock Visible Offer alone.
+         */
+        inStockOnly?: boolean;
     };
     url: '/v1/visible-parts/filters';
 };
@@ -2405,6 +2425,37 @@ export type ReadPlatformFiguresResponses = {
 
 export type ReadPlatformFiguresResponse = ReadPlatformFiguresResponses[keyof ReadPlatformFiguresResponses];
 
+export type ReadBuildData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.
+         */
+        currency: Currency;
+        /**
+         * The Build that is read. Left out, the Build is empty. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.
+         */
+        part?: Array<string>;
+    };
+    url: '/v1/build';
+};
+
+export type ReadBuildErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadBuildError = ReadBuildErrors[keyof ReadBuildErrors];
+
+export type ReadBuildResponses = {
+    200: BuildResponse;
+};
+
+export type ReadBuildResponse = ReadBuildResponses[keyof ReadBuildResponses];
+
 export type ReadPlatformRateData = {
     body?: never;
     path?: never;
@@ -2448,34 +2499,3 @@ export type SetPlatformRateResponses = {
 };
 
 export type SetPlatformRateResponse = SetPlatformRateResponses[keyof SetPlatformRateResponses];
-
-export type ReadBuildData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.
-         */
-        currency: Currency;
-        /**
-         * The Build that is read. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. Left out, the Build is empty. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.
-         */
-        part?: Array<string>;
-    };
-    url: '/v1/build';
-};
-
-export type ReadBuildErrors = {
-    /**
-     * The request was refused, or it failed.
-     */
-    default: ErrorResponse;
-};
-
-export type ReadBuildError = ReadBuildErrors[keyof ReadBuildErrors];
-
-export type ReadBuildResponses = {
-    200: BuildResponse;
-};
-
-export type ReadBuildResponse = ReadBuildResponses[keyof ReadBuildResponses];
