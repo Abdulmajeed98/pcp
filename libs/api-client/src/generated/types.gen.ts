@@ -1263,6 +1263,21 @@ export type SetPlatformRateRequest = {
     iqdPerUsd: number;
 };
 
+export type BuildLowestPriceResponse = {
+    /**
+     * The Lowest Price of one of the Part: the lowest Shown Price among its in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is.
+     */
+    shownPrice: ShownPriceResponse;
+    /**
+     * The Lowest Price times the Part's quantity, as the total across Vendors adds it up: the same as the Lowest Price for a Part of a Category a Build holds one of.
+     */
+    timesQuantity: ShownPriceResponse;
+    /**
+     * The Vendor whose Offer the Lowest Price comes from: of equal prices, the one whose Offer the Part page lists first.
+     */
+    vendor: VisibleOfferVendorResponse;
+};
+
 export type BuildPartResponse = {
     /**
      * The Part's identifier on the platform.
@@ -1296,6 +1311,18 @@ export type BuildPartResponse = {
      * Whether it is a Visible Part, a Part with at least one Visible Offer, which a Part page shows. A Part that is not stays in the Build.
      */
     visible: boolean;
+    /**
+     * Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price and is left out of every total.
+     */
+    unstocked: boolean;
+    /**
+     * Whether some Vendor has it in stock but its price could not be shown: the first of its in-stock Visible Offers has no Shown Price, which happens only before the first Platform Rate, with an Offer quoted only in the other currency. It then has no Lowest Price, and is left out of the total across Vendors.
+     */
+    priceNotShown: boolean;
+    /**
+     * Its Lowest Price in the chosen currency, times its quantity, with the Vendor it comes from, which the total across Vendors adds up (BLD-7). Null for an Unstocked Part, and for a Part whose price could not be shown.
+     */
+    lowestPrice: BuildLowestPriceResponse | null;
 };
 
 export type BuildResponse = {
@@ -1315,6 +1342,10 @@ export type BuildResponse = {
      * The values of the Build's CPU that the rule for a Complete Build reads and the CPU does not hold: `integratedGraphics`, its Integrated graphics, and `includesCooler`, its Cooler included. A CPU that does not hold one counts as not providing it, so the GPU or the CPU cooler stays needed. None without a CPU.
      */
     cpuValuesNotKnown: Array<'integratedGraphics' | 'includesCooler'>;
+    /**
+     * The first price view's total, the Build's total across Vendors (BLD-7, PRC-5): each Part's Lowest Price times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. It leaves out each Part with no Lowest Price, and is null when no Part has one.
+     */
+    totalAcrossVendors: ShownPriceResponse | null;
 };
 
 export type GetCallerData = {
@@ -2324,7 +2355,7 @@ export type ReadBuildData = {
     path?: never;
     query: {
         /**
-         * The chosen currency, required as every public read of prices requires it, so that no page can forget to send it.
+         * The chosen currency, which each Part's Lowest Price and the total across Vendors are in.
          */
         currency: Currency;
         /**

@@ -208,6 +208,7 @@ describe('a Build', () => {
         complete: false,
         stillNeeded: everyCategory,
         cpuValuesNotKnown: [],
+        totalAcrossVendors: null,
       });
     });
   });
@@ -234,6 +235,9 @@ describe('a Build', () => {
           photoPath: ryzen.photoPath,
           quantity: null,
           visible: false,
+          unstocked: true,
+          priceNotShown: false,
+          lowestPrice: null,
         },
       ]);
       expect(ryzen.photoPath).toMatch(/^\/v1\/photos\//);

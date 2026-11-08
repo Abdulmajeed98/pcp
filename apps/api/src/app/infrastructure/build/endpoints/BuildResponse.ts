@@ -2,12 +2,14 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { Build } from '~/domain/build/Build';
 import { Completeness, CpuValue, cpuValues } from '~/domain/build/complete-build';
+import { PriceViews } from '~/domain/build/price-views';
 import { Category } from '~/domain/part/Category';
+import { ShownPriceResponse } from '~/infrastructure/offer/endpoints/VisibleOfferResponse';
 
 import { BuildPartResponse } from './BuildPartResponse';
 
-// A Build as it is read: its Parts as the catalog holds them, and whether it
-// is a Complete Build.
+// A Build as it is read: its Parts as the catalog holds them, whether it is a
+// Complete Build, and its price views in the chosen currency.
 export class BuildResponse {
   @ApiProperty({
     description:
@@ -40,14 +42,27 @@ export class BuildResponse {
   })
   readonly cpuValuesNotKnown: CpuValue[];
 
-  private constructor(build: Build, completeness: Completeness) {
+  @ApiProperty({
+    description:
+      "The first price view's total, the Build's total across Vendors (BLD-7, PRC-5): each Part's Lowest Price times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. It leaves out each Part with no Lowest Price, and is null when no Part has one.",
+    type: ShownPriceResponse,
+    nullable: true,
+  })
+  readonly totalAcrossVendors: ShownPriceResponse | null;
+
+  private constructor(build: Build, completeness: Completeness, priceViews: PriceViews) {
     this.parts = build.getParts().map(BuildPartResponse.ofBuildPart);
     this.complete = completeness.isComplete();
     this.stillNeeded = completeness.getStillNeeded().map((category) => category.getKey());
     this.cpuValuesNotKnown = [...completeness.getCpuValuesNotKnown()];
+    this.totalAcrossVendors = ShownPriceResponse.of(priceViews.getTotalAcrossVendors());
   }
 
-  static of(build: Build, completeness: Completeness): BuildResponse {
-    return new BuildResponse(build, completeness);
+  static of(
+    build: Build,
+    completeness: Completeness,
+    priceViews: PriceViews,
+  ): BuildResponse {
+    return new BuildResponse(build, completeness, priceViews);
   }
 }

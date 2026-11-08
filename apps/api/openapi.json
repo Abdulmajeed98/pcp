@@ -1878,7 +1878,7 @@
             "name": "currency",
             "required": true,
             "in": "query",
-            "description": "The chosen currency, required as every public read of prices requires it, so that no page can forget to send it.",
+            "description": "The chosen currency, which each Part's Lowest Price and the total across Vendors are in.",
             "schema": {
               "$ref": "#/components/schemas/Currency"
             }
@@ -1923,7 +1923,7 @@
           }
         },
         "security": [],
-        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs",
+        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; and its total across Vendors, every price read at one Platform Rate",
         "tags": ["Build"]
       }
     }
@@ -4193,6 +4193,36 @@
         },
         "required": ["iqdPerUsd"]
       },
+      "BuildLowestPriceResponse": {
+        "type": "object",
+        "properties": {
+          "shownPrice": {
+            "description": "The Lowest Price of one of the Part: the lowest Shown Price among its in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "timesQuantity": {
+            "description": "The Lowest Price times the Part's quantity, as the total across Vendors adds it up: the same as the Lowest Price for a Part of a Category a Build holds one of.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "vendor": {
+            "description": "The Vendor whose Offer the Lowest Price comes from: of equal prices, the one whose Offer the Part page lists first.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisibleOfferVendorResponse"
+              }
+            ]
+          }
+        },
+        "required": ["shownPrice", "timesQuantity", "vendor"]
+      },
       "BuildPartResponse": {
         "type": "object",
         "properties": {
@@ -4249,6 +4279,24 @@
           "visible": {
             "type": "boolean",
             "description": "Whether it is a Visible Part, a Part with at least one Visible Offer, which a Part page shows. A Part that is not stays in the Build."
+          },
+          "unstocked": {
+            "type": "boolean",
+            "description": "Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price and is left out of every total."
+          },
+          "priceNotShown": {
+            "type": "boolean",
+            "description": "Whether some Vendor has it in stock but its price could not be shown: the first of its in-stock Visible Offers has no Shown Price, which happens only before the first Platform Rate, with an Offer quoted only in the other currency. It then has no Lowest Price, and is left out of the total across Vendors."
+          },
+          "lowestPrice": {
+            "description": "Its Lowest Price in the chosen currency, times its quantity, with the Vendor it comes from, which the total across Vendors adds up (BLD-7). Null for an Unstocked Part, and for a Part whose price could not be shown.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BuildLowestPriceResponse"
+              }
+            ]
           }
         },
         "required": [
@@ -4259,7 +4307,10 @@
           "partNumbers",
           "photoPath",
           "quantity",
-          "visible"
+          "visible",
+          "unstocked",
+          "priceNotShown",
+          "lowestPrice"
         ]
       },
       "BuildResponse": {
@@ -4302,9 +4353,25 @@
               "type": "string",
               "enum": ["integratedGraphics", "includesCooler"]
             }
+          },
+          "totalAcrossVendors": {
+            "description": "The first price view's total, the Build's total across Vendors (BLD-7, PRC-5): each Part's Lowest Price times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. It leaves out each Part with no Lowest Price, and is null when no Part has one.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
           }
         },
-        "required": ["parts", "complete", "stillNeeded", "cpuValuesNotKnown"]
+        "required": [
+          "parts",
+          "complete",
+          "stillNeeded",
+          "cpuValuesNotKnown",
+          "totalAcrossVendors"
+        ]
       }
     }
   },

@@ -335,6 +335,6 @@ export const setPlatformRate = <ThrowOnError extends boolean = false>(options: O
 });
 
 /**
- * A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs
+ * A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; and its total across Vendors, every price read at one Platform Rate
  */
 export const readBuild = <ThrowOnError extends boolean = false>(options: Options<ReadBuildData, ThrowOnError>): RequestResult<ReadBuildResponses, ReadBuildErrors, ThrowOnError> => (options.client ?? client).get<ReadBuildResponses, ReadBuildErrors, ThrowOnError>({ url: '/v1/build', ...options });

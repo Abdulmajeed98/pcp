@@ -18,7 +18,8 @@ import { inTheOrderOfAPartsOffers } from './visible-offers-order';
 // there are, which is how many Vendors offer it, since a Vendor has one Offer
 // for a Part at most; whether any is in stock; and its Lowest Price, the
 // Shown Price of the first in stock as a Part's page lists them, the lowest,
-// with whether it is converted. It describes the Part, and never decides
+// with whether it is converted and the identifier and name of the Vendor
+// whose Offer it is. It describes the Part, and never decides
 // whether the Part is read: a Category's list asks the rule for a Visible
 // Part, and a Build reads the Parts it names. It is written once, here, so
 // that a Category's list and a Build's Parts answer one Lowest Price.
@@ -46,6 +47,8 @@ export function whatTheirOffersSay(
         .mapWith(Number)
         .as('lowest_amount'),
       lowestConverted: firstInStock<boolean>(shownPrice.converted).as('lowest_converted'),
+      lowestVendorId: firstInStock<string>(sql`${vendor.id}`).as('lowest_vendor_id'),
+      lowestVendorName: firstInStock<string>(sql`${vendor.name}`).as('lowest_vendor_name'),
     })
     .from(offer)
     .innerJoin(vendor, eq(vendor.id, offer.vendorId))
