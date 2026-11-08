@@ -23,7 +23,8 @@ export function visibleOffer(now: Date): SQL | undefined {
 // the API's clock: a Part with at least one visible Offer, by
 // `visibleOffer(now)` (CAT-7). Every query of Parts for Shoppers asks it of
 // `part`, and no other: a Category's list, a Visible Part's own read, its
-// Category's filters and the picker (`browse` and `builder`).
+// Category's filters, a Build's Parts and the picker (`browse` and
+// `builder`).
 export function visiblePart(now: Date): SQL {
   return sql`exists (select 1 from ${offer} inner join ${vendor} on ${eq(vendor.id, offer.vendorId)} where ${and(eq(offer.partId, part.id), visibleOffer(now))})`;
 }
