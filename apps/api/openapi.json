@@ -1923,7 +1923,7 @@
           }
         },
         "security": [],
-        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part",
+        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs",
         "tags": ["Build"]
       }
     }
@@ -4271,9 +4271,40 @@
             "items": {
               "$ref": "#/components/schemas/BuildPartResponse"
             }
+          },
+          "complete": {
+            "type": "boolean",
+            "description": "Whether it is a Complete Build: a CPU, a motherboard, at least one RAM kit, at least one drive, a case and a PSU, with a GPU unless the CPU has integrated graphics and a CPU cooler unless the CPU includes one."
+          },
+          "stillNeeded": {
+            "type": "array",
+            "description": "The Categories it still needs, in the catalog's order: none for a Complete Build, and all eight for an empty one.",
+            "example": ["gpu", "psu"],
+            "items": {
+              "type": "string",
+              "enum": [
+                "cpu",
+                "cpuCooler",
+                "motherboard",
+                "ram",
+                "storage",
+                "gpu",
+                "case",
+                "psu"
+              ]
+            }
+          },
+          "cpuValuesNotKnown": {
+            "type": "array",
+            "description": "The values of the Build's CPU that the rule for a Complete Build reads and the CPU does not hold: `integratedGraphics`, its Integrated graphics, and `includesCooler`, its Cooler included. A CPU that does not hold one counts as not providing it, so the GPU or the CPU cooler stays needed. None without a CPU.",
+            "example": ["includesCooler"],
+            "items": {
+              "type": "string",
+              "enum": ["integratedGraphics", "includesCooler"]
+            }
           }
         },
-        "required": ["parts"]
+        "required": ["parts", "complete", "stillNeeded", "cpuValuesNotKnown"]
       }
     }
   },

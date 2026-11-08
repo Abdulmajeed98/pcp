@@ -13,12 +13,15 @@ import {
   createTestAppWithLogins,
   TestAppWithLogins,
 } from '../../../test-utils/create-test-app';
-import { emptyTheDatabase } from '../../../test-utils/database/test-database';
+import {
+  emptyTheDatabase,
+  keepSpecificationsAsTheyAre,
+} from '../../../test-utils/database/test-database';
 import { emptyTheRealm } from '../../../test-utils/keycloak/keycloak-administrator';
 
 // A Build, read by anyone without a token: the Parts it is given, by their
 // identifiers and, for a RAM kit or a drive, a quantity, each answered as the
-// catalog holds it (BLD-1).
+// catalog holds it, and whether the Build is a Complete Build (BLD-1, BLD-5).
 
 // A Part of a Build as the API answers it.
 type BuildPartBody = {
@@ -33,7 +36,12 @@ type BuildPartBody = {
 };
 
 // A Build as the API answers it.
-type BuildBody = { parts: BuildPartBody[] };
+type BuildBody = {
+  parts: BuildPartBody[];
+  complete: boolean;
+  stillNeeded: string[];
+  cpuValuesNotKnown: string[];
+};
 
 // A Part as the API answers its creation, as far as these tests read it.
 type PartBody = { id: string; photoPath: string | null };
@@ -56,6 +64,18 @@ function aPhoto(): Promise<Buffer> {
     .png()
     .toBuffer();
 }
+
+// The eight Categories in the catalog's order, as the API names them.
+const everyCategory = [
+  'cpu',
+  'cpuCooler',
+  'motherboard',
+  'ram',
+  'storage',
+  'gpu',
+  'case',
+  'psu',
+];
 
 describe('a Build', () => {
   let testApp: TestAppWithLogins;
@@ -182,8 +202,13 @@ describe('a Build', () => {
   }
 
   describe('an empty Build', () => {
-    it('answers no Part', async () => {
-      expect(await theBuild([])).toEqual({ parts: [] });
+    it("answers no Part, is not complete, and needs every Category, in the catalog's order", async () => {
+      expect(await theBuild([])).toEqual({
+        parts: [],
+        complete: false,
+        stillNeeded: everyCategory,
+        cpuValuesNotKnown: [],
+      });
     });
   });
 
@@ -322,6 +347,216 @@ describe('a Build', () => {
 
       await admin('reactivate', shop.id);
       expect(await visibilityIn([ryzen.id])).toEqual({ [ryzen.id]: true });
+    });
+  });
+
+  describe('whether it is a Complete Build', () => {
+    // A CPU that has no integrated graphics and includes no cooler, as
+    // OpenDB writes them.
+    const neitherGraphicsNorCooler = {
+      specifications: { integratedGraphics: { model: 'None' }, includesCooler: false },
+    };
+
+    // A Part of each Category, by its Category's key, a CPU with the
+    // specifications given, and the `part` value that names each.
+    async function aPartOfEach(
+      cpuSpecifications: Record<string, unknown> = neitherGraphicsNorCooler,
+    ): Promise<Record<string, string>> {
+      const values: Record<string, string> = {};
+      for (const category of everyCategory) {
+        const made = await aPart({
+          category,
+          name: `Made-up ${category}`,
+          ...(category === 'cpu' ? { specifications: cpuSpecifications } : {}),
+        });
+        values[category] = ['ram', 'storage'].includes(category) ? `${made.id}:1` : made.id;
+      }
+      return values;
+    }
+
+    // The Build's completeness: whether it is complete, the Categories it
+    // still needs, and the CPU's values not known.
+    async function completenessOf(
+      values: readonly string[],
+    ): Promise<Omit<BuildBody, 'parts'>> {
+      const { complete, stillNeeded, cpuValuesNotKnown } = await theBuild(values);
+      return { complete, stillNeeded, cpuValuesNotKnown };
+    }
+
+    it('is complete with a Part of every Category', async () => {
+      const each = await aPartOfEach();
+
+      expect(await completenessOf(Object.values(each))).toEqual({
+        complete: true,
+        stillNeeded: [],
+        cpuValuesNotKnown: [],
+      });
+    });
+
+    it('lists as still needed each of the CPU, the motherboard, the RAM, the storage, the case and the PSU when it is missing', async () => {
+      const each = await aPartOfEach();
+
+      for (const missing of ['cpu', 'motherboard', 'ram', 'storage', 'case', 'psu']) {
+        const others = everyCategory.filter((category) => category !== missing);
+
+        expect(await completenessOf(others.map((category) => each[category]))).toEqual({
+          complete: false,
+          stillNeeded: [missing],
+          cpuValuesNotKnown: [],
+        });
+      }
+    });
+
+    // The `part` values of a Part of each Category but those given.
+    function without(each: Record<string, string>, ...left: readonly string[]): string[] {
+      return everyCategory
+        .filter((category) => !left.includes(category))
+        .map((category) => each[category]);
+    }
+
+    describe('a CPU with integrated graphics', () => {
+      it('makes the GPU unneeded', async () => {
+        const each = await aPartOfEach({
+          specifications: {
+            integratedGraphics: { model: 'Radeon Graphics' },
+            includesCooler: false,
+          },
+        });
+
+        expect(await completenessOf(without(each, 'gpu'))).toEqual({
+          complete: true,
+          stillNeeded: [],
+          cpuValuesNotKnown: [],
+        });
+      });
+
+      it('written "None" needs one', async () => {
+        const each = await aPartOfEach();
+
+        expect(await completenessOf(without(each, 'gpu'))).toEqual({
+          complete: false,
+          stillNeeded: ['gpu'],
+          cpuValuesNotKnown: [],
+        });
+      });
+
+      it('not held needs one, and the answer says the value is not known, as it does beside a GPU', async () => {
+        const each = await aPartOfEach({ specifications: { includesCooler: false } });
+
+        expect(await completenessOf(without(each, 'gpu'))).toEqual({
+          complete: false,
+          stillNeeded: ['gpu'],
+          cpuValuesNotKnown: ['integratedGraphics'],
+        });
+        expect(await completenessOf(without(each))).toEqual({
+          complete: true,
+          stillNeeded: [],
+          cpuValuesNotKnown: ['integratedGraphics'],
+        });
+      });
+
+      it('stored as an empty text counts as not held', async () => {
+        const each = await aPartOfEach();
+        const cpuId = each.cpu;
+        await keepSpecificationsAsTheyAre(cpuId, {
+          specifications: { integratedGraphics: { model: '' }, includesCooler: false },
+        });
+
+        expect(await completenessOf(without(each, 'gpu'))).toEqual({
+          complete: false,
+          stillNeeded: ['gpu'],
+          cpuValuesNotKnown: ['integratedGraphics'],
+        });
+      });
+    });
+
+    describe('a CPU that includes a cooler', () => {
+      it('makes the CPU cooler unneeded', async () => {
+        const each = await aPartOfEach({
+          specifications: { integratedGraphics: { model: 'None' }, includesCooler: true },
+        });
+
+        expect(await completenessOf(without(each, 'cpuCooler'))).toEqual({
+          complete: true,
+          stillNeeded: [],
+          cpuValuesNotKnown: [],
+        });
+      });
+
+      it('written no needs one', async () => {
+        const each = await aPartOfEach();
+
+        expect(await completenessOf(without(each, 'cpuCooler'))).toEqual({
+          complete: false,
+          stillNeeded: ['cpuCooler'],
+          cpuValuesNotKnown: [],
+        });
+      });
+
+      it('not held needs one, and the answer says the value is not known, as it does beside a CPU cooler', async () => {
+        const each = await aPartOfEach({
+          specifications: { integratedGraphics: { model: 'None' } },
+        });
+
+        expect(await completenessOf(without(each, 'cpuCooler'))).toEqual({
+          complete: false,
+          stillNeeded: ['cpuCooler'],
+          cpuValuesNotKnown: ['includesCooler'],
+        });
+        expect(await completenessOf(without(each))).toEqual({
+          complete: true,
+          stillNeeded: [],
+          cpuValuesNotKnown: ['includesCooler'],
+        });
+      });
+    });
+
+    it('needs both a GPU and a CPU cooler for a CPU that holds neither value, saying both are not known', async () => {
+      const each = await aPartOfEach({});
+
+      expect(await completenessOf(without(each, 'cpuCooler', 'gpu'))).toEqual({
+        complete: false,
+        stillNeeded: ['cpuCooler', 'gpu'],
+        cpuValuesNotKnown: ['integratedGraphics', 'includesCooler'],
+      });
+    });
+
+    it('needs a GPU and a CPU cooler without a CPU, whatever else it holds, and says no value is not known', async () => {
+      const each = await aPartOfEach();
+
+      expect(await completenessOf(without(each, 'cpu', 'cpuCooler', 'gpu'))).toEqual({
+        complete: false,
+        stillNeeded: ['cpu', 'cpuCooler', 'gpu'],
+        cpuValuesNotKnown: [],
+      });
+    });
+
+    it('counts two RAM kits and three drives as RAM and storage once each', async () => {
+      const each = await aPartOfEach();
+      const kits = [
+        each.ram,
+        `${(await aPart({ category: 'ram', name: 'Made-up kit 2' })).id}:2`,
+      ];
+      const drives = [
+        each.storage,
+        `${(await aPart({ category: 'storage', name: 'Made-up drive 2' })).id}:3`,
+        `${(await aPart({ category: 'storage', name: 'Made-up drive 3' })).id}:1`,
+      ];
+
+      expect(
+        await completenessOf([...without(each, 'ram', 'storage'), ...kits, ...drives]),
+      ).toEqual({ complete: true, stillNeeded: [], cpuValuesNotKnown: [] });
+      expect(
+        await completenessOf([
+          ...without(each, 'ram', 'storage', 'psu'),
+          ...kits,
+          ...drives,
+        ]),
+      ).toEqual({
+        complete: false,
+        stillNeeded: ['psu'],
+        cpuValuesNotKnown: [],
+      });
     });
   });
 

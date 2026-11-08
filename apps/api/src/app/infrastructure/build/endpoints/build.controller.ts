@@ -16,7 +16,7 @@ export class BuildController {
 
   @ApiOperation({
     summary:
-      'A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part',
+      'A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs',
     security: [],
   })
   @ApiOkResponse({ type: BuildResponse })
@@ -26,7 +26,7 @@ export class BuildController {
     const result = await this.readBuildQuery.execute(request.toQueryInput());
 
     return result.pipe(
-      Either.map((output) => BuildResponse.of(output.getBuild())),
+      Either.map((output) => BuildResponse.of(output.getBuild(), output.getCompleteness())),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }
