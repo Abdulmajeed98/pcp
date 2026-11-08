@@ -127,11 +127,11 @@ These come true for a Shopper when `builder` shows the library's outcomes.
 
 ### Each rule's reading of OpenDB's values
 
-The table gives what a rule needs in a Build to apply and how it reads OpenDB's values, where the MVP spec's table leaves room. Figures are the imported Parts at the pinned commit, read from the development database on 7 November 2026. A length is in millimetres, and equal fits.
+The table gives what a rule needs in a Build to apply and how it reads OpenDB's values, where the MVP spec's table leaves room. Figures are the imported Parts at the pinned commit, read from the development database on 7 November 2026, and on 8 November for the readings the owner decided that day. A length is in millimetres, and equal fits.
 
 | # | Applies when the Build has | How it reads the values |
 |---|---|---|
-| 1 | A CPU and a motherboard | Equal sockets. A board's "2 x \<socket\>" (20 boards) takes a CPU of that socket, and a board's "Integrated …" (13 boards) makes any CPU a Problem, as the rule notes say. |
+| 1 | A CPU and a motherboard | Equal sockets. A board's "2 x \<socket\>" (20 boards) takes a CPU of that socket, and a board's "Integrated …" (13 boards) makes any CPU a Problem, as the rule notes say. A board's "LGA 2011-3 Narrow" (7 boards) or "2 x LGA 2011-3 Narrow" (4 of the 20) takes a CPU of LGA 2011-3, as the owner decided on 8 November 2026: "Narrow" names the mounting of the board's cooler, and no CPU names it. |
 | 2 | A CPU and a CPU cooler | The CPU's socket among the cooler's sockets. |
 | 3 | A CPU and a RAM kit | Each kit's type among the CPU's memory types. |
 | 4 | A motherboard and a RAM kit | Each kit's type equal to the board's. |
@@ -141,12 +141,12 @@ The table gives what a rule needs in a Build to apply and how it reads OpenDB's 
 | 8 | A GPU and a motherboard | A Problem when no row of the board's PCIe slots has 16 lanes. An empty list of slots, which 13 boards hold, is a value: the board has none. A row with no lanes (6 rows) is unknown. |
 | 9 | A GPU and a case | The GPU's length against the case's longest GPU. |
 | 10 | A GPU and a case | The slots the GPU occupies, which may be a fraction such as 2.5 (586 GPUs), against the case's expansion slots: more than the case has is a Problem. |
-| 11 | A GPU and a PSU | As the rule notes say. The GPU's 6-pin and 8-pin sockets are counted together against the PSU's 6+2-pin connectors. A 12V-2x6 socket and a 12VHPWR socket both take the PSU's 12VHPWR cable, the only such connector OpenDB lists for a PSU. |
+| 11 | A GPU and a PSU | As the rule notes say. The GPU's 6-pin and 8-pin sockets are counted together against the PSU's 6+2-pin connectors. A 12V-2x6 socket and a 12VHPWR socket both take the PSU's 12VHPWR cable, the only such connector OpenDB lists for a PSU, and the GPU needs as many of those cables as the larger of its 12VHPWR and 12V-2x6 counts, as the owner decided on 8 November 2026: a card that lists its one socket under both kinds needs one (2 GPUs), and a card with two sockets of one kind needs two (2 GPUs). A PSU with fewer cables than the GPU needs is read as one with no such cable: the adapter's Warning when it has 6+2-pin connectors, and a Problem when it has none. |
 | 12 | A CPU and a PSU | The PSU's wattage below 1.3 times the estimated power draw, compared in whole numbers, ten times the wattage against thirteen times the draw, so a PSU of exactly 1.3 times passes. |
-| 13 | A motherboard and a SATA drive | A SATA drive is one whose interface is SATA 1.5, 3.0 or 6.0 Gb/s. An M.2 SATA, mSATA, SAS or U.2 drive is not. The board's ports are its SATA 6 Gb/s and 3 Gb/s ports together. |
-| 14 | A motherboard and an M.2 drive | An M.2 drive is one whose form factor is an M.2 size. A slot keyed M takes any M.2 drive (10,231 slots), a slot keyed B only an M.2 SATA drive (2), a slot keyed E none, since it is for a wireless card (602), and a slot with no key is unknown (12). A slot's sizes are not compared: no rule reads them. |
-| 15 | A case and a 3.5-inch or 2.5-inch drive | A drive by its form factor, whatever its interface. A 2.5-inch drive takes a free 3.5-inch bay, and a case that gives no internal bay at all (32 cases) brings a Warning for 2.5-inch drives, as the rule notes say. |
-| 16 | A PSU and a SATA drive | SATA drives as for rule 13, against the PSU's SATA power connectors. An M.2 drive needs none. |
+| 13 | A motherboard and a drive | The SATA drives against the board's ports, so a Build with no SATA drive passes whatever the ports. A SATA drive is one whose interface is SATA 1.5, 3.0 or 6.0 Gb/s and whose form factor is no M.2 size: a drive of an M.2 size and such an interface is an M.2 SATA drive (3 drives), as one whose interface is M.2 SATA is, as the owner decided on 8 November 2026. An mSATA, SAS or U.2 drive is no SATA drive either, and a drive of a SATA interface whose form factor is missing may be an M.2 SATA drive. The board's ports are its SATA 6 Gb/s and 3 Gb/s ports together. |
+| 14 | A motherboard and a drive | The M.2 drives against the board's M.2 slots, so a Build with no M.2 drive passes whatever the slots. An M.2 drive is one whose form factor is an M.2 size, and an M.2 SATA drive one whose interface is M.2 SATA or SATA 1.5, 3.0 or 6.0 Gb/s, as the owner decided on 8 November 2026. A slot keyed M takes any M.2 drive (10,231 slots), a slot keyed B only an M.2 SATA drive (2), a slot keyed E none, since it is for a wireless card (602), and a slot with no key is unknown (12). An empty list of slots is a board with none, but the import leaves it out as not known on a board of a socket of 2017 or later (36 boards), as the owner decided the same day. A slot's sizes are not compared: no rule reads them. |
+| 15 | A case and a drive | The 3.5-inch and 2.5-inch drives against the case's bays, so a Build with neither passes whatever the bays. A drive by its form factor, whatever its interface. A 2.5-inch drive takes a free 3.5-inch bay, and a case that gives no internal bay at all (32 cases) brings a Warning for 2.5-inch drives, as the rule notes say. |
+| 16 | A PSU and a drive | SATA drives as for rule 13, against the PSU's SATA power connectors, so a Build with no SATA drive passes whatever the connectors. An M.2 drive needs none, an M.2 SATA drive among them. |
 | 17 | A CPU cooler and a case | An air cooler, one whose "Liquid cooled" is no, against the case's tallest cooler. A liquid cooler passes. |
 | 18 | A PSU and a case | The PSU's form factor among the case's. No form factor stands in for another. |
 | 19 | A PSU and a case | The PSU's length against the case's longest PSU. |
@@ -154,6 +154,7 @@ The table gives what a rule needs in a Build to apply and how it reads OpenDB's 
 | 21 | A motherboard and a case | A Problem when the board has connectors on its back and the case does not take such boards. |
 
 - Rules 5, 6 and 13 to 16 count every kit and drive in the Build, multiplied by its quantity, as the MVP spec says.
+- Rules 13 to 16 involve every drive, so each applies to a Build with any drive and passes one with no drive of its kind, as the owner kept for rules 13, 15 and 16 on 8 November 2026, and as rule 14 does in the same way.
 - Rules 1, 2, 3, 4, 7 and 18 compare whole values from the fixed sets, so two spellings of one value cannot make a false Problem.
 
 ### The catalog takes what is needed from the rules
@@ -242,7 +243,7 @@ Each new line is seen to fail once, by a deliberate fault planted after a commit
   - No endpoint is added: `builder` decides where the rules run for the picker and for the Build page.
 - **Two Problems cannot arise from the catalog's data today.** The catalog reads a PSU's 0 EPS connectors and 0 PCIe 6+2-pin connectors as "not known" (the owner's decision 6 of 15 October 2026), so a PSU with none is stored without them, and rule 20's "no EPS connector at all" and rule 11's "no such cable and no 6+2-pin connector" come out unchecked instead. The library still judges them as the rules say when it is given a 0, and its tests prove both Problems so.
 - **Coverage.** Rules 17 to 21 stay unchecked for most Builds until the Admin fills in the cases' and PSUs' specifications, as the MVP spec's coverage column says. Missing specifications lists only Parts that have an Offer, so the Admin's work follows what Vendors stock.
-- **No ADR.** Undoing any decision here loses no data: the sets and the needed specifications are code, and a GPU's zeros come back from OpenDB at the pinned commit.
+- **No ADR.** Undoing any decision here loses no data: the sets and the needed specifications are code, and a GPU's zeros and a motherboard's empty list of M.2 slots come back from OpenDB at the pinned commit. The owner kept it so on 8 November 2026, beside ADR-0005's amendment of that day.
 - **Success criteria.** This module makes criterion 11 true. Criterion 5's Compatibility half, incompatible Parts hidden from the picker and a Compatibility Problem listed on the Build page, is `builder`'s.
 - **Open checks.** The `offers` module's checks in the owner's browser and `browse`'s, listed in their last tickets, are still open and do not hold this module back. This module adds no check by hand and none on a phone. It adds no text, so nothing joins the review that LANG-7 asks for.
 - **Next steps.** `builder` follows. It hands the rules each Part through the catalog's rule for what is missing, asks whether a Part is compatible for every Part its picker might show, reusing the Category page's endpoint, words each outcome in three languages, and draws the Build page with the Shown Price component.
