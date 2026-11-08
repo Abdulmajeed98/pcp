@@ -159,6 +159,7 @@ export async function CategoryPlace({
       {isKitOrDrive(category) && parts.length > 0 && parts.length < mostKitsOrDrives && (
         <a
           href={picker}
+          data-controls=""
           className={cn(underlinedAction, 'justify-self-start', fromTheWords)}
         >
           {t('addAnother', { category })}
@@ -166,7 +167,7 @@ export async function CategoryPlace({
       )}
 
       {refused?.reason === 'mostKitsOrDrives' && refused.category === category && (
-        <p data-testid="refused" className={cn('text-base', fromTheWords)}>
+        <p data-testid="refused" data-controls="" className={cn('text-base', fromTheWords)}>
           {t('refused.mostKitsOrDrives', {
             category,
             most: formatNumber(mostKitsOrDrives),

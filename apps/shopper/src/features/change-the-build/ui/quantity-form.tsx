@@ -79,14 +79,14 @@ export function QuantityForm({
     'pressable no-callout grid size-control shrink-0 cursor-pointer place-items-center bg-secondary text-xl font-semibold text-secondary-foreground hover:bg-secondary-pressed active:bg-secondary-pressed disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-secondary';
 
   return (
-    <div className="grid min-w-0 gap-1">
+    <div className="grid max-w-full min-w-0 grid-cols-[minmax(0,1fr)] gap-1">
       <form
         action={action}
         method="post"
         aria-label={words.label}
         data-quantity={part}
         data-testid="quantity"
-        className="flex items-stretch"
+        className="flex max-w-full items-stretch"
         onSubmit={send}
       >
         <input type="hidden" name="part" value={part} />
@@ -118,7 +118,7 @@ export function QuantityForm({
           aria-invalid={problem === undefined ? undefined : true}
           aria-describedby={problem === undefined ? undefined : said}
           data-testid="quantity-figure"
-          className="figures h-control w-14 min-w-0 appearance-none rounded-none border-0 border-b-[3px] border-input bg-background text-center text-base font-semibold text-foreground"
+          className="figures h-control w-14 min-w-[1.75em] appearance-none rounded-none border-0 border-b-[3px] border-input bg-background text-center text-base font-semibold text-foreground"
         />
         <button
           type="submit"

@@ -54,7 +54,7 @@ export function EmptyTheBuild({
           <button
             type="submit"
             data-testid="empty-confirm"
-            className={buttonVariants({ kind: 'ink' })}
+            className={buttonVariants({ kind: 'ink', className: 'max-w-full' })}
           >
             {words.confirm}
           </button>
@@ -62,7 +62,7 @@ export function EmptyTheBuild({
             href={buildAddress}
             data-testid="keep-them"
             onClick={keep}
-            className={buttonVariants({ kind: 'board' })}
+            className={buttonVariants({ kind: 'board', className: 'max-w-full' })}
           >
             {words.keep}
           </a>
