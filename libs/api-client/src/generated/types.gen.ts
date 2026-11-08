@@ -1263,6 +1263,21 @@ export type SetPlatformRateRequest = {
     iqdPerUsd: number;
 };
 
+export type BuildLowestPriceResponse = {
+    /**
+     * The Lowest Price of one of the Part: the lowest Shown Price among its in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is.
+     */
+    shownPrice: ShownPriceResponse;
+    /**
+     * The Lowest Price times the Part's quantity, as the total across Vendors adds it up: the same as the Lowest Price for a Part of a Category a Build holds one of.
+     */
+    timesQuantity: ShownPriceResponse;
+    /**
+     * The Vendor whose Offer the Lowest Price comes from: of equal prices, the one whose Offer the Part page lists first.
+     */
+    vendor: VisibleOfferVendorResponse;
+};
+
 export type BuildPartResponse = {
     /**
      * The Part's identifier on the platform.
@@ -1296,6 +1311,18 @@ export type BuildPartResponse = {
      * Whether it is a Visible Part, a Part with at least one Visible Offer, which a Part page shows. A Part that is not stays in the Build.
      */
     visible: boolean;
+    /**
+     * Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price, is left out of every total and is in no Vendor's list.
+     */
+    unstocked: boolean;
+    /**
+     * Whether some Vendor has it in stock but its price could not be shown: the first of its in-stock Visible Offers has no Shown Price, which happens only before the first Platform Rate, with an Offer quoted only in the other currency. It then has no Lowest Price, and is left out of the total across Vendors.
+     */
+    priceNotShown: boolean;
+    /**
+     * Its Lowest Price in the chosen currency, times its quantity, with the Vendor it comes from, which the total across Vendors adds up (BLD-7). Null for an Unstocked Part, and for a Part whose price could not be shown.
+     */
+    lowestPrice: BuildLowestPriceResponse | null;
 };
 
 export type BuildMissingSpecificationResponse = {
@@ -1347,6 +1374,44 @@ export type EstimatedPowerDrawResponse = {
     missing: Array<BuildMissingSpecificationResponse>;
 };
 
+export type BuildPartInStockResponse = {
+    /**
+     * The Part's identifier, as the Build's Parts name it.
+     */
+    partId: string;
+    /**
+     * The Vendor's Shown Price for one of the Part, in the chosen currency. Null only when its Offer has no Quoted Price in the chosen currency and no Platform Rate has been set: the Part is then left out of the Vendor's total.
+     */
+    shownPrice: ShownPriceResponse | null;
+    /**
+     * The Shown Price times the Part's quantity, as the Vendor's total adds it up, or null with it.
+     */
+    timesQuantity: ShownPriceResponse | null;
+};
+
+export type BuildVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+    /**
+     * The Vendor's total: each Shown Price of the Parts it has in stock times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. Null when none of them has a Shown Price, which happens only when no Platform Rate has been set.
+     */
+    total: ShownPriceResponse | null;
+    /**
+     * The Build's Parts the Vendor has in stock among its Visible Offers, in the order of the Build's Parts.
+     */
+    partsInStock: Array<BuildPartInStockResponse>;
+    /**
+     * The identifiers of the Build's Parts that other Vendors have in stock and this one does not, in the order of the Build's Parts. An Unstocked Part is never among them.
+     */
+    partsLacked: Array<string>;
+};
+
 export type BuildResponse = {
     /**
      * The Build's Parts that the catalog holds, in the catalog's order of Categories, and the RAM kits and drives in the order the Build gives them. A Part the catalog no longer holds is left out.
@@ -1372,6 +1437,14 @@ export type BuildResponse = {
      * Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.
      */
     estimatedPowerDraw: EstimatedPowerDrawResponse | null;
+    /**
+     * The first price view's total, the Build's total across Vendors (BLD-7, PRC-5): each Part's Lowest Price times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. It leaves out each Part with no Lowest Price, and is null when no Part has one.
+     */
+    totalAcrossVendors: ShownPriceResponse | null;
+    /**
+     * The second price view (BLD-8): each active Vendor with at least one of the Build's Parts in stock among its Visible Offers, with its total, the Parts it has and the Parts it lacks. They come by how many Parts they lack, fewest first, then by their total, lowest first, with none after any, then by name, then by identifier. An Unstocked Part is in no Vendor's list.
+     */
+    vendors: Array<BuildVendorResponse>;
 };
 
 export type GetCallerData = {
@@ -2381,7 +2454,7 @@ export type ReadBuildData = {
     path?: never;
     query: {
         /**
-         * The chosen currency, required as every public read of prices requires it, so that no page can forget to send it.
+         * The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.
          */
         currency: Currency;
         /**

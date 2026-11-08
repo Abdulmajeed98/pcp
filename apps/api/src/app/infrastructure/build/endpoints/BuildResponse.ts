@@ -3,15 +3,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Build } from '~/domain/build/Build';
 import { Completeness, CpuValue, cpuValues } from '~/domain/build/complete-build';
 import { Judgment } from '~/domain/build/judgment';
+import { PriceViews } from '~/domain/build/price-views';
 import { Category } from '~/domain/part/Category';
+import { ShownPriceResponse } from '~/infrastructure/offer/endpoints/VisibleOfferResponse';
 
 import { BuildPartResponse } from './BuildPartResponse';
+import { BuildVendorResponse } from './BuildVendorResponse';
 import { EstimatedPowerDrawResponse } from './EstimatedPowerDrawResponse';
 import { RuleOutcomeResponse } from './RuleOutcomeResponse';
 
 // A Build as it is read: its Parts as the catalog holds them, whether it is a
-// Complete Build, what the Compatibility Rules find in it, and its Estimated
-// power draw.
+// Complete Build, what the Compatibility Rules find in it, its Estimated
+// power draw, and its price views in the chosen currency.
 export class BuildResponse {
   @ApiProperty({
     description:
@@ -59,7 +62,27 @@ export class BuildResponse {
   })
   readonly estimatedPowerDraw: EstimatedPowerDrawResponse | null;
 
-  private constructor(build: Build, completeness: Completeness, judgment: Judgment) {
+  @ApiProperty({
+    description:
+      "The first price view's total, the Build's total across Vendors (BLD-7, PRC-5): each Part's Lowest Price times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. It leaves out each Part with no Lowest Price, and is null when no Part has one.",
+    type: ShownPriceResponse,
+    nullable: true,
+  })
+  readonly totalAcrossVendors: ShownPriceResponse | null;
+
+  @ApiProperty({
+    description:
+      "The second price view (BLD-8): each active Vendor with at least one of the Build's Parts in stock among its Visible Offers, with its total, the Parts it has and the Parts it lacks. They come by how many Parts they lack, fewest first, then by their total, lowest first, with none after any, then by name, then by identifier. An Unstocked Part is in no Vendor's list.",
+    type: [BuildVendorResponse],
+  })
+  readonly vendors: BuildVendorResponse[];
+
+  private constructor(
+    build: Build,
+    completeness: Completeness,
+    judgment: Judgment,
+    priceViews: PriceViews,
+  ) {
     this.parts = build.getParts().map(BuildPartResponse.ofBuildPart);
     this.complete = completeness.isComplete();
     this.stillNeeded = completeness.getStillNeeded().map((category) => category.getKey());
@@ -68,9 +91,16 @@ export class BuildResponse {
     const draw = judgment.getEstimatedPowerDraw();
     this.estimatedPowerDraw =
       draw === undefined ? null : EstimatedPowerDrawResponse.of(draw);
+    this.totalAcrossVendors = ShownPriceResponse.of(priceViews.getTotalAcrossVendors());
+    this.vendors = priceViews.getVendors().map(BuildVendorResponse.of);
   }
 
-  static of(build: Build, completeness: Completeness, judgment: Judgment): BuildResponse {
-    return new BuildResponse(build, completeness, judgment);
+  static of(
+    build: Build,
+    completeness: Completeness,
+    judgment: Judgment,
+    priceViews: PriceViews,
+  ): BuildResponse {
+    return new BuildResponse(build, completeness, judgment, priceViews);
   }
 }

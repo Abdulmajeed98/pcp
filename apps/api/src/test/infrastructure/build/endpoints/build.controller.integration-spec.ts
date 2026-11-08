@@ -226,7 +226,7 @@ describe('a Build', () => {
   }
 
   describe('an empty Build', () => {
-    it("answers no Part, is not complete, needs every Category, in the catalog's order, and answers no rule's outcome and no Estimated power draw", async () => {
+    it("answers no Part, is not complete, needs every Category, in the catalog's order, and answers no rule's outcome, no Estimated power draw, no total and no Vendor", async () => {
       expect(await theBuild([])).toEqual({
         parts: [],
         complete: false,
@@ -234,6 +234,8 @@ describe('a Build', () => {
         cpuValuesNotKnown: [],
         outcomes: [],
         estimatedPowerDraw: null,
+        totalAcrossVendors: null,
+        vendors: [],
       });
     });
   });
@@ -260,6 +262,9 @@ describe('a Build', () => {
           photoPath: ryzen.photoPath,
           quantity: null,
           visible: false,
+          unstocked: true,
+          priceNotShown: false,
+          lowestPrice: null,
         },
       ]);
       expect(ryzen.photoPath).toMatch(/^\/v1\/photos\//);
