@@ -134,6 +134,10 @@ _Avoid_: Cart, basket, configuration, list
 A Build with a CPU, motherboard, RAM, storage, case and PSU, plus a GPU and a CPU cooler where the CPU does not provide them.
 _Avoid_: Finished build, valid build
 
+**Unstocked Part**:
+A Part in a Build that no Vendor has in stock among its Visible Offers, whether or not it is still a Visible Part.
+_Avoid_: Unavailable part, missing part, sold-out part
+
 **Compatibility Rule**:
 A check that Parts in the same Build fit and work together; it is unchecked when a specification it needs is missing.
 _Avoid_: Validation, constraint
