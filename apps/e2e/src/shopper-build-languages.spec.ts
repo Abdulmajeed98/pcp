@@ -355,6 +355,29 @@ test('the Build is kept after a reload and on another page in the same browser f
   }
 });
 
+// The Build depends on the Shopper's cookie, so its page asks search engines
+// not to index it, and its preview names no Part and no price, whatever the
+// Build holds.
+test("the Build page's head asks search engines not to index it, and its title names no Part", async ({
+  page,
+}) => {
+  await aBuildStillNeedingFour(page);
+  const answered = await theBuildAsAnswered(page.request, stillNeedingFour());
+
+  for (const language of kurdishAndEnglish) {
+    await page.goto(buildPageIn(language));
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+    const title = await page.title();
+    const description =
+      (await page.locator('meta[name="description"]').getAttribute('content')) ?? '';
+    for (const part of answered.parts) {
+      expect(title).not.toContain(part.name);
+      expect(description).not.toContain(part.name);
+    }
+    expect(`${title} ${description}`, 'no price').not.toMatch(/IQD|\$|[0-9]/);
+  }
+});
+
 test('a pick past the limits is refused and the page says why: a ninth different kit, and a seventeenth of one', async ({
   page,
 }) => {
