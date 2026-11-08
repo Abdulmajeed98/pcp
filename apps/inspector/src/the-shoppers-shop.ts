@@ -1,4 +1,5 @@
 import type {
+  BuildResponse,
   CategoryResponse,
   Currency,
   PartSummaryResponse,
@@ -35,11 +36,21 @@ import {
 
 export type Category = PartSummaryResponse['category'];
 
+// A value of a CPU that the rule for a Complete Build reads, by the name the
+// API's answer gives it: its Integrated graphics, `integratedGraphics`, and
+// its Cooler included, `includesCooler`.
+export type CpuValue = BuildResponse['cpuValuesNotKnown'][number];
+
 // A Part the catalog answered: what a list shows of it, and its
-// specifications document, as the Admin's read of a Part gives it.
+// specifications document, as the Admin's read of a Part gives it; its needed
+// specifications, as the Compatibility Rules are handed them, each one the
+// API answers as missing for it left out (`catalog-parts.ts`); and, for a
+// CPU, each value the rule for a Complete Build reads that it holds.
 export interface ReadPart {
   summary: PartSummaryResponse;
   specifications: Readonly<Record<string, unknown>>;
+  neededSpecifications: Readonly<Record<string, unknown>>;
+  cpuValues?: Readonly<Partial<Record<CpuValue, unknown>>>;
 }
 
 // What the command reads from the catalog when it starts: each Part the
