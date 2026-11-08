@@ -3,6 +3,18 @@ import { ramTypes, sockets } from '@pcp/compatibility';
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
+// The CPU's integrated graphics, "None" for a CPU without them, as OpenDB
+// writes it, and whether a cooler comes with it, which the rule for a
+// Complete Build reads.
+export const integratedGraphics = Specification.text(
+  'specifications.integratedGraphics.model',
+  'Integrated graphics',
+);
+export const coolerIncluded = Specification.yesNo(
+  'specifications.includesCooler',
+  'Cooler included',
+);
+
 // Every specification of a CPU that OpenDB defines, apart from retailer and
 // identity data. A 0 means "not known" in OpenDB wherever 0 cannot be true:
 // a clock speed, a core count other than efficiency cores, a cache size other
@@ -48,8 +60,7 @@ export const cpuSpecifications = new SpecificationList('cpu', [
     unit: 'W',
     zeroMeansMissing: true,
   }),
-  // "None" for a CPU without integrated graphics, as OpenDB writes it.
-  Specification.text('specifications.integratedGraphics.model', 'Integrated graphics'),
+  integratedGraphics,
   Specification.wholeNumber(
     'specifications.integratedGraphics.baseClock',
     'Integrated graphics base clock',
@@ -66,7 +77,7 @@ export const cpuSpecifications = new SpecificationList('cpu', [
     { zeroMeansMissing: true },
   ),
   Specification.yesNo('specifications.eccSupport', 'ECC memory support'),
-  Specification.yesNo('specifications.includesCooler', 'Cooler included'),
+  coolerIncluded,
   Specification.text('specifications.packaging', 'Packaging'),
   Specification.text('specifications.lithography', 'Lithography'),
   Specification.yesNo(

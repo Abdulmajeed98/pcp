@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule, ErrorModule } from '@pcp/core';
 import { ClsModule } from 'nestjs-cls';
 
+import { BuildModule } from '~/infrastructure/build/build.module';
 import { CallerModule } from '~/infrastructure/caller/caller.module';
 import { CategoryModule } from '~/infrastructure/category/category.module';
 import { validate } from '~/infrastructure/configuration/env.validation';
@@ -30,6 +31,7 @@ import { VendorModule } from '~/infrastructure/vendor/vendor.module';
     VendorModule,
     OfferModule,
     PlatformRateModule,
+    BuildModule,
   ],
 })
 export class AppModule {}

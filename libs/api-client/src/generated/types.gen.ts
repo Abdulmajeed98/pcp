@@ -1263,6 +1263,60 @@ export type SetPlatformRateRequest = {
     iqdPerUsd: number;
 };
 
+export type BuildPartResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+    /**
+     * How many of it the Build holds, from 1 to 16, for a RAM kit or a drive; null for a Part of a Category a Build holds one of.
+     */
+    quantity: number | null;
+    /**
+     * Whether it is a Visible Part, a Part with at least one Visible Offer, which a Part page shows. A Part that is not stays in the Build.
+     */
+    visible: boolean;
+};
+
+export type BuildResponse = {
+    /**
+     * The Build's Parts that the catalog holds, in the catalog's order of Categories, and the RAM kits and drives in the order the Build gives them. A Part the catalog no longer holds is left out.
+     */
+    parts: Array<BuildPartResponse>;
+    /**
+     * Whether it is a Complete Build: a CPU, a motherboard, at least one RAM kit, at least one drive, a case and a PSU, with a GPU unless the CPU has integrated graphics and a CPU cooler unless the CPU includes one.
+     */
+    complete: boolean;
+    /**
+     * The Categories it still needs, in the catalog's order: none for a Complete Build, and all eight for an empty one.
+     */
+    stillNeeded: Array<'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu'>;
+    /**
+     * The values of the Build's CPU that the rule for a Complete Build reads and the CPU does not hold: `integratedGraphics`, its Integrated graphics, and `includesCooler`, its Cooler included. A CPU that does not hold one counts as not providing it, so the GPU or the CPU cooler stays needed. None without a CPU.
+     */
+    cpuValuesNotKnown: Array<'integratedGraphics' | 'includesCooler'>;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -2264,3 +2318,34 @@ export type SetPlatformRateResponses = {
 };
 
 export type SetPlatformRateResponse = SetPlatformRateResponses[keyof SetPlatformRateResponses];
+
+export type ReadBuildData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The chosen currency, required as every public read of prices requires it, so that no page can forget to send it.
+         */
+        currency: Currency;
+        /**
+         * The Build that is read. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. Left out, the Build is empty. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.
+         */
+        part?: Array<string>;
+    };
+    url: '/v1/build';
+};
+
+export type ReadBuildErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadBuildError = ReadBuildErrors[keyof ReadBuildErrors];
+
+export type ReadBuildResponses = {
+    200: BuildResponse;
+};
+
+export type ReadBuildResponse = ReadBuildResponses[keyof ReadBuildResponses];
