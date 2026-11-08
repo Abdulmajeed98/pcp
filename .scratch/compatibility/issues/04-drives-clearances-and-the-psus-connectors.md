@@ -6,7 +6,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **Rules 13 to 21**, as the spec's table reads OpenDB's values:
   - a SATA drive, for rules 13 and 16, is one whose interface is SATA 1.5, 3.0 or 6.0 Gb/s, and an M.2 SATA, mSATA, SAS or U.2 drive is not; the board's ports are its SATA 6 Gb/s and 3 Gb/s ports together; an M.2 drive needs no SATA power;

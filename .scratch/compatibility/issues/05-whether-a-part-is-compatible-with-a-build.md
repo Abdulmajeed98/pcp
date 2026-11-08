@@ -6,7 +6,7 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **Where the Part goes.** It replaces the Build's Part of its Category for the six Categories a Build holds one of, and is added beside the Build's others, with a quantity of one, when it is a RAM kit or a drive.
 - [x] **The answer.** A Part is compatible unless the Build with it has a Compatibility Problem that names it. A Compatibility Warning or an unchecked rule never makes a Part incompatible, and a Problem the Build already had that does not name the Part leaves it compatible.

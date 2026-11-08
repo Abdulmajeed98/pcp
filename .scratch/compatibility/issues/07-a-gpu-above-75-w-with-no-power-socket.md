@@ -6,7 +6,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The reading.** A GPU whose TDP is above 75 W and which holds 0 for each of its 6-pin, 8-pin, 12VHPWR and 12V-2x6 power sockets is imported without the four. The import counts them among the values it left out, with a reason of its own, which its report prints. A GPU of 75 W or less with no socket keeps its zeros, since a slot powers it; so does one whose TDP is missing; and a GPU with any socket keeps all four counts as given. The reading stands beside the import's other readings of OpenDB's records, with why.
 - [x] **The import's alone.** The Admin may still give any GPU any socket counts, and the GPU's specification list still reads a 0 socket as true. Its comment says how the import reads a GPU above 75 W with none.

@@ -6,7 +6,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The words.** CONTEXT.md gains two terms under Shoppers and builds, before any code uses them, each with the words to avoid. **Compatible**: said of a Part and a Build, when adding the Part to the Build would cause no Compatibility Problem; a Compatibility Warning or an unchecked rule does not make a Part incompatible (CMP-4). **Estimated power draw**: what a Build is reckoned to draw, its CPU's TDP plus its GPU's TDP, none without a GPU, plus 100 W for everything else (CMP-5). The wording may be bettered; the meaning is CMP-4's and CMP-5's.
 - [x] **The seam.** Jest, as `core` has it: the workspace's Jest preset with SWC, a `test` target that `pnpm check` runs, the tests under the library's own `src/test`, and the test files' eight lint rules. The tests use Jest's globals and import nothing from Jest or any other package, since the library's ban on npm packages covers its test files. A helper that asserts is named in the lint rules' list of assertions. What the seam tests, and what it never does, is written where its tests live.
