@@ -99,6 +99,18 @@ export const madeUpBuilds = {
 
 export type MadeUpBuildName = keyof typeof madeUpBuilds;
 
+// A made-up Build as the Shopper app keeps it in its cookie `build`, which
+// `pnpm shopper:inspect --build` puts in every tab (builder ticket 07): one
+// entry for each Part, in the Build's order, joined by commas, each the
+// Category's key and the Part's `part` value joined by a colon,
+// `cpu:<identifier>` and, for a RAM kit or a drive, `ram:<identifier>:2`.
+// The Shopper app reads it with `readTheBuild` (`entities/build`); the command
+// runs in Node, which reads no app's code, so the text is written here.
+export function buildCookieOf(shop: ShoppersShop, build: MadeUpBuild): string {
+  const values = partValuesOf(shop, build);
+  return build.map(({ part }, place) => `${part.category}:${values[place]}`).join(',');
+}
+
 // A made-up Build as the API's `part` values give it, in its order: each
 // Part's identifier in the shop, followed for a RAM kit or a drive by `:`
 // and its quantity. A Part the shop does not offer stops the command.
