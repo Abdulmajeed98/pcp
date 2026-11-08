@@ -212,6 +212,27 @@ export class Specification {
     return value === 0 && this.zeroMeansMissing;
   }
 
+  // What a Part holds for this specification, as the Compatibility Rules are
+  // handed it, or nothing when it lacks it, as `isMissingIn` says. Each row
+  // of a list of rows holds the fields it does not lack, by their names in
+  // the row, so that a rule never takes a field the catalog counts as not
+  // known for a real one. Something stored there that is not a list is
+  // lacked, and a row that is not a row holds no field.
+  heldIn(value: unknown): unknown {
+    if (this.isMissingIn(value)) return undefined;
+    if (this.kind !== 'listOfRows') return value;
+    if (!Array.isArray(value)) return undefined;
+
+    return value.map((row) =>
+      Object.fromEntries(
+        (this.fields ?? []).flatMap((field) => {
+          const held = isPlainObject(row) ? field.heldIn(row[field.getPath()]) : undefined;
+          return held === undefined ? [] : [[field.getPath(), held]];
+        }),
+      ),
+    );
+  }
+
   // What a Part holds for this specification, labelled, or nothing when it
   // lacks it, as `isMissingIn` says: a stored 0 where 0 stands for "not known"
   // is left out with the rest. Each row of a list of rows holds the fields it

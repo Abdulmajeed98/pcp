@@ -6,6 +6,7 @@ import { Currency } from '../currency/currency';
 import { Build } from './Build';
 import { BuildReading } from './BuildReading';
 import { Completeness, completenessOf } from './complete-build';
+import { Judgment, judgmentOf } from './judgment';
 import { PriceViews } from './price-views';
 
 class Input {
@@ -30,11 +31,17 @@ class Output {
   private constructor(
     private readonly build: Build,
     private readonly completeness: Completeness,
+    private readonly judgment: Judgment,
     private readonly priceViews: PriceViews,
   ) {}
 
-  static of(build: Build, completeness: Completeness, priceViews: PriceViews): Output {
-    return new Output(build, completeness, priceViews);
+  static of(
+    build: Build,
+    completeness: Completeness,
+    judgment: Judgment,
+    priceViews: PriceViews,
+  ): Output {
+    return new Output(build, completeness, judgment, priceViews);
   }
 
   getBuild(): Build {
@@ -43,6 +50,11 @@ class Output {
 
   getCompleteness(): Completeness {
     return this.completeness;
+  }
+
+  // What the Compatibility Rules find in the Build.
+  getJudgment(): Judgment {
+    return this.judgment;
   }
 
   getPriceViews(): PriceViews {
@@ -55,7 +67,9 @@ export { Output as ReadBuildQueryOutput };
 
 // A Build that a request gives, read for anyone, with no Login, and stored
 // nowhere: its Parts as the catalog holds them, whether it is a Complete
-// Build, and its price views in the chosen currency (BLD-1, BLD-5, BLD-7).
+// Build, what the Compatibility Rules find in it, its Estimated power
+// draw and its price views in the chosen currency (BLD-1, BLD-4, BLD-5,
+// BLD-7, BLD-8, CMP-5).
 @Injectable()
 export class ReadBuildQuery {
   constructor(private readonly buildReading: BuildReading) {}
@@ -71,7 +85,7 @@ export class ReadBuildQuery {
     );
 
     return Either.map(build, (read) =>
-      Output.of(read, completenessOf(read), PriceViews.of(read)),
+      Output.of(read, completenessOf(read), judgmentOf(read), PriceViews.of(read)),
     );
   }
 }

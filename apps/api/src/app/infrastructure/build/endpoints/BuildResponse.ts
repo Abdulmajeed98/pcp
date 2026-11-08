@@ -2,15 +2,19 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { Build } from '~/domain/build/Build';
 import { Completeness, CpuValue, cpuValues } from '~/domain/build/complete-build';
+import { Judgment } from '~/domain/build/judgment';
 import { PriceViews } from '~/domain/build/price-views';
 import { Category } from '~/domain/part/Category';
 import { ShownPriceResponse } from '~/infrastructure/offer/endpoints/VisibleOfferResponse';
 
 import { BuildPartResponse } from './BuildPartResponse';
 import { BuildVendorResponse } from './BuildVendorResponse';
+import { EstimatedPowerDrawResponse } from './EstimatedPowerDrawResponse';
+import { RuleOutcomeResponse } from './RuleOutcomeResponse';
 
 // A Build as it is read: its Parts as the catalog holds them, whether it is a
-// Complete Build, and its price views in the chosen currency.
+// Complete Build, what the Compatibility Rules find in it, its Estimated
+// power draw, and its price views in the chosen currency.
 export class BuildResponse {
   @ApiProperty({
     description:
@@ -45,6 +49,21 @@ export class BuildResponse {
 
   @ApiProperty({
     description:
+      'The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.',
+    type: [RuleOutcomeResponse],
+  })
+  readonly outcomes: RuleOutcomeResponse[];
+
+  @ApiProperty({
+    description:
+      'Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.',
+    type: EstimatedPowerDrawResponse,
+    nullable: true,
+  })
+  readonly estimatedPowerDraw: EstimatedPowerDrawResponse | null;
+
+  @ApiProperty({
+    description:
       "The first price view's total, the Build's total across Vendors (BLD-7, PRC-5): each Part's Lowest Price times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. It leaves out each Part with no Lowest Price, and is null when no Part has one.",
     type: ShownPriceResponse,
     nullable: true,
@@ -58,11 +77,20 @@ export class BuildResponse {
   })
   readonly vendors: BuildVendorResponse[];
 
-  private constructor(build: Build, completeness: Completeness, priceViews: PriceViews) {
+  private constructor(
+    build: Build,
+    completeness: Completeness,
+    judgment: Judgment,
+    priceViews: PriceViews,
+  ) {
     this.parts = build.getParts().map(BuildPartResponse.ofBuildPart);
     this.complete = completeness.isComplete();
     this.stillNeeded = completeness.getStillNeeded().map((category) => category.getKey());
     this.cpuValuesNotKnown = [...completeness.getCpuValuesNotKnown()];
+    this.outcomes = judgment.getOutcomes().map(RuleOutcomeResponse.of);
+    const draw = judgment.getEstimatedPowerDraw();
+    this.estimatedPowerDraw =
+      draw === undefined ? null : EstimatedPowerDrawResponse.of(draw);
     this.totalAcrossVendors = ShownPriceResponse.of(priceViews.getTotalAcrossVendors());
     this.vendors = priceViews.getVendors().map(BuildVendorResponse.of);
   }
@@ -70,8 +98,9 @@ export class BuildResponse {
   static of(
     build: Build,
     completeness: Completeness,
+    judgment: Judgment,
     priceViews: PriceViews,
   ): BuildResponse {
-    return new BuildResponse(build, completeness, priceViews);
+    return new BuildResponse(build, completeness, judgment, priceViews);
   }
 }

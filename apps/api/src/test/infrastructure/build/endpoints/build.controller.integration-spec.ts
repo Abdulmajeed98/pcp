@@ -35,12 +35,36 @@ type BuildPartBody = {
   visible: boolean;
 };
 
+// A needed specification a Part of the Build lacks, as the API names it.
+type MissingSpecificationBody = {
+  part: string;
+  path: string;
+  label: string;
+  fieldLabel: string | null;
+};
+
+// The outcome of a Compatibility Rule that applies to the Build.
+type RuleOutcomeBody = {
+  rule: number;
+  outcome: 'passes' | 'problem' | 'warning' | 'unchecked';
+  parts: string[];
+  missing: MissingSpecificationBody[];
+};
+
+// A Build's Estimated power draw: its watts, or the TDPs that are missing.
+type EstimatedPowerDrawBody = {
+  watts: number | null;
+  missing: MissingSpecificationBody[];
+};
+
 // A Build as the API answers it.
 type BuildBody = {
   parts: BuildPartBody[];
   complete: boolean;
   stillNeeded: string[];
   cpuValuesNotKnown: string[];
+  outcomes: RuleOutcomeBody[];
+  estimatedPowerDraw: EstimatedPowerDrawBody | null;
 };
 
 // A Part as the API answers its creation, as far as these tests read it.
@@ -140,13 +164,13 @@ describe('a Build', () => {
     return ((await response.json()) as { vendor: VendorBody }).vendor;
   }
 
-  // An Offer the Admin adds for the Vendor, in stock, at the time of the
-  // clock.
-  async function anOffer(vendorId: string, partId: string): Promise<void> {
+  // An Offer the Admin adds for the Vendor, in stock unless it says
+  // otherwise, at the time of the clock.
+  async function anOffer(vendorId: string, partId: string, inStock = true): Promise<void> {
     const response = await fetch(`${testApp.baseUrl}/v1/vendors/${vendorId}/offers`, {
       method: 'POST',
       headers: { ...bearerHeader(await adminToken()), 'content-type': 'application/json' },
-      body: JSON.stringify({ partId, iqdPrice: 500000, inStock: true }),
+      body: JSON.stringify({ partId, iqdPrice: 500000, inStock }),
     });
     expect(response.status).toBe(201);
   }
@@ -202,12 +226,14 @@ describe('a Build', () => {
   }
 
   describe('an empty Build', () => {
-    it("answers no Part, is not complete, and needs every Category, in the catalog's order", async () => {
+    it("answers no Part, is not complete, needs every Category, in the catalog's order, and answers no rule's outcome, no Estimated power draw, no total and no Vendor", async () => {
       expect(await theBuild([])).toEqual({
         parts: [],
         complete: false,
         stillNeeded: everyCategory,
         cpuValuesNotKnown: [],
+        outcomes: [],
+        estimatedPowerDraw: null,
         totalAcrossVendors: null,
         vendors: [],
       });
@@ -383,7 +409,7 @@ describe('a Build', () => {
     // still needs, and the CPU's values not known.
     async function completenessOf(
       values: readonly string[],
-    ): Promise<Omit<BuildBody, 'parts'>> {
+    ): Promise<Pick<BuildBody, 'complete' | 'stillNeeded' | 'cpuValuesNotKnown'>> {
       const { complete, stillNeeded, cpuValuesNotKnown } = await theBuild(values);
       return { complete, stillNeeded, cpuValuesNotKnown };
     }
@@ -746,6 +772,288 @@ describe('a Build', () => {
         400,
         [notValid('parts')],
       );
+    });
+  });
+
+  // The rules are judged by `@pcp/compatibility`, whose own tests prove each
+  // rule. These prove the wiring: that the Parts reach the rules as the
+  // catalog stores them, and that the library's answers reach the API's
+  // surface whole.
+  describe("the rules' outcomes", () => {
+    // One rule's outcome in a Build's answer, if it applies.
+    function outcomeOf(rule: number, build: BuildBody): RuleOutcomeBody | undefined {
+      return build.outcomes.find((outcome) => outcome.rule === rule);
+    }
+
+    it('answer rule 1 as a Compatibility Problem naming the CPU and the motherboard when their sockets differ, and as a pass naming both when they match', async () => {
+      const cpu = await aPart({ category: 'cpu', specifications: { socket: 'AM5' } });
+      const am4Board = await aPart({
+        category: 'motherboard',
+        name: 'Made-up AM4 board',
+        specifications: { socket: 'AM4' },
+      });
+      const am5Board = await aPart({
+        category: 'motherboard',
+        name: 'Made-up AM5 board',
+        specifications: { socket: 'AM5' },
+      });
+
+      expect((await theBuild([am4Board.id, cpu.id])).outcomes).toEqual([
+        { rule: 1, outcome: 'problem', parts: [cpu.id, am4Board.id], missing: [] },
+      ]);
+      expect((await theBuild([am5Board.id, cpu.id])).outcomes).toEqual([
+        { rule: 1, outcome: 'passes', parts: [cpu.id, am5Board.id], missing: [] },
+      ]);
+    });
+
+    it('answer rule 11 as a Compatibility Warning naming the GPU and the PSU for a GPU with a 12V-2x6 socket and a PSU with 6+2-pin connectors but no such cable', async () => {
+      const gpu = await aPart({
+        category: 'gpu',
+        name: 'Made-up GPU',
+        specifications: {
+          power_connectors: {
+            pcie_6_pin: 0,
+            pcie_8_pin: 0,
+            pcie_12VHPWR: 0,
+            pcie_12V_2x6: 1,
+          },
+        },
+      });
+      const psu = await aPart({
+        category: 'psu',
+        name: 'Made-up PSU',
+        specifications: { connectors: { pcie_6_plus_2_pin: 2, pcie_12vhpwr: 0 } },
+      });
+
+      expect((await theBuild([psu.id, gpu.id])).outcomes).toEqual([
+        { rule: 11, outcome: 'warning', parts: [gpu.id, psu.id], missing: [] },
+      ]);
+    });
+
+    describe('a needed specification the catalog counts as not known', () => {
+      // A case that takes a GPU up to 300 mm long in its 7 expansion slots.
+      function aCase(): Promise<PartBody> {
+        return aPart({
+          category: 'case',
+          name: 'Made-up case',
+          specifications: { max_video_card_length: 300, expansion_slots: 7 },
+        });
+      }
+
+      // Rule 9 unchecked for want of the GPU's length, and rule 10 passed.
+      function lengthNotKnown(gpuId: string, caseId: string): RuleOutcomeBody[] {
+        return [
+          {
+            rule: 9,
+            outcome: 'unchecked',
+            parts: [],
+            missing: [{ part: gpuId, path: 'length', label: 'Length', fieldLabel: null }],
+          },
+          { rule: 10, outcome: 'passes', parts: [gpuId, caseId], missing: [] },
+        ];
+      }
+
+      it('stored as 0 where 0 means "not known" is answered as missing, by its path and English label, and its rule is unchecked', async () => {
+        const gpu = await aPart({
+          category: 'gpu',
+          name: 'Made-up GPU',
+          specifications: { length: 250, total_slot_width: 2 },
+        });
+        await keepSpecificationsAsTheyAre(gpu.id, { length: 0, total_slot_width: 2 });
+        const pcCase = await aCase();
+
+        expect((await theBuild([gpu.id, pcCase.id])).outcomes).toEqual(
+          lengthNotKnown(gpu.id, pcCase.id),
+        );
+      });
+
+      it('not held by the Part is answered the same', async () => {
+        const gpu = await aPart({
+          category: 'gpu',
+          name: 'Made-up GPU',
+          specifications: { total_slot_width: 2 },
+        });
+        const pcCase = await aCase();
+
+        expect((await theBuild([gpu.id, pcCase.id])).outcomes).toEqual(
+          lengthNotKnown(gpu.id, pcCase.id),
+        );
+      });
+
+      describe("in a field of a row, a PCIe slot's lanes,", () => {
+        // A board whose second row of PCIe slots holds the lanes given, or
+        // none, and whose first row holds no 16-lane slot.
+        const slotsWithLanes = (
+          lanes: Record<string, number>,
+        ): Record<string, unknown> => ({
+          pcie_slots: [
+            { gen: 'PCIe 3.0', quantity: 2, lanes: 1 },
+            { gen: 'PCIe 4.0', quantity: 1, ...lanes },
+          ],
+        });
+
+        // Rule 8 unchecked for want of the second row's lanes.
+        function lanesNotKnown(boardId: string): RuleOutcomeBody[] {
+          return [
+            {
+              rule: 8,
+              outcome: 'unchecked',
+              parts: [],
+              missing: [
+                {
+                  part: boardId,
+                  path: 'pcie_slots.1.lanes',
+                  label: 'PCIe slots',
+                  fieldLabel: 'Lanes',
+                },
+              ],
+            },
+          ];
+        }
+
+        it('stored as 0 leaves rule 8 unchecked when the Build has a GPU, naming the field by its path and both labels', async () => {
+          const board = await aPart({
+            category: 'motherboard',
+            name: 'Made-up board',
+            specifications: slotsWithLanes({ lanes: 16 }),
+          });
+          await keepSpecificationsAsTheyAre(board.id, slotsWithLanes({ lanes: 0 }));
+          const gpu = await aPart({ category: 'gpu', name: 'Made-up GPU' });
+
+          expect((await theBuild([board.id, gpu.id])).outcomes).toEqual(
+            lanesNotKnown(board.id),
+          );
+        });
+
+        it('not held leaves it unchecked the same', async () => {
+          const board = await aPart({
+            category: 'motherboard',
+            name: 'Made-up board',
+            specifications: slotsWithLanes({}),
+          });
+          const gpu = await aPart({ category: 'gpu', name: 'Made-up GPU' });
+
+          expect((await theBuild([board.id, gpu.id])).outcomes).toEqual(
+            lanesNotKnown(board.id),
+          );
+        });
+      });
+    });
+
+    it('answer no outcome for a rule whose Parts the Build lacks: without a case, none for rules 7, 9, 10, 15, 17, 18, 19 and 21, and every other rule in rule order', async () => {
+      const values: Record<string, string> = {};
+      for (const category of everyCategory) {
+        const made = await aPart({ category, name: `Made-up ${category}` });
+        values[category] = ['ram', 'storage'].includes(category) ? `${made.id}:1` : made.id;
+      }
+      const rulesAnswered = async (categories: readonly string[]): Promise<number[]> =>
+        (await theBuild(categories.map((category) => values[category]))).outcomes.map(
+          ({ rule }) => rule,
+        );
+
+      expect(
+        await rulesAnswered(everyCategory.filter((category) => category !== 'case')),
+      ).toEqual([1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14, 16, 20]);
+      expect(await rulesAnswered(everyCategory)).toEqual([
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+      ]);
+    });
+
+    it('judge every Part, one whose only Vendor was deactivated and one that no Vendor has in stock among them', async () => {
+      const cpu = await aPart({ category: 'cpu', specifications: { socket: 'AM5' } });
+      const board = await aPart({
+        category: 'motherboard',
+        name: 'Made-up AM4 board',
+        specifications: { socket: 'AM4' },
+      });
+      const deactivated = await aVendor('Made-up deactivated shop');
+      await anOffer(deactivated.id, cpu.id);
+      await admin('deactivate', deactivated.id);
+      await anOffer((await aVendor('Made-up shop out of stock')).id, board.id, false);
+      const { parts, outcomes } = await theBuild([cpu.id, board.id]);
+
+      // The CPU is no longer a Visible Part; the board is one, out of stock.
+      expect(parts.map(({ visible }) => visible)).toEqual([false, true]);
+      expect(outcomes).toEqual([
+        { rule: 1, outcome: 'problem', parts: [cpu.id, board.id], missing: [] },
+      ]);
+    });
+
+    it("count a RAM kit as many times as the Build holds it: two of a kit of two modules fill a board's two slots twice over, under rule 5", async () => {
+      const board = await aPart({
+        category: 'motherboard',
+        name: 'Made-up board',
+        specifications: { memory: { slots: 2 } },
+      });
+      const kit = await aPart({
+        category: 'ram',
+        name: 'Made-up kit',
+        specifications: { modules: { quantity: 2 } },
+      });
+
+      expect(outcomeOf(5, await theBuild([board.id, `${kit.id}:1`]))).toEqual({
+        rule: 5,
+        outcome: 'passes',
+        parts: [board.id, kit.id],
+        missing: [],
+      });
+      expect(outcomeOf(5, await theBuild([board.id, `${kit.id}:2`]))).toEqual({
+        rule: 5,
+        outcome: 'problem',
+        parts: [board.id, kit.id],
+        missing: [],
+      });
+    });
+  });
+
+  // As `estimatedPowerDrawOf` answers it, so that no API code adds a TDP.
+  describe('the Estimated power draw', () => {
+    // A CPU, and a GPU, of the TDP given, or none.
+    function aCpu(specifications: Record<string, unknown>): Promise<PartBody> {
+      return aPart({ category: 'cpu', name: 'Made-up CPU', specifications });
+    }
+    function aGpu(specifications: Record<string, unknown>): Promise<PartBody> {
+      return aPart({ category: 'gpu', name: 'Made-up GPU', specifications });
+    }
+
+    it("is the CPU's TDP plus the GPU's plus 100 W, or the CPU's plus 100 W without a GPU", async () => {
+      const cpu = await aCpu({ specifications: { tdp: 65 } });
+      const gpu = await aGpu({ tdp: 220 });
+      const board = await aPart({ category: 'motherboard', name: 'Made-up board' });
+
+      expect((await theBuild([cpu.id, gpu.id, board.id])).estimatedPowerDraw).toEqual({
+        watts: 385,
+        missing: [],
+      });
+      expect((await theBuild([cpu.id, board.id])).estimatedPowerDraw).toEqual({
+        watts: 165,
+        missing: [],
+      });
+    });
+
+    it('names each missing TDP by its Part, its path and its English label, with no watts', async () => {
+      const cpu = await aCpu({ socket: 'AM5' });
+      const gpu = await aGpu({ tdp: 220 });
+      await keepSpecificationsAsTheyAre(gpu.id, { tdp: 0 });
+
+      expect((await theBuild([gpu.id, cpu.id])).estimatedPowerDraw).toEqual({
+        watts: null,
+        missing: [
+          { part: cpu.id, path: 'specifications.tdp', label: 'TDP', fieldLabel: null },
+          { part: gpu.id, path: 'tdp', label: 'TDP', fieldLabel: null },
+        ],
+      });
+    });
+
+    it('is none for a Build without a CPU, whatever else it holds', async () => {
+      const gpu = await aGpu({ tdp: 220 });
+      const psu = await aPart({
+        category: 'psu',
+        name: 'Made-up PSU',
+        specifications: { wattage: 750 },
+      });
+
+      expect((await theBuild([gpu.id, psu.id])).estimatedPowerDraw).toBeNull();
     });
   });
 
