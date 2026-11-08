@@ -1,4 +1,5 @@
 import {
+  estimatedPowerDrawOf,
   judgeBuild,
   type MissingSpecification,
   type RuleOutcome,
@@ -51,28 +52,49 @@ export type Outcome =
       readonly missing: readonly MissingInABuild[];
     };
 
-// What the Compatibility Rules find in a Build.
+// A Build's Estimated power draw, in W, or not known, each missing TDP it
+// needs labelled.
+export type PowerDraw =
+  | { readonly known: true; readonly watts: number }
+  | { readonly known: false; readonly missing: readonly MissingInABuild[] };
+
+// What the Compatibility Rules find in a Build, and its Estimated power draw.
 export class Judgment {
-  constructor(private readonly outcomes: readonly Outcome[]) {}
+  constructor(
+    private readonly outcomes: readonly Outcome[],
+    private readonly estimatedPowerDraw: PowerDraw | undefined,
+  ) {}
 
   // The outcome of every rule that applies to the Build, passes included, in
   // rule order.
   getOutcomes(): readonly Outcome[] {
     return this.outcomes;
   }
+
+  // Its Estimated power draw (CMP-5), as the library adds it up; none for a
+  // Build without a CPU.
+  getEstimatedPowerDraw(): PowerDraw | undefined {
+    return this.estimatedPowerDraw;
+  }
 }
 
-// What the rules find in a Build, every Part of it judged, a Part that is no
-// longer a Visible Part and one no Vendor has in stock among them, since each
-// stays in the Build until the Shopper removes it.
+// What the rules find in a Build, and its Estimated power draw, every Part
+// of it judged, a Part that is no longer a Visible Part and one no Vendor has
+// in stock among them, since each stays in the Build until the Shopper
+// removes it.
 export function judgmentOf(build: Build): Judgment {
+  const judged = buildForTheRules(build);
   const labelled = labelledIn(build);
+  const draw = estimatedPowerDrawOf(judged);
   return new Judgment(
-    judgeBuild(buildForTheRules(build)).map((outcome) =>
+    judgeBuild(judged).map((outcome) =>
       outcome.outcome === 'unchecked'
         ? { ...outcome, missing: outcome.missing.map(labelled) }
         : outcome,
     ),
+    draw === undefined || draw.known
+      ? draw
+      : { ...draw, missing: draw.missing.map(labelled) },
   );
 }
 

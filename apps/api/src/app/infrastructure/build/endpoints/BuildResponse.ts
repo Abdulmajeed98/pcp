@@ -6,10 +6,12 @@ import { Judgment } from '~/domain/build/judgment';
 import { Category } from '~/domain/part/Category';
 
 import { BuildPartResponse } from './BuildPartResponse';
+import { EstimatedPowerDrawResponse } from './EstimatedPowerDrawResponse';
 import { RuleOutcomeResponse } from './RuleOutcomeResponse';
 
 // A Build as it is read: its Parts as the catalog holds them, whether it is a
-// Complete Build, and what the Compatibility Rules find in it.
+// Complete Build, what the Compatibility Rules find in it, and its Estimated
+// power draw.
 export class BuildResponse {
   @ApiProperty({
     description:
@@ -49,12 +51,23 @@ export class BuildResponse {
   })
   readonly outcomes: RuleOutcomeResponse[];
 
+  @ApiProperty({
+    description:
+      'Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.',
+    type: EstimatedPowerDrawResponse,
+    nullable: true,
+  })
+  readonly estimatedPowerDraw: EstimatedPowerDrawResponse | null;
+
   private constructor(build: Build, completeness: Completeness, judgment: Judgment) {
     this.parts = build.getParts().map(BuildPartResponse.ofBuildPart);
     this.complete = completeness.isComplete();
     this.stillNeeded = completeness.getStillNeeded().map((category) => category.getKey());
     this.cpuValuesNotKnown = [...completeness.getCpuValuesNotKnown()];
     this.outcomes = judgment.getOutcomes().map(RuleOutcomeResponse.of);
+    const draw = judgment.getEstimatedPowerDraw();
+    this.estimatedPowerDraw =
+      draw === undefined ? null : EstimatedPowerDrawResponse.of(draw);
   }
 
   static of(build: Build, completeness: Completeness, judgment: Judgment): BuildResponse {

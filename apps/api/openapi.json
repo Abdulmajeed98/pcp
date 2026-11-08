@@ -1923,7 +1923,7 @@
           }
         },
         "security": [],
-        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs, and the outcome of every Compatibility Rule that applies to it",
+        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs, the outcome of every Compatibility Rule that applies to it, and its Estimated power draw",
         "tags": ["Build"]
       }
     }
@@ -4324,6 +4324,25 @@
         },
         "required": ["rule", "outcome", "parts", "missing"]
       },
+      "EstimatedPowerDrawResponse": {
+        "type": "object",
+        "properties": {
+          "watts": {
+            "type": "integer",
+            "description": "What the Build is reckoned to draw, in W: its CPU's TDP, plus its GPU's TDP when it has one, plus 100 W for everything else. Null when a TDP it needs is missing.",
+            "nullable": true,
+            "example": 385
+          },
+          "missing": {
+            "description": "Each TDP the draw needs that its Part lacks, the CPU's before the GPU's; none when the watts are known.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildMissingSpecificationResponse"
+            }
+          }
+        },
+        "required": ["watts", "missing"]
+      },
       "BuildResponse": {
         "type": "object",
         "properties": {
@@ -4371,9 +4390,26 @@
             "items": {
               "$ref": "#/components/schemas/RuleOutcomeResponse"
             }
+          },
+          "estimatedPowerDraw": {
+            "description": "Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstimatedPowerDrawResponse"
+              }
+            ]
           }
         },
-        "required": ["parts", "complete", "stillNeeded", "cpuValuesNotKnown", "outcomes"]
+        "required": [
+          "parts",
+          "complete",
+          "stillNeeded",
+          "cpuValuesNotKnown",
+          "outcomes",
+          "estimatedPowerDraw"
+        ]
       }
     }
   },

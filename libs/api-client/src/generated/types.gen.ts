@@ -1336,6 +1336,17 @@ export type RuleOutcomeResponse = {
     missing: Array<BuildMissingSpecificationResponse>;
 };
 
+export type EstimatedPowerDrawResponse = {
+    /**
+     * What the Build is reckoned to draw, in W: its CPU's TDP, plus its GPU's TDP when it has one, plus 100 W for everything else. Null when a TDP it needs is missing.
+     */
+    watts: number | null;
+    /**
+     * Each TDP the draw needs that its Part lacks, the CPU's before the GPU's; none when the watts are known.
+     */
+    missing: Array<BuildMissingSpecificationResponse>;
+};
+
 export type BuildResponse = {
     /**
      * The Build's Parts that the catalog holds, in the catalog's order of Categories, and the RAM kits and drives in the order the Build gives them. A Part the catalog no longer holds is left out.
@@ -1357,6 +1368,10 @@ export type BuildResponse = {
      * The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.
      */
     outcomes: Array<RuleOutcomeResponse>;
+    /**
+     * Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.
+     */
+    estimatedPowerDraw: EstimatedPowerDrawResponse | null;
 };
 
 export type GetCallerData = {

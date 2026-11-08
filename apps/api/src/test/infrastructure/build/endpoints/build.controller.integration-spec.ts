@@ -51,6 +51,12 @@ type RuleOutcomeBody = {
   missing: MissingSpecificationBody[];
 };
 
+// A Build's Estimated power draw: its watts, or the TDPs that are missing.
+type EstimatedPowerDrawBody = {
+  watts: number | null;
+  missing: MissingSpecificationBody[];
+};
+
 // A Build as the API answers it.
 type BuildBody = {
   parts: BuildPartBody[];
@@ -58,6 +64,7 @@ type BuildBody = {
   stillNeeded: string[];
   cpuValuesNotKnown: string[];
   outcomes: RuleOutcomeBody[];
+  estimatedPowerDraw: EstimatedPowerDrawBody | null;
 };
 
 // A Part as the API answers its creation, as far as these tests read it.
@@ -219,13 +226,14 @@ describe('a Build', () => {
   }
 
   describe('an empty Build', () => {
-    it("answers no Part, is not complete, needs every Category, in the catalog's order, and answers no rule's outcome", async () => {
+    it("answers no Part, is not complete, needs every Category, in the catalog's order, and answers no rule's outcome and no Estimated power draw", async () => {
       expect(await theBuild([])).toEqual({
         parts: [],
         complete: false,
         stillNeeded: everyCategory,
         cpuValuesNotKnown: [],
         outcomes: [],
+        estimatedPowerDraw: null,
       });
     });
   });
@@ -990,6 +998,57 @@ describe('a Build', () => {
         parts: [board.id, kit.id],
         missing: [],
       });
+    });
+  });
+
+  // As `estimatedPowerDrawOf` answers it, so that no API code adds a TDP.
+  describe('the Estimated power draw', () => {
+    // A CPU, and a GPU, of the TDP given, or none.
+    function aCpu(specifications: Record<string, unknown>): Promise<PartBody> {
+      return aPart({ category: 'cpu', name: 'Made-up CPU', specifications });
+    }
+    function aGpu(specifications: Record<string, unknown>): Promise<PartBody> {
+      return aPart({ category: 'gpu', name: 'Made-up GPU', specifications });
+    }
+
+    it("is the CPU's TDP plus the GPU's plus 100 W, or the CPU's plus 100 W without a GPU", async () => {
+      const cpu = await aCpu({ specifications: { tdp: 65 } });
+      const gpu = await aGpu({ tdp: 220 });
+      const board = await aPart({ category: 'motherboard', name: 'Made-up board' });
+
+      expect((await theBuild([cpu.id, gpu.id, board.id])).estimatedPowerDraw).toEqual({
+        watts: 385,
+        missing: [],
+      });
+      expect((await theBuild([cpu.id, board.id])).estimatedPowerDraw).toEqual({
+        watts: 165,
+        missing: [],
+      });
+    });
+
+    it('names each missing TDP by its Part, its path and its English label, with no watts', async () => {
+      const cpu = await aCpu({ socket: 'AM5' });
+      const gpu = await aGpu({ tdp: 220 });
+      await keepSpecificationsAsTheyAre(gpu.id, { tdp: 0 });
+
+      expect((await theBuild([gpu.id, cpu.id])).estimatedPowerDraw).toEqual({
+        watts: null,
+        missing: [
+          { part: cpu.id, path: 'specifications.tdp', label: 'TDP', fieldLabel: null },
+          { part: gpu.id, path: 'tdp', label: 'TDP', fieldLabel: null },
+        ],
+      });
+    });
+
+    it('is none for a Build without a CPU, whatever else it holds', async () => {
+      const gpu = await aGpu({ tdp: 220 });
+      const psu = await aPart({
+        category: 'psu',
+        name: 'Made-up PSU',
+        specifications: { wattage: 750 },
+      });
+
+      expect((await theBuild([gpu.id, psu.id])).estimatedPowerDraw).toBeNull();
     });
   });
 

@@ -16,7 +16,7 @@ export class BuildController {
 
   @ApiOperation({
     summary:
-      'A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs, and the outcome of every Compatibility Rule that applies to it',
+      'A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs, the outcome of every Compatibility Rule that applies to it, and its Estimated power draw',
     security: [],
   })
   @ApiOkResponse({ type: BuildResponse })

@@ -47,7 +47,8 @@ export { Output as ReadBuildQueryOutput };
 
 // A Build that a request gives, read for anyone, with no Login, and stored
 // nowhere: its Parts as the catalog holds them, whether it is a Complete
-// Build, and what the Compatibility Rules find in it (BLD-1, BLD-4, BLD-5).
+// Build, what the Compatibility Rules find in it and its Estimated power
+// draw (BLD-1, BLD-4, BLD-5, CMP-5).
 @Injectable()
 export class ReadBuildQuery {
   constructor(private readonly buildReading: BuildReading) {}
