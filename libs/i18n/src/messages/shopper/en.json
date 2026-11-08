@@ -15,7 +15,9 @@
       "dark": "Dark",
       "device": "Device"
     },
-    "schemeTurn": "Colours: {now}. Choose {next}"
+    "schemeTurn": "Colours: {now}. Choose {next}",
+    "yourBuild": "Your Build",
+    "yourBuildName": "{count, plural, one {Your Build, {countText} Part} other {Your Build, {countText} Parts}}"
   },
   "BackCover": {
     "invitation": "Find your Part",
@@ -187,6 +189,60 @@
     },
     "tryAgain": "Try again"
   },
+  "BuildPage": {
+    "title": "Your Build",
+    "status": {
+      "empty": "No Part chosen yet. Choose one for any Category below.",
+      "complete": "A Complete Build: it holds every Part a PC needs.",
+      "completeWithProblems": "{count, plural, one {A Complete Build, with a Problem to settle: see what the rules found.} other {A Complete Build, with {countText} Problems to settle: see what the rules found.}}",
+      "stillNeeds": "Still needs {list}.",
+      "listComma": ", ",
+      "listAnd": " and ",
+      "category": "{category, select, cpu {a CPU} cpuCooler {a CPU cooler} motherboard {a motherboard} ram {RAM} storage {storage} gpu {a GPU} case {a case} psu {a PSU} other {a Part}}",
+      "hasGraphics": "Your CPU has integrated graphics, so a GPU is not needed.",
+      "includesCooler": "Your CPU comes with a cooler, so a CPU cooler is not needed.",
+      "graphicsNotKnown": "Your CPU does not say whether it has integrated graphics, so a GPU is counted as needed.",
+      "coolerNotKnown": "Your CPU does not say whether it comes with a cooler, so a CPU cooler is counted as needed."
+    },
+    "stamp": "Complete Build",
+    "slip": {
+      "yourBuild": "{count, plural, one {Your Build · {countText} Part} other {Your Build · {countText} Parts}}",
+      "parts": "Parts",
+      "complete": "Complete",
+      "yes": "Yes",
+      "stillNeeded": "{count, plural, one {{countText} still needed} other {{countText} still needed}}"
+    },
+    "choose": "{category, select, cpu {Choose a CPU} cpuCooler {Choose a CPU cooler} motherboard {Choose a motherboard} ram {Choose RAM} storage {Choose storage} gpu {Choose a GPU} case {Choose a case} psu {Choose a PSU} other {Choose a Part}}",
+    "notNeeded": "{category, select, gpu {Not needed: your CPU has integrated graphics.} other {Not needed: your CPU comes with a cooler.}}",
+    "change": "Change",
+    "changeThe": "{category, select, cpu {Change the CPU} cpuCooler {Change the CPU cooler} motherboard {Change the motherboard} gpu {Change the GPU} case {Change the case} psu {Change the PSU} other {Change the Part}}",
+    "remove": "Remove",
+    "removeThe": "Remove {part}",
+    "addAnother": "{category, select, ram {Add another RAM kit} other {Add another drive}}",
+    "quantity": {
+      "of": "Quantity of {part}",
+      "figure": "Quantity",
+      "oneFewer": "One fewer",
+      "oneMore": "One more",
+      "set": "Set"
+    },
+    "refused": {
+      "mostKitsOrDrives": "{category, select, ram {Your Build holds {most} different RAM kits, the most it keeps, so the kit was not added. Remove one to add another.} other {Your Build holds {most} different drives, the most it keeps, so the drive was not added. Remove one to add another.}}",
+      "mostOfOne": "Your Build holds {most} of it, the most it keeps, so no more was added.",
+      "notAQuantity": "Not a quantity from {least} to {most}, so not changed."
+    },
+    "empty": {
+      "cell": "Empty the Build",
+      "warning": "{count, plural, one {This removes the {countText} Part from your Build. Nothing brings it back.} other {This removes all {countText} Parts from your Build. Nothing brings them back.}}",
+      "confirm": "{count, plural, one {Remove the {countText} Part} other {Remove all {countText} Parts}}",
+      "keep": "{count, plural, one {Keep it} other {Keep them}}"
+    },
+    "notRead": {
+      "title": "Your Build cannot be read just now",
+      "note": "Try again in a moment."
+    },
+    "tryAgain": "Try again"
+  },
   "NotFoundPage": {
     "title": "Page not found",
     "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped.",
@@ -210,6 +266,10 @@
     },
     "vendor": {
       "description": "{vendor}, a Vendor in {city}. How to call, message or find it, and every PC Part it offers now."
+    },
+    "build": {
+      "title": "Your Build",
+      "description": "The PC Parts you have chosen, Category by Category, and what your Build still needs."
     }
   }
 }

@@ -5,5 +5,6 @@ export {
   categoryAddress,
   categoryOfTheAddress,
   categoryPath,
+  nameInTheAddress,
   theCore,
 } from './model/categories';

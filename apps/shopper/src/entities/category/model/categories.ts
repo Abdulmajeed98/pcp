@@ -43,7 +43,13 @@ export function categoryAddress(language: Language, category: Category): string 
 // The part of a Category page's address after its language, as a page's
 // preview names it in every language.
 export function categoryPath(category: Category): string {
-  return `/categories/${namesInTheAddress[category]}`;
+  return `/categories/${nameInTheAddress(category)}`;
+}
+
+// A Category's name in an address, as a Category page's and the picker's
+// write it, and as the Build page names the place of each Category.
+export function nameInTheAddress(category: Category): string {
+  return namesInTheAddress[category];
 }
 
 // The Category a name in the address stands for, or none, for any other
