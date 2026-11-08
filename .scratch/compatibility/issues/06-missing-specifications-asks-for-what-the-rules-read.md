@@ -6,7 +6,7 @@
 
 **Blocked by:** 03, 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **Read from the rules.** No specification list marks a needed specification by hand. Whether a specification is needed is read from the library's statements, and every path the library names is in its Category's list.
 - [x] **The table.** The Categories endpoint's test, which writes out the needed specifications from the MVP spec's table and does not read them from the platform, gains "Liquid cooled" for CPU coolers and passes. No other Category's needed specifications change.

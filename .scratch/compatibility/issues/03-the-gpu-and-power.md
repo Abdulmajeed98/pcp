@@ -6,7 +6,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **Rules 8 to 12**, as the spec's table reads OpenDB's values:
   - rule 8: a Problem when no row of the board's PCIe slots has 16 lanes; an empty list of slots is a value, the board has none; a row with no lanes is unknown;

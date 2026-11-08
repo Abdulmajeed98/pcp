@@ -10,7 +10,7 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 
 **Blocked by:** 05, 06, 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] In a fresh clone in a new directory, with no `.env` and no Docker volumes left from earlier runs, these all pass, with none of the three apps started by hand:
   - one install;
@@ -24,8 +24,8 @@ The services of the owner's own checkout are stopped before the fresh clone's se
 - [x] No check by hand and no check on a phone is added, since no screen changes. Whether the owner wants to look at anything, such as Missing specifications showing a cooler's "Liquid cooled", is asked, and the answer is recorded under Comments.
 - [x] **Recorded in the MVP spec.** The Technology section gains `compatibility`'s place in the order of work and a part of its own, **The compatibility module's conventions**: the library's public face; the Build it reads, and the contract that whoever hands it a Part leaves out what the catalog counts as missing; when a rule is unchecked; each rule's reading of OpenDB's values; the needed specifications and the fixed sets read from the library; the import's reading of GPU power sockets; and the library's test seam. CMP-3 and the testing strategy say that rules 11, 15 and 20 can produce a Compatibility Warning. The description of the `compatibility` library, the catalog's conventions on specification lists and on the import, `browse`'s note that `compatibility` can start now, and the commands and directory layout, where the library's `test` target adds to them, are brought up to date, and so is any figure of the import the MVP spec cites.
 - [x] Whether an ADR is needed for any of the module's decisions, which the spec proposes none of, is decided with the owner, and the answer is recorded under Comments.
-- [ ] The spec's Status becomes `resolved`, and each ticket's too.
-- [ ] The work is committed, leaving `pnpm check` passing.
+- [x] The spec's Status becomes `resolved`, and each ticket's too.
+- [x] The work is committed, leaving `pnpm check` passing.
 
 ## Comments
 
@@ -97,3 +97,4 @@ The owner answered in the orchestrator's chat on 8 November 2026, as the orchest
 
 - **The ADR question.** Asked "Should the compatibility module get an ADR of its own? The code review's fixes already added an amendment to ADR-0005: the needed specifications are now read from the rules, and the fixed sets live in the library. Nothing else is hard to undo. The sets and the rules are code, and the GPU zeros and empty M.2 lists come back from OpenDB at the pinned commit.", the owner chose "No new ADR (Recommended)". No decision of `compatibility` has an ADR beyond ADR-0005's amendment, and the MVP spec's Order of work and its conventions say so.
 - **Looking at anything by hand.** Asked "When the fresh-clone check passes, do you want to look at anything yourself? No screen changed. The only visible change is the CPU cooler's needed count going from 2 to 3 ("Liquid cooled"), and the end-to-end test checks it.", the owner chose "No, the tests are enough (Recommended)". No check by hand and no check on a phone is added, nothing is recorded as seen by the owner, and the end-to-end line above checks the cooler's count.
+- **Resolved.** With every check of the fresh clone passed and both answers recorded, this ticket's Status and the spec's are `resolved`, and so are tickets 01 to 07's. The module adds no check by hand and none on a phone, so none is left open.

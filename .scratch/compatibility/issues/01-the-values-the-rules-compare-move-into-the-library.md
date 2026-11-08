@@ -6,7 +6,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **Moved unchanged.** Every value keeps its place in its set, and the comments that say why a value is in a set or left out, such as "LGA 1151v2", "LGA 115" and "LGA 1121", and why the sets are shared, move with them.
 - [x] **Written once.** No copy of a set is left in the API. Every specification list that uses a set imports it from the library, the M.2 slot's keys among them, which the motherboard's list wrote inline.
