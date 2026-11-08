@@ -9,8 +9,9 @@ import type { FilterValue } from '../model/category-query';
 // The translator of the Category page's search and filters.
 export type SearchWords = Awaited<ReturnType<typeof getTranslations<'SearchParts'>>>;
 
-// The parameters a Category's list is narrowed by, beside its own, as the
-// API's description names them: one for each filter of BRW-2.
+// The parameters a Category's list is narrowed by, beside its own and the
+// picker's conditions, as the API's description names them: one for each
+// filter of BRW-2.
 type FilterParameter = Exclude<
   keyof ListVisiblePartsData['query'],
   | 'page'
@@ -21,6 +22,7 @@ type FilterParameter = Exclude<
   | 'manufacturer'
   | 'lowest'
   | 'highest'
+  | 'inStockOnly'
 >;
 
 // The filters named in the Shopper set (`SearchParts.filterNames`), keyed by

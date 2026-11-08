@@ -13,6 +13,7 @@ import {
   ChosenCurrencyAsked,
   theCategoryAsked,
 } from './category-and-currency';
+import { isOn, SwitchAsked } from './switch-asked';
 
 // A parameter given once is read as a list of one, and one repeated as the
 // list of its values, as the address's query gives them.
@@ -26,8 +27,10 @@ const wholeNumber = /^\d{1,15}$/;
 
 // What a Category's list of Visible Parts asks for, from the address's query:
 // the Category, the chosen currency, the search, the manufacturers, a
-// parameter for each filter of the Category, the price range, and the page. The Category and
-// the currency are required, so that no page can forget to send them.
+// parameter for each filter of the Category, the price range, the picker's
+// in stock only, and the page. The Category and the currency are required,
+// so that no page can forget to send them. A Category page does not send in
+// stock only.
 export class ListVisiblePartsRequest extends PagingRequest {
   @CategoryAsked('The Category whose Visible Parts are listed.')
   readonly category!: string;
@@ -79,6 +82,11 @@ export class ListVisiblePartsRequest extends PagingRequest {
   @Matches(wholeNumber)
   readonly highest?: string;
 
+  @SwitchAsked(
+    'In stock only, as the picker lists a Category (BLD-2): on, only the Visible Parts with at least one in-stock Visible Offer are listed, in the same order.',
+  )
+  readonly inStockOnly?: string;
+
   toQueryInput(): ListVisiblePartsQueryInput {
     // Each filter's parameter, as declared below, with the texts given it.
     const given = this as unknown as Record<string, string[] | undefined>;
@@ -96,6 +104,7 @@ export class ListVisiblePartsRequest extends PagingRequest {
       filters,
       this.lowest === undefined ? undefined : Number(this.lowest),
       this.highest === undefined ? undefined : Number(this.highest),
+      isOn(this.inStockOnly),
       this.toDomain(),
     );
   }

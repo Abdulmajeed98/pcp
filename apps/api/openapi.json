@@ -1402,6 +1402,16 @@
             }
           },
           {
+            "name": "inStockOnly",
+            "required": false,
+            "in": "query",
+            "description": "In stock only, as the picker lists a Category (BLD-2): on, only the Visible Parts with at least one in-stock Visible Offer are listed, in the same order.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
             "name": "socket",
             "required": false,
             "in": "query",
@@ -1593,7 +1603,7 @@
           }
         },
         "security": [],
-        "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last",
+        "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only",
         "tags": ["VisibleParts"]
       }
     },
@@ -1629,6 +1639,16 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             }
+          },
+          {
+            "name": "inStockOnly",
+            "required": false,
+            "in": "query",
+            "description": "In stock only, as the picker asks for a Category's filters (BLD-2): on, every value is read from the Visible Parts with at least one in-stock Visible Offer alone.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -1654,7 +1674,7 @@
           }
         },
         "security": [],
-        "summary": "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied",
+        "summary": "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied; for the picker, read from those in stock only",
         "tags": ["VisibleParts"]
       }
     },

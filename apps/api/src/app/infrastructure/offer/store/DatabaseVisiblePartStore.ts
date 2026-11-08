@@ -84,6 +84,13 @@ function within(range: PriceRange, currency: Currency, lowestAmount: SQL): SQL[]
   ];
 }
 
+// A Part with an in-stock Visible Offer, as the database asks it of what its
+// Visible Offers say of it (`whatTheirOffersSay`), when only those are asked
+// for, as the picker asks (BLD-2); no condition otherwise.
+function inStockOnly(asked: boolean, anyInStock: SQL.Aliased<boolean>): SQL | undefined {
+  return asked ? sql`${anyInStock}` : undefined;
+}
+
 // What each Part's visible Offers say of it in a currency, at now by the
 // API's clock, at the current Platform Rate, for a query of Visible Parts,
 // which joins `currentRate` once and `offered` laterally after `part`: how
@@ -167,6 +174,7 @@ export class DatabaseVisiblePartStore implements VisiblePartStore {
             ofAnyManufacturer(params.getManufacturers()),
             ...params.getChoices().map(matching),
             ...within(params.getPriceRange(), currency, sql`${offered.lowestAmount}`),
+            inStockOnly(params.isInStockOnly(), offered.inStock),
           ),
         ),
     );
@@ -261,7 +269,12 @@ export class DatabaseVisiblePartStore implements VisiblePartStore {
         .from(part)
         .leftJoin(currentRate, sql`true`)
         .crossJoinLateral(offered)
-        .where(theVisiblePartsOf(category, params.getNow()));
+        .where(
+          and(
+            theVisiblePartsOf(category, params.getNow()),
+            inStockOnly(params.isInStockOnly(), offered.inStock),
+          ),
+        );
 
       return Either.right(
         new VisiblePartsFilters(

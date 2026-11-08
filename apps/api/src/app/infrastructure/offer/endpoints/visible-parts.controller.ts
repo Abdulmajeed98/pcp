@@ -22,7 +22,7 @@ export class VisiblePartsController {
 
   @ApiOperation({
     summary:
-      "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last",
+      "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only",
     security: [],
   })
   @ApiOkResponse({ type: VisiblePartPageResponse })
@@ -44,7 +44,7 @@ export class VisiblePartsController {
   // `filters` is never read as a Part's identifier.
   @ApiOperation({
     summary:
-      "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied",
+      "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied; for the picker, read from those in stock only",
     security: [],
   })
   @ApiOkResponse({ type: VisiblePartsFiltersResponse })

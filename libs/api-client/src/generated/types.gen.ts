@@ -2144,6 +2144,10 @@ export type ListVisiblePartsData = {
          */
         highest?: number;
         /**
+         * In stock only, as the picker lists a Category (BLD-2): on, only the Visible Parts with at least one in-stock Visible Offer are listed, in the same order.
+         */
+        inStockOnly?: boolean;
+        /**
          * A filter: for CPUs, the Socket at `socket`; for motherboards, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         socket?: Array<string>;
@@ -2230,6 +2234,10 @@ export type ReadVisiblePartsFiltersData = {
          * The chosen currency, which the range of Lowest Prices is in.
          */
         currency: Currency;
+        /**
+         * In stock only, as the picker asks for a Category's filters (BLD-2): on, every value is read from the Visible Parts with at least one in-stock Visible Offer alone.
+         */
+        inStockOnly?: boolean;
     };
     url: '/v1/visible-parts/filters';
 };

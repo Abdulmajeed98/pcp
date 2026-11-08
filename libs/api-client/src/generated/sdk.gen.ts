@@ -288,12 +288,12 @@ export const editOffer = <ThrowOnError extends boolean = false>(options: Options
 export const listVisibleOffersOfPart = <ThrowOnError extends boolean = false>(options: Options<ListVisibleOffersOfPartData, ThrowOnError>): RequestResult<ListVisibleOffersOfPartResponses, ListVisibleOffersOfPartErrors, ThrowOnError> => (options.client ?? client).get<ListVisibleOffersOfPartResponses, ListVisibleOffersOfPartErrors, ThrowOnError>({ url: '/v1/parts/{partId}/offers', ...options });
 
 /**
- * One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last
+ * One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only
  */
 export const listVisibleParts = <ThrowOnError extends boolean = false>(options: Options<ListVisiblePartsData, ThrowOnError>): RequestResult<ListVisiblePartsResponses, ListVisiblePartsErrors, ThrowOnError> => (options.client ?? client).get<ListVisiblePartsResponses, ListVisiblePartsErrors, ThrowOnError>({ url: '/v1/visible-parts', ...options });
 
 /**
- * A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied
+ * A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied; for the picker, read from those in stock only
  */
 export const readVisiblePartsFilters = <ThrowOnError extends boolean = false>(options: Options<ReadVisiblePartsFiltersData, ThrowOnError>): RequestResult<ReadVisiblePartsFiltersResponses, ReadVisiblePartsFiltersErrors, ThrowOnError> => (options.client ?? client).get<ReadVisiblePartsFiltersResponses, ReadVisiblePartsFiltersErrors, ThrowOnError>({ url: '/v1/visible-parts/filters', ...options });
 

@@ -14,8 +14,8 @@ import { VisiblePartsFilters } from './VisiblePartsFilters';
 // currency every Lowest Price is in, the words every Part holds, the
 // manufacturers one of which every Part's is, the choices among the
 // Category's filters every Part matches, the range every Part's Lowest Price
-// is within, the page, and now, by the API's clock, which every Offer's
-// visibility is judged by.
+// is within, whether every Part has an in-stock Visible Offer, the page, and
+// now, by the API's clock, which every Offer's visibility is judged by.
 export class ListVisiblePartsParams {
   constructor(
     private readonly category: Category,
@@ -24,6 +24,7 @@ export class ListVisiblePartsParams {
     private readonly manufacturers: readonly string[],
     private readonly choices: readonly FilterChoice[],
     private readonly priceRange: PriceRange,
+    private readonly inStockOnly: boolean,
     private readonly pageable: PageableAttributes,
     private readonly now: Date,
   ) {}
@@ -53,6 +54,10 @@ export class ListVisiblePartsParams {
     return this.priceRange;
   }
 
+  isInStockOnly(): boolean {
+    return this.inStockOnly;
+  }
+
   getPageable(): PageableAttributes {
     return this.pageable;
   }
@@ -79,12 +84,14 @@ export class VisiblePartsPage {
 }
 
 // What a Category's filters ask for: the Category, the chosen currency the
-// range of Lowest Prices is in, and now, by the API's clock, which every
+// range of Lowest Prices is in, whether only the Parts with an in-stock
+// Visible Offer give the values, and now, by the API's clock, which every
 // Offer's visibility is judged by.
 export class ReadVisiblePartsFiltersParams {
   constructor(
     private readonly category: Category,
     private readonly currency: Currency,
+    private readonly inStockOnly: boolean,
     private readonly now: Date,
   ) {}
 
@@ -94,6 +101,10 @@ export class ReadVisiblePartsFiltersParams {
 
   getCurrency(): Currency {
     return this.currency;
+  }
+
+  isInStockOnly(): boolean {
+    return this.inStockOnly;
   }
 
   getNow(): Date {
@@ -114,7 +125,8 @@ export abstract class VisiblePartStore {
   // specification, or holding a value that stands for "not known", matches no
   // value of that filter. A price range with an end leaves out a Part with no
   // Lowest Price, and keeps those whose Lowest Price, as answered, after
-  // rounding, is within both ends. Each has its Lowest Price in the
+  // rounding, is within both ends. In stock only leaves out a Part none of
+  // whose Visible Offers is in stock. Each has its Lowest Price in the
   // currency, from the Shown Prices of its in-stock Visible Offers at the
   // current Platform Rate, which is read in the same query as the Parts, the
   // page and the total, so that one answer never mixes two rates. Parts with
@@ -128,7 +140,8 @@ export abstract class VisiblePartStore {
   ): Promise<Either.Either<VisiblePartsPage, StructuredError>>;
 
   // The Category's filters, read from all its Visible Parts at the params'
-  // now, by the same rule as its list, before any filter or search: the
+  // now, by the same rule as its list, before any filter or search, and in
+  // stock only from those with an in-stock Visible Offer alone: the
   // manufacturers they have; for each filter in `filters.ts`, the distinct
   // values they hold, numbers by size and text alphabetically, leaving out a
   // value that stands for "not known" and a filter none holds a value of;

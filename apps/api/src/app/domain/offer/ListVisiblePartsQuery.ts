@@ -22,6 +22,7 @@ class Input {
     private readonly filters: ReadonlyMap<string, readonly string[]>,
     private readonly lowest: number | undefined,
     private readonly highest: number | undefined,
+    private readonly inStockOnly: boolean,
     private readonly pageable: PageableAttributes,
   ) {}
 
@@ -61,6 +62,12 @@ class Input {
     return this.highest;
   }
 
+  // Whether only the Visible Parts with an in-stock Visible Offer are asked
+  // for, as the picker asks (BLD-2).
+  isInStockOnly(): boolean {
+    return this.inStockOnly;
+  }
+
   getPageable(): PageableAttributes {
     return this.pageable;
   }
@@ -93,7 +100,8 @@ export { Output as ListVisiblePartsQueryOutput };
 // filter the Category does not have, or a value not of its filter's kind, is
 // refused, naming its parameter. So is a price range whose lowest end is
 // above its highest; a Part is within it when its Lowest Price, as
-// answered, after rounding, is within both ends.
+// answered, after rounding, is within both ends. The picker's in stock only
+// keeps the Parts with an in-stock Visible Offer (BLD-2).
 @Injectable()
 export class ListVisiblePartsQuery {
   constructor(private readonly visiblePartStore: VisiblePartStore) {}
@@ -114,6 +122,7 @@ export class ListVisiblePartsQuery {
         input.getManufacturers(),
         choices.right,
         range.right,
+        input.isInStockOnly(),
         input.getPageable(),
         now,
       ),
