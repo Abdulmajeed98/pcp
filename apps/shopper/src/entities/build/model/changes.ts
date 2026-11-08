@@ -64,10 +64,17 @@ export function changeTheQuantity(build: Build, partText: string, typed: string)
   const held = build.find((each) => each.part === identifierIn(partText));
   if (held === undefined || !('quantity' in held)) return { build };
 
-  const quantity = quantityIn(westernNumberIn(typed));
+  const quantity = typedQuantityIn(typed);
   return quantity === undefined
     ? { refused: { reason: 'notAQuantity', category: held.category, part: held.part } }
     : { build: withQuantity(build, held.part, quantity) };
+}
+
+// A quantity as a Shopper types it on the phone's number pad, in Western,
+// Arabic-Indic or Eastern Arabic-Indic digits, with spaces or a thousands
+// separator dropped: a whole number from 1 to 16, or none.
+export function typedQuantityIn(typed: string): number | undefined {
+  return quantityIn(westernNumberIn(typed));
 }
 
 // The Build without a Part, the rest kept in their order.

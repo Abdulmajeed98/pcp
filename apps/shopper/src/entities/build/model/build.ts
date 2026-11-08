@@ -91,11 +91,15 @@ export function partValuesOf(build: Build): string[] {
   );
 }
 
-// How many Parts the Build holds, as the frame's way to the Build page says
-// it: each Part once, whatever its quantity, as the Build's sheet lists each
-// once (DESIGN.md's The way to the Build).
-export function partsCountedIn(build: Build): number {
-  return build.length;
+// How many Parts the Build holds, as the frame's way to the Build page, the
+// Build's slip and its one confirmation say it: each Part once, whatever its
+// quantity, as the Build's sheet lists each once (DESIGN.md's The way to the
+// Build). It counts the Build as its cookie holds it, or its Parts as the API
+// answers them, each a kit's or a drive's with its quantity.
+export function partsCountedIn(
+  parts: Build | readonly Pick<BuildPartResponse, 'quantity'>[],
+): number {
+  return parts.length;
 }
 
 // Reads the Build from its cookie's text, and never refuses it: a cookie the

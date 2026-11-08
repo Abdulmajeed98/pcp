@@ -4,6 +4,7 @@ export {
   type Category,
   type HoldsOne,
   identifierIn,
+  isCategory,
   isKitOrDrive,
   type KitOrDrive,
   mostKitsOrDrives,
@@ -19,5 +20,11 @@ export {
   pickInto,
   type Refusal,
   removeFrom,
+  typedQuantityIn,
 } from './model/changes';
-export { buildCookie, keptBuild, rememberTheBuild } from './model/kept-build';
+export {
+  buildCookie,
+  buildIn,
+  rememberTheBuild,
+  type RequestCookies,
+} from './model/kept-build';

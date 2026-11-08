@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import type { NextResponse } from 'next/server';
 
 import { rememberAChoice } from '@/shared/lib';
@@ -13,10 +12,18 @@ import { type Build, readTheBuild, writeTheBuild } from './build';
 // specification, which the API answers for each request.
 export const buildCookie = 'build';
 
-// The Shopper's Build, read on the server from the request being answered:
-// what can be read of the cookie, and an empty Build when there is none.
-export async function keptBuild(): Promise<Build> {
-  return readTheBuild((await cookies()).get(buildCookie)?.value);
+// What the Build is read from: the cookies of the request being answered,
+// which the server hands in (`await cookies()` from `next/headers`). This
+// slice imports nothing of the server's own, so that the forms that change
+// the Build can use it in the browser too.
+export interface RequestCookies {
+  get(name: string): { value: string } | undefined;
+}
+
+// The Shopper's Build, read from the request's cookies: what can be read of
+// its cookie, and an empty Build when there is none.
+export function buildIn(cookies: RequestCookies): Build {
+  return readTheBuild(cookies.get(buildCookie)?.value);
 }
 
 // Writes the Build into the server's answer, kept for a year through the
