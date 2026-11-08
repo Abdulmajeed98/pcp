@@ -81,8 +81,9 @@ export class BuildVendor {
   }
 }
 
-// Names compared as the database orders them elsewhere, by English
-// collation, so that the order is the same however the API's host is set.
+// Names compared in English collation, as near as JavaScript comes to the
+// database's own `en_US.utf8`, by which a Part page orders its Vendors'
+// names, and the same however the API's host is set.
 const byName = new Intl.Collator('en').compare;
 
 // Two totals compared as answered, after rounding (PRC-4), the lowest first,
