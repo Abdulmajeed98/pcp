@@ -1,3 +1,5 @@
+import { type CategoryKey, neededSpecificationsOf } from '@pcp/compatibility';
+
 import { LabelledSpecification } from './LabelledSpecification';
 import { Specification, SpecificationProblem } from './Specification';
 import {
@@ -19,9 +21,29 @@ export type SpecificationCheck = {
   problems: SpecificationProblem[];
 };
 
-// Every specification a Part of one Category can hold.
+// Every specification a Part of one Category can hold, the Category given by
+// its key, which the list is found by. No list marks a needed specification:
+// one is needed when the library's statements of the Compatibility Rules name
+// its path for the list's Category, so that what the Admin is asked to fill
+// in is what the rules read. A path the statements name that the list lacks
+// marks nothing, and the API still starts (ADR-0004: domain code never
+// throws); the Categories endpoint's test proves that none is.
 export class SpecificationList {
-  constructor(private readonly specifications: readonly Specification[]) {}
+  private readonly needed: ReadonlySet<Specification>;
+
+  constructor(
+    private readonly category: CategoryKey,
+    private readonly specifications: readonly Specification[],
+  ) {
+    const paths = new Set(neededSpecificationsOf(category));
+    this.needed = new Set(
+      specifications.filter((specification) => paths.has(specification.getPath())),
+    );
+  }
+
+  getCategoryKey(): CategoryKey {
+    return this.category;
+  }
 
   getSpecifications(): readonly Specification[] {
     return this.specifications;
@@ -47,7 +69,14 @@ export class SpecificationList {
 
   // The specifications a Compatibility Rule reads, in the list's order.
   getNeeded(): readonly Specification[] {
-    return this.specifications.filter((specification) => specification.isNeeded());
+    return this.specifications.filter((specification) => this.isNeeded(specification));
+  }
+
+  // Whether a Compatibility Rule reads a specification of the list, or a
+  // field of one of its lists of rows, which none does: a rule that reads a
+  // list of rows, such as a motherboard's PCIe slots, names the list.
+  isNeeded(specification: Specification): boolean {
+    return this.needed.has(specification);
   }
 
   // The needed specifications a Part's specifications do not hold, by their

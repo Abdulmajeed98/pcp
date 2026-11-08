@@ -1,4 +1,5 @@
-import { ramTypes, sockets } from './shared-sets';
+import { ramTypes, sockets } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
@@ -6,8 +7,8 @@ import { SpecificationList } from './SpecificationList';
 // identity data. A 0 means "not known" in OpenDB wherever 0 cannot be true:
 // a clock speed, a core count other than efficiency cores, a cache size other
 // than L3, which some older AMD processors do not have, and a power figure.
-export const cpuSpecifications = new SpecificationList([
-  Specification.oneOf('socket', 'Socket', sockets, { needed: true }),
+export const cpuSpecifications = new SpecificationList('cpu', [
+  Specification.oneOf('socket', 'Socket', sockets),
   Specification.text('series', 'Series'),
   Specification.text('microarchitecture', 'Microarchitecture'),
   Specification.text('coreFamily', 'Core family'),
@@ -41,7 +42,6 @@ export const cpuSpecifications = new SpecificationList([
   Specification.decimalNumber('cache.l3', 'L3 cache', { unit: 'MB' }),
   Specification.wholeNumber('specifications.tdp', 'TDP', {
     unit: 'W',
-    needed: true,
     zeroMeansMissing: true,
   }),
   Specification.wholeNumber('specifications.ppt', 'Package power tracking (PPT)', {
@@ -77,9 +77,7 @@ export const cpuSpecifications = new SpecificationList([
     unit: 'GB',
     zeroMeansMissing: true,
   }),
-  Specification.severalOf('specifications.memory.types', 'Memory types', ramTypes, {
-    needed: true,
-  }),
+  Specification.severalOf('specifications.memory.types', 'Memory types', ramTypes),
   Specification.wholeNumber('specifications.memory.channels', 'Memory channels', {
     zeroMeansMissing: true,
   }),

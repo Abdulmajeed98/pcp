@@ -1,4 +1,5 @@
-import { motherboardFormFactors, ramTypes, sockets } from './shared-sets';
+import { m2SlotKeys, motherboardFormFactors, ramTypes, sockets } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
@@ -11,59 +12,39 @@ import { SpecificationList } from './SpecificationList';
 // that counts SATA drives would otherwise call those a Compatibility Problem.
 // A 0 for the older SATA 3 Gb/s ports, which current boards do not have, is
 // true.
-export const motherboardSpecifications = new SpecificationList([
-  Specification.oneOf('socket', 'Socket', sockets, { needed: true }),
-  Specification.oneOf('form_factor', 'Form factor', motherboardFormFactors, {
-    needed: true,
-  }),
+//
+// An empty list of M.2 slots is a value, a board with none. Only the import
+// reads one otherwise: on a board of a socket of 2017 or later it is left
+// out, as not known, so that Missing specifications asks for it. The Admin
+// may still give any board an empty list.
+export const motherboardSpecifications = new SpecificationList('motherboard', [
+  Specification.oneOf('socket', 'Socket', sockets),
+  Specification.oneOf('form_factor', 'Form factor', motherboardFormFactors),
   Specification.text('chipset', 'Chipset'),
-  Specification.oneOf('memory.ram_type', 'Memory type', ramTypes, { needed: true }),
-  Specification.wholeNumber('memory.slots', 'Memory slots', {
-    needed: true,
-    zeroMeansMissing: true,
-  }),
+  Specification.oneOf('memory.ram_type', 'Memory type', ramTypes),
+  Specification.wholeNumber('memory.slots', 'Memory slots', { zeroMeansMissing: true }),
   Specification.wholeNumber('memory.max', 'Maximum memory', {
     unit: 'GB',
-    needed: true,
     zeroMeansMissing: true,
   }),
-  Specification.listOfRows(
-    'pcie_slots',
-    'PCIe slots',
-    [
-      Specification.text('gen', 'Generation'),
-      Specification.wholeNumber('quantity', 'Slots', { zeroMeansMissing: true }),
-      Specification.wholeNumber('lanes', 'Lanes', { zeroMeansMissing: true }),
-    ],
-    { needed: true },
-  ),
-  Specification.listOfRows(
-    'm2_slots',
-    'M.2 slots',
-    [
-      Specification.text('size', 'Sizes'),
-      // A drive goes only in a slot keyed M. Slots keyed E are for wireless
-      // cards.
-      Specification.oneOf('key', 'Key', ['B', 'E', 'M']),
-      Specification.text('interface', 'Interface'),
-    ],
-    { needed: true },
-  ),
+  Specification.listOfRows('pcie_slots', 'PCIe slots', [
+    Specification.text('gen', 'Generation'),
+    Specification.wholeNumber('quantity', 'Slots', { zeroMeansMissing: true }),
+    Specification.wholeNumber('lanes', 'Lanes', { zeroMeansMissing: true }),
+  ]),
+  Specification.listOfRows('m2_slots', 'M.2 slots', [
+    Specification.text('size', 'Sizes'),
+    Specification.oneOf('key', 'Key', m2SlotKeys),
+    Specification.text('interface', 'Interface'),
+  ]),
   Specification.wholeNumber('storage_devices.sata_6_gb_s', 'SATA 6 Gb/s ports', {
-    needed: true,
     zeroMeansMissing: true,
   }),
-  Specification.wholeNumber('storage_devices.sata_3_gb_s', 'SATA 3 Gb/s ports', {
-    needed: true,
-  }),
+  Specification.wholeNumber('storage_devices.sata_3_gb_s', 'SATA 3 Gb/s ports'),
   Specification.wholeNumber('storage_devices.u2', 'U.2 ports'),
-  Specification.listOfText('power_connectors.cpu_power', 'CPU power connectors', {
-    needed: true,
-  }),
+  Specification.listOfText('power_connectors.cpu_power', 'CPU power connectors'),
   Specification.text('power_connectors.main_power', 'Main power connector'),
-  Specification.yesNo('back_connect_connectors', 'Connectors on the back of the board', {
-    needed: true,
-  }),
+  Specification.yesNo('back_connect_connectors', 'Connectors on the back of the board'),
   Specification.listOfRows('onboard_ethernet', 'Ethernet', [
     Specification.text('speed', 'Speed'),
     Specification.text('controller', 'Controller'),

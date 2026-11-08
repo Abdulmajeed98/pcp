@@ -1,18 +1,15 @@
-import { ramTypes } from './shared-sets';
+import { ramTypes } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
 
 // Every specification of a RAM kit that OpenDB defines, apart from retailer
 // and identity data. A 0 means "not known" for every number here.
-export const ramSpecifications = new SpecificationList([
-  Specification.oneOf('ram_type', 'Memory type', ramTypes, { needed: true }),
-  Specification.wholeNumber('modules.quantity', 'Modules', {
-    needed: true,
-    zeroMeansMissing: true,
-  }),
+export const ramSpecifications = new SpecificationList('ram', [
+  Specification.oneOf('ram_type', 'Memory type', ramTypes),
+  Specification.wholeNumber('modules.quantity', 'Modules', { zeroMeansMissing: true }),
   Specification.wholeNumber('modules.capacity_gb', 'Capacity of each module', {
     unit: 'GB',
-    needed: true,
     zeroMeansMissing: true,
   }),
   Specification.wholeNumber('capacity', 'Total capacity', {

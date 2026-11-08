@@ -4,7 +4,6 @@ import { pinnedOpenDbCommit } from '@pcp/opendb';
 import { Either, Option } from 'effect';
 
 import { Category } from '../part/Category';
-import { SpecificationProblem } from '../specification/Specification';
 import { CatalogImportStore } from './CatalogImportStore';
 import {
   CategoryImport,
@@ -19,6 +18,7 @@ import {
   PartOfRecord,
   partOfRecord,
   RecordLeftOutReason,
+  ValueLeftOut,
   withPartNumbersOf,
 } from './opendb-record';
 import { OpenDbSource } from './OpenDbSource';
@@ -62,13 +62,13 @@ function byText(one: string, other: string): number {
 
 // The values left out, counted for each specification and reason. The rows
 // of a list are counted together.
-function valuesLeftOutOf(problems: readonly SpecificationProblem[]): ValuesLeftOut[] {
+function valuesLeftOutOf(leftOut: readonly ValueLeftOut[]): ValuesLeftOut[] {
   const counts = new Map<string, ValuesLeftOut>();
-  for (const problem of problems) {
-    const specification = problem.path.replace(/\.\d+(?=\.|$)/g, '.*');
-    const key = `${specification} ${problem.reason}`;
+  for (const value of leftOut) {
+    const specification = value.path.replace(/\.\d+(?=\.|$)/g, '.*');
+    const key = `${specification} ${value.reason}`;
     const count = (counts.get(key)?.getCount() ?? 0) + 1;
-    counts.set(key, new ValuesLeftOut(specification, problem.reason, count));
+    counts.set(key, new ValuesLeftOut(specification, value.reason, count));
   }
   return [...counts.entries()]
     .sort(([one], [other]) => byText(one, other))

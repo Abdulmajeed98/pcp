@@ -12,6 +12,7 @@ type SpecificationBody = {
   kind: string;
   unit?: string;
   values?: string[];
+  fields?: SpecificationBody[];
   needed: boolean;
   zeroMeansMissing: boolean;
 };
@@ -57,10 +58,12 @@ describe('the Categories endpoint', () => {
   // table of Compatibility Rules and not read from the platform. Where the
   // table names an object, the specifications in it that a rule counts are
   // listed: a motherboard's SATA ports (rule 13), a GPU's power sockets
-  // (rule 11) and a PSU's connectors (rules 11, 16 and 20).
+  // (rule 11) and a PSU's connectors (rules 11, 16 and 20). A CPU cooler's
+  // "Liquid cooled" is listed too, which rule 17 reads to tell an air cooler
+  // from a liquid one.
   const neededByTheRules: Record<string, string[]> = {
     cpu: ['socket', 'specifications.memory.types', 'specifications.tdp'],
-    cpuCooler: ['cpu_sockets', 'height'],
+    cpuCooler: ['cpu_sockets', 'water_cooled', 'height'],
     motherboard: [
       'socket',
       'form_factor',
@@ -119,6 +122,39 @@ describe('the Categories endpoint', () => {
         needed: [...neededByTheRules[category.key]].sort(),
       });
     }
+  });
+
+  it('marks no field of a row as needed, since a rule that reads a list of rows names the list', async () => {
+    const categories = await readCategories(['admin']);
+    const rowLists = categories.flatMap((category) =>
+      category.specifications
+        .filter((each) => each.fields !== undefined)
+        .map((each) => ({
+          list: `${category.key} ${each.path}`,
+          fields: (each.fields ?? []).map((field) => field.path),
+          needed: (each.fields ?? [])
+            .filter((field) => field.needed)
+            .map((field) => field.path),
+        })),
+    );
+
+    expect(rowLists).toEqual([
+      {
+        list: 'motherboard pcie_slots',
+        fields: ['gen', 'quantity', 'lanes'],
+        needed: [],
+      },
+      {
+        list: 'motherboard m2_slots',
+        fields: ['size', 'key', 'interface'],
+        needed: [],
+      },
+      {
+        list: 'motherboard onboard_ethernet',
+        fields: ['speed', 'controller'],
+        needed: [],
+      },
+    ]);
   });
 
   it('gives every Category a specification list', async () => {

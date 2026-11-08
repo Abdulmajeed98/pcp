@@ -1,7 +1,9 @@
 import { CategoryImport } from '~/domain/catalog-import/CategoryImport';
 import { ImportCatalogCommandOutput } from '~/domain/catalog-import/ImportCatalogCommand';
-import { RecordLeftOutReason } from '~/domain/catalog-import/opendb-record';
-import { SpecificationProblemReason } from '~/domain/specification/Specification';
+import {
+  RecordLeftOutReason,
+  ValueLeftOutReason,
+} from '~/domain/catalog-import/opendb-record';
 
 const recordReasons: Record<RecordLeftOutReason, string> = {
   notARecord: 'it holds no JSON record',
@@ -16,7 +18,7 @@ const recordReasons: Record<RecordLeftOutReason, string> = {
     'it has the name, manufacturer and specifications of another record, whose Part takes its part numbers',
 };
 
-const valueReasons: Record<SpecificationProblemReason, string> = {
+const valueReasons: Record<ValueLeftOutReason, string> = {
   notAWholeNumber: 'not a whole number',
   notANumber: 'not a number',
   negative: 'below 0',
@@ -28,6 +30,9 @@ const valueReasons: Record<SpecificationProblemReason, string> = {
   notARow: 'not a row',
   notAGroup: 'not a group of values',
   unknown: 'not on the list',
+  noPowerSocketAbove75W:
+    '0 for each power socket, where the GPU draws more than the 75 W a PCIe slot supplies',
+  noM2SlotSince2017: "an empty list, where the board's socket came in 2017 or later",
 };
 
 const columns = ['Imported', 'Already there', 'Records left out', 'Values left out'];

@@ -1,3 +1,43 @@
-// Placeholder: it exists so that apps can prove `@pcp/compatibility` resolves.
-// Delete it when the first Compatibility Rule arrives.
-export const compatibilityPlaceholder = '@pcp/compatibility';
+export type {
+  Build,
+  CaseSpecifications,
+  CategoryKey,
+  CpuCoolerSpecifications,
+  CpuSpecifications,
+  GpuSpecifications,
+  M2Slot,
+  MotherboardSpecifications,
+  Part,
+  PartAndQuantity,
+  PcieSlots,
+  PsuSpecifications,
+  RamSpecifications,
+  StorageSpecifications,
+} from './build';
+export {
+  gpuPowerSockets,
+  m2SlotKeys,
+  motherboardFormFactors,
+  powerSupplyFormFactors,
+  ramTypes,
+  sockets,
+  storageFormFactors,
+  storageInterfaces,
+} from './fixed-sets';
+export type {
+  GpuPowerSocket,
+  M2SlotKey,
+  MotherboardFormFactor,
+  PowerSupplyFormFactor,
+  RamType,
+  Socket,
+  StorageFormFactor,
+  StorageInterface,
+} from './fixed-sets';
+export { estimatedPowerDrawOf } from './estimated-power-draw';
+export type { EstimatedPowerDraw } from './estimated-power-draw';
+export { isCompatible } from './is-compatible';
+export type { PartOf } from './is-compatible';
+export { judgeBuild } from './judge-build';
+export { neededSpecificationsOf } from './needed-specifications';
+export type { MissingSpecification, RuleOutcome } from './outcome';

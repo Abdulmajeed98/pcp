@@ -1,12 +1,28 @@
+import { type GpuPowerSocket, gpuPowerSockets } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
+
+// The label of each kind of power socket a GPU has, whose names the
+// compatibility library states.
+const powerSocketLabels: { readonly [Socket in GpuPowerSocket]: string } = {
+  pcie_6_pin: 'PCIe 6-pin power sockets',
+  pcie_8_pin: 'PCIe 8-pin power sockets',
+  pcie_12VHPWR: '12VHPWR power sockets',
+  pcie_12V_2x6: '12V-2x6 power sockets',
+};
 
 // Every specification of a GPU that OpenDB defines, apart from retailer and
 // identity data. A 0 means "not known" for a size, a clock, a memory figure,
 // the TDP and the number of cores. The radiator and its fans are only those of
-// a hybrid or liquid-cooled card, and a 0 there stands for none. A 0 power connector or
-// video output of one kind is true: a card has none of that kind.
-export const gpuSpecifications = new SpecificationList([
+// a hybrid or liquid-cooled card, and a 0 there stands for none. A 0 power
+// connector or video output of one kind is true: a card has none of that kind.
+// Only the import reads such zeros otherwise: a GPU above 75 W, the most a
+// PCIe slot supplies, that holds 0 for each of its four power sockets is
+// imported without the four, as not known, so that Missing specifications
+// asks for them. The Admin may still give any GPU any counts, 0 for each
+// among them.
+export const gpuSpecifications = new SpecificationList('gpu', [
   Specification.text('chipset_manufacturer', 'Chipset manufacturer'),
   Specification.text('chipset', 'Chipset'),
   Specification.wholeNumber('memory', 'Memory', { unit: 'GB', zeroMeansMissing: true }),
@@ -28,19 +44,10 @@ export const gpuSpecifications = new SpecificationList([
     unit: 'bit',
     zeroMeansMissing: true,
   }),
-  Specification.wholeNumber('tdp', 'TDP', {
-    unit: 'W',
-    needed: true,
-    zeroMeansMissing: true,
-  }),
+  Specification.wholeNumber('tdp', 'TDP', { unit: 'W', zeroMeansMissing: true }),
   Specification.text('interface', 'Interface'),
-  Specification.decimalNumber('length', 'Length', {
-    unit: 'mm',
-    needed: true,
-    zeroMeansMissing: true,
-  }),
+  Specification.decimalNumber('length', 'Length', { unit: 'mm', zeroMeansMissing: true }),
   Specification.decimalNumber('total_slot_width', 'Slots it occupies', {
-    needed: true,
     zeroMeansMissing: true,
   }),
   Specification.decimalNumber(
@@ -50,18 +57,9 @@ export const gpuSpecifications = new SpecificationList([
       zeroMeansMissing: true,
     },
   ),
-  Specification.wholeNumber('power_connectors.pcie_6_pin', 'PCIe 6-pin power sockets', {
-    needed: true,
-  }),
-  Specification.wholeNumber('power_connectors.pcie_8_pin', 'PCIe 8-pin power sockets', {
-    needed: true,
-  }),
-  Specification.wholeNumber('power_connectors.pcie_12VHPWR', '12VHPWR power sockets', {
-    needed: true,
-  }),
-  Specification.wholeNumber('power_connectors.pcie_12V_2x6', '12V-2x6 power sockets', {
-    needed: true,
-  }),
+  ...gpuPowerSockets.map((socket) =>
+    Specification.wholeNumber(`power_connectors.${socket}`, powerSocketLabels[socket]),
+  ),
   Specification.text('cooling', 'Cooling'),
   Specification.wholeNumber('radiator_size', 'External radiator size', {
     unit: 'mm',
