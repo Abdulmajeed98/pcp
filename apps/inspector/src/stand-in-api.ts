@@ -13,6 +13,7 @@ import type {
   PartSummaryResponse,
   PlatformFiguresResponse,
   ReadBuildData,
+  ReadVisiblePartsFiltersData,
   RuleOutcomeResponse,
   ShownPriceResponse,
   SpecificationResponse,
@@ -28,6 +29,7 @@ import type {
 import {
   type CategoryKey,
   estimatedPowerDrawOf,
+  isCompatible,
   judgeBuild,
   type MissingSpecification,
   type PartOf,
@@ -315,7 +317,22 @@ type FilterParameter = Exclude<
   | 'manufacturer'
   | 'lowest'
   | 'highest'
+  | typeof inStockOnly
+  | typeof theBuild
+  | typeof keepNotCompatible
 >;
+
+// The picker's conditions on a Category's list (BLD-2, BLD-3): in stock
+// only, which its filters take too; the Build, in `part`, as reading a Build
+// takes it; and the switch that keeps the Parts that are not Compatible.
+// Each is on only when it is `true`.
+const inStockOnly = 'inStockOnly' satisfies keyof ListVisiblePartsData['query'] &
+  keyof ReadVisiblePartsFiltersData['query'];
+const keepNotCompatible = 'keepNotCompatible' satisfies keyof ListVisiblePartsData['query'];
+
+function isOn(query: URLSearchParams, condition: string): boolean {
+  return query.get(condition) === 'true';
+}
 
 // Which specification each of a Category's filters shows, in the order a
 // form shows them, as the API's description of each parameter says. It is
@@ -447,14 +464,36 @@ function visibleParts(shop: ShoppersShop, query: URLSearchParams): StandInAnswer
       holdsEveryWord(response, words) &&
       (manufacturers.length === 0 || manufacturers.includes(response.manufacturer)) &&
       filters.every((filter) => holdsOneOf(read, filter.path, filter.asked)) &&
-      inRange
+      inRange &&
+      (response.inStock || !isOn(query, inStockOnly))
     );
   });
   const body: VisiblePartPageResponse = aPageOf(
     query,
-    picked.map((visible) => visible.response),
+    judgedForThePicker(shop, picked, query),
   );
   return answer(body);
+}
+
+// The Parts listed, each judged against the Build the picker gives, when it
+// gives one: each answers whether it is Compatible with it, through the
+// library's `isCompatible`, which puts a Part in place of the Build's Part of
+// its Category, or a kit or a drive beside the others, and the Parts that are
+// not are left out unless the switch keeps them. They are judged before they
+// are paged, so a page counts only the Parts kept.
+function judgedForThePicker(
+  shop: ShoppersShop,
+  listed: readonly VisiblePartAnswered[],
+  query: URLSearchParams,
+): VisiblePartResponse[] {
+  if (!query.has(theBuild)) return listed.map(({ response }) => response);
+  const build = buildForTheRules(theBuildAsked(shop, query));
+  return listed
+    .map(({ read, response }) => ({
+      ...response,
+      compatible: isCompatible(read.summary.category, forTheRules(read), build),
+    }))
+    .filter((response) => response.compatible || isOn(query, keepNotCompatible));
 }
 
 // The kind of value a filter offers, for each kind of specification a filter
@@ -478,7 +517,9 @@ function inOrder(a: FilterResponse['values'][number], b: FilterResponse['values'
 function filtersOfCategory(shop: ShoppersShop, query: URLSearchParams): StandInAnswer {
   const category = categoryOf(query);
   const currency = currencyOf(query);
-  const visible = visiblePartsOf(shop, category, currency);
+  const visible = visiblePartsOf(shop, category, currency).filter(
+    ({ response }) => response.inStock || !isOn(query, inStockOnly),
+  );
   const list = shop.categories.get(category)?.specifications ?? [];
   const filters = filtersOf[category].flatMap(({ parameter, path }): FilterResponse[] => {
     const specification = list.find((each) => each.path === path);

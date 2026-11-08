@@ -205,6 +205,75 @@ describe('the stand-in API', () => {
       expect(listOf('category=chair&currency=IQD').body).toEqual(notValid('category'));
       expect(listOf('category=cpu').body).toEqual(notValid('currency'));
     });
+
+    describe('for the picker', () => {
+      const everyCpu = [
+        'Intel Core i3 12100F',
+        'AMD Ryzen 5 5600',
+        'AMD Ryzen 5 7600X',
+        'Intel Core i5 14600K',
+        'Intel Core Ultra 7 265K',
+        'AMD Ryzen 7 7800X3D',
+        'Intel Core i7 14700K',
+        'AMD Ryzen 7 9800X3D',
+        'AMD Ryzen 9 7950X3D',
+      ];
+      const withTheBuild = (...parts: CatalogPart[]) =>
+        parts.map((part) => `&part=${idOf(part)}`).join('');
+      const cpusFor = (more: string) =>
+        (
+          listOf(`category=cpu&currency=IQD&size=100${more}`)
+            .body as VisiblePartPageResponse
+        ).content;
+
+      it('are those some Vendor has in stock, in stock only, in the same order', () => {
+        expect(cpus('&inStockOnly=true')).toEqual(everyCpu.slice(0, -1));
+        expect(cpus('&inStockOnly=false')).toEqual(everyCpu);
+      });
+
+      it('each answer whether it is Compatible with the Build given, and leave out those that are not', () => {
+        const listed = cpusFor(withTheBuild(b650Tomahawk));
+
+        expect(listed.map((part) => part.name)).toEqual(
+          everyCpu.filter((name) => name !== ryzen5600.name),
+        );
+        expect(listed.every((part) => part.compatible === true)).toBe(true);
+      });
+
+      it('keep those that are not Compatible with the switch, in their place, answering that they are not', () => {
+        const listed = cpusFor(`${withTheBuild(b650Tomahawk)}&keepNotCompatible=true`);
+
+        expect(listed.map((part) => [part.name, part.compatible])).toEqual(
+          everyCpu.map((name) => [name, name !== ryzen5600.name]),
+        );
+      });
+
+      it('are each judged in place of the Build’s Part of their Category', () => {
+        expect(
+          cpusFor(withTheBuild(ryzen5600, b650Tomahawk)).map((part) => part.name),
+        ).toEqual(everyCpu.filter((name) => name !== ryzen5600.name));
+      });
+
+      it('answer nothing of being Compatible without a Build, with the switch or without', () => {
+        for (const listed of [cpusFor(''), cpusFor('&keepNotCompatible=true')]) {
+          expect(listed.map((part) => part.name)).toEqual(everyCpu);
+          expect(listed.some((part) => 'compatible' in part)).toBe(false);
+        }
+      });
+
+      it('come a page at a time once judged, counting only those kept', () => {
+        const page = listOf(
+          `category=cpu&currency=IQD&size=3&page=1&inStockOnly=true${withTheBuild(b650Tomahawk)}`,
+        ).body as VisiblePartPageResponse;
+
+        expect(page).toMatchObject({ totalElements: 7, totalPages: 3, pageNumber: 1 });
+        expect(page.content.map((part) => part.name)).toEqual([
+          'Intel Core Ultra 7 265K',
+          'AMD Ryzen 7 7800X3D',
+          'Intel Core i7 14700K',
+        ]);
+      });
+    });
   });
 
   describe("a Category's filters", () => {
@@ -240,6 +309,13 @@ describe('the stand-in API', () => {
 
     it('leave out a filter no Visible Part holds a value of', () => {
       expect(filtersOf('category=case&currency=IQD').filters).toEqual([]);
+    });
+
+    it('offer only what Parts some Vendor has in stock hold, in stock only', () => {
+      expect(filtersOf('category=storage&currency=IQD').manufacturers).toContain('Western');
+      expect(
+        filtersOf('category=storage&currency=IQD&inStockOnly=true').manufacturers,
+      ).not.toContain('Western');
     });
 
     it('are refused without a Category or a currency', () => {
