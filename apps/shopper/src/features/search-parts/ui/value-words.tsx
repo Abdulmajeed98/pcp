@@ -23,6 +23,8 @@ type FilterParameter = Exclude<
   | 'lowest'
   | 'highest'
   | 'inStockOnly'
+  | 'part'
+  | 'keepNotCompatible'
 >;
 
 // The filters named in the Shopper set (`SearchParts.filterNames`), keyed by

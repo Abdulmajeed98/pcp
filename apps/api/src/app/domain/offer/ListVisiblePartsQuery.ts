@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { PageableAttributes, StructuredError } from '@pcp/core';
+import { PageableAttributes, PageAttributes, StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
+import { BuildReading } from '../build/BuildReading';
+import { compatibleWith } from '../build/compatible';
 import { Currency } from '../currency/currency';
 import { Category } from '../part/Category';
 import { searchWordsOf } from '../part/search-words';
 import { choicesOf } from '../specification/filters';
 import { PriceRange } from './PriceRange';
+import { VisiblePart } from './VisiblePart';
 import {
   ListVisiblePartsParams,
   VisiblePartsPage,
@@ -23,6 +26,8 @@ class Input {
     private readonly lowest: number | undefined,
     private readonly highest: number | undefined,
     private readonly inStockOnly: boolean,
+    private readonly partValues: readonly string[],
+    private readonly keepNotCompatible: boolean,
     private readonly pageable: PageableAttributes,
   ) {}
 
@@ -68,6 +73,19 @@ class Input {
     return this.inStockOnly;
   }
 
+  // The `part` values the request gives, as it gives them, before they are
+  // read as the Build the picker judges each Part against; none without a
+  // Build.
+  getPartValues(): readonly string[] {
+    return this.partValues;
+  }
+
+  // Whether the Parts that are not Compatible with the Build are kept, as the
+  // picker's switch asks; they are left out otherwise.
+  isKeepingNotCompatible(): boolean {
+    return this.keepNotCompatible;
+  }
+
   getPageable(): PageableAttributes {
     return this.pageable;
   }
@@ -100,11 +118,21 @@ export { Output as ListVisiblePartsQueryOutput };
 // filter the Category does not have, or a value not of its filter's kind, is
 // refused, naming its parameter. So is a price range whose lowest end is
 // above its highest; a Part is within it when its Lowest Price, as
-// answered, after rounding, is within both ends. The picker's in stock only
-// keeps the Parts with an in-stock Visible Offer (BLD-2).
+// answered, after rounding, is within both ends.
+//
+// The picker's conditions: in stock only keeps the Parts with an in-stock
+// Visible Offer (BLD-2). Given a Build, read as reading a Build reads it and
+// refused as it refuses it, naming `part`, each Part answers whether it is
+// Compatible with it, and those that are not are left out unless the switch
+// keeps them, in their place in the order (BLD-3). Every Part is judged
+// before the list is paged, so that the page and the total count only the
+// Parts kept.
 @Injectable()
 export class ListVisiblePartsQuery {
-  constructor(private readonly visiblePartStore: VisiblePartStore) {}
+  constructor(
+    private readonly visiblePartStore: VisiblePartStore,
+    private readonly buildReading: BuildReading,
+  ) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const choices = choicesOf(input.getCategory(), input.getFilters());
@@ -114,20 +142,49 @@ export class ListVisiblePartsQuery {
 
     // Read once, so that every Offer's visibility is judged at one moment.
     const now = new Date();
-    const page = await this.visiblePartStore.listVisibleParts(
-      new ListVisiblePartsParams(
-        input.getCategory(),
-        input.getCurrency(),
-        searchWordsOf(input.getTerm()),
-        input.getManufacturers(),
-        choices.right,
-        range.right,
-        input.isInStockOnly(),
-        input.getPageable(),
-        now,
-      ),
+    const params = new ListVisiblePartsParams(
+      input.getCategory(),
+      input.getCurrency(),
+      searchWordsOf(input.getTerm()),
+      input.getManufacturers(),
+      choices.right,
+      range.right,
+      input.isInStockOnly(),
+      now,
     );
+    if (input.getPartValues().length === 0) {
+      const page = await this.visiblePartStore.listVisibleParts(
+        params,
+        input.getPageable(),
+      );
+      return Either.map(page, Output.of);
+    }
 
-    return Either.map(page, Output.of);
+    const build = await this.buildReading.read(input.getPartValues(), now);
+    if (Either.isLeft(build)) return Either.left(build.left);
+    const every = await this.visiblePartStore.listEveryVisiblePart(params);
+    if (Either.isLeft(every)) return Either.left(every.left);
+
+    // Each Part judged, then the Parts kept paged, so that the page and the
+    // total count only those.
+    const compatible = compatibleWith(build.right);
+    const kept = every.right
+      .map((visible) => visible.judged(compatible(visible.getPart())))
+      .filter((visible) => input.isKeepingNotCompatible() || visible.isCompatible());
+    return Either.right(Output.of(onePageOf(kept, input.getPageable())));
   }
+}
+
+// One page of a list, as the catalog's paging gives it: the items past the
+// page's offset, as many as it holds, and where the page stands among them
+// all, so that a page past the end is empty and still answers the total.
+function onePageOf(
+  parts: readonly VisiblePart[],
+  pageable: PageableAttributes,
+): VisiblePartsPage {
+  const offset = pageable.getOffset();
+  return new VisiblePartsPage(
+    parts.slice(offset, offset + pageable.getLimit()),
+    PageAttributes.of(pageable, parts.length),
+  );
 }

@@ -288,7 +288,7 @@ export const editOffer = <ThrowOnError extends boolean = false>(options: Options
 export const listVisibleOffersOfPart = <ThrowOnError extends boolean = false>(options: Options<ListVisibleOffersOfPartData, ThrowOnError>): RequestResult<ListVisibleOffersOfPartResponses, ListVisibleOffersOfPartErrors, ThrowOnError> => (options.client ?? client).get<ListVisibleOffersOfPartResponses, ListVisibleOffersOfPartErrors, ThrowOnError>({ url: '/v1/parts/{partId}/offers', ...options });
 
 /**
- * One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only
+ * One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only, and, given a Build, each with whether it is Compatible with it, those that are not left out unless the switch keeps them
  */
 export const listVisibleParts = <ThrowOnError extends boolean = false>(options: Options<ListVisiblePartsData, ThrowOnError>): RequestResult<ListVisiblePartsResponses, ListVisiblePartsErrors, ThrowOnError> => (options.client ?? client).get<ListVisiblePartsResponses, ListVisiblePartsErrors, ThrowOnError>({ url: '/v1/visible-parts', ...options });
 
@@ -313,6 +313,11 @@ export const listVisibleOffersOfVendor = <ThrowOnError extends boolean = false>(
 export const readPlatformFigures = <ThrowOnError extends boolean = false>(options?: Options<ReadPlatformFiguresData, ThrowOnError>): RequestResult<ReadPlatformFiguresResponses, ReadPlatformFiguresErrors, ThrowOnError> => (options?.client ?? client).get<ReadPlatformFiguresResponses, ReadPlatformFiguresErrors, ThrowOnError>({ url: '/v1/platform-figures', ...options });
 
 /**
+ * A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs, the outcome of every Compatibility Rule that applies to it, and its Estimated power draw
+ */
+export const readBuild = <ThrowOnError extends boolean = false>(options: Options<ReadBuildData, ThrowOnError>): RequestResult<ReadBuildResponses, ReadBuildErrors, ThrowOnError> => (options.client ?? client).get<ReadBuildResponses, ReadBuildErrors, ThrowOnError>({ url: '/v1/build', ...options });
+
+/**
  * The current Platform Rate, in whole dinars per dollar, and when it was set, or none until the Admin sets the first
  */
 export const readPlatformRate = <ThrowOnError extends boolean = false>(options?: Options<ReadPlatformRateData, ThrowOnError>): RequestResult<ReadPlatformRateResponses, ReadPlatformRateErrors, ThrowOnError> => (options?.client ?? client).get<ReadPlatformRateResponses, ReadPlatformRateErrors, ThrowOnError>({
@@ -333,8 +338,3 @@ export const setPlatformRate = <ThrowOnError extends boolean = false>(options: O
         ...options.headers
     }
 });
-
-/**
- * A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity and whether it is a Visible Part, and whether it is a Complete Build, with the Categories it still needs, the outcome of every Compatibility Rule that applies to it, and its Estimated power draw
- */
-export const readBuild = <ThrowOnError extends boolean = false>(options: Options<ReadBuildData, ThrowOnError>): RequestResult<ReadBuildResponses, ReadBuildErrors, ThrowOnError> => (options.client ?? client).get<ReadBuildResponses, ReadBuildErrors, ThrowOnError>({ url: '/v1/build', ...options });

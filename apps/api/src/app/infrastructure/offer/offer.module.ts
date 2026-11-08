@@ -16,6 +16,7 @@ import { ReadPlatformFiguresQuery } from '~/domain/offer/ReadPlatformFiguresQuer
 import { ReadVisiblePartQuery } from '~/domain/offer/ReadVisiblePartQuery';
 import { RemoveOfferCommand } from '~/domain/offer/RemoveOfferCommand';
 import { VisiblePartStore } from '~/domain/offer/VisiblePartStore';
+import { BuildModule } from '~/infrastructure/build/build.module';
 import { PartModule } from '~/infrastructure/part/part.module';
 import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
@@ -30,8 +31,9 @@ import { DatabasePlatformFiguresStore } from './store/DatabasePlatformFiguresSto
 import { DatabaseVisiblePartStore } from './store/DatabaseVisiblePartStore';
 
 @Module({
-  // The rule for which Vendor a request acts for, and the Parts offered.
-  imports: [VendorModule, PartModule],
+  // The rule for which Vendor a request acts for, the Parts offered, and the
+  // reading of the Build the picker lists a Category for.
+  imports: [VendorModule, PartModule, BuildModule],
   controllers: [
     OfferController,
     PartOffersController,

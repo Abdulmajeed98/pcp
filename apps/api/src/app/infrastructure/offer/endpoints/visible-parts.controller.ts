@@ -22,7 +22,7 @@ export class VisiblePartsController {
 
   @ApiOperation({
     summary:
-      "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only",
+      "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only, and, given a Build, each with whether it is Compatible with it, those that are not left out unless the switch keeps them",
     security: [],
   })
   @ApiOkResponse({ type: VisiblePartPageResponse })
