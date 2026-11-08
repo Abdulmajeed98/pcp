@@ -160,7 +160,11 @@ export class ListVisiblePartsQuery {
       return Either.map(page, Output.of);
     }
 
-    const build = await this.buildReading.read(input.getPartValues(), now);
+    const build = await this.buildReading.read(
+      input.getPartValues(),
+      input.getCurrency(),
+      now,
+    );
     if (Either.isLeft(build)) return Either.left(build.left);
     const every = await this.visiblePartStore.listEveryVisiblePart(params);
     if (Either.isLeft(every)) return Either.left(every.left);

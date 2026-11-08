@@ -37,13 +37,10 @@ import { partOf, partWithPhoto } from '~/infrastructure/part/part-of-row';
 import { holdingEveryWord } from '~/infrastructure/part/search-text';
 import { isMissingAt, specificationAt } from '~/infrastructure/part/specification-at';
 import { partPhoto } from '~/infrastructure/photo/photo.schema';
-import { currentPlatformRate } from '~/infrastructure/platform-rate/current-platform-rate';
-import { vendor } from '~/infrastructure/vendor/vendor.schema';
 
-import { offer } from '../offer.schema';
-import { inTheDatabase, shownPriceIn } from '../shown-price-in-the-database';
-import { visibleOffer, visiblePart } from '../visible-offer';
-import { inTheOrderOfAPartsOffers } from '../visible-offers-order';
+import { inTheDatabase } from '../shown-price-in-the-database';
+import { visiblePart } from '../visible-offer';
+import { whatTheirOffersSay } from '../what-their-offers-say';
 
 // A Category's Visible Parts, as the database asks it of a Part, at now by
 // the API's clock, by `visiblePart(now)`.
@@ -94,42 +91,6 @@ function within(range: PriceRange, currency: Currency, lowestAmount: SQL): SQL[]
 // for, as the picker asks (BLD-2); no condition otherwise.
 function inStockOnly(asked: boolean, anyInStock: SQL.Aliased<boolean>): SQL | undefined {
   return asked ? sql`${anyInStock}` : undefined;
-}
-
-// What each Part's visible Offers say of it in a currency, at now by the
-// API's clock, at the current Platform Rate, for a query of Visible Parts,
-// which joins `currentRate` once and `offered` laterally after `part`: how
-// many there are, which is how many Vendors offer it, since a Vendor has one
-// Offer for a Part at most; whether any is in stock; and its Lowest Price,
-// the Shown Price of the first in stock as a Part's page lists them, the
-// lowest, with whether it is converted. It describes the Part, and the rule
-// for a Visible Part alone decides whether the Part is read. Drizzle names a
-// subquery's field by its alias alone, so each alias here, and in a query
-// that uses it, is one no table in the same statement has as a column.
-function whatTheirOffersSay(client: NodePgDatabase<Schema>, currency: Currency, now: Date) {
-  const currentRate = currentPlatformRate(client).as('current_rate');
-  const shownPrice = shownPriceIn(currency, sql`${currentRate.iqdPerUsd}`);
-  const inTheirOrder = sql.join(inTheOrderOfAPartsOffers(shownPrice.amount), sql`, `);
-  // The first of them in stock, in the order a Part's page lists them.
-  function firstInStock<T>(value: SQL): SQL<T | null> {
-    return sql<T | null>`(array_agg(${value} order by ${inTheirOrder}) filter (where ${offer.inStock}))[1]`;
-  }
-
-  const offered = client
-    .select({
-      vendorCount: sql<number>`count(*)::int`.as('vendor_count'),
-      inStock: sql<boolean>`coalesce(bool_or(${offer.inStock}), false)`.as('any_in_stock'),
-      lowestAmount: firstInStock<number>(shownPrice.amount)
-        .mapWith(Number)
-        .as('lowest_amount'),
-      lowestConverted: firstInStock<boolean>(shownPrice.converted).as('lowest_converted'),
-    })
-    .from(offer)
-    .innerJoin(vendor, eq(vendor.id, offer.vendorId))
-    .where(and(eq(offer.partId, part.id), visibleOffer(now)))
-    .as('offered');
-
-  return { currentRate, offered };
 }
 
 // Every Visible Part a Category's list asks for, in a statement of its own

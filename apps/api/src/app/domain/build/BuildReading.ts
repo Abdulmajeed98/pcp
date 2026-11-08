@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
+import { Currency } from '../currency/currency';
 import { Build, BuildPart } from './Build';
 import { BuildStore } from './BuildStore';
 import { partsAskedIn } from './parts-asked';
@@ -14,10 +15,12 @@ export class BuildReading {
   constructor(private readonly buildStore: BuildStore) {}
 
   // The Build the values give, its Parts as the catalog holds them, each
-  // with whether it is a Visible Part at now by the API's clock, or the
+  // with whether it is a Visible Part and its in-stock Visible Offers in the
+  // currency, at now by the API's clock and at one Platform Rate, or the
   // refusal of the values, naming `part`.
   async read(
     values: readonly string[],
+    currency: Currency,
     now: Date,
   ): Promise<Either.Either<Build, StructuredError>> {
     const asked = partsAskedIn(values);
@@ -25,6 +28,7 @@ export class BuildReading {
 
     const found = await this.buildStore.readParts(
       asked.right.map((part) => part.getPartId()),
+      currency,
       now,
     );
 
@@ -34,7 +38,14 @@ export class BuildReading {
           const held = parts.find((part) => part.getPart().getId() === each.getPartId());
           return held === undefined
             ? []
-            : [new BuildPart(held.getPart(), each.getQuantity(), held.isVisible())];
+            : [
+                new BuildPart(
+                  held.getPart(),
+                  each.getQuantity(),
+                  held.isVisible(),
+                  held.getInStockOffers(),
+                ),
+              ];
         }),
       ),
     );
