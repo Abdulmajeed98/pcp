@@ -6,3 +6,8 @@ export {
   placeOf,
   refusalIn,
 } from './model/address-after-a-change';
+export { ChangesInPlace } from './ui/changes-in-place';
+export { EmptyTheBuild } from './ui/empty-the-build';
+export { QuantityForm } from './ui/quantity-form';
+export { RemoveForm } from './ui/remove-form';
+export { underlinedAction } from './ui/underlined-action';

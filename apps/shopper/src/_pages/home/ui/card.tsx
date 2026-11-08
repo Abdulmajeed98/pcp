@@ -7,7 +7,7 @@ import { partAddress } from '@/entities/part';
 import { photographs } from '@/shared/photographs';
 import { ShownPrice } from '@/shared/price';
 import { buttonVariants, DimPhotograph } from '@/shared/ui';
-import { NameSlot, Switches } from '@/widgets/frame-header';
+import { FrameRow } from '@/widgets/frame-header';
 
 // The card over a dim room (DESIGN.md's The card over a dim room): the home
 // page's whole first screen, a full-bleed photograph of a red-lit motherboard
@@ -49,8 +49,7 @@ export async function Card({
           data-testid="frame-header"
           className="flex flex-col items-start gap-x-6 md:flex-row md:flex-wrap md:items-center md:justify-between"
         >
-          <NameSlot onTheHomePage />
-          <Switches />
+          <FrameRow onTheHomePage />
         </header>
 
         <h1
