@@ -9,7 +9,7 @@
 **Status:** ready-for-agent
 
 - [x] **The guide is read first**, and so are DESIGN.md, ADR-0013 and `browse`'s design tickets 07 and 08. Fit Diagram's idea of a Build drawn like a motherboard manual, which ADR-0013 records as `builder`'s, binds nothing.
-- [ ] **The pieces to design**, Taste leading their composition inside the chosen direction:
+- [x] **The pieces to design**, Taste leading their composition inside the chosen direction:
   - the Build page as a sheet of the same stationery: the eight Categories, each with its Part or Parts or a way to choose one, a kit's or a drive's quantity, removing a Part, and emptying the Build with its one confirmation;
   - its status, a Complete Build or the Categories still needed, with the line saying a CPU's graphics or cooler is not known;
   - its outcomes, Problems, then Warnings, then unchecked rules, and the line counting the passes, with the Estimated power draw;
@@ -18,13 +18,13 @@
   - the picker as a Category page's sheet, with the switch, the pick control, the mark of the Part already in the Build and the mark of a Part that is not Compatible;
   - the frame's way to the Build page, with how many Parts the Build holds, as a small, additive change to the frame.
 - [x] **The words of an outcome.** Impeccable leads their copy. One example of each kind, a Problem, a Warning and an unchecked rule, is drafted in English, naming its Parts and what fails without the values compared, and is shown with the options.
-- [ ] **The rendering.** Each piece's options are drawn with ticket 05's made-up shop and Builds, in Kurdish and in English, at 390 pixels and at 1440, and at 1024 and 1280 where a desk layout differs, in both schemes. They are served from the scratchpad, never opened as a file, and shown in the built-in browser, one option to an anchor and two columns at most, before the owner is asked. An option that breaks a hard rule says so on its page.
-- [ ] **The motion**, led by Emil Kowalski's skills: whether a Part arriving in the Build, a quantity changing, a total settling and an outcome appearing move at all, and how, in the motion of paper and print DESIGN.md already holds. It covers reduced motion and the No Snap Rule. Movements are rendered live for the owner, as `browse`'s were.
-- [ ] **The feel on a phone**, led by Emil's `mobile-native`: the pick control and the switch taking a tap at once, the quantity typed on the phone's number pad, and the Build page's length on a phone.
+- [x] **The rendering.** Each piece's options are drawn with ticket 05's made-up shop and Builds, in Kurdish and in English, at 390 pixels and at 1440, and at 1024 and 1280 where a desk layout differs, in both schemes. They are served from the scratchpad, never opened as a file, and shown in the built-in browser, one option to an anchor and two columns at most, before the owner is asked. An option that breaks a hard rule says so on its page.
+- [x] **The motion**, led by Emil Kowalski's skills: whether a Part arriving in the Build, a quantity changing, a total settling and an outcome appearing move at all, and how, in the motion of paper and print DESIGN.md already holds. It covers reduced motion and the No Snap Rule. Movements are rendered live for the owner, as `browse`'s were.
+- [x] **The feel on a phone**, led by Emil's `mobile-native`: the pick control and the switch taking a tap at once, the quantity typed on the phone's number pad, and the Build page's length on a phone.
 - [x] **The worst cases**, led by Emil's `break-ui`, on the worst-case Build: 8 kits and 8 drives, the longest names, every kind of outcome at once, 20 Vendors in the second view, and an empty Build.
-- [ ] **The choosing.** The owner's choice for each piece is recorded under Comments with the owner's words. A choice the owner refuses is rendered again.
-- [ ] **The record.** Impeccable writes the choices into the Shopper app's DESIGN.md, the motion in its Motion section, before any page is built. The hard rules hold, and a piece that pulls against one is put to the owner. An ADR is written only if a choice replaces part of ADR-0013.
-- [ ] `pnpm check` passes, and the work is committed.
+- [x] **The choosing.** The owner's choice for each piece is recorded under Comments with the owner's words. A choice the owner refuses is rendered again.
+- [x] **The record.** Impeccable writes the choices into the Shopper app's DESIGN.md, the motion in its Motion section, before any page is built. The hard rules hold, and a piece that pulls against one is put to the owner. An ADR is written only if a choice replaces part of ADR-0013.
+- [x] `pnpm check` passes, and the work is committed.
 
 ## Comments
 
@@ -47,3 +47,49 @@
 **Measured.** Each of the 132 windows, in each scheme, in headless Chrome: drawn, no script error, nothing scrolling sideways, no text under 14 pixels nor Arabic script under 15. At 320 pixels nothing scrolls sideways. On a phone at 390 pixels the complete Build's page is about 6,850 pixels long in English and 7,760 in Kurdish, the worst case's 14,500 and 16,800, the empty Build's 2,800.
 
 Nothing is written into DESIGN.md before the owner chooses. The boxes for the pieces, the rendering's showing, the motion, the feel on a phone, the choosing, the record and the last stay open until then.
+
+### 9 November 2026: the owner's choice
+
+The coordinator served the page at the owner's `.taste-skill/builder-06/` and showed it to the owner, then relayed the owner's words exactly: "Keep every A". What follows is the coordinator's reading of those words, recorded as such: every option A on all fourteen pieces, and with `#p14` the seven worst-case fixes.
+
+1. `#p1` The arrangement: the Build's till slip beside the Build's sheet, pinned from 64rem and first on a phone, then the rules' sheet, then the Vendors.
+2. `#p2` A Category on the sheet: the Category's icon and name head its place, each Part printed as on a Category page, an empty Category a "Choose …" cell, one not needed saying why.
+3. `#p3` The quantity: − 2 +, each cell a button of a plain form, the figure typed on the number pad.
+4. `#p4` Emptying: confirmed in place, "Remove all 8 Parts" and "Keep them".
+5. `#p5` The status: in words, the stamp only on a Complete Build with no Problem.
+6. `#p6` The outcomes: grouped by kind under their counts, each led by a mark of its own shape, the passes and the Estimated power draw as lines of the sheet.
+7. `#p7` The words: a sentence in Categories and its way out, the Parts named under it.
+8. `#p8` A Part's price: the line's total at its end, its quantity and Vendor under it; an Unstocked Part said in words.
+9. `#p9` Each Vendor's total: one sheet, each Vendor a line that unfolds, the first open.
+10. `#p10` The picker: a Pick cell under each Part, the switch in the sheet's head, "In your Build" and "Does not fit your Build" in words with their marks.
+11. `#p11` When no Part fits: say so, with Show all as the sheet's primary button and See why on your Build.
+12. `#p12` The frame's way: "Your Build" and its count in the stub.
+13. `#p13` Motion: what a change brings prints in, its space opening and folding so that nothing jumps.
+14. `#p14` The worst cases: the stamp withheld while Problems remain; one shrinking column for every new list, controls under the picture on a stacked line and a narrower quantity figure; the stub's name row wrapping; an outcome's Parts folding past three; the Vendors folding past five; the "none fits" state for any list the Build empties; and the shorter Kurdish title of the rules' sheet.
+
+No option was refused, so nothing is drawn again.
+
+### 9 November 2026: the record
+
+Impeccable writes the choices into `apps/shopper/DESIGN.md`, merging them into the file as it stands (its `document` reference's merge, the ticket being the instruction to change an existing DESIGN.md), in the file's own terms; nothing else in it changes. Its head comment says what this ticket added and that nothing of ADR-0013 is replaced, so no ADR is written.
+
+| Piece | In DESIGN.md |
+|---|---|
+| The Build page as a sheet of the same stationery | Overview's list of pages; Layout › The pieces, page by page (the Build page, the picker); Components › The Build page › The Build's till slip, The Build's sheet, A Category on the Build's sheet, The quantity, Emptying the Build |
+| Its status, with the line that a CPU's graphics or cooler is not known | Components › The Build page › The status; the stamp only on a Complete Build with no Problem, in The stationery › The stamp too |
+| Its outcomes, the passes and the Estimated power draw | Components › The Build page › The rules' sheet, The words of an outcome; Shapes › Printed marks |
+| The first price view and an Unstocked Part | Components › The Build page › A Part's price on the Build's sheet, and the slip's Lowest total |
+| The second price view | Components › The Build page › The Vendors' sheet |
+| The picker, its switch, its pick control and its marks | Components › The picker › Its sheet, The switch, A Part in the picker, The empty states |
+| The frame's way to the Build page | Components › The frame › The way to the Build |
+| The motion | Motion: the intro's one exception, the tokens `--unfold` (now also a Build line's space), `--line-print`, `--settle-again` and `--leave`, When a movement plays › A change to the Build, What moves › 11, What stays still, When a movement is interrupted, Right to left, Reduced motion |
+| The feel on a phone | Layout › The feel on a phone: the Build with a thumb, the quantity on the number pad, the picker's switch, back to the Build after a pick, the page's length |
+| The worst cases | The seven fixes, each where it acts: the stamp (The stationery, the Build's slip), the one shrinking column (The picker's last line, Do's), the name row wrapping (The way to the Build), the folds of an outcome's Parts and of the Vendors, the "none fits" state, the Kurdish title (The rules' sheet) |
+
+Do's and Don'ts gain three lines: say an outcome in Categories and name its Parts under it, the marks told by their shapes; let every new list shrink and fold what runs long; and never set a Part's name inside an outcome, compare its values, stamp a Build with a Problem as complete, or stop a Shopper keeping a Build. The Don't on animating prices now names Motion 11 as its exception.
+
+**The hard rules hold.** Every colour of the new pieces is one the file has measured: Soft Ink and the Ink on Sheet Paper, Green's Ink on Print Green for the switch when on, the paper's colour on the Ink for "Remove all" and the count, Print Green only as the stamp and the switch, never as text on the Board. Every control is at least 44 pixels on a touchscreen (Pick, Change, Remove, Add another, the quantity's cells and figure, the switch, the way to the Build, Empty the Build and its two answers), no text is under 14 pixels nor Arabic script under 15 (checked in the 132 windows in each scheme), nothing scrolls sideways at 320 or 390, every side is logical so that each piece mirrors in Kurdish and Arabic, and no font is added. No piece pulls against one, so nothing more was put to the owner.
+
+**Motion and the phone, against the existing file.** Motion 11 keeps the file's curve and its arrival rule, and adds three tokens. One difference from the filters is the owner's choice of `#p13`: with reduced motion a Build line's space still opens and folds, in 150 ms, where the filters' fold opens at once, so that a change in place never jumps (the No Snap Rule). The by-hand checks on a phone (the pick control and the switch with a thumb, the quantity on the number pad, the motion with reduced motion on and off) wait for hosting, as the builder spec's Open checks already list them; ticket 10 adds them to the MVP spec's list.
+
+**The gates.** `pnpm check` passes on the commit, with the documents formatted; this ticket changes no code.
