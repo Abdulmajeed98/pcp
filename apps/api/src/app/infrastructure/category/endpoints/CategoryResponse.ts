@@ -29,7 +29,7 @@ export class CategoryResponse {
       category.getKey(),
       specifications
         .getSpecifications()
-        .map((each) => SpecificationResponse.of(each, specifications.isNeeded(each))),
+        .map((each) => SpecificationResponse.of(each, specifications)),
     );
   }
 }

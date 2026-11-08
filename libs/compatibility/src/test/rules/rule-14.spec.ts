@@ -6,18 +6,8 @@ import type {
   StorageInterface,
   StorageSpecifications,
 } from '../../index';
+import { drive } from '../made-up-parts';
 import { outcomeOf } from '../outcome-of';
-
-// A drive of a form factor and an interface, of which the Build holds
-// `quantity`.
-function drive(
-  id: string,
-  formFactor: StorageFormFactor | undefined,
-  iface: StorageInterface | undefined,
-  quantity = 1,
-): PartAndQuantity<StorageSpecifications> {
-  return { id, quantity, specifications: { form_factor: formFactor, interface: iface } };
-}
 
 function nvmeDrive(id: string, quantity = 1): PartAndQuantity<StorageSpecifications> {
   return drive(id, 'M.2-2280', 'M.2 PCIe 4.0 x4', quantity);
@@ -139,6 +129,37 @@ describe("rule 14: the M.2 drives and the motherboard's M.2 slots", () => {
       ['an M.2 SATA drive', 'E', m2SataDrive('the-drive')],
     ])('finds a Problem in %s in a slot keyed %s', (_what, key, theDrive) => {
       const build: Build = { motherboard: boardWithSlots([key]), storage: [theDrive] };
+
+      expect(outcomeOf(14, build)).toEqual({
+        rule: 14,
+        outcome: 'problem',
+        parts: ['the-board', 'the-drive'],
+      });
+    });
+
+    // The owner's decision of 8 November 2026: an M.2 drive whose interface
+    // is SATA is an M.2 SATA drive.
+    it.each<[StorageInterface]>([['SATA 1.5 Gb/s'], ['SATA 3.0 Gb/s'], ['SATA 6.0 Gb/s']])(
+      'passes an M.2 drive whose interface is %s, an M.2 SATA drive, in a slot keyed B',
+      (iface) => {
+        const build: Build = {
+          motherboard: boardWithSlots(['B']),
+          storage: [drive('the-drive', 'M.2-2280', iface)],
+        };
+
+        expect(outcomeOf(14, build)).toEqual({
+          rule: 14,
+          outcome: 'passes',
+          parts: ['the-board', 'the-drive'],
+        });
+      },
+    );
+
+    it('finds a Problem in an M.2 drive whose interface is SATA 6.0 Gb/s in a slot keyed E', () => {
+      const build: Build = {
+        motherboard: boardWithSlots(['E']),
+        storage: [drive('the-drive', 'M.2-2280', 'SATA 6.0 Gb/s')],
+      };
 
       expect(outcomeOf(14, build)).toEqual({
         rule: 14,

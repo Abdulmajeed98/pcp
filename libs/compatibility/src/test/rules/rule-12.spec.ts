@@ -1,13 +1,6 @@
 import type { Build } from '../../index';
+import { cpuOf, gpuOf } from '../made-up-parts';
 import { outcomeOf } from '../outcome-of';
-
-function cpuOf(tdp: number | undefined): Build['cpu'] {
-  return { id: 'the-cpu', specifications: { socket: 'AM5', specifications: { tdp } } };
-}
-
-function gpuOf(tdp: number | undefined): Build['gpu'] {
-  return { id: 'the-gpu', specifications: { tdp } };
-}
 
 function psuOf(wattage: number | undefined): Build['psu'] {
   return { id: 'the-psu', specifications: { wattage } };

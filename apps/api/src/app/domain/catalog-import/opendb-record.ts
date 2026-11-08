@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 
+import { gpuPowerSockets, type Socket } from '@pcp/compatibility';
 import { Either, Option } from 'effect';
 
 import { Category } from '../part/Category';
@@ -34,9 +35,13 @@ export type RecordLeftOutReason =
   | 'sameAsAnotherRecord';
 
 // Why a value in one of OpenDB's records was left out of its Part: it did not
-// fit its specification, or it is a power socket of a GPU above 75 W that
-// holds 0 for each of its four, which the import reads as not known.
-export type ValueLeftOutReason = SpecificationProblemReason | 'noPowerSocketAbove75W';
+// fit its specification, or the import reads it as not known, as it reads a
+// power socket of a GPU above 75 W that holds 0 for each of its four, and an
+// empty list of M.2 slots on a motherboard of a socket of 2017 or later.
+export type ValueLeftOutReason =
+  | SpecificationProblemReason
+  | 'noPowerSocketAbove75W'
+  | 'noM2SlotSince2017';
 
 // A value left out of a Part, by its path, as a specification problem names
 // it, and why.
@@ -194,10 +199,6 @@ function withoutRedundantSocket(
   return { ...record, cpu_sockets: sockets.filter((socket) => socket !== 'LGA 1151v2') };
 }
 
-// A GPU's four kinds of power socket, which are all its list holds under
-// `power_connectors`.
-const gpuPowerSockets = ['pcie_6_pin', 'pcie_8_pin', 'pcie_12VHPWR', 'pcie_12V_2x6'];
-
 // The most a PCIe slot supplies a GPU, in watts.
 const slotPower = 75;
 
@@ -229,7 +230,8 @@ function withoutPowerSocketsNotKnown(
   }
   return {
     // Without its sockets, the Part holds no `power_connectors`, as one whose
-    // record gives no count does.
+    // record gives no count does: the four kinds, which the compatibility
+    // library names, are all a GPU's list holds there.
     document: Object.fromEntries(
       Object.entries(document).filter(([name]) => name !== 'power_connectors'),
     ),
@@ -237,6 +239,68 @@ function withoutPowerSocketsNotKnown(
       path: `power_connectors.${socket}`,
       reason: 'noPowerSocketAbove75W',
     })),
+  };
+}
+
+// The sockets that came in 2017 or later, each with the year its first boards
+// were sold on their own. AM4's first CPUs went only into prebuilt PCs in
+// 2016, and its boards were first sold with Ryzen. LGA 3647's first boards,
+// for Xeon Phi, came in 2016, so it is not among them. LGA 1954 is Intel's
+// socket after LGA 1851, which only coolers name at the pinned commit.
+const socketsOf2017OrLater: ReadonlyMap<string, number> = new Map<Socket, number>([
+  ['AM4', 2017],
+  ['AM5', 2022],
+  ['LGA 1200', 2020],
+  ['LGA 1700', 2021],
+  ['LGA 1851', 2024],
+  ['LGA 1954', 2026],
+  ['LGA 2066', 2017],
+  ['LGA 4677', 2023],
+  ['LGA 4710', 2024],
+  ['SP3', 2017],
+  ['SP5', 2022],
+  ['SP6', 2023],
+  ['sTR4', 2017],
+  ['sTR5', 2023],
+  ['sTRX4', 2019],
+  ['sWRX8', 2021],
+  ['TR4', 2017],
+]);
+
+// OpenDB gives an empty list of M.2 slots for many motherboards, some of them
+// boards that have slots it does not know: at the pinned commit 723 boards,
+// 36 of them of a socket of 2017 or later, such as the ASRock X570 Taichi and
+// two ASRock B860 Challenger WiFi boards. Read as a board with no slot, the
+// list would make rule 14 find a Problem in any M.2 drive on such a board. So
+// on a board of a socket of 2017 or later, where 2,273 of the 2,309 boards at
+// the pinned commit list their slots, an empty list is left out, as not
+// known, and counted with a reason of its own, and Missing specifications
+// asks for it once a Vendor offers the board (the owner's decision of 8
+// November 2026). A board of an older socket keeps its empty list as one with
+// no slot, as does a board with its CPU built in and one whose socket is
+// missing: 687 boards at the pinned commit, 9 of them with a CPU built in. A
+// list with slots is kept as given. The reading is the import's alone: the
+// Admin may give any board an empty list.
+function withoutM2SlotsNotKnown(
+  document: SpecificationDocument,
+  category: Category,
+): { document: SpecificationDocument; leftOut: ValueLeftOut[] } {
+  const socket = valueAt(document, 'socket');
+  const slots = valueAt(document, 'm2_slots');
+  if (
+    category !== Category.MOTHERBOARD ||
+    typeof socket !== 'string' ||
+    !socketsOf2017OrLater.has(socket) ||
+    !Array.isArray(slots) ||
+    slots.length > 0
+  ) {
+    return { document, leftOut: [] };
+  }
+  return {
+    document: Object.fromEntries(
+      Object.entries(document).filter(([name]) => name !== 'm2_slots'),
+    ),
+    leftOut: [{ path: 'm2_slots', reason: 'noM2SlotSince2017' }],
   };
 }
 
@@ -282,11 +346,13 @@ export function partOfRecord(
   // it names. The metadata, the identifiers and the retailer data are not on
   // it, and neither is anything else the list does not name. Those are
   // ignored, and only a value that is on the list and does not fit is counted,
-  // beside a GPU's power sockets that are read as not known.
+  // beside a GPU's power sockets and a motherboard's M.2 slots that are read
+  // as not known.
   const { document: checked, problems } = specificationListOf(category).check(
     withoutRedundantSocket(record, category),
   );
-  const { document, leftOut } = withoutPowerSocketsNotKnown(checked, category);
+  const powerSockets = withoutPowerSocketsNotKnown(checked, category);
+  const m2Slots = withoutM2SlotsNotKnown(powerSockets.document, category);
 
   return Either.right({
     part: new ImportPartParams(
@@ -299,11 +365,12 @@ export function partOfRecord(
       // a record with no manufacturer may share only a complete record's name
       // with it: at the pinned commit, one does.
       partNumbersKept(partNumbers, name),
-      document,
+      m2Slots.document,
     ),
     valuesLeftOut: [
       ...problems.filter((problem) => problem.reason !== 'unknown'),
-      ...leftOut,
+      ...powerSockets.leftOut,
+      ...m2Slots.leftOut,
     ],
     manufacturerFromName,
   });

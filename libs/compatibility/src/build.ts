@@ -1,4 +1,5 @@
 import type {
+  GpuPowerSocket,
   M2SlotKey,
   MotherboardFormFactor,
   PowerSupplyFormFactor,
@@ -23,8 +24,20 @@ export type Build = {
   readonly psu?: Part<PsuSpecifications>;
 };
 
-// The kind of a Part, by the key the API and `i18n` name it by.
-export type Category = keyof Build;
+// A Category's key, the one the API and `i18n` name it by, such as `cpu` or
+// `cpuCooler`: a key of a Build.
+export type CategoryKey = keyof Build;
+
+// The specifications a Part of a Category holds: those of a RAM kit or a
+// drive for the two Categories a Build holds a list of.
+export type SpecificationsOf<C extends CategoryKey> =
+  NonNullable<Build[C]> extends readonly (infer Held)[]
+    ? Held extends Part<infer Specifications>
+      ? Specifications
+      : never
+    : NonNullable<Build[C]> extends Part<infer Specifications>
+      ? Specifications
+      : never;
 
 // A Part of a Build. Its identifier is the caller's, its Part's identifier,
 // and the outcomes name the Part by it. Its specifications are its needed
@@ -106,12 +119,8 @@ export type GpuSpecifications = {
   readonly tdp?: number;
   readonly length?: number;
   readonly total_slot_width?: number;
-  readonly power_connectors?: {
-    readonly pcie_6_pin?: number;
-    readonly pcie_8_pin?: number;
-    readonly pcie_12VHPWR?: number;
-    readonly pcie_12V_2x6?: number;
-  };
+  // How many sockets of each kind the GPU has.
+  readonly power_connectors?: { readonly [Socket in GpuPowerSocket]?: number };
 };
 
 export type CaseSpecifications = {

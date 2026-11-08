@@ -1,5 +1,16 @@
+import { type GpuPowerSocket, gpuPowerSockets } from '@pcp/compatibility';
+
 import { Specification } from './Specification';
 import { SpecificationList } from './SpecificationList';
+
+// The label of each kind of power socket a GPU has, whose names the
+// compatibility library states.
+const powerSocketLabels: { readonly [Socket in GpuPowerSocket]: string } = {
+  pcie_6_pin: 'PCIe 6-pin power sockets',
+  pcie_8_pin: 'PCIe 8-pin power sockets',
+  pcie_12VHPWR: '12VHPWR power sockets',
+  pcie_12V_2x6: '12V-2x6 power sockets',
+};
 
 // Every specification of a GPU that OpenDB defines, apart from retailer and
 // identity data. A 0 means "not known" for a size, a clock, a memory figure,
@@ -46,10 +57,9 @@ export const gpuSpecifications = new SpecificationList('gpu', [
       zeroMeansMissing: true,
     },
   ),
-  Specification.wholeNumber('power_connectors.pcie_6_pin', 'PCIe 6-pin power sockets'),
-  Specification.wholeNumber('power_connectors.pcie_8_pin', 'PCIe 8-pin power sockets'),
-  Specification.wholeNumber('power_connectors.pcie_12VHPWR', '12VHPWR power sockets'),
-  Specification.wholeNumber('power_connectors.pcie_12V_2x6', '12V-2x6 power sockets'),
+  ...gpuPowerSockets.map((socket) =>
+    Specification.wholeNumber(`power_connectors.${socket}`, powerSocketLabels[socket]),
+  ),
   Specification.text('cooling', 'Cooling'),
   Specification.wholeNumber('radiator_size', 'External radiator size', {
     unit: 'mm',

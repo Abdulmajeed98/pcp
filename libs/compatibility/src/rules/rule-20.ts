@@ -1,5 +1,6 @@
 import { exceeds, not, problemWhen } from './findings';
-import { type Reading, rule } from './statement';
+import type { Reading } from './reading';
+import { rule } from './statement';
 
 // Rule 20: the PSU has no CPU power connector. The motherboard's CPU power
 // sockets are the entries of its CPU power connectors, one to three, against

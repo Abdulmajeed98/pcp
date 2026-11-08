@@ -1,5 +1,6 @@
 import { drawOf } from '../estimated-power-draw';
-import { exceeds, problemWhen, times } from './findings';
+import { times } from './amounts';
+import { exceeds, problemWhen } from './findings';
 import { rule } from './statement';
 
 // Rule 12: the PSU's wattage is below 1.3 times the Build's estimated power

@@ -1,5 +1,6 @@
-import type { Build, Category, Part } from '../build';
+import type { Build, CategoryKey, Part, SpecificationsOf } from '../build';
 import type { Judgment } from './findings';
+import type { Reading } from './reading';
 
 // A Compatibility Rule, stated once: its number, the Categories it involves
 // with the specifications it reads in each, by their paths, those it reads in
@@ -8,8 +9,8 @@ import type { Judgment } from './findings';
 // involves (CMP-2).
 export type Rule = {
   readonly number: number;
-  readonly involves: Involves;
-  readonly readsWhenHeld: Involves;
+  readonly involves: PathsRead;
+  readonly readsWhenHeld: PathsRead;
   judge(build: Build): Judgment;
 };
 
@@ -19,8 +20,8 @@ export type Rule = {
 // a Part of a Category it reads when held, such as rule 12's GPU, when the
 // Build holds one, and nothing otherwise.
 export function rule<
-  const Stated extends Involves,
-  const WhenHeld extends Involves = {},
+  const Stated extends PathsRead,
+  const WhenHeld extends PathsRead = {},
 >(statement: {
   readonly number: number;
   readonly involves: Stated;
@@ -42,26 +43,12 @@ export function rule<
   };
 }
 
-// One value a rule reads: a Part's value at a specification's path, or none
-// when the Part was not given it, which makes it missing.
-export type Reading<Value> = {
-  readonly part: string;
-  readonly path: string;
-  readonly value: Value | undefined;
+// The paths of the specifications a rule reads, by Category: those of each
+// Category it involves, or those of each it reads when the Build holds a Part
+// of it.
+type PathsRead = {
+  readonly [C in CategoryKey]?: readonly PathOf<SpecificationsOf<C>>[];
 };
-
-type Involves = {
-  readonly [C in Category]?: readonly PathOf<SpecificationsOf<C>>[];
-};
-
-type SpecificationsOf<C extends Category> =
-  NonNullable<Build[C]> extends readonly (infer Held)[]
-    ? Held extends Part<infer Specifications>
-      ? Specifications
-      : never
-    : NonNullable<Build[C]> extends Part<infer Specifications>
-      ? Specifications
-      : never;
 
 // A specification's path, such as `specifications.memory.types`: the names
 // that lead to it in a Part's specifications, joined by dots. A list, such as
@@ -104,8 +91,10 @@ type PathIn<Paths> = Paths extends readonly (infer Path extends string)[] ? Path
 
 // The Parts a judgment is handed: one of each Category the rule involves,
 // and every RAM kit or drive, with its quantity.
-type PartsRead<Stated extends Involves> = {
-  readonly [C in keyof Stated & Category]: NonNullable<Build[C]> extends readonly unknown[]
+type PartsRead<Stated extends PathsRead> = {
+  readonly [C in keyof Stated & CategoryKey]: NonNullable<
+    Build[C]
+  > extends readonly unknown[]
     ? readonly (PartRead<SpecificationsOf<C>, PathIn<Stated[C]>> & {
         readonly quantity: number;
       })[]
@@ -114,8 +103,8 @@ type PartsRead<Stated extends Involves> = {
 
 // The Parts a judgment is handed of the Categories a rule reads when held:
 // each one's Part when the Build holds one, and none otherwise.
-type PartsReadWhenHeld<Stated extends Involves> = {
-  readonly [C in keyof Stated & Category]: PartsRead<Stated>[C] | undefined;
+type PartsReadWhenHeld<Stated extends PathsRead> = {
+  readonly [C in keyof Stated & CategoryKey]: PartsRead<Stated>[C] | undefined;
 };
 
 type HeldPart = Part<unknown> & { readonly quantity?: number };
@@ -123,7 +112,7 @@ type HeldPart = Part<unknown> & { readonly quantity?: number };
 function partsRead(build: Build, categories: readonly string[]): Record<string, unknown> {
   return Object.fromEntries(
     categories.map((category) => {
-      const held = build[category as Category] as
+      const held = build[category as CategoryKey] as
         | HeldPart
         | readonly HeldPart[]
         | undefined;

@@ -1,4 +1,4 @@
-import type { Build, Category, Part } from './build';
+import type { Build, CategoryKey, Part } from './build';
 import type { RuleOutcome } from './outcome';
 import { missingIn } from './rules/findings';
 import { rules } from './rules/rules';
@@ -14,7 +14,7 @@ const categories = [
   'gpu',
   'case',
   'psu',
-] as const satisfies readonly Category[];
+] as const satisfies readonly CategoryKey[];
 
 // The outcome of every Compatibility Rule that applies to a Build, in rule
 // order.
@@ -76,7 +76,7 @@ function partsJudged(rule: Rule, build: Build): string[] {
 }
 
 // The Parts a Build holds of one Category: none, one, or every kit or drive.
-function heldIn(build: Build, category: Category): readonly Part<unknown>[] {
+function heldIn(build: Build, category: CategoryKey): readonly Part<unknown>[] {
   const held: Part<unknown> | readonly Part<unknown>[] | undefined = build[category];
   if (held === undefined) return [];
   return isList(held) ? held : [held];

@@ -1,4 +1,5 @@
-import { exceeds, fact, problemWhen, product, whatever, yesOrNo } from './findings';
+import { product } from './amounts';
+import { exceeds, fact, problemWhen, whatever, yesOrNo } from './findings';
 import { rule } from './statement';
 
 // Rule 17: an air cooler, one that is not liquid cooled, is taller than the

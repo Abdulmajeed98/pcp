@@ -87,7 +87,7 @@ describe("rule 4: each RAM kit's type and the motherboard's", () => {
       });
     });
 
-    it('is unchecked, naming the other kit and its type, when the known kit fits', () => {
+    it("is unchecked, naming the other kit and its type, when the known kit is of the motherboard's type", () => {
       const build: Build = {
         motherboard: { id: 'the-board', specifications: { memory: { ram_type: 'DDR5' } } },
         ram: [

@@ -1,19 +1,6 @@
-import type {
-  Build,
-  PartAndQuantity,
-  StorageInterface,
-  StorageSpecifications,
-} from '../../index';
+import type { Build, StorageFormFactor, StorageInterface } from '../../index';
+import { drive } from '../made-up-parts';
 import { outcomeOf } from '../outcome-of';
-
-// A drive of an interface, of which the Build holds `quantity`.
-function drive(
-  id: string,
-  iface: StorageInterface | undefined,
-  quantity = 1,
-): PartAndQuantity<StorageSpecifications> {
-  return { id, quantity, specifications: { interface: iface } };
-}
 
 function psuWithConnectors(sata: number | undefined): Build['psu'] {
   return { id: 'the-psu', specifications: { connectors: { sata } } };
@@ -22,7 +9,7 @@ function psuWithConnectors(sata: number | undefined): Build['psu'] {
 describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
   it('passes fewer SATA drives than the PSU has SATA power connectors', () => {
     const build: Build = {
-      storage: [drive('the-drive', 'SATA 6.0 Gb/s')],
+      storage: [drive('the-drive', '2.5"', 'SATA 6.0 Gb/s')],
       psu: psuWithConnectors(4),
     };
 
@@ -35,7 +22,10 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
 
   it('finds a Problem in more SATA drives than the PSU has SATA power connectors', () => {
     const build: Build = {
-      storage: [drive('an-ssd', 'SATA 6.0 Gb/s'), drive('a-hard-drive', 'SATA 3.0 Gb/s')],
+      storage: [
+        drive('an-ssd', '2.5"', 'SATA 6.0 Gb/s'),
+        drive('a-hard-drive', '3.5"', 'SATA 3.0 Gb/s'),
+      ],
       psu: psuWithConnectors(1),
     };
 
@@ -48,7 +38,7 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
 
   it('passes as many SATA drives as the PSU has SATA power connectors', () => {
     const build: Build = {
-      storage: [drive('two-ssds', 'SATA 6.0 Gb/s', 2)],
+      storage: [drive('two-ssds', '2.5"', 'SATA 6.0 Gb/s', 2)],
       psu: psuWithConnectors(2),
     };
 
@@ -62,8 +52,8 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
   it('finds a Problem in one SATA drive more than the connectors, counting two of one drive as two', () => {
     const build: Build = {
       storage: [
-        drive('two-ssds', 'SATA 6.0 Gb/s', 2),
-        drive('one-more-drive', 'SATA 3.0 Gb/s'),
+        drive('two-ssds', '2.5"', 'SATA 6.0 Gb/s', 2),
+        drive('one-more-drive', '3.5"', 'SATA 3.0 Gb/s'),
       ],
       psu: psuWithConnectors(2),
     };
@@ -77,7 +67,7 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
 
   it('finds a Problem in a SATA drive and a PSU with no SATA power connector, a 0 given to the library directly', () => {
     const build: Build = {
-      storage: [drive('the-drive', 'SATA 6.0 Gb/s')],
+      storage: [drive('the-drive', '2.5"', 'SATA 6.0 Gb/s')],
       psu: psuWithConnectors(0),
     };
 
@@ -88,25 +78,50 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
     });
   });
 
-  it.each<[StorageInterface]>([['M.2 SATA'], ['M.2 PCIe 4.0 x4'], ['mSATA']])(
-    'needs no SATA power for a drive whose interface is %s',
+  it.each<[StorageInterface, StorageFormFactor]>([
+    ['M.2 SATA', 'M.2-2280'],
+    ['M.2 PCIe 4.0 x4', 'M.2-2280'],
+    ['mSATA', 'mSATA'],
+  ])('needs no SATA power for a drive whose interface is %s', (iface, formFactor) => {
+    const build: Build = {
+      storage: [
+        drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+        drive('the-other-drive', formFactor, iface),
+      ],
+      psu: psuWithConnectors(1),
+    };
+
+    expect(outcomeOf(16, build)).toEqual({
+      rule: 16,
+      outcome: 'passes',
+      parts: ['a-sata-drive', 'the-other-drive', 'the-psu'],
+    });
+  });
+
+  // The owner's decision of 8 November 2026: an M.2 drive whose interface is
+  // SATA is an M.2 SATA drive, which its slot powers.
+  it.each<[StorageInterface]>([['SATA 1.5 Gb/s'], ['SATA 3.0 Gb/s'], ['SATA 6.0 Gb/s']])(
+    'needs no SATA power for an M.2 drive whose interface is %s, an M.2 SATA drive',
     (iface) => {
       const build: Build = {
-        storage: [drive('a-sata-drive', 'SATA 6.0 Gb/s'), drive('the-other-drive', iface)],
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('an-m2-sata-drive', 'M.2-2280', iface),
+        ],
         psu: psuWithConnectors(1),
       };
 
       expect(outcomeOf(16, build)).toEqual({
         rule: 16,
         outcome: 'passes',
-        parts: ['a-sata-drive', 'the-other-drive', 'the-psu'],
+        parts: ['a-sata-drive', 'an-m2-sata-drive', 'the-psu'],
       });
     },
   );
 
   it("is unchecked when the PSU's SATA power connectors are missing", () => {
     const build: Build = {
-      storage: [drive('the-drive', 'SATA 6.0 Gb/s')],
+      storage: [drive('the-drive', '2.5"', 'SATA 6.0 Gb/s')],
       psu: psuWithConnectors(undefined),
     };
 
@@ -120,7 +135,7 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
   describe('unchecked only when it matters', () => {
     it("passes a Build with no SATA drive whatever the PSU's connectors", () => {
       const build: Build = {
-        storage: [drive('an-nvme-drive', 'M.2 PCIe 4.0 x4')],
+        storage: [drive('an-nvme-drive', 'M.2-2280', 'M.2 PCIe 4.0 x4')],
         psu: psuWithConnectors(undefined),
       };
 
@@ -134,8 +149,8 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
     it('is unchecked when a drive whose interface is missing could tip the count', () => {
       const build: Build = {
         storage: [
-          drive('a-sata-drive', 'SATA 6.0 Gb/s'),
-          drive('a-drive-of-no-interface', undefined),
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-interface', '2.5"', undefined),
         ],
         psu: psuWithConnectors(1),
       };
@@ -150,8 +165,8 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
     it('judges a drive whose interface is missing when it could not tip the count', () => {
       const build: Build = {
         storage: [
-          drive('a-sata-drive', 'SATA 6.0 Gb/s'),
-          drive('a-drive-of-no-interface', undefined),
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-interface', '2.5"', undefined),
         ],
         psu: psuWithConnectors(2),
       };
@@ -160,6 +175,22 @@ describe("rule 16: the SATA drives and the PSU's SATA power connectors", () => {
         rule: 16,
         outcome: 'passes',
         parts: ['a-sata-drive', 'a-drive-of-no-interface', 'the-psu'],
+      });
+    });
+
+    it('is unchecked when a drive of a SATA interface whose form factor is missing could tip the count, since it may be an M.2 SATA drive', () => {
+      const build: Build = {
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-form-factor', undefined, 'SATA 6.0 Gb/s'),
+        ],
+        psu: psuWithConnectors(1),
+      };
+
+      expect(outcomeOf(16, build)).toEqual({
+        rule: 16,
+        outcome: 'unchecked',
+        missing: [{ part: 'a-drive-of-no-form-factor', path: 'form_factor' }],
       });
     });
   });

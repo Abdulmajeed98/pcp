@@ -12,6 +12,11 @@ import { SpecificationList } from './SpecificationList';
 // that counts SATA drives would otherwise call those a Compatibility Problem.
 // A 0 for the older SATA 3 Gb/s ports, which current boards do not have, is
 // true.
+//
+// An empty list of M.2 slots is a value, a board with none. Only the import
+// reads one otherwise: on a board of a socket of 2017 or later it is left
+// out, as not known, so that Missing specifications asks for it. The Admin
+// may still give any board an empty list.
 export const motherboardSpecifications = new SpecificationList('motherboard', [
   Specification.oneOf('socket', 'Socket', sockets),
   Specification.oneOf('form_factor', 'Form factor', motherboardFormFactors),

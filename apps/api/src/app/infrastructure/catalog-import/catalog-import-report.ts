@@ -32,6 +32,7 @@ const valueReasons: Record<ValueLeftOutReason, string> = {
   unknown: 'not on the list',
   noPowerSocketAbove75W:
     '0 for each power socket, where the GPU draws more than the 75 W a PCIe slot supplies',
+  noM2SlotSince2017: "an empty list, where the board's socket came in 2017 or later",
 };
 
 const columns = ['Imported', 'Already there', 'Records left out', 'Values left out'];

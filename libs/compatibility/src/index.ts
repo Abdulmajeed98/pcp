@@ -1,7 +1,7 @@
 export type {
   Build,
   CaseSpecifications,
-  Category,
+  CategoryKey,
   CpuCoolerSpecifications,
   CpuSpecifications,
   GpuSpecifications,
@@ -15,6 +15,7 @@ export type {
   StorageSpecifications,
 } from './build';
 export {
+  gpuPowerSockets,
   m2SlotKeys,
   motherboardFormFactors,
   powerSupplyFormFactors,
@@ -24,6 +25,7 @@ export {
   storageInterfaces,
 } from './fixed-sets';
 export type {
+  GpuPowerSocket,
   M2SlotKey,
   MotherboardFormFactor,
   PowerSupplyFormFactor,

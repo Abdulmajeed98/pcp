@@ -1,19 +1,6 @@
-import type {
-  Build,
-  PartAndQuantity,
-  StorageInterface,
-  StorageSpecifications,
-} from '../../index';
+import type { Build, StorageFormFactor, StorageInterface } from '../../index';
+import { drive } from '../made-up-parts';
 import { outcomeOf } from '../outcome-of';
-
-// A drive of an interface, of which the Build holds `quantity`.
-function drive(
-  id: string,
-  iface: StorageInterface | undefined,
-  quantity = 1,
-): PartAndQuantity<StorageSpecifications> {
-  return { id, quantity, specifications: { interface: iface } };
-}
 
 function boardWithPorts(
   sata6: number | undefined,
@@ -29,7 +16,7 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
   it('passes fewer SATA drives than the motherboard has SATA ports', () => {
     const build: Build = {
       motherboard: boardWithPorts(4, 0),
-      storage: [drive('the-drive', 'SATA 6.0 Gb/s')],
+      storage: [drive('the-drive', '2.5"', 'SATA 6.0 Gb/s')],
     };
 
     expect(outcomeOf(13, build)).toEqual({
@@ -42,7 +29,10 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
   it('finds a Problem in more SATA drives than the motherboard has SATA ports', () => {
     const build: Build = {
       motherboard: boardWithPorts(1, 0),
-      storage: [drive('an-ssd', 'SATA 6.0 Gb/s'), drive('a-hard-drive', 'SATA 3.0 Gb/s')],
+      storage: [
+        drive('an-ssd', '2.5"', 'SATA 6.0 Gb/s'),
+        drive('a-hard-drive', '3.5"', 'SATA 3.0 Gb/s'),
+      ],
     };
 
     expect(outcomeOf(13, build)).toEqual({
@@ -56,8 +46,8 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
     const build: Build = {
       motherboard: boardWithPorts(2, 2),
       storage: [
-        drive('two-ssds', 'SATA 6.0 Gb/s', 2),
-        drive('two-hard-drives', 'SATA 3.0 Gb/s', 2),
+        drive('two-ssds', '2.5"', 'SATA 6.0 Gb/s', 2),
+        drive('two-hard-drives', '3.5"', 'SATA 3.0 Gb/s', 2),
       ],
     };
 
@@ -72,9 +62,9 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
     const build: Build = {
       motherboard: boardWithPorts(2, 2),
       storage: [
-        drive('two-ssds', 'SATA 6.0 Gb/s', 2),
-        drive('two-hard-drives', 'SATA 3.0 Gb/s', 2),
-        drive('an-old-drive', 'SATA 1.5 Gb/s'),
+        drive('two-ssds', '2.5"', 'SATA 6.0 Gb/s', 2),
+        drive('two-hard-drives', '3.5"', 'SATA 3.0 Gb/s', 2),
+        drive('an-old-drive', '3.5"', 'SATA 1.5 Gb/s'),
       ],
     };
 
@@ -88,7 +78,7 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
   it("is unchecked when the motherboard's SATA 6 Gb/s ports are missing", () => {
     const build: Build = {
       motherboard: boardWithPorts(undefined, 0),
-      storage: [drive('the-drive', 'SATA 6.0 Gb/s')],
+      storage: [drive('the-drive', '2.5"', 'SATA 6.0 Gb/s')],
     };
 
     expect(outcomeOf(13, build)).toEqual({
@@ -98,30 +88,57 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
     });
   });
 
-  it.each<[StorageInterface]>([
-    ['M.2 SATA'],
-    ['mSATA'],
-    ['SAS 12.0 Gb/s'],
-    ['U.2'],
-    ['M.2 PCIe 4.0 x4'],
-    ['PATA 100'],
-  ])('does not count a drive whose interface is %s as a SATA drive', (iface) => {
-    const build: Build = {
-      motherboard: boardWithPorts(1, 0),
-      storage: [drive('a-sata-drive', 'SATA 6.0 Gb/s'), drive('the-other-drive', iface)],
-    };
+  it.each<[StorageInterface, StorageFormFactor]>([
+    ['M.2 SATA', 'M.2-2280'],
+    ['mSATA', 'mSATA'],
+    ['SAS 12.0 Gb/s', '3.5"'],
+    ['U.2', '2.5"'],
+    ['M.2 PCIe 4.0 x4', 'M.2-2280'],
+    ['PATA 100', '3.5"'],
+  ])(
+    'does not count a drive whose interface is %s as a SATA drive',
+    (iface, formFactor) => {
+      const build: Build = {
+        motherboard: boardWithPorts(1, 0),
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('the-other-drive', formFactor, iface),
+        ],
+      };
 
-    expect(outcomeOf(13, build)).toEqual({
-      rule: 13,
-      outcome: 'passes',
-      parts: ['the-board', 'a-sata-drive', 'the-other-drive'],
-    });
-  });
+      expect(outcomeOf(13, build)).toEqual({
+        rule: 13,
+        outcome: 'passes',
+        parts: ['the-board', 'a-sata-drive', 'the-other-drive'],
+      });
+    },
+  );
+
+  // The owner's decision of 8 November 2026: an M.2 drive whose interface is
+  // SATA, as OpenDB gives 3 drives' at the pinned commit, is an M.2 SATA drive.
+  it.each<[StorageInterface]>([['SATA 1.5 Gb/s'], ['SATA 3.0 Gb/s'], ['SATA 6.0 Gb/s']])(
+    'does not count an M.2 drive whose interface is %s, an M.2 SATA drive, as a SATA drive',
+    (iface) => {
+      const build: Build = {
+        motherboard: boardWithPorts(1, 0),
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('an-m2-sata-drive', 'M.2-2280', iface),
+        ],
+      };
+
+      expect(outcomeOf(13, build)).toEqual({
+        rule: 13,
+        outcome: 'passes',
+        parts: ['the-board', 'a-sata-drive', 'an-m2-sata-drive'],
+      });
+    },
+  );
 
   it('counts two of one drive as two drives', () => {
     const build: Build = {
       motherboard: boardWithPorts(1, 0),
-      storage: [drive('two-ssds', 'SATA 6.0 Gb/s', 2)],
+      storage: [drive('two-ssds', '2.5"', 'SATA 6.0 Gb/s', 2)],
     };
 
     expect(outcomeOf(13, build)).toEqual({
@@ -136,8 +153,8 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
       const build: Build = {
         motherboard: boardWithPorts(1, 0),
         storage: [
-          drive('a-sata-drive', 'SATA 6.0 Gb/s'),
-          drive('a-drive-of-no-interface', undefined),
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-interface', '2.5"', undefined),
         ],
       };
 
@@ -152,8 +169,8 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
       const build: Build = {
         motherboard: boardWithPorts(2, 0),
         storage: [
-          drive('a-sata-drive', 'SATA 6.0 Gb/s'),
-          drive('a-drive-of-no-interface', undefined),
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-interface', '2.5"', undefined),
         ],
       };
 
@@ -164,12 +181,44 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
       });
     });
 
+    it('is unchecked when a drive of a SATA interface whose form factor is missing could tip the count, since it may be an M.2 SATA drive', () => {
+      const build: Build = {
+        motherboard: boardWithPorts(1, 0),
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-form-factor', undefined, 'SATA 6.0 Gb/s'),
+        ],
+      };
+
+      expect(outcomeOf(13, build)).toEqual({
+        rule: 13,
+        outcome: 'unchecked',
+        missing: [{ part: 'a-drive-of-no-form-factor', path: 'form_factor' }],
+      });
+    });
+
+    it('judges a drive of a SATA interface whose form factor is missing when it could not tip the count', () => {
+      const build: Build = {
+        motherboard: boardWithPorts(2, 0),
+        storage: [
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-form-factor', undefined, 'SATA 6.0 Gb/s'),
+        ],
+      };
+
+      expect(outcomeOf(13, build)).toEqual({
+        rule: 13,
+        outcome: 'passes',
+        parts: ['the-board', 'a-sata-drive', 'a-drive-of-no-form-factor'],
+      });
+    });
+
     it('finds a Problem the known SATA drives prove beside a drive whose interface is missing, naming the known ones', () => {
       const build: Build = {
         motherboard: boardWithPorts(1, 0),
         storage: [
-          drive('two-ssds', 'SATA 6.0 Gb/s', 2),
-          drive('a-drive-of-no-interface', undefined),
+          drive('two-ssds', '2.5"', 'SATA 6.0 Gb/s', 2),
+          drive('a-drive-of-no-interface', '2.5"', undefined),
         ],
       };
 
@@ -184,8 +233,8 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
       const build: Build = {
         motherboard: boardWithPorts(undefined, undefined),
         storage: [
-          drive('an-nvme-drive', 'M.2 PCIe 4.0 x4'),
-          drive('an-m2-sata-drive', 'M.2 SATA'),
+          drive('an-nvme-drive', 'M.2-2280', 'M.2 PCIe 4.0 x4'),
+          drive('an-m2-sata-drive', 'M.2-2280', 'M.2 SATA'),
         ],
       };
 
@@ -199,7 +248,7 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
     it('passes the SATA drives that the 6 Gb/s ports take, whatever the missing 3 Gb/s ports', () => {
       const build: Build = {
         motherboard: boardWithPorts(2, undefined),
-        storage: [drive('two-ssds', 'SATA 6.0 Gb/s', 2)],
+        storage: [drive('two-ssds', '2.5"', 'SATA 6.0 Gb/s', 2)],
       };
 
       expect(outcomeOf(13, build)).toEqual({
@@ -212,7 +261,7 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
     it('is unchecked when the 3 Gb/s ports are missing and the 6 Gb/s ports take too few', () => {
       const build: Build = {
         motherboard: boardWithPorts(2, undefined),
-        storage: [drive('three-ssds', 'SATA 6.0 Gb/s', 3)],
+        storage: [drive('three-ssds', '2.5"', 'SATA 6.0 Gb/s', 3)],
       };
 
       expect(outcomeOf(13, build)).toEqual({
@@ -226,8 +275,8 @@ describe("rule 13: the SATA drives and the motherboard's SATA ports", () => {
       const build: Build = {
         motherboard: boardWithPorts(undefined, 0),
         storage: [
-          drive('a-sata-drive', 'SATA 6.0 Gb/s'),
-          drive('a-drive-of-no-interface', undefined),
+          drive('a-sata-drive', '2.5"', 'SATA 6.0 Gb/s'),
+          drive('a-drive-of-no-interface', '2.5"', undefined),
         ],
       };
 

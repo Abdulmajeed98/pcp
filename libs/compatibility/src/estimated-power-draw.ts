@@ -1,6 +1,6 @@
 import type { Build, CpuSpecifications, GpuSpecifications } from './build';
 import type { MissingSpecification } from './outcome';
-import { type Amount, product, total } from './rules/findings';
+import { type Amount, product, total } from './rules/amounts';
 import { type PartRead, readPart } from './rules/statement';
 
 // A Build's estimated power draw (CMP-5), in W, or not known, naming each
