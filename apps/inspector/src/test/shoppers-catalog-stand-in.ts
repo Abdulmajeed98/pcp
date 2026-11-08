@@ -203,6 +203,8 @@ export function theShoppersCatalogStandIn({ otherParts = 450 } = {}): TheShopper
         {
           summary: part(`named-${index}`, wanted.category, wanted.name),
           specifications: specificationsByName[wanted.name] ?? {},
+          neededSpecifications: {},
+          ...(wanted.category === 'cpu' ? { cpuValues: {} } : {}),
         },
       ]),
     ),
@@ -216,6 +218,7 @@ export function theShoppersCatalogStandIn({ otherParts = 450 } = {}): TheShopper
         chipset: `Chipset ${index % 7}`,
         memory: [4, 8, 12, 16, 24][index % 5],
       },
+      neededSpecifications: {},
     })),
     categories,
   };

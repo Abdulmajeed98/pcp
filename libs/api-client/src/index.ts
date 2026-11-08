@@ -1,5 +1,6 @@
 export { type ApiClient, type ApiClientOptions, createApiClient } from './api-client';
 export type {
+  BuildResponse,
   CallerResponse,
   CategoryResponse,
   ConfirmedOffersResponse,

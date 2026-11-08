@@ -21,6 +21,7 @@ import type {
 import { currencies } from './currencies.ts';
 import { theShopsPlatformRate } from './made-up-offers.ts';
 import { daysAnOfferStaysCurrent } from './made-up-shop.ts';
+import { valueAt } from './specification-document.ts';
 import type { Category, ReadPart, ShopOffer, ShoppersShop } from './the-shoppers-shop.ts';
 
 // The stand-in API: the answers the made-up shop gives to the public
@@ -214,23 +215,6 @@ function detailsOf(offer: ShopOffer, currency: Currency) {
 }
 
 const partNotFound = refusal(404, 'PART_NOT_FOUND');
-
-// The value at a path of a Part's specifications, `cores.total` naming
-// `cores` and then `total`.
-export function valueAt(
-  document: Readonly<Record<string, unknown>>,
-  path: string,
-): unknown {
-  return path
-    .split('.')
-    .reduce<unknown>(
-      (held, name) =>
-        typeof held === 'object' && held !== null && !Array.isArray(held)
-          ? (held as Record<string, unknown>)[name]
-          : undefined,
-      document,
-    );
-}
 
 // Whether a Part holds nothing for a specification, as the API's description
 // of a Part's specifications has it: no value, an empty text or list, or a
