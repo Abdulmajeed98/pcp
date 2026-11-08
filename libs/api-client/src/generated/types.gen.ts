@@ -1298,6 +1298,44 @@ export type BuildPartResponse = {
     visible: boolean;
 };
 
+export type BuildMissingSpecificationResponse = {
+    /**
+     * The Part that lacks it, by its identifier.
+     */
+    part: string;
+    /**
+     * Its path in the Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it; for a field of a row, the list's path, the row's place from 0 and the field's name.
+     */
+    path: string;
+    /**
+     * Its English label, from the Part's specification list; for a field of a row, the list's.
+     */
+    label: string;
+    /**
+     * For a field of a row, such as a PCIe slot's lanes, the field's English label; null otherwise.
+     */
+    fieldLabel: string | null;
+};
+
+export type RuleOutcomeResponse = {
+    /**
+     * The rule's number, from 1 to 21, as the MVP spec numbers them.
+     */
+    rule: number;
+    /**
+     * Its outcome: `passes`; `problem`, a Compatibility Problem; `warning`, a Compatibility Warning, which only rules 11, 15 and 20 give; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.
+     */
+    outcome: 'passes' | 'problem' | 'warning' | 'unchecked';
+    /**
+     * The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.
+     */
+    parts: Array<string>;
+    /**
+     * For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.
+     */
+    missing: Array<BuildMissingSpecificationResponse>;
+};
+
 export type BuildResponse = {
     /**
      * The Build's Parts that the catalog holds, in the catalog's order of Categories, and the RAM kits and drives in the order the Build gives them. A Part the catalog no longer holds is left out.
@@ -1315,6 +1353,10 @@ export type BuildResponse = {
      * The values of the Build's CPU that the rule for a Complete Build reads and the CPU does not hold: `integratedGraphics`, its Integrated graphics, and `includesCooler`, its Cooler included. A CPU that does not hold one counts as not providing it, so the GPU or the CPU cooler stays needed. None without a CPU.
      */
     cpuValuesNotKnown: Array<'integratedGraphics' | 'includesCooler'>;
+    /**
+     * The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.
+     */
+    outcomes: Array<RuleOutcomeResponse>;
 };
 
 export type GetCallerData = {
