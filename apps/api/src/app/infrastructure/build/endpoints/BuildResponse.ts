@@ -2,12 +2,16 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { Build } from '~/domain/build/Build';
 import { Completeness, CpuValue, cpuValues } from '~/domain/build/complete-build';
+import { Judgment } from '~/domain/build/judgment';
 import { Category } from '~/domain/part/Category';
 
 import { BuildPartResponse } from './BuildPartResponse';
+import { EstimatedPowerDrawResponse } from './EstimatedPowerDrawResponse';
+import { RuleOutcomeResponse } from './RuleOutcomeResponse';
 
-// A Build as it is read: its Parts as the catalog holds them, and whether it
-// is a Complete Build.
+// A Build as it is read: its Parts as the catalog holds them, whether it is a
+// Complete Build, what the Compatibility Rules find in it, and its Estimated
+// power draw.
 export class BuildResponse {
   @ApiProperty({
     description:
@@ -40,14 +44,33 @@ export class BuildResponse {
   })
   readonly cpuValuesNotKnown: CpuValue[];
 
-  private constructor(build: Build, completeness: Completeness) {
+  @ApiProperty({
+    description:
+      'The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.',
+    type: [RuleOutcomeResponse],
+  })
+  readonly outcomes: RuleOutcomeResponse[];
+
+  @ApiProperty({
+    description:
+      'Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.',
+    type: EstimatedPowerDrawResponse,
+    nullable: true,
+  })
+  readonly estimatedPowerDraw: EstimatedPowerDrawResponse | null;
+
+  private constructor(build: Build, completeness: Completeness, judgment: Judgment) {
     this.parts = build.getParts().map(BuildPartResponse.ofBuildPart);
     this.complete = completeness.isComplete();
     this.stillNeeded = completeness.getStillNeeded().map((category) => category.getKey());
     this.cpuValuesNotKnown = [...completeness.getCpuValuesNotKnown()];
+    this.outcomes = judgment.getOutcomes().map(RuleOutcomeResponse.of);
+    const draw = judgment.getEstimatedPowerDraw();
+    this.estimatedPowerDraw =
+      draw === undefined ? null : EstimatedPowerDrawResponse.of(draw);
   }
 
-  static of(build: Build, completeness: Completeness): BuildResponse {
-    return new BuildResponse(build, completeness);
+  static of(build: Build, completeness: Completeness, judgment: Judgment): BuildResponse {
+    return new BuildResponse(build, completeness, judgment);
   }
 }
