@@ -1,4 +1,3 @@
 export { CurrencySwitch } from './ui/currency-switch';
-export { NameSlot } from './ui/name-slot';
+export { FrameRow } from './ui/frame-row';
 export { Stub } from './ui/stub';
-export { Switches } from './ui/switches';

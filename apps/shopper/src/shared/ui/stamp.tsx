@@ -10,14 +10,18 @@ import type { ReactNode } from 'react';
 export function Stamp({
   children,
   className,
+  data,
 }: {
   children: ReactNode;
   className?: string;
+  // What a page's script or a test may read of it, as `data-*` attributes.
+  data?: Record<`data-${string}`, string>;
 }) {
   return (
     <span
       aria-hidden="true"
       data-testid="stamp"
+      {...data}
       className={cn(
         'stamp-lands type-label pointer-events-none absolute z-[1] inline-block border-[3px] border-double border-primary bg-[color-mix(in_srgb,var(--card)_70%,transparent)] px-3.5 py-1.5 text-primary',
         className,

@@ -258,6 +258,9 @@
   --scan: 700ms;
   --unfold: 250ms;
   --fold: 150ms;
+  --line-print: 450ms;
+  --settle-again: 300ms;
+  --leave: 100ms;
   --lean: 160ms;
   --press: 140ms;
   --hover: 150ms;
@@ -728,6 +731,23 @@
 }
 
 /*
+ * A line of the Build's sheet too narrow for its text, as at 320 pixels or a
+ * phone's largest text (break-ui, builder ticket 06): its controls start
+ * under its picture, as its picture stacks over its name, and the
+ * quantity's figure narrows so that − and + keep their 44 pixels. The
+ * Category's place is the container, measured in its own text's em.
+ */
+@container (width < 17em) {
+  [data-controls] {
+    padding-inline-start: 0;
+  }
+
+  [data-quantity] input {
+    width: 2.75em;
+  }
+}
+
+/*
  * A dotted leader in Half Ink, from an item's name to its price: it fills
  * the space between them, sits on their baseline, and shrinks to 0.75rem at
  * the least on a phone.
@@ -1131,6 +1151,94 @@
   @supports selector(::details-content) {
     @media (min-width: 64rem) {
       display: none;
+    }
+  }
+}
+
+/*
+ * Emptying the Build is a disclosure whose space opens as the filters' fold
+ * does, over 250 ms as its contents fade in, and folds in 150 ms, where the
+ * browser can animate a disclosure's height, and at once where it cannot or
+ * with reduced motion, so that the sheet's foot moves down rather than jumps.
+ * Unlike the filters' fold it stays a fold at every width.
+ */
+@utility unfolds-in-place {
+  interpolate-size: allow-keywords;
+
+  &::details-content {
+    display: flow-root;
+    block-size: 0;
+    opacity: 0;
+    overflow-y: clip;
+    transition:
+      block-size var(--fold) var(--ease-out),
+      opacity var(--fold) var(--ease-out),
+      content-visibility var(--fold) allow-discrete;
+  }
+
+  &[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+    transition-duration: var(--unfold);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::details-content {
+      transition: none;
+    }
+  }
+}
+
+/*
+ * 11. A change to the Build: with script, a change on the Build page applies
+ * in place, and the page holds still but for what the change brought. The
+ * page's script opens the space of a line the Build gains and folds the space
+ * of one it loses (`--unfold`, `--fold`, and `--leave` for its fade), and
+ * marks what it brought: a line it gains (`data-arrived`) is fed out top
+ * first, uncovered from its top edge while it slides 8 pixels down, its
+ * price settling from 150 ms; a figure it altered (`data-settles-again`)
+ * settles again from the end side, 10 pixels and its opacity; the stamp
+ * lands once the change completes the Build with no Problem. With reduced
+ * motion nothing prints or settles, and the spaces still open and fold, in
+ * 150 ms, so that nothing jumps (the No Snap Rule).
+ */
+@keyframes line-prints {
+  from {
+    clip-path: inset(0 0 100% 0);
+    translate: 0 -8px;
+  }
+
+  to {
+    clip-path: inset(0);
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-arrived] {
+    animation: line-prints var(--line-print) var(--ease-out) both;
+  }
+
+  [data-arrived] .settles {
+    animation: settle var(--settle) var(--ease-out) both;
+    animation-delay: 150ms;
+  }
+
+  [data-arrived].stamp-lands,
+  [data-arrived] .stamp-lands {
+    animation:
+      stamp var(--stamp) var(--ease-out) both,
+      stamp-ink var(--stamp-ink) ease both;
+    animation-delay: 250ms;
+  }
+
+  [data-settles-again] {
+    --settle-from-side: 10px;
+    display: inline-block;
+    animation: settle var(--settle-again) var(--ease-out) both;
+
+    &:where(:dir(rtl)) {
+      --settle-from-side: -10px;
     }
   }
 }

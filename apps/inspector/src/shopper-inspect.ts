@@ -6,6 +6,7 @@ import { type CatalogReads, readTheShoppersCatalog } from './catalog-parts.ts';
 import { CannotInspect, type Login } from './chrome.ts';
 import { emulatedMedia } from './colour-scheme.ts';
 import { developmentAdmin } from './development-admin.ts';
+import { buildCookieOf, madeUpBuilds } from './made-up-builds.ts';
 import { madeUpPhotos } from './made-up-photos.ts';
 import {
   isTaken,
@@ -24,7 +25,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // made-up shop rather than the development database. Run it from the
 // repository root:
 //
-//   pnpm shopper:inspect <path> [--language ckb|ar|en] [--scheme light|dark] [--currency IQD|USD] [the inspector's options]
+//   pnpm shopper:inspect <path> [--language ckb|ar|en] [--scheme light|dark] [--currency IQD|USD] [--build empty|complete|worstCase] [the inspector's options]
 //
 // The Shopper app calls the API on its server, where the inspector's Chrome
 // cannot answer for it as `pnpm dashboard:inspect` answers for the
@@ -35,13 +36,16 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // saying so. It starts a Shopper app of its own on port 3100 with `API_URL`
 // set to the stand-in, leaving the owner's on port 3000 alone, and runs
 // Taste's `inspect.mjs` unchanged on the page, with every option but
-// `--language`, `--scheme` and `--currency` passed through (`--widths`,
-// `--out`, `--app` and the rest). The path leaves out the language:
-// `--language` gives it, Kurdish when left out. `--scheme` shows every tab in
-// the light or the dark scheme; without it Chrome follows the computer's
-// appearance. `--currency` shows every price in dinars or in dollars, as the
-// frame's switch would; without it prices show in dinars, the Shopper's
-// starting currency. Both servers are stopped when it ends, however it ends.
+// `--language`, `--scheme`, `--currency` and `--build` passed through
+// (`--widths`, `--out`, `--app` and the rest). The path leaves out the
+// language: `--language` gives it, Kurdish when left out. `--scheme` shows
+// every tab in the light or the dark scheme; without it Chrome follows the
+// computer's appearance. `--currency` shows every price in dinars or in
+// dollars, as the frame's switch would; without it prices show in dinars,
+// the Shopper's starting currency. `--build` puts one of the made-up Builds
+// (`made-up-builds.ts`) in every tab's Build cookie, as the Build page's
+// forms would; without it the Build is empty, as in a fresh browser. Both
+// servers are stopped when it ends, however it ends.
 //
 // It exits with the inspector's own status, 0 with no FAIL findings and 1
 // with some, or with 3, before any finding is written, when it cannot start:
@@ -49,7 +53,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // Shopper app not answering.
 
 const usage =
-  'usage: pnpm shopper:inspect <path without the language> [--language ckb|ar|en] [--scheme light|dark] [--currency IQD|USD] [--widths 1440,768,390] [--out DIR] [other options of inspect.mjs]';
+  'usage: pnpm shopper:inspect <path without the language> [--language ckb|ar|en] [--scheme light|dark] [--currency IQD|USD] [--build empty|complete|worstCase] [--widths 1440,768,390] [--out DIR] [other options of inspect.mjs]';
 
 // Before any read: a refused type of service would stop the command where
 // nothing can catch it (`type-of-service.ts`).
@@ -135,9 +139,10 @@ function catalogOfTheApi(authorization: string): CatalogReads {
 let address: string;
 let scheme: ReturnType<typeof shopperCommandLine>['scheme'];
 let currency: ReturnType<typeof shopperCommandLine>['currency'];
+let build: ReturnType<typeof shopperCommandLine>['build'];
 let inspectorArgs: string[];
 try {
-  ({ address, scheme, currency, inspectorArgs } = shopperCommandLine(
+  ({ address, scheme, currency, build, inspectorArgs } = shopperCommandLine(
     process.argv.slice(2),
     shopperOrigin,
   ));
@@ -197,7 +202,12 @@ try {
   // is shown in the scheme asked for, with the motion Taste asks for, and in
   // the currency asked for, held as the frame's switch holds a Shopper's
   // choice: in the cookie the Shopper app names `currency`, which its server
-  // reads for every page (`chosen-currency.ts`).
+  // reads for every page (`chosen-currency.ts`); and with the made-up Build
+  // asked for, in the cookie the Shopper app keeps a Build in, `build`, its
+  // text written as the Shopper app's server writes it, encoded for a
+  // cookie as Next encodes it.
+  const buildCookie =
+    build === undefined ? undefined : buildCookieOf(shop, madeUpBuilds[build]);
   const newPage = browser.newPage.bind(browser);
   browser.newPage = async (options) => {
     const page = await newPage(options);
@@ -206,6 +216,13 @@ try {
       await page.send('Network.setCookie', {
         name: 'currency',
         value: currency,
+        url: shopperOrigin,
+      });
+    }
+    if (buildCookie !== undefined && buildCookie !== '') {
+      await page.send('Network.setCookie', {
+        name: 'build',
+        value: encodeURIComponent(buildCookie),
         url: shopperOrigin,
       });
     }

@@ -55,6 +55,22 @@ describe("the Shopper's inspection's command line", () => {
     expect(read('/').currency).toBeUndefined();
   });
 
+  it("takes the made-up Build every tab's Build cookie holds, and keeps it from the inspector", () => {
+    expect(read('/build --build worstCase --language en')).toEqual({
+      address: 'http://localhost:3100/en/build',
+      scheme: undefined,
+      build: 'worstCase',
+      inspectorArgs: ['http://localhost:3100/en/build'],
+    });
+    expect(read('/build --build empty').build).toBe('empty');
+    expect(read('/build --build complete --widths 390').inspectorArgs).toEqual([
+      'http://localhost:3100/ckb/build',
+      '--widths',
+      '390',
+    ]);
+    expect(read('/build').build).toBeUndefined();
+  });
+
   it('refuses a line it cannot read', () => {
     for (const line of [
       '',
@@ -69,6 +85,9 @@ describe("the Shopper's inspection's command line", () => {
       '/ --currency EUR',
       '/ --currency usd',
       '/ --currency',
+      '/build --build',
+      '/build --build worst',
+      '/build --build Complete',
     ]) {
       expect(() => read(line)).toThrow(BadCommandLine);
     }

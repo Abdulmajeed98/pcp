@@ -1,7 +1,12 @@
 import { describe, expect, it } from '@jest/globals';
 import type { BuildResponse } from '@pcp/api-client';
 
-import { type MadeUpBuild, madeUpBuilds, partValuesOf } from '../made-up-builds.ts';
+import {
+  buildCookieOf,
+  type MadeUpBuild,
+  madeUpBuilds,
+  partValuesOf,
+} from '../made-up-builds.ts';
 import { dual2060Super, ryzen7800X3D, theLongestName } from '../made-up-offers.ts';
 import { answerFromTheStandIn } from '../stand-in-api.ts';
 import { theShoppersShop } from '../the-shoppers-shop.ts';
@@ -50,6 +55,29 @@ describe('the made-up Builds', () => {
     ).toThrow(
       'The made-up shop does not offer the cpu Part named "Not a Part of the shop".',
     );
+  });
+
+  // The Shopper app keeps a Build in its cookie `build`: each Part's
+  // identifier under its Category, joined by a colon, and a kit's or a
+  // drive's quantity after another, the entries joined by commas, in the
+  // Build's order (builder ticket 07).
+  it("give the Shopper app's Build cookie, each Part under its Category, a kit or a drive with its quantity", () => {
+    const entries = buildCookieOf(shop, madeUpBuilds.complete).split(',');
+
+    // The test's catalog names its Parts otherwise than the API does.
+    expect(entries.map((entry) => entry.replace(/:[^:]+/, ':<id>'))).toEqual([
+      'cpu:<id>',
+      'cpuCooler:<id>',
+      'motherboard:<id>',
+      'ram:<id>:2',
+      'storage:<id>:1',
+      'gpu:<id>',
+      'case:<id>',
+      'psu:<id>',
+    ]);
+    expect(entries[0]).toBe(`cpu:${partValuesOf(shop, madeUpBuilds.complete)[0]}`);
+    expect(buildCookieOf(shop, madeUpBuilds.empty)).toBe('');
+    expect(buildCookieOf(shop, madeUpBuilds.worstCase).split(',').length).toBe(22);
   });
 
   it('are an empty one, needing every Category', () => {
