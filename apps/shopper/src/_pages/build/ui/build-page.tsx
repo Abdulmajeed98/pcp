@@ -67,7 +67,10 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
           address={buildAddress(language)}
         />
       ) : (
-        <ChangesInPlace drawnFor={writeTheBuild(build)}>
+        // The page's own column between the stub and the back cover, a box
+        // of its own, so that each of its sections reads as one, as a
+        // reader and Taste's inspector take a page's sections.
+        <ChangesInPlace drawnFor={writeTheBuild(build)} className="flex flex-1 flex-col">
           <main className="relative isolate flex-1 px-ground-edge py-section-phone md:page-margins md:py-section">
             <DimPhotograph photograph={photographs.builtPc} first />
             <div className="mx-auto grid w-full max-w-[40rem] grid-cols-[minmax(0,1fr)] justify-items-center gap-y-10 lg:max-w-none lg:grid-cols-[minmax(0,23rem)_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
