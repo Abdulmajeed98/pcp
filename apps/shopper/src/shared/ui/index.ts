@@ -5,6 +5,7 @@ export { MarkADrawingAgain } from './mark-a-drawing-again';
 export { nameType } from './name-type';
 export { NotRead } from './not-read';
 export { CategoryDrawing, HeatSinkDrawing } from './printed-drawings';
+export { PrintedMark } from './printed-mark';
 export { Paging } from './paging';
 export { PrintInView } from './print-in-view';
 export { Sheet, SheetAction, SheetClose, SheetGroup, SheetNote, SheetTitle } from './sheet';
