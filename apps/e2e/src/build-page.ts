@@ -1,5 +1,7 @@
 import { type APIRequestContext, expect, type Locator, type Page } from '@playwright/test';
 
+import type { Currency } from './currencies';
+import type { ShownPrice } from './home-page';
 import type { Language } from './languages';
 import { apiUrl, shopperUrl } from './platform';
 
@@ -49,22 +51,52 @@ export function buildPageIn(language: Language['tag'] | Language): string {
   return `${shopperUrl}/${typeof language === 'string' ? language : language.tag}/build`;
 }
 
-// What the API answers of a Build, in dinars: its Parts, whether it is a
-// Complete Build and the Categories it still needs, in the catalog's order.
+// What the API answers of a Build, in a currency, as far as the tests read
+// it: its Parts, each with its Lowest Price times its quantity and the
+// Vendor it comes from, or none for an Unstocked Part; whether it is a
+// Complete Build and the Categories it still needs, in the catalog's order;
+// every rule's outcome; the first price view's total; and the second price
+// view's Vendors, in their order.
 export interface AnsweredBuild {
-  parts: { id: string; category: BuildCategory; name: string; quantity: number | null }[];
+  parts: {
+    id: string;
+    category: BuildCategory;
+    name: string;
+    quantity: number | null;
+    unstocked: boolean;
+    lowestPrice: {
+      shownPrice: ShownPrice;
+      timesQuantity: ShownPrice;
+      vendor: { id: string; name: string };
+    } | null;
+  }[];
   complete: boolean;
   stillNeeded: BuildCategory[];
+  outcomes: {
+    rule: number;
+    outcome: 'passes' | 'problem' | 'warning' | 'unchecked';
+    parts: string[];
+  }[];
+  totalAcrossVendors: ShownPrice | null;
+  vendors: {
+    id: string;
+    name: string;
+    total: ShownPrice | null;
+    partsInStock: { partId: string; timesQuantity: ShownPrice | null }[];
+    partsLacked: string[];
+  }[];
 }
 
 // `GET v1/build` for the Build of these `part` values: each Part's
-// identifier, and for a kit or a drive `:` and its quantity.
+// identifier, and for a kit or a drive `:` and its quantity; in dinars unless
+// the test asks for dollars.
 export async function theBuildAsAnswered(
   request: APIRequestContext,
   values: string[],
+  currency: Currency = 'IQD',
 ): Promise<AnsweredBuild> {
   const query = new URLSearchParams([
-    ['currency', 'IQD'],
+    ['currency', currency],
     ...values.map((value) => ['part', value]),
   ]);
   const answer = await request.get(`${apiUrl}/v1/build?${query}`);
@@ -137,4 +169,80 @@ export function emptyTheBuild(page: Page): Locator {
 export async function emptyTheBuildAfterConfirming(page: Page): Promise<void> {
   await emptyTheBuild(page).locator('summary').click();
   await emptyTheBuild(page).getByTestId('empty-confirm').click();
+}
+
+// The Build's till slip, and its Lowest total, the page's headline.
+export function theSlip(page: Page): Locator {
+  return page.getByTestId('build-slip');
+}
+
+export function theTotal(page: Page): Locator {
+  return theSlip(page).getByTestId('slip-total').getByTestId('shown-price');
+}
+
+// A Part's price on the Build's sheet, its Lowest Price times its quantity,
+// and the Vendor it comes from.
+export function priceOf(page: Page, partId: string): Locator {
+  return lineOf(page, partId).getByTestId('part-price');
+}
+
+export function lowestAtOf(page: Page, partId: string): Locator {
+  return lineOf(page, partId).getByTestId('lowest-at');
+}
+
+// What the rules found, as the rules' sheet lists it: each outcome of a
+// kind, in its order, by its rule's number.
+export function outcomesListed(
+  page: Page,
+  outcome: 'problem' | 'warning' | 'unchecked',
+): Locator {
+  return page.locator(`[data-testid="outcome"][data-outcome="${outcome}"]`);
+}
+
+export async function rulesListed(
+  page: Page,
+  outcome: 'problem' | 'warning' | 'unchecked',
+): Promise<number[]> {
+  return outcomesListed(page, outcome).evaluateAll((listed) =>
+    listed.map((each) => Number(each.getAttribute('data-rule'))),
+  );
+}
+
+// The Parts an outcome names, by their identifiers, in their order.
+export async function partsNamedBy(
+  page: Page,
+  rule: number,
+  outcome: 'problem' | 'warning',
+): Promise<string[]> {
+  return page
+    .locator(`[data-testid="outcome"][data-rule="${rule}"][data-outcome="${outcome}"]`)
+    .getByTestId('named-part')
+    .evaluateAll((named) => named.map((each) => each.getAttribute('data-part') ?? ''));
+}
+
+// How many rules the rules' sheet says were checked and passed.
+export function rulesPassed(page: Page): Locator {
+  return page.getByTestId('rules-passed').getByTestId('item-end');
+}
+
+// The second price view: each Vendor's line, in the order the page lists
+// them, its total and the Parts it lacks.
+export function vendorLines(page: Page): Locator {
+  return page.getByTestId('build-vendor');
+}
+
+export async function vendorsListed(page: Page): Promise<string[]> {
+  return vendorLines(page).evaluateAll((lines) =>
+    lines.map((line) => line.getAttribute('data-vendor') ?? ''),
+  );
+}
+
+export function vendorLineOf(page: Page, vendorId: string): Locator {
+  return page.locator(`[data-testid="build-vendor"][data-vendor="${vendorId}"]`);
+}
+
+export async function partsLackedBy(page: Page, vendorId: string): Promise<string[]> {
+  return vendorLineOf(page, vendorId)
+    .locator('[data-testid="vendor-lacks"] [data-part]')
+    .evaluateAll((lacked) => lacked.map((each) => each.getAttribute('data-part') ?? ''));
 }
