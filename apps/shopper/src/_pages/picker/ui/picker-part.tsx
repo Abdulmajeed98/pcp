@@ -25,7 +25,8 @@ import { Item, whereAPartsNameStands } from '@/shared/ui';
 // more. With the switch on, a Part that is not Compatible with the Build
 // begins its second line with "✕ Does not fit your Build" at 600 in the
 // Ink, in words as well as its mark, and can still be picked; the Build page
-// then says why.
+// then says why. The ✕ is drawn, as the rules' sheet draws its marks, since
+// the character is read as an emoji (Taste's inspector, `emoji`).
 export async function PickerPart({
   part,
   place,
@@ -79,7 +80,7 @@ export async function PickerPart({
                     data-testid="does-not-fit"
                     className="font-semibold text-foreground"
                   >
-                    <span aria-hidden="true">✕ </span>
+                    <Cross />
                     {t('doesNotFit')}
                   </span>
                   {' · '}
@@ -130,6 +131,23 @@ export async function PickerPart({
         )}
       </div>
     </li>
+  );
+}
+
+// The ✕ before "Does not fit your Build": two strokes in the Ink, three
+// quarters of the line's text tall, on its baseline, hidden from readers,
+// since the words beside it say the same. It reads the same in every
+// direction.
+function Cross() {
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      aria-hidden="true"
+      data-testid="cross"
+      className="me-[0.35em] inline size-[0.75em] align-baseline"
+    >
+      <path d="M2 2 L10 10 M10 2 L2 10" fill="none" stroke="currentColor" strokeWidth={2} />
+    </svg>
   );
 }
 

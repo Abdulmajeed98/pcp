@@ -35,7 +35,10 @@ import { TheSwitch } from './the-switch';
 
 // The picker's sheet (DESIGN.md's The picker, Its sheet): a Category page's
 // sheet for picking, its title "Choose a CPU" in the Sheet title as the
-// page's `h1`, the stamp "Lowest price first", its sentence in Body large,
+// page's `h1`, the stamp "Lowest price first" under it at every width, since
+// a picker's title is longer than a Category's and ran into the stamp in
+// the sheet's end corner, in Kurdish at every desk width, its sentence in
+// Body large,
 // "3 CPUs in stock that fit your Build, lowest price first.", or with the
 // switch on "8 CPUs in stock, lowest price first. 5 do not fit your Build.";
 // then the switch, once the Build holds a Part; the choices that are on; the
@@ -235,7 +238,7 @@ export async function PickerSheet({
     >
       <SheetTitle as="h1">{buildWords('choose', { category })}</SheetTitle>
       {listed && (
-        <Stamp className="static mx-auto mt-3.5 table text-[1.125rem] @[30rem]:absolute @[30rem]:end-[22px] @[30rem]:top-[26px] @[30rem]:mt-0">
+        <Stamp className="static mx-auto mt-3.5 table text-[1.125rem]">
           {categoryPage('stamp')}
         </Stamp>
       )}
