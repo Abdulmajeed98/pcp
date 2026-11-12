@@ -14,8 +14,10 @@ export interface SearchFormWords {
 }
 
 // A Category page's search and filters (DESIGN.md's The swing tag, The search
-// and The filters): one plain form sent with GET to the Category page's own
-// address, so that it works before any script has loaded, its choices
+// and The filters): one plain form sent with GET to the list's own address,
+// a Category page's or the picker's, so that it works before any script has
+// loaded, the fields it keeps as they are after its own (`kept`, the
+// picker's switch), its choices
 // landing in the address, where a reload, a link or a friend finds them
 // again. A new search or choice starts again at the list's first page, as
 // the form sends no page.
@@ -49,6 +51,7 @@ export interface SearchFormWords {
 // chip, and a price read from Arabic-Indic digits shows in Western ones.
 export function SearchForm({
   action,
+  kept,
   search,
   priceRange,
   words,
@@ -56,6 +59,7 @@ export function SearchForm({
   children,
 }: {
   action: string;
+  kept: readonly (readonly [string, string])[];
   search: string;
   priceRange: PriceRangeResponse | null;
   words: SearchFormWords;
@@ -177,6 +181,9 @@ export function SearchForm({
           />
         </label>
         {children}
+        {kept.map(([name, value]) => (
+          <input key={name} type="hidden" name={name} value={value} />
+        ))}
       </form>
     </search>
   );

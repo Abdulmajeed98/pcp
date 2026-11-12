@@ -5,8 +5,10 @@ import { categoryAddress, categoryOfTheAddress } from '@/entities/category';
 import {
   type AddressQuery,
   addressOfTheForm,
+  readAPageOfTheList,
   readCategoryQuery,
   readPriceRange,
+  readTheFilters,
   Search,
 } from '@/features/search-parts';
 import { chosenCurrency } from '@/shared/currency';
@@ -15,7 +17,6 @@ import { DimPhotograph, MarkADrawingAgain } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
 import { Stub } from '@/widgets/frame-header';
 
-import { readTheCategoryFilters, readTheCategoryPage } from '../api/read-the-category-page';
 import type { CategoryPageParams } from '../model/preview';
 import { CategorySheet } from './category-sheet';
 
@@ -46,12 +47,10 @@ export async function CategoryPage({
     chosenCurrency(),
     getLocale(),
   ]);
-  const offered = await readTheCategoryFilters(category, currency);
+  const offered = await readTheFilters(category, currency);
   const query = readCategoryQuery(address, offered);
   const page =
-    offered === undefined
-      ? undefined
-      : await readTheCategoryPage(category, query, currency);
+    offered === undefined ? undefined : await readAPageOfTheList(category, query, currency);
   const asAsked = addressOfTheForm(
     categoryAddress(language, category),
     Object.entries(address).flatMap(([name, values]) =>

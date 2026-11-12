@@ -1,22 +1,22 @@
 import type { FilterResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import type { Category } from '@/entities/category';
 import { currencyMarks } from '@/shared/currency';
 import { shownPriceText } from '@/shared/price';
 import { buttonVariants } from '@/shared/ui';
 
 import {
+  addressOfAList,
+  allCleared,
   type CategoryQuery,
-  categoryPageAddress,
   choicesOn,
   type FilterValue,
-  nothingOn,
   type OfferedFilters,
+  type PickerQuery,
   type PriceEnd,
 } from '../model/category-query';
 import { isNamed, nameOfFilter, type SearchWords, wordsOfAValue } from './value-words';
@@ -39,17 +39,19 @@ import { isNamed, nameOfFilter, type SearchWords, wordsOfAValue } from './value-
 // browser can show a disclosure's contents while it is folded; where it
 // cannot, the bar stays, and a tap unfolds the tag there too.
 export async function FiltersFold({
-  category,
   query,
   offered,
   range,
+  list,
 }: {
-  category: Category;
-  query: CategoryQuery;
+  query: CategoryQuery | PickerQuery;
   offered: OfferedFilters | undefined;
   range: { lowest: PriceEnd; highest: PriceEnd };
+  // The list's own address with no query, a Category page's or the
+  // picker's, which Clear all leads to with every choice cleared.
+  list: string;
 }) {
-  const [language, t] = await Promise.all([getLocale(), getTranslations('SearchParts')]);
+  const t = await getTranslations('SearchParts');
   const on = choicesOn(query).filter(({ kind }) => kind !== 'search').length;
   const chosen = (parameter: string) =>
     parameter === 'manufacturer'
@@ -142,7 +144,7 @@ export async function FiltersFold({
             {t('show')}
           </button>
           <Link
-            href={categoryPageAddress(language, category, nothingOn)}
+            href={addressOfAList(list, allCleared(query))}
             prefetch={false}
             data-testid="clear-all-filters"
             className={buttonVariants({ kind: 'board', className: atTheFoot })}
