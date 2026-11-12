@@ -1,6 +1,12 @@
 export {
   type AddressQuery,
+  addressOfAList,
   addressOfTheForm,
+  allCleared,
+  fieldsTheFormKeeps,
+  type PickerQuery,
+  readPickerQuery,
+  switchedTo,
   type CategoryQuery,
   categoryPageAddress,
   type ChoiceOn,

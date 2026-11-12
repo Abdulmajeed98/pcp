@@ -30,6 +30,12 @@ describe('the address the scheme switch returns to', () => {
     );
   });
 
+  it("keeps the picker's whole query, its switch among it", () => {
+    expect(
+      addressAfterChoosingScheme('ckb', '/build/gpu?search=rtx&lowest=150000&show=all'),
+    ).toBe('/ckb/build/gpu?search=rtx&lowest=150000&show=all');
+  });
+
   it('returns the first page as it was sent, with no query or with one', () => {
     expect(addressAfterChoosingScheme('ckb', '')).toBe('/ckb');
     expect(addressAfterChoosingScheme('ckb', '?search=ryzen')).toBe('/ckb?search=ryzen');
