@@ -212,9 +212,13 @@ test('in Kurdish and English, a CPU and a motherboard of different sockets make 
         await expect(outcome.getByTestId('outcome-words')).not.toContainText(part.name);
       }
       await expect(outcome.getByTestId('outcome-words')).not.toHaveText('');
-      await expect(theSlip(page).getByTestId('slip-problems')).toContainText(
+      // The group counts its Problems; on a phone the slip carries its price
+      // lines alone and leaves the rules' counts to the rules' sheet.
+      await expect(page.getByTestId('outcomes-problem').locator('h3')).toContainText(
         String(problems.length),
       );
+      await expect(theSlip(page).getByTestId('slip-complete')).toBeVisible();
+      await expect(theSlip(page).getByTestId('slip-problems')).toBeHidden();
       // The page never stops the Shopper keeping the Build (BLD-4): it holds
       // both Parts, each with its Remove and nothing else in the way.
       await expect(lineOf(page, cpu.id)).toBeVisible();
@@ -239,9 +243,16 @@ test('in Kurdish and English, a CPU and a motherboard of different sockets make 
       }
       await expect(page.getByTestId('rules-sentence')).not.toHaveText('');
       await expect(rulesPassed(page)).toHaveText(String(passes));
-      await expect(theSlip(page).getByTestId('slip-problems')).toContainText('0');
+      await expect(theSlip(page).getByTestId('slip-passed')).toBeHidden();
     });
   }
+
+  await test.step("at a desk, the slip beside the sheet carries the rules' counts too", async () => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(buildPageIn(english));
+    await expect(theSlip(page).getByTestId('slip-problems')).toContainText('0');
+    await expect(theSlip(page).getByTestId('slip-passed')).toContainText(String(passes));
+  });
 });
 
 test("in Kurdish and English, the page shows each Part's Lowest Price and Vendor and the total, and each Vendor's total with the Parts it lacks, in the API's order", async ({
