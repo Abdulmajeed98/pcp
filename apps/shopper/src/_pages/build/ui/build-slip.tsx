@@ -1,6 +1,7 @@
 import type { BuildResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
@@ -20,7 +21,11 @@ import { powerDrawOf } from '../model/findings';
 // Vendors the Lowest Prices come from; the Parts; whether it is complete;
 // and, once it holds a Part, the Problems, the Warnings and the rules not
 // checked, the rules passed, and the Estimated power draw, "—" when it is
-// not known and left out without a CPU. Then a dashed rule, and at its foot,
+// not known and left out without a CPU. Below 64rem, where it comes first,
+// it carries its price lines alone, from the Lowest total to Complete, and
+// leaves the rules' counts and the power draw to the rules' sheet, which
+// says them too, so that a phone's first screen holds the slip and the
+// Build's title (the owner, 13 November 2026). Then a dashed rule, and at its foot,
 // in Small Soft Ink, that each Part is at its Lowest Price, read just now,
 // with, when it holds any, that the total leaves out the Parts no Vendor has
 // in stock, and the Parts whose price cannot be shown yet (PRC-5). No
@@ -28,8 +33,8 @@ import { powerDrawOf } from '../model/findings';
 // Build" lands on it when the Build is a Complete Build with no
 // Compatibility Problem, and only then.
 //
-// It comes first on a phone, so that the first screen holds the total and
-// the status, and is pinned from 64rem beside the Build's sheet, holding its
+// It comes first on a phone, so that the first screen holds the total, and
+// is pinned from 64rem beside the Build's sheet, holding its
 // place 32 pixels from the top while the sheet scrolls past (Motion 7). It is
 // on the first screen, so it prints as the page opens (Motion 1). Each figure
 // a change in place may alter is named for the page's script, which settles
@@ -97,20 +102,20 @@ export async function BuildSlip({
           </Line>
           {answer.parts.length > 0 && (
             <>
-              <Line name={t('slip.problems')} figure="problems">
+              <Line name={t('slip.problems')} figure="problems" fromTheDesk>
                 {count('problem')}
               </Line>
-              <Line name={t('slip.warnings')} figure="warnings">
+              <Line name={t('slip.warnings')} figure="warnings" fromTheDesk>
                 {count('warning')}
               </Line>
-              <Line name={t('slip.notChecked')} figure="unchecked">
+              <Line name={t('slip.notChecked')} figure="unchecked" fromTheDesk>
                 {count('unchecked')}
               </Line>
-              <Line name={t('slip.rulesPassed')} figure="passed">
+              <Line name={t('slip.rulesPassed')} figure="passed" fromTheDesk>
                 {count('passes')}
               </Line>
               {power !== undefined && (
-                <Line name={t('slip.powerDraw')} figure="power">
+                <Line name={t('slip.powerDraw')} figure="power" fromTheDesk>
                   {'watts' in power ? <AlwaysEnglish>{power.watts}</AlwaysEnglish> : '—'}
                 </Line>
               )}
@@ -155,21 +160,27 @@ export async function BuildSlip({
 // One line of the slip, as a Part page's slip draws it: its name at the
 // start, a dotted leader, and its figure at the end, at weight 600. On a slip
 // too narrow for its own text its name takes the whole line, and the leader
-// runs to the figure on the next (the theme's `data-slip-line` rule).
+// runs to the figure on the next (the theme's `data-slip-line` rule). A
+// line drawn only `fromTheDesk` is left out below 64rem.
 function Line({
   name,
   figure,
+  fromTheDesk = false,
   children,
 }: {
   name: string;
   figure: string;
+  fromTheDesk?: boolean;
   children: ReactNode;
 }) {
   return (
     <li
       data-testid={`slip-${figure}`}
       data-slip-line=""
-      className="grid grid-cols-[minmax(0,max-content)_minmax(0.5rem,1fr)_auto] items-end gap-2 md:grid-cols-[max-content_minmax(1rem,1fr)_auto]"
+      className={cn(
+        'grid grid-cols-[minmax(0,max-content)_minmax(0.5rem,1fr)_auto] items-end gap-2 md:grid-cols-[max-content_minmax(1rem,1fr)_auto]',
+        fromTheDesk && 'max-lg:hidden',
+      )}
     >
       <span>{name}</span>
       <span aria-hidden="true" className="leader" />
