@@ -157,14 +157,14 @@ export async function PickerSheet({
                 href={addressAt(switchedTo(query, true))}
                 prefetch={false}
                 data-testid="show-all"
-                className={buttonVariants({ kind: 'primary' })}
+                className={buttonVariants({ kind: 'primary', className: 'max-w-full' })}
               >
                 {t('showAll', counting(state.inStock))}
               </Link>
               <a
                 href={`${buildAddress(language)}#rules`}
                 data-testid="see-why"
-                className={buttonVariants({ kind: 'board' })}
+                className={buttonVariants({ kind: 'board', className: 'max-w-full' })}
               >
                 {t('seeWhy')}
               </a>

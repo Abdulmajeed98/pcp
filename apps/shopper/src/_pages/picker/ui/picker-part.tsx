@@ -104,12 +104,14 @@ export async function PickerPart({
         ) : (
           <span
             data-testid="in-your-build"
-            className="inline-flex min-h-control items-center gap-2 text-base font-semibold"
+            className="inline-flex min-h-control max-w-full items-center gap-2 text-base font-semibold"
           >
             <TickMark />
-            {'quantity' in held
-              ? t('inYourBuildTimes', { quantity: formatNumber(held.quantity) })
-              : t('inYourBuild')}
+            <span className="min-w-0 wrap-break-word">
+              {'quantity' in held
+                ? t('inYourBuildTimes', { quantity: formatNumber(held.quantity) })
+                : t('inYourBuild')}
+            </span>
           </span>
         )}
         {canPick && (
