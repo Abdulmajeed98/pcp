@@ -23,7 +23,7 @@ This makes success criterion 6 true, and the half of criterion 5 where an incomp
 - [x] **The second price view.** Each Vendor has its name, linked to its Vendor page, its total through `ShownPrice`, the Parts it has and the Parts it lacks, in the API's order. It is built so that `sharing` can add a "send on WhatsApp" button to each Vendor.
 - [x] **The currency switch** changes every price and total on the page. What "≈" means is said once under the sheet when a price on it is converted, as on the other Shopper pages.
 - [x] **The motion** DESIGN.md gives the outcomes and the totals, filmed with `film` and judged by `snapsOf`, with reduced motion and without it.
-- [ ] **`pnpm shopper:inspect`** on the Build page with each made-up Build, in both schemes, in Kurdish and in English, at 1440, 1280, 1024, 768 and 390 pixels, and in dollars at 1440 and 390 pixels. Every FAIL is fixed, and every WARN fixed or defended under Comments. `break-ui`'s worst cases are looked at with the worst-case Build.
+- [x] **`pnpm shopper:inspect`** on the Build page with each made-up Build, in both schemes, in Kurdish and in English, at 1440, 1280, 1024, 768 and 390 pixels, and in dollars at 1440 and 390 pixels. Every FAIL is fixed, and every WARN fixed or defended under Comments. `break-ui`'s worst cases are looked at with the worst-case Build.
 - [x] **The Shopper's unit seam** gains tests that word every rule's every outcome in each language, each naming its Parts, and an unchecked rule naming its missing specifications in English.
 - [x] **`pnpm platform:check`** gains these lines, in a window 360 pixels wide, in Kurdish and in English, each arranging its Build with the pick form and made-up Parts carrying the specifications it needs:
   - A CPU and a motherboard of different sockets make the page list a Compatibility Problem naming both Parts. A Build with no Problem lists none and counts its passes.
@@ -118,3 +118,32 @@ The page for the owner, `builder-08/index.html` in the scratchpad (for the owner
 1. **A phone's first screen.** The slip fills it, and the page's title is below it (Taste's FAIL `no-title`). Recommended: B, below 64rem the slip keeps its price lines (the Lowest total, the Vendors to visit, the Parts and Complete) and leaves the rules' counts and the power draw to the rules' sheet, which says them already; it keeps the arrangement you chose and puts the title on the first screen in every case measured. Or C, the sheet first and the slip after it, which puts the total thousands of pixels down.
 2. **`first-action` at more widths.** Recommended: keep the page as chosen and defend it at 1280, 1024, 768 and 390 on a Build with Parts, and at 768 and 390 on an empty Build, for the reason you kept it at 1440: the first screen is what the Build is, and an empty Build's cells to choose a Part are one scroll away under its title.
 3. **A price wider than its line at twice the text** (ticket 06's follow-up, on every Shopper page). Recommended: A, the unit wraps under the figure where the line cannot hold the price, the figure and its "≈" kept whole, at its line's size; at 390 every price then fits, and at 320 a seven-figure figure alone is still a little wider than the slip's line and a Vendor's. Or B, the price keeps one line and narrows on a line too narrow for it. Either is a change to the Shown Price for a ticket of its own, not this one.
+
+### 13 November 2026: the owner's answers
+
+The coordinator relayed the owner's answer to the three questions, given after the owner had seen the page of them at `.taste-skill/builder-08/`: "Keep every recommendation".
+
+1. **A phone's first screen**: B. Below 64rem the Build's slip carries its price lines alone, the Lowest total, the Vendors to visit, the Parts and Complete, and leaves the rules' counts and the power draw to the rules' sheet, which says them too; from 64rem, beside the sheet, it carries every line. Built in `BuildSlip` (each of the five lines drawn `fromTheDesk`, left out below 64rem), and DESIGN.md's The Build's till slip, its Layout and its page's length on a phone say so. The end-to-end line of the sockets' Problem now reads its count on the rules' sheet in the phone's window, finds the slip's counts hidden there, and reads them on the slip at 1280 pixels.
+2. **`first-action` at more widths**: defended by the owner, for the reason kept at 1440: at 1280, 1024, 768 and 390 pixels on a Build that holds Parts, and at 768 and 390 on an empty Build, whose cells to choose a Part lie one scroll down under its title. DESIGN.md's The Build's till slip records it beside the defence at 1440.
+3. **A price wider than its line at twice the text**: A, the unit wraps under the figure only where the line cannot hold the price, the "≈" kept on the figure's line and the figure whole, at its line's size. It is a change to the Shown Price for a ticket of its own after this module, not built here; the orchestrator keeps the follow-up, and DESIGN.md's head comment records the choice.
+
+**`pnpm shopper:inspect`** again on `/build` with each made-up Build, in both schemes, in Kurdish and English, at 1440, 1280, 1024, 768 and 390 pixels, and the complete and the worst-case Builds in dollars at 1440 and 390, under the lock, with this worktree's API on 3183; 16 runs.
+
+| Build | Kurdish, light and dark | English, light and dark |
+| --- | --- | --- |
+| Empty | `dashed`, `no-footage`, `blank-gap` at 768, `first-action` at 768 and 390 | `dashed`, `no-footage`, `first-action` at 390 |
+| Complete | `dashed`, `no-footage`, `grey-body` (light), `first-action` at every width | the same |
+| Worst case | the same as the complete Build, and `name-only-title` at 390 | the same as the complete Build |
+| Complete and worst case, in dollars | `dashed`, `no-footage`, `grey-body`, `first-action`; the worst case `name-only-title` at 390 | `dashed`, `no-footage`, `grey-body`, `first-action` |
+
+0 FAIL in each of the 16 runs. Measured with the stand-in as built, the page's title now starts 649 to 765 pixels down at 390 (the inspector's first screen ends at 802) and 765 to 881 at 768 (it ends at 973), and the status 701 to 831 and 821 to 947. The desk captures at 1024 and 1280, taken apart, show the slip beside the sheet with every line, as before.
+
+`no-title` is gone at every width, and so is `name-only-title` at 768: on a phone the title now stands on the first screen under the slip. One WARN is new: `name-only-title` at 390 in Kurdish on the worst-case Build alone, whose slip also says that it leaves out the 4 Unstocked Parts, so that the title, "بیڵدەکەت", stands at 765 pixels and the status under it starts at 831, 29 pixels past the inspector's first screen, which then finds no line of reading size saying what the page is. It is defended here, as a consequence of the slip the owner chose with the worst case's data: the slip above the title says what the Build is, its Lowest total, its Vendors, its Parts and whether it is complete, and the status is the next line down; making room for it would change the slip's paper or its foot, which DESIGN.md fixes. It is listed for the owner to confirm. Every other WARN is defended: `dashed`, `no-footage`, `grey-body` in light and `blank-gap` at 768 as browse ticket 14's reference defends them, and `first-action` as the owner kept it, at 1440 on 9 November and at the other widths on 13 November 2026. The inspection's box is ticked; the box for the checks on a phone stays open, waiting for hosting.
+
+**The gates.** Each piece was committed only once `pnpm check` passed on exactly what it held. `pnpm platform:check` under the lock, on `585428b`, passed 412 lines in 17.9 minutes, Motion 11's films among them. The last commit passed `pnpm check --skip-nx-cache` with every `*.tsbuildinfo` outside `node_modules` deleted first. `pnpm integration:check` was not run: the API is unchanged. `builder/integration` was still at `77dae4b`, so merging it changed nothing.
+
+**The pieces**:
+
+- `94668da` fix(shopper): keep the slip's price lines alone on a phone
+- `585428b` test(e2e): read the rules' counts where the Build page shows them
+- this record, with DESIGN.md given the owner's answers
