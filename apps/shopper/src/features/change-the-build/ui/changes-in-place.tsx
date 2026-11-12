@@ -47,9 +47,13 @@ export function useChangesInPlace(): SendInPlace | undefined {
 // for, which changes when a change is applied.
 export function ChangesInPlace({
   drawnFor,
+  className = 'contents',
   children,
 }: {
   drawnFor: string;
+  // The box that holds what the change reaches: none of its own by default,
+  // or, round several sections of a page, the page's own column.
+  className?: string;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -108,7 +112,7 @@ export function ChangesInPlace({
 
   return (
     <InPlace value={send}>
-      <div ref={container} className="contents">
+      <div ref={container} className={className}>
         {children}
       </div>
     </InPlace>

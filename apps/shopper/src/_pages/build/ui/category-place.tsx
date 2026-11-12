@@ -1,8 +1,9 @@
 import type { BuildPartResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
-import { AlwaysEnglish, CategoryIcon } from '@pcp/ui';
+import { AlwaysEnglish, AsWritten, CategoryIcon } from '@pcp/ui';
 import { cn } from 'cn';
 import { getLocale, getTranslations } from 'next-intl/server';
+import type { ReactNode } from 'react';
 
 import {
   type Category,
@@ -12,6 +13,7 @@ import {
   type Refusal,
 } from '@/entities/build';
 import { partAddress, PartSquare } from '@/entities/part';
+import { vendorAddress } from '@/entities/vendor';
 import {
   pickerAddress,
   placeOf,
@@ -19,16 +21,18 @@ import {
   RemoveForm,
   underlinedAction,
 } from '@/features/change-the-build';
-import { buttonVariants, Item } from '@/shared/ui';
+import { ShownPrice } from '@/shared/price';
+import { buttonVariants, Item, whereAPartsNameStands } from '@/shared/ui';
 
 // A Category on the Build's sheet (DESIGN.md's A Category on the Build's
 // sheet): the Category's icon at 20 pixels and its name, in Body at 600 in
 // Soft Ink, head its place, which an address leads to after a change
 // (`#ram`). Under it each of its Parts is printed as a Part on a Category
 // page is, its photo or its Category's icon in the small square, its name in
-// English as a link to its Part page (a Visible Part only), and its
-// manufacturer on its second line; ticket 08 of the builder module adds its
-// price. Under the line, from the start of its words, its controls: Change,
+// English as a link to its Part page (a Visible Part only), the leader, its
+// price at the end, and its second line, its manufacturer and where its
+// Lowest Price comes from; a long name keeps the Long Name Rule. Under the
+// line, from the start of its words, its controls: Change,
 // a link to its picker, or a kit's or a drive's quantity, at the start, and
 // Remove at the end, never side by side. Several kits or drives follow one
 // another 8 pixels apart, and under the last, while fewer than 8, Add
@@ -45,11 +49,15 @@ import { buttonVariants, Item } from '@/shared/ui';
 export async function CategoryPlace({
   category,
   parts,
+  firstPlace,
   notNeeded,
   refused,
 }: {
   category: Category;
   parts: readonly BuildPartResponse[];
+  // The place of the Category's first Part on the sheet, from 0, which
+  // staggers its price as the sheet prints (Motion 2).
+  firstPlace: number;
   notNeeded: boolean;
   refused: Refusal | undefined;
 }) {
@@ -58,6 +66,78 @@ export async function CategoryPlace({
     getTranslations('BuildPage'),
     getTranslations('Category'),
   ]);
+
+  // A Part's price on the Build's sheet (DESIGN.md's A Part's price on the
+  // Build's sheet), the first price view (BLD-7): its Lowest Price times its
+  // quantity, as the API answers it, drawn by the Shown Price with its "≈",
+  // so that the sheet's column adds up to the slip's total; for an Unstocked
+  // Part, "No Vendor has it" in words in the price's place, never a colour
+  // alone; and nothing for a Part whose price cannot be shown yet, as a
+  // Category page shows none. Each price is named for the page's script,
+  // which settles it again when a change in place alters it (Motion 11).
+  const priceOf = (part: BuildPartResponse) => {
+    if (part.lowestPrice !== null) {
+      return (
+        <span data-figure={`price-${part.id}`} data-testid="part-price">
+          <ShownPrice price={part.lowestPrice.timesQuantity} />
+        </span>
+      );
+    }
+    if (!part.unstocked) return undefined;
+    return (
+      <span
+        data-testid="no-vendor-has-it"
+        className="text-base font-normal text-muted-foreground"
+      >
+        {t('price.noVendorHasIt')}
+      </span>
+    );
+  };
+
+  // Its second line after its manufacturer: for a kit or a drive held more
+  // than once, its Lowest Price of one, "2 × 172,000 IQD"; and "Lowest at"
+  // the Vendor its Lowest Price comes from, linked to its Vendor page, its
+  // name as written. An Unstocked Part says instead, in words, that no Vendor
+  // has it in stock, so it is left out of every total.
+  const whereItIsPriced = (part: BuildPartResponse) => {
+    if (part.unstocked) {
+      return (
+        <>
+          {' · '}
+          <span data-testid="unstocked">{t('price.unstocked')}</span>
+        </>
+      );
+    }
+    const lowest = part.lowestPrice;
+    if (lowest === null) return null;
+    return (
+      <>
+        {part.quantity !== null && part.quantity > 1 && (
+          <>
+            {' · '}
+            <AlwaysEnglish data-testid="price-of-one">
+              {formatNumber(part.quantity)} ×{' '}
+              <ShownPrice price={lowest.shownPrice} className="font-normal" />
+            </AlwaysEnglish>
+          </>
+        )}
+        {' · '}
+        <span data-testid="lowest-at" data-vendor={lowest.vendor.id}>
+          {t.rich('price.lowestAt', {
+            vendor: lowest.vendor.name,
+            link: (chunks: ReactNode) => (
+              <a
+                href={vendorAddress(language, lowest.vendor.id)}
+                className="hover-underline"
+              >
+                <AsWritten>{chunks}</AsWritten>
+              </a>
+            ),
+          })}
+        </span>
+      </>
+    );
+  };
   const place = placeOf(category);
   const heading = `${place}-heading`;
   const picker = pickerAddress(language, category);
@@ -83,7 +163,7 @@ export async function CategoryPlace({
         <span>{categoryName(category)}</span>
       </h3>
 
-      {parts.map((part) => (
+      {parts.map((part, at) => (
         <div
           key={part.id}
           data-line={`part-${part.id}`}
@@ -93,6 +173,8 @@ export async function CategoryPlace({
         >
           <ul className="@container grid grid-cols-[minmax(0,1fr)]">
             <Item
+              place={firstPlace + at}
+              nameAlone={whereAPartsNameStands(part.name)}
               picture={<PartSquare part={part} />}
               name={
                 part.visible ? (
@@ -103,7 +185,13 @@ export async function CategoryPlace({
                   <AlwaysEnglish>{part.name}</AlwaysEnglish>
                 )
               }
-              second={<AlwaysEnglish>{part.manufacturer}</AlwaysEnglish>}
+              end={priceOf(part)}
+              second={
+                <>
+                  <AlwaysEnglish>{part.manufacturer}</AlwaysEnglish>
+                  {whereItIsPriced(part)}
+                </>
+              }
             />
           </ul>
           <div
