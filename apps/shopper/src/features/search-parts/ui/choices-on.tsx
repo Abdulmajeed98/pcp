@@ -4,16 +4,17 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import type { Category } from '@/entities/category';
+import { type Category, categoryAddress } from '@/entities/category';
 import { currencyMarks } from '@/shared/currency';
 
 import {
+  addressOfAList,
+  allCleared,
   type CategoryQuery,
-  categoryPageAddress,
   type ChoiceOn,
   choicesOn,
-  nothingOn,
   type OfferedFilters,
+  type PickerQuery,
 } from '../model/category-query';
 import { type SearchWords, wordsOfAValue } from './value-words';
 
@@ -32,21 +33,26 @@ import { type SearchWords, wordsOfAValue } from './value-words';
 //
 // Each is a link, which works before any script has loaded; with script the
 // list is drawn again in place, shown printed. The list without a choice
-// starts again at its first page.
+// starts again at its first page. In the picker each keeps the switch as it
+// is, since the switch is not a choice (`allCleared`).
 export async function ChoicesOn({
   category,
   query,
   offered,
   withClearAll,
+  list,
 }: {
   category: Category;
-  query: CategoryQuery;
+  query: CategoryQuery | PickerQuery;
   offered: OfferedFilters | undefined;
   withClearAll: boolean;
+  // The list's own address with no query, a Category page's when left out.
+  list?: string;
 }) {
   const choices = choicesOn(query);
   if (choices.length === 0) return null;
   const [language, t] = await Promise.all([getLocale(), getTranslations('SearchParts')]);
+  const at = list ?? categoryAddress(language, category);
 
   return (
     <nav
@@ -59,7 +65,7 @@ export async function ChoicesOn({
         return (
           <Link
             key={id}
-            href={categoryPageAddress(language, category, choice.without)}
+            href={addressOfAList(at, choice.without)}
             prefetch={false}
             data-testid="choice-on"
             data-choice={id}
@@ -75,7 +81,7 @@ export async function ChoicesOn({
       })}
       {withClearAll && (
         <Link
-          href={categoryPageAddress(language, category, nothingOn)}
+          href={addressOfAList(at, allCleared(query))}
           prefetch={false}
           data-testid="clear-all"
           className="hover-underline inline-flex min-h-control items-center px-2"
