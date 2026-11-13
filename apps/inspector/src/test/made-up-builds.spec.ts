@@ -30,8 +30,9 @@ function read(build: MadeUpBuild, currency = 'IQD'): BuildResponse {
 }
 
 describe('the made-up Builds', () => {
-  it("are each read whole through the stand-in, each Part one of the shop's real Parts, a kit or a drive with its quantity", () => {
-    for (const build of Object.values(madeUpBuilds)) {
+  it("are each read whole through the stand-in, but the one the API refuses, each Part one of the shop's real Parts, a kit or a drive with its quantity", () => {
+    const { refused: _refused, ...readWhole } = madeUpBuilds;
+    for (const build of Object.values(readWhole)) {
       const answer = read(build);
 
       expect(answer.parts.map((part) => part.name).sort()).toEqual(
@@ -78,6 +79,23 @@ describe('the made-up Builds', () => {
     expect(entries[0]).toBe(`cpu:${partValuesOf(shop, madeUpBuilds.complete)[0]}`);
     expect(buildCookieOf(shop, madeUpBuilds.empty)).toBe('');
     expect(buildCookieOf(shop, madeUpBuilds.worstCase).split(',').length).toBe(22);
+  });
+
+  // A cookie edited by hand, which no form of the Shopper app writes: a RAM
+  // kit filed under the CPU, which the Shopper app reads as a CPU and sends
+  // with no quantity, so that the API refuses the Build (the owner's answer
+  // of 13 November 2026).
+  it('are one the API refuses, a RAM kit filed under the CPU', () => {
+    const [entry] = buildCookieOf(shop, madeUpBuilds.refused).split(',');
+    const [kit] = partValuesOf(shop, madeUpBuilds.refused);
+
+    expect(entry).toBe(`cpu:${kit}`);
+    expect(
+      answerFromTheStandIn(shop, {
+        method: 'GET',
+        path: `/v1/build?currency=IQD&part=${kit}`,
+      }).status,
+    ).toBe(400);
   });
 
   it('are an empty one, needing every Category', () => {

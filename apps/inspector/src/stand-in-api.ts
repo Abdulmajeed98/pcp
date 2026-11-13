@@ -661,7 +661,10 @@ interface PartOfABuild {
 // followed for a RAM kit or a drive by `:` and its quantity, in the
 // catalog's order of Categories and then in the order given. A Part the shop
 // does not offer is left out, as the API leaves out one the catalog does not
-// hold; a value whose quantity is not a number is refused. The Shopper app
+// hold. Refused, naming `part`, as the API refuses them: a value whose
+// quantity is not a number, and a RAM kit or a drive with no quantity or
+// another Part with one, which a cookie edited by hand can give, filing a
+// kit under the CPU (`refused` in `made-up-builds.ts`). The Shopper app
 // sends nothing else the API refuses, so nothing else is checked.
 function theBuildAsked(shop: ShoppersShop, query: URLSearchParams): PartOfABuild[] {
   const parts = query.getAll(theBuild).flatMap((value): PartOfABuild[] => {
@@ -672,7 +675,8 @@ function theBuildAsked(shop: ShoppersShop, query: URLSearchParams): PartOfABuild
     const read = shop.parts.get(partId);
     if (read === undefined) return [];
     const withAQuantity = heldWithAQuantity.includes(read.summary.category);
-    return [{ read, quantity: withAQuantity ? Number(quantity ?? 1) : null }];
+    if (withAQuantity === (quantity === undefined)) throw new Refused(notValid(theBuild));
+    return [{ read, quantity: withAQuantity ? Number(quantity) : null }];
   });
   return parts.sort(
     (a, b) =>

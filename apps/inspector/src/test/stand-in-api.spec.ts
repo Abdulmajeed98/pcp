@@ -1044,6 +1044,22 @@ describe('the stand-in API', () => {
       expect(get('/v1/build').body).toEqual(notValid('currency'));
       expect(buildOf('IQD', `${idOf(vengeance)}:two`).body).toEqual(notValid('part'));
     });
+
+    // As the API refuses a Build that a cookie edited by hand can give, such
+    // as one that files a RAM kit under the CPU, so that the Build page's
+    // state for it can be looked at.
+    it('is refused, naming `part`, for a RAM kit with no quantity and a CPU with one', () => {
+      for (const value of [idOf(vengeance), `${idOf(ryzen7800X3D)}:1`]) {
+        const answer = buildOf('IQD', value);
+
+        expect(answer.status).toBe(400);
+        expect(answer.body).toEqual(notValid('part'));
+        expect(
+          get(`/v1/visible-parts?category=cpu&currency=IQD&inStockOnly=true&part=${value}`)
+            .body,
+        ).toEqual(notValid('part'));
+      }
+    });
   });
 
   describe('what it does not answer', () => {
