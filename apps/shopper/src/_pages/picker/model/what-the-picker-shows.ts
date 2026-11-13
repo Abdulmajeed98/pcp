@@ -4,14 +4,14 @@ import { choicesOn, type PickerQuery } from '@/features/search-parts';
 import { whatAPageShows } from '@/shared/lib';
 
 // What the sentence under the picker's title counts (DESIGN.md's The
-// picker, Its sheet): the Parts in stock, for an empty Build, which every
-// Part fits; the Parts in stock that fit the Build, with the switch off or
-// when every Part fits it; or, with the switch on, every Part in stock and
-// how many of them do not fit.
+// picker, Its sheet): the Parts in stock, for an empty Build, with which
+// every Part is Compatible; the Parts in stock Compatible with the Build,
+// with the switch off or when every Part is; or, with the switch on, every
+// Part in stock and how many of them are not Compatible.
 export type PickerSays =
   | { kind: 'in-stock'; count: number }
-  | { kind: 'fit'; count: number }
-  | { kind: 'some-do-not-fit'; count: number; notFit: number };
+  | { kind: 'compatible'; count: number }
+  | { kind: 'some-not-compatible'; count: number; notCompatible: number };
 
 // What the picker's sheet shows: a page of its list, with what its sentence
 // counts, or why it lists nothing.
@@ -19,7 +19,7 @@ export type PickerState =
   | { kind: 'listed'; page: VisiblePartPageResponse; says: PickerSays }
   | { kind: 'none-in-stock' }
   | { kind: 'no-match' }
-  | { kind: 'none-fits'; inStock: number }
+  | { kind: 'none-compatible'; inStock: number }
   | { kind: 'past-the-end'; totalPages: number }
   | { kind: 'not-read' };
 
@@ -31,7 +31,7 @@ export type PickerState =
 // told apart in words, from one answer, and a Shopper knows what to change:
 //
 // - a Category no Vendor has in stock: nothing in stock, and no choice on;
-// - a search or filters that found nothing in stock, fitting or not;
+// - a search or filters that found nothing in stock, Compatible or not;
 // - a list where every Part in stock is not Compatible with the Build: the
 //   switch off leaves nothing, though some Part is in stock, and the sheet
 //   offers the switch, saying how many it would show;
@@ -43,14 +43,16 @@ export function whatThePickerShows(
   query: PickerQuery,
 ): PickerState {
   const shown = whatAPageShows(page);
-  const notFit = page?.notCompatibleCount ?? 0;
+  const notCompatible = page?.notCompatibleCount ?? 0;
 
   switch (shown.kind) {
     case 'not-read':
     case 'past-the-end':
       return shown;
     case 'none':
-      if (!query.showAll && notFit > 0) return { kind: 'none-fits', inStock: notFit };
+      if (!query.showAll && notCompatible > 0) {
+        return { kind: 'none-compatible', inStock: notCompatible };
+      }
       return { kind: choicesOn(query).length === 0 ? 'none-in-stock' : 'no-match' };
     case 'listed': {
       const count = shown.page.totalElements;
@@ -60,9 +62,9 @@ export function whatThePickerShows(
       return {
         ...shown,
         says:
-          query.showAll && notFit > 0
-            ? { kind: 'some-do-not-fit', count, notFit }
-            : { kind: 'fit', count },
+          query.showAll && notCompatible > 0
+            ? { kind: 'some-not-compatible', count, notCompatible }
+            : { kind: 'compatible', count },
       };
     }
   }

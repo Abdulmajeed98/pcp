@@ -54,8 +54,8 @@ export const nothingOn: CategoryQuery = {
 
 // What the picker's address asks of its list (the builder spec's The
 // Shopper's addresses): a Category page's query, and the switch, which
-// shows every Part in stock, those that do not fit the Build among them,
-// each marked (BLD-3), or, off, only those that fit.
+// shows every Part in stock, those not Compatible with the Build among
+// them, each marked (BLD-3), or, off, only those that are.
 export interface PickerQuery extends CategoryQuery {
   showAll: boolean;
 }

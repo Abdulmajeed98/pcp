@@ -35,8 +35,9 @@ import { TheSwitch } from './the-switch';
 // a picker's title is longer than a Category's and ran into the stamp in
 // the sheet's end corner, in Kurdish at every desk width, its sentence in
 // Body large,
-// "3 CPUs in stock that fit your Build, lowest price first.", or with the
-// switch on "8 CPUs in stock, lowest price first. 5 do not fit your Build.";
+// "3 CPUs in stock compatible with your Build, lowest price first.", or with
+// the switch on "8 CPUs in stock, lowest price first. 5 are not compatible
+// with your Build.";
 // then the switch, once the Build holds a Part; the choices that are on; the
 // Category's drawing; and the list, in stock only, in the API's order, 20
 // to a page with Paging, each Part with its pick control. It closes, as a
@@ -90,10 +91,10 @@ export async function PickerSheet({
     switch (says.kind) {
       case 'in-stock':
         return t('inStock', counting(says.count));
-      case 'fit':
-        return t('fit', counting(says.count));
-      case 'some-do-not-fit':
-        return `${t('inStock', counting(says.count))} ${t('notFit', counting(says.notFit))}`;
+      case 'compatible':
+        return t('compatible', counting(says.count));
+      case 'some-not-compatible':
+        return `${t('inStock', counting(says.count))} ${t('someNotCompatible', counting(says.notCompatible))}`;
     }
   };
 
@@ -146,10 +147,10 @@ export async function PickerSheet({
             </>
           ),
         };
-      case 'none-fits':
+      case 'none-compatible':
         return {
-          sentence: t('noneFits', counting(state.inStock)),
-          line: { text: t('noneFitsLine'), size: 'body' },
+          sentence: t('noneCompatible', counting(state.inStock)),
+          line: { text: t('noneCompatibleLine'), size: 'body' },
           holds: (
             <div className="mt-8 flex flex-wrap justify-center gap-2">
               <Link

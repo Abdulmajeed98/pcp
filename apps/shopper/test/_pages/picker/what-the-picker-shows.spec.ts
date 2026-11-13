@@ -59,7 +59,8 @@ const nothingJudged = (compatible: number, notCompatible: number) =>
 // What the picker's sheet says (DESIGN.md's The picker, The empty states):
 // its list, or why it lists nothing, told apart in words so that a Shopper
 // knows what to change. The picker lists in stock only and, once the Build
-// holds a Part, only what fits it, unless the switch shows every Part. A list
+// holds a Part, only what is Compatible with it, unless the switch shows
+// every Part. A list
 // judged against such a Build says, in the one answer, how many of the Parts
 // it judged are Compatible and how many are not, which tells a Build that
 // leaves nothing from a Category no Vendor has in stock.
@@ -96,15 +97,15 @@ describe("what the picker's sheet shows", () => {
   describe('a list where every Part in stock is not Compatible', () => {
     it('is told by a list the Build empties while some Part is in stock, offering the switch with how many', () => {
       expect(whatThePickerShows(nothingJudged(0, 7), aPickerQuery({}))).toEqual({
-        kind: 'none-fits',
+        kind: 'none-compatible',
         inStock: 7,
       });
     });
 
-    it('is told so with a search on too, which found Parts that do not fit', () => {
+    it('is told so with a search on too, which found Parts that are not Compatible', () => {
       expect(
         whatThePickerShows(nothingJudged(0, 2), aPickerQuery({ search: 'ryzen 9' })),
-      ).toEqual({ kind: 'none-fits', inStock: 2 });
+      ).toEqual({ kind: 'none-compatible', inStock: 2 });
     });
   });
 
@@ -126,7 +127,7 @@ describe("what the picker's sheet shows", () => {
   });
 
   describe('a page of the list', () => {
-    it('counts the Parts in stock for an empty Build, which every Part fits', () => {
+    it('counts the Parts in stock for an empty Build, with which every Part is Compatible', () => {
       const listed = aPage(3, [aCpu('1'), aCpu('2'), aCpu('3')]);
       expect(whatThePickerShows(listed, aPickerQuery({}))).toEqual({
         kind: 'listed',
@@ -135,36 +136,36 @@ describe("what the picker's sheet shows", () => {
       });
     });
 
-    it('counts the Parts that fit the Build with the switch off', () => {
+    it('counts the Parts Compatible with the Build with the switch off', () => {
       const listed = aPage(3, [aCpu('1', true), aCpu('2', true), aCpu('3', true)], {
         judged: { compatible: 3, notCompatible: 5 },
       });
       expect(whatThePickerShows(listed, aPickerQuery({}))).toEqual({
         kind: 'listed',
         page: listed,
-        says: { kind: 'fit', count: 3 },
+        says: { kind: 'compatible', count: 3 },
       });
     });
 
-    it('counts every Part in stock and those that do not fit with the switch on', () => {
+    it('counts every Part in stock and those that are not Compatible with the switch on', () => {
       const every = aPage(8, [aCpu('1', true), aCpu('2', false)], {
         judged: { compatible: 3, notCompatible: 5 },
       });
       expect(whatThePickerShows(every, aPickerQuery({ showAll: true }))).toEqual({
         kind: 'listed',
         page: every,
-        says: { kind: 'some-do-not-fit', count: 8, notFit: 5 },
+        says: { kind: 'some-not-compatible', count: 8, notCompatible: 5 },
       });
     });
 
-    it('counts the Parts that fit with the switch on when every Part fits', () => {
+    it('counts the Parts Compatible with the Build with the switch on when every Part is', () => {
       const listed = aPage(3, [aCpu('1', true), aCpu('2', true), aCpu('3', true)], {
         judged: { compatible: 3, notCompatible: 0 },
       });
       expect(whatThePickerShows(listed, aPickerQuery({ showAll: true }))).toEqual({
         kind: 'listed',
         page: listed,
-        says: { kind: 'fit', count: 3 },
+        says: { kind: 'compatible', count: 3 },
       });
     });
   });

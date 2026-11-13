@@ -252,10 +252,17 @@ test('in Kurdish and English, the CPU picker hides a CPU of another socket than 
       await turnTheSwitch(page, true);
       await expectThePickerToList(page, [am5Cpu.id, am4Cpu.id]);
       await expect(theSwitch(page)).toHaveAttribute('data-on', 'yes');
-      await expect(pickerPartOf(page, am4Cpu.id)).toHaveAttribute('data-not-fit', '');
-      await expect(pickerPartOf(page, am4Cpu.id).getByTestId('does-not-fit')).toBeVisible();
-      await expect(pickerPartOf(page, am5Cpu.id)).not.toHaveAttribute('data-not-fit');
-      await expect(pickerPartOf(page, am5Cpu.id).getByTestId('does-not-fit')).toHaveCount(
+      await expect(pickerPartOf(page, am4Cpu.id)).toHaveAttribute(
+        'data-not-compatible',
+        '',
+      );
+      await expect(
+        pickerPartOf(page, am4Cpu.id).getByTestId('not-compatible'),
+      ).toBeVisible();
+      await expect(pickerPartOf(page, am5Cpu.id)).not.toHaveAttribute(
+        'data-not-compatible',
+      );
+      await expect(pickerPartOf(page, am5Cpu.id).getByTestId('not-compatible')).toHaveCount(
         0,
       );
 
@@ -397,7 +404,9 @@ test('the picker is right to left in Kurdish and Arabic, with every number in We
       await expect(
         pickerPartOf(page, am5Cpu.id).getByTestId('in-your-build'),
       ).toBeVisible();
-      await expect(pickerPartOf(page, am4Cpu.id).getByTestId('does-not-fit')).toBeVisible();
+      await expect(
+        pickerPartOf(page, am4Cpu.id).getByTestId('not-compatible'),
+      ).toBeVisible();
       const name = pickerPartOf(page, am4Cpu.id).locator('[data-item-name] bdi');
       return {
         listed: await partsInThePicker(page),

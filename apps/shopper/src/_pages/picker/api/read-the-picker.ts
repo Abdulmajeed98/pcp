@@ -40,7 +40,7 @@ export async function readThePickersFilters(
 // them. The answer then says, in the same statement, how many of the Parts
 // it judged are Compatible and how many are not, so the list is asked once.
 // An empty Build is not sent, since a query cannot tell it from none, and
-// every Part fits it. The browser never calls the API. A read the API does
+// every Part is Compatible with it. The browser never calls the API. A read the API does
 // not answer, or refuses, is nothing.
 export async function readThePickersList(
   category: Category,
