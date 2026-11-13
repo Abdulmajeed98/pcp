@@ -6,7 +6,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The word.** **Unstocked Part** is added to CONTEXT.md under Shoppers and builds before any code uses it, as the spec defines it: a Part in a Build that no Vendor has in stock among its Visible Offers, whether or not it is still a Visible Part. Its words to avoid are "unavailable part", "missing part" and "sold-out part". CONTEXT.md already tells us to avoid "available part" for a Visible Part.
 - [x] **The endpoint.** `GET v1/build`, marked `@Public()` and described with `security: []`, answers the same with a good token, a bad one or none. `currency` is required and refused as `pricing` refuses it, though only ticket 03 answers a price, so that the contract does not change later.

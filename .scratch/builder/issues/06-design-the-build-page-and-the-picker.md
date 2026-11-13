@@ -6,7 +6,7 @@
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The guide is read first**, and so are DESIGN.md, ADR-0013 and `browse`'s design tickets 07 and 08. Fit Diagram's idea of a Build drawn like a motherboard manual, which ADR-0013 records as `builder`'s, binds nothing.
 - [x] **The pieces to design**, Taste leading their composition inside the chosen direction:

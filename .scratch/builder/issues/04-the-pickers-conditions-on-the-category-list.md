@@ -11,7 +11,7 @@ The page and the total count only the Parts kept. A Category page that sends nei
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **In stock only.** A parameter on `GET v1/visible-parts` keeps only the Visible Parts with at least one in-stock Visible Offer. The order stays BRW-1's. `GET v1/visible-parts/filters` takes the same parameter, so that the picker's choices are the values its in-stock Parts hold, still before any choice is made, so that they never shift.
 - [x] **The Build.** `part` is taken as `GET v1/build` takes it, through the same request and its same refusals, each naming `part`.
@@ -94,3 +94,20 @@ The list with a Build grows with the Parts it judges, about 40 µs a Part with i
 - `bfd5b15` the merge of `builder/integration` at `2ef634c`, ticket 03 (618 tests): the store's conflict kept this ticket's statement and took ticket 03's `whatTheirOffersSay` from its new file, the list passes its currency to `BuildReading.read`, and the description and the client were written again with `pnpm api-client:write`.
 
 **With Docker stopped.** Each of the three commits passed `pnpm check --skip-nx-cache` in a fresh clone in the scratchpad, after `pnpm install --frozen-lockfile --offline`, with `DOCKER_HOST` pointed at a socket that does not exist and `PLAYWRIGHT_BROWSERS_PATH` at an empty folder: 32 tasks succeeded each time. The owner's services stayed up, so Docker itself was not stopped.
+
+### 13 November 2026: the speed again, on the fresh clone's database
+
+Ticket 10 measured the picker's list again as this ticket measured it, on the module's fresh clone at `builder/integration` `fe9a9f9` (tickets 01 to 09 and the code review's fixes), after its `pnpm platform:check` and its catalog's import: the clone's API, served by `nx serve` on port 3001 under the e2e lock, asked over HTTP with `curl`, three times each after one answer to warm it, on the CPUs and the GPUs, 20 Parts to a page. Its database is not the development database: it holds the 25,974 imported Parts and what one end-to-end run made, so its CPUs are 905, of which 89 are Visible Parts and 84 in stock, all made-up Parts of that run, and its GPUs 3,857, of which 4 are Visible and 2 in stock. The full Build was one Visible Part in stock of each of the eight Categories, the one holding the most specifications (up to 26), with the kit's quantity 2 and a drive.
+
+| Asked | CPUs | GPUs |
+|---|---|---|
+| As a Category page, no condition (89 CPUs, 4 GPUs) | 6 to 9 ms | 3 ms |
+| In stock only (84, 2) | 5 ms | 2 to 3 ms |
+| In stock only, the full Build, switch off (69 CPUs kept, 15 not Compatible; no GPU kept) | 9 to 11 ms | 3 ms |
+| In stock only, the full Build, switch on | 10 to 11 ms | 3 to 4 ms |
+| The same, switch off, page 3 | 9 to 11 ms | 3 ms |
+| The same, switch on, with a search | 8 to 9 ms | 3 to 4 ms |
+| Every Visible Part, the full Build, switch off and on, and in dollars on the last page | 8 to 10 ms | 3 ms |
+| The filters, in stock only | 4 ms | 2 ms |
+
+Every answer was 200, and `compatibleCount` and `notCompatibleCount` came with each list asked with the Build. On a few dozen Parts the list with a Build costs a few milliseconds more than without one; the figures above, on the development database's thousands, remain the measure of how it grows, about 40 µs a Part. Nothing is cached or indexed.

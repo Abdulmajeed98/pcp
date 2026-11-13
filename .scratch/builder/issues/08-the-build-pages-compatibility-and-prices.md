@@ -11,7 +11,7 @@ This makes success criterion 6 true, and the half of criterion 5 where an incomp
 
 **Blocked by:** 02, 03, 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The outcomes**, built to DESIGN.md: Problems first, then Warnings, then unchecked rules, each group in rule order, and a line counting the rules that passed.
   - Each outcome is worded for its rule in the page's language, naming its Parts in English, saying what fails without the values compared.
@@ -147,3 +147,8 @@ The coordinator relayed the owner's answer to the three questions, given after t
 - `94668da` fix(shopper): keep the slip's price lines alone on a phone
 - `585428b` test(e2e): read the rules' counts where the Build page shows them
 - this record, with DESIGN.md given the owner's answers
+
+### 13 November 2026: after the owner's answers and the code review
+
+- **`name-only-title` at 390 pixels in Kurdish on the worst-case Build**, listed above for the owner to confirm: the owner kept it on 13 November 2026, with "Keep it". It is defended, and ticket 10's run from a fresh clone records it as such.
+- **`BuildPage.unworded` and the hand-written list of rules**, which the Comments above name (the words for an outcome the set does not word, the type check's `EveryOutcome` written out rule by rule, and the fault that fell back to the unworded words): the code review's fixes replaced them. The fallback is gone with its words in the three languages, and `EveryOutcome` is read through the client from the API's two outcome schemas, which the compatibility library's own list of rules makes, so that a rule added to the library fails `pnpm check` until it is worded. See [review-fixes.md](../review-fixes.md), the Spec's finding 2.
