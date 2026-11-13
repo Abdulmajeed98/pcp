@@ -5,6 +5,7 @@ import { Either } from 'effect';
 import { Currency } from '../currency/currency';
 import { Build } from './Build';
 import { BuildReading } from './BuildReading';
+import { CatalogPart } from './BuildStore';
 import { Completeness, completenessOf } from './complete-build';
 import { Judgment, judgmentOf } from './judgment';
 import { PriceViews } from './price-views';
@@ -29,14 +30,14 @@ class Input {
 
 class Output {
   private constructor(
-    private readonly build: Build,
+    private readonly build: Build<CatalogPart>,
     private readonly completeness: Completeness,
     private readonly judgment: Judgment,
     private readonly priceViews: PriceViews,
   ) {}
 
   static of(
-    build: Build,
+    build: Build<CatalogPart>,
     completeness: Completeness,
     judgment: Judgment,
     priceViews: PriceViews,
@@ -44,7 +45,7 @@ class Output {
     return new Output(build, completeness, judgment, priceViews);
   }
 
-  getBuild(): Build {
+  getBuild(): Build<CatalogPart> {
     return this.build;
   }
 

@@ -78,10 +78,7 @@ function provides(cpu: Part, provision: Provision): boolean {
 // unless the CPU has integrated graphics, and a CPU cooler unless the CPU
 // includes one. Without a CPU, the GPU and the CPU cooler are needed.
 export function completenessOf(build: Build): Completeness {
-  const cpu = build
-    .getParts()
-    .find((each) => each.getPart().getCategory() === Category.CPU)
-    ?.getPart();
+  const cpu = build.partOf(Category.CPU);
   // Whether the Build needs a Part of the Category, held or not.
   function needs(category: Category): boolean {
     const provision = Object.values(provisions).find((each) => each.insteadOf === category);

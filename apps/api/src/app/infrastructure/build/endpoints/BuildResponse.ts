@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import { Build } from '~/domain/build/Build';
+import { CatalogPart } from '~/domain/build/BuildStore';
 import { Completeness, CpuValue, cpuValues } from '~/domain/build/complete-build';
 import { Judgment } from '~/domain/build/judgment';
 import { PriceViews } from '~/domain/build/price-views';
@@ -78,7 +79,7 @@ export class BuildResponse {
   readonly vendors: BuildVendorResponse[];
 
   private constructor(
-    build: Build,
+    build: Build<CatalogPart>,
     completeness: Completeness,
     judgment: Judgment,
     priceViews: PriceViews,
@@ -96,7 +97,7 @@ export class BuildResponse {
   }
 
   static of(
-    build: Build,
+    build: Build<CatalogPart>,
     completeness: Completeness,
     judgment: Judgment,
     priceViews: PriceViews,

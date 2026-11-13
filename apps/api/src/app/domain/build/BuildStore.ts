@@ -5,17 +5,26 @@ import { Currency } from '../currency/currency';
 import { Part } from '../part/Part';
 import { InStockOffers } from './in-stock-offers';
 
-// A Part a Build names, as the catalog holds it, with whether it is a
-// Visible Part and its in-stock Visible Offers, at the moment it was read.
-export class CatalogPart {
-  constructor(
-    private readonly part: Part,
-    private readonly visible: boolean,
-    private readonly inStockOffers: InStockOffers,
-  ) {}
+// A Part a Build names, as the catalog holds it: what the Compatibility
+// Rules read of a Build, its specifications among the Part's own fields.
+export class NamedPart {
+  constructor(private readonly part: Part) {}
 
   getPart(): Part {
     return this.part;
+  }
+}
+
+// A Part a Build names, as the catalog holds it, with whether it is a
+// Visible Part and its in-stock Visible Offers, at the moment it was read:
+// what reading a Build answers of it beside the rules, its price views.
+export class CatalogPart extends NamedPart {
+  constructor(
+    part: Part,
+    private readonly visible: boolean,
+    private readonly inStockOffers: InStockOffers,
+  ) {
+    super(part);
   }
 
   isVisible(): boolean {
@@ -42,4 +51,13 @@ export abstract class BuildStore {
     currency: Currency,
     now: Date,
   ): Promise<Either.Either<readonly CatalogPart[], StructuredError>>;
+
+  // The Parts with these identifiers that the catalog holds, in no order,
+  // and nothing of their Offers: what the picker judges each Part of its
+  // list against, the Build's specifications (the builder spec's Handing a
+  // stored Part to the rules). An identifier the catalog does not hold gives
+  // none.
+  abstract readNamedParts(
+    partIds: readonly string[],
+  ): Promise<Either.Either<readonly NamedPart[], StructuredError>>;
 }

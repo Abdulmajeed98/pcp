@@ -3,7 +3,7 @@ import { databaseErrorOf, StructuredError } from '@pcp/core';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { Either } from 'effect';
 
-import { BuildStore, CatalogPart } from '~/domain/build/BuildStore';
+import { BuildStore, CatalogPart, NamedPart } from '~/domain/build/BuildStore';
 import {
   InStockOffer,
   InStockOffers,
@@ -122,6 +122,30 @@ export class DatabaseBuildStore implements BuildStore {
                 ),
               ),
           ),
+        ),
+      );
+    } catch (error) {
+      this.logger.error(error, "A Build's Parts could not be read");
+      return Either.left(databaseErrorOf(error, "A Build's Parts could not be read"));
+    }
+  }
+
+  async readNamedParts(
+    partIds: readonly string[],
+  ): Promise<Either.Either<readonly NamedPart[], StructuredError>> {
+    if (partIds.length === 0) return Either.right([]);
+
+    try {
+      const rows = await this.databaseProvider
+        .getClient()
+        .select(partWithPhoto)
+        .from(part)
+        .leftJoin(partPhoto, eq(partPhoto.partId, part.id))
+        .where(inArray(part.id, [...partIds]));
+
+      return Either.all(
+        rows.map((row) =>
+          Either.map(partOf(row.part, row.photoId), (found) => new NamedPart(found)),
         ),
       );
     } catch (error) {

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import { BuildPart } from '~/domain/build/Build';
+import { CatalogPart } from '~/domain/build/BuildStore';
 import { PartSummaryResponse } from '~/infrastructure/part/endpoints/PartSummaryResponse';
 
 import { BuildLowestPriceResponse } from './BuildLowestPriceResponse';
@@ -43,7 +44,7 @@ export class BuildPartResponse extends PartSummaryResponse {
   })
   readonly lowestPrice: BuildLowestPriceResponse | null;
 
-  private constructor(part: BuildPart) {
+  private constructor(part: BuildPart<CatalogPart>) {
     super(part.getPart());
     this.quantity = part.getQuantity() ?? null;
     this.visible = part.isVisible();
@@ -55,7 +56,7 @@ export class BuildPartResponse extends PartSummaryResponse {
     );
   }
 
-  static ofBuildPart(part: BuildPart): BuildPartResponse {
+  static ofBuildPart(part: BuildPart<CatalogPart>): BuildPartResponse {
     return new BuildPartResponse(part);
   }
 }

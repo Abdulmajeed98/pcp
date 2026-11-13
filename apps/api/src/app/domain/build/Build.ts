@@ -5,7 +5,8 @@ import { ShownPrice } from '../offer/shown-price';
 import { Category } from '../part/Category';
 import { Part } from '../part/Part';
 import { partNotValid } from './build-errors';
-import { InStockOffer, InStockOffers, LowestPrice } from './in-stock-offers';
+import { CatalogPart, NamedPart } from './BuildStore';
+import { InStockOffer, LowestPrice } from './in-stock-offers';
 import { timesQuantity } from './totals';
 
 // The Categories a Build holds several of, each with a quantity: RAM kits
@@ -18,19 +19,19 @@ const countedCategories: readonly Category[] = [Category.RAM, Category.STORAGE];
 export const MOST_DIFFERENT_KITS_OR_DRIVES = 8;
 export const MOST_OF_ONE_KIT_OR_DRIVE = 16;
 
-// One Part of a Build, as the catalog holds it: its quantity, when it is a
-// RAM kit or a drive, and whether it is a Visible Part and its in-stock
-// Visible Offers, at the moment the Build was read.
-export class BuildPart {
+// One Part of a Build: the Part as the reading of the Build read it from the
+// catalog (`Read`), the Part alone for the rules or with its Offers for the
+// price views, and its quantity, when it is a RAM kit or a drive. What only
+// a Part read with its Offers can answer, its visibility and its prices,
+// asks for one.
+export class BuildPart<Read extends NamedPart = NamedPart> {
   constructor(
-    private readonly part: Part,
+    private readonly read: Read,
     private readonly quantity: number | undefined,
-    private readonly visible: boolean,
-    private readonly inStockOffers: InStockOffers,
   ) {}
 
   getPart(): Part {
-    return this.part;
+    return this.read.getPart();
   }
 
   // How many of it the Build holds, from 1 to 16, for a RAM kit or a drive;
@@ -41,41 +42,41 @@ export class BuildPart {
 
   // Whether it is a Visible Part, a Part with at least one Visible Offer. A
   // Part that is not stays in the Build.
-  isVisible(): boolean {
-    return this.visible;
+  isVisible(this: BuildPart<CatalogPart>): boolean {
+    return this.read.isVisible();
   }
 
   // Whether it is an Unstocked Part: no Vendor has it in stock among its
   // Visible Offers, whether or not it is still a Visible Part (BLD-9). It
   // stays in the Build, and is left out of every total.
-  isUnstocked(): boolean {
-    return this.inStockOffers.getOffers().length === 0;
+  isUnstocked(this: BuildPart<CatalogPart>): boolean {
+    return this.getInStockOffers().length === 0;
   }
 
   // Its in-stock Visible Offers, one for each Vendor that has it in stock,
   // with each Shown Price in the chosen currency, in no order.
-  getInStockOffers(): readonly InStockOffer[] {
-    return this.inStockOffers.getOffers();
+  getInStockOffers(this: BuildPart<CatalogPart>): readonly InStockOffer[] {
+    return this.read.getInStockOffers().getOffers();
   }
 
   // Whether some Vendor has it in stock but its price cannot be shown: the
   // first of its in-stock Visible Offers has no Shown Price, which happens
   // only before the first Platform Rate, with an Offer quoted only in the
   // other currency. It has no Lowest Price, and is left out of the total.
-  isPriceNotShown(): boolean {
+  isPriceNotShown(this: BuildPart<CatalogPart>): boolean {
     return !this.isUnstocked() && this.getLowestPrice() === null;
   }
 
   // Its Lowest Price in the chosen currency, with the Vendor of the Offer it
   // comes from, as a Category's list answers it, read through the rules
   // `browse` wrote once (BLD-7, PRC-4).
-  getLowestPrice(): LowestPrice | null {
-    return this.inStockOffers.getLowestPrice();
+  getLowestPrice(this: BuildPart<CatalogPart>): LowestPrice | null {
+    return this.read.getInStockOffers().getLowestPrice();
   }
 
   // Its Lowest Price times its quantity, as the first price view adds it up
   // (PRC-5), or none when it has no Lowest Price.
-  getLowestPriceTimesQuantity(): ShownPrice | null {
+  getLowestPriceTimesQuantity(this: BuildPart<CatalogPart>): ShownPrice | null {
     const lowest = this.getLowestPrice();
     return lowest === null ? null : timesQuantity(lowest.getShownPrice(), this.quantity);
   }
@@ -86,16 +87,19 @@ function placeOf(part: BuildPart): number {
   return Category.values().indexOf(part.getPart().getCategory());
 }
 
-// A Shopper's chosen set of Parts intended to make one PC (BLD-1).
-export class Build {
-  private constructor(private readonly parts: readonly BuildPart[]) {}
+// A Shopper's chosen set of Parts intended to make one PC (BLD-1), each Part
+// as the reading of the Build read it (`Read`).
+export class Build<Read extends NamedPart = NamedPart> {
+  private constructor(private readonly parts: readonly BuildPart<Read>[]) {}
 
   // The Build of these Parts, given in the Build's order, or the refusal,
   // naming `part`, of the first Part a Build cannot hold so: a quantity on a
   // Part of a Category it holds one of, and none on a RAM kit or a drive; a
   // second Part of a Category it holds one of; and then more different RAM
   // kits, or drives, than the limit.
-  static of(parts: readonly BuildPart[]): Either.Either<Build, NotValidError> {
+  static of<Read extends NamedPart>(
+    parts: readonly BuildPart<Read>[],
+  ): Either.Either<Build<Read>, NotValidError> {
     for (const [place, part] of parts.entries()) {
       const category = part.getPart().getCategory();
       const counted = countedCategories.includes(category);
@@ -137,12 +141,23 @@ export class Build {
   // Its Parts in the catalog's order of Categories, and the RAM kits and
   // drives in the Build's order, as a sort that keeps ties in place gives
   // them.
-  getParts(): readonly BuildPart[] {
+  getParts(): readonly BuildPart<Read>[] {
     return this.parts;
   }
 
   // Whether it holds a Part of the Category.
   holds(category: Category): boolean {
-    return this.parts.some((each) => each.getPart().getCategory() === category);
+    return this.partOf(category) !== undefined;
+  }
+
+  // Its Part of a Category, the first of them for RAM kits and drives; none
+  // when it holds none.
+  partOf(category: Category): Part | undefined {
+    return this.parts.find((each) => each.getPart().getCategory() === category)?.getPart();
+  }
+
+  // Its Part with this identifier, or none.
+  partWithId(partId: string): Part | undefined {
+    return this.parts.find((each) => each.getPart().getId() === partId)?.getPart();
   }
 }

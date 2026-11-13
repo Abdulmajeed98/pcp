@@ -69,6 +69,23 @@ export class VisiblePartsPage {
     private readonly page: PageAttributes,
   ) {}
 
+  // The page among Visible Parts already read whole, in their order, as the
+  // picker reads them to judge each before it pages them: those past the
+  // page's offset, as many as it holds, and where it stands among them all,
+  // as the catalog's paging gives it, so that a page past the end is empty
+  // and still answers the total. A list a Store pages in its statement takes
+  // its page there, through `onePageOf` in `infrastructure/database`.
+  static among(
+    parts: readonly VisiblePart[],
+    pageable: PageableAttributes,
+  ): VisiblePartsPage {
+    const offset = pageable.getOffset();
+    return new VisiblePartsPage(
+      parts.slice(offset, offset + pageable.getLimit()),
+      PageAttributes.of(pageable, parts.length),
+    );
+  }
+
   getParts(): readonly VisiblePart[] {
     return this.parts;
   }

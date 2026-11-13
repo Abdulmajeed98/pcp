@@ -5,6 +5,7 @@ import { IsOptional, IsString, Matches } from 'class-validator';
 
 import { type Currency } from '~/domain/currency/currency';
 import { ListVisiblePartsQueryInput } from '~/domain/offer/ListVisiblePartsQuery';
+import { PickersConditions } from '~/domain/offer/PickersConditions';
 import { Category } from '~/domain/part/Category';
 import { filterParameters, type FilterKind } from '~/domain/specification/filters';
 import { BuildAsked } from '~/infrastructure/build/endpoints/build-asked';
@@ -112,9 +113,11 @@ export class ListVisiblePartsRequest extends PagingRequest {
       filters,
       this.lowest === undefined ? undefined : Number(this.lowest),
       this.highest === undefined ? undefined : Number(this.highest),
-      isOn(this.inStockOnly),
-      this.part ?? [],
-      isOn(this.keepNotCompatible),
+      new PickersConditions(
+        isOn(this.inStockOnly),
+        this.part ?? [],
+        isOn(this.keepNotCompatible),
+      ),
       this.toDomain(),
     );
   }

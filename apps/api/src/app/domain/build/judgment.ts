@@ -104,10 +104,7 @@ export function judgmentOf(build: Build): Judgment {
 // for its label.
 function labelledIn(build: Build): (missing: MissingSpecification) => MissingInABuild {
   return ({ part: partId, path }) => {
-    const part = build
-      .getParts()
-      .find((each) => each.getPart().getId() === partId)
-      ?.getPart();
+    const part = build.partWithId(partId);
     const labels = part && specificationListOf(part.getCategory()).labelsAt(path);
     return new MissingInABuild(partId, path, labels?.label ?? path, labels?.fieldLabel);
   };
