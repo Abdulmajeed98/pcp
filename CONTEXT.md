@@ -15,7 +15,7 @@ A Part with at least one Visible Offer: the only Parts a Shopper ever sees, in s
 _Avoid_: Offered part, available part, listed part, active part
 
 **Category**:
-The kind of Part: CPU, CPU cooler, motherboard, RAM, storage, GPU, case or PSU.
+The kind of Part: CPU, CPU cooler, motherboard, RAM, storage, GPU, case or PSU. A Part of RAM is a RAM kit, and a Part of storage a drive.
 _Avoid_: Type, group, section
 
 **Specification**:
