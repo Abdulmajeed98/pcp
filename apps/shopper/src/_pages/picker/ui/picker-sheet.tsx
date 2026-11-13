@@ -271,7 +271,6 @@ export async function PickerSheet({
         />
       )}
       <ChoicesOn
-        category={category}
         query={query}
         offered={offered}
         withClearAll={listed}

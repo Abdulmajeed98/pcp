@@ -1,11 +1,4 @@
 export {
-  partsAPage,
-  type PickersConditions,
-  readAPageOfTheList,
-  readTheFilters,
-} from './api/read-the-list';
-export {
-  type AddressQuery,
   addressOfAList,
   addressOfTheForm,
   allCleared,
@@ -16,8 +9,10 @@ export {
   choicesOn,
   fieldsTheFormKeeps,
   type FilterValue,
+  listAskedFor,
   nothingOn,
   type OfferedFilters,
+  partsAPage,
   type PickerQuery,
   type PriceEnd,
   type PriceProblem,

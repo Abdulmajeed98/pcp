@@ -6,6 +6,7 @@ import { buildIn, writeTheBuild } from '@/entities/build';
 import { buildAddress, ChangesInPlace, refusalIn } from '@/features/change-the-build';
 import { chosenCurrency } from '@/shared/currency';
 import { type Photograph, photographs } from '@/shared/photographs';
+import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { DimPhotograph, NotRead } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
 import { Stub } from '@/widgets/frame-header';
@@ -16,9 +17,6 @@ import { BuildSheet } from './build-sheet';
 import { BuildSlip } from './build-slip';
 import { RulesSheet } from './rules-sheet';
 import { VendorsSheet } from './vendors-sheet';
-
-// The query of the Build page's address, as Next hands it to the page.
-type AddressQuery = Record<string, string | string[] | undefined>;
 
 // The Build page, at `/<language>/build` (DESIGN.md's The Build page): the
 // stub, its way to the Build marked as the page the Shopper is on; then,
@@ -47,13 +45,7 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
   ]);
   const build = buildIn(sent);
   const answer = await readTheBuildPage(build, currency);
-  const refused = refusalIn(
-    new URLSearchParams(
-      Object.entries(address).flatMap(([name, value]) =>
-        [value ?? []].flat().map((each) => [name, each]),
-      ),
-    ),
-  );
+  const refused = refusalIn(new URLSearchParams(fieldsOf(address)));
 
   return (
     <>

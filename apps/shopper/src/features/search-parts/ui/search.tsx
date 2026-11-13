@@ -1,6 +1,6 @@
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 
-import { type Category, categoryAddress } from '@/entities/category';
+import type { Category } from '@/entities/category';
 
 import {
   type CategoryQuery,
@@ -14,7 +14,7 @@ import { SearchForm } from './search-form';
 
 // A Category page's search and filters, as the server draws them: the form,
 // sent to the list's own address, a Category page's or the picker's
-// (`list`), with the search the address holds and the filters the API's
+// (`list`), as its choices and its filters lead to it, with the search the address holds and the filters the API's
 // answer offers, each chip ticked as the address chose it and each end of
 // the price range as it was typed, and the words in the page's language. In
 // the picker the form keeps the switch as it is (`fieldsTheFormKeeps`).
@@ -32,11 +32,11 @@ export async function Search({
   query: CategoryQuery | PickerQuery;
   offered: OfferedFilters | undefined;
   range: { lowest: PriceEnd; highest: PriceEnd };
-  // The list's own address with no query, a Category page's when left out.
-  list?: string;
+  // The list's own address with no query, a Category page's or the picker's.
+  list: string;
   className?: string;
 }) {
-  const [language, t] = await Promise.all([getLocale(), getTranslations('SearchParts')]);
+  const t = await getTranslations('SearchParts');
   const priceRange =
     offered?.priceRange.lowest != null && offered.priceRange.highest != null
       ? offered.priceRange
@@ -44,7 +44,7 @@ export async function Search({
 
   return (
     <SearchForm
-      action={list ?? categoryAddress(language, category)}
+      action={list}
       kept={fieldsTheFormKeeps(query)}
       search={query.search}
       priceRange={priceRange}
@@ -55,12 +55,7 @@ export async function Search({
       }}
       className={className}
     >
-      <FiltersFold
-        query={query}
-        offered={offered}
-        range={range}
-        list={list ?? categoryAddress(language, category)}
-      />
+      <FiltersFold query={query} offered={offered} range={range} list={list} />
     </SearchForm>
   );
 }
