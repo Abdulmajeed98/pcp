@@ -3,23 +3,21 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { buildIn } from '@/entities/build';
-import { categoryOfTheAddress } from '@/entities/category';
-import { pickerAddress } from '@/features/change-the-build';
+import { categoryOfTheAddress, pickerAddress } from '@/entities/category';
 import {
-  type AddressQuery,
   addressOfTheForm,
   readPickerQuery,
   readPriceRange,
-  readTheFilters,
   Search,
 } from '@/features/search-parts';
 import { chosenCurrency } from '@/shared/currency';
+import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { photographs } from '@/shared/photographs';
 import { DimPhotograph, MarkADrawingAgain } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
 import { Stub } from '@/widgets/frame-header';
 
-import { readThePickersList } from '../api/read-the-picker';
+import { readThePickersFilters, readThePickersList } from '../api/read-the-picker';
 import type { PickerPageParams } from '../model/preview';
 import { whatThePickerShows } from '../model/what-the-picker-shows';
 import { PickerSheet } from './picker-sheet';
@@ -56,19 +54,14 @@ export async function PickerPage({
   ]);
   const build = buildIn(sent);
   const judged = build.length > 0;
-  const offered = await readTheFilters(category, currency, { inStockOnly: true });
+  const offered = await readThePickersFilters(category, currency);
   const query = readPickerQuery(address, offered);
-  const answers =
+  const page =
     offered === undefined
-      ? { page: undefined }
+      ? undefined
       : await readThePickersList(category, query, currency, build);
   const list = pickerAddress(language, category);
-  const asAsked = addressOfTheForm(
-    list,
-    Object.entries(address).flatMap(([name, values]) =>
-      [values ?? []].flat().map((value) => [name, value] as const),
-    ),
-  );
+  const asAsked = addressOfTheForm(list, fieldsOf(address));
 
   return (
     <>
@@ -89,7 +82,7 @@ export async function PickerPage({
             category={category}
             query={query}
             offered={offered}
-            state={whatThePickerShows(answers, query, judged)}
+            state={whatThePickerShows(page, query)}
             build={build}
             judged={judged}
             asAsked={asAsked}

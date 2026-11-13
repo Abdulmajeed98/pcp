@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PagingResponse } from '@pcp/core';
 
 import { VisiblePartsPage } from '~/domain/offer/VisiblePartStore';
@@ -14,9 +14,28 @@ export class VisiblePartPageResponse extends PagingResponse {
   })
   readonly content: VisiblePartResponse[];
 
+  @ApiPropertyOptional({
+    description:
+      'With a Build, how many of the Parts the list judged are Compatible with it, on all the pages together: those that the search, the manufacturers, the filters, the price range and in stock only keep, read in the same statement as the page. Left out when the list was asked for without a Build.',
+    type: 'integer',
+    example: 4,
+  })
+  readonly compatibleCount?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'With a Build, how many of the Parts the list judged are not Compatible with it, on all the pages together, whether or not the switch keeps them, read in the same statement as the page. Left out when the list was asked for without a Build.',
+    type: 'integer',
+    example: 3,
+  })
+  readonly notCompatibleCount?: number;
+
   private constructor(page: VisiblePartsPage) {
     super(page.getPageAttributes());
     this.content = page.getParts().map(VisiblePartResponse.ofVisible);
+    const counted = page.getCompatibleCount();
+    this.compatibleCount = counted?.getCompatible();
+    this.notCompatibleCount = counted?.getNotCompatible();
   }
 
   static of(page: VisiblePartsPage): VisiblePartPageResponse {

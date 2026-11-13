@@ -29,6 +29,8 @@ type VisiblePartBody = {
 
 type PageOfVisibleParts = {
   content: VisiblePartBody[];
+  compatibleCount?: number;
+  notCompatibleCount?: number;
   pageNumber: number;
   pageSize: number;
   totalElements: number;
@@ -513,7 +515,10 @@ describe("the picker's conditions on a Category's Visible Parts", () => {
       return { names: content.map(({ name }) => name), paging };
     }
 
-    // Where a page of two stands among the Parts kept.
+    // Where a page of two stands among the Parts kept, and how many of the
+    // Parts judged against the board are Compatible with it, and not: the
+    // four of its socket in stock and the three of another, whatever the
+    // switch keeps and whatever the page.
     function pageOf(
       pageNumber: number,
       totalElements: number,
@@ -521,7 +526,16 @@ describe("the picker's conditions on a Category's Visible Parts", () => {
       first: boolean,
       last: boolean,
     ): Omit<PageOfVisibleParts, 'content'> {
-      return { pageNumber, pageSize: 2, totalElements, totalPages, first, last };
+      return {
+        compatibleCount: 4,
+        notCompatibleCount: 3,
+        pageNumber,
+        pageSize: 2,
+        totalElements,
+        totalPages,
+        first,
+        last,
+      };
     }
 
     it('count only the Parts kept, each page full but the last, and a page past the end answers the total', async () => {
@@ -550,6 +564,41 @@ describe("the picker's conditions on a Category's Visible Parts", () => {
         { names: ['Made-up CPU 1', 'Made-up CPU 2'], paging: pageOf(0, 7, 4, true, false) },
         { names: ['Made-up CPU 7'], paging: pageOf(3, 7, 4, false, true) },
       ]);
+    });
+
+    it('answer how many of the Parts judged are Compatible and how many are not in the one statement that reads the list, those the search finds alone', async () => {
+      const board = await aBoardAndEightCpus();
+
+      const counted = async (query: Record<string, string>) => {
+        const { compatibleCount, notCompatibleCount } = await theVisibleParts(
+          { inStockOnly: 'true', size: '2', ...query },
+          [board.id],
+        );
+        return { compatibleCount, notCompatibleCount };
+      };
+      expect(await counted({})).toEqual({ compatibleCount: 4, notCompatibleCount: 3 });
+      expect(await counted({ search: 'CPU 7' })).toEqual({
+        compatibleCount: 0,
+        notCompatibleCount: 1,
+      });
+      expect(await counted({ search: 'CPU 8' })).toEqual({
+        compatibleCount: 0,
+        notCompatibleCount: 0,
+      });
+      expect(await counted({ inStockOnly: 'false', keepNotCompatible: 'true' })).toEqual({
+        compatibleCount: 5,
+        notCompatibleCount: 3,
+      });
+    });
+
+    it('answer no count without a Build, as on a Category page', async () => {
+      await aBoardAndEightCpus();
+
+      for (const query of [{}, { keepNotCompatible: 'true' }] as Record<string, string>[]) {
+        const page = await theVisibleParts({ inStockOnly: 'true', ...query });
+        expect(page).not.toHaveProperty('compatibleCount');
+        expect(page).not.toHaveProperty('notCompatibleCount');
+      }
     });
   });
 });

@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 // The picker's switch (DESIGN.md's The switch, The feel on a phone): a chip
 // under the sheet's sentence, in sight on a phone without unfolding the
-// filters, "Show the CPUs that do not fit". Off, the Board with an empty
+// filters, "Show the CPUs that are not compatible". Off, the Board with an empty
 // square before its words; on, Print Green with Green's Ink and a tick, so
 // that its state is in a mark as well as a colour, and its name for a
 // screen reader says after its words that they are shown and that a tap

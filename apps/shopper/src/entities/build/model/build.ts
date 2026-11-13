@@ -83,12 +83,26 @@ export function writeTheBuild(build: Build): string {
 // The Build as the API reads it, `GET v1/build`'s query and the picker's
 // `part`: each Part's identifier, in the Build's order, followed for a RAM
 // kit or a drive by `:` and its quantity. The Shopper app's server sends it;
-// the browser never calls the API. A Build read from the cookie is never
-// one the API refuses.
+// the browser never calls the API. A Build its forms wrote is never one the
+// API refuses, but a cookie edited by hand can be: its entries are read by
+// their Categories as the cookie names them, which the catalog may not, as
+// a RAM kit filed under the CPU, and the API then refuses the Build. The
+// Build page then offers to empty it (`refusesTheBuild`).
 export function partValuesOf(build: Build): string[] {
   return build.map((each) =>
     'quantity' in each ? `${each.part}:${each.quantity}` : each.part,
   );
+}
+
+// The Build as the catalog holds it: its Parts whose identifiers the API
+// answered when it read the Build, in their order, each with its quantity.
+// A Part the catalog no longer holds is left out of the API's answer, so its
+// Category shows as not chosen, and a change keeps the Build so before it
+// applies itself, so that the cookie forgets the Part then and a vanished
+// kit or drive counts toward no limit (the builder spec's The Build in the
+// Shopper's browser).
+export function heldByTheCatalog(build: Build, answered: readonly string[]): Build {
+  return build.filter((each) => answered.includes(each.part));
 }
 
 // How many Parts the Build holds, as the frame's way to the Build page, the

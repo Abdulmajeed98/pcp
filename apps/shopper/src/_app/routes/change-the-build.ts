@@ -1,6 +1,4 @@
-import { hasLocale } from 'next-intl';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
 
 import {
   type Build,
@@ -14,7 +12,9 @@ import {
   removeFrom,
 } from '@/entities/build';
 import { addressAfterAChange } from '@/features/change-the-build';
-import { routing } from '@/shared/i18n';
+
+import { readTheBuildToChange } from '../api/read-the-build-to-change';
+import { answerAForm } from './answer-a-form';
 
 // What a form that changes the Build does to it, from what the form sends:
 // the change, and the Category it changed, whose place on the Build page the
@@ -22,37 +22,27 @@ import { routing } from '@/shared/i18n';
 type AChange = (build: Build, form: FormData) => { changed: Changed; at?: Category };
 
 // A form that changes the Build, sent with POST to its address under
-// `/<language>/build/`: the answer writes the changed Build into the browser
-// for a year, as the switches' answers write their choice, and sends the
-// Shopper to the Build page with a 303, in the language of the address, at
-// the place of the Category it changed. The browser follows it with a plain
-// request for the page, which the server draws anew from the cookie, so the
-// form works before any script has loaded and a reload does not send it a
-// second time. A change past the limits is not applied, the Build kept as it
-// was, and the address says why. An address in no language the Shopper app
-// knows answers 404.
+// `/<language>/build/`: the change applies to the Build as the catalog holds
+// it, which forgets the Parts it no longer holds (`readTheBuildToChange`);
+// the answer writes the changed Build into the browser for a year, as the
+// switches' answers write their choice, and sends the Shopper to the Build
+// page, at the place of the Category it changed, which the server draws
+// anew from the cookie. A change past the limits is not applied, the Build
+// kept as its cookie holds it, and the address says why. `answerAForm` says
+// how the answer is made.
 function answerAChange(change: AChange) {
-  return async function answer(
-    request: Request,
-    { params }: { params: Promise<{ locale: string }> },
-  ): Promise<Response> {
-    const { locale } = await params;
-    if (!hasLocale(routing.locales, locale)) {
-      return new NextResponse(null, { status: 404 });
-    }
-
-    const [form, sent] = await Promise.all([request.formData(), cookies()]);
-    const build = buildIn(sent);
+  return answerAForm(async (language, form) => {
+    const build = await readTheBuildToChange(buildIn(await cookies()));
     const { changed, at } = change(build, form);
     const refused = 'refused' in changed ? changed.refused : undefined;
-    const response = new NextResponse(null, {
-      status: 303,
-      headers: { Location: addressAfterAChange(locale, { at, refused }) },
-    });
-    if ('build' in changed) rememberTheBuild(response, changed.build);
-
-    return response;
-  };
+    return {
+      address: addressAfterAChange(language, { at, refused }),
+      write:
+        'build' in changed
+          ? (response) => rememberTheBuild(response, changed.build)
+          : undefined,
+    };
+  });
 }
 
 // A field of the form, as text: what is not text, as a file, is none.
@@ -95,5 +85,9 @@ export const removeAPart = answerAChange((build, form) => {
 });
 
 // `POST /<language>/build/empty`: the Build emptied, which its one
-// confirmation sends. The answer opens the empty Build from its top.
-export const emptyTheBuild = answerAChange(() => ({ changed: { build: [] } }));
+// confirmation sends, whatever it held, so it is not read first. The answer
+// opens the empty Build from its top.
+export const emptyTheBuild = answerAForm((language) => ({
+  address: addressAfterAChange(language, {}),
+  write: (response) => rememberTheBuild(response, []),
+}));

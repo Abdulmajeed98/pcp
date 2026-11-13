@@ -3,20 +3,19 @@ import { notFound } from 'next/navigation';
 
 import { categoryAddress, categoryOfTheAddress } from '@/entities/category';
 import {
-  type AddressQuery,
   addressOfTheForm,
-  readAPageOfTheList,
   readCategoryQuery,
   readPriceRange,
-  readTheFilters,
   Search,
 } from '@/features/search-parts';
 import { chosenCurrency } from '@/shared/currency';
+import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { photographs } from '@/shared/photographs';
 import { DimPhotograph, MarkADrawingAgain } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
 import { Stub } from '@/widgets/frame-header';
 
+import { readTheCategoryFilters, readTheCategoryPage } from '../api/read-the-category-page';
 import type { CategoryPageParams } from '../model/preview';
 import { CategorySheet } from './category-sheet';
 
@@ -47,16 +46,14 @@ export async function CategoryPage({
     chosenCurrency(),
     getLocale(),
   ]);
-  const offered = await readTheFilters(category, currency);
+  const offered = await readTheCategoryFilters(category, currency);
   const query = readCategoryQuery(address, offered);
   const page =
-    offered === undefined ? undefined : await readAPageOfTheList(category, query, currency);
-  const asAsked = addressOfTheForm(
-    categoryAddress(language, category),
-    Object.entries(address).flatMap(([name, values]) =>
-      [values ?? []].flat().map((value) => [name, value] as const),
-    ),
-  );
+    offered === undefined
+      ? undefined
+      : await readTheCategoryPage(category, query, currency);
+  const list = categoryAddress(language, category);
+  const asAsked = addressOfTheForm(list, fieldsOf(address));
 
   return (
     <>
@@ -70,6 +67,7 @@ export async function CategoryPage({
             query={query}
             offered={offered}
             range={readPriceRange(address, offered)}
+            list={list}
             className="lg:col-span-5"
           />
           <CategorySheet
@@ -77,6 +75,7 @@ export async function CategoryPage({
             query={query}
             offered={offered}
             page={page}
+            list={list}
             asAsked={asAsked}
           />
         </div>

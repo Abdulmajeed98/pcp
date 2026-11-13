@@ -2,6 +2,7 @@ import {
   estimatedPowerDrawOf,
   judgeBuild,
   type MissingSpecification,
+  type RuleNumber,
   type RuleOutcome,
 } from '@pcp/compatibility';
 
@@ -47,7 +48,7 @@ export class MissingInABuild {
 export type Outcome =
   | Exclude<RuleOutcome, { outcome: 'unchecked' }>
   | {
-      readonly rule: number;
+      readonly rule: RuleNumber;
       readonly outcome: 'unchecked';
       readonly missing: readonly MissingInABuild[];
     };
@@ -104,10 +105,7 @@ export function judgmentOf(build: Build): Judgment {
 // for its label.
 function labelledIn(build: Build): (missing: MissingSpecification) => MissingInABuild {
   return ({ part: partId, path }) => {
-    const part = build
-      .getParts()
-      .find((each) => each.getPart().getId() === partId)
-      ?.getPart();
+    const part = build.partWithId(partId);
     const labels = part && specificationListOf(part.getCategory()).labelsAt(path);
     return new MissingInABuild(partId, path, labels?.label ?? path, labels?.fieldLabel);
   };

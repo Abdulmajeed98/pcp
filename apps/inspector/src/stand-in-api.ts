@@ -14,7 +14,6 @@ import type {
   PlatformFiguresResponse,
   ReadBuildData,
   ReadVisiblePartsFiltersData,
-  RuleOutcomeResponse,
   ShownPriceResponse,
   SpecificationResponse,
   VisibleOfferOfVendorPageResponse,
@@ -468,19 +467,36 @@ function visibleParts(shop: ShoppersShop, query: URLSearchParams): StandInAnswer
       (response.inStock || !isOn(query, inStockOnly))
     );
   });
-  const body: VisiblePartPageResponse = aPageOf(
-    query,
-    judgedForThePicker(shop, picked, query),
-  );
+  const judged = judgedForThePicker(shop, picked, query);
+  const body: VisiblePartPageResponse = {
+    ...aPageOf(
+      query,
+      judged.filter(
+        ({ compatible }) => compatible !== false || isOn(query, keepNotCompatible),
+      ),
+    ),
+    ...countOf(judged),
+  };
   return answer(body);
+}
+
+// How many of the Parts judged against the Build are Compatible with it and
+// how many are not, whichever way the switch is, as the API answers them;
+// none without a Build.
+function countOf(
+  judged: readonly VisiblePartResponse[],
+): Pick<VisiblePartPageResponse, 'compatibleCount' | 'notCompatibleCount'> {
+  if (judged.some(({ compatible }) => compatible === undefined)) return {};
+  const compatibleCount = judged.filter(({ compatible }) => compatible === true).length;
+  return { compatibleCount, notCompatibleCount: judged.length - compatibleCount };
 }
 
 // The Parts listed, each judged against the Build the picker gives, when it
 // gives one: each answers whether it is Compatible with it, through the
 // library's `isCompatible`, which puts a Part in place of the Build's Part of
-// its Category, or a kit or a drive beside the others, and the Parts that are
-// not are left out unless the switch keeps them. They are judged before they
-// are paged, so a page counts only the Parts kept.
+// its Category, or a kit or a drive beside the others. Those that are not
+// are left out unless the switch keeps them, once counted, and before the
+// list is paged, so a page counts only the Parts kept.
 function judgedForThePicker(
   shop: ShoppersShop,
   listed: readonly VisiblePartAnswered[],
@@ -488,12 +504,10 @@ function judgedForThePicker(
 ): VisiblePartResponse[] {
   if (!query.has(theBuild)) return listed.map(({ response }) => response);
   const build = buildForTheRules(theBuildAsked(shop, query));
-  return listed
-    .map(({ read, response }) => ({
-      ...response,
-      compatible: isCompatible(read.summary.category, forTheRules(read), build),
-    }))
-    .filter((response) => response.compatible || isOn(query, keepNotCompatible));
+  return listed.map(({ read, response }) => ({
+    ...response,
+    compatible: isCompatible(read.summary.category, forTheRules(read), build),
+  }));
 }
 
 // The kind of value a filter offers, for each kind of specification a filter
@@ -647,7 +661,10 @@ interface PartOfABuild {
 // followed for a RAM kit or a drive by `:` and its quantity, in the
 // catalog's order of Categories and then in the order given. A Part the shop
 // does not offer is left out, as the API leaves out one the catalog does not
-// hold; a value whose quantity is not a number is refused. The Shopper app
+// hold. Refused, naming `part`, as the API refuses them: a value whose
+// quantity is not a number, and a RAM kit or a drive with no quantity or
+// another Part with one, which a cookie edited by hand can give, filing a
+// kit under the CPU (`refused` in `made-up-builds.ts`). The Shopper app
 // sends nothing else the API refuses, so nothing else is checked.
 function theBuildAsked(shop: ShoppersShop, query: URLSearchParams): PartOfABuild[] {
   const parts = query.getAll(theBuild).flatMap((value): PartOfABuild[] => {
@@ -658,7 +675,8 @@ function theBuildAsked(shop: ShoppersShop, query: URLSearchParams): PartOfABuild
     const read = shop.parts.get(partId);
     if (read === undefined) return [];
     const withAQuantity = heldWithAQuantity.includes(read.summary.category);
-    return [{ read, quantity: withAQuantity ? Number(quantity ?? 1) : null }];
+    if (withAQuantity === (quantity === undefined)) throw new Refused(notValid(theBuild));
+    return [{ read, quantity: withAQuantity ? Number(quantity) : null }];
   });
   return parts.sort(
     (a, b) =>
@@ -800,7 +818,7 @@ function judgmentOf(shop: ShoppersShop, build: readonly PartOfABuild[]) {
   const labelled = labelledIn(shop, build);
   const draw = estimatedPowerDrawOf(judged);
   return {
-    outcomes: judgeBuild(judged).map((outcome): RuleOutcomeResponse =>
+    outcomes: judgeBuild(judged).map((outcome): BuildResponse['outcomes'][number] =>
       outcome.outcome === 'unchecked'
         ? { ...outcome, parts: [], missing: outcome.missing.map(labelled) }
         : { ...outcome, parts: [...outcome.parts], missing: [] },

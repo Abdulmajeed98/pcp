@@ -81,7 +81,7 @@ export async function pickInThePicker(page: Page, partId: string): Promise<void>
   await page.waitForURL((url) => /^\/[a-z]+\/build$/.test(url.pathname) && url.hash !== '');
 }
 
-// The picker's switch, which shows the Parts that do not fit the Build.
+// The picker's switch, which shows the Parts not Compatible with the Build.
 export function theSwitch(page: Page): Locator {
   return page.getByTestId('switch');
 }

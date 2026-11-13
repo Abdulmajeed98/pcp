@@ -1,11 +1,4 @@
-export {
-  addressAfterAChange,
-  buildAddress,
-  buildPath,
-  pickerAddress,
-  placeOf,
-  refusalIn,
-} from './model/address-after-a-change';
+export { addressAfterAChange, refusalIn } from './model/address-after-a-change';
 export { ChangesInPlace } from './ui/changes-in-place';
 export { EmptyTheBuild } from './ui/empty-the-build';
 export { PickForm } from './ui/pick-form';

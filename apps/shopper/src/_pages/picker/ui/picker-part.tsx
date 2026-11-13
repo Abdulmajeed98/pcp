@@ -3,9 +3,9 @@ import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 
-import { type BuildPart, isKitOrDrive } from '@/entities/build';
+import { buildAddress, type BuildPart, isKitOrDrive } from '@/entities/build';
 import { partAddress, PartSquare } from '@/entities/part';
-import { buildAddress, PickForm } from '@/features/change-the-build';
+import { PickForm } from '@/features/change-the-build';
 import { ShownPrice } from '@/shared/price';
 import { Item, whereAPartsNameStands } from '@/shared/ui';
 
@@ -23,7 +23,7 @@ import { Item, whereAPartsNameStands } from '@/shared/ui';
 // place of Pick; a RAM kit or a drive the Build holds says how many, "In
 // your Build, 2 ×", and offers Add one more at the end, which counts it once
 // more. With the switch on, a Part that is not Compatible with the Build
-// begins its second line with "✕ Does not fit your Build" at 600 in the
+// begins its second line with "✕ Not compatible with your Build" at 600 in the
 // Ink, in words as well as its mark, and can still be picked; the Build page
 // then says why. The ✕ is drawn, as the rules' sheet draws its marks, since
 // the character is read as an emoji (Taste's inspector, `emoji`).
@@ -44,7 +44,7 @@ export async function PickerPart({
     getTranslations('PickerPage'),
     getTranslations('Part'),
   ]);
-  const notFit = part.compatible === false;
+  const notCompatible = part.compatible === false;
   const canPick = held === undefined || isKitOrDrive(part.category);
 
   return (
@@ -54,7 +54,7 @@ export async function PickerPart({
       data-in-build={
         held === undefined ? undefined : 'quantity' in held ? String(held.quantity) : 'one'
       }
-      data-not-fit={notFit ? '' : undefined}
+      data-not-compatible={notCompatible ? '' : undefined}
       className="@container grid grid-cols-[minmax(0,1fr)] gap-1"
     >
       <ul className="@container grid grid-cols-[minmax(0,1fr)]">
@@ -74,14 +74,14 @@ export async function PickerPart({
           }
           second={
             <>
-              {notFit && (
+              {notCompatible && (
                 <>
                   <span
-                    data-testid="does-not-fit"
+                    data-testid="not-compatible"
                     className="font-semibold text-foreground"
                   >
                     <Cross />
-                    {t('doesNotFit')}
+                    {t('notCompatible')}
                   </span>
                   {' · '}
                 </>
@@ -134,7 +134,7 @@ export async function PickerPart({
   );
 }
 
-// The ✕ before "Does not fit your Build": two strokes in the Ink, three
+// The ✕ before "Not compatible with your Build": two strokes in the Ink, three
 // quarters of the line's text tall, on its baseline, hidden from readers,
 // since the words beside it say the same. It reads the same in every
 // direction.

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   type APIRequestContext,
   type Browser,
@@ -15,6 +17,7 @@ import {
   emptyTheBuild,
   emptyTheBuildAfterConfirming,
   figureOf,
+  keepInTheCookieByHand,
   lineOf,
   partLines,
   pick,
@@ -27,6 +30,7 @@ import {
   theWayToTheBuild,
   whatTheQuantitySays,
 } from './build-page';
+import { whatTheSheetSays } from './category-page';
 import { createAMadeUpPart } from './catalog';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import {
@@ -39,6 +43,7 @@ import {
 } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
 import { film, snapsOf } from './motion-film';
+import { pickerIn } from './picker';
 import { shopperUrl } from './platform';
 
 const [kurdish, , english] = languages;
@@ -399,6 +404,53 @@ test('a pick past the limits is refused and the page says why: a ninth different
   await expect(figureOf(page, kit.id)).toHaveValue('16');
   await expect(whatTheQuantitySays(page, kit.id)).not.toHaveText('');
   await expect(quantityOf(page, kit.id).getByTestId('one-more')).toBeDisabled();
+});
+
+test('a change forgets the Parts the catalog no longer holds, so that a kit joins a Build whose cookie names 8 kits the catalog does not hold', async ({
+  page,
+}) => {
+  // Eight kits no catalog holds, as a cookie keeps Parts that have since
+  // left the catalog.
+  const gone = Array.from({ length: 8 }, () => `ram:${randomUUID()}:1`);
+  await keepInTheCookieByHand(page, gone.join(','));
+  await page.goto(buildPageIn(english));
+  await expect(partLines(page)).toHaveCount(0);
+  expect(await theFramesCount(page), 'the cookie still names them').toBe(8);
+
+  const picked = await pick(page, kit);
+  expect(picked, 'the kit is not refused as a ninth').not.toContain('refused');
+  await page.goto(buildPageIn(english));
+  await expect(partLines(page)).toHaveCount(1);
+  await expect(lineOf(page, kit.id)).toBeVisible();
+  expect(await theFramesCount(page), 'the cookie forgot them').toBe(1);
+});
+
+test('a Build the API refuses, a RAM kit filed by hand under the CPU, is said to be one that cannot be read and is emptied after confirming, and the picker says so and leads to the Build page', async ({
+  page,
+}) => {
+  await keepInTheCookieByHand(page, `cpu:${kit.id}`);
+
+  for (const language of kurdishAndEnglish) {
+    await test.step(`in ${language.name}`, async () => {
+      await page.goto(pickerIn(language, 'cpu'));
+      await expectPageIn(page, language);
+      await expect(whatTheSheetSays(page)).toHaveAttribute('data-state', 'build-refused');
+      await expect(page.getByTestId('picker-list')).toHaveCount(0);
+      await page.getByTestId('to-your-build').click();
+      await expect(page).toHaveURL(buildPageIn(language));
+
+      await expect(page.getByTestId('build-refused')).toBeVisible();
+      await expect(page.getByTestId('try-again')).toHaveCount(0);
+      await expect(emptyTheBuild(page)).toBeVisible();
+      await expectNoSidewaysScroll(page);
+    });
+  }
+
+  await emptyTheBuildAfterConfirming(page);
+  await expect(page).toHaveURL(buildPageIn(english));
+  await expect(page.getByTestId('build-refused')).toHaveCount(0);
+  await expect(page.getByTestId('choose')).toHaveCount(8);
+  expect(await theFramesCount(page)).toBe(0);
 });
 
 test('the Build page passes WCAG 2.2 level AA in the light and the dark scheme, its confirmation open', async ({

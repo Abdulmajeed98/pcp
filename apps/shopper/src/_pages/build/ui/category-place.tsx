@@ -12,15 +12,10 @@ import {
   mostOfOne,
   type Refusal,
 } from '@/entities/build';
+import { nameInTheAddress, pickerAddress } from '@/entities/category';
 import { partAddress, PartSquare } from '@/entities/part';
 import { vendorAddress } from '@/entities/vendor';
-import {
-  pickerAddress,
-  placeOf,
-  QuantityForm,
-  RemoveForm,
-  underlinedAction,
-} from '@/features/change-the-build';
+import { QuantityForm, RemoveForm, underlinedAction } from '@/features/change-the-build';
 import { ShownPrice } from '@/shared/price';
 import { buttonVariants, Item, whereAPartsNameStands } from '@/shared/ui';
 
@@ -138,7 +133,7 @@ export async function CategoryPlace({
       </>
     );
   };
-  const place = placeOf(category);
+  const place = nameInTheAddress(category);
   const heading = `${place}-heading`;
   const picker = pickerAddress(language, category);
   const most = { most: formatNumber(mostOfOne), least: formatNumber(1) };

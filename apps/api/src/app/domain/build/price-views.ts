@@ -1,5 +1,6 @@
 import { ShownPrice } from '../offer/shown-price';
 import { Build, BuildPart } from './Build';
+import { CatalogPart } from './BuildStore';
 import { OfferVendor } from './in-stock-offers';
 import { timesQuantity, totalOf } from './totals';
 
@@ -7,11 +8,11 @@ import { timesQuantity, totalOf } from './totals';
 // Visible Offers, with its Shown Price there.
 export class PartInStock {
   constructor(
-    private readonly part: BuildPart,
+    private readonly part: BuildPart<CatalogPart>,
     private readonly shownPrice: ShownPrice | null,
   ) {}
 
-  getPart(): BuildPart {
+  getPart(): BuildPart<CatalogPart> {
     return this.part;
   }
 
@@ -39,13 +40,16 @@ export class BuildVendor {
   private constructor(
     private readonly vendor: OfferVendor,
     private readonly partsInStock: readonly PartInStock[],
-    private readonly partsLacked: readonly BuildPart[],
+    private readonly partsLacked: readonly BuildPart<CatalogPart>[],
     private readonly total: ShownPrice | null,
   ) {}
 
   // The Vendor among the Parts some Vendor has in stock, in the Build's
   // order.
-  static among(vendor: OfferVendor, stocked: readonly BuildPart[]): BuildVendor {
+  static among(
+    vendor: OfferVendor,
+    stocked: readonly BuildPart<CatalogPart>[],
+  ): BuildVendor {
     const partsInStock = stocked.flatMap((part) => {
       const offer = part
         .getInStockOffers()
@@ -68,7 +72,7 @@ export class BuildVendor {
     return this.partsInStock;
   }
 
-  getPartsLacked(): readonly BuildPart[] {
+  getPartsLacked(): readonly BuildPart<CatalogPart>[] {
     return this.partsLacked;
   }
 
@@ -119,7 +123,7 @@ export class PriceViews {
     private readonly vendors: readonly BuildVendor[],
   ) {}
 
-  static of(build: Build): PriceViews {
+  static of(build: Build<CatalogPart>): PriceViews {
     const stocked = build.getParts().filter((part) => !part.isUnstocked());
     // Each Vendor once, whichever of its Parts it is met by.
     const vendors = new Map(

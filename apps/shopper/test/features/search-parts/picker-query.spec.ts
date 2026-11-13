@@ -38,7 +38,7 @@ const cpuFilters: VisiblePartsFiltersResponse = {
 // The picker's query is a Category page's query, read by the same function,
 // with one more parameter for the switch (the builder spec's The Shopper's
 // addresses): `show=all`, which shows every Part in stock, those that do not
-// fit the Build among them. The address holds only what is on, so the
+// are not Compatible with the Build among them. The address holds only what is on, so the
 // switch off is no parameter at all.
 describe("the picker's query, read from its address", () => {
   it('reads the switch on', () => {
@@ -112,7 +112,7 @@ describe("a Category page's query, left as it was", () => {
 });
 
 // The switch, a link to the same picker with or without the Parts that do
-// not fit (DESIGN.md's The switch): the list it leads to starts again at its
+// are not Compatible (DESIGN.md's The switch): the list it leads to starts again at its
 // first page, as a new choice does, and keeps every choice that is on.
 describe("the picker's switch", () => {
   const searched = aPickerQuery({

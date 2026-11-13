@@ -2,23 +2,22 @@ import type { BuildResponse } from '@pcp/api-client';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { cookies } from 'next/headers';
 
-import { buildIn, writeTheBuild } from '@/entities/build';
-import { buildAddress, ChangesInPlace, refusalIn } from '@/features/change-the-build';
+import { buildAddress, buildIn, partsCountedIn, writeTheBuild } from '@/entities/build';
+import { ChangesInPlace, refusalIn } from '@/features/change-the-build';
 import { chosenCurrency } from '@/shared/currency';
 import { type Photograph, photographs } from '@/shared/photographs';
+import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { DimPhotograph, NotRead } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
 import { Stub } from '@/widgets/frame-header';
 
 import { readTheBuildPage } from '../api/read-the-build-page';
 import { statusOf } from '../model/status';
+import { BuildRefused } from './build-refused';
 import { BuildSheet } from './build-sheet';
 import { BuildSlip } from './build-slip';
 import { RulesSheet } from './rules-sheet';
 import { VendorsSheet } from './vendors-sheet';
-
-// The query of the Build page's address, as Next hands it to the page.
-type AddressQuery = Record<string, string | string[] | undefined>;
 
 // The Build page, at `/<language>/build` (DESIGN.md's The Build page): the
 // stub, its way to the Build marked as the page the Shopper is on; then,
@@ -34,9 +33,11 @@ type AddressQuery = Record<string, string | string[] | undefined>;
 // and the chosen currency, from the Build its cookie holds and what the API
 // answers of it then. A change past the limits is said where it was refused,
 // as the address after it says (`refusalIn`). A Build the API did not answer
-// shows the sheet that says it cannot be read just now, with Try again, and
-// its cookie is left as it is. Every piece the API's answer fills is drawn
-// again in place by a change with script (Motion 11).
+// shows the sheet that says it cannot be read just now, with Try again; one
+// the API refuses, which only a cookie edited by hand makes, the sheet that
+// says it cannot be read, with Empty the Build; and in both its cookie is
+// left as it is. Every piece the API's answer fills is drawn again in place
+// by a change with script (Motion 11).
 export async function BuildPage({ searchParams }: { searchParams: Promise<AddressQuery> }) {
   const [address, language, currency, sent, t] = await Promise.all([
     searchParams,
@@ -46,19 +47,16 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
     getTranslations('BuildPage'),
   ]);
   const build = buildIn(sent);
-  const answer = await readTheBuildPage(build, currency);
-  const refused = refusalIn(
-    new URLSearchParams(
-      Object.entries(address).flatMap(([name, value]) =>
-        [value ?? []].flat().map((each) => [name, each]),
-      ),
-    ),
-  );
+  const read = await readTheBuildPage(build, currency);
+  const answer = read.kind === 'read' ? read.answer : undefined;
+  const refused = refusalIn(new URLSearchParams(fieldsOf(address)));
 
   return (
     <>
       <Stub onTheBuildPage />
-      {answer === undefined ? (
+      {read.kind === 'refused' ? (
+        <BuildRefused count={partsCountedIn(build)} />
+      ) : answer === undefined ? (
         <NotRead
           photograph={photographs.builtPc}
           title={t('notRead.title')}

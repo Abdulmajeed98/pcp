@@ -25,7 +25,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // made-up shop rather than the development database. Run it from the
 // repository root:
 //
-//   pnpm shopper:inspect <path> [--language ckb|ar|en] [--scheme light|dark] [--currency IQD|USD] [--build empty|complete|worstCase] [the inspector's options]
+//   pnpm shopper:inspect <path> [--language ckb|ar|en] [--scheme light|dark] [--currency IQD|USD] [--build empty|complete|worstCase|refused] [the inspector's options]
 //
 // The Shopper app calls the API on its server, where the inspector's Chrome
 // cannot answer for it as `pnpm dashboard:inspect` answers for the
@@ -53,7 +53,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // Shopper app not answering.
 
 const usage =
-  'usage: pnpm shopper:inspect <path without the language> [--language ckb|ar|en] [--scheme light|dark] [--currency IQD|USD] [--build empty|complete|worstCase] [--widths 1440,768,390] [--out DIR] [other options of inspect.mjs]';
+  'usage: pnpm shopper:inspect <path without the language> [--language ckb|ar|en] [--scheme light|dark] [--currency IQD|USD] [--build empty|complete|worstCase|refused] [--widths 1440,768,390] [--out DIR] [other options of inspect.mjs]';
 
 // Before any read: a refused type of service would stop the command where
 // nothing can catch it (`type-of-service.ts`).

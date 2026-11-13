@@ -1,16 +1,23 @@
+import type { RuleNumber, RuleThatCannotWarn, RuleThatCanWarn } from './rules/rules';
+
 // The outcome of one Compatibility Rule that applies to a Build (CMP-3), by
-// the rule's number. It passes, finds a Compatibility Problem or finds a
-// Compatibility Warning, naming the Parts it is about by their identifiers;
-// or it is unchecked, naming each missing needed specification that could
-// change it. An unchecked rule is never a pass.
+// the rule's number. It passes, finds a Compatibility Problem or, for a rule
+// that can give one, finds a Compatibility Warning, naming the Parts it is
+// about by their identifiers; or it is unchecked, naming each missing needed
+// specification that could change it. An unchecked rule is never a pass.
 export type RuleOutcome =
   | {
-      readonly rule: number;
+      readonly rule: RuleThatCanWarn;
       readonly outcome: 'passes' | 'problem' | 'warning';
       readonly parts: readonly string[];
     }
   | {
-      readonly rule: number;
+      readonly rule: RuleThatCannotWarn;
+      readonly outcome: 'passes' | 'problem';
+      readonly parts: readonly string[];
+    }
+  | {
+      readonly rule: RuleNumber;
       readonly outcome: 'unchecked';
       readonly missing: readonly MissingSpecification[];
     };

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PageableAttributes, PageAttributes, StructuredError } from '@pcp/core';
+import { PageableAttributes, StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
 import { BuildReading } from '../build/BuildReading';
@@ -8,9 +8,10 @@ import { Currency } from '../currency/currency';
 import { Category } from '../part/Category';
 import { searchWordsOf } from '../part/search-words';
 import { choicesOf } from '../specification/filters';
+import { PickersConditions } from './PickersConditions';
 import { PriceRange } from './PriceRange';
-import { VisiblePart } from './VisiblePart';
 import {
+  CompatibleCount,
   ListVisiblePartsParams,
   VisiblePartsPage,
   VisiblePartStore,
@@ -25,9 +26,7 @@ class Input {
     private readonly filters: ReadonlyMap<string, readonly string[]>,
     private readonly lowest: number | undefined,
     private readonly highest: number | undefined,
-    private readonly inStockOnly: boolean,
-    private readonly partValues: readonly string[],
-    private readonly keepNotCompatible: boolean,
+    private readonly conditions: PickersConditions,
     private readonly pageable: PageableAttributes,
   ) {}
 
@@ -67,23 +66,9 @@ class Input {
     return this.highest;
   }
 
-  // Whether only the Visible Parts with an in-stock Visible Offer are asked
-  // for, as the picker asks (BLD-2).
-  isInStockOnly(): boolean {
-    return this.inStockOnly;
-  }
-
-  // The `part` values the request gives, as it gives them, before they are
-  // read as the Build the picker judges each Part against; none without a
-  // Build.
-  getPartValues(): readonly string[] {
-    return this.partValues;
-  }
-
-  // Whether the Parts that are not Compatible with the Build are kept, as the
-  // picker's switch asks; they are left out otherwise.
-  isKeepingNotCompatible(): boolean {
-    return this.keepNotCompatible;
+  // The picker's conditions, none of which a Category page asks.
+  getConditions(): PickersConditions {
+    return this.conditions;
   }
 
   getPageable(): PageableAttributes {
@@ -142,6 +127,7 @@ export class ListVisiblePartsQuery {
 
     // Read once, so that every Offer's visibility is judged at one moment.
     const now = new Date();
+    const conditions = input.getConditions();
     const params = new ListVisiblePartsParams(
       input.getCategory(),
       input.getCurrency(),
@@ -149,10 +135,10 @@ export class ListVisiblePartsQuery {
       input.getManufacturers(),
       choices.right,
       range.right,
-      input.isInStockOnly(),
+      conditions.isInStockOnly(),
       now,
     );
-    if (input.getPartValues().length === 0) {
+    if (!conditions.givesABuild()) {
       const page = await this.visiblePartStore.listVisibleParts(
         params,
         input.getPageable(),
@@ -160,35 +146,25 @@ export class ListVisiblePartsQuery {
       return Either.map(page, Output.of);
     }
 
-    const build = await this.buildReading.read(
-      input.getPartValues(),
-      input.getCurrency(),
-      now,
-    );
+    const build = await this.buildReading.readForTheRules(conditions.getPartValues());
     if (Either.isLeft(build)) return Either.left(build.left);
     const every = await this.visiblePartStore.listEveryVisiblePart(params);
     if (Either.isLeft(every)) return Either.left(every.left);
 
     // Each Part judged, then the Parts kept paged, so that the page and the
-    // total count only those.
+    // total count only those, and the count of those judged Compatible and
+    // not is of the same reading.
     const compatible = compatibleWith(build.right);
-    const kept = every.right
-      .map((visible) => visible.judged(compatible(visible.getPart())))
-      .filter((visible) => input.isKeepingNotCompatible() || visible.isCompatible());
-    return Either.right(Output.of(onePageOf(kept, input.getPageable())));
+    const judged = every.right.map((visible) =>
+      visible.judged(compatible(visible.getPart())),
+    );
+    const kept = judged.filter(
+      (visible) => conditions.isKeepingNotCompatible() || visible.isCompatible(),
+    );
+    return Either.right(
+      Output.of(
+        VisiblePartsPage.among(kept, input.getPageable(), CompatibleCount.of(judged)),
+      ),
+    );
   }
-}
-
-// One page of a list, as the catalog's paging gives it: the items past the
-// page's offset, as many as it holds, and where the page stands among them
-// all, so that a page past the end is empty and still answers the total.
-function onePageOf(
-  parts: readonly VisiblePart[],
-  pageable: PageableAttributes,
-): VisiblePartsPage {
-  const offset = pageable.getOffset();
-  return new VisiblePartsPage(
-    parts.slice(offset, offset + pageable.getLimit()),
-    PageAttributes.of(pageable, parts.length),
-  );
 }

@@ -1,7 +1,6 @@
 import type { Language } from '@pcp/i18n';
 
-import type { Category } from '@/entities/category';
-import { pickerAddress } from '@/features/change-the-build';
+import { type Category, pickerAddress } from '@/entities/category';
 import { addressOfAList, type PickerQuery } from '@/features/search-parts';
 
 // The picker's address, in a language, written from its query (the builder

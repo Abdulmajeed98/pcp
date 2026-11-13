@@ -1,12 +1,9 @@
-import type { VisiblePartsFiltersResponse } from '@pcp/api-client';
+import type { ListVisiblePartsData, VisiblePartsFiltersResponse } from '@pcp/api-client';
 import { type Language, westernDigitsIn, westernNumberIn } from '@pcp/i18n';
 
 import { type Category, categoryAddress } from '@/entities/category';
-import { pageInTheAddress } from '@/shared/lib';
-
-// The query of a Category page's address, as Next hands it to the page: each
-// parameter's value, or its values when it is repeated.
-export type AddressQuery = Record<string, string | string[] | undefined>;
+import type { Currency } from '@/shared/currency';
+import { type AddressQuery, pageInTheAddress } from '@/shared/lib';
 
 // What the API answers of a Category's filters (`GET v1/visible-parts/
 // filters`): its Visible Parts' manufacturers, each of its filters with the
@@ -57,8 +54,8 @@ export const nothingOn: CategoryQuery = {
 
 // What the picker's address asks of its list (the builder spec's The
 // Shopper's addresses): a Category page's query, and the switch, which
-// shows every Part in stock, those that do not fit the Build among them,
-// each marked (BLD-3), or, off, only those that fit.
+// shows every Part in stock, those not Compatible with the Build among
+// them, each marked (BLD-3), or, off, only those that are.
 export interface PickerQuery extends CategoryQuery {
   showAll: boolean;
 }
@@ -349,4 +346,41 @@ export function addressOfTheForm(
   const written = query.toString();
 
   return `${action}${written === '' ? '' : `?${written}`}`;
+}
+
+// How many Parts a page of a Category's list holds, on a Category page and
+// in the picker: as many as the dashboard's lists hold, and within the 12 to
+// 24 a printed menu sheet holds.
+export const partsAPage = 20;
+
+// A Category's list as the API is asked for it (`GET v1/visible-parts`), from
+// a Category page's query or the picker's, in the chosen currency: one page
+// of its Visible Parts, in BRW-1's order, for the search, the manufacturers,
+// the filters and the price range the query holds, read against what the
+// Category's filters offer, so that nothing they do not offer is ever sent.
+// A filter with several values repeats its parameter, by the parameter the
+// API answered it with, which the generated client knows by name for the
+// filters it was written with. The page counts from 1 in the address and from
+// 0 at the API. Each page asks it in its own `api` segment, the picker with
+// its conditions beside it.
+export function listAskedFor(
+  category: Category,
+  { search, manufacturers, filters, lowest, highest, page }: CategoryQuery,
+  currency: Currency,
+): ListVisiblePartsData['query'] {
+  const chosen = Object.fromEntries(
+    filters.map(({ parameter, values }) => [parameter, [...values]]),
+  ) as Partial<ListVisiblePartsData['query']>;
+
+  return {
+    ...chosen,
+    category,
+    currency,
+    search: search === '' ? undefined : search,
+    manufacturer: manufacturers.length === 0 ? undefined : [...manufacturers],
+    lowest: lowest ?? undefined,
+    highest: highest ?? undefined,
+    page: page - 1,
+    size: partsAPage,
+  };
 }

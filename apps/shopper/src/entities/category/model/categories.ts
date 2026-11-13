@@ -46,8 +46,23 @@ export function categoryPath(category: Category): string {
   return `/categories/${nameInTheAddress(category)}`;
 }
 
+// A Category's picker's address, in a language, its Category written as on a
+// Category page: `/<language>/build/cpu-cooler`, under the Build page's
+// address (`buildAddress` in the build entity, which a slice of this layer
+// may not import).
+export function pickerAddress(language: Language, category: Category): string {
+  return `/${language}${pickerPath(category)}`;
+}
+
+// The part of a Category's picker's address after its language, as its
+// preview names it in every language.
+export function pickerPath(category: Category): string {
+  return `/build/${nameInTheAddress(category)}`;
+}
+
 // A Category's name in an address, as a Category page's and the picker's
-// write it, and as the Build page names the place of each Category.
+// write it, and as the Build page names the place of each Category: `#ram`,
+// `#cpu-cooler`, which an address leads to after a change.
 export function nameInTheAddress(category: Category): string {
   return namesInTheAddress[category];
 }

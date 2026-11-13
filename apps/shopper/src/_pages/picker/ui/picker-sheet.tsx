@@ -4,13 +4,9 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import type { Build } from '@/entities/build';
-import type { Category } from '@/entities/category';
-import {
-  addressAfterAChange,
-  buildAddress,
-  pickerAddress,
-} from '@/features/change-the-build';
+import { type Build, buildAddress } from '@/entities/build';
+import { type Category, pickerAddress } from '@/entities/category';
+import { addressAfterAChange } from '@/features/change-the-build';
 import {
   allCleared,
   ChoicesOn,
@@ -39,8 +35,9 @@ import { TheSwitch } from './the-switch';
 // a picker's title is longer than a Category's and ran into the stamp in
 // the sheet's end corner, in Kurdish at every desk width, its sentence in
 // Body large,
-// "3 CPUs in stock that fit your Build, lowest price first.", or with the
-// switch on "8 CPUs in stock, lowest price first. 5 do not fit your Build.";
+// "3 CPUs in stock compatible with your Build, lowest price first.", or with
+// the switch on "8 CPUs in stock, lowest price first. 5 are not compatible
+// with your Build.";
 // then the switch, once the Build holds a Part; the choices that are on; the
 // Category's drawing; and the list, in stock only, in the API's order, 20
 // to a page with Paging, each Part with its pick control. It closes, as a
@@ -53,8 +50,9 @@ import { TheSwitch } from './the-switch';
 // sheet's primary button, and "See why on your Build", a cell to the rules'
 // sheet; a search or filters that found nothing offer Clear all, which keeps
 // the switch; a Category no Vendor has in stock leads back to the Build, at
-// the Category's place. A page past the last and a list the API did not
-// answer say so as a Category page does.
+// the Category's place; and a Build the API refuses says so and leads to the
+// Build page, which offers to empty it. A page past the last and a list the
+// API did not answer say so as a Category page does.
 //
 // The sentence is the page's status (`output`): drawn again in place with
 // script, by a search, a filter, the switch or another page, its new words
@@ -94,10 +92,10 @@ export async function PickerSheet({
     switch (says.kind) {
       case 'in-stock':
         return t('inStock', counting(says.count));
-      case 'fit':
-        return t('fit', counting(says.count));
-      case 'some-do-not-fit':
-        return `${t('inStock', counting(says.count))} ${t('notFit', counting(says.notFit))}`;
+      case 'compatible':
+        return t('compatible', counting(says.count));
+      case 'some-not-compatible':
+        return `${t('inStock', counting(says.count))} ${t('someNotCompatible', counting(says.notCompatible))}`;
     }
   };
 
@@ -150,10 +148,10 @@ export async function PickerSheet({
             </>
           ),
         };
-      case 'none-fits':
+      case 'none-compatible':
         return {
-          sentence: t('noneFits', counting(state.inStock)),
-          line: { text: t('noneFitsLine'), size: 'body' },
+          sentence: t('noneCompatible', counting(state.inStock)),
+          line: { text: t('noneCompatibleLine'), size: 'body' },
           holds: (
             <div className="mt-8 flex flex-wrap justify-center gap-2">
               <Link
@@ -218,6 +216,20 @@ export async function PickerSheet({
             </SheetAction>
           ),
         };
+      case 'build-refused':
+        return {
+          sentence: t('buildRefused'),
+          holds: (
+            <SheetAction
+              kind="board"
+              address={buildAddress(language)}
+              plain
+              testId="to-your-build"
+            >
+              {t('backToYourBuild')}
+            </SheetAction>
+          ),
+        };
       case 'not-read':
         return {
           sentence: categoryPage('notRead'),
@@ -271,7 +283,6 @@ export async function PickerSheet({
         />
       )}
       <ChoicesOn
-        category={category}
         query={query}
         offered={offered}
         withClearAll={listed}

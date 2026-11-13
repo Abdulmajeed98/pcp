@@ -9,6 +9,17 @@ import { createTranslator } from 'next-intl';
 
 // What the Build page reads of the API's answer to say what the rules found.
 type Answered = Pick<BuildResponse, 'parts' | 'outcomes'>;
+
+// How many of a Build's outcomes are of each kind (CMP-3): its Compatibility
+// Problems, its Compatibility Warnings, its unchecked rules and the rules
+// that passed, as the slip, the status and the rules' sheet each count them.
+export type OutcomeCounts = Record<BuildResponse['outcomes'][number]['outcome'], number>;
+
+export function outcomeCountsOf(outcomes: BuildResponse['outcomes']): OutcomeCounts {
+  const counts: OutcomeCounts = { passes: 0, problem: 0, warning: 0, unchecked: 0 };
+  for (const { outcome } of outcomes) counts[outcome] += 1;
+  return counts;
+}
 type Part = BuildResponse['parts'][number];
 type Outcome = BuildResponse['outcomes'][number];
 
@@ -97,40 +108,17 @@ function missingNamed(
   );
 }
 
-// The 21 Compatibility Rules by their numbers, and the outcomes the page
-// lists for each (CMP-3): a Compatibility Problem and an unchecked case for
-// every rule, and a Compatibility Warning for rules 11, 15 and 20 alone, as
-// the MVP spec's Compatibility Rules and the API's description say.
-type RuleNumber =
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16
-  | 17
-  | 18
-  | 19
-  | 20
-  | 21;
-type WarningRule = 11 | 15 | 20;
-
-// How many Compatibility Rules there are, which the rules' sheet's note says.
-export const rulesInAll = 21 satisfies RuleNumber;
+// Every Compatibility Rule the API can answer, by its number, with the
+// outcomes the page lists for it (CMP-3): a Compatibility Problem and an
+// unchecked case for every rule, and a Compatibility Warning for a rule that
+// can give one. The API describes them from the compatibility library's own
+// list of the rules, and `api-client` is generated from that description, so
+// a rule the library gains, or one that can newly warn, reaches this type.
 type EveryOutcome = {
-  [Rule in RuleNumber as `rule${Rule}`]: Rule extends WarningRule
-    ? Found
-    : Exclude<Found, 'warning'>;
+  [Answered in Outcome as `rule${Answered['rule']}`]: Exclude<
+    Answered['outcome'],
+    'passes'
+  >;
 };
 
 // The outcomes the Shopper set words, rule by rule (`BuildPage.outcomes`).
@@ -144,6 +132,21 @@ type WordedOutcomes = { [Rule in keyof Worded]: keyof Worded[Rule] };
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 const everyOutcomeIsWorded: Same<WordedOutcomes, EveryOutcome> = true;
 void everyOutcomeIsWorded;
+
+// How many Compatibility Rules there are, which the rules' sheet's note says:
+// as many as the Shopper set words, which the type check above holds to the
+// rules the API answers.
+export const rulesInAll = Object.keys(shopperMessages.en.BuildPage.outcomes).length;
+
+// The numbers a rule's words name, each given to its own rule's words, written
+// in Western digits by `formatNumber`: rule 8's PCIe slot of 16 lanes, which a
+// GPU takes, and rule 15's drives of 2.5 inches, which a case with no bay may
+// not hold, as the MVP spec's table of the rules states each rule. Neither is
+// a value a Part holds, which the words never name.
+const numbersNamed: Partial<Record<keyof Worded, Record<string, string>>> = {
+  rule8: { lanes: formatNumber(16) },
+  rule15: { inches: formatNumber(2.5) },
+};
 
 type WordedKey = {
   [Rule in keyof Worded]: `outcomes.${Rule & string}.${keyof Worded[Rule] & string}`;
@@ -159,9 +162,8 @@ type WordedKey = {
 // in Western digits. A Problem or a Warning names its Parts under it, each
 // once, in English, in the API's order; an unchecked rule names each
 // specification its Parts lack, by its English label, with its Part. A Part
-// the answer does not hold is not named. An outcome the Shopper set does not
-// word, of a rule newer than the page, is said in words of its kind, so that
-// nothing the rules found is left out.
+// the answer does not hold is not named. Every rule the API can answer is
+// worded, as the type check above holds.
 export function findingsOf(answer: Answered, language: Language): Findings {
   const t = createTranslator({
     locale: language,
@@ -171,10 +173,10 @@ export function findingsOf(answer: Answered, language: Language): Findings {
   const held = new Map(answer.parts.map((part) => [part.id, part]));
 
   const worded = (outcome: Outcome & { outcome: Found }): WordedOutcome => {
-    const key = `outcomes.rule${outcome.rule}.${outcome.outcome}` as WordedKey;
-    const words = t.has(key)
-      ? t(key, { lanes: formatNumber(16), inches: formatNumber(2.5) })
-      : t(`unworded.${outcome.outcome}`);
+    const rule = `rule${outcome.rule}` as const;
+    // A key of the set, since every rule's every outcome is worded.
+    const key = `outcomes.${rule}.${outcome.outcome}` as WordedKey;
+    const words = t(key, numbersNamed[rule]);
     const parts = [...new Set(outcome.parts)].flatMap((id) => {
       const part = held.get(id);
       return part === undefined ? [] : [named(part)];
@@ -199,6 +201,6 @@ export function findingsOf(answer: Answered, language: Language): Findings {
     problems: ofKind('problem'),
     warnings: ofKind('warning'),
     unchecked: ofKind('unchecked'),
-    passed: answer.outcomes.filter(({ outcome }) => outcome === 'passes').length,
+    passed: outcomeCountsOf(answer.outcomes).passes,
   };
 }

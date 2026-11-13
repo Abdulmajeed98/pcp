@@ -11,6 +11,8 @@ import {
   useRef,
 } from 'react';
 
+import { markDrawnAgain } from '@/shared/ui';
+
 import { type Held, leave, showWhatArrived, whatIsHeld } from '../lib/in-place';
 
 // How a form on the Build page sends its change in place: the form, the
@@ -67,7 +69,7 @@ export function ChangesInPlace({
     (form, submitter, leaving) => {
       const page = container.current;
       if (page === null) return;
-      document.documentElement.setAttribute('data-drawn-again', '');
+      markDrawnAgain();
       focusAfter.current = leaving?.focusAfter;
       const lines =
         leaving === undefined

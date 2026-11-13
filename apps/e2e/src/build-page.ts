@@ -46,6 +46,17 @@ export async function pick(
   return answer.headers().location ?? '';
 }
 
+// Puts a Build into the browser's cookie by hand, as a cookie edited by hand
+// or written by an older version of the platform would hold it, its text
+// encoded as the server's answer encodes it: what no form of the platform
+// writes, such as a RAM kit filed under the CPU, or identifiers the catalog
+// does not hold.
+export async function keepInTheCookieByHand(page: Page, text: string): Promise<void> {
+  await page
+    .context()
+    .addCookies([{ name: 'build', value: encodeURIComponent(text), url: shopperUrl }]);
+}
+
 // The Build page's address in a language.
 export function buildPageIn(language: Language['tag'] | Language): string {
   return `${shopperUrl}/${typeof language === 'string' ? language : language.tag}/build`;

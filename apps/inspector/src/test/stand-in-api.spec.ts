@@ -254,6 +254,26 @@ describe('the stand-in API', () => {
         ).toEqual(everyCpu.filter((name) => name !== ryzen5600.name));
       });
 
+      it('count those that are Compatible and those that are not, whichever way the switch is, and none without a Build', () => {
+        const counted = (more: string) => {
+          const { compatibleCount, notCompatibleCount } = listOf(
+            `category=cpu&currency=IQD&size=3${more}`,
+          ).body as VisiblePartPageResponse;
+          return { compatibleCount, notCompatibleCount };
+        };
+
+        for (const more of ['', '&keepNotCompatible=true']) {
+          expect(counted(`${withTheBuild(b650Tomahawk)}${more}`)).toEqual({
+            compatibleCount: everyCpu.length - 1,
+            notCompatibleCount: 1,
+          });
+          expect(counted(more)).toEqual({
+            compatibleCount: undefined,
+            notCompatibleCount: undefined,
+          });
+        }
+      });
+
       it('answer nothing of being Compatible without a Build, with the switch or without', () => {
         for (const listed of [cpusFor(''), cpusFor('&keepNotCompatible=true')]) {
           expect(listed.map((part) => part.name)).toEqual(everyCpu);
@@ -1023,6 +1043,22 @@ describe('the stand-in API', () => {
     it('is refused without a currency, or with a value of `part` that names no Part', () => {
       expect(get('/v1/build').body).toEqual(notValid('currency'));
       expect(buildOf('IQD', `${idOf(vengeance)}:two`).body).toEqual(notValid('part'));
+    });
+
+    // As the API refuses a Build that a cookie edited by hand can give, such
+    // as one that files a RAM kit under the CPU, so that the Build page's
+    // state for it can be looked at.
+    it('is refused, naming `part`, for a RAM kit with no quantity and a CPU with one', () => {
+      for (const value of [idOf(vengeance), `${idOf(ryzen7800X3D)}:1`]) {
+        const answer = buildOf('IQD', value);
+
+        expect(answer.status).toBe(400);
+        expect(answer.body).toEqual(notValid('part'));
+        expect(
+          get(`/v1/visible-parts?category=cpu&currency=IQD&inStockOnly=true&part=${value}`)
+            .body,
+        ).toEqual(notValid('part'));
+      }
     });
   });
 

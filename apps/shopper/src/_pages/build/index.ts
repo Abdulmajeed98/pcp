@@ -4,6 +4,8 @@ export {
   findingsOf,
   type Found,
   type MissingNamed,
+  type OutcomeCounts,
+  outcomeCountsOf,
   type PartNamed,
   type PowerDraw,
   powerDrawOf,

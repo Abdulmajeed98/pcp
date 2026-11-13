@@ -10,19 +10,32 @@ export type Finding =
   | { readonly holds: boolean; readonly about: ReadonlySet<string> }
   | { readonly holds: 'maybe'; readonly missing: readonly MissingSpecification[] };
 
-// What a rule finds of a Build: whether it has a Compatibility Problem, and
-// whether it has a Compatibility Warning, which only rules 11, 15 and 20 can
-// find. A Problem comes first: the Warning's finding counts only when the
-// Problem's does not hold.
-export type Judgment = { readonly problem: Finding; readonly warning: Finding };
+// What a rule finds of a Build: whether it has a Compatibility Problem, and,
+// for a rule that can give one, whether it has a Compatibility Warning, which
+// only rules 11, 15 and 20 can find (CMP-3). A Problem comes first: the
+// Warning's finding counts only when the Problem's does not hold.
+export type Judgment = WithAWarning | ProblemAlone;
+
+// What a rule that can give a Compatibility Warning finds.
+export type WithAWarning = { readonly problem: Finding; readonly warning: Finding };
+
+// What any other rule finds: a Compatibility Problem or not, and no Warning.
+export type ProblemAlone = { readonly problem: Finding; readonly warning?: undefined };
 
 // A Problem when a condition holds, and otherwise, for a rule that can give
-// one, a Warning when another does.
+// one, a Warning when another does. A rule states whether it can give one
+// (`rule` in `statement.ts`), and its judgment is typed by it, so that a rule
+// cannot find a Warning without saying so, nor say so and never look for one.
+export function problemWhen(problem: Finding): ProblemAlone;
 export function problemWhen(
   problem: Finding,
-  { warningWhen: warning = fact(false) }: { readonly warningWhen?: Finding } = {},
+  { warningWhen }: { readonly warningWhen: Finding },
+): WithAWarning;
+export function problemWhen(
+  problem: Finding,
+  { warningWhen }: { readonly warningWhen?: Finding } = {},
 ): Judgment {
-  return { problem, warning };
+  return warningWhen === undefined ? { problem } : { problem, warning: warningWhen };
 }
 
 // The missing values that leave any of several findings open, such as a

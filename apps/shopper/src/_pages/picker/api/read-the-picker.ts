@@ -1,47 +1,65 @@
+import type { VisiblePartPageResponse } from '@pcp/api-client';
+import { connection } from 'next/server';
+
 import { type Build, partValuesOf } from '@/entities/build';
 import type { Category } from '@/entities/category';
-import { type PickerQuery, readAPageOfTheList } from '@/features/search-parts';
+import {
+  listAskedFor,
+  type OfferedFilters,
+  type PickerQuery,
+} from '@/features/search-parts';
+import { apiClient, refusesTheBuild } from '@/shared/api';
 import type { Currency } from '@/shared/currency';
 
-import { asksTheOtherWay, type PickerAnswers } from '../model/what-the-picker-shows';
+// What the picker reads first from the API, on the server, for each request,
+// with no cache: the Category's filters in stock only (BLD-2), so that its
+// choices are the values its Parts in stock hold. The form is built from it,
+// and the address is read against it. A read the API does not answer, or
+// refuses, is nothing.
+export async function readThePickersFilters(
+  category: Category,
+  currency: Currency,
+): Promise<OfferedFilters | undefined> {
+  // Rendering waits here for a request, so the page is never built ahead
+  // nor kept: prices change by the hour and depend on the Shopper's cookie.
+  await connection();
 
-// What the picker reads of its list from the API, on the server, for each
-// request, in the chosen currency, with no cache (the builder spec's The
-// picker's conditions): the page its address asks for, of the Category's
-// Parts in stock only, with the Build from the Shopper's cookie as `part`
-// once it holds a Part, so that each answers whether it is Compatible with
-// it and those that are not are left out, unless the switch keeps them. An
-// empty Build is not sent, since a query cannot tell it from none, and every
-// Part fits it. The browser never calls the API.
-//
-// When its sheet needs it (`asksTheOtherWay`), it then reads how many Parts
-// the list holds with the switch the other way, one Part to a page, since
-// the count alone is wanted: those that fit when the switch shows every
-// Part, or every Part in stock when the Build leaves the list empty. A read
-// the API does not answer, or refuses, is nothing.
+  const { data } = await apiClient().readVisiblePartsFilters({
+    query: { category, currency, inStockOnly: true },
+    cache: 'no-store',
+  });
+  return data;
+}
+
+// What the picker reads of its list then, for each request (the builder
+// spec's The picker's conditions): the page its address asks for, as a
+// Category page asks for its own (`listAskedFor`), with the picker's
+// conditions: in stock only; the Build from the Shopper's cookie as `part`
+// once it holds a Part, so that each Part answers whether it is Compatible
+// with it and those that are not are left out; and the switch, which keeps
+// them. The answer then says, in the same statement, how many of the Parts
+// it judged are Compatible and how many are not, so the list is asked once.
+// An empty Build is not sent, since a query cannot tell it from none, and
+// every Part is Compatible with it. The browser never calls the API. A Build
+// the API refuses, as a cookie edited by hand can make it, is said so
+// (`build-refused`); a read the API does not answer, or refuses otherwise,
+// is nothing.
 export async function readThePickersList(
   category: Category,
   query: PickerQuery,
   currency: Currency,
   build: Build,
-): Promise<PickerAnswers> {
-  const judged = build.length > 0;
-  const conditions = {
-    inStockOnly: true,
-    part: judged ? partValuesOf(build) : undefined,
-  };
-  const page = await readAPageOfTheList(category, query, currency, {
-    ...conditions,
-    keepNotCompatible: query.showAll,
-  });
-  if (!asksTheOtherWay(page, query, judged)) return { page };
+): Promise<VisiblePartPageResponse | 'build-refused' | undefined> {
+  await connection();
 
-  const otherWay = await readAPageOfTheList(
-    category,
-    { ...query, page: 1 },
-    currency,
-    { ...conditions, keepNotCompatible: !query.showAll },
-    1,
-  );
-  return { page, otherWay: otherWay?.totalElements };
+  const { data, error, response } = await apiClient().listVisibleParts({
+    query: {
+      ...listAskedFor(category, query, currency),
+      inStockOnly: true,
+      part: build.length > 0 ? partValuesOf(build) : undefined,
+      keepNotCompatible: query.showAll ? true : undefined,
+    },
+    cache: 'no-store',
+  });
+  return refusesTheBuild({ status: response?.status, error }) ? 'build-refused' : data;
 }
