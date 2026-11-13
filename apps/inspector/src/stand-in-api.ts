@@ -468,19 +468,36 @@ function visibleParts(shop: ShoppersShop, query: URLSearchParams): StandInAnswer
       (response.inStock || !isOn(query, inStockOnly))
     );
   });
-  const body: VisiblePartPageResponse = aPageOf(
-    query,
-    judgedForThePicker(shop, picked, query),
-  );
+  const judged = judgedForThePicker(shop, picked, query);
+  const body: VisiblePartPageResponse = {
+    ...aPageOf(
+      query,
+      judged.filter(
+        ({ compatible }) => compatible !== false || isOn(query, keepNotCompatible),
+      ),
+    ),
+    ...countOf(judged),
+  };
   return answer(body);
+}
+
+// How many of the Parts judged against the Build are Compatible with it and
+// how many are not, whichever way the switch is, as the API answers them;
+// none without a Build.
+function countOf(
+  judged: readonly VisiblePartResponse[],
+): Pick<VisiblePartPageResponse, 'compatibleCount' | 'notCompatibleCount'> {
+  if (judged.some(({ compatible }) => compatible === undefined)) return {};
+  const compatibleCount = judged.filter(({ compatible }) => compatible === true).length;
+  return { compatibleCount, notCompatibleCount: judged.length - compatibleCount };
 }
 
 // The Parts listed, each judged against the Build the picker gives, when it
 // gives one: each answers whether it is Compatible with it, through the
 // library's `isCompatible`, which puts a Part in place of the Build's Part of
-// its Category, or a kit or a drive beside the others, and the Parts that are
-// not are left out unless the switch keeps them. They are judged before they
-// are paged, so a page counts only the Parts kept.
+// its Category, or a kit or a drive beside the others. Those that are not
+// are left out unless the switch keeps them, once counted, and before the
+// list is paged, so a page counts only the Parts kept.
 function judgedForThePicker(
   shop: ShoppersShop,
   listed: readonly VisiblePartAnswered[],
@@ -488,12 +505,10 @@ function judgedForThePicker(
 ): VisiblePartResponse[] {
   if (!query.has(theBuild)) return listed.map(({ response }) => response);
   const build = buildForTheRules(theBuildAsked(shop, query));
-  return listed
-    .map(({ read, response }) => ({
-      ...response,
-      compatible: isCompatible(read.summary.category, forTheRules(read), build),
-    }))
-    .filter((response) => response.compatible || isOn(query, keepNotCompatible));
+  return listed.map(({ read, response }) => ({
+    ...response,
+    compatible: isCompatible(read.summary.category, forTheRules(read), build),
+  }));
 }
 
 // The kind of value a filter offers, for each kind of specification a filter

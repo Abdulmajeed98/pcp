@@ -11,6 +11,7 @@ import { choicesOf } from '../specification/filters';
 import { PickersConditions } from './PickersConditions';
 import { PriceRange } from './PriceRange';
 import {
+  CompatibleCount,
   ListVisiblePartsParams,
   VisiblePartsPage,
   VisiblePartStore,
@@ -151,11 +152,19 @@ export class ListVisiblePartsQuery {
     if (Either.isLeft(every)) return Either.left(every.left);
 
     // Each Part judged, then the Parts kept paged, so that the page and the
-    // total count only those.
+    // total count only those, and the count of those judged Compatible and
+    // not is of the same reading.
     const compatible = compatibleWith(build.right);
-    const kept = every.right
-      .map((visible) => visible.judged(compatible(visible.getPart())))
-      .filter((visible) => conditions.isKeepingNotCompatible() || visible.isCompatible());
-    return Either.right(Output.of(VisiblePartsPage.among(kept, input.getPageable())));
+    const judged = every.right.map((visible) =>
+      visible.judged(compatible(visible.getPart())),
+    );
+    const kept = judged.filter(
+      (visible) => conditions.isKeepingNotCompatible() || visible.isCompatible(),
+    );
+    return Either.right(
+      Output.of(
+        VisiblePartsPage.among(kept, input.getPageable(), CompatibleCount.of(judged)),
+      ),
+    );
   }
 }

@@ -62,11 +62,38 @@ export class ListVisiblePartsParams {
   }
 }
 
-// One page of a Category's Visible Parts, and where it stands among them all.
+// How many of the Parts a list judged against a Build are Compatible with it,
+// and how many are not, on all the pages together, whether or not the switch
+// keeps those that are not (BLD-3).
+export class CompatibleCount {
+  private constructor(
+    private readonly compatible: number,
+    private readonly notCompatible: number,
+  ) {}
+
+  // The count of Parts each judged Compatible or not.
+  static of(judged: readonly VisiblePart[]): CompatibleCount {
+    const compatible = judged.filter((visible) => visible.isCompatible() === true).length;
+    return new CompatibleCount(compatible, judged.length - compatible);
+  }
+
+  getCompatible(): number {
+    return this.compatible;
+  }
+
+  getNotCompatible(): number {
+    return this.notCompatible;
+  }
+}
+
+// One page of a Category's Visible Parts, and where it stands among them all;
+// in the picker, with how many of the Parts it judged are Compatible with the
+// Build, and how many are not.
 export class VisiblePartsPage {
   constructor(
     private readonly parts: readonly VisiblePart[],
     private readonly page: PageAttributes,
+    private readonly compatibleCount?: CompatibleCount,
   ) {}
 
   // The page among Visible Parts already read whole, in their order, as the
@@ -78,11 +105,13 @@ export class VisiblePartsPage {
   static among(
     parts: readonly VisiblePart[],
     pageable: PageableAttributes,
+    compatibleCount?: CompatibleCount,
   ): VisiblePartsPage {
     const offset = pageable.getOffset();
     return new VisiblePartsPage(
       parts.slice(offset, offset + pageable.getLimit()),
       PageAttributes.of(pageable, parts.length),
+      compatibleCount,
     );
   }
 
@@ -92,6 +121,12 @@ export class VisiblePartsPage {
 
   getPageAttributes(): PageAttributes {
     return this.page;
+  }
+
+  // How many of the Parts judged against the Build are Compatible with it,
+  // and how many are not; none when the list was asked without a Build.
+  getCompatibleCount(): CompatibleCount | undefined {
+    return this.compatibleCount;
   }
 }
 

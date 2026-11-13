@@ -58,9 +58,9 @@ export async function PickerPage({
   const judged = build.length > 0;
   const offered = await readTheFilters(category, currency, { inStockOnly: true });
   const query = readPickerQuery(address, offered);
-  const answers =
+  const page =
     offered === undefined
-      ? { page: undefined }
+      ? undefined
       : await readThePickersList(category, query, currency, build);
   const list = pickerAddress(language, category);
   const asAsked = addressOfTheForm(
@@ -89,7 +89,7 @@ export async function PickerPage({
             category={category}
             query={query}
             offered={offered}
-            state={whatThePickerShows(answers, query, judged)}
+            state={whatThePickerShows(page, query)}
             build={build}
             judged={judged}
             asAsked={asAsked}

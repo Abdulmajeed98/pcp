@@ -23,33 +23,12 @@ export type PickerState =
   | { kind: 'past-the-end'; totalPages: number }
   | { kind: 'not-read' };
 
-// What the API answered the picker: the page of its list that its address
-// asks for (`page`), and, when the sheet needs it (`asksTheOtherWay`), how
-// many Parts the list holds with the switch the other way (`otherWay`):
-// every Part in stock when the switch is off, and those that fit when it is
-// on. Either is nothing when the API did not answer it.
-export interface PickerAnswers {
-  page: VisiblePartPageResponse | undefined;
-  otherWay?: number;
-}
-
-// Whether the picker asks for its list with the switch the other way, which
-// only a Build that holds a Part judges (`judged`): with the switch on, to
-// count those that do not fit; with it off, when the Build leaves the list
-// empty, to tell that from a Category no Vendor has in stock.
-export function asksTheOtherWay(
-  page: VisiblePartPageResponse | undefined,
-  query: PickerQuery,
-  judged: boolean,
-): boolean {
-  if (page === undefined || !judged) return false;
-  return query.showAll ? page.totalElements > 0 : page.totalElements === 0;
-}
-
 // What the picker's sheet shows (DESIGN.md's The picker, The empty states),
-// from what the API answered, its query and whether the list was judged
-// against a Build that holds a Part. Its four ways of listing nothing are
-// told apart in words, so that a Shopper knows what to change:
+// from the page of its list the API answered and its query. A list judged
+// against a Build that holds a Part answers, in the same statement, how many
+// of the Parts it judged are Compatible with it and how many are not,
+// whichever way the switch is, so that its four ways of listing nothing are
+// told apart in words, from one answer, and a Shopper knows what to change:
 //
 // - a Category no Vendor has in stock: nothing in stock, and no choice on;
 // - a search or filters that found nothing in stock, fitting or not;
@@ -58,35 +37,32 @@ export function asksTheOtherWay(
 //   offers the switch, saying how many it would show;
 // - a page past the last, as an old link may ask.
 //
-// A list the API did not answer, or whose count the other way it needed and
-// did not answer, cannot be read.
+// A list the API did not answer cannot be read.
 export function whatThePickerShows(
-  { page, otherWay }: PickerAnswers,
+  page: VisiblePartPageResponse | undefined,
   query: PickerQuery,
-  judged: boolean,
 ): PickerState {
-  if (asksTheOtherWay(page, query, judged) && otherWay === undefined) {
-    return { kind: 'not-read' };
-  }
   const shown = whatAPageShows(page);
+  const notFit = page?.notCompatibleCount ?? 0;
 
   switch (shown.kind) {
     case 'not-read':
     case 'past-the-end':
       return shown;
     case 'none':
-      if (judged && !query.showAll && otherWay !== undefined && otherWay > 0) {
-        return { kind: 'none-fits', inStock: otherWay };
-      }
+      if (!query.showAll && notFit > 0) return { kind: 'none-fits', inStock: notFit };
       return { kind: choicesOn(query).length === 0 ? 'none-in-stock' : 'no-match' };
     case 'listed': {
       const count = shown.page.totalElements;
-      if (!judged) return { ...shown, says: { kind: 'in-stock', count } };
-      const notFit = query.showAll ? count - (otherWay ?? count) : 0;
+      if (shown.page.compatibleCount === undefined) {
+        return { ...shown, says: { kind: 'in-stock', count } };
+      }
       return {
         ...shown,
         says:
-          notFit > 0 ? { kind: 'some-do-not-fit', count, notFit } : { kind: 'fit', count },
+          query.showAll && notFit > 0
+            ? { kind: 'some-do-not-fit', count, notFit }
+            : { kind: 'fit', count },
       };
     }
   }

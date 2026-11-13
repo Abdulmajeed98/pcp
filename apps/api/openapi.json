@@ -3804,6 +3804,16 @@
             "items": {
               "$ref": "#/components/schemas/VisiblePartResponse"
             }
+          },
+          "compatibleCount": {
+            "type": "integer",
+            "description": "With a Build, how many of the Parts the list judged are Compatible with it, on all the pages together: those that the search, the manufacturers, the filters, the price range and in stock only keep, read in the same statement as the page. Left out when the list was asked for without a Build.",
+            "example": 4
+          },
+          "notCompatibleCount": {
+            "type": "integer",
+            "description": "With a Build, how many of the Parts the list judged are not Compatible with it, on all the pages together, whether or not the switch keeps them, read in the same statement as the page. Left out when the list was asked for without a Build.",
+            "example": 3
           }
         },
         "required": [

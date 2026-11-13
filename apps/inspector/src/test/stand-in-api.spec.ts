@@ -254,6 +254,26 @@ describe('the stand-in API', () => {
         ).toEqual(everyCpu.filter((name) => name !== ryzen5600.name));
       });
 
+      it('count those that are Compatible and those that are not, whichever way the switch is, and none without a Build', () => {
+        const counted = (more: string) => {
+          const { compatibleCount, notCompatibleCount } = listOf(
+            `category=cpu&currency=IQD&size=3${more}`,
+          ).body as VisiblePartPageResponse;
+          return { compatibleCount, notCompatibleCount };
+        };
+
+        for (const more of ['', '&keepNotCompatible=true']) {
+          expect(counted(`${withTheBuild(b650Tomahawk)}${more}`)).toEqual({
+            compatibleCount: everyCpu.length - 1,
+            notCompatibleCount: 1,
+          });
+          expect(counted(more)).toEqual({
+            compatibleCount: undefined,
+            notCompatibleCount: undefined,
+          });
+        }
+      });
+
       it('answer nothing of being Compatible without a Build, with the switch or without', () => {
         for (const listed of [cpusFor(''), cpusFor('&keepNotCompatible=true')]) {
           expect(listed.map((part) => part.name)).toEqual(everyCpu);
