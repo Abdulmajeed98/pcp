@@ -3,9 +3,9 @@ import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
 
-import { type BuildPart, isKitOrDrive } from '@/entities/build';
+import { buildAddress, type BuildPart, isKitOrDrive } from '@/entities/build';
 import { partAddress, PartSquare } from '@/entities/part';
-import { buildAddress, PickForm } from '@/features/change-the-build';
+import { PickForm } from '@/features/change-the-build';
 import { ShownPrice } from '@/shared/price';
 import { Item, whereAPartsNameStands } from '@/shared/ui';
 

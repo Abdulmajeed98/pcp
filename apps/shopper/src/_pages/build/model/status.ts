@@ -2,6 +2,8 @@ import type { BuildResponse } from '@pcp/api-client';
 import { formatNumber, type Language, shopperMessages } from '@pcp/i18n';
 import { createTranslator } from 'next-intl';
 
+import { outcomeCountsOf } from './findings';
+
 type Category = BuildResponse['stillNeeded'][number];
 
 // What the Build page's status reads of the API's answer.
@@ -40,7 +42,7 @@ export function statusOf(answer: Answered, language: Language): Status {
     messages: shopperMessages[language],
     namespace: 'BuildPage.status',
   });
-  const problems = answer.outcomes.filter(({ outcome }) => outcome === 'problem').length;
+  const problems = outcomeCountsOf(answer.outcomes).problem;
   const holds = (category: Category) =>
     answer.parts.some((part) => part.category === category);
 

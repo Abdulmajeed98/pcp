@@ -2,8 +2,7 @@ import { type Language, shopperMessages } from '@pcp/i18n';
 import type { Metadata } from 'next';
 import { createTranslator } from 'next-intl';
 
-import { type Category, nameInTheAddress } from '@/entities/category';
-import { buildPath } from '@/features/change-the-build';
+import { type Category, pickerPath } from '@/entities/category';
 import { previewOf } from '@/shared/preview';
 
 // The picker's preview, in its language. The picker judges its Parts against
@@ -31,7 +30,7 @@ export function pickerPreview({
   return {
     ...previewOf({
       language,
-      path: `${buildPath}/${nameInTheAddress(category)}`,
+      path: pickerPath(category),
       title: words('Preview.titleOfAPage', {
         page: words('BuildPage.choose', { category }),
         site,

@@ -3,8 +3,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { buildIn } from '@/entities/build';
-import { categoryOfTheAddress } from '@/entities/category';
-import { pickerAddress } from '@/features/change-the-build';
+import { categoryOfTheAddress, pickerAddress } from '@/entities/category';
 import {
   addressOfTheForm,
   readPickerQuery,

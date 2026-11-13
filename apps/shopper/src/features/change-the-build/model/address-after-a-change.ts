@@ -1,28 +1,14 @@
 import type { Language } from '@pcp/i18n';
 
-import { type Category, identifierIn, type Refusal } from '@/entities/build';
+import {
+  buildAddress,
+  type Category,
+  identifierIn,
+  isCategory,
+  isKitOrDrive,
+  type Refusal,
+} from '@/entities/build';
 import { nameInTheAddress } from '@/entities/category';
-
-// The Build page's address, in a language: `/<language>/build`.
-export function buildAddress(language: Language): string {
-  return `/${language}${buildPath}`;
-}
-
-// The part of the Build page's address after its language.
-export const buildPath = '/build';
-
-// A Category's picker's address, in a language, its Category written as on
-// a Category page: `/<language>/build/cpu-cooler`. Ticket 09 of the builder
-// module builds the page.
-export function pickerAddress(language: Language, category: Category): string {
-  return `${buildAddress(language)}/${nameInTheAddress(category)}`;
-}
-
-// The name of a Category's place on the Build page, which an address leads
-// to after a change: `#ram`, `#cpu-cooler`.
-export function placeOf(category: Category): string {
-  return nameInTheAddress(category);
-}
 
 // The address each form that changes the Build is answered with, 303, as the
 // switches' forms are: the Build page, in the form's language, at the place
@@ -43,7 +29,7 @@ export function addressAfterAChange(
           category: refused.category,
           ...('part' in refused ? { part: refused.part } : {}),
         }).toString()}`;
-  return `${buildAddress(language)}${query}${at === undefined ? '' : `#${placeOf(at)}`}`;
+  return `${buildAddress(language)}${query}${at === undefined ? '' : `#${nameInTheAddress(at)}`}`;
 }
 
 // Why a change was refused, as the Build page reads it from its address, or
@@ -52,8 +38,8 @@ export function addressAfterAChange(
 export function refusalIn(query: {
   get(name: string): string | null;
 }): Refusal | undefined {
-  const category = query.get('category');
-  if (category !== 'ram' && category !== 'storage') return undefined;
+  const category = query.get('category') ?? '';
+  if (!isCategory(category) || !isKitOrDrive(category)) return undefined;
 
   const reason = query.get('refused');
   if (reason === 'mostKitsOrDrives') return { reason, category };

@@ -4,13 +4,9 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import type { Build } from '@/entities/build';
-import type { Category } from '@/entities/category';
-import {
-  addressAfterAChange,
-  buildAddress,
-  pickerAddress,
-} from '@/features/change-the-build';
+import { type Build, buildAddress } from '@/entities/build';
+import { type Category, pickerAddress } from '@/entities/category';
+import { addressAfterAChange } from '@/features/change-the-build';
 import {
   allCleared,
   ChoicesOn,

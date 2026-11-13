@@ -1,3 +1,4 @@
+export { buildAddress, buildPath } from './model/addresses';
 export {
   type Build,
   type BuildPart,

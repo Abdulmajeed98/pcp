@@ -2,6 +2,7 @@ import { type Language, shopperMessages } from '@pcp/i18n';
 import type { Metadata } from 'next';
 import { createTranslator } from 'next-intl';
 
+import { buildPath } from '@/entities/build';
 import { previewOf } from '@/shared/preview';
 
 // The Build page's preview, in its language. The Build is the Shopper's own,
@@ -26,7 +27,7 @@ export function buildPreview({
   return {
     ...previewOf({
       language,
-      path: '/build',
+      path: buildPath,
       title: words('Preview.titleOfAPage', { page: words('Preview.build.title'), site }),
       description: words('Preview.build.description'),
       siteName: site,

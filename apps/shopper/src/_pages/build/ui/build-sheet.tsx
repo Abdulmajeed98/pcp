@@ -2,9 +2,9 @@ import type { BuildResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { getLocale, getTranslations } from 'next-intl/server';
 
-import { partsCountedIn, type Refusal } from '@/entities/build';
-import { aroundIt, type Category, theCore } from '@/entities/category';
-import { buildAddress, EmptyTheBuild, pickerAddress } from '@/features/change-the-build';
+import { buildAddress, partsCountedIn, type Refusal } from '@/entities/build';
+import { aroundIt, type Category, pickerAddress, theCore } from '@/entities/category';
+import { EmptyTheBuild } from '@/features/change-the-build';
 import { Sheet, SheetTitle } from '@/shared/ui';
 
 import { statusOf } from '../model/status';

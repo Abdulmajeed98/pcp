@@ -2,8 +2,7 @@ import { formatNumber } from '@pcp/i18n';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { cookies } from 'next/headers';
 
-import { buildIn, partsCountedIn } from '@/entities/build';
-import { buildAddress } from '@/features/change-the-build';
+import { buildAddress, buildIn, partsCountedIn } from '@/entities/build';
 
 // The way to the Build (DESIGN.md's The way to the Build): a link to the
 // Build page on every page, "Your Build" in Body at 600 (Body large from

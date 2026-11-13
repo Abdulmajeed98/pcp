@@ -9,7 +9,7 @@ import { partsCountedIn } from '@/entities/build';
 import { ShownPrice } from '@/shared/price';
 import { Stamp } from '@/shared/ui';
 
-import { powerDrawOf } from '../model/findings';
+import { outcomeCountsOf, powerDrawOf } from '../model/findings';
 
 // The Build's till slip (DESIGN.md's The Build's till slip): the price slip
 // of a Part page, the same paper, width, torn foot and rules, carrying the
@@ -59,8 +59,8 @@ export async function BuildSlip({
       lowestPrice === null ? [] : [lowestPrice.vendor.id],
     ),
   ).size;
-  const count = (outcome: BuildResponse['outcomes'][number]['outcome']) =>
-    formatNumber(answer.outcomes.filter((each) => each.outcome === outcome).length);
+  const counts = outcomeCountsOf(answer.outcomes);
+  const count = (outcome: keyof typeof counts) => formatNumber(counts[outcome]);
   const power = powerDrawOf(answer);
   const unstocked = answer.parts.filter((part) => part.unstocked).length;
   const priceNotShown = answer.parts.filter((part) => part.priceNotShown).length;

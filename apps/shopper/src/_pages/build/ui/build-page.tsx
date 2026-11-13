@@ -2,8 +2,8 @@ import type { BuildResponse } from '@pcp/api-client';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { cookies } from 'next/headers';
 
-import { buildIn, writeTheBuild } from '@/entities/build';
-import { buildAddress, ChangesInPlace, refusalIn } from '@/features/change-the-build';
+import { buildAddress, buildIn, writeTheBuild } from '@/entities/build';
+import { ChangesInPlace, refusalIn } from '@/features/change-the-build';
 import { chosenCurrency } from '@/shared/currency';
 import { type Photograph, photographs } from '@/shared/photographs';
 import { type AddressQuery, fieldsOf } from '@/shared/lib';

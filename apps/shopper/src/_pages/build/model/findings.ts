@@ -9,6 +9,17 @@ import { createTranslator } from 'next-intl';
 
 // What the Build page reads of the API's answer to say what the rules found.
 type Answered = Pick<BuildResponse, 'parts' | 'outcomes'>;
+
+// How many of a Build's outcomes are of each kind (CMP-3): its Compatibility
+// Problems, its Compatibility Warnings, its unchecked rules and the rules
+// that passed, as the slip, the status and the rules' sheet each count them.
+export type OutcomeCounts = Record<BuildResponse['outcomes'][number]['outcome'], number>;
+
+export function outcomeCountsOf(outcomes: BuildResponse['outcomes']): OutcomeCounts {
+  const counts: OutcomeCounts = { passes: 0, problem: 0, warning: 0, unchecked: 0 };
+  for (const { outcome } of outcomes) counts[outcome] += 1;
+  return counts;
+}
 type Part = BuildResponse['parts'][number];
 type Outcome = BuildResponse['outcomes'][number];
 
@@ -190,6 +201,6 @@ export function findingsOf(answer: Answered, language: Language): Findings {
     problems: ofKind('problem'),
     warnings: ofKind('warning'),
     unchecked: ofKind('unchecked'),
-    passed: answer.outcomes.filter(({ outcome }) => outcome === 'passes').length,
+    passed: outcomeCountsOf(answer.outcomes).passes,
   };
 }
