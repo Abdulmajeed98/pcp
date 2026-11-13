@@ -116,3 +116,7 @@ Defended as browse ticket 14's reference defends them: `dashed` (the dotted lead
 - `58ed6c6` fix(shopper): show a pick's Build page printed from its first frame
 - `b9c4792` fix(shopper): draw the picker's cross and keep its stamp off its title
 - this record
+
+### 13 November 2026: after the code review
+
+`features/search-parts/api/read-the-list.ts` and `asksTheOtherWay`, which the Comments above name, are gone: the code review's fixes replaced them. Each page reads in its own slice's `api` segment again, the Category page in `_pages/category/api/read-the-category-page.ts` and the picker in `_pages/picker/api/read-the-picker.ts` (`readThePickersFilters`, `readThePickersList`), the feature writing the list's request from the query (`listAskedFor`, with `partsAPage`); and the picker asks its list once, since `GET v1/visible-parts` with a Build answers `compatibleCount` and `notCompatibleCount`, so that `whatThePickerShows(page, query)` reads one answer. `Search`, `ChoicesOn` and `FiltersFold` each require `list`, with no fallback to the Category page's address. `MarkAReturn` is `MarkAReturnOrAnAnchor`, and the picker's words say Compatible, never "fit" (the owner's "The glossary's"). See [review-fixes.md](../review-fixes.md), the Standards' findings 1, 3, 5 and 6.
