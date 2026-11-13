@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   type APIRequestContext,
   type Browser,
@@ -15,6 +17,7 @@ import {
   emptyTheBuild,
   emptyTheBuildAfterConfirming,
   figureOf,
+  keepInTheCookieByHand,
   lineOf,
   partLines,
   pick,
@@ -399,6 +402,25 @@ test('a pick past the limits is refused and the page says why: a ninth different
   await expect(figureOf(page, kit.id)).toHaveValue('16');
   await expect(whatTheQuantitySays(page, kit.id)).not.toHaveText('');
   await expect(quantityOf(page, kit.id).getByTestId('one-more')).toBeDisabled();
+});
+
+test('a change forgets the Parts the catalog no longer holds, so that a kit joins a Build whose cookie names 8 kits the catalog does not hold', async ({
+  page,
+}) => {
+  // Eight kits no catalog holds, as a cookie keeps Parts that have since
+  // left the catalog.
+  const gone = Array.from({ length: 8 }, () => `ram:${randomUUID()}:1`);
+  await keepInTheCookieByHand(page, gone.join(','));
+  await page.goto(buildPageIn(english));
+  await expect(partLines(page)).toHaveCount(0);
+  expect(await theFramesCount(page), 'the cookie still names them').toBe(8);
+
+  const picked = await pick(page, kit);
+  expect(picked, 'the kit is not refused as a ninth').not.toContain('refused');
+  await page.goto(buildPageIn(english));
+  await expect(partLines(page)).toHaveCount(1);
+  await expect(lineOf(page, kit.id)).toBeVisible();
+  expect(await theFramesCount(page), 'the cookie forgot them').toBe(1);
 });
 
 test('the Build page passes WCAG 2.2 level AA in the light and the dark scheme, its confirmation open', async ({

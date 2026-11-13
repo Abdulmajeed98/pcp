@@ -91,6 +91,17 @@ export function partValuesOf(build: Build): string[] {
   );
 }
 
+// The Build as the catalog holds it: its Parts whose identifiers the API
+// answered when it read the Build, in their order, each with its quantity.
+// A Part the catalog no longer holds is left out of the API's answer, so its
+// Category shows as not chosen, and a change keeps the Build so before it
+// applies itself, so that the cookie forgets the Part then and a vanished
+// kit or drive counts toward no limit (the builder spec's The Build in the
+// Shopper's browser).
+export function heldByTheCatalog(build: Build, answered: readonly string[]): Build {
+  return build.filter((each) => answered.includes(each.part));
+}
+
 // How many Parts the Build holds, as the frame's way to the Build page, the
 // Build's slip and its one confirmation say it: each Part once, whatever its
 // quantity, as the Build's sheet lists each once (DESIGN.md's The way to the

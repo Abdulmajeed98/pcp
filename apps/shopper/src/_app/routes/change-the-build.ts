@@ -13,6 +13,7 @@ import {
 } from '@/entities/build';
 import { addressAfterAChange } from '@/features/change-the-build';
 
+import { readTheBuildToChange } from '../api/read-the-build-to-change';
 import { answerAForm } from './answer-a-form';
 
 // What a form that changes the Build does to it, from what the form sends:
@@ -21,15 +22,17 @@ import { answerAForm } from './answer-a-form';
 type AChange = (build: Build, form: FormData) => { changed: Changed; at?: Category };
 
 // A form that changes the Build, sent with POST to its address under
-// `/<language>/build/`: the answer writes the changed Build into the browser
-// for a year, as the switches' answers write their choice, and sends the
-// Shopper to the Build page, at the place of the Category it changed, which
-// the server draws anew from the cookie. A change past the limits is not
-// applied, the Build kept as it was, and the address says why.
-// `answerAForm` says how the answer is made.
+// `/<language>/build/`: the change applies to the Build as the catalog holds
+// it, which forgets the Parts it no longer holds (`readTheBuildToChange`);
+// the answer writes the changed Build into the browser for a year, as the
+// switches' answers write their choice, and sends the Shopper to the Build
+// page, at the place of the Category it changed, which the server draws
+// anew from the cookie. A change past the limits is not applied, the Build
+// kept as its cookie holds it, and the address says why. `answerAForm` says
+// how the answer is made.
 function answerAChange(change: AChange) {
   return answerAForm(async (language, form) => {
-    const build = buildIn(await cookies());
+    const build = await readTheBuildToChange(buildIn(await cookies()));
     const { changed, at } = change(build, form);
     const refused = 'refused' in changed ? changed.refused : undefined;
     return {
@@ -82,5 +85,9 @@ export const removeAPart = answerAChange((build, form) => {
 });
 
 // `POST /<language>/build/empty`: the Build emptied, which its one
-// confirmation sends. The answer opens the empty Build from its top.
-export const emptyTheBuild = answerAChange(() => ({ changed: { build: [] } }));
+// confirmation sends, whatever it held, so it is not read first. The answer
+// opens the empty Build from its top.
+export const emptyTheBuild = answerAForm((language) => ({
+  address: addressAfterAChange(language, {}),
+  write: (response) => rememberTheBuild(response, []),
+}));

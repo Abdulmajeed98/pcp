@@ -3,6 +3,7 @@ export {
   type Build,
   type BuildPart,
   type Category,
+  heldByTheCatalog,
   type HoldsOne,
   identifierIn,
   isCategory,
