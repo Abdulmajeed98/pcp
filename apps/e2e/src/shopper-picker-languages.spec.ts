@@ -74,7 +74,7 @@ const stockWord = aWordUniqueToTheRun();
 const pickWord = aWordUniqueToTheRun();
 
 // One Part of each Category, with no specification, so that no rule finds
-// a Problem and each fits every Build of them.
+// a Problem and each is Compatible with every Build of them.
 let completeBuild: Record<BuildCategory, BuildPart>;
 // An AM5 motherboard, and two CPUs: one of its socket, the cheaper, and one
 // of AM4, which rule 1 finds a Problem with beside it.
@@ -389,7 +389,7 @@ test('picking a second CPU replaces the first, and picking the same RAM kit twic
 
 // LANG-2, LANG-3 and LANG-5 in the picker, in all three languages, with a
 // Part in the Build, so that it is marked, and the switch on, so that one is
-// marked as not fitting.
+// marked as not Compatible.
 test('the picker is right to left in Kurdish and Arabic, with every number in Western digits, Part names in English, and nothing scrolling sideways', async ({
   page,
 }) => {
