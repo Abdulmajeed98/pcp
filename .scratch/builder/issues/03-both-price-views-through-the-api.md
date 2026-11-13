@@ -11,7 +11,7 @@ An Unstocked Part is answered as such and left out of every total (BLD-9). Every
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **Each Part's Lowest Price**, with the identifier and name of the Vendor whose Offer it comes from, or none when it is an Unstocked Part. It is read through the visible-Offer rule, the Shown Price, the Lowest Price and OFF-11's order of a Part's Offers as `browse` wrote them, never a second copy. So of equal prices it is the Offer the Part page lists first.
 - [x] **The first view's total**: each Part's Lowest Price times its quantity, added up as answered, after rounding (PRC-5). It is marked converted when any of them is a Converted Price. It leaves out Unstocked Parts, and is none when no Part has a Lowest Price.

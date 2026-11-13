@@ -11,7 +11,7 @@ The page and the total count only the Parts kept. A Category page that sends nei
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **In stock only.** A parameter on `GET v1/visible-parts` keeps only the Visible Parts with at least one in-stock Visible Offer. The order stays BRW-1's. `GET v1/visible-parts/filters` takes the same parameter, so that the picker's choices are the values its in-stock Parts hold, still before any choice is made, so that they never shift.
 - [x] **The Build.** `part` is taken as `GET v1/build` takes it, through the same request and its same refusals, each naming `part`.

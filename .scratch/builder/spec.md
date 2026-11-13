@@ -1,6 +1,6 @@
 # Spec: Builder
 
-Status: ready-for-agent
+Status: resolved
 
 This is `builder`, the eighth module in the build order of [the MVP spec](../mvp/spec.md)'s capability map, after `browse` and `compatibility`. It covers BLD-1 to BLD-9, PRC-4's choice of the cheapest Offer, PRC-5's totals, the Shopper's side of CMP-2 to CMP-5, and success criteria 5 and 6. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0005](../../docs/adr/0005-specifications-as-one-document-per-part.md), [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md) and [ADR-0013](../../docs/adr/0013-the-shopper-apps-look-is-the-printed-price-list.md). It builds on the conventions that `languages`, `catalog`, `accounts`, `offers`, the redesign, `pricing`, `browse` and `compatibility` recorded in the MVP spec.
 

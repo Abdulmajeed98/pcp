@@ -6,7 +6,7 @@
 
 **Blocked by:** 04, 08
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The page** at `/{language}/build/{category}`, built to DESIGN.md. It is rendered on the server for each request and asks `GET v1/visible-parts` and its filters with in stock only, the Build from the cookie, and the switch when it is on, through `api-client` with no cache. An unknown Category answers the not-found page with a 404 in the page's language.
 - [x] **Its query** is the Category page's, read and written by the same functions of the `search-parts` feature, with one more parameter for the switch. The address holds only what is on. The search and the filters are the Category page's form, sent with GET, so they work before any script has loaded. The currency switch drops the price range, as on a Category page, and the language and scheme switches keep the whole query.

@@ -6,7 +6,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **Handing a stored Part to the rules.** The API reads each Part's needed specifications, the paths `neededSpecificationsOf` answers for its Category, from its document. It leaves out each value its Specification list counts as missing through `Specification.isMissingIn`, a field of a row (such as a PCIe slot's lanes) included. A RAM kit and a drive carry their quantity. The function is written once in the API and holds no copy of the catalog's rule for what is missing. The compatibility module's conventions leave it to this module.
 - [x] **The outcomes.** The answer gains every outcome `judgeBuild` gives, passes included, in rule order. Each has its rule's number and its outcome, `passes`, `problem`, `warning` or `unchecked`. A Problem, a Warning or a pass names its Parts by their identifiers. An unchecked rule names each missing specification by its Part, its path and its English label from the Part's Specification list, so that the Shopper app can name it in English (LANG-3). A rule that does not apply answers nothing (CMP-2).

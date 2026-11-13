@@ -6,7 +6,7 @@
 
 **Blocked by:** 01, 02, 03, 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **What it answers.** `GET v1/build` and `GET v1/visible-parts` and its filters with the picker's parameters, `GET` alone, from the made-up shop, typed by `@pcp/api-client`'s own types. A change to the API's description that the stand-in does not follow fails `pnpm check`. Writes are still refused with 405 and every other path with 404.
 - [x] **It copies no rule of the library.** It judges every Build and every candidate with `@pcp/compatibility` itself, `judgeBuild`, `isCompatible` and `estimatedPowerDrawOf`. Its one reading of the catalog, when the command starts, also reads its Parts' needed specifications and leaves out each one the API answers as missing for the Part, so that it holds no copy of the catalog's rule for what is missing. It also reads each CPU's Integrated graphics and "Cooler included".

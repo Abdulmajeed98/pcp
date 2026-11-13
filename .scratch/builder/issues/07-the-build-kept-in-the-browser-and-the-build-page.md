@@ -8,7 +8,7 @@ The Build is kept in the Shopper's browser for a year and is still there when th
 
 **Blocked by:** 01, 06
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The cookie.** `build`, kept for a year through the same function that keeps the currency and the scheme. It holds each Part's identifier under its Category and, for a RAM kit or a drive, its quantity. It holds no name, price or specification.
 - [x] **Reading it never refuses.** Each entry that cannot be read is dropped, and the Build is what could be read:

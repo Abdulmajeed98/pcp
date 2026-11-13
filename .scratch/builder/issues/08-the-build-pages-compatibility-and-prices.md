@@ -11,7 +11,7 @@ This makes success criterion 6 true, and the half of criterion 5 where an incomp
 
 **Blocked by:** 02, 03, 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The outcomes**, built to DESIGN.md: Problems first, then Warnings, then unchecked rules, each group in rule order, and a line counting the rules that passed.
   - Each outcome is worded for its rule in the page's language, naming its Parts in English, saying what fails without the values compared.
