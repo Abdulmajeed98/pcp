@@ -2,6 +2,7 @@ import {
   estimatedPowerDrawOf,
   judgeBuild,
   type MissingSpecification,
+  type RuleNumber,
   type RuleOutcome,
 } from '@pcp/compatibility';
 
@@ -47,7 +48,7 @@ export class MissingInABuild {
 export type Outcome =
   | Exclude<RuleOutcome, { outcome: 'unchecked' }>
   | {
-      readonly rule: number;
+      readonly rule: RuleNumber;
       readonly outcome: 'unchecked';
       readonly missing: readonly MissingInABuild[];
     };

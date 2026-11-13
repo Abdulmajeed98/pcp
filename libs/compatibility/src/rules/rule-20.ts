@@ -11,6 +11,7 @@ import { rule } from './statement';
 // owner's decision of 15 October 2026).
 export const rule20 = rule({
   number: 20,
+  canWarn: true,
   involves: { motherboard: ['power_connectors.cpu_power'], psu: ['connectors.eps_8_pin'] },
   judge: ({ motherboard, psu }) => {
     const connectors = psu.read('connectors.eps_8_pin');

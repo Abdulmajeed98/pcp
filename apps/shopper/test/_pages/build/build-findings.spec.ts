@@ -7,6 +7,7 @@ import { findingsOf, type Found, powerDrawOf } from '@/_pages/build';
 type Answered = Pick<BuildResponse, 'parts' | 'outcomes' | 'estimatedPowerDraw'>;
 type Category = BuildResponse['stillNeeded'][number];
 type Outcome = BuildResponse['outcomes'][number];
+type RuleNumber = Outcome['rule'];
 
 const languages: Language[] = ['en', 'ckb', 'ar'];
 
@@ -42,34 +43,38 @@ function aBuild(outcomes: Outcome[], answered: Partial<Answered> = {}): Answered
   return { parts, outcomes, estimatedPowerDraw: null, ...answered };
 }
 
-// An outcome as the API answers it: a Problem or a Warning naming its Parts,
-// a pass naming every Part the rule judged, or an unchecked rule naming the
-// needed specifications its Parts lack.
-function anOutcome(rule: number, outcome: Found | 'passes'): Outcome {
-  return outcome === 'unchecked'
-    ? {
-        rule,
-        outcome,
-        parts: [],
-        missing: [{ part: board.id, path: 'socket', label: 'Socket', fieldLabel: null }],
-      }
-    : { rule, outcome, parts: [cpu.id, board.id], missing: [] };
+// An outcome as the API answers it, of a rule and an outcome it can have: a
+// Problem or a Warning naming its Parts, a pass naming every Part the rule
+// judged, or an unchecked rule naming the needed specifications its Parts
+// lack. The API's description types each rule's outcomes, which a rule and
+// an outcome given apart cannot carry, so the made-up answer is cast.
+function anOutcome(rule: RuleNumber, outcome: Found | 'passes'): Outcome {
+  return (
+    outcome === 'unchecked'
+      ? {
+          rule,
+          outcome,
+          parts: [],
+          missing: [{ part: board.id, path: 'socket', label: 'Socket', fieldLabel: null }],
+        }
+      : { rule, outcome, parts: [cpu.id, board.id], missing: [] }
+  ) as Outcome;
 }
 
 // The outcomes each Compatibility Rule can have, as the MVP spec's
 // Compatibility Rules list them (CMP-3): a Problem and an unchecked case for
 // every rule, and a Warning for rules 11, 15 and 20 alone.
-const everyOutcome: [number, Found][] = Array.from(
+const everyOutcome: [RuleNumber, Found][] = Array.from(
   { length: 21 },
-  (_, place) => place + 1,
-).flatMap((rule): [number, Found][] => [
+  (_, place) => (place + 1) as RuleNumber,
+).flatMap((rule): [RuleNumber, Found][] => [
   [rule, 'problem'],
-  ...([11, 15, 20].includes(rule) ? [[rule, 'warning'] as [number, Found]] : []),
+  ...([11, 15, 20].includes(rule) ? [[rule, 'warning'] as [RuleNumber, Found]] : []),
   [rule, 'unchecked'],
 ]);
 
 // The one outcome a Build of one outcome lists, in its group.
-function theOneListed(rule: number, outcome: Found, language: Language) {
+function theOneListed(rule: RuleNumber, outcome: Found, language: Language) {
   const findings = findingsOf(aBuild([anOutcome(rule, outcome)]), language);
   const group = {
     problem: 'problems',
@@ -91,9 +96,7 @@ describe('what the rules found', () => {
       expect(listed).toMatchObject({ rule, outcome });
       expect(listed.words).toMatch(/^[^{}<>]+$/);
       expect(listed.words).not.toContain('BuildPage');
-      // Not the words of an outcome the Shopper set does not word, of a rule
-      // newer than the page.
-      expect(listed.words).not.toBe(theOneListed(22, outcome, language).words);
+      expect(listed.words).not.toContain('outcomes.');
     });
 
     it("words no two of the rules' outcomes alike", () => {
@@ -108,7 +111,9 @@ describe('what the rules found', () => {
       "names rule %i's %s's Parts in English, each once, in the API's order",
       (rule, outcome) => {
         const listed = findingsOf(
-          aBuild([{ rule, outcome, parts: [board.id, kit.id, board.id], missing: [] }]),
+          aBuild([
+            { rule, outcome, parts: [board.id, kit.id, board.id], missing: [] } as Outcome,
+          ]),
           language,
         )[outcome === 'problem' ? 'problems' : 'warnings'][0];
 
@@ -150,7 +155,7 @@ describe('what the rules found', () => {
                   fieldLabel: null,
                 },
               ],
-            },
+            } as Outcome,
           ]),
           language,
         ).unchecked[0];
@@ -170,7 +175,7 @@ describe('what the rules found', () => {
     );
   });
 
-  it.each<[Language, number, Found, string]>([
+  it.each<[Language, RuleNumber, Found, string]>([
     [
       'en',
       5,

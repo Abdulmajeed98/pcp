@@ -1250,6 +1250,63 @@ export type PlatformFiguresResponse = {
     daysAnOfferStaysCurrent: number;
 };
 
+export type BuildMissingSpecificationResponse = {
+    /**
+     * The Part that lacks it, by its identifier.
+     */
+    part: string;
+    /**
+     * Its path in the Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it; for a field of a row, the list's path, the row's place from 0 and the field's name.
+     */
+    path: string;
+    /**
+     * Its English label, from the Part's specification list; for a field of a row, the list's.
+     */
+    label: string;
+    /**
+     * For a field of a row, such as a PCIe slot's lanes, the field's English label; null otherwise.
+     */
+    fieldLabel: string | null;
+};
+
+export type OutcomeOfARuleThatCanWarnResponse = {
+    /**
+     * The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.
+     */
+    parts: Array<string>;
+    /**
+     * For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.
+     */
+    missing: Array<BuildMissingSpecificationResponse>;
+    /**
+     * The rule's number, as the MVP spec numbers them: one of the rules that can give a Compatibility Warning, from the compatibility library's own list.
+     */
+    rule: 11 | 15 | 20;
+    /**
+     * Its outcome: `passes`; `problem`, a Compatibility Problem; `warning`, a Compatibility Warning; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.
+     */
+    outcome: 'passes' | 'problem' | 'warning' | 'unchecked';
+};
+
+export type OutcomeOfAnotherRuleResponse = {
+    /**
+     * The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.
+     */
+    parts: Array<string>;
+    /**
+     * For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.
+     */
+    missing: Array<BuildMissingSpecificationResponse>;
+    /**
+     * The rule's number, as the MVP spec numbers them: one of the rules that never give a Compatibility Warning, from the compatibility library's own list.
+     */
+    rule: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 12 | 13 | 14 | 16 | 17 | 18 | 19 | 21;
+    /**
+     * Its outcome: `passes`; `problem`, a Compatibility Problem; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.
+     */
+    outcome: 'passes' | 'problem' | 'unchecked';
+};
+
 export type BuildLowestPriceResponse = {
     /**
      * The Lowest Price of one of the Part: the lowest Shown Price among its in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is.
@@ -1310,44 +1367,6 @@ export type BuildPartResponse = {
      * Its Lowest Price in the chosen currency, times its quantity, with the Vendor it comes from, which the total across Vendors adds up (BLD-7). Null for an Unstocked Part, and for a Part whose price could not be shown.
      */
     lowestPrice: BuildLowestPriceResponse | null;
-};
-
-export type BuildMissingSpecificationResponse = {
-    /**
-     * The Part that lacks it, by its identifier.
-     */
-    part: string;
-    /**
-     * Its path in the Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it; for a field of a row, the list's path, the row's place from 0 and the field's name.
-     */
-    path: string;
-    /**
-     * Its English label, from the Part's specification list; for a field of a row, the list's.
-     */
-    label: string;
-    /**
-     * For a field of a row, such as a PCIe slot's lanes, the field's English label; null otherwise.
-     */
-    fieldLabel: string | null;
-};
-
-export type RuleOutcomeResponse = {
-    /**
-     * The rule's number, from 1 to 21, as the MVP spec numbers them.
-     */
-    rule: number;
-    /**
-     * Its outcome: `passes`; `problem`, a Compatibility Problem; `warning`, a Compatibility Warning, which only rules 11, 15 and 20 give; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.
-     */
-    outcome: 'passes' | 'problem' | 'warning' | 'unchecked';
-    /**
-     * The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.
-     */
-    parts: Array<string>;
-    /**
-     * For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.
-     */
-    missing: Array<BuildMissingSpecificationResponse>;
 };
 
 export type EstimatedPowerDrawResponse = {
@@ -1417,9 +1436,9 @@ export type BuildResponse = {
      */
     cpuValuesNotKnown: Array<'integratedGraphics' | 'includesCooler'>;
     /**
-     * The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.
+     * The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order, each of a rule of the compatibility library's own list and as its rule can have it: a Compatibility Warning only of a rule that can give one. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.
      */
-    outcomes: Array<RuleOutcomeResponse>;
+    outcomes: Array<OutcomeOfARuleThatCanWarnResponse | OutcomeOfAnotherRuleResponse>;
     /**
      * Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.
      */

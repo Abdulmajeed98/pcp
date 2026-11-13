@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
 
 import { Build } from '~/domain/build/Build';
 import { CatalogPart } from '~/domain/build/BuildStore';
@@ -11,11 +11,17 @@ import { ShownPriceResponse } from '~/infrastructure/offer/endpoints/VisibleOffe
 import { BuildPartResponse } from './BuildPartResponse';
 import { BuildVendorResponse } from './BuildVendorResponse';
 import { EstimatedPowerDrawResponse } from './EstimatedPowerDrawResponse';
-import { RuleOutcomeResponse } from './RuleOutcomeResponse';
+import {
+  OutcomeOfAnotherRuleResponse,
+  OutcomeOfARuleThatCanWarnResponse,
+  type RuleOutcomeResponse,
+  ruleOutcomeResponseOf,
+} from './RuleOutcomeResponse';
 
 // A Build as it is read: its Parts as the catalog holds them, whether it is a
 // Complete Build, what the Compatibility Rules find in it, its Estimated
 // power draw, and its price views in the chosen currency.
+@ApiExtraModels(OutcomeOfARuleThatCanWarnResponse, OutcomeOfAnotherRuleResponse)
 export class BuildResponse {
   @ApiProperty({
     description:
@@ -50,8 +56,14 @@ export class BuildResponse {
 
   @ApiProperty({
     description:
-      'The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.',
-    type: [RuleOutcomeResponse],
+      "The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order, each of a rule of the compatibility library's own list and as its rule can have it: a Compatibility Warning only of a rule that can give one. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.",
+    type: 'array',
+    items: {
+      oneOf: [
+        { $ref: getSchemaPath(OutcomeOfARuleThatCanWarnResponse) },
+        { $ref: getSchemaPath(OutcomeOfAnotherRuleResponse) },
+      ],
+    },
   })
   readonly outcomes: RuleOutcomeResponse[];
 
@@ -88,7 +100,7 @@ export class BuildResponse {
     this.complete = completeness.isComplete();
     this.stillNeeded = completeness.getStillNeeded().map((category) => category.getKey());
     this.cpuValuesNotKnown = [...completeness.getCpuValuesNotKnown()];
-    this.outcomes = judgment.getOutcomes().map(RuleOutcomeResponse.of);
+    this.outcomes = judgment.getOutcomes().map(ruleOutcomeResponseOf);
     const draw = judgment.getEstimatedPowerDraw();
     this.estimatedPowerDraw =
       draw === undefined ? null : EstimatedPowerDrawResponse.of(draw);

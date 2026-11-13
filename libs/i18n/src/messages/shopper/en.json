@@ -341,11 +341,6 @@
         "unchecked": "Whether the case takes the motherboard's rear connectors could not be checked. Check the case's box before you buy."
       }
     },
-    "unworded": {
-      "problem": "A Compatibility Rule finds a Problem with these Parts.",
-      "warning": "A Compatibility Rule warns about these Parts.",
-      "unchecked": "A Compatibility Rule could not be checked."
-    },
     "price": {
       "lowestAt": "Lowest at <link>{vendor}</link>",
       "noVendorHasIt": "No Vendor has it",

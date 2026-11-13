@@ -1,7 +1,7 @@
 import type { Build, CategoryKey, Part } from './build';
 import type { RuleOutcome } from './outcome';
-import { missingIn } from './rules/findings';
-import { rules } from './rules/rules';
+import { fact, missingIn } from './rules/findings';
+import { canWarn, rules, type StatedRule } from './rules/rules';
 import type { Rule } from './rules/statement';
 
 // Every Category, in the catalog's order, which an outcome names Parts in.
@@ -38,8 +38,8 @@ function applies(rule: Rule, build: Build): boolean {
 // names each missing value that could change its outcome. Parts come in the
 // catalog's order of Categories, and a Build's kits and drives in their own
 // order.
-function outcomeOf(rule: Rule, build: Build): RuleOutcome {
-  const { problem, warning } = rule.judge(build);
+function outcomeOf(rule: StatedRule, build: Build): RuleOutcome {
+  const { problem, warning = fact(false) } = rule.judge(build);
   const parts = partsJudged(rule, build);
   if (problem.holds === true) {
     return {
@@ -57,7 +57,7 @@ function outcomeOf(rule: Rule, build: Build): RuleOutcome {
       ),
     };
   }
-  if (warning.holds) {
+  if (warning.holds === true && canWarn(rule)) {
     return {
       rule: rule.number,
       outcome: 'warning',

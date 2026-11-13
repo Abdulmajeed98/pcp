@@ -14,7 +14,6 @@ import type {
   PlatformFiguresResponse,
   ReadBuildData,
   ReadVisiblePartsFiltersData,
-  RuleOutcomeResponse,
   ShownPriceResponse,
   SpecificationResponse,
   VisibleOfferOfVendorPageResponse,
@@ -815,7 +814,7 @@ function judgmentOf(shop: ShoppersShop, build: readonly PartOfABuild[]) {
   const labelled = labelledIn(shop, build);
   const draw = estimatedPowerDrawOf(judged);
   return {
-    outcomes: judgeBuild(judged).map((outcome): RuleOutcomeResponse =>
+    outcomes: judgeBuild(judged).map((outcome): BuildResponse['outcomes'][number] =>
       outcome.outcome === 'unchecked'
         ? { ...outcome, parts: [], missing: outcome.missing.map(labelled) }
         : { ...outcome, parts: [...outcome.parts], missing: [] },

@@ -4210,6 +4210,105 @@
           "daysAnOfferStaysCurrent"
         ]
       },
+      "BuildMissingSpecificationResponse": {
+        "type": "object",
+        "properties": {
+          "part": {
+            "type": "string",
+            "description": "The Part that lacks it, by its identifier.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "path": {
+            "type": "string",
+            "description": "Its path in the Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it; for a field of a row, the list's path, the row's place from 0 and the field's name.",
+            "example": "pcie_slots.0.lanes"
+          },
+          "label": {
+            "type": "string",
+            "description": "Its English label, from the Part's specification list; for a field of a row, the list's.",
+            "example": "PCIe slots"
+          },
+          "fieldLabel": {
+            "type": "string",
+            "description": "For a field of a row, such as a PCIe slot's lanes, the field's English label; null otherwise.",
+            "nullable": true,
+            "example": "Lanes"
+          }
+        },
+        "required": ["part", "path", "label", "fieldLabel"]
+      },
+      "OutcomeOfARuleThatCanWarnResponse": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "description": "The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.",
+            "example": [
+              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing": {
+            "description": "For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildMissingSpecificationResponse"
+            }
+          },
+          "rule": {
+            "type": "integer",
+            "description": "The rule's number, as the MVP spec numbers them: one of the rules that can give a Compatibility Warning, from the compatibility library's own list.",
+            "enum": [11, 15, 20],
+            "example": 11
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Its outcome: `passes`; `problem`, a Compatibility Problem; `warning`, a Compatibility Warning; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.",
+            "enum": ["passes", "problem", "warning", "unchecked"],
+            "example": "warning"
+          }
+        },
+        "required": ["parts", "missing", "rule", "outcome"]
+      },
+      "OutcomeOfAnotherRuleResponse": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "description": "The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.",
+            "example": [
+              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing": {
+            "description": "For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildMissingSpecificationResponse"
+            }
+          },
+          "rule": {
+            "type": "integer",
+            "description": "The rule's number, as the MVP spec numbers them: one of the rules that never give a Compatibility Warning, from the compatibility library's own list.",
+            "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16, 17, 18, 19, 21],
+            "example": 1
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Its outcome: `passes`; `problem`, a Compatibility Problem; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.",
+            "enum": ["passes", "problem", "unchecked"],
+            "example": "problem"
+          }
+        },
+        "required": ["parts", "missing", "rule", "outcome"]
+      },
       "BuildLowestPriceResponse": {
         "type": "object",
         "properties": {
@@ -4329,68 +4428,6 @@
           "priceNotShown",
           "lowestPrice"
         ]
-      },
-      "BuildMissingSpecificationResponse": {
-        "type": "object",
-        "properties": {
-          "part": {
-            "type": "string",
-            "description": "The Part that lacks it, by its identifier.",
-            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
-          },
-          "path": {
-            "type": "string",
-            "description": "Its path in the Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it; for a field of a row, the list's path, the row's place from 0 and the field's name.",
-            "example": "pcie_slots.0.lanes"
-          },
-          "label": {
-            "type": "string",
-            "description": "Its English label, from the Part's specification list; for a field of a row, the list's.",
-            "example": "PCIe slots"
-          },
-          "fieldLabel": {
-            "type": "string",
-            "description": "For a field of a row, such as a PCIe slot's lanes, the field's English label; null otherwise.",
-            "nullable": true,
-            "example": "Lanes"
-          }
-        },
-        "required": ["part", "path", "label", "fieldLabel"]
-      },
-      "RuleOutcomeResponse": {
-        "type": "object",
-        "properties": {
-          "rule": {
-            "type": "integer",
-            "description": "The rule's number, from 1 to 21, as the MVP spec numbers them.",
-            "example": 1
-          },
-          "outcome": {
-            "type": "string",
-            "description": "Its outcome: `passes`; `problem`, a Compatibility Problem; `warning`, a Compatibility Warning, which only rules 11, 15 and 20 give; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.",
-            "enum": ["passes", "problem", "warning", "unchecked"],
-            "example": "problem"
-          },
-          "parts": {
-            "description": "The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.",
-            "example": [
-              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
-              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "missing": {
-            "description": "For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BuildMissingSpecificationResponse"
-            }
-          }
-        },
-        "required": ["rule", "outcome", "parts", "missing"]
       },
       "EstimatedPowerDrawResponse": {
         "type": "object",
@@ -4525,10 +4562,17 @@
             }
           },
           "outcomes": {
-            "description": "The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.",
             "type": "array",
+            "description": "The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order, each of a rule of the compatibility library's own list and as its rule can have it: a Compatibility Warning only of a rule that can give one. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.",
             "items": {
-              "$ref": "#/components/schemas/RuleOutcomeResponse"
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/OutcomeOfARuleThatCanWarnResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/OutcomeOfAnotherRuleResponse"
+                }
+              ]
             }
           },
           "estimatedPowerDraw": {

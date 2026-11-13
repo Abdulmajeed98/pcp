@@ -14,6 +14,7 @@ import { rule } from './statement';
 // 2026).
 export const rule15 = rule({
   number: 15,
+  canWarn: true,
   involves: { storage: ['form_factor'], case: ['internal_3_5_bays', 'internal_2_5_bays'] },
   judge: ({ storage, case: pcCase }) => {
     // The drives of the sizes. A drive whose form factor is missing may be of
