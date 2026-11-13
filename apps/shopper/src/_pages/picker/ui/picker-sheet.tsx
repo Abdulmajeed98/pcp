@@ -50,8 +50,9 @@ import { TheSwitch } from './the-switch';
 // sheet's primary button, and "See why on your Build", a cell to the rules'
 // sheet; a search or filters that found nothing offer Clear all, which keeps
 // the switch; a Category no Vendor has in stock leads back to the Build, at
-// the Category's place. A page past the last and a list the API did not
-// answer say so as a Category page does.
+// the Category's place; and a Build the API refuses says so and leads to the
+// Build page, which offers to empty it. A page past the last and a list the
+// API did not answer say so as a Category page does.
 //
 // The sentence is the page's status (`output`): drawn again in place with
 // script, by a search, a filter, the switch or another page, its new words
@@ -212,6 +213,20 @@ export async function PickerSheet({
               testId="to-the-first-page"
             >
               {paging('toTheFirstPage')}
+            </SheetAction>
+          ),
+        };
+      case 'build-refused':
+        return {
+          sentence: t('buildRefused'),
+          holds: (
+            <SheetAction
+              kind="board"
+              address={buildAddress(language)}
+              plain
+              testId="to-your-build"
+            >
+              {t('backToYourBuild')}
             </SheetAction>
           ),
         };

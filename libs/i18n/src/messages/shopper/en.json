@@ -251,6 +251,10 @@
       "title": "Your Build cannot be read just now",
       "note": "Try again in a moment."
     },
+    "notReadable": {
+      "title": "Your Build cannot be read",
+      "note": "Something in it is not as the platform keeps a Build, so its Parts cannot be shown. Empty it to start a new Build."
+    },
     "tryAgain": "Try again",
     "outcomes": {
       "rule1": {
@@ -394,6 +398,7 @@
     "seeWhy": "See why on your Build",
     "noMatch": "{category, select, cpu {No CPU in stock matches your search and filters.} cpuCooler {No CPU cooler in stock matches your search and filters.} motherboard {No motherboard in stock matches your search and filters.} ram {No RAM in stock matches your search and filters.} storage {No storage in stock matches your search and filters.} gpu {No GPU in stock matches your search and filters.} case {No case in stock matches your search and filters.} psu {No PSU in stock matches your search and filters.} other {No Part in stock matches your search and filters.}}",
     "noneInStock": "{category, select, cpu {No Vendor has a CPU in stock now.} cpuCooler {No Vendor has a CPU cooler in stock now.} motherboard {No Vendor has a motherboard in stock now.} ram {No Vendor has RAM in stock now.} storage {No Vendor has storage in stock now.} gpu {No Vendor has a GPU in stock now.} case {No Vendor has a case in stock now.} psu {No Vendor has a PSU in stock now.} other {No Vendor has one in stock now.}}",
+    "buildRefused": "Your Build cannot be read, so no Part can be judged against it.",
     "backToYourBuild": "Back to your Build"
   },
   "NotFoundPage": {

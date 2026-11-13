@@ -170,6 +170,20 @@ describe("what the picker's sheet shows", () => {
     });
   });
 
+  describe('a Build the API refuses', () => {
+    it('is told apart, whatever the query, so that the picker leads to the Build page', () => {
+      expect(whatThePickerShows('build-refused', aPickerQuery({}))).toEqual({
+        kind: 'build-refused',
+      });
+      expect(
+        whatThePickerShows(
+          'build-refused',
+          aPickerQuery({ search: 'ryzen', showAll: true }),
+        ),
+      ).toEqual({ kind: 'build-refused' });
+    });
+  });
+
   describe('a list the API did not answer', () => {
     it('cannot be read', () => {
       expect(whatThePickerShows(undefined, aPickerQuery({}))).toEqual({

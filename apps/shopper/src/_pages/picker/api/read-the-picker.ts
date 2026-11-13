@@ -8,7 +8,7 @@ import {
   type OfferedFilters,
   type PickerQuery,
 } from '@/features/search-parts';
-import { apiClient } from '@/shared/api';
+import { apiClient, refusesTheBuild } from '@/shared/api';
 import type { Currency } from '@/shared/currency';
 
 // What the picker reads first from the API, on the server, for each request,
@@ -40,17 +40,19 @@ export async function readThePickersFilters(
 // them. The answer then says, in the same statement, how many of the Parts
 // it judged are Compatible and how many are not, so the list is asked once.
 // An empty Build is not sent, since a query cannot tell it from none, and
-// every Part is Compatible with it. The browser never calls the API. A read the API does
-// not answer, or refuses, is nothing.
+// every Part is Compatible with it. The browser never calls the API. A Build
+// the API refuses, as a cookie edited by hand can make it, is said so
+// (`build-refused`); a read the API does not answer, or refuses otherwise,
+// is nothing.
 export async function readThePickersList(
   category: Category,
   query: PickerQuery,
   currency: Currency,
   build: Build,
-): Promise<VisiblePartPageResponse | undefined> {
+): Promise<VisiblePartPageResponse | 'build-refused' | undefined> {
   await connection();
 
-  const { data } = await apiClient().listVisibleParts({
+  const { data, error, response } = await apiClient().listVisibleParts({
     query: {
       ...listAskedFor(category, query, currency),
       inStockOnly: true,
@@ -59,5 +61,5 @@ export async function readThePickersList(
     },
     cache: 'no-store',
   });
-  return data;
+  return refusesTheBuild({ status: response?.status, error }) ? 'build-refused' : data;
 }

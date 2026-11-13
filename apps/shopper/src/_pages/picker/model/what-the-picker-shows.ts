@@ -21,6 +21,7 @@ export type PickerState =
   | { kind: 'no-match' }
   | { kind: 'none-compatible'; inStock: number }
   | { kind: 'past-the-end'; totalPages: number }
+  | { kind: 'build-refused' }
   | { kind: 'not-read' };
 
 // What the picker's sheet shows (DESIGN.md's The picker, The empty states),
@@ -37,11 +38,14 @@ export type PickerState =
 //   offers the switch, saying how many it would show;
 // - a page past the last, as an old link may ask.
 //
-// A list the API did not answer cannot be read.
+// A Build the API refuses, which only a cookie edited by hand makes, is said
+// so, and the sheet leads to the Build page, which offers to empty it. A
+// list the API did not answer cannot be read.
 export function whatThePickerShows(
-  page: VisiblePartPageResponse | undefined,
+  page: VisiblePartPageResponse | 'build-refused' | undefined,
   query: PickerQuery,
 ): PickerState {
+  if (page === 'build-refused') return { kind: 'build-refused' };
   const shown = whatAPageShows(page);
   const notCompatible = page?.notCompatibleCount ?? 0;
 
