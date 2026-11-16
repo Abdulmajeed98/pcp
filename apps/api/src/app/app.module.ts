@@ -11,6 +11,7 @@ import { DatabaseModule } from '~/infrastructure/database/database.module';
 import { OfferModule } from '~/infrastructure/offer/offer.module';
 import { PartModule } from '~/infrastructure/part/part.module';
 import { PlatformRateModule } from '~/infrastructure/platform-rate/platform-rate.module';
+import { SharedBuildModule } from '~/infrastructure/shared-build/shared-build.module';
 import { StatusModule } from '~/infrastructure/status/status.module';
 import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
@@ -32,6 +33,7 @@ import { VendorModule } from '~/infrastructure/vendor/vendor.module';
     OfferModule,
     PlatformRateModule,
     BuildModule,
+    SharedBuildModule,
   ],
 })
 export class AppModule {}

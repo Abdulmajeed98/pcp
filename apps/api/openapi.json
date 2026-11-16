@@ -1972,6 +1972,97 @@
         "summary": "Set the Platform Rate, in whole dinars per dollar, as a new setting, also when it equals the current one, and answer it as the current one",
         "tags": ["PlatformRate"]
       }
+    },
+    "/v1/shared-builds": {
+      "post": {
+        "operationId": "shareBuild",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareBuildRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The Shared Build an earlier share of the same Build stored, as it was stored.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildSharedResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "A new Shared Build, stored now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildSharedResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Share a Build: freeze the Parts of it the catalog holds, with their quantities, as a Shared Build that never changes, and answer it, a new one, or the one an earlier share of the same Build stored",
+        "tags": ["SharedBuild"]
+      }
+    },
+    "/v1/shared-builds/{sharedBuildId}": {
+      "get": {
+        "operationId": "readSharedBuild",
+        "parameters": [
+          {
+            "name": "sharedBuildId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedBuildResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Shared Build's frozen Parts and quantities, as `GET v1/build` takes them, never changed since it was shared, and when it was shared",
+        "tags": ["SharedBuild"]
+      }
     }
   },
   "info": {
@@ -4656,6 +4747,66 @@
           }
         },
         "required": ["iqdPerUsd"]
+      },
+      "ShareBuildRequest": {
+        "type": "object",
+        "properties": {
+          "part": {
+            "description": "The Build to share, as `GET v1/build` takes it. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives. Also refused, naming `part`, with the reason `empty`, for a Build that holds no Part once those the catalog does not hold are left out.",
+            "example": [
+              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["part"]
+      },
+      "BuildSharedResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Shared Build's identifier, a random UUID, which the Shared Build page's address names.",
+            "example": "7c1e2f3a-4b5d-4e6f-8a9b-0c1d2e3f4a5b"
+          },
+          "sharedAt": {
+            "type": "string",
+            "description": "When the Build was first shared, by the API's clock.",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "sharedAt"]
+      },
+      "SharedBuildResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Shared Build's identifier, a random UUID.",
+            "example": "7c1e2f3a-4b5d-4e6f-8a9b-0c1d2e3f4a5b"
+          },
+          "sharedAt": {
+            "type": "string",
+            "description": "When the Build was first shared, by the API's clock.",
+            "format": "date-time"
+          },
+          "part": {
+            "description": "The Build's Parts and quantities as they were shared, never changed since, as `GET v1/build` takes them in `part`: lower-case identifiers, in the catalog's order of Categories, then the Build's order for RAM kits and drives, each kit or drive followed by `:` and its quantity. A Part that has left the catalog since stays among them, and `GET v1/build` leaves it out.",
+            "example": [
+              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["id", "sharedAt", "part"]
       }
     }
   },

@@ -1478,6 +1478,39 @@ export type SetPlatformRateRequest = {
     iqdPerUsd: number;
 };
 
+export type ShareBuildRequest = {
+    /**
+     * The Build to share, as `GET v1/build` takes it. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives. Also refused, naming `part`, with the reason `empty`, for a Build that holds no Part once those the catalog does not hold are left out.
+     */
+    part: Array<string>;
+};
+
+export type BuildSharedResponse = {
+    /**
+     * The Shared Build's identifier, a random UUID, which the Shared Build page's address names.
+     */
+    id: string;
+    /**
+     * When the Build was first shared, by the API's clock.
+     */
+    sharedAt: string;
+};
+
+export type SharedBuildResponse = {
+    /**
+     * The Shared Build's identifier, a random UUID.
+     */
+    id: string;
+    /**
+     * When the Build was first shared, by the API's clock.
+     */
+    sharedAt: string;
+    /**
+     * The Build's Parts and quantities as they were shared, never changed since, as `GET v1/build` takes them in `part`: lower-case identifiers, in the catalog's order of Categories, then the Build's order for RAM kits and drives, each kit or drive followed by `:` and its quantity. A Part that has left the catalog since stays among them, and `GET v1/build` leaves it out.
+     */
+    part: Array<string>;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -2526,3 +2559,56 @@ export type SetPlatformRateResponses = {
 };
 
 export type SetPlatformRateResponse = SetPlatformRateResponses[keyof SetPlatformRateResponses];
+
+export type ShareBuildData = {
+    body: ShareBuildRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/shared-builds';
+};
+
+export type ShareBuildErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ShareBuildError = ShareBuildErrors[keyof ShareBuildErrors];
+
+export type ShareBuildResponses = {
+    /**
+     * The Shared Build an earlier share of the same Build stored, as it was stored.
+     */
+    200: BuildSharedResponse;
+    /**
+     * A new Shared Build, stored now.
+     */
+    201: BuildSharedResponse;
+};
+
+export type ShareBuildResponse = ShareBuildResponses[keyof ShareBuildResponses];
+
+export type ReadSharedBuildData = {
+    body?: never;
+    path: {
+        sharedBuildId: string;
+    };
+    query?: never;
+    url: '/v1/shared-builds/{sharedBuildId}';
+};
+
+export type ReadSharedBuildErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadSharedBuildError = ReadSharedBuildErrors[keyof ReadSharedBuildErrors];
+
+export type ReadSharedBuildResponses = {
+    200: SharedBuildResponse;
+};
+
+export type ReadSharedBuildResponse = ReadSharedBuildResponses[keyof ReadSharedBuildResponses];
