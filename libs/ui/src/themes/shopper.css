@@ -680,7 +680,7 @@
  * price on the next; below 11em, as with a phone's text at twice its size,
  * the picture takes a line of its own above the name, and the leader gives
  * way to the price, down to nothing, so that a price of seven figures keeps
- * its line (follow-up ticket 10).
+ * its line.
  */
 @container (width < 17em) {
   [data-item='with-picture'] > [data-item-picture] {
