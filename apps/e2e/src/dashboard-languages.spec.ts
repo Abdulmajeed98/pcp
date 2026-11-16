@@ -47,6 +47,7 @@ import {
   theRemovalDialog,
 } from './offers';
 import { dashboardUrl, keycloakUrl } from './platform';
+import { recordAReferral, referralCountOf, shareABuildOf } from './referrals';
 import {
   aMadeUpMobileNumber,
   aMadeUpVendorThatHasLoggedIn,
@@ -784,3 +785,77 @@ async function expectInEnglish(element: Locator, text: string): Promise<void> {
   expect((await linesAsDrawn(element)).join('')).toBe(text);
   expect(await layoutOf(element)).toEqual({ direction: 'ltr', keptApart: true });
 }
+
+// The Vendor's Referral count, one sentence under the Offers screen's title,
+// as the owner chose on 17 November 2026 (sharing ticket 03): how many times
+// Shoppers have sent the Vendor their Build on WhatsApp, as the API counts
+// them. The test records three Referrals over HTTP, as the Shopper's button
+// records them, so that every language shows the count as a number: Arabic
+// says one and two in words.
+test.describe("the Vendor's Referral count, on the Offers screen", () => {
+  let counted: number;
+
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: true });
+    try {
+      const sharedBuild = await shareABuildOf(context.request, [offered.id]);
+      for (let tap = 0; tap < 3; tap++) {
+        await recordAReferral(context.request, sharedBuild, vendor.vendorId);
+      }
+      const authorization = await authorizationOfTheDevelopmentAdmin(
+        await context.newPage(),
+      );
+      counted = await referralCountOf(context.request, authorization, vendor.vendorId);
+    } finally {
+      await context.close();
+    }
+    expect(counted).toBe(3);
+  });
+
+  test('passes the checks of every screen of the Vendor portal, in all three languages; its sentence differs in each, its count is the API’s in Western digits, and its mark points the reading way', async ({
+    page,
+  }) => {
+    await openTheDashboardAs(page, vendor);
+    await expect(rowOfOffer(page, offered.name)).toBeVisible();
+    const said = page.getByTestId('referrals');
+
+    const read = await readInEveryLanguageOfTheVendorPortal(page, async () => {
+      await expect(said.getByTestId('referral-count')).toHaveText(String(counted));
+      return {
+        sentence: await said.innerText(),
+        mark: await said.locator('svg').evaluate((mark) => getComputedStyle(mark).scale),
+      };
+    });
+
+    expectADifferentTextInEachLanguage(
+      new Map([...read].map(([language, { sentence }]) => [language, sentence])),
+    );
+    for (const [language, { mark }] of read) {
+      expect(mark, `the mark in ${language}`).toBe(language === english ? 'none' : '-1 1');
+    }
+  });
+
+  test('the Admin acting as the Vendor sees the same count', async ({ page }) => {
+    await logInToTheDashboard(page);
+    await page.goto(`${dashboardUrl}/vendors/${vendor.vendorId}/portal`);
+
+    await expect(page.getByTestId('referrals').getByTestId('referral-count')).toHaveText(
+      String(counted),
+    );
+  });
+
+  test("another made-up Vendor's portal shows its own count, none yet, and not this Vendor's", async ({
+    browser,
+    page,
+  }) => {
+    const another = await aMadeUpVendorThatHasLoggedIn(browser, {
+      whatsAppNumber: aMadeUpMobileNumber(),
+    });
+    await openTheDashboardAs(page, another);
+
+    const said = page.getByTestId('referrals');
+    await expect(said.getByTestId('no-referrals')).toBeVisible();
+    await expect(said.getByTestId('referral-count')).toHaveCount(0);
+    await expectNoSidewaysScroll(page);
+  });
+});

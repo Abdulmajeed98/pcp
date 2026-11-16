@@ -20,6 +20,7 @@ import {
 import { useSearchInTheAddress } from '../model/search';
 import { ExpiryBanner } from './expiry-banner';
 import { ListedOffers, NoOffers } from './listed-offers';
+import { ReferralCount } from './referral-count';
 import { SearchForm } from './search-form';
 import { StateTabs } from './state-tabs';
 
@@ -29,7 +30,9 @@ import { StateTabs } from './state-tabs';
 //
 // Its title row first, with Add an Offer from the catalog search, `add`,
 // relative to its route, outlined on the title row's end side from 64rem,
-// and on a phone a plus on the end side of the frame's bar, named. Then what needs action: the banner, while an Offer
+// and on a phone a plus on the end side of the frame's bar, named. Under it,
+// the line that says how many times Shoppers have sent the Vendor their
+// Build, read on its own (sharing ticket 03). Then what needs action: the banner, while an Offer
 // is expired or about to expire, with the button that confirms them all,
 // which leaves as Motion 8 says once none is; and the line that says how
 // many Confirm all confirmed, which stays. Then the tabs, All, Need
@@ -84,6 +87,7 @@ export function OffersPage() {
           </ScreenAction>
         )}
       </div>
+      <ReferralCount vendorId={vendorId} />
 
       {listed.error ? (
         <div className={gapAbove}>
