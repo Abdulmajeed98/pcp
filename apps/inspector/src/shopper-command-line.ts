@@ -2,12 +2,13 @@ import type { Currency } from '@pcp/api-client';
 
 import { BadScheme, type Scheme, takeTheScheme } from './colour-scheme.ts';
 import { currencies } from './currencies.ts';
+import { type MadeUpBuildName, madeUpBuilds } from './made-up-builds.ts';
 
 // The command line of `pnpm shopper:inspect`: a page's path on the Shopper
 // app, without its language, `--language` for the language its address
 // starts with, `--scheme` for the colour scheme, `--currency` for the
-// currency its prices show in, and the inspector's own options, passed
-// through as they are.
+// currency its prices show in, `--build` for the made-up Build its Build
+// cookie holds, and the inspector's own options, passed through as they are.
 
 // A line the command cannot read.
 export class BadCommandLine extends Error {}
@@ -40,6 +41,7 @@ export function shopperCommandLine(
   address: string;
   scheme: Scheme | undefined;
   currency: Currency | undefined;
+  build: MadeUpBuildName | undefined;
   inspectorArgs: string[];
 } {
   let scheme: Scheme | undefined;
@@ -60,6 +62,13 @@ export function shopperCommandLine(
   const language =
     takeAChoice(rest, '--language', languages, '--language takes ckb, ar or en.') ??
     languages[0];
+  const builds = Object.keys(madeUpBuilds) as MadeUpBuildName[];
+  const build = takeAChoice(
+    rest,
+    '--build',
+    builds,
+    `--build takes one of the made-up Builds: ${builds.join(', ')}.`,
+  );
 
   const [path, ...options] = rest;
   if (path === undefined || !path.startsWith('/')) {
@@ -71,5 +80,5 @@ export function shopperCommandLine(
     throw new BadCommandLine('The path leaves out the language, which --language gives.');
   }
   const address = `${origin}/${language}${page.pathname === '/' ? '' : page.pathname}${page.search}`;
-  return { address, scheme, currency, inspectorArgs: [address, ...options] };
+  return { address, scheme, currency, build, inspectorArgs: [address, ...options] };
 }

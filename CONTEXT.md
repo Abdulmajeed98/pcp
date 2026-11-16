@@ -15,7 +15,7 @@ A Part with at least one Visible Offer: the only Parts a Shopper ever sees, in s
 _Avoid_: Offered part, available part, listed part, active part
 
 **Category**:
-The kind of Part: CPU, CPU cooler, motherboard, RAM, storage, GPU, case or PSU.
+The kind of Part: CPU, CPU cooler, motherboard, RAM, storage, GPU, case or PSU. A Part of RAM is a RAM kit, and a Part of storage a drive.
 _Avoid_: Type, group, section
 
 **Specification**:
@@ -133,6 +133,10 @@ _Avoid_: Cart, basket, configuration, list
 **Complete Build**:
 A Build with a CPU, motherboard, RAM, storage, case and PSU, plus a GPU and a CPU cooler where the CPU does not provide them.
 _Avoid_: Finished build, valid build
+
+**Unstocked Part**:
+A Part in a Build that no Vendor has in stock among its Visible Offers, whether or not it is still a Visible Part.
+_Avoid_: Unavailable part, missing part, sold-out part
 
 **Compatibility Rule**:
 A check that Parts in the same Build fit and work together; it is unchecked when a specification it needs is missing.

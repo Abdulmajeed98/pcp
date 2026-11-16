@@ -1402,6 +1402,42 @@
             }
           },
           {
+            "name": "inStockOnly",
+            "required": false,
+            "in": "query",
+            "description": "In stock only, as the picker lists a Category (BLD-2): on, only the Visible Parts with at least one in-stock Visible Offer are listed, in the same order.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "part",
+            "required": false,
+            "in": "query",
+            "description": "The Build so far, as the picker lists a Category for it (BLD-3), taken as reading a Build takes it. Given, each Part answers whether it is Compatible with it. Left out, no Part answers it, as on a Category page. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.",
+            "schema": {
+              "example": [
+                "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+                "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "keepNotCompatible",
+            "required": false,
+            "in": "query",
+            "description": "The picker's switch (BLD-3): on, the Parts that are not Compatible with the Build are kept, in their place in the order, each answering that it is not. Off, they are left out. It changes nothing without a Build.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
             "name": "socket",
             "required": false,
             "in": "query",
@@ -1593,7 +1629,7 @@
           }
         },
         "security": [],
-        "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last",
+        "summary": "One page of a Category's Visible Parts, the Parts with at least one Visible Offer, each with its Lowest Price in the chosen currency, how many Vendors offer it and whether one has it in stock, the lowest Lowest Price first and the Parts every Vendor has out of stock last; for the picker, those in stock only, and, given a Build, each with whether it is Compatible with it, those that are not left out unless the switch keeps them",
         "tags": ["VisibleParts"]
       }
     },
@@ -1629,6 +1665,16 @@
             "schema": {
               "$ref": "#/components/schemas/Currency"
             }
+          },
+          {
+            "name": "inStockOnly",
+            "required": false,
+            "in": "query",
+            "description": "In stock only, as the picker asks for a Category's filters (BLD-2): on, every value is read from the Visible Parts with at least one in-stock Visible Offer alone.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -1654,7 +1700,7 @@
           }
         },
         "security": [],
-        "summary": "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied",
+        "summary": "A Category's filters: its Visible Parts' manufacturers, each of its filters with the values they hold, and the range of their Lowest Prices in the chosen currency, read before any filter or search is applied; for the picker, read from those in stock only",
         "tags": ["VisibleParts"]
       }
     },
@@ -1800,6 +1846,63 @@
         "security": [],
         "summary": "The platform's figures: how many active Vendors it has, how many Visible Offers it lists, the current Platform Rate in whole dinars per dollar or none, and how many days an Offer stays current without a Confirmation",
         "tags": ["PlatformFigures"]
+      }
+    },
+    "/v1/build": {
+      "get": {
+        "operationId": "readBuild",
+        "parameters": [
+          {
+            "name": "currency",
+            "required": true,
+            "in": "query",
+            "description": "The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          },
+          {
+            "name": "part",
+            "required": false,
+            "in": "query",
+            "description": "The Build that is read. Left out, the Build is empty. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.",
+            "schema": {
+              "example": [
+                "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+                "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Build that the request gives and nothing stores: its Parts as the catalog holds them, each with its quantity, whether it is a Visible Part, whether it is an Unstocked Part and its Lowest Price in the chosen currency with the Vendor it comes from; whether it is a Complete Build, with the Categories it still needs; the outcome of every Compatibility Rule that applies to it, and its Estimated power draw; and its two price views, its total across Vendors and each Vendor that has any of its Parts in stock, with its total, the Parts it has and the Parts it lacks, every price read at one Platform Rate",
+        "tags": ["Build"]
       }
     },
     "/v1/platform-rate": {
@@ -3644,6 +3747,10 @@
           "inStock": {
             "type": "boolean",
             "description": "Whether any Visible Offer for the Part is in stock. False when every Vendor has it out of stock."
+          },
+          "compatible": {
+            "type": "boolean",
+            "description": "Whether the Part is Compatible with the Build the list was asked for: adding it would cause no Compatibility Problem, a Compatibility Warning and an unchecked rule leaving it Compatible (CMP-4). Left out when the list was asked for without a Build."
           }
         },
         "required": [
@@ -3697,6 +3804,16 @@
             "items": {
               "$ref": "#/components/schemas/VisiblePartResponse"
             }
+          },
+          "compatibleCount": {
+            "type": "integer",
+            "description": "With a Build, how many of the Parts the list judged are Compatible with it, on all the pages together: those that the search, the manufacturers, the filters, the price range and in stock only keep, read in the same statement as the page. Left out when the list was asked for without a Build.",
+            "example": 4
+          },
+          "notCompatibleCount": {
+            "type": "integer",
+            "description": "With a Build, how many of the Parts the list judged are not Compatible with it, on all the pages together, whether or not the switch keeps them, read in the same statement as the page. Left out when the list was asked for without a Build.",
+            "example": 3
           }
         },
         "required": [
@@ -4091,6 +4208,410 @@
           "visibleOfferCount",
           "iqdPerUsd",
           "daysAnOfferStaysCurrent"
+        ]
+      },
+      "BuildMissingSpecificationResponse": {
+        "type": "object",
+        "properties": {
+          "part": {
+            "type": "string",
+            "description": "The Part that lacks it, by its identifier.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "path": {
+            "type": "string",
+            "description": "Its path in the Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it; for a field of a row, the list's path, the row's place from 0 and the field's name.",
+            "example": "pcie_slots.0.lanes"
+          },
+          "label": {
+            "type": "string",
+            "description": "Its English label, from the Part's specification list; for a field of a row, the list's.",
+            "example": "PCIe slots"
+          },
+          "fieldLabel": {
+            "type": "string",
+            "description": "For a field of a row, such as a PCIe slot's lanes, the field's English label; null otherwise.",
+            "nullable": true,
+            "example": "Lanes"
+          }
+        },
+        "required": ["part", "path", "label", "fieldLabel"]
+      },
+      "OutcomeOfARuleThatCanWarnResponse": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "description": "The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.",
+            "example": [
+              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing": {
+            "description": "For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildMissingSpecificationResponse"
+            }
+          },
+          "rule": {
+            "type": "integer",
+            "description": "The rule's number, as the MVP spec numbers them: one of the rules that can give a Compatibility Warning, from the compatibility library's own list.",
+            "enum": [11, 15, 20],
+            "example": 11
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Its outcome: `passes`; `problem`, a Compatibility Problem; `warning`, a Compatibility Warning; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.",
+            "enum": ["passes", "problem", "warning", "unchecked"],
+            "example": "warning"
+          }
+        },
+        "required": ["parts", "missing", "rule", "outcome"]
+      },
+      "OutcomeOfAnotherRuleResponse": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "description": "The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.",
+            "example": [
+              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing": {
+            "description": "For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildMissingSpecificationResponse"
+            }
+          },
+          "rule": {
+            "type": "integer",
+            "description": "The rule's number, as the MVP spec numbers them: one of the rules that never give a Compatibility Warning, from the compatibility library's own list.",
+            "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16, 17, 18, 19, 21],
+            "example": 1
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Its outcome: `passes`; `problem`, a Compatibility Problem; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.",
+            "enum": ["passes", "problem", "unchecked"],
+            "example": "problem"
+          }
+        },
+        "required": ["parts", "missing", "rule", "outcome"]
+      },
+      "BuildLowestPriceResponse": {
+        "type": "object",
+        "properties": {
+          "shownPrice": {
+            "description": "The Lowest Price of one of the Part: the lowest Shown Price among its in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "timesQuantity": {
+            "description": "The Lowest Price times the Part's quantity, as the total across Vendors adds it up: the same as the Lowest Price for a Part of a Category a Build holds one of.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "vendor": {
+            "description": "The Vendor whose Offer the Lowest Price comes from: of equal prices, the one whose Offer the Part page lists first.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisibleOfferVendorResponse"
+              }
+            ]
+          }
+        },
+        "required": ["shownPrice", "timesQuantity", "vendor"]
+      },
+      "BuildPartResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Part's identifier on the platform.",
+            "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60"
+          },
+          "category": {
+            "type": "string",
+            "description": "The Part's Category.",
+            "enum": [
+              "cpu",
+              "cpuCooler",
+              "motherboard",
+              "ram",
+              "storage",
+              "gpu",
+              "case",
+              "psu"
+            ],
+            "example": "cpu"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Part's name.",
+            "example": "AMD Ryzen 5 7600"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "The Part's manufacturer.",
+            "example": "AMD"
+          },
+          "partNumbers": {
+            "description": "The manufacturer's part numbers.",
+            "example": ["100-100001015BOX"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoPath": {
+            "type": "string",
+            "description": "The address of the Part's photo on this API, or null when it has none.",
+            "nullable": true,
+            "example": "/v1/photos/9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "How many of it the Build holds, from 1 to 16, for a RAM kit or a drive; null for a Part of a Category a Build holds one of.",
+            "nullable": true,
+            "example": 2
+          },
+          "visible": {
+            "type": "boolean",
+            "description": "Whether it is a Visible Part, a Part with at least one Visible Offer, which a Part page shows. A Part that is not stays in the Build."
+          },
+          "unstocked": {
+            "type": "boolean",
+            "description": "Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price, is left out of every total and is in no Vendor's list."
+          },
+          "priceNotShown": {
+            "type": "boolean",
+            "description": "Whether some Vendor has it in stock but its price could not be shown: the first of its in-stock Visible Offers has no Shown Price, which happens only before the first Platform Rate, with an Offer quoted only in the other currency. It then has no Lowest Price, and is left out of the total across Vendors."
+          },
+          "lowestPrice": {
+            "description": "Its Lowest Price in the chosen currency, times its quantity, with the Vendor it comes from, which the total across Vendors adds up (BLD-7). Null for an Unstocked Part, and for a Part whose price could not be shown.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BuildLowestPriceResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "name",
+          "manufacturer",
+          "partNumbers",
+          "photoPath",
+          "quantity",
+          "visible",
+          "unstocked",
+          "priceNotShown",
+          "lowestPrice"
+        ]
+      },
+      "EstimatedPowerDrawResponse": {
+        "type": "object",
+        "properties": {
+          "watts": {
+            "type": "integer",
+            "description": "What the Build is reckoned to draw, in W: its CPU's TDP, plus its GPU's TDP when it has one, plus 100 W for everything else. Null when a TDP it needs is missing.",
+            "nullable": true,
+            "example": 385
+          },
+          "missing": {
+            "description": "Each TDP the draw needs that its Part lacks, the CPU's before the GPU's; none when the watts are known.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildMissingSpecificationResponse"
+            }
+          }
+        },
+        "required": ["watts", "missing"]
+      },
+      "BuildPartInStockResponse": {
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "description": "The Part's identifier, as the Build's Parts name it.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "shownPrice": {
+            "description": "The Vendor's Shown Price for one of the Part, in the chosen currency. Null only when its Offer has no Quoted Price in the chosen currency and no Platform Rate has been set: the Part is then left out of the Vendor's total.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "timesQuantity": {
+            "description": "The Shown Price times the Part's quantity, as the Vendor's total adds it up, or null with it.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          }
+        },
+        "required": ["partId", "shownPrice", "timesQuantity"]
+      },
+      "BuildVendorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as the Vendor writes it.",
+            "example": "Made-up Computer Shop"
+          },
+          "total": {
+            "description": "The Vendor's total: each Shown Price of the Parts it has in stock times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. Null when none of them has a Shown Price, which happens only when no Platform Rate has been set.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "partsInStock": {
+            "description": "The Build's Parts the Vendor has in stock among its Visible Offers, in the order of the Build's Parts.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildPartInStockResponse"
+            }
+          },
+          "partsLacked": {
+            "description": "The identifiers of the Build's Parts that other Vendors have in stock and this one does not, in the order of the Build's Parts. An Unstocked Part is never among them.",
+            "example": ["3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["id", "name", "total", "partsInStock", "partsLacked"]
+      },
+      "BuildResponse": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "description": "The Build's Parts that the catalog holds, in the catalog's order of Categories, and the RAM kits and drives in the order the Build gives them. A Part the catalog no longer holds is left out.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildPartResponse"
+            }
+          },
+          "complete": {
+            "type": "boolean",
+            "description": "Whether it is a Complete Build: a CPU, a motherboard, at least one RAM kit, at least one drive, a case and a PSU, with a GPU unless the CPU has integrated graphics and a CPU cooler unless the CPU includes one."
+          },
+          "stillNeeded": {
+            "type": "array",
+            "description": "The Categories it still needs, in the catalog's order: none for a Complete Build, and all eight for an empty one.",
+            "example": ["gpu", "psu"],
+            "items": {
+              "type": "string",
+              "enum": [
+                "cpu",
+                "cpuCooler",
+                "motherboard",
+                "ram",
+                "storage",
+                "gpu",
+                "case",
+                "psu"
+              ]
+            }
+          },
+          "cpuValuesNotKnown": {
+            "type": "array",
+            "description": "The values of the Build's CPU that the rule for a Complete Build reads and the CPU does not hold: `integratedGraphics`, its Integrated graphics, and `includesCooler`, its Cooler included. A CPU that does not hold one counts as not providing it, so the GPU or the CPU cooler stays needed. None without a CPU.",
+            "example": ["includesCooler"],
+            "items": {
+              "type": "string",
+              "enum": ["integratedGraphics", "includesCooler"]
+            }
+          },
+          "outcomes": {
+            "type": "array",
+            "description": "The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order, each of a rule of the compatibility library's own list and as its rule can have it: a Compatibility Warning only of a rule that can give one. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/OutcomeOfARuleThatCanWarnResponse"
+                },
+                {
+                  "$ref": "#/components/schemas/OutcomeOfAnotherRuleResponse"
+                }
+              ]
+            }
+          },
+          "estimatedPowerDraw": {
+            "description": "Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstimatedPowerDrawResponse"
+              }
+            ]
+          },
+          "totalAcrossVendors": {
+            "description": "The first price view's total, the Build's total across Vendors (BLD-7, PRC-5): each Part's Lowest Price times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. It leaves out each Part with no Lowest Price, and is null when no Part has one.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownPriceResponse"
+              }
+            ]
+          },
+          "vendors": {
+            "description": "The second price view (BLD-8): each active Vendor with at least one of the Build's Parts in stock among its Visible Offers, with its total, the Parts it has and the Parts it lacks. They come by how many Parts they lack, fewest first, then by their total, lowest first, with none after any, then by name, then by identifier. An Unstocked Part is in no Vendor's list.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildVendorResponse"
+            }
+          }
+        },
+        "required": [
+          "parts",
+          "complete",
+          "stillNeeded",
+          "cpuValuesNotKnown",
+          "outcomes",
+          "estimatedPowerDraw",
+          "totalAcrossVendors",
+          "vendors"
         ]
       },
       "CurrentPlatformRateResponse": {

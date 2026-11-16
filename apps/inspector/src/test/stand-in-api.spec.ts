@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import type {
+  BuildResponse,
   VisibleOfferOfVendorPageResponse,
   VisibleOfferResponse,
   VisiblePartPageResponse,
@@ -7,6 +8,26 @@ import type {
   VisiblePartWithSpecificationsResponse,
 } from '@pcp/api-client';
 
+import {
+  b650Tomahawk,
+  barraCuda,
+  type CatalogPart,
+  core12100F,
+  core14600K,
+  dual2060Super,
+  furyBeast16,
+  nhD15,
+  p3Plus,
+  palit4070Super,
+  rm850e,
+  ryzen5600,
+  ryzen7800X3D,
+  samsung990Pro,
+  theLongestName,
+  theOnlyCase,
+  tridentZ5,
+  vengeance,
+} from '../made-up-offers.ts';
 import { madeUpIdentifier } from '../made-up-vendors.ts';
 import { answerFromTheStandIn } from '../stand-in-api.ts';
 import { theShoppersShop } from '../the-shoppers-shop.ts';
@@ -21,6 +42,21 @@ const shop = theShoppersShop(now, catalog, photosStandIn);
 
 function get(path: string) {
   return answerFromTheStandIn(shop, { method: 'GET', path });
+}
+
+// A named Part's identifier in the catalog's stand-in, and its summary as
+// the shop holds it, with its made-up photo if it has one.
+function idOf(part: CatalogPart): string {
+  return catalog.named.get(part.name)?.summary.id ?? 'not a named Part';
+}
+function summaryOf(part: CatalogPart) {
+  return shop.parts.get(idOf(part))?.summary;
+}
+
+// A Build read in a currency, each value of `part` as the API takes it.
+function buildOf(currency: string, ...values: string[]) {
+  const parts = values.map((value) => `&part=${encodeURIComponent(value)}`).join('');
+  return get(`/v1/build?currency=${currency}${parts}`);
 }
 
 // The API's refusal of a parameter, as a whole.
@@ -169,6 +205,95 @@ describe('the stand-in API', () => {
       expect(listOf('category=chair&currency=IQD').body).toEqual(notValid('category'));
       expect(listOf('category=cpu').body).toEqual(notValid('currency'));
     });
+
+    describe('for the picker', () => {
+      const everyCpu = [
+        'Intel Core i3 12100F',
+        'AMD Ryzen 5 5600',
+        'AMD Ryzen 5 7600X',
+        'Intel Core i5 14600K',
+        'Intel Core Ultra 7 265K',
+        'AMD Ryzen 7 7800X3D',
+        'Intel Core i7 14700K',
+        'AMD Ryzen 7 9800X3D',
+        'AMD Ryzen 9 7950X3D',
+      ];
+      const withTheBuild = (...parts: CatalogPart[]) =>
+        parts.map((part) => `&part=${idOf(part)}`).join('');
+      const cpusFor = (more: string) =>
+        (
+          listOf(`category=cpu&currency=IQD&size=100${more}`)
+            .body as VisiblePartPageResponse
+        ).content;
+
+      it('are those some Vendor has in stock, in stock only, in the same order', () => {
+        expect(cpus('&inStockOnly=true')).toEqual(everyCpu.slice(0, -1));
+        expect(cpus('&inStockOnly=false')).toEqual(everyCpu);
+      });
+
+      it('each answer whether it is Compatible with the Build given, and leave out those that are not', () => {
+        const listed = cpusFor(withTheBuild(b650Tomahawk));
+
+        expect(listed.map((part) => part.name)).toEqual(
+          everyCpu.filter((name) => name !== ryzen5600.name),
+        );
+        expect(listed.every((part) => part.compatible === true)).toBe(true);
+      });
+
+      it('keep those that are not Compatible with the switch, in their place, answering that they are not', () => {
+        const listed = cpusFor(`${withTheBuild(b650Tomahawk)}&keepNotCompatible=true`);
+
+        expect(listed.map((part) => [part.name, part.compatible])).toEqual(
+          everyCpu.map((name) => [name, name !== ryzen5600.name]),
+        );
+      });
+
+      it('are each judged in place of the Build’s Part of their Category', () => {
+        expect(
+          cpusFor(withTheBuild(ryzen5600, b650Tomahawk)).map((part) => part.name),
+        ).toEqual(everyCpu.filter((name) => name !== ryzen5600.name));
+      });
+
+      it('count those that are Compatible and those that are not, whichever way the switch is, and none without a Build', () => {
+        const counted = (more: string) => {
+          const { compatibleCount, notCompatibleCount } = listOf(
+            `category=cpu&currency=IQD&size=3${more}`,
+          ).body as VisiblePartPageResponse;
+          return { compatibleCount, notCompatibleCount };
+        };
+
+        for (const more of ['', '&keepNotCompatible=true']) {
+          expect(counted(`${withTheBuild(b650Tomahawk)}${more}`)).toEqual({
+            compatibleCount: everyCpu.length - 1,
+            notCompatibleCount: 1,
+          });
+          expect(counted(more)).toEqual({
+            compatibleCount: undefined,
+            notCompatibleCount: undefined,
+          });
+        }
+      });
+
+      it('answer nothing of being Compatible without a Build, with the switch or without', () => {
+        for (const listed of [cpusFor(''), cpusFor('&keepNotCompatible=true')]) {
+          expect(listed.map((part) => part.name)).toEqual(everyCpu);
+          expect(listed.some((part) => 'compatible' in part)).toBe(false);
+        }
+      });
+
+      it('come a page at a time once judged, counting only those kept', () => {
+        const page = listOf(
+          `category=cpu&currency=IQD&size=3&page=1&inStockOnly=true${withTheBuild(b650Tomahawk)}`,
+        ).body as VisiblePartPageResponse;
+
+        expect(page).toMatchObject({ totalElements: 7, totalPages: 3, pageNumber: 1 });
+        expect(page.content.map((part) => part.name)).toEqual([
+          'Intel Core Ultra 7 265K',
+          'AMD Ryzen 7 7800X3D',
+          'Intel Core i7 14700K',
+        ]);
+      });
+    });
   });
 
   describe("a Category's filters", () => {
@@ -204,6 +329,13 @@ describe('the stand-in API', () => {
 
     it('leave out a filter no Visible Part holds a value of', () => {
       expect(filtersOf('category=case&currency=IQD').filters).toEqual([]);
+    });
+
+    it('offer only what Parts some Vendor has in stock hold, in stock only', () => {
+      expect(filtersOf('category=storage&currency=IQD').manufacturers).toContain('Western');
+      expect(
+        filtersOf('category=storage&currency=IQD&inStockOnly=true').manufacturers,
+      ).not.toContain('Western');
     });
 
     it('are refused without a Category or a currency', () => {
@@ -491,7 +623,7 @@ describe('the stand-in API', () => {
       expect(answer.status).toBe(200);
       expect(answer.body).toEqual({
         activeVendorCount: 21,
-        visibleOfferCount: 852,
+        visibleOfferCount: 860,
         iqdPerUsd: 1575,
         daysAnOfferStaysCurrent: 14,
       });
@@ -528,6 +660,405 @@ describe('the stand-in API', () => {
           },
         ],
       });
+    });
+  });
+
+  describe('a Build', () => {
+    it('is empty with no Part, needing every Category, with no outcome, no Estimated power draw and no price', () => {
+      const answer = get('/v1/build?currency=IQD');
+
+      expect(answer.status).toBe(200);
+      expect(answer.refused).toBeUndefined();
+      expect(answer.body).toEqual({
+        parts: [],
+        complete: false,
+        stillNeeded: [
+          'cpu',
+          'cpuCooler',
+          'motherboard',
+          'ram',
+          'storage',
+          'gpu',
+          'case',
+          'psu',
+        ],
+        cpuValuesNotKnown: [],
+        outcomes: [],
+        estimatedPowerDraw: null,
+        totalAcrossVendors: null,
+        vendors: [],
+      });
+    });
+
+    it("holds its Parts in the catalog's order of Categories and then the Build's, each with its quantity, its Lowest Price times it and the Vendor it comes from", () => {
+      const body = buildOf(
+        'IQD',
+        `${idOf(vengeance)}:2`,
+        idOf(ryzen7800X3D),
+        `${idOf(furyBeast16)}:1`,
+        idOf(palit4070Super),
+      ).body as BuildResponse;
+      const iqd = (amount: string) => ({ currency: 'IQD', amount, converted: false });
+
+      expect(body.parts).toEqual([
+        {
+          ...summaryOf(ryzen7800X3D),
+          quantity: null,
+          visible: true,
+          unstocked: false,
+          priceNotShown: false,
+          lowestPrice: {
+            shownPrice: iqd('559000'),
+            timesQuantity: iqd('559000'),
+            vendor: { id: madeUpIdentifier(4), name: 'Pretend Tech' },
+          },
+        },
+        {
+          ...summaryOf(vengeance),
+          quantity: 2,
+          visible: true,
+          unstocked: false,
+          priceNotShown: false,
+          lowestPrice: {
+            shownPrice: iqd('172000'),
+            timesQuantity: iqd('344000'),
+            vendor: { id: madeUpIdentifier(1), name: 'Made-up PC Parts' },
+          },
+        },
+        {
+          ...summaryOf(furyBeast16),
+          quantity: 1,
+          visible: true,
+          unstocked: false,
+          priceNotShown: false,
+          lowestPrice: {
+            shownPrice: iqd('48000'),
+            timesQuantity: iqd('48000'),
+            vendor: { id: madeUpIdentifier(2), name: 'کۆگای پارچەی خەیاڵی' },
+          },
+        },
+        {
+          ...summaryOf(palit4070Super),
+          quantity: null,
+          visible: true,
+          unstocked: false,
+          priceNotShown: false,
+          lowestPrice: {
+            shownPrice: iqd('925000'),
+            timesQuantity: iqd('925000'),
+            vendor: { id: madeUpIdentifier(3), name: 'حاسبات المثال' },
+          },
+        },
+      ]);
+    });
+
+    it('has each Lowest Price in the currency asked, quoted or converted, and times its quantity in cents', () => {
+      const [cpu, kit] = (
+        buildOf('USD', idOf(ryzen7800X3D), `${idOf(vengeance)}:3`).body as BuildResponse
+      ).parts;
+
+      expect(cpu.lowestPrice).toEqual({
+        shownPrice: { currency: 'USD', amount: '355.00', converted: true },
+        timesQuantity: { currency: 'USD', amount: '355.00', converted: true },
+        vendor: { id: madeUpIdentifier(4), name: 'Pretend Tech' },
+      });
+      expect(kit.lowestPrice?.timesQuantity).toEqual({
+        currency: 'USD',
+        amount: '327.00',
+        converted: false,
+      });
+    });
+
+    it('adds up each Lowest Price times its quantity into the total across Vendors, in the currency asked, marked converted when any is', () => {
+      const values = [
+        idOf(ryzen7800X3D),
+        `${idOf(vengeance)}:2`,
+        `${idOf(furyBeast16)}:1`,
+        idOf(palit4070Super),
+      ];
+      const totalIn = (currency: string) =>
+        (buildOf(currency, ...values).body as BuildResponse).totalAcrossVendors;
+
+      expect(totalIn('IQD')).toEqual({
+        currency: 'IQD',
+        amount: '1876000',
+        converted: false,
+      });
+      expect(totalIn('USD')).toEqual({
+        currency: 'USD',
+        amount: '1192.00',
+        converted: true,
+      });
+    });
+
+    it('holds an Unstocked Part, which every Vendor has out of stock, with no Lowest Price, and leaves it out of the total', () => {
+      const body = buildOf('IQD', `${idOf(tridentZ5)}:1`, idOf(ryzen7800X3D))
+        .body as BuildResponse;
+
+      expect(body.parts[1]).toEqual({
+        ...summaryOf(tridentZ5),
+        quantity: 1,
+        visible: true,
+        unstocked: true,
+        priceNotShown: false,
+        lowestPrice: null,
+      });
+      expect(body.totalAcrossVendors).toEqual({
+        currency: 'IQD',
+        amount: '559000',
+        converted: false,
+      });
+      expect(
+        (buildOf('IQD', `${idOf(tridentZ5)}:1`).body as BuildResponse).totalAcrossVendors,
+      ).toBe(null);
+    });
+
+    it('lists each Vendor with any of its Parts in stock, with its total, the Parts it has and those it lacks, never an Unstocked Part, those lacking fewest first and then the lowest total', () => {
+      const [cpu, kit, pcCase] = [ryzen7800X3D, tridentZ5, theOnlyCase].map(idOf);
+      const { vendors } = buildOf('IQD', cpu, `${kit}:1`, pcCase).body as BuildResponse;
+      const iqd = (amount: string, converted = false) => ({
+        currency: 'IQD',
+        amount,
+        converted,
+      });
+
+      expect(vendors.map((vendor) => vendor.name)).toEqual([
+        'Made-up PC Parts',
+        'Mock Hardware House',
+        'Pretend Tech',
+        'Example Electronics Bazaar',
+        'کۆمپیوتەری وەهمی',
+        'حاسبات المثال',
+        'کۆگای پارچەی خەیاڵی',
+        'متجر التجربة للإلكترونيات',
+        'ئەلیکترۆنیاتی خەیاڵ',
+        'تەکنەلۆجیای نموونە',
+        'عالم الحاسوب الافتراضي',
+        'Invented Components & Accessories Trading Company',
+        'Sample Systems',
+        'Not-a-Real PC Shop',
+        'Fictional Circuits',
+        'شركة التقنيات الوهمية لتجارة الحاسبات وملحقاتها',
+        'Dummy Digital',
+      ]);
+      expect(vendors[0]).toEqual({
+        id: madeUpIdentifier(1),
+        name: 'Made-up PC Parts',
+        total: iqd('710000'),
+        partsInStock: [
+          { partId: cpu, shownPrice: iqd('575000'), timesQuantity: iqd('575000') },
+          { partId: pcCase, shownPrice: iqd('135000'), timesQuantity: iqd('135000') },
+        ],
+        partsLacked: [],
+      });
+      expect(vendors[2]).toEqual({
+        id: madeUpIdentifier(4),
+        name: 'Pretend Tech',
+        total: iqd('559000'),
+        partsInStock: [
+          { partId: cpu, shownPrice: iqd('559000'), timesQuantity: iqd('559000') },
+        ],
+        partsLacked: [pcCase],
+      });
+      expect(vendors[7].total).toEqual(iqd('570250', true));
+    });
+
+    it('adds up each Shown Price times its quantity into a Vendor’s total', () => {
+      const { vendors } = buildOf('USD', `${idOf(vengeance)}:3`).body as BuildResponse;
+
+      expect(vendors).toEqual([
+        {
+          id: madeUpIdentifier(1),
+          name: 'Made-up PC Parts',
+          total: { currency: 'USD', amount: '327.00', converted: false },
+          partsInStock: [
+            {
+              partId: idOf(vengeance),
+              shownPrice: { currency: 'USD', amount: '109.00', converted: false },
+              timesQuantity: { currency: 'USD', amount: '327.00', converted: false },
+            },
+          ],
+          partsLacked: [],
+        },
+      ]);
+    });
+
+    it('orders the Vendors tied on their total by name, so that their order can differ between currencies', () => {
+      const firstFourIn = (currency: string) =>
+        (buildOf(currency, idOf(ryzen7800X3D)).body as BuildResponse).vendors
+          .slice(0, 4)
+          .map((vendor) => vendor.name);
+
+      expect(firstFourIn('IQD')).toEqual([
+        'Pretend Tech',
+        'Example Electronics Bazaar',
+        'کۆمپیوتەری وەهمی',
+        'حاسبات المثال',
+      ]);
+      expect(firstFourIn('USD')).toEqual([
+        'Pretend Tech',
+        'Example Electronics Bazaar',
+        'حاسبات المثال',
+        'کۆمپیوتەری وەهمی',
+      ]);
+    });
+
+    it("answers every rule's outcome as the Compatibility Rules judge it, and the Estimated power draw, or the TDP it lacks", () => {
+      const [cpu, board] = [ryzen5600, b650Tomahawk].map(idOf);
+      const body = buildOf('IQD', cpu, board).body as BuildResponse;
+
+      expect(body.outcomes).toEqual([
+        { rule: 1, outcome: 'problem', parts: [cpu, board], missing: [] },
+      ]);
+      expect(body.estimatedPowerDraw).toEqual({
+        watts: null,
+        missing: [
+          { part: cpu, path: 'specifications.tdp', label: 'TDP', fieldLabel: null },
+        ],
+      });
+    });
+
+    it('names each missing specification of an unchecked rule by its English label, a field of a row by its list’s and its own', () => {
+      const [cpu, cooler, board, gpu] = [
+        ryzen7800X3D,
+        theLongestName,
+        b650Tomahawk,
+        palit4070Super,
+      ].map(idOf);
+      const body = buildOf('IQD', gpu, board, cooler, cpu).body as BuildResponse;
+
+      expect(body.outcomes).toEqual([
+        { rule: 1, outcome: 'passes', parts: [cpu, board], missing: [] },
+        {
+          rule: 2,
+          outcome: 'unchecked',
+          parts: [],
+          missing: [
+            { part: cooler, path: 'cpu_sockets', label: 'CPU sockets', fieldLabel: null },
+          ],
+        },
+        {
+          rule: 8,
+          outcome: 'unchecked',
+          parts: [],
+          missing: [
+            {
+              part: board,
+              path: 'pcie_slots.1.lanes',
+              label: 'PCIe slots',
+              fieldLabel: 'Lanes',
+            },
+          ],
+        },
+      ]);
+      expect(body.estimatedPowerDraw).toEqual({ watts: 440, missing: [] });
+    });
+
+    describe('is a Complete Build', () => {
+      // A Build of the CPU given and a Part of each Category but the GPU and
+      // the CPU cooler, or only those Categories given.
+      const withoutGpuOrCooler = (cpu: CatalogPart) => [
+        idOf(cpu),
+        idOf(b650Tomahawk),
+        `${idOf(vengeance)}:1`,
+        `${idOf(samsung990Pro)}:1`,
+        idOf(theOnlyCase),
+        idOf(rm850e),
+      ];
+      const completenessOf = (values: string[]) => {
+        const { complete, stillNeeded, cpuValuesNotKnown } = buildOf('IQD', ...values)
+          .body as BuildResponse;
+        return { complete, stillNeeded, cpuValuesNotKnown };
+      };
+
+      it('with a Part of every Category', () => {
+        expect(
+          completenessOf([
+            ...withoutGpuOrCooler(ryzen7800X3D),
+            idOf(nhD15),
+            idOf(palit4070Super),
+          ]),
+        ).toEqual({ complete: true, stillNeeded: [], cpuValuesNotKnown: [] });
+      });
+
+      it('without a GPU when its CPU has integrated graphics, and without a CPU cooler when its CPU includes one', () => {
+        expect(completenessOf(withoutGpuOrCooler(ryzen7800X3D))).toEqual({
+          complete: false,
+          stillNeeded: ['cpuCooler'],
+          cpuValuesNotKnown: [],
+        });
+        expect(completenessOf(withoutGpuOrCooler(ryzen5600))).toEqual({
+          complete: false,
+          stillNeeded: ['gpu'],
+          cpuValuesNotKnown: [],
+        });
+        expect(
+          completenessOf([...withoutGpuOrCooler(ryzen5600), idOf(dual2060Super)]),
+        ).toEqual({ complete: true, stillNeeded: [], cpuValuesNotKnown: [] });
+      });
+
+      it('only with both when its CPU does not hold the values, which it says are not known', () => {
+        expect(completenessOf(withoutGpuOrCooler(core12100F))).toEqual({
+          complete: false,
+          stillNeeded: ['cpuCooler', 'gpu'],
+          cpuValuesNotKnown: ['integratedGraphics', 'includesCooler'],
+        });
+        expect(completenessOf(withoutGpuOrCooler(core14600K))).toEqual({
+          complete: false,
+          stillNeeded: ['cpuCooler'],
+          cpuValuesNotKnown: ['includesCooler'],
+        });
+      });
+
+      it('not without a CPU, needing a GPU and a CPU cooler too, kits and drives counting once however many', () => {
+        expect(
+          completenessOf([
+            idOf(b650Tomahawk),
+            `${idOf(vengeance)}:2`,
+            `${idOf(furyBeast16)}:1`,
+            `${idOf(samsung990Pro)}:1`,
+            `${idOf(p3Plus)}:3`,
+            `${idOf(barraCuda)}:1`,
+            idOf(theOnlyCase),
+            idOf(rm850e),
+          ]),
+        ).toEqual({
+          complete: false,
+          stillNeeded: ['cpu', 'cpuCooler', 'gpu'],
+          cpuValuesNotKnown: [],
+        });
+      });
+    });
+
+    it('leaves out a Part the shop does not offer, as the API leaves out one the catalog does not hold', () => {
+      const body = buildOf(
+        'IQD',
+        '00000000-0000-4000-8000-999999999999',
+        idOf(ryzen7800X3D),
+      ).body as BuildResponse;
+
+      expect(body.parts.map((part) => part.name)).toEqual([ryzen7800X3D.name]);
+    });
+
+    it('is refused without a currency, or with a value of `part` that names no Part', () => {
+      expect(get('/v1/build').body).toEqual(notValid('currency'));
+      expect(buildOf('IQD', `${idOf(vengeance)}:two`).body).toEqual(notValid('part'));
+    });
+
+    // As the API refuses a Build that a cookie edited by hand can give, such
+    // as one that files a RAM kit under the CPU, so that the Build page's
+    // state for it can be looked at.
+    it('is refused, naming `part`, for a RAM kit with no quantity and a CPU with one', () => {
+      for (const value of [idOf(vengeance), `${idOf(ryzen7800X3D)}:1`]) {
+        const answer = buildOf('IQD', value);
+
+        expect(answer.status).toBe(400);
+        expect(answer.body).toEqual(notValid('part'));
+        expect(
+          get(`/v1/visible-parts?category=cpu&currency=IQD&inStockOnly=true&part=${value}`)
+            .body,
+        ).toEqual(notValid('part'));
+      }
     });
   });
 

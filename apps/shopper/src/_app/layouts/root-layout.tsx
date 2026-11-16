@@ -9,7 +9,7 @@ import { barColours, browsersBar, schemeIn } from '@/shared/scheme';
 
 import '../styles/global.css';
 import { Frame } from './frame';
-import { MarkAReturn } from './mark-a-return';
+import { MarkAReturnOrAnAnchor } from './mark-a-return-or-an-anchor';
 
 // What every page's preview builds on: the Shopper app's public address,
 // from which the addresses a page names are written, and the site's name,
@@ -41,7 +41,7 @@ export async function generateViewport(): Promise<Viewport> {
 // it and no page flashes the other; with the device's scheme chosen it names
 // none, and the page follows the device. No script sets any of them; the
 // scheme switch changes the scheme in place once its script runs, and a
-// return is marked by one line in the head (`MarkAReturn`), so React is told
+// return is marked by one line in the head (`MarkAReturnOrAnAnchor`), so React is told
 // not to mind either. Every page is shown inside the frame.
 //
 // The "not found" screen of an address that matches no route is drawn on
@@ -63,7 +63,7 @@ export async function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <head>
-        <MarkAReturn />
+        <MarkAReturnOrAnAnchor />
       </head>
       <body>
         <Frame>{children}</Frame>

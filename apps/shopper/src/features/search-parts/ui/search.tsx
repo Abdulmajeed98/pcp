@@ -1,31 +1,42 @@
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 
-import { type Category, categoryAddress } from '@/entities/category';
+import type { Category } from '@/entities/category';
 
-import type { CategoryQuery, OfferedFilters, PriceEnd } from '../model/category-query';
+import {
+  type CategoryQuery,
+  fieldsTheFormKeeps,
+  type OfferedFilters,
+  type PickerQuery,
+  type PriceEnd,
+} from '../model/category-query';
 import { FiltersFold } from './filters-fold';
 import { SearchForm } from './search-form';
 
 // A Category page's search and filters, as the server draws them: the form,
-// sent to the Category page's own address, with the search the address holds
-// and the filters the API's answer offers, each chip ticked as the address
-// chose it and each end of the price range as it was typed, and the words in
-// the page's language. Without the API's answer of the filters, the form
-// holds the search alone, with Show Parts and Clear all.
+// sent to the list's own address, a Category page's or the picker's
+// (`list`), as its choices and its filters lead to it, with the search the address holds and the filters the API's
+// answer offers, each chip ticked as the address chose it and each end of
+// the price range as it was typed, and the words in the page's language. In
+// the picker the form keeps the switch as it is (`fieldsTheFormKeeps`).
+// Without the API's answer of the filters, the form holds the search alone,
+// with Show Parts and Clear all.
 export async function Search({
   category,
   query,
   offered,
   range,
+  list,
   className,
 }: {
   category: Category;
-  query: CategoryQuery;
+  query: CategoryQuery | PickerQuery;
   offered: OfferedFilters | undefined;
   range: { lowest: PriceEnd; highest: PriceEnd };
+  // The list's own address with no query, a Category page's or the picker's.
+  list: string;
   className?: string;
 }) {
-  const [language, t] = await Promise.all([getLocale(), getTranslations('SearchParts')]);
+  const t = await getTranslations('SearchParts');
   const priceRange =
     offered?.priceRange.lowest != null && offered.priceRange.highest != null
       ? offered.priceRange
@@ -33,7 +44,8 @@ export async function Search({
 
   return (
     <SearchForm
-      action={categoryAddress(language, category)}
+      action={list}
+      kept={fieldsTheFormKeeps(query)}
       search={query.search}
       priceRange={priceRange}
       words={{
@@ -43,7 +55,7 @@ export async function Search({
       }}
       className={className}
     >
-      <FiltersFold category={category} query={query} offered={offered} range={range} />
+      <FiltersFold query={query} offered={offered} range={range} list={list} />
     </SearchForm>
   );
 }

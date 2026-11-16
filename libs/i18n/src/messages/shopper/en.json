@@ -15,7 +15,9 @@
       "dark": "Dark",
       "device": "Device"
     },
-    "schemeTurn": "Colours: {now}. Choose {next}"
+    "schemeTurn": "Colours: {now}. Choose {next}",
+    "yourBuild": "Your Build",
+    "yourBuildName": "{count, plural, one {Your Build, {countText} Part} other {Your Build, {countText} Parts}}"
   },
   "BackCover": {
     "invitation": "Find your Part",
@@ -187,6 +189,218 @@
     },
     "tryAgain": "Try again"
   },
+  "BuildPage": {
+    "title": "Your Build",
+    "status": {
+      "empty": "No Part chosen yet. Choose one for any Category below.",
+      "complete": "A Complete Build: it holds every Part a PC needs.",
+      "completeWithProblems": "{count, plural, one {A Complete Build, with a Problem to settle: see what the rules found.} other {A Complete Build, with {countText} Problems to settle: see what the rules found.}}",
+      "stillNeeds": "Still needs {list}.",
+      "listComma": ", ",
+      "listAnd": " and ",
+      "category": "{category, select, cpu {a CPU} cpuCooler {a CPU cooler} motherboard {a motherboard} ram {RAM} storage {storage} gpu {a GPU} case {a case} psu {a PSU} other {a Part}}",
+      "hasGraphics": "Your CPU has integrated graphics, so a GPU is not needed.",
+      "includesCooler": "Your CPU comes with a cooler, so a CPU cooler is not needed.",
+      "graphicsNotKnown": "Your CPU does not say whether it has integrated graphics, so a GPU is counted as needed.",
+      "coolerNotKnown": "Your CPU does not say whether it comes with a cooler, so a CPU cooler is counted as needed."
+    },
+    "stamp": "Complete Build",
+    "slip": {
+      "yourBuild": "{count, plural, one {Your Build · {countText} Part} other {Your Build · {countText} Parts}}",
+      "parts": "Parts",
+      "complete": "Complete",
+      "yes": "Yes",
+      "stillNeeded": "{count, plural, one {{countText} still needed} other {{countText} still needed}}",
+      "lowestTotal": "Lowest total",
+      "vendorsToVisit": "Vendors to visit",
+      "problems": "Problems",
+      "warnings": "Warnings",
+      "notChecked": "Not checked",
+      "rulesPassed": "Rules passed",
+      "powerDraw": "Power draw",
+      "foot": "Each Part at its Lowest Price, read just now.",
+      "leavesOut": "{count, plural, one {Leaves out the Part no Vendor has in stock.} other {Leaves out the {countText} Parts no Vendor has in stock.}}",
+      "priceNotShown": "{count, plural, one {Leaves out a Part whose price cannot be shown yet.} other {Leaves out {countText} Parts whose prices cannot be shown yet.}}"
+    },
+    "choose": "{category, select, cpu {Choose a CPU} cpuCooler {Choose a CPU cooler} motherboard {Choose a motherboard} ram {Choose RAM} storage {Choose storage} gpu {Choose a GPU} case {Choose a case} psu {Choose a PSU} other {Choose a Part}}",
+    "notNeeded": "{category, select, gpu {Not needed: your CPU has integrated graphics.} other {Not needed: your CPU comes with a cooler.}}",
+    "change": "Change",
+    "changeThe": "{category, select, cpu {Change the CPU} cpuCooler {Change the CPU cooler} motherboard {Change the motherboard} gpu {Change the GPU} case {Change the case} psu {Change the PSU} other {Change the Part}}",
+    "remove": "Remove",
+    "removeThe": "Remove {part}",
+    "addAnother": "{category, select, ram {Add another RAM kit} other {Add another drive}}",
+    "quantity": {
+      "of": "Quantity of {part}",
+      "figure": "Quantity",
+      "oneFewer": "One fewer",
+      "oneMore": "One more",
+      "set": "Set"
+    },
+    "refused": {
+      "mostKitsOrDrives": "{category, select, ram {Your Build holds {most} different RAM kits, the most it keeps, so the kit was not added. Remove one to add another.} other {Your Build holds {most} different drives, the most it keeps, so the drive was not added. Remove one to add another.}}",
+      "mostOfOne": "Your Build holds {most} of it, the most it keeps, so no more was added.",
+      "notAQuantity": "Not a quantity from {least} to {most}, so not changed."
+    },
+    "empty": {
+      "cell": "Empty the Build",
+      "warning": "{count, plural, one {This removes the {countText} Part from your Build. Nothing brings it back.} other {This removes all {countText} Parts from your Build. Nothing brings them back.}}",
+      "confirm": "{count, plural, one {Remove the {countText} Part} other {Remove all {countText} Parts}}",
+      "keep": "{count, plural, one {Keep it} other {Keep them}}"
+    },
+    "notRead": {
+      "title": "Your Build cannot be read just now",
+      "note": "Try again in a moment."
+    },
+    "notReadable": {
+      "title": "Your Build cannot be read",
+      "note": "Something in it is not as the platform keeps a Build, so its Parts cannot be shown. Empty it to start a new Build."
+    },
+    "tryAgain": "Try again",
+    "outcomes": {
+      "rule1": {
+        "problem": "The CPU does not fit the motherboard's socket. Choose a CPU and a motherboard of the same socket.",
+        "unchecked": "Whether the CPU fits the motherboard's socket could not be checked. Check both sockets before you buy."
+      },
+      "rule2": {
+        "problem": "The CPU cooler does not fit the CPU's socket. Choose a cooler that lists the CPU's socket.",
+        "unchecked": "Whether the CPU cooler fits the CPU's socket could not be checked. Check the cooler's box before you buy."
+      },
+      "rule3": {
+        "problem": "The CPU does not support the RAM's type. Choose RAM of a type the CPU supports.",
+        "unchecked": "Whether the CPU supports the RAM's type could not be checked. Check the CPU's memory types before you buy."
+      },
+      "rule4": {
+        "problem": "The RAM's type does not fit the motherboard. Choose RAM of the motherboard's type.",
+        "unchecked": "Whether the RAM's type fits the motherboard could not be checked. Check the motherboard's memory type before you buy."
+      },
+      "rule5": {
+        "problem": "The RAM kits have more sticks than the motherboard has slots. Remove a kit, or choose a motherboard with more slots.",
+        "unchecked": "Whether the motherboard has a slot for every RAM stick could not be checked. Check the motherboard's memory slots before you buy."
+      },
+      "rule6": {
+        "problem": "The RAM adds up to more than the motherboard can take. Choose less RAM, or a motherboard that takes more.",
+        "unchecked": "Whether the motherboard can take all the RAM could not be checked. Check how much memory the motherboard takes before you buy."
+      },
+      "rule7": {
+        "problem": "The case does not take the motherboard's form factor. Choose a case that takes it, or a motherboard the case takes.",
+        "unchecked": "Whether the case takes the motherboard's form factor could not be checked. Check the case's box before you buy."
+      },
+      "rule8": {
+        "problem": "The motherboard has no PCIe slot of {lanes} lanes for the GPU. Choose a motherboard with one.",
+        "unchecked": "Whether the motherboard has a PCIe slot of {lanes} lanes for the GPU could not be checked. Check the motherboard's slots before you buy."
+      },
+      "rule9": {
+        "problem": "The GPU is longer than the case allows. Choose a shorter GPU, or a case with room for a longer one.",
+        "unchecked": "Whether the GPU fits the case's length could not be checked. Check both lengths before you buy."
+      },
+      "rule10": {
+        "problem": "The GPU takes more slots than the case has. Choose a slimmer GPU, or a case with more expansion slots.",
+        "unchecked": "Whether the case has enough slots for the GPU could not be checked. Check the case's expansion slots before you buy."
+      },
+      "rule11": {
+        "problem": "The PSU lacks the power connectors the GPU needs. Choose a PSU with the GPU's power connectors.",
+        "warning": "The PSU lacks the GPU's power cable, but has the connectors its adapter takes. Use the adapter that comes with the GPU.",
+        "unchecked": "Whether the PSU can power the GPU could not be checked. Check both Parts' power connectors before you buy."
+      },
+      "rule12": {
+        "problem": "The PSU's wattage leaves too little to spare over the Build's estimated power draw. Choose a PSU of more watts.",
+        "unchecked": "Whether the PSU is strong enough for the Build could not be checked. Check its wattage against the CPU's and the GPU's before you buy."
+      },
+      "rule13": {
+        "problem": "The SATA drives outnumber the motherboard's SATA ports. Remove a SATA drive, or choose a motherboard with more ports.",
+        "unchecked": "Whether the motherboard has a SATA port for every SATA drive could not be checked. Check the motherboard's ports before you buy."
+      },
+      "rule14": {
+        "problem": "The M.2 drives outnumber the motherboard's M.2 slots. Remove an M.2 drive, or choose a motherboard with more slots.",
+        "unchecked": "Whether the motherboard has an M.2 slot for every M.2 drive could not be checked. Check the motherboard's slots before you buy."
+      },
+      "rule15": {
+        "problem": "The drives outnumber the case's drive bays. Remove a drive, or choose a case with more bays.",
+        "warning": "The case lists no drive bay for the {inches}-inch drives. Many small cases mount them elsewhere; the case's manual says.",
+        "unchecked": "Whether the case has a bay for every drive could not be checked. Check the case's drive bays before you buy."
+      },
+      "rule16": {
+        "problem": "The SATA drives outnumber the PSU's SATA power connectors. Remove a SATA drive, or choose a PSU with more connectors.",
+        "unchecked": "Whether the PSU has a SATA power connector for every SATA drive could not be checked. Check the PSU's connectors before you buy."
+      },
+      "rule17": {
+        "problem": "The CPU cooler is taller than the case allows. Choose a lower cooler, or a case with more room above the CPU.",
+        "unchecked": "Whether the CPU cooler fits the case's height could not be checked. Check both heights before you buy."
+      },
+      "rule18": {
+        "problem": "The case does not take the PSU's form factor. Choose a PSU the case takes, or a case that takes it.",
+        "unchecked": "Whether the case takes the PSU's form factor could not be checked. Check the case's box before you buy."
+      },
+      "rule19": {
+        "problem": "The PSU is longer than the case allows. Choose a shorter PSU, or a case with room for a longer one.",
+        "unchecked": "Whether the PSU fits the case's length could not be checked. Check both lengths before you buy."
+      },
+      "rule20": {
+        "problem": "The PSU has no CPU power connector for the motherboard. Choose a PSU with one.",
+        "warning": "The PSU has fewer CPU power connectors than the motherboard has sockets. Many motherboards start with one; the motherboard's manual says.",
+        "unchecked": "Whether the PSU has the motherboard's CPU power connectors could not be checked. Check both before you buy."
+      },
+      "rule21": {
+        "problem": "The motherboard's connectors face its back, and the case does not take such a motherboard. Choose a case that does, or another motherboard.",
+        "unchecked": "Whether the case takes the motherboard's rear connectors could not be checked. Check the case's box before you buy."
+      }
+    },
+    "price": {
+      "lowestAt": "Lowest at <link>{vendor}</link>",
+      "noVendorHasIt": "No Vendor has it",
+      "unstocked": "No Vendor has it in stock, so it is left out of every total."
+    },
+    "rules": {
+      "title": "What the rules found",
+      "note": "The {rules} Compatibility Rules, judged on the Parts in your Build.",
+      "noneApply": "No rule applies yet: the rules judge Parts that work together, as you choose them.",
+      "allPassed": "{count, plural, one {No Problem: the one rule that applies was checked and passed.} other {No Problem: all {countText} rules that apply were checked and passed.}}",
+      "problems": "{count, plural, one {{countText} Problem} other {{countText} Problems}}",
+      "warnings": "{count, plural, one {{countText} Warning} other {{countText} Warnings}}",
+      "notChecked": "{count, plural, one {{countText} rule not checked} other {{countText} rules not checked}}",
+      "passed": "Rules checked and passed",
+      "powerDraw": "Estimated power draw",
+      "powerNotKnown": "Not known: the <english>{part}</english> does not list its <english>{specification}</english>.",
+      "notInTheCatalog": "Not in the catalog: <english>{specification}</english>",
+      "more": "{count, plural, one {{countText} more} other {{countText} more}}",
+      "fewer": "Fewer",
+      "kept": "Your Build is kept as it is: change a Part when you choose to."
+    },
+    "vendors": {
+      "title": "Buy from one Vendor",
+      "note": "Each Vendor's total for the Parts it has in stock. Fewest missing first, then the lowest total. No Vendor pays for its place.",
+      "hasEvery": "Has every Part",
+      "has": "{count, plural, one {Has {hasText} of your {countText} Part · lacks {lacksText}} other {Has {hasText} of your {countText} Parts · lacks {lacksText}}}",
+      "itsParts": "Its Parts",
+      "inStockThere": "In stock there",
+      "notThere": "Not there",
+      "showTheOthers": "{count, plural, one {Show the other Vendor} other {Show the other {countText} Vendors}}",
+      "unstocked": "{count, plural, one {The one Part no Vendor has in stock is in no Vendor's list.} other {{countText} Parts no Vendor has in stock are in no Vendor's list.}}"
+    }
+  },
+  "PickerPage": {
+    "inStock": "{category, select, cpu {{count, plural, one {{countText} CPU in stock, lowest price first.} other {{countText} CPUs in stock, lowest price first.}}} cpuCooler {{count, plural, one {{countText} CPU cooler in stock, lowest price first.} other {{countText} CPU coolers in stock, lowest price first.}}} motherboard {{count, plural, one {{countText} motherboard in stock, lowest price first.} other {{countText} motherboards in stock, lowest price first.}}} ram {{count, plural, one {{countText} RAM kit in stock, lowest price first.} other {{countText} RAM kits in stock, lowest price first.}}} storage {{count, plural, one {{countText} drive in stock, lowest price first.} other {{countText} drives in stock, lowest price first.}}} gpu {{count, plural, one {{countText} GPU in stock, lowest price first.} other {{countText} GPUs in stock, lowest price first.}}} case {{count, plural, one {{countText} case in stock, lowest price first.} other {{countText} cases in stock, lowest price first.}}} psu {{count, plural, one {{countText} PSU in stock, lowest price first.} other {{countText} PSUs in stock, lowest price first.}}} other {{count, plural, one {{countText} Part in stock, lowest price first.} other {{countText} Parts in stock, lowest price first.}}}}",
+    "compatible": "{category, select, cpu {{count, plural, one {{countText} CPU in stock compatible with your Build, lowest price first.} other {{countText} CPUs in stock compatible with your Build, lowest price first.}}} cpuCooler {{count, plural, one {{countText} CPU cooler in stock compatible with your Build, lowest price first.} other {{countText} CPU coolers in stock compatible with your Build, lowest price first.}}} motherboard {{count, plural, one {{countText} motherboard in stock compatible with your Build, lowest price first.} other {{countText} motherboards in stock compatible with your Build, lowest price first.}}} ram {{count, plural, one {{countText} RAM kit in stock compatible with your Build, lowest price first.} other {{countText} RAM kits in stock compatible with your Build, lowest price first.}}} storage {{count, plural, one {{countText} drive in stock compatible with your Build, lowest price first.} other {{countText} drives in stock compatible with your Build, lowest price first.}}} gpu {{count, plural, one {{countText} GPU in stock compatible with your Build, lowest price first.} other {{countText} GPUs in stock compatible with your Build, lowest price first.}}} case {{count, plural, one {{countText} case in stock compatible with your Build, lowest price first.} other {{countText} cases in stock compatible with your Build, lowest price first.}}} psu {{count, plural, one {{countText} PSU in stock compatible with your Build, lowest price first.} other {{countText} PSUs in stock compatible with your Build, lowest price first.}}} other {{count, plural, one {{countText} Part in stock compatible with your Build, lowest price first.} other {{countText} Parts in stock compatible with your Build, lowest price first.}}}}",
+    "someNotCompatible": "{count, plural, one {{countText} is not compatible with your Build.} other {{countText} are not compatible with your Build.}}",
+    "switch": "{category, select, cpu {Show the CPUs that are not compatible} cpuCooler {Show the CPU coolers that are not compatible} motherboard {Show the motherboards that are not compatible} ram {Show the RAM kits that are not compatible} storage {Show the drives that are not compatible} gpu {Show the GPUs that are not compatible} case {Show the cases that are not compatible} psu {Show the PSUs that are not compatible} other {Show the Parts that are not compatible}}",
+    "switchOn": "They are shown now. A tap hides them.",
+    "pick": "Pick",
+    "pickIt": "Pick {part}",
+    "addOneMore": "Add one more",
+    "addOneMoreOf": "Add one more {part}",
+    "inYourBuild": "In your Build",
+    "inYourBuildTimes": "In your Build, {quantity} ×",
+    "notCompatible": "Not compatible with your Build",
+    "close": "Only Parts some Vendor has in stock, lowest price first.",
+    "noneCompatible": "{category, select, cpu {{count, plural, one {The {countText} CPU in stock is not compatible with your Build.} other {None of the {countText} CPUs in stock is compatible with your Build.}}} cpuCooler {{count, plural, one {The {countText} CPU cooler in stock is not compatible with your Build.} other {None of the {countText} CPU coolers in stock is compatible with your Build.}}} motherboard {{count, plural, one {The {countText} motherboard in stock is not compatible with your Build.} other {None of the {countText} motherboards in stock is compatible with your Build.}}} ram {{count, plural, one {The {countText} RAM kit in stock is not compatible with your Build.} other {None of the {countText} RAM kits in stock is compatible with your Build.}}} storage {{count, plural, one {The {countText} drive in stock is not compatible with your Build.} other {None of the {countText} drives in stock is compatible with your Build.}}} gpu {{count, plural, one {The {countText} GPU in stock is not compatible with your Build.} other {None of the {countText} GPUs in stock is compatible with your Build.}}} case {{count, plural, one {The {countText} case in stock is not compatible with your Build.} other {None of the {countText} cases in stock is compatible with your Build.}}} psu {{count, plural, one {The {countText} PSU in stock is not compatible with your Build.} other {None of the {countText} PSUs in stock is compatible with your Build.}}} other {{count, plural, one {The {countText} Part in stock is not compatible with your Build.} other {None of the {countText} Parts in stock is compatible with your Build.}}}}",
+    "noneCompatibleLine": "Your Build’s Problems say what stands in the way.",
+    "showAll": "{category, select, cpu {{count, plural, one {Show the {countText} CPU} other {Show all {countText} CPUs}}} cpuCooler {{count, plural, one {Show the {countText} CPU cooler} other {Show all {countText} CPU coolers}}} motherboard {{count, plural, one {Show the {countText} motherboard} other {Show all {countText} motherboards}}} ram {{count, plural, one {Show the {countText} RAM kit} other {Show all {countText} RAM kits}}} storage {{count, plural, one {Show the {countText} drive} other {Show all {countText} drives}}} gpu {{count, plural, one {Show the {countText} GPU} other {Show all {countText} GPUs}}} case {{count, plural, one {Show the {countText} case} other {Show all {countText} cases}}} psu {{count, plural, one {Show the {countText} PSU} other {Show all {countText} PSUs}}} other {{count, plural, one {Show the {countText} Part} other {Show all {countText} Parts}}}}",
+    "seeWhy": "See why on your Build",
+    "noMatch": "{category, select, cpu {No CPU in stock matches your search and filters.} cpuCooler {No CPU cooler in stock matches your search and filters.} motherboard {No motherboard in stock matches your search and filters.} ram {No RAM in stock matches your search and filters.} storage {No storage in stock matches your search and filters.} gpu {No GPU in stock matches your search and filters.} case {No case in stock matches your search and filters.} psu {No PSU in stock matches your search and filters.} other {No Part in stock matches your search and filters.}}",
+    "noneInStock": "{category, select, cpu {No Vendor has a CPU in stock now.} cpuCooler {No Vendor has a CPU cooler in stock now.} motherboard {No Vendor has a motherboard in stock now.} ram {No Vendor has RAM in stock now.} storage {No Vendor has storage in stock now.} gpu {No Vendor has a GPU in stock now.} case {No Vendor has a case in stock now.} psu {No Vendor has a PSU in stock now.} other {No Vendor has one in stock now.}}",
+    "buildRefused": "Your Build cannot be read, so no Part can be judged against it.",
+    "backToYourBuild": "Back to your Build"
+  },
   "NotFoundPage": {
     "title": "Page not found",
     "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped.",
@@ -210,6 +424,13 @@
     },
     "vendor": {
       "description": "{vendor}, a Vendor in {city}. How to call, message or find it, and every PC Part it offers now."
+    },
+    "build": {
+      "title": "Your Build",
+      "description": "The PC Parts you have chosen, Category by Category, and what your Build still needs."
+    },
+    "picker": {
+      "description": "{category, select, cpu {Choose a CPU for your Build among those Vendors have in stock now, lowest price first.} cpuCooler {Choose a CPU cooler for your Build among those Vendors have in stock now, lowest price first.} motherboard {Choose a motherboard for your Build among those Vendors have in stock now, lowest price first.} ram {Choose RAM for your Build among those Vendors have in stock now, lowest price first.} storage {Choose storage for your Build among those Vendors have in stock now, lowest price first.} gpu {Choose a GPU for your Build among those Vendors have in stock now, lowest price first.} case {Choose a case for your Build among those Vendors have in stock now, lowest price first.} psu {Choose a PSU for your Build among those Vendors have in stock now, lowest price first.} other {Choose a Part for your Build among those Vendors have in stock now, lowest price first.}}"
     }
   }
 }

@@ -5,11 +5,13 @@ import type {
   PartResponse,
   PartSummaryResponse,
 } from '@pcp/api-client';
+import { neededSpecificationsOf } from '@pcp/compatibility';
 
 import { theOtherGpus } from './made-up-gpus.ts';
 import { type CatalogPart, namedParts, theCategoryOfManyParts } from './made-up-offers.ts';
 import { partsTheShopOffers } from './made-up-shop.ts';
-import type { ReadPart, TheShoppersCatalog } from './the-shoppers-shop.ts';
+import { setAt, valueAt } from './specification-document.ts';
+import type { CpuValue, ReadPart, TheShoppersCatalog } from './the-shoppers-shop.ts';
 
 // A search of the catalog for the Parts of one Category whose names hold
 // every word of `search`, as the API answers it.
@@ -79,10 +81,50 @@ function isACode(partNumber: string): boolean {
   return /^\S+$/.test(partNumber);
 }
 
+// A Part's needed specifications, the paths the Compatibility Rules read in
+// its Category, as the rules are handed them: each one the API answers as
+// missing for the Part is left out, so that the shop holds no copy of the
+// catalog's rule for what is missing, and the rules never take a value the
+// catalog counts as not known for a real one. The catalog keeps only the
+// fields of a row that it does not count as missing, so a row is taken as it
+// is.
+function neededHeldIn(part: PartResponse): Record<string, unknown> {
+  const held: Record<string, unknown> = {};
+  for (const path of neededSpecificationsOf(part.category)) {
+    const value = valueAt(part.specifications, path);
+    if (value !== undefined && !part.missingNeededSpecifications.includes(path)) {
+      setAt(held, path, value);
+    }
+  }
+  return held;
+}
+
+// Where a CPU's specifications hold the values the rule for a Complete Build
+// reads, as the API's CPU list names them (`cpu.specifications.ts`). Neither
+// is a needed specification, so the API answers neither as missing; the
+// catalog keeps no value it counts as missing, so a value the document does
+// not hold is one the CPU lacks.
+const cpuValuesAt: Readonly<Record<CpuValue, string>> = {
+  integratedGraphics: 'specifications.integratedGraphics.model',
+  includesCooler: 'specifications.includesCooler',
+};
+
+// The values of a CPU that the rule for a Complete Build reads, each it holds.
+function cpuValuesOf(part: PartResponse): Partial<Record<CpuValue, unknown>> {
+  return Object.fromEntries(
+    Object.entries(cpuValuesAt).flatMap(([value, path]) => {
+      const held = valueAt(part.specifications, path);
+      return held === undefined ? [] : [[value, held]];
+    }),
+  );
+}
+
 // A Part as the shop holds it: what a list shows of it, without the photo
 // the development database may hold for it, since the shop serves only its
 // own made-up photos, and with only the part numbers that are codes, so that
-// a Part page shows plain codes; and its specifications.
+// a Part page shows plain codes; its specifications; its needed
+// specifications, as the rules are handed them; and, for a CPU, the values
+// the rule for a Complete Build reads.
 function heldAs(part: PartResponse): ReadPart {
   const { id, category, name, manufacturer, partNumbers, specifications } = part;
   return {
@@ -95,6 +137,8 @@ function heldAs(part: PartResponse): ReadPart {
       photoPath: null,
     },
     specifications,
+    neededSpecifications: neededHeldIn(part),
+    ...(category === 'cpu' ? { cpuValues: cpuValuesOf(part) } : {}),
   };
 }
 

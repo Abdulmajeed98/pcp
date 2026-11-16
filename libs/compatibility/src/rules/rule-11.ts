@@ -17,6 +17,7 @@ import { rule } from './statement';
 // 2026).
 export const rule11 = rule({
   number: 11,
+  canWarn: true,
   involves: {
     gpu: gpuPowerSockets.map((socket) => `power_connectors.${socket}` as const),
     psu: ['connectors.pcie_6_plus_2_pin', 'connectors.pcie_12vhpwr'],

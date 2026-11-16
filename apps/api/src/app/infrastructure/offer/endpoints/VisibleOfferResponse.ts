@@ -64,6 +64,8 @@ export class ShownPriceResponse {
     this.converted = shown.isConverted();
   }
 
+  static of(shown: ShownPrice): ShownPriceResponse;
+  static of(shown: ShownPrice | null): ShownPriceResponse | null;
   static of(shown: ShownPrice | null): ShownPriceResponse | null {
     return shown === null ? null : new ShownPriceResponse(shown);
   }

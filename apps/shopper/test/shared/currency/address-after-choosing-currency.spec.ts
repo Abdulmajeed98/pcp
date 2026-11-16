@@ -50,6 +50,18 @@ describe('the address the currency switch returns to', () => {
     ).toBe('/en/categories/cpu?search=ryzen');
   });
 
+  // The picker's switch shows every Part in stock, those not Compatible with the
+  // Build among them, in any currency, so it is kept as the page wrote it,
+  // and only the price range is dropped (builder ticket 09).
+  it("keeps the picker's switch and drops its price range", () => {
+    expect(
+      addressAfterChoosingCurrency(
+        'ckb',
+        '/build/cpu?search=ryzen&lowest=150000&highest=900000&show=all&page=2',
+      ),
+    ).toBe('/ckb/build/cpu?search=ryzen&show=all&page=2');
+  });
+
   it('returns a page with no query with none', () => {
     expect(addressAfterChoosingCurrency('en', '/categories/cpu')).toBe(
       '/en/categories/cpu',

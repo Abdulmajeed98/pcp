@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { PageableAttributes, StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
+import { BuildReading } from '../build/BuildReading';
+import { compatibleWith } from '../build/compatible';
 import { Currency } from '../currency/currency';
 import { Category } from '../part/Category';
 import { searchWordsOf } from '../part/search-words';
 import { choicesOf } from '../specification/filters';
+import { PickersConditions } from './PickersConditions';
 import { PriceRange } from './PriceRange';
 import {
+  CompatibleCount,
   ListVisiblePartsParams,
   VisiblePartsPage,
   VisiblePartStore,
@@ -22,6 +26,7 @@ class Input {
     private readonly filters: ReadonlyMap<string, readonly string[]>,
     private readonly lowest: number | undefined,
     private readonly highest: number | undefined,
+    private readonly conditions: PickersConditions,
     private readonly pageable: PageableAttributes,
   ) {}
 
@@ -61,6 +66,11 @@ class Input {
     return this.highest;
   }
 
+  // The picker's conditions, none of which a Category page asks.
+  getConditions(): PickersConditions {
+    return this.conditions;
+  }
+
   getPageable(): PageableAttributes {
     return this.pageable;
   }
@@ -94,9 +104,20 @@ export { Output as ListVisiblePartsQueryOutput };
 // refused, naming its parameter. So is a price range whose lowest end is
 // above its highest; a Part is within it when its Lowest Price, as
 // answered, after rounding, is within both ends.
+//
+// The picker's conditions: in stock only keeps the Parts with an in-stock
+// Visible Offer (BLD-2). Given a Build, read as reading a Build reads it and
+// refused as it refuses it, naming `part`, each Part answers whether it is
+// Compatible with it, and those that are not are left out unless the switch
+// keeps them, in their place in the order (BLD-3). Every Part is judged
+// before the list is paged, so that the page and the total count only the
+// Parts kept.
 @Injectable()
 export class ListVisiblePartsQuery {
-  constructor(private readonly visiblePartStore: VisiblePartStore) {}
+  constructor(
+    private readonly visiblePartStore: VisiblePartStore,
+    private readonly buildReading: BuildReading,
+  ) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const choices = choicesOf(input.getCategory(), input.getFilters());
@@ -106,19 +127,44 @@ export class ListVisiblePartsQuery {
 
     // Read once, so that every Offer's visibility is judged at one moment.
     const now = new Date();
-    const page = await this.visiblePartStore.listVisibleParts(
-      new ListVisiblePartsParams(
-        input.getCategory(),
-        input.getCurrency(),
-        searchWordsOf(input.getTerm()),
-        input.getManufacturers(),
-        choices.right,
-        range.right,
+    const conditions = input.getConditions();
+    const params = new ListVisiblePartsParams(
+      input.getCategory(),
+      input.getCurrency(),
+      searchWordsOf(input.getTerm()),
+      input.getManufacturers(),
+      choices.right,
+      range.right,
+      conditions.isInStockOnly(),
+      now,
+    );
+    if (!conditions.givesABuild()) {
+      const page = await this.visiblePartStore.listVisibleParts(
+        params,
         input.getPageable(),
-        now,
+      );
+      return Either.map(page, Output.of);
+    }
+
+    const build = await this.buildReading.readForTheRules(conditions.getPartValues());
+    if (Either.isLeft(build)) return Either.left(build.left);
+    const every = await this.visiblePartStore.listEveryVisiblePart(params);
+    if (Either.isLeft(every)) return Either.left(every.left);
+
+    // Each Part judged, then the Parts kept paged, so that the page and the
+    // total count only those, and the count of those judged Compatible and
+    // not is of the same reading.
+    const compatible = compatibleWith(build.right);
+    const judged = every.right.map((visible) =>
+      visible.judged(compatible(visible.getPart())),
+    );
+    const kept = judged.filter(
+      (visible) => conditions.isKeepingNotCompatible() || visible.isCompatible(),
+    );
+    return Either.right(
+      Output.of(
+        VisiblePartsPage.among(kept, input.getPageable(), CompatibleCount.of(judged)),
       ),
     );
-
-    return Either.map(page, Output.of);
   }
 }

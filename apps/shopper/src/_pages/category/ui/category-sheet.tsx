@@ -58,6 +58,7 @@ export async function CategorySheet({
   query,
   offered,
   page,
+  list,
   asAsked,
   className,
 }: {
@@ -65,6 +66,8 @@ export async function CategorySheet({
   query: CategoryQuery;
   offered: OfferedFilters | undefined;
   page: VisiblePartPageResponse | undefined;
+  // The Category page's own address with no query.
+  list: string;
   asAsked: string;
   className?: string;
 }) {
@@ -192,12 +195,7 @@ export async function CategorySheet({
       {line !== undefined && (
         <p className="mt-2.5 text-center text-sm text-muted-foreground">{line}</p>
       )}
-      <ChoicesOn
-        category={category}
-        query={query}
-        offered={offered}
-        withClearAll={listed}
-      />
+      <ChoicesOn query={query} offered={offered} withClearAll={listed} list={list} />
       <CategoryDrawing category={category} />
       {holds}
     </Sheet>

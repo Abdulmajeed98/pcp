@@ -3,13 +3,13 @@ import { notFound } from 'next/navigation';
 
 import { categoryAddress, categoryOfTheAddress } from '@/entities/category';
 import {
-  type AddressQuery,
   addressOfTheForm,
   readCategoryQuery,
   readPriceRange,
   Search,
 } from '@/features/search-parts';
 import { chosenCurrency } from '@/shared/currency';
+import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { photographs } from '@/shared/photographs';
 import { DimPhotograph, MarkADrawingAgain } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
@@ -52,12 +52,8 @@ export async function CategoryPage({
     offered === undefined
       ? undefined
       : await readTheCategoryPage(category, query, currency);
-  const asAsked = addressOfTheForm(
-    categoryAddress(language, category),
-    Object.entries(address).flatMap(([name, values]) =>
-      [values ?? []].flat().map((value) => [name, value] as const),
-    ),
-  );
+  const list = categoryAddress(language, category);
+  const asAsked = addressOfTheForm(list, fieldsOf(address));
 
   return (
     <>
@@ -71,6 +67,7 @@ export async function CategoryPage({
             query={query}
             offered={offered}
             range={readPriceRange(address, offered)}
+            list={list}
             className="lg:col-span-5"
           />
           <CategorySheet
@@ -78,6 +75,7 @@ export async function CategoryPage({
             query={query}
             offered={offered}
             page={page}
+            list={list}
             asAsked={asAsked}
           />
         </div>

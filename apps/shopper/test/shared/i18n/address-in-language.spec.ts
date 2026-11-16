@@ -35,6 +35,18 @@ describe("the language switch's address for a page", () => {
     ).toBe('/ar/categories/gpu?lowest=150000&highest=900000');
   });
 
+  // The picker's query is a Category page's with its switch, and a switch
+  // of language keeps all of it (builder ticket 09).
+  it("keeps the picker's whole query, its switch among it", () => {
+    expect(
+      addressInLanguage(
+        'ar',
+        '/en/build/ram',
+        'search=ddr5&ramType=DDR5&lowest=80000&show=all&page=2',
+      ),
+    ).toBe('/ar/build/ram?search=ddr5&ramType=DDR5&lowest=80000&show=all&page=2');
+  });
+
   it('leads to the first page in the language, with its query or with none', () => {
     expect(addressInLanguage('en', '/ckb', '')).toBe('/en');
     expect(addressInLanguage('en', '/ckb', 'search=ryzen')).toBe('/en?search=ryzen');

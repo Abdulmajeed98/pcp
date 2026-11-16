@@ -21,6 +21,13 @@ export type SpecificationCheck = {
   problems: SpecificationProblem[];
 };
 
+// The English labels that name a specification to Shoppers (LANG-3): its
+// own, or, for a field of a row, the list's and the field's.
+export type SpecificationLabels = {
+  label: string;
+  fieldLabel?: string;
+};
+
 // Every specification a Part of one Category can hold, the Category given by
 // its key, which the list is found by. No list marks a needed specification:
 // one is needed when the library's statements of the Compatibility Rules name
@@ -87,6 +94,40 @@ export class SpecificationList {
         specification.isMissingIn(valueAt(document, specification.getPath())),
       )
       .map((specification) => specification.getPath());
+  }
+
+  // The needed specifications a Part's specifications hold, at their paths,
+  // as the Compatibility Rules are handed them: each one it lacks, and each
+  // field of a row it lacks, as `Specification.heldIn` says, is left out, so
+  // that the rules never take a value the catalog counts as not known for a
+  // real one.
+  neededHeldIn(document: SpecificationDocument): SpecificationDocument {
+    const held: SpecificationDocument = {};
+    for (const specification of this.getNeeded()) {
+      const value = specification.heldIn(valueAt(document, specification.getPath()));
+      if (value !== undefined) setAt(held, specification.getPath(), value);
+    }
+    return held;
+  }
+
+  // The English labels of the specification at a path, as a Compatibility
+  // Rule names it: its own, or, for a field of a row, such as
+  // `pcie_slots.0.lanes`, the list's and the field's. None for a path the
+  // list does not hold.
+  labelsAt(path: string): SpecificationLabels | undefined {
+    const specification = this.specifications.find((each) => each.getPath() === path);
+    if (specification !== undefined) return { label: specification.getLabel() };
+
+    const list = this.specifications.find(
+      (each) => each.getKind() === 'listOfRows' && path.startsWith(`${each.getPath()}.`),
+    );
+    if (list === undefined) return undefined;
+    // After the list's path come the row's place and the field's name.
+    const [, fieldName] = path.slice(list.getPath().length + 1).split('.');
+    const field = list.getFields()?.find((each) => each.getPath() === fieldName);
+    return field === undefined
+      ? undefined
+      : { label: list.getLabel(), fieldLabel: field.getLabel() };
   }
 
   // The specifications a Part's specifications hold, labelled, in the list's

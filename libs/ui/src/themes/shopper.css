@@ -258,6 +258,9 @@
   --scan: 700ms;
   --unfold: 250ms;
   --fold: 150ms;
+  --line-print: 450ms;
+  --settle-again: 300ms;
+  --leave: 100ms;
   --lean: 160ms;
   --press: 140ms;
   --hover: 150ms;
@@ -400,6 +403,36 @@
   }
 }
 
+/*
+ * A sheet's group heading, a Label, where its sheet is narrower than 12em of
+ * its text, which only a phone's largest text makes: 1rem in every script,
+ * which holds the Kurdish "ساردکەرەوەی" of a CPU cooler whole on a sheet at
+ * 360 pixels with twice the text; and where it is narrower than 6.5em, which
+ * only a phone 320 pixels wide with twice the text makes, 0.875rem, which
+ * holds it whole there, so that its letters stay joined at every width (the
+ * owner's choices of 16 November 2026, follow-up ticket 13). Each keeps the
+ * Label's face, weight and lines.
+ */
+@utility type-label-narrow {
+  font-size: 1rem;
+
+  &:lang(ckb),
+  &:lang(ar),
+  &[data-script='arabic'] {
+    font-size: 1rem;
+  }
+}
+
+@utility type-label-narrowest {
+  font-size: 0.875rem;
+
+  &:lang(ckb),
+  &:lang(ar),
+  &[data-script='arabic'] {
+    font-size: 0.875rem;
+  }
+}
+
 /* The frame's name, a Label, a step smaller still in Arabic script. */
 @utility type-name-slot {
   font-family: var(--font-display);
@@ -488,6 +521,23 @@
  */
 @utility figures {
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A left-to-right piece set on a line, as a Shown Price is, whose own lines
+ * take the side its line sets it to: the line's start or end read against
+ * the line's direction, not the piece's own. So a price that wraps its unit
+ * at the end of a Kurdish or an Arabic item keeps both its lines at the
+ * item's left, as at the end of an English one at its right, and its edge
+ * stays straight (follow-up ticket 10). Chrome and Safari read the prefixed
+ * value, Firefox the standard one.
+ */
+@utility set-as-its-line {
+  text-align: -webkit-match-parent;
+
+  @supports (text-align: match-parent) {
+    text-align: match-parent;
+  }
 }
 
 /*
@@ -658,7 +708,9 @@
  * own placing. Below 17em, as a phone's at 320 pixels is, the picture and
  * the name share the first line and the leader runs from the start to the
  * price on the next; below 11em, as with a phone's text at twice its size,
- * the picture takes a line of its own above the name.
+ * the picture takes a line of its own above the name, and the leader gives
+ * way to the price, down to nothing, so that a price of seven figures keeps
+ * its line.
  */
 @container (width < 17em) {
   [data-item='with-picture'] > [data-item-picture] {
@@ -679,10 +731,26 @@
 }
 
 /*
+ * From 48rem a slip's line keeps its name whole on one line, and a price on
+ * it keeps whole too, as it did before a price could wrap its unit, so that
+ * no page changes at the text's own size (follow-up ticket 10). A slip too
+ * narrow for its text stacks its lines, below, and a price there may wrap
+ * its unit on the line it has to itself.
+ */
+@media (width >= 48rem) {
+  [data-slip-line] [data-price-lines] {
+    white-space: nowrap;
+  }
+}
+
+/*
  * An item with no picture that stacks the same way on a list too narrow for
  * its text, as an Offer on a Part page does (break-ui, browse ticket 12): its
  * name takes the whole line, and its leader runs to its price on the next.
  * A line of the price slip does the same on a slip too narrow for its text.
+ * Below 11em, as with a phone's text at twice its size, its leader gives way
+ * to its price down to nothing, as an item's with a picture does, so that a
+ * Vendor's total of seven figures keeps its line (follow-up ticket 10).
  */
 @container (width < 15em) {
   [data-slip-line] {
@@ -691,6 +759,10 @@
 
   [data-slip-line] > :first-child {
     grid-column: 1 / -1;
+  }
+
+  [data-slip-line] [data-price-lines] {
+    white-space: normal;
   }
 }
 
@@ -724,6 +796,35 @@
 
   [data-item='with-picture'] > [data-item-end] {
     grid-column: 2 / 3;
+  }
+
+  [data-item='text'] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  [data-item='text'] > [data-item-leader] {
+    grid-column: 1 / 2;
+  }
+
+  [data-item='text'] > [data-item-end] {
+    grid-column: 2 / 3;
+  }
+}
+
+/*
+ * A line of the Build's sheet too narrow for its text, as at 320 pixels or a
+ * phone's largest text (break-ui, builder ticket 06): its controls start
+ * under its picture, as its picture stacks over its name, and the
+ * quantity's figure narrows so that − and + keep their 44 pixels. The
+ * Category's place is the container, measured in its own text's em.
+ */
+@container (width < 17em) {
+  [data-controls] {
+    padding-inline-start: 0;
+  }
+
+  [data-quantity] input {
+    width: 2.75em;
   }
 }
 
@@ -1131,6 +1232,94 @@
   @supports selector(::details-content) {
     @media (min-width: 64rem) {
       display: none;
+    }
+  }
+}
+
+/*
+ * Emptying the Build is a disclosure whose space opens as the filters' fold
+ * does, over 250 ms as its contents fade in, and folds in 150 ms, where the
+ * browser can animate a disclosure's height, and at once where it cannot or
+ * with reduced motion, so that the sheet's foot moves down rather than jumps.
+ * Unlike the filters' fold it stays a fold at every width.
+ */
+@utility unfolds-in-place {
+  interpolate-size: allow-keywords;
+
+  &::details-content {
+    display: flow-root;
+    block-size: 0;
+    opacity: 0;
+    overflow-y: clip;
+    transition:
+      block-size var(--fold) var(--ease-out),
+      opacity var(--fold) var(--ease-out),
+      content-visibility var(--fold) allow-discrete;
+  }
+
+  &[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+    transition-duration: var(--unfold);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::details-content {
+      transition: none;
+    }
+  }
+}
+
+/*
+ * 11. A change to the Build: with script, a change on the Build page applies
+ * in place, and the page holds still but for what the change brought. The
+ * page's script opens the space of a line the Build gains and folds the space
+ * of one it loses (`--unfold`, `--fold`, and `--leave` for its fade), and
+ * marks what it brought: a line it gains (`data-arrived`) is fed out top
+ * first, uncovered from its top edge while it slides 8 pixels down, its
+ * price settling from 150 ms; a figure it altered (`data-settles-again`)
+ * settles again from the end side, 10 pixels and its opacity; the stamp
+ * lands once the change completes the Build with no Problem. With reduced
+ * motion nothing prints or settles, and the spaces still open and fold, in
+ * 150 ms, so that nothing jumps (the No Snap Rule).
+ */
+@keyframes line-prints {
+  from {
+    clip-path: inset(0 0 100% 0);
+    translate: 0 -8px;
+  }
+
+  to {
+    clip-path: inset(0);
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-arrived] {
+    animation: line-prints var(--line-print) var(--ease-out) both;
+  }
+
+  [data-arrived] .settles {
+    animation: settle var(--settle) var(--ease-out) both;
+    animation-delay: 150ms;
+  }
+
+  [data-arrived].stamp-lands,
+  [data-arrived] .stamp-lands {
+    animation:
+      stamp var(--stamp) var(--ease-out) both,
+      stamp-ink var(--stamp-ink) ease both;
+    animation-delay: 250ms;
+  }
+
+  [data-settles-again] {
+    --settle-from-side: 10px;
+    display: inline-block;
+    animation: settle var(--settle-again) var(--ease-out) both;
+
+    &:where(:dir(rtl)) {
+      --settle-from-side: -10px;
     }
   }
 }

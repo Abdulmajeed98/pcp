@@ -81,18 +81,20 @@ const pcCase = (name: string): CatalogPart => ({ category: 'case', name });
 const psu = (name: string): CatalogPart => ({ category: 'psu', name });
 
 // The Parts, by name. The two cooler names are the longest the catalog holds,
-// 276 and 210 characters; the GPU's is the longest of its Category.
+// 276 and 210 characters; the GPU's is the longest of its Category, and the
+// third longest the catalog holds, 205; the GIGASTONE kit's and the Inland
+// drive's are the longest of theirs, 183 and 176.
 export const ryzen7800X3D = cpu('AMD Ryzen 7 7800X3D');
-const ryzen7600X = cpu('AMD Ryzen 5 7600X');
-const ryzen9800X3D = cpu('AMD Ryzen 7 9800X3D');
-const ryzen7950X3D = cpu('AMD Ryzen 9 7950X3D');
-const ryzen5600 = cpu('AMD Ryzen 5 5600');
-const core14600K = cpu('Intel Core i5 14600K');
-const core14700K = cpu('Intel Core i7 14700K');
-const core12100F = cpu('Intel Core i3 12100F');
-const ultra265K = cpu('Intel Core Ultra 7 265K');
-const nhD15 = cpuCooler('Noctua NH-D15 chromax.black Air 165mm Black');
-const peerlessAssassin = cpuCooler(
+export const ryzen7600X = cpu('AMD Ryzen 5 7600X');
+export const ryzen9800X3D = cpu('AMD Ryzen 7 9800X3D');
+export const ryzen7950X3D = cpu('AMD Ryzen 9 7950X3D');
+export const ryzen5600 = cpu('AMD Ryzen 5 5600');
+export const core14600K = cpu('Intel Core i5 14600K');
+export const core14700K = cpu('Intel Core i7 14700K');
+export const core12100F = cpu('Intel Core i3 12100F');
+export const ultra265K = cpu('Intel Core Ultra 7 265K');
+export const nhD15 = cpuCooler('Noctua NH-D15 chromax.black Air 165mm Black');
+export const peerlessAssassin = cpuCooler(
   'Thermalright Peerless Assassin 120 SE Air 155mm Black/Silver',
 );
 export const theLongestName = cpuCooler(
@@ -101,38 +103,64 @@ export const theLongestName = cpuCooler(
 export const theNextLongestName = cpuCooler(
   'DeepCool LS720 SE Liquid Cooler 360mm 4th Gen Dual-Chamber Pump 3100RPM 300w TDP AIO Cooler Anti-Leak Tech with ARGB Fans CPU Water Cooler Narrow Frame Infinity Mirror Block for AMD AM4/AM5 LGA 1700/1200, Black',
 );
-const liquidFreezer = cpuCooler('ARCTIC Liquid Freezer III Pro 360mm Black');
-const ak620 = cpuCooler('Deepcool AK620 Air 160mm Black / Silver');
-const b650Tomahawk = motherboard('MSI MAG B650 TOMAHAWK WIFI AM5 DDR5 ATX');
-const b650Elite = motherboard('GIGABYTE B650 AORUS ELITE AX AM5 DDR5 ATX');
-const b760mDs3h = motherboard('Gigabyte B760M DS3H DDR4 Micro ATX');
-const b550mPro4 = motherboard('ASRock B550M Pro4 AM4 DDR4 Micro ATX');
-const z790Tomahawk = motherboard('MSI MAG Z790 TOMAHAWK WIFI DDR5 ATX');
-const vengeance = ram('CORSAIR Vengeance 32GB (2x16GB) DDR5 6000 CL30 Black');
-const tridentZ5 = ram('G.Skill Trident Z5 Neo RGB 32GB (2x16GB) DDR5 6400 CL30 Black');
-const furyBeast16 = ram('Kingston FURY Beast 16GB (2x8GB) DDR4 3200 CL16 Black');
-const furyBeast32 = ram('Kingston FURY Beast 32GB (2x16GB) DDR4 3200 CL16 Black');
-const sn850x = storage('Western Digital WD_Black SN850X 1TB SSD M.2 PCIe 4.0 NVMe');
-const samsung990Pro = storage('Samsung 990 Pro 2TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
-const p3Plus = storage('Crucial P3 Plus 1TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
-const samsung870Evo = storage('Samsung 870 Evo 1TB 2.5" SSD SATA');
-const barraCuda = storage('Seagate BarraCuda 2TB 3.5" HDD 7200RPM SATA');
-const palit4070Super = gpu('Palit Dual OC GeForce RTX 4070 SUPER 12GB GDDR6X Black');
-const foundersEdition = gpu('NVIDIA GeForce RTX 4070 SUPER 12GB GDDR6X Founders Edition');
-const tuf7800XT = gpu('Asus TUF GAMING OC Radeon RX 7800 XT 16GB GDDR6 Black');
-const dual2060Super = gpu(
+export const liquidFreezer = cpuCooler('ARCTIC Liquid Freezer III Pro 360mm Black');
+export const ak620 = cpuCooler('Deepcool AK620 Air 160mm Black / Silver');
+export const b650Tomahawk = motherboard('MSI MAG B650 TOMAHAWK WIFI AM5 DDR5 ATX');
+export const b650Elite = motherboard('GIGABYTE B650 AORUS ELITE AX AM5 DDR5 ATX');
+export const b760mDs3h = motherboard('Gigabyte B760M DS3H DDR4 Micro ATX');
+export const b550mPro4 = motherboard('ASRock B550M Pro4 AM4 DDR4 Micro ATX');
+export const z790Tomahawk = motherboard('MSI MAG Z790 TOMAHAWK WIFI DDR5 ATX');
+export const vengeance = ram('CORSAIR Vengeance 32GB (2x16GB) DDR5 6000 CL30 Black');
+export const tridentZ5 = ram(
+  'G.Skill Trident Z5 Neo RGB 32GB (2x16GB) DDR5 6400 CL30 Black',
+);
+export const furyBeast16 = ram('Kingston FURY Beast 16GB (2x8GB) DDR4 3200 CL16 Black');
+export const furyBeast32 = ram('Kingston FURY Beast 32GB (2x16GB) DDR4 3200 CL16 Black');
+export const gigastone = ram(
+  'GIGASTONE Game PRO 32GB Kit (2x16GB) DDR4-3200MHz PC4-25600 CL16-20-20-40 Intel XMP 2.0 AMD Ryzen 1.35V UDIMM 288 Pin Unbuffered Non ECC High Performance Gaming Desktop Memory - White',
+);
+export const vengeanceLpx16 = ram(
+  'Corsair Vengeance LPX 16GB (2x8GB) DDR4 3600 CL18 Black',
+);
+export const vengeanceLpx64 = ram(
+  'Corsair Vengeance LPX Black DDR4-3600 CL18 64GB (2x32GB)',
+);
+export const flareX5 = ram('G.Skill Flare X5 32GB (2x16GB) DDR5 6000 CL32 Black');
+export const sn850x = storage('Western Digital WD_Black SN850X 1TB SSD M.2 PCIe 4.0 NVMe');
+export const samsung990Pro = storage('Samsung 990 Pro 2TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
+export const p3Plus = storage('Crucial P3 Plus 1TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
+export const samsung870Evo = storage('Samsung 870 Evo 1TB 2.5" SSD SATA');
+export const barraCuda = storage('Seagate BarraCuda 2TB 3.5" HDD 7200RPM SATA');
+export const inlandPremium = storage(
+  'Inland Premium 512GB SSD M.2 2280 PCIe NVMe 3.0 x4 3D NAND Internal Solid State Drive, High-Speed Read/Write Speed up to 3100 MBps and 1900 MBps, NVMe 1.3 & PCIe 3.1 Compatible',
+);
+export const mx500 = storage('Crucial MX500 1TB SSD 2.5" SATA');
+export const ironWolf = storage('Seagate IronWolf 4TB 3.5" HDD 5900RPM SATA');
+export const palit4070Super = gpu('Palit Dual OC GeForce RTX 4070 SUPER 12GB GDDR6X Black');
+export const foundersEdition = gpu(
+  'NVIDIA GeForce RTX 4070 SUPER 12GB GDDR6X Founders Edition',
+);
+export const tuf7800XT = gpu('Asus TUF GAMING OC Radeon RX 7800 XT 16GB GDDR6 Black');
+export const dual2060Super = gpu(
   'ASUS DUAL GeForce RTX 2060 SUPER EVO V2 OC Edition Gaming Graphics Card (PCIe 3.0, 8GB GDDR6, HDMI, DisplayPort, DVI-D, Axial-Tech Fan, 0dB Technology, DirectCU II, Auto-Extreme) (DUAL-RTX2060S-O8G-EVO-V2)',
 );
 // The Category's one Part.
 export const theOnlyCase = pcCase(
   'Corsair 4000D AIRFLOW Tempered Glass Mid-Tower ATX Case - Black',
 );
-const rm850e = psu('Corsair RM850e (2022) Black 850W Fully Modular 80+ Gold Certified');
-const focusGx750 = psu(
+export const rm850e = psu(
+  'Corsair RM850e (2022) Black 850W Fully Modular 80+ Gold Certified',
+);
+export const focusGx750 = psu(
   'SeaSonic FOCUS GX-750 Black ATX 3.0 750W Fully Modular 80+ Gold Certified',
 );
-const purePower12M = psu('be quiet! Pure Power 12 M 750W Fully Modular 80+ Gold Certified');
-const a650bn = psu('MSI MAG A650BN Black ATX 650W Non-Modular 80+ Bronze Certified');
+export const purePower12M = psu(
+  'be quiet! Pure Power 12 M 750W Fully Modular 80+ Gold Certified',
+);
+export const a650bn = psu('MSI MAG A650BN Black ATX 650W Non-Modular 80+ Bronze Certified');
+export const a850gl = psu(
+  'MSI MAG A850GL PCIE5 II Black 850W Fully Modular 80+ Gold Certified ATX',
+);
 
 // The Category whose Visible Parts are many: these GPUs, and the 396 others
 // of `made-up-gpus.ts`, read from the catalog by Category and exact name too,
@@ -223,6 +251,17 @@ const theOtherShopsOffers: readonly MadeUpOffer[] = [
   offer(8, furyBeast32, inDinars(89000, '57.00'), 'in stock', 24, ago(4, 0)),
   offer(9, z790Tomahawk, inDollars('239.00', '376500'), 'out of stock', 36, ago(7, 7)),
   offer(10, theOnlyCase, both('89.00', 140000), 'in stock', 24, ago(2, 9)),
+  // The Parts the made-up Builds hold beside the others (`made-up-builds.ts`):
+  // a PSU that every rule passes with, and enough kits and drives to make 8
+  // of each.
+  offer(6, a850gl, inDollars('129.00', '203250'), 'in stock', 120, ago(1, 3)),
+  offer(7, gigastone, inDinars(85000, '54.00'), 'in stock', 24, ago(2, 1)),
+  offer(11, vengeanceLpx16, both('45.00', 71000), 'in stock', 24, ago(4, 4)),
+  offer(12, vengeanceLpx64, inDollars('139.00', '219000'), 'in stock', 36, ago(5, 2)),
+  offer(13, flareX5, inDinars(165000, '105.00'), 'in stock', 36, ago(6, 3)),
+  offer(14, inlandPremium, inDinars(45000, '29.00'), 'in stock', 12, ago(7, 1)),
+  offer(15, mx500, both('69.00', 109000), 'in stock', 60, ago(8, 6)),
+  offer(16, ironWolf, inDollars('99.00', '156000'), 'in stock', 36, ago(9, 8)),
 ];
 
 // Every Offer a Shopper sees, the first Vendor's first, of the Parts named

@@ -1,18 +1,25 @@
 export {
-  type AddressQuery,
+  addressOfAList,
   addressOfTheForm,
+  allCleared,
   type CategoryQuery,
   categoryPageAddress,
   type ChoiceOn,
   type ChosenFilter,
   choicesOn,
+  fieldsTheFormKeeps,
   type FilterValue,
+  listAskedFor,
   nothingOn,
   type OfferedFilters,
+  partsAPage,
+  type PickerQuery,
   type PriceEnd,
   type PriceProblem,
   readCategoryQuery,
+  readPickerQuery,
   readPriceRange,
+  switchedTo,
 } from './model/category-query';
 export { ChoicesOn } from './ui/choices-on';
 export { Search } from './ui/search';

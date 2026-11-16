@@ -1,12 +1,9 @@
-import type { VisiblePartsFiltersResponse } from '@pcp/api-client';
+import type { ListVisiblePartsData, VisiblePartsFiltersResponse } from '@pcp/api-client';
 import { type Language, westernDigitsIn, westernNumberIn } from '@pcp/i18n';
 
 import { type Category, categoryAddress } from '@/entities/category';
-import { pageInTheAddress } from '@/shared/lib';
-
-// The query of a Category page's address, as Next hands it to the page: each
-// parameter's value, or its values when it is repeated.
-export type AddressQuery = Record<string, string | string[] | undefined>;
+import type { Currency } from '@/shared/currency';
+import { type AddressQuery, pageInTheAddress } from '@/shared/lib';
 
 // What the API answers of a Category's filters (`GET v1/visible-parts/
 // filters`): its Visible Parts' manufacturers, each of its filters with the
@@ -55,6 +52,18 @@ export const nothingOn: CategoryQuery = {
   page: 1,
 };
 
+// What the picker's address asks of its list (the builder spec's The
+// Shopper's addresses): a Category page's query, and the switch, which
+// shows every Part in stock, those not Compatible with the Build among
+// them, each marked (BLD-3), or, off, only those that are.
+export interface PickerQuery extends CategoryQuery {
+  showAll: boolean;
+}
+
+// The switch's parameter in the picker's address, `show=all` when it is on.
+// The address holds only what is on, so the switch off is no parameter.
+const theSwitch = { name: 'show', on: 'all' } as const;
+
 // The most digits a price range's end may have: the API reads each end
 // exactly up to 15 of them, and refuses more. No price comes near.
 const mostDigitsOfAnEnd = 15;
@@ -102,6 +111,30 @@ export function readCategoryQuery(
     highest: range.highest.value,
     page: pageInTheAddress(address.page),
   };
+}
+
+// The picker's query, read from its address by the function that reads a
+// Category page's (`readCategoryQuery`), against the API's answer of the
+// Category's filters in stock only, with the switch: on when the address
+// holds `show=all`, as the picker writes it, and off for anything else,
+// none among it. A switch repeated is read as its first, as a search is.
+// Without the answer of the filters, the search, the page and the switch
+// are read.
+export function readPickerQuery(
+  address: AddressQuery,
+  offered?: OfferedFilters,
+): PickerQuery {
+  return {
+    ...readCategoryQuery(address, offered),
+    showAll: [address[theSwitch.name]].flat()[0] === theSwitch.on,
+  };
+}
+
+// The picker's query with the switch turned on or off: the list it leads to
+// keeps every choice that is on and starts again at its first page, as a new
+// choice does, since its pages count other Parts.
+export function switchedTo(query: PickerQuery, on: boolean): PickerQuery {
+  return { ...query, showAll: on, page: 1 };
 }
 
 // The first value of a parameter, or nothing.
@@ -181,47 +214,66 @@ function readEnd(text: string, inRange: boolean): PriceEnd {
   return { typed, value: Number(significant), problem: null };
 }
 
-// A Category page's address, in a language, written from a query: the
-// search, the manufacturers, each filter's values, the price range's ends and
-// then the page, each only when it asks for something, so that the first page
-// with nothing on is the Category page's own address. A filter with several
-// values repeats its parameter. Numbers are written in Western digits, and
-// the search as it was read. What is written reads back as the same query.
+// A Category page's address, in a language, written from a query
+// (`addressOfAList`).
 export function categoryPageAddress(
   language: Language,
   category: Category,
-  { search, manufacturers, filters, lowest, highest, page }: CategoryQuery,
+  query: CategoryQuery,
 ): string {
-  const query = new URLSearchParams();
-  if (search !== '') query.append('search', search);
-  for (const manufacturer of manufacturers) query.append('manufacturer', manufacturer);
-  for (const { parameter, values } of filters) {
-    for (const value of values) query.append(parameter, writtenValue(value));
-  }
-  if (lowest !== null) query.append('lowest', String(lowest));
-  if (highest !== null) query.append('highest', String(highest));
-  if (page > 1) query.append('page', String(page));
-  const written = query.toString();
+  return addressOfAList(categoryAddress(language, category), query);
+}
 
-  return `${categoryAddress(language, category)}${written === '' ? '' : `?${written}`}`;
+// The address of a list of a Category's Parts, a Category page's or the
+// picker's: its own address with no query (`list`), then its query: the
+// search, the manufacturers, each filter's values, the price range's ends,
+// the picker's switch and then the page, each only when it asks for
+// something, so that the first page with nothing on is the list's own
+// address. A filter with several values repeats its parameter. Numbers are
+// written in Western digits, and the search as it was read. What is written
+// reads back as the same query.
+export function addressOfAList(list: string, query: CategoryQuery | PickerQuery): string {
+  const { search, manufacturers, filters, lowest, highest, page } = query;
+  const written = new URLSearchParams();
+  if (search !== '') written.append('search', search);
+  for (const manufacturer of manufacturers) written.append('manufacturer', manufacturer);
+  for (const { parameter, values } of filters) {
+    for (const value of values) written.append(parameter, writtenValue(value));
+  }
+  if (lowest !== null) written.append('lowest', String(lowest));
+  if (highest !== null) written.append('highest', String(highest));
+  for (const [name, value] of fieldsTheFormKeeps(query)) written.append(name, value);
+  if (page > 1) written.append('page', String(page));
+  const text = written.toString();
+
+  return `${list}${text === '' ? '' : `?${text}`}`;
+}
+
+// The fields the search's and the filters' form keeps as they are, which
+// the Shopper does not fill in: in the picker, the switch when it is on, so
+// that a search or a filter applied with the switch on still shows every
+// Part; and nothing on a Category page.
+export function fieldsTheFormKeeps(query: CategoryQuery | PickerQuery): [string, string][] {
+  return 'showAll' in query && query.showAll ? [[theSwitch.name, theSwitch.on]] : [];
 }
 
 // A choice that is on, which the Shopper can clear on its own (DESIGN.md's
 // The choices that are on), with the query of the list without it, from its
 // first page.
-export type ChoiceOn = (
+export type ChoiceOn<Query extends CategoryQuery = CategoryQuery> = (
   | { kind: 'search'; search: string }
   | { kind: 'manufacturer'; manufacturer: string }
   | { kind: 'filter'; parameter: string; value: FilterValue }
   | { kind: 'price'; lowest: number | null; highest: number | null }
-) & { without: CategoryQuery };
+) & { without: Query };
 
 // The choices that are on, in the order of the address: the search's words,
 // each manufacturer, each value of each filter, and the price range, its two
-// ends one choice. Clearing all of them at once is `nothingOn`.
-export function choicesOn(query: CategoryQuery): ChoiceOn[] {
+// ends one choice. The picker's switch is not one: clearing a choice leaves
+// it as it is. Clearing all of them at once is `allCleared`.
+export function choicesOn<Query extends CategoryQuery>(query: Query): ChoiceOn<Query>[] {
   const fromTheFirstPage = { ...query, page: 1 };
-  const choices: ChoiceOn[] = [];
+  const choices: ChoiceOn<Query>[] = [];
 
   if (query.search !== '') {
     choices.push({
@@ -268,6 +320,13 @@ export function choicesOn(query: CategoryQuery): ChoiceOn[] {
   return choices;
 }
 
+// The query with every choice cleared, the list Clear all leads to: a
+// Category page's with nothing on (`nothingOn`), and the picker's with its
+// switch as it was, since the switch is not a choice.
+export function allCleared<Query extends CategoryQuery>(query: Query): Query {
+  return { ...query, ...nothingOn };
+}
+
 // The address the filters' form is sent to with script, which applies a
 // choice as soon as it is made: the fields the form holds, in their order, a
 // repeated parameter in each of its places, as a browser sends a form with
@@ -287,4 +346,41 @@ export function addressOfTheForm(
   const written = query.toString();
 
   return `${action}${written === '' ? '' : `?${written}`}`;
+}
+
+// How many Parts a page of a Category's list holds, on a Category page and
+// in the picker: as many as the dashboard's lists hold, and within the 12 to
+// 24 a printed menu sheet holds.
+export const partsAPage = 20;
+
+// A Category's list as the API is asked for it (`GET v1/visible-parts`), from
+// a Category page's query or the picker's, in the chosen currency: one page
+// of its Visible Parts, in BRW-1's order, for the search, the manufacturers,
+// the filters and the price range the query holds, read against what the
+// Category's filters offer, so that nothing they do not offer is ever sent.
+// A filter with several values repeats its parameter, by the parameter the
+// API answered it with, which the generated client knows by name for the
+// filters it was written with. The page counts from 1 in the address and from
+// 0 at the API. Each page asks it in its own `api` segment, the picker with
+// its conditions beside it.
+export function listAskedFor(
+  category: Category,
+  { search, manufacturers, filters, lowest, highest, page }: CategoryQuery,
+  currency: Currency,
+): ListVisiblePartsData['query'] {
+  const chosen = Object.fromEntries(
+    filters.map(({ parameter, values }) => [parameter, [...values]]),
+  ) as Partial<ListVisiblePartsData['query']>;
+
+  return {
+    ...chosen,
+    category,
+    currency,
+    search: search === '' ? undefined : search,
+    manufacturer: manufacturers.length === 0 ? undefined : [...manufacturers],
+    lowest: lowest ?? undefined,
+    highest: highest ?? undefined,
+    page: page - 1,
+    size: partsAPage,
+  };
 }

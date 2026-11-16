@@ -10,3 +10,19 @@ export function nameType(name: string, smallest: 'title' | 'facts' = 'title'): s
   if (name.length > 40) return 'type-facts';
   return 'type-sheet-title';
 }
+
+// The type of a name that is its piece's title where a phone's largest text
+// narrows the piece, the Vendor's coupon and the Part's plate: as
+// `nameType`, and a name in the Sheet title takes the Facts size on a piece
+// narrower than 12em of its own text, which only such text makes, so that a
+// long word keeps whole where that size holds it, and breaks where it must
+// where even that cannot (the owner's choice of 16 November 2026, follow-up
+// ticket 12). The piece is the container named `piece`; at the text's own
+// size none is that narrow, and a name already smaller keeps its size.
+export function nameTypeOnANarrowPiece(
+  name: string,
+  smallest: 'title' | 'facts' = 'title',
+): string {
+  const type = nameType(name, smallest);
+  return type === 'type-sheet-title' ? `${type} @max-[12em]/piece:type-facts` : type;
+}

@@ -1,14 +1,17 @@
 import type { Build, CategoryKey, Part, SpecificationsOf } from '../build';
-import type { Judgment } from './findings';
+import type { Judgment, ProblemAlone, WithAWarning } from './findings';
 import type { Reading } from './reading';
 
-// A Compatibility Rule, stated once: its number, the Categories it involves
-// with the specifications it reads in each, by their paths, those it reads in
-// a Category it does not involve when the Build holds a Part of it, and its
-// judgment. It applies to a Build that holds a Part of each Category it
-// involves (CMP-2).
-export type Rule = {
-  readonly number: number;
+// A Compatibility Rule, stated once: its number, whether it can give a
+// Compatibility Warning, the Categories it involves with the specifications
+// it reads in each, by their paths, those it reads in a Category it does not
+// involve when the Build holds a Part of it, and its judgment. It applies to
+// a Build that holds a Part of each Category it involves (CMP-2). Its number
+// and whether it can warn are typed as stated, so that the list of the rules
+// gives their numbers and the outcomes each can have.
+export type Rule<Numbered extends number = number, CanWarn extends boolean = boolean> = {
+  readonly number: Numbered;
+  readonly canWarn: CanWarn;
   readonly involves: PathsRead;
   readonly readsWhenHeld: PathsRead;
   judge(build: Build): Judgment;
@@ -18,19 +21,27 @@ export type Rule = {
 // involves, and reads each one's values through the paths stated for its
 // Category, and no others: what a rule reads is what it states. It is handed
 // a Part of a Category it reads when held, such as rule 12's GPU, when the
-// Build holds one, and nothing otherwise.
+// Build holds one, and nothing otherwise. A rule that can give a
+// Compatibility Warning says so (`canWarn`), and only its judgment may find
+// one.
 export function rule<
+  const Numbered extends number,
   const Stated extends PathsRead,
   const WhenHeld extends PathsRead = {},
+  const CanWarn extends boolean = false,
 >(statement: {
-  readonly number: number;
+  readonly number: Numbered;
+  readonly canWarn?: CanWarn;
   readonly involves: Stated;
   readonly readsWhenHeld?: WhenHeld;
-  readonly judge: (parts: PartsRead<Stated> & PartsReadWhenHeld<WhenHeld>) => Judgment;
-}): Rule {
+  readonly judge: (
+    parts: PartsRead<Stated> & PartsReadWhenHeld<WhenHeld>,
+  ) => CanWarn extends true ? WithAWarning : ProblemAlone;
+}): Rule<Numbered, CanWarn> {
   const { number, involves, readsWhenHeld = {} as WhenHeld, judge } = statement;
   return {
     number,
+    canWarn: (statement.canWarn ?? false) as CanWarn,
     involves,
     readsWhenHeld,
     judge: (build) =>

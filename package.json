@@ -19,8 +19,8 @@
     "catalog:import": "nx run @pcp/api:catalog-import --output-style=static",
     "platform:check": "node tools/check-platform.mjs",
     "integration:check": "node tools/check-integration.mjs",
-    "dashboard:inspect": "node apps/inspector/src/main.ts",
-    "shopper:inspect": "node apps/inspector/src/shopper-inspect.ts"
+    "dashboard:inspect": "node --import ./apps/inspector/src/typescript-libraries.ts apps/inspector/src/main.ts",
+    "shopper:inspect": "node --import ./apps/inspector/src/typescript-libraries.ts apps/inspector/src/shopper-inspect.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -44,7 +44,7 @@
     "libphonenumber-js": "^1.13.15",
     "lucide-react": "^1.57.0",
     "nestjs-cls": "^7.0.1",
-    "next": "~16.4.3",
+    "next": "~16.4.6",
     "next-intl": "^4.14.9",
     "pg": "^8.23.1",
     "react": "^19.0.0",

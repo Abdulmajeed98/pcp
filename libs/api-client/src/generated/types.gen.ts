@@ -1012,6 +1012,10 @@ export type VisiblePartResponse = {
      * Whether any Visible Offer for the Part is in stock. False when every Vendor has it out of stock.
      */
     inStock: boolean;
+    /**
+     * Whether the Part is Compatible with the Build the list was asked for: adding it would cause no Compatibility Problem, a Compatibility Warning and an unchecked rule leaving it Compatible (CMP-4). Left out when the list was asked for without a Build.
+     */
+    compatible?: boolean;
 };
 
 export type VisiblePartPageResponse = {
@@ -1043,6 +1047,14 @@ export type VisiblePartPageResponse = {
      * The page's Visible Parts: those with a Lowest Price first, the lowest first; then those in stock with none; then those every Vendor has out of stock; then by name.
      */
     content: Array<VisiblePartResponse>;
+    /**
+     * With a Build, how many of the Parts the list judged are Compatible with it, on all the pages together: those that the search, the manufacturers, the filters, the price range and in stock only keep, read in the same statement as the page. Left out when the list was asked for without a Build.
+     */
+    compatibleCount?: number;
+    /**
+     * With a Build, how many of the Parts the list judged are not Compatible with it, on all the pages together, whether or not the switch keeps them, read in the same statement as the page. Left out when the list was asked for without a Build.
+     */
+    notCompatibleCount?: number;
 };
 
 /**
@@ -1236,6 +1248,209 @@ export type PlatformFiguresResponse = {
      * How many days an Offer stays current without a Confirmation: one last confirmed longer ago is an Expired Offer, which no Shopper sees.
      */
     daysAnOfferStaysCurrent: number;
+};
+
+export type BuildMissingSpecificationResponse = {
+    /**
+     * The Part that lacks it, by its identifier.
+     */
+    part: string;
+    /**
+     * Its path in the Part's specifications, in OpenDB's field names and nesting, as its Category's specification list names it; for a field of a row, the list's path, the row's place from 0 and the field's name.
+     */
+    path: string;
+    /**
+     * Its English label, from the Part's specification list; for a field of a row, the list's.
+     */
+    label: string;
+    /**
+     * For a field of a row, such as a PCIe slot's lanes, the field's English label; null otherwise.
+     */
+    fieldLabel: string | null;
+};
+
+export type OutcomeOfARuleThatCanWarnResponse = {
+    /**
+     * The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.
+     */
+    parts: Array<string>;
+    /**
+     * For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.
+     */
+    missing: Array<BuildMissingSpecificationResponse>;
+    /**
+     * The rule's number, as the MVP spec numbers them: one of the rules that can give a Compatibility Warning, from the compatibility library's own list.
+     */
+    rule: 11 | 15 | 20;
+    /**
+     * Its outcome: `passes`; `problem`, a Compatibility Problem; `warning`, a Compatibility Warning; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.
+     */
+    outcome: 'passes' | 'problem' | 'warning' | 'unchecked';
+};
+
+export type OutcomeOfAnotherRuleResponse = {
+    /**
+     * The Parts it is about, by their identifiers: for a Compatibility Problem or a Warning, the Parts whose values make it, every RAM kit or drive it counts among them; for a pass, every Part the rule judged; none for an unchecked rule. In the catalog's order of Categories, and the RAM kits and drives in the Build's order.
+     */
+    parts: Array<string>;
+    /**
+     * For an unchecked rule, each needed specification a Part lacks that could change its outcome, once, in the catalog's order of the Parts; none otherwise.
+     */
+    missing: Array<BuildMissingSpecificationResponse>;
+    /**
+     * The rule's number, as the MVP spec numbers them: one of the rules that never give a Compatibility Warning, from the compatibility library's own list.
+     */
+    rule: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 12 | 13 | 14 | 16 | 17 | 18 | 19 | 21;
+    /**
+     * Its outcome: `passes`; `problem`, a Compatibility Problem; or `unchecked`, when a needed specification it reads is missing and could change it. An unchecked rule is never a pass.
+     */
+    outcome: 'passes' | 'problem' | 'unchecked';
+};
+
+export type BuildLowestPriceResponse = {
+    /**
+     * The Lowest Price of one of the Part: the lowest Shown Price among its in-stock Visible Offers, in the chosen currency, as the first of them a Part's page lists shows it, marked converted exactly when that Offer's is.
+     */
+    shownPrice: ShownPriceResponse;
+    /**
+     * The Lowest Price times the Part's quantity, as the total across Vendors adds it up: the same as the Lowest Price for a Part of a Category a Build holds one of.
+     */
+    timesQuantity: ShownPriceResponse;
+    /**
+     * The Vendor whose Offer the Lowest Price comes from: of equal prices, the one whose Offer the Part page lists first.
+     */
+    vendor: VisibleOfferVendorResponse;
+};
+
+export type BuildPartResponse = {
+    /**
+     * The Part's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name.
+     */
+    name: string;
+    /**
+     * The Part's manufacturer.
+     */
+    manufacturer: string;
+    /**
+     * The manufacturer's part numbers.
+     */
+    partNumbers: Array<string>;
+    /**
+     * The address of the Part's photo on this API, or null when it has none.
+     */
+    photoPath: string | null;
+    /**
+     * How many of it the Build holds, from 1 to 16, for a RAM kit or a drive; null for a Part of a Category a Build holds one of.
+     */
+    quantity: number | null;
+    /**
+     * Whether it is a Visible Part, a Part with at least one Visible Offer, which a Part page shows. A Part that is not stays in the Build.
+     */
+    visible: boolean;
+    /**
+     * Whether it is an Unstocked Part: no Vendor has it in stock among its Visible Offers, whether or not it is still a Visible Part (BLD-9). It stays in the Build, has no Lowest Price, is left out of every total and is in no Vendor's list.
+     */
+    unstocked: boolean;
+    /**
+     * Whether some Vendor has it in stock but its price could not be shown: the first of its in-stock Visible Offers has no Shown Price, which happens only before the first Platform Rate, with an Offer quoted only in the other currency. It then has no Lowest Price, and is left out of the total across Vendors.
+     */
+    priceNotShown: boolean;
+    /**
+     * Its Lowest Price in the chosen currency, times its quantity, with the Vendor it comes from, which the total across Vendors adds up (BLD-7). Null for an Unstocked Part, and for a Part whose price could not be shown.
+     */
+    lowestPrice: BuildLowestPriceResponse | null;
+};
+
+export type EstimatedPowerDrawResponse = {
+    /**
+     * What the Build is reckoned to draw, in W: its CPU's TDP, plus its GPU's TDP when it has one, plus 100 W for everything else. Null when a TDP it needs is missing.
+     */
+    watts: number | null;
+    /**
+     * Each TDP the draw needs that its Part lacks, the CPU's before the GPU's; none when the watts are known.
+     */
+    missing: Array<BuildMissingSpecificationResponse>;
+};
+
+export type BuildPartInStockResponse = {
+    /**
+     * The Part's identifier, as the Build's Parts name it.
+     */
+    partId: string;
+    /**
+     * The Vendor's Shown Price for one of the Part, in the chosen currency. Null only when its Offer has no Quoted Price in the chosen currency and no Platform Rate has been set: the Part is then left out of the Vendor's total.
+     */
+    shownPrice: ShownPriceResponse | null;
+    /**
+     * The Shown Price times the Part's quantity, as the Vendor's total adds it up, or null with it.
+     */
+    timesQuantity: ShownPriceResponse | null;
+};
+
+export type BuildVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+    /**
+     * The Vendor's total: each Shown Price of the Parts it has in stock times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. Null when none of them has a Shown Price, which happens only when no Platform Rate has been set.
+     */
+    total: ShownPriceResponse | null;
+    /**
+     * The Build's Parts the Vendor has in stock among its Visible Offers, in the order of the Build's Parts.
+     */
+    partsInStock: Array<BuildPartInStockResponse>;
+    /**
+     * The identifiers of the Build's Parts that other Vendors have in stock and this one does not, in the order of the Build's Parts. An Unstocked Part is never among them.
+     */
+    partsLacked: Array<string>;
+};
+
+export type BuildResponse = {
+    /**
+     * The Build's Parts that the catalog holds, in the catalog's order of Categories, and the RAM kits and drives in the order the Build gives them. A Part the catalog no longer holds is left out.
+     */
+    parts: Array<BuildPartResponse>;
+    /**
+     * Whether it is a Complete Build: a CPU, a motherboard, at least one RAM kit, at least one drive, a case and a PSU, with a GPU unless the CPU has integrated graphics and a CPU cooler unless the CPU includes one.
+     */
+    complete: boolean;
+    /**
+     * The Categories it still needs, in the catalog's order: none for a Complete Build, and all eight for an empty one.
+     */
+    stillNeeded: Array<'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu'>;
+    /**
+     * The values of the Build's CPU that the rule for a Complete Build reads and the CPU does not hold: `integratedGraphics`, its Integrated graphics, and `includesCooler`, its Cooler included. A CPU that does not hold one counts as not providing it, so the GPU or the CPU cooler stays needed. None without a CPU.
+     */
+    cpuValuesNotKnown: Array<'integratedGraphics' | 'includesCooler'>;
+    /**
+     * The outcome of every Compatibility Rule that applies to the Build, passes included, in rule order, each of a rule of the compatibility library's own list and as its rule can have it: a Compatibility Warning only of a rule that can give one. A rule applies only when the Build holds a Part of each Category it involves (CMP-2), so an empty Build has none. Every Part is judged, one that is no longer a Visible Part and one no Vendor has in stock among them, since each stays in the Build.
+     */
+    outcomes: Array<OutcomeOfARuleThatCanWarnResponse | OutcomeOfAnotherRuleResponse>;
+    /**
+     * Its Estimated power draw, as the Compatibility Rules add it up, or the TDPs it lacks; null for a Build without a CPU.
+     */
+    estimatedPowerDraw: EstimatedPowerDrawResponse | null;
+    /**
+     * The first price view's total, the Build's total across Vendors (BLD-7, PRC-5): each Part's Lowest Price times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. It leaves out each Part with no Lowest Price, and is null when no Part has one.
+     */
+    totalAcrossVendors: ShownPriceResponse | null;
+    /**
+     * The second price view (BLD-8): each active Vendor with at least one of the Build's Parts in stock among its Visible Offers, with its total, the Parts it has and the Parts it lacks. They come by how many Parts they lack, fewest first, then by their total, lowest first, with none after any, then by name, then by identifier. An Unstocked Part is in no Vendor's list.
+     */
+    vendors: Array<BuildVendorResponse>;
 };
 
 export type CurrentPlatformRateResponse = {
@@ -2033,6 +2248,18 @@ export type ListVisiblePartsData = {
          */
         highest?: number;
         /**
+         * In stock only, as the picker lists a Category (BLD-2): on, only the Visible Parts with at least one in-stock Visible Offer are listed, in the same order.
+         */
+        inStockOnly?: boolean;
+        /**
+         * The Build so far, as the picker lists a Category for it (BLD-3), taken as reading a Build takes it. Given, each Part answers whether it is Compatible with it. Left out, no Part answers it, as on a Category page. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.
+         */
+        part?: Array<string>;
+        /**
+         * The picker's switch (BLD-3): on, the Parts that are not Compatible with the Build are kept, in their place in the order, each answering that it is not. Off, they are left out. It changes nothing without a Build.
+         */
+        keepNotCompatible?: boolean;
+        /**
          * A filter: for CPUs, the Socket at `socket`; for motherboards, the Socket at `socket`. Repeated for several values, a Part holding any of them is found, and a Part missing it is not. Refused for any other Category.
          */
         socket?: Array<string>;
@@ -2119,6 +2346,10 @@ export type ReadVisiblePartsFiltersData = {
          * The chosen currency, which the range of Lowest Prices is in.
          */
         currency: Currency;
+        /**
+         * In stock only, as the picker asks for a Category's filters (BLD-2): on, every value is read from the Visible Parts with at least one in-stock Visible Offer alone.
+         */
+        inStockOnly?: boolean;
     };
     url: '/v1/visible-parts/filters';
 };
@@ -2220,6 +2451,37 @@ export type ReadPlatformFiguresResponses = {
 };
 
 export type ReadPlatformFiguresResponse = ReadPlatformFiguresResponses[keyof ReadPlatformFiguresResponses];
+
+export type ReadBuildData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The chosen currency, which each Part's Lowest Price, each Vendor's Shown Prices and every total are in, and the Vendors are ordered by.
+         */
+        currency: Currency;
+        /**
+         * The Build that is read. Left out, the Build is empty. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives.
+         */
+        part?: Array<string>;
+    };
+    url: '/v1/build';
+};
+
+export type ReadBuildErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadBuildError = ReadBuildErrors[keyof ReadBuildErrors];
+
+export type ReadBuildResponses = {
+    200: BuildResponse;
+};
+
+export type ReadBuildResponse = ReadBuildResponses[keyof ReadBuildResponses];
 
 export type ReadPlatformRateData = {
     body?: never;
