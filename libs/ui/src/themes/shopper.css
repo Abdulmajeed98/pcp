@@ -494,6 +494,23 @@
 }
 
 /*
+ * A left-to-right piece set on a line, as a Shown Price is, whose own lines
+ * take the side its line sets it to: the line's start or end read against
+ * the line's direction, not the piece's own. So a price that wraps its unit
+ * at the end of a Kurdish or an Arabic item keeps both its lines at the
+ * item's left, as at the end of an English one at its right, and its edge
+ * stays straight (follow-up ticket 10). Chrome and Safari read the prefixed
+ * value, Firefox the standard one.
+ */
+@utility set-as-its-line {
+  text-align: -webkit-match-parent;
+
+  @supports (text-align: match-parent) {
+    text-align: match-parent;
+  }
+}
+
+/*
  * The cuts in the paper (DESIGN.md's Shapes), each made with a mask, never
  * with a border.
  *
@@ -661,7 +678,9 @@
  * own placing. Below 17em, as a phone's at 320 pixels is, the picture and
  * the name share the first line and the leader runs from the start to the
  * price on the next; below 11em, as with a phone's text at twice its size,
- * the picture takes a line of its own above the name.
+ * the picture takes a line of its own above the name, and the leader gives
+ * way to the price, down to nothing, so that a price of seven figures keeps
+ * its line.
  */
 @container (width < 17em) {
   [data-item='with-picture'] > [data-item-picture] {
@@ -686,7 +705,23 @@
  * its text, as an Offer on a Part page does (break-ui, browse ticket 12): its
  * name takes the whole line, and its leader runs to its price on the next.
  * A line of the price slip does the same on a slip too narrow for its text.
+ * Below 11em, as with a phone's text at twice its size, its leader gives way
+ * to its price down to nothing, as an item's with a picture does, so that a
+ * Vendor's total of seven figures keeps its line (follow-up ticket 10).
  */
+/*
+ * From 48rem a slip's line keeps its name whole on one line, and a price on
+ * it keeps whole too, as it did before a price could wrap its unit, so that
+ * no page changes at the text's own size (follow-up ticket 10). A slip too
+ * narrow for its text stacks its lines, below, and a price there may wrap
+ * its unit on the line it has to itself.
+ */
+@media (width >= 48rem) {
+  [data-slip-line] [data-price-lines] {
+    white-space: nowrap;
+  }
+}
+
 @container (width < 15em) {
   [data-slip-line] {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -694,6 +729,10 @@
 
   [data-slip-line] > :first-child {
     grid-column: 1 / -1;
+  }
+
+  [data-slip-line] [data-price-lines] {
+    white-space: normal;
   }
 }
 
@@ -726,6 +765,18 @@
   }
 
   [data-item='with-picture'] > [data-item-end] {
+    grid-column: 2 / 3;
+  }
+
+  [data-item='text'] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  [data-item='text'] > [data-item-leader] {
+    grid-column: 1 / 2;
+  }
+
+  [data-item='text'] > [data-item-end] {
     grid-column: 2 / 3;
   }
 }
