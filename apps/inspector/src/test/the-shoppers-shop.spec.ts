@@ -42,8 +42,26 @@ describe("the made-up shop's Vendors", () => {
         vendor.openingHours === null,
     );
 
-    expect(everyDetail.length).toBe(shop.vendors.length - 1);
+    expect(everyDetail.length).toBe(shop.vendors.length - 4);
     expect(onlyThePhone.map((vendor) => vendor.name)).toEqual(['Pretend Tech']);
+  });
+
+  // The second price view draws "send on WhatsApp" only for a Vendor that
+  // gave a WhatsApp number (sharing ticket 02).
+  it('give no WhatsApp number, four of them, in Latin and Arabic script, the one with only its phone number among them', () => {
+    const withoutWhatsApp = shop.vendors.filter((vendor) => vendor.whatsAppNumber === null);
+
+    expect(withoutWhatsApp.map((vendor) => vendor.name)).toEqual([
+      'Pretend Tech',
+      'Mock Hardware House',
+      'متجر التجربة للإلكترونيات',
+      'Demo Devices',
+    ]);
+    for (const vendor of withoutWhatsApp.slice(1)) {
+      expect(vendor.mapLocation).not.toBeNull();
+      expect(vendor.instagramName).not.toBeNull();
+      expect(vendor.openingHours).not.toBeNull();
+    }
   });
 });
 

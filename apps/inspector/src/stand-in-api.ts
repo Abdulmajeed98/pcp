@@ -13,7 +13,9 @@ import type {
   PartSummaryResponse,
   PlatformFiguresResponse,
   ReadBuildData,
+  ReadSharedBuildData,
   ReadVisiblePartsFiltersData,
+  SharedBuildResponse,
   ShownPriceResponse,
   SpecificationResponse,
   VisibleOfferOfVendorPageResponse,
@@ -69,6 +71,12 @@ import type {
 // counts: its fixed prices added up into both price views' totals
 // (`totalOf`), the second view's order (`inTheSecondViewsOrder`) and the rule
 // for a Complete Build (`completenessOf`).
+//
+// It answers a Shared Build too, one of the made-up Shared Builds the shop
+// holds (`made-up-shared-builds.ts`), whose Parts the Shopper app then reads
+// as a Build, and answers whether each Vendor of the second price view gave
+// a WhatsApp number, from the Vendor's own details. It records no Referral
+// and shares no Build: every write is refused.
 //
 // Every answer is typed by the API client's own types, so a change to the
 // API's description that the shop does not follow fails the type-check.
@@ -961,6 +969,22 @@ function aBuild(shop: ShoppersShop, query: URLSearchParams): StandInAnswer {
   return answer(body);
 }
 
+// The address of a Shared Build, as the API's description names it: a
+// change to it that the stand-in does not follow fails the type-check.
+const aSharedBuildsAddress =
+  '/v1/shared-builds/{sharedBuildId}' satisfies ReadSharedBuildData['url'];
+const sharedBuildsSegment = aSharedBuildsAddress.split('/')[2];
+
+// A made-up Shared Build (`made-up-shared-builds.ts`), its Parts as they
+// were shared, or none found, as the API answers an identifier it holds no
+// Shared Build for.
+function aSharedBuild(shop: ShoppersShop, sharedBuildId: string): StandInAnswer {
+  const shared = shop.sharedBuilds.get(sharedBuildId);
+  if (shared === undefined) return refusal(404, 'SHARED_BUILD_NOT_FOUND');
+  const body: SharedBuildResponse = shared;
+  return answer(body);
+}
+
 // Nothing is ever written: the shop is not in the database.
 const aWrite: StandInAnswer = {
   ...refusal(405, 'MADE_UP_SHOP_IS_READ_ONLY'),
@@ -997,6 +1021,8 @@ export function answerFromTheStandIn(shop: ShoppersShop, call: ApiCall): StandIn
     }
     if (first === 'visible-vendors' && rest.length === 0)
       return visibleVendor(shop, second);
+    if (first === sharedBuildsSegment && rest.length === 0)
+      return aSharedBuild(shop, second);
     if (first === 'visible-vendors' && rest.length === 1 && rest[0] === 'offers') {
       return offersOfVendor(shop, second, query);
     }
