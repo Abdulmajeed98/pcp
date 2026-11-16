@@ -8,8 +8,9 @@ import { madeUpIdentifier, madeUpVendors } from './made-up-vendors.ts';
 // must draw: the shop's own Vendor with a count in the thousands, three
 // Vendors tied on a count, so that their names decide their order, several
 // with none, the longest name among them, and one deactivated Vendor, which
-// keeps its Referrals. "Pretend Tech" gave no WhatsApp number, so no Shopper
-// could have sent it a Build.
+// keeps its Referrals. The Vendors that gave no WhatsApp number, "Pretend
+// Tech" and the three sharing ticket 02 left without one, have none, since
+// no Shopper could have sent them a Build.
 const counts: ReadonlyMap<string, number> = new Map(
   (
     [
@@ -22,11 +23,11 @@ const counts: ReadonlyMap<string, number> = new Map(
       [7, 187],
       [8, 95],
       [9, 0],
-      [10, 58],
+      [10, 0],
       [11, 0],
       [12, 0],
       [13, 21],
-      [14, 9],
+      [14, 0],
       [15, 0],
       [16, 0],
       [17, 3],
