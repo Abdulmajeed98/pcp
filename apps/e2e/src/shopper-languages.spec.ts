@@ -1,6 +1,9 @@
 import { type Browser, expect, type Locator, type Page, test } from '@playwright/test';
 
-import { choiceOf, currencies, currencySwitch } from './currencies';
+import { type BuildPart, pick } from './build-page';
+import { createAMadeUpPart } from './catalog';
+import { choiceOf, currencies, currencySwitch, setThePlatformRate } from './currencies';
+import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { categories, endOf, linkOf } from './home-page';
 import {
   addressIn,
@@ -21,7 +24,11 @@ import {
   narrowWindow,
   readInEveryLanguage,
 } from './languages';
+import { aWordUniqueToTheRun } from './made-up';
+import { addAnOffer } from './offers';
+import { pickerPath } from './picker';
 import { shopperUrl } from './platform';
+import { createAMadeUpVendor, type MadeUpVendor } from './vendors';
 
 // A browser states its languages in its own order. The first one the platform
 // has is used, a regional form counts as its language, and Kurdish is used
@@ -583,4 +590,235 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
       await devtools.detach();
     }
   });
+
+  // A Shown Price of seven figures in dinars, "≈ 6,499,750 IQD", is wider
+  // than a phone's line at twice the text. It is one left-to-right unit
+  // whose figure never breaks, so its unit wraps under its figure, and only
+  // where its line cannot hold it whole: the "≈" stays with the figure, and
+  // the unit stands on the side the price is set to, so that the price's
+  // edge stays straight (DESIGN.md's The Shown Price, the owner's option A
+  // of 13 November 2026). Before, the sheet clipped what ran past its line,
+  // pulling the line's other columns with it (builder ticket 08's break-ui).
+  test.describe('with prices of seven figures in dinars', () => {
+    // The finished page: a price settling into its column comes 16 pixels
+    // from the side (Motion 2), and reduced motion shows it settled.
+    test.use({ reducedMotion: 'reduce' });
+    // The run's Parts are found by a word of eight digits in their names:
+    // the run's whole word, sixteen digits with nowhere to break, widens a
+    // Part page's plate past a phone's window at twice the text.
+    const word = aWordUniqueToTheRun().slice(-8);
+    // The Platform Rate behind the run's Converted Prices.
+    const rate = 1500;
+
+    // A Vendor that offers every Part, the GPU and the kit in dollars
+    // alone, so that its prices and its total in dinars are converted, and
+    // one that offers the CPU and the GPU, which lacks the kit.
+    let everything: MadeUpVendor;
+    let lacksTheKit: MadeUpVendor;
+    let cpu: BuildPart;
+    let gpu: BuildPart;
+    let kit: BuildPart;
+
+    test.beforeAll(async ({ browser }) => {
+      test.setTimeout(120_000);
+      const context = await browser.newContext({ javaScriptEnabled: true });
+      try {
+        const request = context.request;
+        const authorization = await authorizationOfTheDevelopmentAdmin(
+          await context.newPage(),
+        );
+        await setThePlatformRate(request, authorization, rate);
+        everything = await createAMadeUpVendor(request, authorization);
+        lacksTheKit = await createAMadeUpVendor(request, authorization);
+        const aPart = async (category: BuildPart['category'], what: string) => {
+          const named = { name: `Made-up test ${what} ${word}` };
+          const { id } = await createAMadeUpPart(
+            request,
+            authorization,
+            {},
+            category,
+            named,
+          );
+          return { id, category };
+        };
+        cpu = await aPart('cpu', 'CPU');
+        gpu = await aPart('gpu', 'GPU');
+        kit = await aPart('ram', 'RAM kit');
+        const offer = (vendor: MadeUpVendor, part: BuildPart, details: object) =>
+          addAnOffer(request, authorization, vendor.id, part.id, details);
+        // ≈ 3,750,000 IQD and 3,999,750 IQD.
+        await offer(everything, gpu, { usdPrice: '2499.99' });
+        await offer(lacksTheKit, gpu, { iqdPrice: 3_999_750 });
+        // 1,249,750 IQD and ≈ 1,350,000 IQD.
+        await offer(everything, cpu, { iqdPrice: 1_249_750 });
+        await offer(lacksTheKit, cpu, { usdPrice: '899.99' });
+        // ≈ 750,000 IQD.
+        await offer(everything, kit, { usdPrice: '499.99' });
+      } finally {
+        await context.close();
+      }
+    });
+
+    test('in Kurdish and English, no Shown Price runs past its line on the Build page, the picker, a Category page, a Part page or a Vendor page; at the text’s own size each keeps one line', async ({
+      page,
+    }) => {
+      test.setTimeout(180_000);
+      // The Build whose totals are the longest: two of the kit, ≈ 6,499,750
+      // IQD across Vendors and at the Vendor that offers every Part.
+      for (const part of [cpu, gpu, kit, kit]) await pick(page, part);
+      const pages = [
+        ['the Build page', '/build'],
+        ['the picker', pickerPath('gpu', `?search=${word}`)],
+        ['a Category page', `/categories/gpu?search=${word}`],
+        ['a Part page', `/parts/${gpu.id}`],
+        ['a Vendor page', `/vendors/${everything.id}`],
+      ] as const;
+
+      const devtools = await page.context().newCDPSession(page);
+      try {
+        for (const size of [16, 32]) {
+          // The browser's own text size, as its settings set it.
+          await devtools.send('Page.setFontSizes', {
+            fontSizes: { standard: size, fixed: (size * 13) / 16 },
+          });
+          for (const language of [kurdish, english]) {
+            for (const [name, address] of pages) {
+              await test.step(`${name} in ${language.name}, the text at ${size} pixels`, async () => {
+                await page.goto(addressIn(language, address));
+                await expect(page.getByTestId('frame')).toBeVisible();
+                await page.evaluate(() => document.fonts.ready);
+                expect(
+                  await page.evaluate(
+                    () => getComputedStyle(document.documentElement).fontSize,
+                  ),
+                ).toBe(`${size}px`);
+                // Every disclosure open, as a Vendor's Parts on the Build page.
+                await page.evaluate(() => {
+                  for (const fold of document.querySelectorAll('details')) fold.open = true;
+                });
+                const prices = await howThePricesStand(page);
+                expect(
+                  prices.map(({ written }) => written),
+                  'the page shows a price of seven figures in dinars',
+                ).toContainEqual(expect.stringMatching(/^(≈ )?\d,\d{3},\d{3} IQD$/));
+                const faults = prices.flatMap(({ faults }) => faults);
+                expect(faults).toEqual([]);
+                if (size === 16) {
+                  expect(
+                    prices.filter(({ lines }) => lines > 1).map(({ written }) => written),
+                    'at its own size, the text keeps every price on one line',
+                  ).toEqual([]);
+                }
+                // The page does not scroll sideways at the text's own size.
+                // At twice the text a Vendor's name of one long word, as a
+                // made-up Vendor's is, still widens its coupon past the
+                // window, which is not a price's to settle, so there each
+                // price is read against the window as well as its line.
+                if (size === 16) await expectNoSidewaysScroll(page);
+              });
+            }
+          }
+        }
+      } finally {
+        await devtools.send('Page.setFontSizes', {
+          fontSizes: { standard: 16, fixed: 13 },
+        });
+        await devtools.detach();
+      }
+    });
+  });
 });
+
+// Each Shown Price on the page, as the browser drew it against its line: the
+// item, the slip's line or the sentence it stands on. Read character by
+// character, as `linesAsDrawn` reads them, so that the markup it comes from
+// does not matter. Its faults: a character past its line, or past the
+// window; its figure, with its "≈", broken across two lines; its unit
+// anywhere but on the figure's line or alone on the line under it; and a
+// unit under the figure that is not flush with it on the side the price is
+// set to on its line, so that the price's edge would not stay straight.
+async function howThePricesStand(
+  page: Page,
+): Promise<{ written: string; lines: number; faults: string[] }[]> {
+  return page.getByTestId('shown-price').evaluateAll((prices) =>
+    prices.map((price) => {
+      const written = (price.textContent ?? '').replace(/\s+/g, ' ').trim();
+      const line = price.closest('li, p') ?? price.parentElement ?? price;
+      const edges = line.getBoundingClientRect();
+      const characters: DOMRect[] = [];
+      const texts = document.createTreeWalker(price, NodeFilter.SHOW_TEXT);
+      for (let text = texts.nextNode(); text !== null; text = texts.nextNode()) {
+        const content = text.textContent ?? '';
+        for (let index = 0; index < content.length; index += 1) {
+          if (/\s/.test(content[index])) continue;
+          const one = document.createRange();
+          one.setStart(text, index);
+          one.setEnd(text, index + 1);
+          characters.push(one.getBoundingClientRect());
+        }
+      }
+      // The characters of its figure, "≈" and all, and those of its unit.
+      const unitLength = written.length - written.lastIndexOf(' ') - 1;
+      const figure = characters.slice(0, characters.length - unitLength);
+      const unit = characters.slice(characters.length - unitLength);
+      const box = (of: DOMRect[]) => ({
+        left: Math.min(...of.map(({ left }) => left)),
+        right: Math.max(...of.map(({ right }) => right)),
+        top: Math.min(...of.map(({ top }) => top)),
+        bottom: Math.max(...of.map(({ bottom }) => bottom)),
+      });
+      const figureBox = box(figure);
+      const unitBox = box(unit);
+      const middle = ({ top, bottom }: { top: number; bottom: number }) =>
+        (top + bottom) / 2;
+      // A character is on a line under another's when its middle is below
+      // the other's foot.
+      const firstFoot = Math.min(...figure.map(({ bottom }) => bottom));
+      const faults: string[] = [];
+
+      const past = Math.max(
+        ...characters.map(({ left, right }) =>
+          Math.max(right - edges.right, edges.left - left),
+        ),
+      );
+      if (past > 0.5) faults.push(`"${written}" runs ${Math.round(past)} px past its line`);
+      const windowWidth = document.documentElement.clientWidth;
+      const outside = Math.max(
+        ...characters.map(({ left, right }) => Math.max(right - windowWidth, -left)),
+      );
+      if (outside > 0.5) {
+        faults.push(`"${written}" runs ${Math.round(outside)} px past the window`);
+      }
+      if (figure.some((one) => middle(one) > firstFoot)) {
+        faults.push(`"${written}" breaks inside its figure`);
+      }
+      const underTheFigure = unit.some((one) => middle(one) > firstFoot);
+      if (underTheFigure) {
+        // Under the figure, on the line under it, flush with the figure's
+        // edge on the side the price is set to: the side its line aligns
+        // what holds the price to, read against the line's direction, its
+        // end on an item, and its start on a slip's line stacked on a
+        // narrow slip.
+        const holder = getComputedStyle(price.parentElement ?? price);
+        const toTheEnd = holder.textAlign === 'end' || holder.textAlign === 'right';
+        const side =
+          holder.textAlign === 'left' || holder.textAlign === 'right'
+            ? holder.textAlign
+            : toTheEnd === (holder.direction === 'rtl')
+              ? 'left'
+              : 'right';
+        if (Math.abs(unitBox[side] - figureBox[side]) > 1) {
+          faults.push(`"${written}" has its unit off the ${side} edge of its figure`);
+        }
+        if (unit.some((one) => middle(one) < figureBox.bottom)) {
+          faults.push(`"${written}" has its unit across two lines`);
+        }
+        if (unitBox.top - figureBox.bottom > figureBox.bottom - figureBox.top) {
+          faults.push(`"${written}" has its unit more than a line under its figure`);
+        }
+      }
+
+      return { written, lines: underTheFigure ? 2 : 1, faults };
+    }),
+  );
+}
