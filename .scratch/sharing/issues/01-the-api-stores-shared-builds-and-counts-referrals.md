@@ -32,19 +32,19 @@ No page shows any of this yet. Tickets 03 to 05 do. For now the integration test
   It does not check that the Vendor stocks a Part of the Shared Build. A refused Referral is not stored.
 - [x] **The Admin's counts.** `GET v1/referral-counts`, for the Admin only, answers one page of every Vendor, active and deactivated. Each has its identifier, its name, whether it is active and its Referral count, zeros included. The page is ordered by count, most first, then name, then identifier, and is paged through `PagingRequest`.
 - [x] **A Vendor's own count.** `GET v1/vendors/{vendorId}/referral-count` answers `{ count }` for the Admin and for the Vendor's own Login, through `VendorAccessRule`: another Vendor's is 403 `VENDOR_ACCESS_DENIED`, a deactivated Vendor's own Login gets 403 `VENDOR_DEACTIVATED`, and no token gets 401. No public endpoint answers any count.
-- [ ] **The second view's WhatsApp field.** Each Vendor in `GET v1/build`'s `vendors` answers whether it gave a WhatsApp number. Nothing else in the answer changes, and `builder`'s tests of the views pass unchanged.
+- [x] **The second view's WhatsApp field.** Each Vendor in `GET v1/build`'s `vendors` answers whether it gave a WhatsApp number. Nothing else in the answer changes, and `builder`'s tests of the views pass unchanged.
 - [x] **The public endpoints** are `@Public()`, carry `security: []`, and answer the same with an Admin's token, a Vendor's, a bad one or none.
 - [x] **The code** follows the catalog's conventions:
   - a Command to share a Build and a Command to record a Referral;
   - Queries to read a Shared Build, to list the counts and to read one Vendor's;
   - each with its Input and Output, and its Store port in the domain.
 - [x] **The storage.** One table for Shared Builds and one for Referrals, beside their Stores, with forward-only migrations made by `pnpm db:generate` under names that say what they do. Neither holds anything about the Shopper.
-- [ ] **The integration tests** at seam 2 cover each line the spec lists under Sharing a Build, Reading a Shared Build, Recording a Referral, Reading the counts, the second view's WhatsApp field and Tokens. They prove the counts' order on Vendors that tie on each key in turn, and the frozen copy against a changed price, an Offer put out of stock, a deactivated Vendor and an edited Part.
-- [ ] **The description.** `pnpm api-client:write` writes the five endpoints and the new field into the committed description and the client. Each of two faults is seen to fail `pnpm check` once and then reverted: a response field added without `pnpm api-client:write`, and a column added to a schema without a migration.
+- [x] **The integration tests** at seam 2 cover each line the spec lists under Sharing a Build, Reading a Shared Build, Recording a Referral, Reading the counts, the second view's WhatsApp field and Tokens. They prove the counts' order on Vendors that tie on each key in turn, and the frozen copy against a changed price, an Offer put out of stock, a deactivated Vendor and an edited Part.
+- [x] **The description.** `pnpm api-client:write` writes the five endpoints and the new field into the committed description and the client. Each of two faults is seen to fail `pnpm check` once and then reverted: a response field added without `pnpm api-client:write`, and a column added to a schema without a migration.
 - [x] **ADR-0014** records the decisions that are costly to undo:
   - Shared Builds stored as frozen `part` values, unique by their text, identified by a random UUID, never changed or deleted, behind `/{language}/builds/{id}`;
   - Referrals stored one row a tap, holding nothing about the Shopper.
-- [ ] `pnpm integration:check` and `pnpm check` pass, and the work is committed.
+- [x] `pnpm integration:check` and `pnpm check` pass, and the work is committed.
 
 ## Comments
 
@@ -62,7 +62,7 @@ No page shows any of this yet. Tickets 03 to 05 do. For now the integration test
 
 **The counts.** `GET v1/referral-counts` (`listReferralCounts`), `@PreAuthorize([Role.ADMIN])`, pages through `PagingRequest`: every Vendor left-joined to its Referrals, `count(referral.id)` so that a Vendor with none counts 0, ordered by the count descending, then `vendor.name` and `vendor.id` ascending, as the Vendors list orders names, the page and the total of Vendors read in one repeatable-read, read-only snapshot. Each row is `{ id, name, active, count }`. `GET v1/vendors/{vendorId}/referral-count` (`readVendorsReferralCount`), for the Admin and the `vendor` role, answers `{ count }` through `VendorAccessRule`.
 
-**The description.** `pnpm api-client:write` wrote the five endpoints into `apps/api/openapi.json` and the client: `shareBuild` (201 and 200), `readSharedBuild` and `recordReferral` with `security: []`, and `listReferralCounts` and `readVendorsReferralCount` with the bearer token, as read back from the committed description.
+**The description.** `pnpm api-client:write` wrote the five endpoints, and later the second view's `hasWhatsAppNumber`, into `apps/api/openapi.json` and the client: `shareBuild` (201 and 200), `readSharedBuild` and `recordReferral` with `security: []`, and `listReferralCounts` and `readVendorsReferralCount` with the bearer token, as read back from the committed description.
 
 **The use cases** follow the catalog's conventions, each with its Input and Output in its file: `ShareBuildCommand`, `RecordReferralCommand`, `ReadSharedBuildQuery`, `ListReferralCountsQuery` and `ReadVendorsReferralCountQuery`, with the ports `SharedBuildStore` (`domain/shared-build/`) and `ReferralStore` (`domain/referral/`), and their tables beside `DatabaseSharedBuildStore` and `DatabaseReferralStore`.
 
@@ -113,7 +113,9 @@ No page shows any of this yet. Tickets 03 to 05 do. For now the integration test
 - `a7765e4` docs: name the Shared Build in CONTEXT.md (`pnpm check` only, since it changes no API: 32 tasks);
 - `35d0b30` feat: share a Build and read the Shared Build back (24 suites and 637 tests; `pnpm check` 32 tasks). It was first committed as `5bd2237` and amended with the race test sent past a held table, gated again with the same counts;
 - `61ec5fa` feat: record Referrals and count them for the Admin and each Vendor (25 suites, 654 tests; 32 tasks);
-- the commit that adds ADR-0014 and this record.
+- `0131fc1` docs: record Shared Builds and Referrals as ADR-0014 (`pnpm check`);
+- `a70eb8d` feat: answer whether each Vendor of a Build gave a WhatsApp number (26 suites, 656 tests; 32 tasks). Its message was amended once, to rewrap a body line commitlint read as a footer; its tree is the one gated;
+- the commit that closes this record.
 
 **Decisions where the ticket leaves room**, each following the nearest written rule:
 
@@ -124,4 +126,10 @@ No page shows any of this yet. Tickets 03 to 05 do. For now the integration test
 
 **ADR-0014**, `docs/adr/0014-shared-builds-as-frozen-part-values-and-referrals-as-rows.md`, records Shared Builds stored as frozen `part` values, unique by their text, behind a random UUID, never changed or deleted, behind `/{language}/builds/{id}`, and Referrals one row a tap holding nothing about the Shopper, with the options weighed and what must keep working.
 
-**Waiting for the owner: the second view's WhatsApp field.** Its box, the WhatsApp field's line of the tests' box and the description's box stay open. The ticket asks each Vendor of `GET v1/build`'s `vendors` to answer whether it gave a WhatsApp number while `builder`'s tests of the views pass unchanged. Two of them, in `build.controller.prices.integration-spec.ts` ("gives each Vendor its total…" and "with no Platform Rate…"), compare each Vendor whole with `toEqual`, so any field answered for every Vendor fails them; and the Shopper's stand-in (`apps/inspector/src/stand-in-api.ts`, ticket 02's) builds `BuildVendorResponse` typed by the client, so a required field fails `pnpm check` until the stand-in answers it. Put to the owner: a boolean answered for every Vendor, those two tests' expected Vendors gaining it as `false` and the stand-in answering it from its made-up Vendors here; or a field answered only for a Vendor that gave a number, which changes neither.
+**The second view's WhatsApp field, as the owner chose.** The ticket asked each Vendor of `GET v1/build`'s `vendors` to answer whether it gave a WhatsApp number while `builder`'s tests of the views pass unchanged. Two of them, in `build.controller.prices.integration-spec.ts` ("gives each Vendor its total…" and "with no Platform Rate…"), compare each Vendor whole with `toEqual`, so a field answered for every Vendor fails them, and the Shopper's stand-in (`apps/inspector/src/stand-in-api.ts`) builds `BuildVendorResponse` typed by the client, so a required field fails `pnpm check` until the stand-in answers it. This was put to the owner, who answered "Always yes or no (Recommended)": a required boolean answered for every Vendor.
+
+- Each Vendor of the second view answers `hasWhatsAppNumber` (`BuildVendorResponse`). `DatabaseBuildStore.readParts` reads `vendor.whatsapp_number IS NOT NULL` beside each in-stock Visible Offer's Vendor in its one statement, as a `StockingVendor` (`domain/build/in-stock-offers.ts`), an `OfferVendor` that also says whether it gave a number; `BuildVendor` and `PriceViews` carry it. The number itself is never in the answer; a recorded Referral answers it. A Lowest Price's Vendor stays `{ id, name }`.
+- The two exact answers in `builder`'s test gained `hasWhatsAppNumber: false` on each expected Vendor, five lines, and nothing else.
+- The stand-in answers it from its made-up Vendors' own `whatsAppNumber`, and its own test of the second view gained it the same way, three lines: `true` for Made-up PC Parts, and `false` for Pretend Tech, which already gave none. Ticket 02 makes more of them lack one.
+- Its tests are in a file of their own, `build.controller.whatsapp.integration-spec.ts`, so that `builder`'s files change by the field alone: the field answered `true` and `false` for two Vendors of one Part, the number never in the answer and the Lowest Price's Vendor unchanged; and the field following the Vendor's contact details, `false` once its number is cleared and `true` once one is added. Both were red first on the field's absence (`undefined`), then green; `builder`'s two tests then failed on the new field alone, as expected, until each expected Vendor gained it.
+- The two faults of the description were not planted again for the new field: the ones shown on `61ec5fa` cover the mechanism, a field the committed description lacks failing the API's own test and a column with no migration failing `check-migrations.mjs`, whatever the field.
