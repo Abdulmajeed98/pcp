@@ -16,7 +16,7 @@ Pictures of the slip at 768, 820 and 900 pixels, taken while follow-up ticket 10
 
 **Done when:**
 
-- [ ] The widths where a slip's line runs past the slip, with the text at its own size, are measured in English, Kurdish and Arabic, from 768 to 1440 pixels, on the home page, the Part page and the Build page. The measurements are recorded under Comments.
+- [x] The widths where a slip's line runs past the slip, with the text at its own size, are measured in English, Kurdish and Arabic, from 768 to 1440 pixels, on the home page, the Part page and the Build page. The measurements are recorded under Comments.
 - [ ] How the line fits is the owner's choice. The ways it could fit are rendered on a page for the owner with the made-up shop's real slip, in English and Kurdish at 768 pixels, the recommended one first. Examples are a price that wraps its unit under its figure as option A does, a line that stacks its name over its leader and price as a narrow slip's does, or a name that wraps. The owner answers before the change is built.
 - [ ] With the owner's choice built, no word and no price of a slip's line runs past the slip at any width measured, in any of the three languages.
 - [ ] Every other page and width stays as it is: the measurements before and after match wherever no line ran past its slip.
@@ -27,3 +27,34 @@ Pictures of the slip at 768, 820 and 900 pixels, taken while follow-up ticket 10
 - [ ] `pnpm check` and `pnpm platform:check` pass, and the work is committed.
 
 ## Comments
+
+### 16 November 2026: where a slip's line runs past its slip
+
+**Read first**: the ticket, follow-up ticket 10 and its Comments, the follow-up brief and the builder implementer's brief, `CLAUDE.md`, `CONTEXT.md`, `docs/agents/design-skills.md`, `apps/shopper/DESIGN.md` (Prices, The Shown Price, the price slip, the square plate, the home page, Widths and On a phone, and its head comment), the MVP spec's **The browse module's conventions** on `ShownPrice` and the slip, and its end-to-end tests, browse ticket 14's reference table for the home page, the theme's `[data-slip-line]` rules, the two slips' `Line` (`price-slip.tsx`, `build-slip.tsx`), the plate (`plate.tsx`), and follow-up ticket 10's `home-slip.mjs` and `measure.mjs` and its pictures in the owner's `.taste-skill/follow-up-10/pieces/home-after/`.
+
+**How it was measured.** A Shopper app of this worktree's own on the made-up shop (port 3180, the stand-in on 3181, the catalog read once through this worktree's API on 3183), with the text at its own size, reduced motion, prices in dinars, in English, Kurdish and Arabic. Each page was opened once per language and the window then narrowed pixel by pixel, so that the container queries answer as for a window of that width, and at each width every line of every slip (`[data-slip-line]`) was read character by character, its name's and its figure's, against its line and its slip, with what the line needs to hold its name and its figure whole side by side. The pages: the home page, the AMD Ryzen 7 7800X3D's Part page (20 Offers), and the Build page with the complete, the worst-case and the empty Build. From 768 to 1440 pixels, as the ticket asks, and from 320 to 767 as well, as a reference for every phone width, 16,815 page widths in all. Scripts and results are in the scratchpad's `follow-up-11/` (`live.ts`, `measure.mjs`, `before.json`, `before-phone.json`, `spare.py`).
+
+| Page | English | Kurdish | Arabic |
+| --- | --- | --- | --- |
+| The home page | "Highest in stock" runs past its slip from 768 to 789 pixels, by up to 10.6 (its line 256, its need 266.6) | from 768 to 809, by up to 20.6 (need 276.6) | from 768 to 797, by up to 14.8 (need 270.8) |
+| The home page's other five lines | within their slip at every width | the same | the same |
+| The Part page | every line within its slip at every width; the least room 53.4 pixels ("Highest in stock" at 768) | the least 43.4 | the least 49.2 |
+| The Build page, complete and worst case | every line within its slip; the least room 38.9 (the Lowest total at 768) | the least 45.6 | the least 42.0 |
+| The Build page, empty | every line within its slip; the least room 112.8 | 99.1 | 117.8 |
+| Every page from 320 to 767 | no line past its slip | the same | the same |
+
+The last width of each run, 789, 809 and 797, the line was a tenth to three tenths of a pixel short. The Part page's and the Build page's slips are 23rem wide from 768, their lines 320 pixels; the home page's is half the plate less its padding, its lines 256 pixels at 768, until 896 pixels.
+
+**The worst case** (Emil's `break-ui`): every one of the made-up shop's 442 Parts was read on its Part page (`scan.mjs`, `worst.py`), as if each were the plate's Part, against the home slip's 256 pixels at 768. As it is, 111 slips in English, 381 in Kurdish and 111 in Arabic would run a line past, by up to 23 pixels; the widest price is a seven-figure one, "1,196,000 IQD". The platform's largest Shown Price in dinars, "≈ 150,000,000 IQD" (an Offer's largest, nine figures), was measured on the slip's own two price lines (`largest.mjs`): it runs past by 33 to 61 pixels.
+
+### 16 November 2026: three ways, for the owner
+
+Emil's skills lead the choice, variants of one piece side by side (`prototype`, whose rules were followed: one named axis each, every variant working, the cost of each said) and the worst case (`break-ui`); Impeccable records the answer in DESIGN.md. No direction was dealt: the slip stays the printed price list's. Each way was built in this worktree by exact edits (`option.py`), photographed on the home page at 768 pixels in English, Kurdish and Arabic (`shots.mjs`), measured from 320 to 1440 pixels on the five pages in the three languages, and taken out again by the inverse edits.
+
+1. **The line stacks** (recommended): from 48rem a slip's line is a row that wraps, its leader and figure one piece, so that a line that cannot hold its name and price side by side keeps its name whole and runs its leader from the start to its price, whole, on the next; the others stay.
+2. **The name wraps**: from 48rem a slip's name may wrap, as below 48rem, its leader and price on its last line.
+3. **The unit wraps**: from 48rem a slip's price follows the Shown Price's own rule (option A, follow-up ticket 10), its figure set at the line's end on its name's line and its unit under it. As follow-up ticket 10 had seen it, the wrapped price stood at its column's start with its figure above its name's line; here it is set flush with the column.
+
+Under each, no word and no price runs past its slip at any width from 320 to 1440 on any of the five pages in any language, and the only line that moved, compared line by line to half a pixel with the measurement above (`compare.py`), is the home page's "Highest in stock" at exactly the widths where it had run past. With the platform's largest price on the home slip at 768, only the first holds every line: 46 to 79 pixels to spare, where the name wrapping runs the Lowest Price line past by up to 23 (Kurdish) and the unit wrapping up to 31.
+
+The page with the pictures, the measurements and the cost of each is in the owner's `.taste-skill/follow-up-11/`. The owner has not answered yet, so the second box stays open and nothing of the change is built.
