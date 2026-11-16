@@ -18,7 +18,7 @@
   - Writes are still refused with 405, and every other path with 404. No test of the platform relies on it.
 - [ ] **`pnpm shopper:inspect` opens a Shared Build page by its path.** With `--build complete` and the `complete` Shared Build, the page is in its "This is your Build" state. The commands table and the design skills guide say how.
 - [x] **The guide is read first**, and so are DESIGN.md, ADR-0013 and `builder`'s design ticket 06.
-- [ ] **The pieces to design**, Taste leading their composition inside the chosen direction:
+- [x] **The pieces to design**, Taste leading their composition inside the chosen direction:
   - the share button on the Build page, shown only when the Build holds a Part;
   - the Shared Build page as a sheet of the same stationery: its Parts with their quantities and no forms that change them, its status, its outcomes, its power draw and both price views, as the Build page draws them;
   - when the Build was shared, and the note that its Parts are fixed and its prices are today's;
@@ -27,25 +27,25 @@
   - Share the link: the phone's share sheet, a copy where there is none, and the link as text to select without script;
   - the "send on WhatsApp" button on each Vendor's line in the second price view, a Vendor's line with no button where it gave no WhatsApp number, and what the page says when a send is refused;
   - a Shared Build whose Parts have all left the catalog.
-- [ ] **The words.** Impeccable leads their copy. They are drafted in English and shown with the options:
+- [x] **The words.** Impeccable leads their copy. They are drafted in English and shown with the options:
   - the WhatsApp message: one sentence naming the Vendor, then the link, with no price and no city;
   - the note of what is fixed and what is today's;
   - the copy's confirmation;
   - the refusals.
 
   `words.md` gains Shared Build and Referral in the three languages, the Kurdish and Arabic drafts for LANG-7.
-- [ ] **The rendering.** Each piece's options are drawn with the made-up shop and its Shared Builds, in Kurdish and in English, at 390 pixels and at 1440, at 1024 and 1280 where a desk layout differs, and in both schemes. They are served from the scratchpad, never opened as a file, and shown in the built-in browser, one option to an anchor and two columns at most, before the owner is asked. An option that breaks a hard rule says so on its page.
-- [ ] **The motion**, led by Emil Kowalski's skills: whether the share, the hand-off to WhatsApp, a copy landing on the Build page and a button busy with its first tap move at all, and how, in the motion of paper and print DESIGN.md already holds. It covers reduced motion and the No Snap Rule. Movements are rendered live for the owner.
-- [ ] **The feel on a phone**, led by Emil's `mobile-native`: the share sheet, a new tab opening WhatsApp, and each button taking a tap at once.
-- [ ] **The worst cases**, led by Emil's `break-ui`:
+- [x] **The rendering.** Each piece's options are drawn with the made-up shop and its Shared Builds, in Kurdish and in English, at 390 pixels and at 1440, at 1024 and 1280 where a desk layout differs, and in both schemes. They are served from the scratchpad, never opened as a file, and shown in the built-in browser, one option to an anchor and two columns at most, before the owner is asked. An option that breaks a hard rule says so on its page.
+- [x] **The motion**, led by Emil Kowalski's skills: whether the share, the hand-off to WhatsApp, a copy landing on the Build page and a button busy with its first tap move at all, and how, in the motion of paper and print DESIGN.md already holds. It covers reduced motion and the No Snap Rule. Movements are rendered live for the owner.
+- [x] **The feel on a phone**, led by Emil's `mobile-native`: the share sheet, a new tab opening WhatsApp, and each button taking a tap at once.
+- [x] **The worst cases**, led by Emil's `break-ui`:
   - the `worstCase` Shared Build;
   - the Shared Build whose Parts are all gone;
   - 20 Vendors, some without a WhatsApp number;
   - the longest names;
   - a Vendor name in Kurdish inside the English message.
-- [ ] **The choosing.** The owner's choice for each piece is recorded under Comments with the owner's words. A choice the owner refuses is rendered again.
-- [ ] **The record.** Impeccable writes the choices into the Shopper app's DESIGN.md, the motion in its Motion section, before any page is built. The hard rules hold, and a piece that pulls against one is put to the owner. An ADR is written only if a choice replaces part of ADR-0013.
-- [ ] `pnpm check` passes, and the work is committed.
+- [x] **The choosing.** The owner's choice for each piece is recorded under Comments with the owner's words. A choice the owner refuses is rendered again.
+- [x] **The record.** Impeccable writes the choices into the Shopper app's DESIGN.md, the motion in its Motion section, before any page is built. The hard rules hold, and a piece that pulls against one is put to the owner. An ADR is written only if a choice replaces part of ADR-0013.
+- [x] `pnpm check` passes, and the work is committed.
 
 ## Comments
 
@@ -83,4 +83,49 @@ How each skill was run: Taste (`design-taste-frontend`) for "a component or a si
 
 **`words.md`** gains Shared Build (بیڵدی هاوبەشکراو, تجميعة مُشارَكة) and Referral (ڕەوانەکردن, إحالة), the drafts for LANG-7; Referral leaves the list of terms no Shopper or Vendor reads, since the Vendor portal now shows a count.
 
-Nothing is written into DESIGN.md before the owner chooses. The pieces, the words, the rendering's showing, the motion, the feel on a phone, the worst cases, the choosing, the record and the last box stay open until then. The checks on a phone wait for hosting, as the spec's Open checks list them.
+Nothing was written into DESIGN.md before the owner chose. The checks on a phone wait for hosting, as the spec's Open checks list them.
+
+### 17 November 2026: the owner's choice
+
+The coordinator served the page at the owner's `.taste-skill/sharing-02/` and showed it to the owner, then relayed the owner's words exactly: "all recommendations with proper motions". What follows is the coordinator's reading of those words, recorded as such: every option A of `#d1` to `#d10`, and the six fixes of `#worst`.
+
+1. `#d1` The share button: on the Build's till slip, the Build page's one primary button.
+2. `#d2` The Shared Build page: the Build page's composition, its slip carrying what a reader can do.
+3. `#d3` When it was shared: "Shared 12 days ago, on 5 November 2026. Its Parts stay as they were shared; its prices are today's.", and a date stamp under the title.
+4. `#d4` "This is your Build": on the slip in the copy's place, with the mark of a chosen thing.
+5. `#d5` Copy into my Build: confirmed in place, as emptying is; no question for an empty Build.
+6. `#d6` Share the link: the link printed on the slip, and one button, the share sheet or a copy.
+7. `#d7` Send on WhatsApp: a cell at the end of the row that holds "Its Parts"; "Gave no WhatsApp number" where there is none; a refusal under the line.
+8. `#d8` All Parts gone: one sheet that says so, with "Start your own Build".
+9. `#d9` The motion: each moment answered by the paper.
+10. `#d10` The WhatsApp message: it names the Vendor and the platform.
+11. `#worst`: the stamp under the title, the link breaking anywhere, the held widths, "Gave no WhatsApp number", the words that speak of the Build as the sender's, and the note counting Parts that left the catalog.
+
+No option was refused, so nothing is drawn again. The follow-up the first report raised was taken too, as the coordinator relayed: Empty the Build's confirmation opens and folds in 150 ms with reduced motion, as the copy's does (the No Snap Rule). That changes the Build page's Motion 10 for Empty the Build, recorded in DESIGN.md; the code is ticket 04's, which builds the copy's confirmation beside it, and nothing in the Shopper app changes here.
+
+**"With proper motions"**, as the coordinator read it: the motion is not thinned out, each new piece moving as the paper-and-print motion DESIGN.md holds. Emil Kowalski's `emil-design-eng` and `animate` led it, and its frequency gate still kept anything that would play on every visit out. What `#d9`'s A already showed stands: the Shared Build page printing as the Build page does with its two stamps landing, the press and the busy words, "Link copied" cross-fading, the copy's confirmation unfolding and a copied Build arriving on the Build page and printing anew. Three movements `#d9`'s A had not shown were added and drawn live under a new anchor, `#d9m`, on the same page: the tick of "✓ Link copied" printing in from its start edge (200 ms, 60 ms after the words), a refused send's line printing in under its Vendor (Motion 11's line print, 150 ms after the first paint), and both confirmations opening in 150 ms with reduced motion. None pulls against a hard rule, so none was put to the owner again. Read back in headless Chromium with `getAnimations()`: an arriving Shared Build page runs the sheet's and the slip's prints (900 ms), the date stamp's landing at 900 ms and "Complete Build"'s at 1150 ms, and its prices settling 45 ms apart from 300 ms; "Copy the link" runs the 150-ms cross-fade and the 200-ms tick from 60 ms; the refusal runs its 450-ms print from 150 ms. In a browser asking for reduced motion both confirmations, sampled each frame, opened from 52 to about 200 pixels over 150 ms rather than in one frame.
+
+The coordinator's message also listed "a copied Build arriving on the Build page shown printed as a pick's answer is". The recommendation the owner kept, `#d9` A, has the Build page opened anew and printing, as after emptying, and that is what is recorded: a copy is answered with the Build page from its top, not at an anchor as a pick's is, and printing anew is the fuller motion "proper motions" asks for. This is flagged in the report, so that the coordinator can say if the other was meant.
+
+### 17 November 2026: the record
+
+Impeccable writes the choices into `apps/shopper/DESIGN.md`, merging them into the file as it stands (its `document` reference's merge, the ticket being the instruction to change an existing DESIGN.md), in the file's own terms. Its head comment says what this ticket added and that nothing of ADR-0013 is replaced, so no ADR is written.
+
+| Piece | In DESIGN.md |
+|---|---|
+| The share button | Components › The Build page › The share button, and the till slip's `first-action` sentence: the first screen of a Build that holds Parts now has its one action; an empty Build's stays defended |
+| The Shared Build page | Overview; Layout › The pieces, page by page; Components › The Shared Build page (its slip, Copy into my Build, "This is your Build", the link and Share the link, its sheet, all Parts gone, an unknown Shared Build) |
+| When it was shared, and the stamp | Components › The stationery › The stamp; The Shared Build page › Its sheet |
+| Send on WhatsApp, no number, refusals | Components › The Build page › Send on WhatsApp |
+| The WhatsApp message | Components › The Build page › The WhatsApp message |
+| The motion | Motion: the tokens `--swap` and `--tick-print`, and `--unfold` for the two confirmations; When a movement plays › Sharing, copying and sending; What moves › 12; What stays still; When a movement is interrupted; Right to left; Reduced motion; and Empty the Build's confirmation in 150 ms with reduced motion, in Emptying the Build too |
+| The feel on a phone | Layout › The feel on a phone: the share sheet, the link by hand, a new tab opening WhatsApp, one tap one Referral, thumbs on the sharing pieces, and the Shared Build page's length |
+| The worst cases | Each where it acts: the stamp under the title, the link breaking anywhere, held widths (Motion 12, Do's), "Gave no WhatsApp number", the words a Shared Build changes, the note of Parts gone |
+
+Do's and Don'ts gain a line each: hold a button's width when its words change, say a busy button's work in its words, say why a line has no Send on WhatsApp, and let an address break anywhere; and never offer a form that changes a Shared Build, speak to its reader as its owner, put a price or a city in the message, or turn a spinner on the paper.
+
+**The hard rules hold.** Every colour of the new pieces is one the file has measured: Print Green with Green's Ink for the two primary buttons, the Ink with the paper's colour for Replace, the Board with the Ink for the cells, Soft Ink on Sheet Paper for the notes, Print Green as the stamp. Every control is 44 pixels or more on a touchscreen (52 on the slip), no text is under 14 pixels nor Arabic script under 15, nothing scrolls sideways at 320 or 390 pixels in either scheme (280 drawings), every side is logical so that each piece mirrors in Kurdish and Arabic, and no font is added. One piece changes an earlier defence rather than a hard rule: the share button gives the Build page's first screen the action Taste's `first-action` asked for, which the owner had kept defended; it was put to the owner as `#d1` A, which says so.
+
+The words of the new pieces are drafted in English and Kurdish in the renderings' `#words` (and the message in Arabic), for ticket 04 and 05 to put into the Shopper set; `words.md`'s Shared Build and Referral are committed with the first record.
+
+**`pnpm shopper:inspect` and "This is your Build".** The box stays open for ticket 04, which builds the Shared Build page; the command already opens the page's path, and with `--build complete` the browser holds the complete Shared Build's Build.
