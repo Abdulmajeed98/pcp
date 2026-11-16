@@ -22,17 +22,148 @@ The measuring scripts are in the owner's `.taste-skill/follow-up-10/`: `sideways
 
 **Done when:**
 
-- [ ] With the browser's text at 200%, on a phone 390 pixels wide, in Kurdish and English, these pages do not scroll sideways:
+- [x] With the browser's text at 200%, on a phone 390 pixels wide, in Kurdish and English, these pages do not scroll sideways:
   - the Vendor page of `…007`;
   - a Vendor page whose name is one word of sixteen digits;
   - a Part page whose name holds a word of sixteen digits.
-- [ ] The cause of the Kurdish and Arabic 7800X3D Part page's 17 pixels at 320 pixels is found and recorded under Comments. It is fixed if a word or a box there can give way under DESIGN.md's rules. If what is wider is a Shown Price's figure alone, it is recorded beside follow-up ticket 10's limits.
-- [ ] A word in Latin letters or digits wider than its box breaks where it must, as a sheet's title does. A break inside a word in Arabic script, which parts its joined letters, or a name set smaller to fit, is the owner's choice. If either is needed, the options are rendered on a page for the owner, the recommended one first, and the owner answers before it is built.
-- [ ] With the text at its own size, no page changes. Vendor pages and Part pages are measured before and after at 1440, 1280, 1024, 768, 390, 360 and 320 pixels in Kurdish and English, and match.
-- [ ] The tests come first. Follow-up ticket 10's line names its Parts with the run's whole word again. An end-to-end line reads that the pages above do not scroll sideways at twice the text: follow-up ticket 10's line extended, or a line beside it. Each new check is seen red, for the right reason, before the change.
-- [ ] A fault is shown once and then reverted: with a name's word made unbreakable again, the end-to-end line fails.
-- [ ] `pnpm shopper:inspect` on the Vendor page of `…002` and of `…007`, and on the 7800X3D's Part page, in Kurdish and English, light and dark, at 1440, 1280, 1024, 768 and 390 pixels: 0 FAIL, and no WARN beyond browse ticket 14's for a Vendor page and a Part page.
-- [ ] `apps/shopper/DESIGN.md` records the change: a Vendor's name, the Part page's plate and its head comment.
-- [ ] `pnpm check` and `pnpm platform:check` pass, and the work is committed.
+- [x] The cause of the Kurdish and Arabic 7800X3D Part page's 17 pixels at 320 pixels is found and recorded under Comments. It is fixed if a word or a box there can give way under DESIGN.md's rules. If what is wider is a Shown Price's figure alone, it is recorded beside follow-up ticket 10's limits.
+- [x] A word in Latin letters or digits wider than its box breaks where it must, as a sheet's title does. A break inside a word in Arabic script, which parts its joined letters, or a name set smaller to fit, is the owner's choice. If either is needed, the options are rendered on a page for the owner, the recommended one first, and the owner answers before it is built.
+- [x] With the text at its own size, no page changes. Vendor pages and Part pages are measured before and after at 1440, 1280, 1024, 768, 390, 360 and 320 pixels in Kurdish and English, and match.
+- [x] The tests come first. Follow-up ticket 10's line names its Parts with the run's whole word again. An end-to-end line reads that the pages above do not scroll sideways at twice the text: follow-up ticket 10's line extended, or a line beside it. Each new check is seen red, for the right reason, before the change.
+- [x] A fault is shown once and then reverted: with a name's word made unbreakable again, the end-to-end line fails.
+- [x] `pnpm shopper:inspect` on the Vendor page of `…002` and of `…007`, and on the 7800X3D's Part page, in Kurdish and English, light and dark, at 1440, 1280, 1024, 768 and 390 pixels: 0 FAIL, and no WARN beyond browse ticket 14's for a Vendor page and a Part page.
+- [x] `apps/shopper/DESIGN.md` records the change: a Vendor's name, the Part page's plate and its head comment.
+- [x] `pnpm check` and `pnpm platform:check` pass, and the work is committed.
 
 ## Comments
+
+### 16 November 2026: the words in Latin letters and digits, and a question for the owner
+
+**Read first**: the ticket, follow-up ticket 10 and its Comments, the follow-up brief and the builder implementer's brief, `CLAUDE.md`, `CONTEXT.md`, `docs/agents/design-skills.md`, `apps/shopper/DESIGN.md` (Typography's sizes for Arabic script, Widths, On a phone, the square plate, the coupon, a Vendor's name), browse tickets 12 and 13 and browse's code review on long words, the MVP spec's **The browse module's conventions** and its end-to-end tests, browse ticket 14's reference table, and the 200% lines in `shopper-languages.spec.ts`. The owner's `.taste-skill/follow-up-10/` scripts were copied into the scratchpad's `follow-up-12/` and pointed at this worktree.
+
+**How each skill was run.** `mattpocock-skills:tdd` at seam 3, the end-to-end line, seen red for its reason before the change, then green. Emil's `break-ui` on the worst long words, below. Impeccable's `harden` for Kurdish, Arabic and right to left: a word is broken by its script, never by its page's language, and a name in Arabic script on an English page and one in Latin script on a Kurdish page were each measured in Kurdish, Arabic and English. Taste's inspector through `pnpm shopper:inspect`. No direction was dealt and none picked: what a word in Arabic script does is put to the owner, below.
+
+**The cause** of the first two pages, measured as the ticket guessed. `wrap-break-word` (`overflow-wrap: break-word`) breaks a word on its line, but leaves the box's narrowest width, its min-content, at the whole word. The coupon's words hold the name in a grid (`grid gap-3`) and the plate's column holds its words in a grid (`grid justify-items-start gap-4`), each with one implicit `auto` column, which grows to its items' min-content. So the column grew to the word, and the page with it: on `…007` at 390 pixels with twice the text, the name's min-content was 436 pixels, the word "تەکنەلۆجیای" at 72 pixels, in a column of 270. `wrap-anywhere` (`overflow-wrap: anywhere`) lowers the min-content to a letter, so the column keeps its width and a word wider than its line breaks on it, where it must; with the text at its own size, where every word fits, it breaks nothing.
+
+**The Kurdish and Arabic 7800X3D at 320 pixels**: the part number "100100000910WOF", fifteen characters with its comma and no place to break, at the Kurdish and Arabic text size at twice the text (17 pixels, the Tall Script Rule, so 34), is 304.8 pixels wide, and the plate's column at 320 pixels is 256 (320 less 32 pixels of padding at each side). The column's grid grew to it, and the title, the part numbers and the Lowest Price with it, which `max-w-full` lets as wide as the column. In Kurdish and Arabic the column grows to the left, from its right edge at 288, so 16.8 pixels past the window's left edge: the 17. In English at 32 pixels the same word is 286.9 pixels and grows to the right, into the plate's padding, ending at 318.9, inside the window. It is a word of Latin letters and digits, not a Shown Price's figure, so it breaks where it must now, and the page fits at 320 in Kurdish, Arabic and English.
+
+**What changed** (`d32d776`), each a word of Latin letters or digits, which DESIGN.md already breaks where it must:
+
+- the Part's name on its plate, and the list of its part numbers (`AlwaysEnglish`, `part-plate.tsx`), the label before them, in the page's language, keeping its words whole;
+- a specification's value (`specification-list.tsx`), found by `break-ui` below;
+- a Vendor's name in Latin script on its coupon (`coupon.tsx`); a name in Arabic script keeps `wrap-break-word` until the owner answers.
+
+DESIGN.md's square plate, its specifications, a Vendor's contact details and its head comment say so.
+
+**Measured** in headless Chromium over this worktree's Shopper apps (the made-up shop on 3120 over the stand-in on 3121, the development database's end-to-end rows on 3125, both over this worktree's API on 3123), with the browser's own text size at 16 and 32 pixels as the 200% lines set it, reduced motion and the light scheme: the Vendor pages of `…002`, `…007`, `…016` and `…021`, the Part pages of the 7800X3D and of the catalog's two longest names, and an end-to-end made-up Vendor named "Made-up test Vendor 1794844397665285" and a made-up Part named "Made-up test storage 1794844317586744" (part number `TEST-…`), each in Kurdish and English at 1440, 1280, 1024, 768, 390, 360 and 320 pixels: 252 pages, every element's box and every run of text's lines and box (`layout.mjs`, `compare.py`, `per-page.py`, `before.json`, `after.json`).
+
+- **At the text's own size**: 126 pages; 120 the same box by box, within half a pixel, 60,130 boxes and 22,344 runs of text compared. The other 6 are the made-up Vendor with sixteen digits at 320, 768 and 1024 pixels, in both languages: its name had run past its half of the coupon even at the text's own size, by 16, 27.5 and 3 pixels, and now breaks its digits there, the page 12 to 55 pixels taller. No page of the made-up shop changed.
+- **At twice the text**, pixels scrolled sideways, before and after:
+
+| Page | 390 | 360 | 320 |
+| --- | --- | --- | --- |
+| A made-up Vendor of sixteen digits, Kurdish and English (and Arabic) | 223, now 0 | 253, now 0 | 293, now 0 |
+| A made-up Part of sixteen digits, Kurdish and English (and Arabic) | 176, now 0 | 206, now 0 | 246, now 0 |
+| The 7800X3D, Kurdish and Arabic | 0 | 0 | 17, now 0 |
+| `…007`, "تەکنەلۆجیای نموونە", Kurdish, Arabic and English | 106, the owner's | 136, the owner's | 176, the owner's |
+| `…002`, Kurdish (English) | 0 | 7 (0) | 47 (4), a follow-up |
+
+The made-up Part's plate scrolled 176 pixels here, the ticket's 165 being another run's word. `…002` at 360 and 320 is its sheet of Offers, below.
+
+**`break-ui`**, the worst long words the API and the catalog allow, fed through a second stand-in on 3127 from a scratchpad copy of the made-up shop (`worst-live.ts`, the page drawn on the server, so no toggle) and through the development database's end-to-end rows: `…001`'s address with a line holding a pasted map link, "https://maps.app.goo.gl/Xq7rTzP9vLm2Kd8A6" (an address may be 300 characters); `…003` named by 96 characters of Latin words (a name may be 100), `…008` by 91 of Arabic words, and `…014` by "کۆگای 1794844397665285", a Kurdish word and sixteen digits; the 7800X3D with the catalog's longest one-word part number, a PSU's of 160 characters, and the tests' `TEST-` and sixteen digits; the catalog's name holding its longest word, "upHere P5K CPU Air Cooler … (Mainboard X79/X99)/1700/1200/1150/1121/1155/1156/1366/AMD AM5/AM4", 198 characters with a word of 47 that a slash before a digit never breaks; and the catalog's ROG Strix name of 144. Each in Kurdish, Arabic and English, at 320, 360, 390, 768 and 1440 pixels, at the text's own size and twice it: 360 pages, 111 broken before (scrolling sideways, or a word running past its coupon or plate) and 57 after (`worst.mjs`, `worst-before.log`, `worst-after.log`). And every Vendor page of the made-up shop and every Part page its Vendors link to, 206, in Kurdish and English at 390 pixels with twice the text, for a name's word broken inside and a page scrolled sideways (`names-break.mjs`).
+
+| # | Severity | Case | What happened | Fix |
+| --- | --- | --- | --- | --- |
+| 1 | Broken | A Vendor's name with sixteen digits, twice the text | The coupon grew to the word, the page 223 pixels wide at 390 | The name in Latin script breaks where it must (`coupon.tsx`) |
+| 2 | Broken | A Part's name with sixteen digits, twice the text | The plate grew to it, 176 pixels at 390 | The plate's name breaks where it must (`part-plate.tsx`) |
+| 3 | Broken | The 198-character name with a word of 47, at the text's own size | The plate 128 pixels past the window at 390, 158 at 768 | The same |
+| 4 | Broken | The 7800X3D's part number, Kurdish and Arabic, 320 pixels, twice the text | 17 pixels, above | The part numbers break where they must (`part-plate.tsx`) |
+| 5 | Broken | A motherboard's M.2 sizes "25110/22110/2580/2280", the GIGABYTE B650 AORUS ELITE AX, twice the text | Its specifications 73 pixels past the window at 390 in English, 96 in Kurdish | A specification's value breaks where it must (`specification-list.tsx`) |
+| 6 | Broken | A name in Arabic script with a word wider than its coupon, twice the text | Six of the made-up shop's 21: `…007` 106 pixels at 390, `…011` 149, `…019` 92, `…015` 90, `…012` 83, `…008` 18; and `…014`'s "کۆگای" with sixteen digits, 207 | The owner's choice, below |
+| 7 | Broken | `…001`'s address with a pasted map link | At the text's own size the page scrolls 56 pixels at 320 in English and 77 in Kurdish and Arabic, 16 and 37 at 360, 7 at 390 in Kurdish and Arabic; 361 to 474 at twice the text | The address and the opening hours are written in any script, and a word of them can only break; it waits for the owner's answer, under which they break where they must |
+| 8 | Ugly | A name in Latin script of long words, twice the text | Before, four of the made-up names ran past their column at 390 without scrolling, "Placeholder Computers" 19 pixels past the coupon's green; now they break inside a word, "Imaginar‧y", "Placehol‧der Compute‧rs", "Hardwar‧e", "Electroni‧cs" | As DESIGN.md has a Latin word break; the owner's choice B below would keep them whole |
+| 9 | Ugly | A sheet's group heading at 360 and 320 pixels, twice the text | The Kurdish "ساردکەرەوەی پرۆسێسەر" at the Label size widens a Vendor page's sheet of Offers 7 pixels at 360 and 47 at 320, and the English "Motherboard" 4 at 320 | A follow-up: the ticket asks for 390 |
+| 10 | Ugly | A specification's long value at twice the text | The value's `auto` column takes the row, and its label is squeezed to a letter a line ("PCIe slots" on the GIGABYTE), with or without a long word, before and after | A follow-up |
+
+What held up, seen: the 160-character part number, which breaks after its hyphens; the ROG Strix name, the catalog's longest names and the 100-character Latin name, at the Facts and Title sizes, wrapping in full; a name in Arabic script on an English page and one in Latin script on a Kurdish page keeping their own direction; no Part page of the 206 scrolling sideways at 390 with twice the text after the change; and nothing of any page past the window at the text's own size but `…001`'s address.
+
+**The tests.** Follow-up ticket 10's line, beside the 200% lines in `shopper-languages.spec.ts`, names its Parts with the run's whole word again, sixteen digits, as its two made-up Vendors' names and its Parts' part numbers hold one too, and at both text sizes reads that nothing of the page's `main` reaches past the window (`piecesPastTheWindow`, so that a word cut by its piece's edge would fail as well as one that scrolls) and that the page does not scroll sideways, on the Build page, the picker, a Category page, the GPU's Part page and the first Vendor's page, in Kurdish and English (`0bfe443`).
+
+- **Red, for its reason**, with the line alone (`red-1.log`): the Part page in Kurdish at 32 pixels, the plate's name, part numbers, manufacturer and Lowest Price 139 pixels past the window. The ten pages at 16 pixels and the Build page, the picker and the Category page at 32 passed. With the plate fixed and the coupon not (`red-2.log`): the Vendor page in Kurdish at 32 pixels, its name 202 pixels past the window.
+- Green with the change: both 200% lines passed (`green-1.log`).
+
+**The faults**, each planted by one exact edit on `0bfe443`, the tree clean, by a script that refused a dirty one, ran the line under the lock and reverted by the inverse edit (`fault.py`); `git status` was clean after each:
+
+| Fault | Edit | Failed |
+| --- | --- | --- |
+| The Part's name made unbreakable again | its `wrap-anywhere` to `wrap-break-word` in `part-plate.tsx` | the line, at the Part page in Kurdish at 32 pixels: its name 186 pixels past the window |
+| A Vendor's name in Latin script made unbreakable again | its `wrap-anywhere` to `wrap-break-word` in `coupon.tsx` | the line, at the Vendor page in Kurdish at 32 pixels: its name 216 pixels past the window |
+
+**`pnpm shopper:inspect`**, with the Shopper's sheet in place and this worktree's API on 3123 for the made-up shop's one reading of the catalog, under the lock, on `0bfe443`: the Vendor pages of `…002` and `…007` and the 7800X3D's Part page, each in Kurdish and English, light and dark, at 1440, 1280, 1024, 768 and 390 pixels: 12 runs, **every one exiting 0 with 0 FAIL**, each in 37 to 49 seconds (`inspect-first/`). The Vendor pages warn `dashed` and `no-footage` at 1440 and 1280, and `blank-gap` at 768; the Part page `dashed`, `no-footage` at 1440 and 1280, and `grey-body` in light: browse ticket 14's, the same, defended as it defends them. The photographs were looked at: the plate and the coupon stand as before. `…007` is inspected again once the owner's answer is built.
+
+**For the owner.** Two questions, each shown with pictures of the real pages on a page in the scratchpad, `follow-up-12/owner/index.html`. Until they are answered, the first, third, fourth, fifth, seventh and eighth boxes stay open, and the last.
+
+1. **A Vendor's name of long words, on its coupon, at a phone's largest text.** A word in Arabic script wider than the coupon fits only by breaking inside its letters or by the name being set smaller. **B (recommended):** on a coupon narrower than 12em of its own text, which only a phone's largest text makes, the name takes the Facts size (40 pixels in Arabic script, 48 in Latin, instead of 72), so that every one of the 21 made-up names keeps its words whole at 390 pixels; a word still wider breaks where it must, as at 360, where "تەکنەلۆجیای" and "ئەلیکترۆنیاتی" lose their last letter to the next line. Why: a printer sets a long name smaller rather than split it, as the Long Name Rule steps a long name down, and at 72 pixels 10 of the 21 names break inside a word, 4 in Latin script and 6 in Arabic, one leaving a letter alone ("وەهم‧ی"). **A:** the name keeps its 72 pixels, and a word wider than the coupon breaks inside its letters where it must, in every script, as a sheet's title already does in Kurdish (browse ticket 13). Under either, the address and the opening hours break a word wider than their line where they must, since they cannot be set smaller.
+2. **A Part's name on its plate.** It is always in Latin letters, so as built a word wider than the plate breaks where it must at its size: 2 of the made-up shop's 206 Parts at 390 pixels with twice the text ("Superclock‧ed", "VCGGTX1070T8PB‧-CG"), and every end-to-end Part. **As built (recommended):** a Part's name is a model name full of codes, where a break reads as one, and a name of more than 40 characters steps down already. **B on the plate too:** on a plate narrower than 12em of its text, a name in the Sheet title takes the Facts size, 48 pixels.
+
+**Follow-ups**, outside this ticket and not changed by it:
+
+- At 360 and 320 pixels with twice the text, a sheet's group heading in the Label size wider than its sheet widens it: a Vendor page's "ساردکەرەوەی پرۆسێسەر" 7 pixels at 360 and 47 at 320 in Kurdish, "Motherboard" 4 at 320 in English (`SheetGroup`'s heading keeps `wrap-break-word`; in Kurdish it waits on question 1's answer, a word in Arabic script).
+- On a Part page at a phone's largest text, a specification whose value is wider than its row takes the row, and its label is squeezed to a letter a line ("PCIe slots", the GIGABYTE B650 AORUS ELITE AX), since the value's column is `auto`.
+
+### 16 November 2026: the owner's answers
+
+The owner answered both questions on 16 November 2026, through the coordinator: "the smaller ones looks fitter", and for the Part's name, "Smaller too".
+
+1. A Vendor's name on its coupon: **B**, the recommendation. Below 12em of its own text the name takes the Facts size, 40 pixels in Arabic script and 48 in Latin, and a word still wider breaks where it must; the address and the opening hours break a word too long for their line where they must.
+2. A Part's name on its plate: **B on the plate too**, not the recommendation ("as built"). On a plate narrower than 12em of its text, a name in the Sheet title takes the Facts size, 48 pixels, and a word still wider breaks where it must.
+
+### 16 November 2026: the smaller name, built
+
+**`builder/integration` merged first** (`2c4f92f`), at `fa20ed6`, with follow-up ticket 11. Its slips' lines merged alone; DESIGN.md's head comment and the Shown Price and specifications passages met in conflicts, resolved by keeping both sides (`resolve.py` in the scratchpad's `follow-up-12/`, which asserted that each side had changed only its own passage), ticket 11's sentence first in the head comment and this ticket's after it. The merge passed `pnpm check`.
+
+**What changed** (`40de000`):
+
+- `nameTypeOnANarrowPiece` (`shared/ui/name-type.ts`) gives a name that is its piece's title the type `nameType` gives it, and to a name in the Sheet title the Facts size where its piece, the container named `piece`, is narrower than 12em of its own text (`@max-[12em]/piece:type-facts`). A name already smaller keeps its size. At the text's own size no piece is that narrow: a coupon's words are 260 pixels at 320, 16em of English text and 15 of Kurdish, and a plate's column 288, 18em of English text and 17 of Kurdish.
+- The coupon's words are that container, and break a word too long for their line where it must, in every script (`wrap-anywhere` on `.coupon-words`): the name, the line under it, the address and the opening hours. The name takes `nameTypeOnANarrowPiece`, as the plate's does, and the plate's column is a container too.
+- DESIGN.md's Long Name Rule, square plate, Vendor's contact details and head comment say so.
+
+**The tests** (`e75f0c6`). The line's second made-up Vendor, which lacks the kit, is named in Arabic script, "Made-up test Vendor 1794851997 الافتراضي": its name begins with the time it was made, so that it sorts among the made-up Vendors on the Admin's list (`findOnTheList` goes back from the last page, and a name beginning in Arabic script would follow them all, one more each run), and at 40 characters it keeps the Sheet title; "الافتراضي", the made-up shop's own `…008` word, is 348 pixels at 72, wider than a coupon's 270. Its page joins the line's pages, and on it the name keeps every word whole (`wordsBrokenAcrossLines`).
+
+- **Red, for its reason**, on the merged branch with the line alone (`red-3.log`): the Vendor page named in Arabic script, in Kurdish at 32 pixels, its name 18 pixels past the window, the coupon grown to its word.
+- With the coupon's words breaking where they must and the name at the Sheet title's size, as option A would have it (`red-4.log`): nothing past the window, and the second check red, the name's words broken, "الافترا‧ضي" and the time "17948519‧97".
+- Green with the owner's B: the whole of `shopper-languages.spec.ts`, 29 lines, passed (`green-2.log`).
+
+**Measured** again, on the merged branch before the change and after it, as before, with three pages more, `…009`, `…011` and the EVGA Superclocked GeForce GT 740's Part page: 12 pages in Kurdish and English at 1440, 1280, 1024, 768, 390, 360 and 320 pixels, at the text's own size and twice it (`before-b.json`, `after-b.json`).
+
+- **At the text's own size**: 168 pages, every one the same box by box, within half a pixel, 85,568 boxes and 31,290 runs of text compared. No page changed.
+- **At twice the text**, pixels scrolled sideways, before and after, in Kurdish and English: `…007`, "تەکنەلۆجیای نموونە", 106, 136 and 176 at 390, 360 and 320 pixels, now 0, its name at 40 pixels and its word 242 pixels in its column of 270 at 390; `…011`, "ئەلیکترۆنیاتی خەیاڵ", 149, 179 and 219, now 0. Nothing else moved: `…002` and `…009` at 360 and 320 are their sheets' group headings, the first round's follow-up.
+
+**`break-ui`** again, the worst cases of the first round on the built page: the 360 pages, 57 broken before this change and 7 after. `…001`'s pasted link, which had scrolled the page even at the text's own size, the names in Arabic script, `…014`'s "کۆگای" with sixteen digits and `…008`'s 91 characters no longer widen the coupon or run past it, at any width or size; what remains is the sheets' group headings at 360 and 320 pixels with twice the text (`…001`, `…003`, `…009`). And at 390 pixels with twice the text, none of the 21 Vendor pages breaks a name inside a word, against 10 at the Sheet title's size, and of the 206 Part pages one, "VCGGTX1070T8PB‧-CG", a model's code at the Facts size, "Superclocked" now whole; no Vendor page and no Part page scrolls sideways there (`worst-after-b.log`, `names-b-built-390.log`). At 360, "تەکنەلۆجیای" and "ئەلیکترۆنیاتی" lose their last letter to the next line, as the owner was shown (`names-b-built-360.log`).
+
+**`pnpm shopper:inspect`** on `…007` and the 7800X3D's Part page, again, on the change, with the Shopper's sheet in place and this worktree's API on 3123, under the lock, each in Kurdish and English, light and dark, at 1440, 1280, 1024, 768 and 390 pixels: 8 runs, **every one exiting 0 with 0 FAIL**, each in 41 to 48 seconds (`inspect-second/`), with the WARNs of the first round and browse ticket 14's: the Vendor page `dashed`, `no-footage` at 1440 and 1280 and `blank-gap` at 768, the Part page `dashed`, `no-footage` at 1440 and 1280 and `grey-body` in light. The photographs were looked at: at the text's own size the name stands at its size, as before.
+
+**The fault** of the first round stands: the end-to-end line still holds both of its checks, and with a name's word made unbreakable again it fails, as shown above.
+
+**The boxes.** With the first round's records, every box holds. The text at its own size: of both rounds' measurements every page matched but the end-to-end made-up Vendor of sixteen digits at 320, 768 and 1024 pixels in the first round, whose name had run past its half of the coupon even at its own size and now breaks its digits there.
+
+**The gates.**
+
+- Each commit passed `pnpm check` on exactly what it held, the others set aside as `HEAD` had them (`gate.sh`), and the merge `2c4f92f` before its commit. `pnpm integration:check` was not run: the API is unchanged.
+- `pnpm platform:check` under the lock, on `e75f0c6`, the last commit of code, on the merged tip `fa20ed6`: **427 passed** in 19.6 minutes, the line with its Vendor named in Arabic script among them. The Shopper app logged once that "the destination stream errored", a line leaving a page before its answer ended, as earlier runs did; no line failed for it.
+- The last commit, of these records, passed `pnpm check --skip-nx-cache` with every `*.tsbuildinfo` outside `node_modules` deleted first. `builder/integration` was still at `fa20ed6`, so merging it again changed nothing.
+
+**The pieces**:
+
+- `d32d776` fix(shopper): break a long Latin word on the plate and the coupon
+- `0bfe443` test(e2e): read that a name's long word widens no page at twice the text
+- `06821dd` docs(shopper): record the long Latin words and ask about Arabic script
+- `2c4f92f` the merge of `builder/integration` at `fa20ed6`
+- `40de000` fix(shopper): set a name smaller on a narrow coupon or plate
+- `e75f0c6` test(e2e): read a Vendor's name in Arabic script at twice the text
+- this record, with DESIGN.md's
+
+**Follow-ups**, outside this ticket and not changed by it, beside the first round's two:
+
+- A Part's name on its box label, in the specifications, keeps the Sheet title and `wrap-break-word` at a phone's largest text: the owner's smaller name was asked of the plate alone, so a long word there breaks inside at the Sheet title's size, and `nameTypeOnANarrowPiece` could serve it if the owner wants it there too.
+- The first round's group heading of a sheet, in the Label size, which widens a Vendor page's sheet at 360 and 320 pixels with twice the text, could break where it must or step down as a name now does.

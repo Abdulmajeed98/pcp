@@ -3,7 +3,7 @@ export { DimPhotograph } from './dim-photograph';
 export { drawnAgain, markDrawnAgain } from './drawn-again';
 export { Item, type NameAlone, whereAPartsNameStands } from './item';
 export { MarkADrawingAgain } from './mark-a-drawing-again';
-export { nameType } from './name-type';
+export { nameType, nameTypeOnANarrowPiece } from './name-type';
 export { NotRead } from './not-read';
 export { CategoryDrawing, HeatSinkDrawing } from './printed-drawings';
 export { PrintedMark } from './printed-mark';
