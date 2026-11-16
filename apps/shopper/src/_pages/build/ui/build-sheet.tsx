@@ -1,11 +1,12 @@
 import type { BuildResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
+import { cn } from 'cn';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { buildAddress, partsCountedIn, type Refusal } from '@/entities/build';
 import { aroundIt, type Category, pickerAddress, theCore } from '@/entities/category';
 import { EmptyTheBuild } from '@/features/change-the-build';
-import { Sheet, SheetTitle } from '@/shared/ui';
+import { Sheet, sheetGroup, sheetGroupHeading, SheetTitle } from '@/shared/ui';
 
 import { statusOf } from '../model/status';
 import { CategoryPlace } from './category-place';
@@ -100,12 +101,12 @@ export async function BuildSheet({
         ))}
       </div>
 
-      <section className="mt-group grid grid-cols-[minmax(0,1fr)] gap-6">
-        <h2 className="type-label text-center">{groups('theCore')}</h2>
+      <section className={cn(sheetGroup, 'mt-group grid grid-cols-[minmax(0,1fr)] gap-6')}>
+        <h2 className={sheetGroupHeading}>{groups('theCore')}</h2>
         <ul className="grid grid-cols-[minmax(0,1fr)] gap-6">{places(theCore)}</ul>
       </section>
-      <section className="mt-group grid grid-cols-[minmax(0,1fr)] gap-6">
-        <h2 className="type-label text-center">{groups('aroundIt')}</h2>
+      <section className={cn(sheetGroup, 'mt-group grid grid-cols-[minmax(0,1fr)] gap-6')}>
+        <h2 className={sheetGroupHeading}>{groups('aroundIt')}</h2>
         <ul className="grid grid-cols-[minmax(0,1fr)] gap-6">{places(aroundIt)}</ul>
       </section>
 

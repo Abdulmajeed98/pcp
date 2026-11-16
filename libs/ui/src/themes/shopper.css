@@ -403,6 +403,36 @@
   }
 }
 
+/*
+ * A sheet's group heading, a Label, where its sheet is narrower than 12em of
+ * its text, which only a phone's largest text makes: 1rem in every script,
+ * which holds the Kurdish "ساردکەرەوەی" of a CPU cooler whole on a sheet at
+ * 360 pixels with twice the text; and where it is narrower than 6.5em, which
+ * only a phone 320 pixels wide with twice the text makes, 0.875rem, which
+ * holds it whole there, so that its letters stay joined at every width (the
+ * owner's choices of 16 November 2026, follow-up ticket 13). Each keeps the
+ * Label's face, weight and lines.
+ */
+@utility type-label-narrow {
+  font-size: 1rem;
+
+  &:lang(ckb),
+  &:lang(ar),
+  &[data-script='arabic'] {
+    font-size: 1rem;
+  }
+}
+
+@utility type-label-narrowest {
+  font-size: 0.875rem;
+
+  &:lang(ckb),
+  &:lang(ar),
+  &[data-script='arabic'] {
+    font-size: 0.875rem;
+  }
+}
+
 /* The frame's name, a Label, a step smaller still in Arabic script. */
 @utility type-name-slot {
   font-family: var(--font-display);

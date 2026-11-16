@@ -9,6 +9,15 @@ export { CategoryDrawing, HeatSinkDrawing } from './printed-drawings';
 export { PrintedMark } from './printed-mark';
 export { Paging } from './paging';
 export { PrintInView } from './print-in-view';
-export { Sheet, SheetAction, SheetClose, SheetGroup, SheetNote, SheetTitle } from './sheet';
+export {
+  Sheet,
+  SheetAction,
+  SheetClose,
+  SheetGroup,
+  sheetGroup,
+  sheetGroupHeading,
+  SheetNote,
+  SheetTitle,
+} from './sheet';
 export { Stamp } from './stamp';
 export { TearOffTabs } from './tear-off-tabs';

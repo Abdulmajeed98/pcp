@@ -1,6 +1,7 @@
 import type { BuildResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
@@ -10,6 +11,8 @@ import {
   Item,
   PrintedMark,
   Sheet,
+  sheetGroup,
+  sheetGroupHeading,
   SheetNote,
   SheetTitle,
 } from '@/shared/ui';
@@ -102,9 +105,12 @@ export async function RulesSheet({ answer }: { answer: BuildResponse }) {
                     key={found}
                     data-line={`group-${found}`}
                     data-testid={`outcomes-${found}`}
-                    className="mt-group grid grid-cols-[minmax(0,1fr)] gap-5"
+                    className={cn(
+                      sheetGroup,
+                      'mt-group grid grid-cols-[minmax(0,1fr)] gap-5',
+                    )}
                   >
-                    <h3 className="type-label text-center">
+                    <h3 className={sheetGroupHeading}>
                       <span data-figure={`group-${found}`}>
                         {t(groupsOf[found], {
                           count: outcomes.length,
