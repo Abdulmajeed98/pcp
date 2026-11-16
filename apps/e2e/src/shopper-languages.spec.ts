@@ -679,6 +679,43 @@ async function piecesPastTheWindow(piece: Locator): Promise<string[]> {
   });
 }
 
+// The words of an element's text that the browser broke across two lines,
+// each written with a "|" where its next line begins: a character is on a
+// line below the one before it when its middle is below that one's foot.
+// Read character by character, as `linesAsDrawn` reads them, so that it
+// holds in either direction.
+async function wordsBrokenAcrossLines(element: Locator): Promise<string[]> {
+  return element.evaluate((root) => {
+    const broken: string[] = [];
+    const texts = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let text = texts.nextNode(); text !== null; text = texts.nextNode()) {
+      const written = text.textContent ?? '';
+      const boxes = Array.from({ length: written.length }, (_, index) => {
+        const one = document.createRange();
+        one.setStart(text, index);
+        one.setEnd(text, index + 1);
+        return one.getBoundingClientRect();
+      });
+      let start = 0;
+      for (const word of written.split(/(\s+)/)) {
+        if (word.trim() !== '') {
+          for (let index = start + 1; index < start + word.length; index += 1) {
+            const before = boxes[index - 1];
+            const now = boxes[index];
+            if ((now.top + now.bottom) / 2 > before.bottom) {
+              const at = index - start;
+              broken.push(`${word.slice(0, at)}|${word.slice(at)}`);
+              break;
+            }
+          }
+        }
+        start += word.length;
+      }
+    }
+    return broken;
+  });
+}
+
 // A Shopper may make the browser's text larger, to 200% (WCAG 1.4.4), and
 // on a phone 390 pixels wide, in Kurdish, whose words run longest, the
 // frame's header with its switches, and the back cover, still lie within the
@@ -749,7 +786,14 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
 
     // A Vendor that offers every Part, the GPU and the kit in dollars
     // alone, so that its prices and its total in dinars are converted, and
-    // one that offers the CPU and the GPU, which lacks the kit.
+    // one that offers the CPU and the GPU, which lacks the kit. The second
+    // is named in Arabic script, with a word as wide as a made-up shop's
+    // "الافتراضي", which at the Sheet title's size at twice the text is
+    // wider than its coupon. Its name begins as every made-up Vendor's
+    // does, with the time it was made, so that it sorts among them on the
+    // Admin's list of Vendors (`findOnTheList`), and it is 40 characters,
+    // the longest a name keeps the Sheet title at.
+    const arabicWord = 'الافتراضي';
     let everything: MadeUpVendor;
     let lacksTheKit: MadeUpVendor;
     let cpu: BuildPart;
@@ -766,7 +810,9 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
         );
         await setThePlatformRate(request, authorization, rate);
         everything = await createAMadeUpVendor(request, authorization);
-        lacksTheKit = await createAMadeUpVendor(request, authorization);
+        lacksTheKit = await createAMadeUpVendor(request, authorization, {
+          name: `Made-up test Vendor ${word.slice(0, 10)} ${arabicWord}`,
+        });
         const aPart = async (category: BuildPart['category'], what: string) => {
           const named = { name: `Made-up test ${what} ${word}` };
           const { id } = await createAMadeUpPart(
@@ -796,19 +842,21 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
       }
     });
 
-    test('in Kurdish and English, no Shown Price runs past its line, and nothing reaches past the window, on the Build page, the picker, a Category page, a Part page or a Vendor page, their names holding the run’s word; at the text’s own size each price keeps one line', async ({
+    test('in Kurdish and English, no Shown Price runs past its line, and nothing reaches past the window, on the Build page, the picker, a Category page, a Part page or a Vendor page, their names holding the run’s word, and on a Vendor page named in Arabic script, whose name keeps its words whole; at the text’s own size each price keeps one line', async ({
       page,
     }) => {
-      test.setTimeout(180_000);
+      test.setTimeout(210_000);
       // The Build whose totals are the longest: two of the kit, ≈ 6,499,750
       // IQD across Vendors and at the Vendor that offers every Part.
       for (const part of [cpu, gpu, kit, kit]) await pick(page, part);
+      const namedInArabicScript = `/vendors/${lacksTheKit.id}`;
       const pages = [
         ['the Build page', '/build'],
         ['the picker', pickerPath('gpu', `?search=${word}`)],
         ['a Category page', `/categories/gpu?search=${word}`],
         ['a Part page', `/parts/${gpu.id}`],
         ['a Vendor page', `/vendors/${everything.id}`],
+        ['a Vendor page named in Arabic script', namedInArabicScript],
       ] as const;
 
       const devtools = await page.context().newCDPSession(page);
@@ -853,6 +901,16 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
                 // its part number and on every list.
                 expect(await piecesPastTheWindow(page.getByRole('main'))).toEqual([]);
                 await expectNoSidewaysScroll(page);
+                // A name in Arabic script keeps its words whole: on a
+                // coupon narrower than 12em of its text, as at twice the
+                // text, it takes the Facts size, which holds the word,
+                // rather than part its joined letters (the owner's choice
+                // of 16 November 2026, follow-up ticket 12).
+                if (address === namedInArabicScript) {
+                  const name = page.getByRole('heading', { level: 1 });
+                  await expect(name).toContainText(arabicWord);
+                  expect(await wordsBrokenAcrossLines(name)).toEqual([]);
+                }
               });
             }
           }
