@@ -33,7 +33,12 @@ import { CurrencySwitch } from '@/widgets/frame-header';
 // Paper to its Category's page. The name, the manufacturer and the part
 // numbers are English in every language (LANG-3), the part numbers one
 // left-to-right list, as a box prints them. On a phone it stacks, its words
-// first and the photograph after them, its cells one above the other.
+// first and the photograph after them, its cells one above the other. A word
+// of the name or a part number wider than the column, as a made-up Part's
+// sixteen digits or a list of sockets joined by slashes at a phone's largest
+// text, breaks where it must, as a sheet's title does, rather than widen the
+// plate past the window (follow-up ticket 12); the part numbers' label, in
+// the page's language, keeps its words whole.
 export async function PartPlate({
   part,
   offers,
@@ -77,7 +82,7 @@ export async function PartPlate({
           <h1
             id="part-name"
             lang="en"
-            className={cn('max-w-full wrap-break-word', nameType(part.name))}
+            className={cn('max-w-full wrap-anywhere', nameType(part.name))}
           >
             <AlwaysEnglish>{part.name}</AlwaysEnglish>
           </h1>
@@ -97,7 +102,7 @@ export async function PartPlate({
               <span className="text-muted-foreground">
                 {t('partNumbers', { count: part.partNumbers.length })}
               </span>{' '}
-              <AlwaysEnglish>
+              <AlwaysEnglish className="wrap-anywhere">
                 {part.partNumbers.map((number, place) => (
                   <Fragment key={place}>
                     {place > 0 && ', '}

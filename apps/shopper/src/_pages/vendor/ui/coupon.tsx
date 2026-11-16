@@ -38,7 +38,10 @@ function inLatinScript(name: string): boolean {
 // a phone's messages are; what the platform writes, the page's. From 48rem
 // to 64rem each half has 32 pixels of padding, so that the name and the
 // hours keep their lines in a half of a coupon 768 pixels wide, and 48 from
-// 64rem.
+// 64rem. A word of a name in Latin script wider than its half, as a made-up
+// Vendor's sixteen digits at a phone's largest text, breaks where it must,
+// as a sheet's title does, rather than widen the coupon past the window
+// (follow-up ticket 12).
 // On its end half, past the perforation, the links, each a cell 56 pixels
 // tall of Deep Green with what it does at the start and the detail at the
 // end: Call, the first, turned over in Coupon Ink with green words, a `tel:`
@@ -76,7 +79,10 @@ export async function Coupon({ vendor }: { vendor: VisibleVendorResponse }) {
               id="vendor-name"
               lang={latin ? 'en' : undefined}
               data-script={latin ? undefined : 'arabic'}
-              className={cn('wrap-break-word', nameType(vendor.name, 'facts'))}
+              className={cn(
+                latin ? 'wrap-anywhere' : 'wrap-break-word',
+                nameType(vendor.name, 'facts'),
+              )}
             >
               {/* Lines 1.4 apart whatever the script, as Kurdish and Arabic
                   need and the renderings had them. */}
