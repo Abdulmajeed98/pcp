@@ -3,6 +3,7 @@ import type {
   CategoryResponse,
   Currency,
   PartSummaryResponse,
+  SharedBuildResponse,
   ShownPriceResponse,
   VisibleVendorResponse,
 } from '@pcp/api-client';
@@ -16,6 +17,7 @@ import {
   theCategoryOfManyParts,
   visiblePartsOfThatCategory,
 } from './made-up-offers.ts';
+import { theMadeUpSharedBuilds } from './made-up-shared-builds.ts';
 import {
   madeUpIdentifier,
   madeUpVendors,
@@ -32,7 +34,9 @@ import {
 // names the catalog holds, one with a photo and one without; a Category
 // offered by one Part, and one with 400 Visible Parts; a Part with 20 Visible
 // Offers; Vendor names in Arabic script beside Latin; a Vendor with only its
-// phone number, and one with no Visible Offer.
+// phone number, and one with no Visible Offer. Since sharing it also holds
+// three made-up Shared Builds, and some of its Vendors give no WhatsApp
+// number.
 
 export type Category = PartSummaryResponse['category'];
 
@@ -88,6 +92,9 @@ export interface ShoppersShop {
   categories: ReadonlyMap<Category, CategoryResponse>;
   // The photos' bytes, by the photo's identifier.
   photos: ReadonlyMap<string, Buffer>;
+  // The made-up Shared Builds, by their identifiers
+  // (`made-up-shared-builds.ts`).
+  sharedBuilds: ReadonlyMap<string, SharedBuildResponse>;
 }
 
 const anHour = 60 * 60 * 1000;
@@ -228,5 +235,6 @@ export function theShoppersShop(
     offers,
     categories: new Map(catalog.categories.map((category) => [category.key, category])),
     photos: photoBytes,
+    sharedBuilds: theMadeUpSharedBuilds(now, { parts }),
   };
 }

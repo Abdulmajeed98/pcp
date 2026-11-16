@@ -98,6 +98,26 @@ describe('the made-up Builds', () => {
     ).toBe(400);
   });
 
+  // "send on WhatsApp" stands only on the line of a Vendor that gave a
+  // WhatsApp number (sharing ticket 02).
+  it('have Vendors in the second price view that gave no WhatsApp number: one of the complete Build’s, and four of the worst case’s', () => {
+    const withoutWhatsApp = (build: MadeUpBuild) =>
+      read(build)
+        .vendors.filter((vendor) => !vendor.hasWhatsAppNumber)
+        .map((vendor) => vendor.name)
+        .sort();
+
+    expect(read(madeUpBuilds.complete).vendors.length).toBe(5);
+    expect(withoutWhatsApp(madeUpBuilds.complete)).toEqual(['Mock Hardware House']);
+    expect(read(madeUpBuilds.worstCase).vendors.length).toBe(18);
+    expect(withoutWhatsApp(madeUpBuilds.worstCase)).toEqual([
+      'Demo Devices',
+      'Mock Hardware House',
+      'Pretend Tech',
+      'متجر التجربة للإلكترونيات',
+    ]);
+  });
+
   it('are an empty one, needing every Category', () => {
     const empty = read(madeUpBuilds.empty);
 
