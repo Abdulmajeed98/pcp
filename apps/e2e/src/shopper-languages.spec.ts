@@ -1,4 +1,11 @@
-import { type Browser, expect, type Locator, type Page, test } from '@playwright/test';
+import {
+  type Browser,
+  type CDPSession,
+  expect,
+  type Locator,
+  type Page,
+  test,
+} from '@playwright/test';
 
 import { type BuildPart, pick } from './build-page';
 import { createAMadeUpPart } from './catalog';
@@ -920,6 +927,215 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
           fontSizes: { standard: 16, fixed: 13 },
         });
         await devtools.detach();
+      }
+    });
+  });
+});
+
+// The pieces a phone's largest text can still squeeze, on the narrowest
+// phones (follow-up ticket 13): a sheet's group heading, set in the Label,
+// whose longest word, the Kurdish "ساردکەرەوەی" of a CPU cooler or the
+// English "Motherboard", is wider than a sheet at 360 and 320 pixels with
+// twice the text and held the sheet open past the window; a Part's
+// specifications, whose long value left its label a letter a line, as
+// "PCIe slots" beside a motherboard's slots, even with the text at its own
+// size, and whose box label's key lines left their value no room, "A|M5";
+// and the Part's name on its box label, which broke inside a word that its
+// plate keeps whole at the Facts size.
+test.describe("a sheet's group headings, a Part's specifications and its box label at a phone's largest text", () => {
+  // The finished page: Motion 2's prices come 16 pixels from the side.
+  test.use({ reducedMotion: 'reduce' });
+  const word = aWordUniqueToTheRun();
+  // A name of 40 characters, the longest that keeps the Sheet title, with
+  // two words, a catalog's "Superclocked" and eight of the run's digits,
+  // each wider than the box label at the Sheet title's size at 390 pixels
+  // with twice the text, and narrower at the Facts size.
+  const boardName = `Made-up test board Superclocked ${word.slice(0, 8)}`;
+  let vendor: MadeUpVendor;
+  let board: { id: string };
+
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(120_000);
+    const context = await browser.newContext({ javaScriptEnabled: true });
+    try {
+      const request = context.request;
+      const authorization = await authorizationOfTheDevelopmentAdmin(
+        await context.newPage(),
+      );
+      vendor = await createAMadeUpVendor(request, authorization);
+      const cooler = await createAMadeUpPart(request, authorization, {}, 'cpuCooler', {
+        name: `Made-up test cooler ${word}`,
+      });
+      // A motherboard's specifications as the catalog writes the GIGABYTE
+      // B650 AORUS ELITE AX's, whose slots and Ethernet are each wider than
+      // half a phone's row.
+      board = await createAMadeUpPart(
+        request,
+        authorization,
+        {
+          socket: 'AM5',
+          form_factor: 'ATX',
+          chipset: 'AMD B650',
+          memory: { ram_type: 'DDR5', slots: 4, max: 256 },
+          pcie_slots: [
+            { gen: '4.0', quantity: 1, lanes: 16 },
+            { gen: '3.0', quantity: 2, lanes: 1 },
+          ],
+          m2_slots: [
+            { size: '25110/22110/2580/2280', key: 'M', interface: 'PCIe 5.0 x4' },
+            { size: '25110/22110/2580/2280', key: 'M', interface: 'PCIe 4.0 x4' },
+          ],
+          power_connectors: { cpu_power: ['8-pin', '4-pin'], main_power: '24-pin' },
+          onboard_ethernet: [{ speed: '2.5 Gb/s', controller: 'Realtek' }],
+        },
+        'motherboard',
+        { name: boardName },
+      );
+      // Prices of five figures, which every line holds at 320 pixels with
+      // twice the text (follow-up ticket 10's limits are wider ones).
+      await addAnOffer(request, authorization, vendor.id, cooler.id, { iqdPrice: 52_000 });
+      await addAnOffer(request, authorization, vendor.id, board.id, { iqdPrice: 95_000 });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // Opens a page in a window of the width given, with the browser's own
+  // text size, as its settings set it, through the test's DevTools session.
+  async function openWithTheText(
+    page: Page,
+    devtools: CDPSession,
+    {
+      width,
+      size,
+      language,
+      address,
+    }: {
+      width: number;
+      size: number;
+      language: Language;
+      address: string;
+    },
+  ): Promise<void> {
+    await page.setViewportSize({ width, height: 844 });
+    await devtools.send('Page.setFontSizes', {
+      fontSizes: { standard: size, fixed: (size * 13) / 16 },
+    });
+    await page.goto(addressIn(language, address));
+    await expect(page.getByTestId('frame')).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    expect(
+      await page.evaluate(() => getComputedStyle(document.documentElement).fontSize),
+    ).toBe(`${size}px`);
+  }
+
+  // Runs the steps with a DevTools session of the page's, and gives the
+  // browser back its own text size after them.
+  async function withDevTools(
+    page: Page,
+    steps: (devtools: CDPSession) => Promise<void>,
+  ): Promise<void> {
+    const devtools = await page.context().newCDPSession(page);
+    try {
+      await steps(devtools);
+    } finally {
+      await devtools.send('Page.setFontSizes', { fontSizes: { standard: 16, fixed: 13 } });
+      await devtools.detach();
+    }
+  }
+
+  test('in Kurdish and English, a Vendor page whose Offers are grouped under the CPU cooler and the motherboard lies within a window 360 and 320 pixels wide at twice the text, and its group headings keep their words whole', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await withDevTools(page, async (devtools) => {
+      for (const width of [360, 320]) {
+        for (const language of [kurdish, english]) {
+          await test.step(`${language.name}, ${width} pixels`, async () => {
+            await openWithTheText(page, devtools, {
+              width,
+              size: 32,
+              language,
+              address: `/vendors/${vendor.id}`,
+            });
+            expect(await piecesPastTheWindow(page.getByRole('main'))).toEqual([]);
+            await expectNoSidewaysScroll(page);
+            // A heading's word wider than its sheet takes a smaller size
+            // rather than part its letters (the owner's choice, follow-up
+            // ticket 13).
+            for (const category of ['cpuCooler', 'motherboard']) {
+              const heading = page
+                .getByTestId(`offers-of-${category}`)
+                .getByRole('heading');
+              await expect(heading).toBeVisible();
+              expect(await wordsBrokenAcrossLines(heading)).toEqual([]);
+            }
+          });
+        }
+      }
+    });
+  });
+
+  test("in Kurdish and English, at 390, 360 and 320 pixels, at the text's own size and twice it, no specification's label on a Part page, and no key line on its box label, is broken inside its words", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await withDevTools(page, async (devtools) => {
+      for (const size of [16, 32]) {
+        for (const width of [390, 360, 320]) {
+          for (const language of [kurdish, english]) {
+            await test.step(`${language.name}, ${width} pixels, the text at ${size}`, async () => {
+              await openWithTheText(page, devtools, {
+                width,
+                size,
+                language,
+                address: `/parts/${board.id}`,
+              });
+              const labels = page.getByTestId('specification').locator('dt');
+              await expect(labels.filter({ hasText: 'PCIe slots' })).toBeVisible();
+              const broken: string[] = [];
+              for (const label of await labels.all()) {
+                broken.push(...(await wordsBrokenAcrossLines(label)));
+              }
+              const keyLines = page.getByTestId('key-line');
+              await expect(keyLines.first()).toBeVisible();
+              for (const line of await keyLines.all()) {
+                broken.push(...(await wordsBrokenAcrossLines(line)));
+              }
+              expect(broken).toEqual([]);
+              expect(await piecesPastTheWindow(page.getByRole('main'))).toEqual([]);
+              await expectNoSidewaysScroll(page);
+            });
+          }
+        }
+      }
+    });
+  });
+
+  test('in Kurdish and English, at 390 pixels with twice the text, the Part’s name on its box label keeps whole the words its plate keeps whole', async ({
+    page,
+  }) => {
+    await withDevTools(page, async (devtools) => {
+      for (const language of [kurdish, english]) {
+        await test.step(language.name, async () => {
+          await openWithTheText(page, devtools, {
+            width: 390,
+            size: 32,
+            language,
+            address: `/parts/${board.id}`,
+          });
+          // On a piece narrower than 12em of its text a name in the Sheet
+          // title takes the Facts size (the owner's choice of 16 November
+          // 2026, follow-up ticket 12), on the plate and on the box label.
+          const onThePlate = page.getByRole('heading', { level: 1, name: boardName });
+          const onTheLabel = page
+            .getByTestId('box-label')
+            .getByText(boardName, { exact: true });
+          await expect(onThePlate).toBeVisible();
+          await expect(onTheLabel).toBeVisible();
+          expect(await wordsBrokenAcrossLines(onThePlate)).toEqual([]);
+          expect(await wordsBrokenAcrossLines(onTheLabel)).toEqual([]);
+        });
       }
     });
   });

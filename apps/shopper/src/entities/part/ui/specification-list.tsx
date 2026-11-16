@@ -11,7 +11,12 @@ import { specificationText } from '../model/specification-text';
 // leaves out, the Part does not hold, and is not shown. A value's word wider
 // than its line, as a motherboard's M.2 sizes joined by slashes at a phone's
 // largest text, breaks where it must rather than widen the page past the
-// window (follow-up ticket 12).
+// window (follow-up ticket 12). A row stacks where it must: where its value
+// would leave its label narrower than the label's longest word, as a
+// motherboard's slots beside "PCIe slots" do on a phone, the value takes the
+// next line, at the end, and the label keeps its words whole; every other row
+// keeps its one line (the owner's choice of 16 November 2026, follow-up
+// ticket 13).
 export function SpecificationList({
   specifications,
 }: {
@@ -27,12 +32,15 @@ export function SpecificationList({
           key={specification.path}
           data-testid="specification"
           data-specification={specification.path}
-          className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4"
+          className="flex min-w-0 flex-wrap items-baseline gap-x-4"
         >
-          <dt className="min-w-0 wrap-break-word">
+          {/* The label asks for no more than its longest word and takes
+              what the value leaves; on a line of its own it may break a
+              word wider than the row. */}
+          <dt className="w-min min-w-0 grow wrap-break-word">
             <AlwaysEnglish>{specification.label}</AlwaysEnglish>
           </dt>
-          <dd className="max-w-[18rem] text-end font-semibold wrap-anywhere">
+          <dd className="ms-auto max-w-[18rem] text-end font-semibold wrap-anywhere">
             {/* Two rows of a list may hold the same, as two alike M.2 slots
                 do, so a line is known by its place. */}
             {specificationText(specification).map((text, place) => (

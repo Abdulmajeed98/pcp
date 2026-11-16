@@ -127,6 +127,20 @@ export function SheetNote({
   );
 }
 
+// A group of a sheet's items is the container `sheet-group`, and its heading
+// is in the Label type, centred. On a sheet narrower than 12em of its text,
+// which only a phone's largest text makes, the heading steps down to 1rem,
+// and on one narrower than 6.5em, which only a phone 320 pixels wide with
+// twice the text makes, to 0.875rem, so that a long word, the Kurdish
+// "ساردکەرەوەی" of a CPU cooler or the English "Motherboard", keeps its
+// letters joined rather than hold the sheet open past the window or part
+// them; a word still wider breaks where it must (the owner's choices of 16
+// November 2026, follow-up ticket 13). Every sheet's groups take these, the
+// Build page's among them.
+export const sheetGroup = '@container/sheet-group';
+export const sheetGroupHeading =
+  'type-label text-center wrap-anywhere @max-[12em]/sheet-group:type-label-narrow @max-[6.5em]/sheet-group:type-label-narrowest';
+
 // A group of a sheet's items, 56 pixels below what comes before it, under a
 // centred heading in the Label type, its items 16 pixels apart. Its one
 // column may shrink to the sheet's width, so that an item too wide for its
@@ -144,8 +158,8 @@ export function SheetGroup({
   children: ReactNode;
 }) {
   return (
-    <section data-testid={testId} className="mt-group grid gap-4">
-      <Heading className="type-label text-center">{heading}</Heading>
+    <section data-testid={testId} className={cn(sheetGroup, 'mt-group grid gap-4')}>
+      <Heading className={sheetGroupHeading}>{heading}</Heading>
       <ul className="@container grid grid-cols-[minmax(0,1fr)] gap-4">{children}</ul>
     </section>
   );
