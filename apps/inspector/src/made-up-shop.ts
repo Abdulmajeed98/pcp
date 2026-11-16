@@ -5,10 +5,13 @@ import type {
   PartPageResponse,
   PartSummaryResponse,
   PlatformRateResponse,
+  ReferralCountResponse,
+  ReferralCountsPageResponse,
   VendorPageResponse,
   VendorResponse,
   VendorsOfferCountsResponse,
   VendorsOffersPageResponse,
+  VendorsReferralCountResponse,
   VendorsWithExpiringOffersPageResponse,
 } from '@pcp/api-client';
 
@@ -17,6 +20,7 @@ import {
   offersOfTheFirstVendor,
   theShopsPlatformRate,
 } from './made-up-offers.ts';
+import { madeUpReferralCounts } from './made-up-referral-counts.ts';
 import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
 
 // The made-up shop's first Vendor (`made-up-vendors.ts`) as the dashboard's
@@ -56,6 +60,9 @@ export interface MadeUpShop {
   offers: readonly OfferResponse[];
   // The Platform Rate as the shop's screens see it.
   platformRate: PlatformRateResponse;
+  // Every made-up Vendor's Referral count, the shop's own among them, in
+  // the API's order (`made-up-referral-counts.ts`).
+  referralCounts: readonly VendorsReferralCountResponse[];
 }
 
 function before(now: Date, milliseconds: number): string {
@@ -106,6 +113,7 @@ export function madeUpShop(
         ? { iqdPerUsd: theShopsPlatformRate, setAt: before(now, 3 * aDay) }
         : null,
     },
+    referralCounts: madeUpReferralCounts,
   };
 }
 
@@ -213,7 +221,9 @@ const readOnly = refusal(
 // but those that only read the real Vendors, and the read of the Platform
 // Rate, which the shop holds, so that the Platform Rate screen is seen with
 // a rate or with none whatever the development database holds (the pricing
-// module's ticket 02). The list of Vendors is the
+// module's ticket 02), and the Referral counts, the Admin's list of every
+// made-up Vendor's and the shop's Vendor's own (sharing ticket 03), which
+// no Referral recorded through the API could make. The list of Vendors is the
 // API's, with the shop's Vendor among them (`listsTheVendors`), and another
 // Vendor's page and its Offers are the API's alone, so that the Vendors'
 // screens show the shop among the development database's real Vendors (the
@@ -231,6 +241,12 @@ export function answerFromTheMadeUpShop(
   const [version, first, second, ...rest] = address.pathname.split('/').filter(Boolean);
   if (version === 'v1' && first === 'platform-rate' && second === undefined) {
     return { status: 200, body: shop.platformRate };
+  }
+  // The Referrals screen's list: every made-up Vendor with its count, as
+  // the API orders them, and none of the development database's.
+  if (version === 'v1' && first === 'referral-counts' && second === undefined) {
+    const body: ReferralCountsPageResponse = paged(address, shop.referralCounts);
+    return { status: 200, body };
   }
   const vendorsCall = first === 'vendors' || first === 'offers';
   const callersVendor = first === 'caller' && second === 'vendor';
@@ -262,6 +278,10 @@ export function answerFromTheMadeUpShop(
   if (second === undefined || second !== shop.vendor.id) return undefined;
   const [offers, offerId, ...beyond] = rest;
   if (offers === undefined) return { status: 200, body: shop.vendor };
+  if (offers === 'referral-count' && offerId === undefined) {
+    const body: ReferralCountResponse = { count: referralCountOf(shop) };
+    return { status: 200, body };
+  }
   if (offers !== 'offers' || beyond.length > 0) return notFound;
   if (offerId !== undefined) {
     // One Offer is read with its expiry at the moment it is read, as the API
@@ -295,6 +315,11 @@ function listedOffersOf(shop: MadeUpShop, now: Date): ListedOfferResponse[] {
         a.confirmedAt.localeCompare(b.confirmedAt) ||
         a.part.name.localeCompare(b.part.name),
     );
+}
+
+// The shop's own Vendor's Referral count, as the Referrals screen lists it.
+function referralCountOf(shop: MadeUpShop): number {
+  return shop.referralCounts.find((vendor) => vendor.id === shop.vendor.id)?.count ?? 0;
 }
 
 // Whether a call asks for a page of the list of Vendors, which the API
