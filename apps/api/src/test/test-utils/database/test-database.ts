@@ -67,6 +67,22 @@ export async function keepSpecificationsAsTheyAre(
   }
 }
 
+// A Part taken out of the catalog, as no endpoint can: nothing in the
+// platform deletes a Part, yet a Shared Build must outlive one that leaves,
+// as an old Build does in a Shopper's cookie. The Part has no Offer and no
+// photo, whose references would refuse it. It is the fourth named exception
+// that arranges data through the database rather than the endpoints, after
+// `changeTheRateAndDeactivateAVendorWhileReading` below.
+export async function takeThePartOutOfTheCatalog(partId: string): Promise<void> {
+  const client = new Client(connectionOf(testDatabaseSettings()));
+  await client.connect();
+  try {
+    await client.query('DELETE FROM part WHERE id = $1', [partId]);
+  } finally {
+    await client.end();
+  }
+}
+
 // A row of the Offer history, as the database holds it.
 export type OfferHistoryRow = {
   changedAt: Date;
@@ -232,6 +248,49 @@ async function changeWhileReading<T>(
     return await reading;
   } finally {
     await changing.end();
+    await watching.end();
+  }
+}
+
+// Requests that meet a table at one moment, as requests sent at once can:
+// the table is held locked while they are sent, each waits for it, and it is
+// let go once as many as given are waiting, so that none of them reads or
+// writes it before the others have reached it. Requests sent at once without
+// it can reach the table one after another, each done before the next comes,
+// and then a read before an insert hides a missing unique rule (`offers`
+// ticket 01).
+//
+// It is the fifth named exception that arranges data through the database,
+// after `takeThePartOutOfTheCatalog`, for the same reason as
+// `changeTheRateAndTheOffersWhileReading`: no endpoint holds a table locked.
+export async function sentWhileTheTableIsHeld<T>(
+  lockedTable: 'shared_build',
+  waiting: number,
+  send: () => Promise<T>,
+): Promise<T> {
+  const holding = new Client(connectionOf(testDatabaseSettings()));
+  const watching = new Client(connectionOf(testDatabaseSettings()));
+  await holding.connect();
+  await watching.connect();
+  try {
+    await holding.query('BEGIN');
+    await holding.query(`LOCK TABLE ${lockedTable} IN ACCESS EXCLUSIVE MODE`);
+
+    const sending = send();
+    // Until every request waits for the lock.
+    for (let tries = 0; ; tries += 1) {
+      const { rows } = await watching.query<{ waiting: number }>(
+        'SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted',
+      );
+      if (rows[0].waiting >= waiting) break;
+      if (tries > 500) throw new Error('Not every request waited for the locked table.');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    await holding.query('COMMIT');
+
+    return await sending;
+  } finally {
+    await holding.end();
     await watching.end();
   }
 }

@@ -17,17 +17,36 @@ export class OfferVendor {
   }
 }
 
+// The Vendor of an in-stock Visible Offer, as a Build's second price view
+// knows it: its identifier, its name, and whether it gave a WhatsApp number,
+// so that a page offers to send the Build to it only where a chat can be
+// opened (SHR-5). The number itself is answered only once a Referral is
+// recorded.
+export class StockingVendor extends OfferVendor {
+  constructor(
+    id: string,
+    name: string,
+    private readonly whatsAppNumberGiven: boolean,
+  ) {
+    super(id, name);
+  }
+
+  hasWhatsAppNumber(): boolean {
+    return this.whatsAppNumberGiven;
+  }
+}
+
 // One of a Part's in-stock Visible Offers, as a Build's price views read it:
 // its Vendor, and its Shown Price in the chosen currency, which is none only
 // when the Offer has no Quoted Price in that currency and there is no
 // Platform Rate.
 export class InStockOffer {
   constructor(
-    private readonly vendor: OfferVendor,
+    private readonly vendor: StockingVendor,
     private readonly shownPrice: ShownPrice | null,
   ) {}
 
-  getVendor(): OfferVendor {
+  getVendor(): StockingVendor {
     return this.vendor;
   }
 

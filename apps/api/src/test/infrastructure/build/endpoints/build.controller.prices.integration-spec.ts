@@ -634,6 +634,7 @@ describe("a Build's price views", () => {
         {
           id: store.id,
           name: 'Made-up Computer Store',
+          hasWhatsAppNumber: false,
           // 2 × 60,000 + 3 × 85,000.
           total: quoted('IQD', '375000'),
           partsInStock: [
@@ -653,6 +654,7 @@ describe("a Build's price views", () => {
         {
           id: shop.id,
           name: 'Made-up Computer Shop',
+          hasWhatsAppNumber: false,
           // 350 $ at 1,500 is 525,000 IQD; 525,000 + 3 × 90,000.
           total: converted('IQD', '795000'),
           partsInStock: [
@@ -757,6 +759,7 @@ describe("a Build's price views", () => {
         {
           id: bravo.id,
           name: 'Made-up Bravo Computers',
+          hasWhatsAppNumber: false,
           total: quoted('IQD', '600000'),
           partsInStock: [
             {
@@ -770,6 +773,7 @@ describe("a Build's price views", () => {
         {
           id: alpha.id,
           name: 'Made-up Alpha Computers',
+          hasWhatsAppNumber: false,
           total: null,
           partsInStock: [notShown],
           partsLacked: [],
@@ -777,6 +781,7 @@ describe("a Build's price views", () => {
         {
           id: charlie.id,
           name: 'Made-up Charlie Computers',
+          hasWhatsAppNumber: false,
           total: null,
           partsInStock: [notShown],
           partsLacked: [],

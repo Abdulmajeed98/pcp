@@ -57,6 +57,13 @@ export class BuildVendorResponse {
 
   @ApiProperty({
     description:
+      'Whether the Vendor gave a WhatsApp number, so that a page offers to send the Build to it only where a chat can be opened. The number itself is answered by recording a Referral.',
+    example: true,
+  })
+  readonly hasWhatsAppNumber: boolean;
+
+  @ApiProperty({
+    description:
       "The Vendor's total: each Shown Price of the Parts it has in stock times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. Null when none of them has a Shown Price, which happens only when no Platform Rate has been set.",
     type: ShownPriceResponse,
     nullable: true,
@@ -81,6 +88,7 @@ export class BuildVendorResponse {
   private constructor(vendor: BuildVendor) {
     this.id = vendor.getVendor().getId();
     this.name = vendor.getVendor().getName();
+    this.hasWhatsAppNumber = vendor.getVendor().hasWhatsAppNumber();
     this.total = ShownPriceResponse.of(vendor.getTotal());
     this.partsInStock = vendor.getPartsInStock().map(BuildPartInStockResponse.of);
     this.partsLacked = vendor.getPartsLacked().map((part) => part.getPart().getId());

@@ -1405,6 +1405,10 @@ export type BuildVendorResponse = {
      */
     name: string;
     /**
+     * Whether the Vendor gave a WhatsApp number, so that a page offers to send the Build to it only where a chat can be opened. The number itself is answered by recording a Referral.
+     */
+    hasWhatsAppNumber: boolean;
+    /**
      * The Vendor's total: each Shown Price of the Parts it has in stock times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. Null when none of them has a Shown Price, which happens only when no Platform Rate has been set.
      */
     total: ShownPriceResponse | null;
@@ -1476,6 +1480,126 @@ export type SetPlatformRateRequest = {
      * The Platform Rate, in whole dinars per dollar, as a JSON whole number within the platform's limits.
      */
     iqdPerUsd: number;
+};
+
+export type ShareBuildRequest = {
+    /**
+     * The Build to share, as `GET v1/build` takes it. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives. Also refused, naming `part`, with the reason `empty`, for a Build that holds no Part once those the catalog does not hold are left out.
+     */
+    part: Array<string>;
+};
+
+export type BuildSharedResponse = {
+    /**
+     * The Shared Build's identifier, a random UUID, which the Shared Build page's address names.
+     */
+    id: string;
+    /**
+     * When the Build was first shared, by the API's clock.
+     */
+    sharedAt: string;
+};
+
+export type SharedBuildResponse = {
+    /**
+     * The Shared Build's identifier, a random UUID.
+     */
+    id: string;
+    /**
+     * When the Build was first shared, by the API's clock.
+     */
+    sharedAt: string;
+    /**
+     * The Build's Parts and quantities as they were shared, never changed since, as `GET v1/build` takes them in `part`: lower-case identifiers, in the catalog's order of Categories, then the Build's order for RAM kits and drives, each kit or drive followed by `:` and its quantity. A Part that has left the catalog since stays among them, and `GET v1/build` leaves it out.
+     */
+    part: Array<string>;
+};
+
+export type RecordReferralRequest = {
+    /**
+     * The identifier of the Vendor the Shared Build is sent to: an active Vendor that gave a WhatsApp number. Refused, naming `vendorId`, with the reason `noWhatsAppNumber`, for a Vendor that gave none.
+     */
+    vendorId: string;
+};
+
+export type ReferredVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+    /**
+     * The Vendor's WhatsApp number, which the chat is opened with.
+     */
+    whatsAppNumber: PhoneNumberResponse;
+};
+
+export type ReferralResponse = {
+    vendor: ReferredVendorResponse;
+    /**
+     * When the Referral was recorded, by the API's clock.
+     */
+    referredAt: string;
+};
+
+export type VendorsReferralCountResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+    /**
+     * Whether the Vendor is active, or a deactivated Vendor.
+     */
+    active: boolean;
+    /**
+     * How many Referrals name the Vendor, over all time.
+     */
+    count: number;
+};
+
+export type ReferralCountsPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Vendors, active and deactivated, those with none among them: the most Referrals first, then by name, then by identifier.
+     */
+    content: Array<VendorsReferralCountResponse>;
+};
+
+export type ReferralCountResponse = {
+    /**
+     * How many Referrals name the Vendor, over all time.
+     */
+    count: number;
 };
 
 export type GetCallerData = {
@@ -2526,3 +2650,135 @@ export type SetPlatformRateResponses = {
 };
 
 export type SetPlatformRateResponse = SetPlatformRateResponses[keyof SetPlatformRateResponses];
+
+export type ShareBuildData = {
+    body: ShareBuildRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/shared-builds';
+};
+
+export type ShareBuildErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ShareBuildError = ShareBuildErrors[keyof ShareBuildErrors];
+
+export type ShareBuildResponses = {
+    /**
+     * The Shared Build an earlier share of the same Build stored, as it was stored.
+     */
+    200: BuildSharedResponse;
+    /**
+     * A new Shared Build, stored now.
+     */
+    201: BuildSharedResponse;
+};
+
+export type ShareBuildResponse = ShareBuildResponses[keyof ShareBuildResponses];
+
+export type ReadSharedBuildData = {
+    body?: never;
+    path: {
+        sharedBuildId: string;
+    };
+    query?: never;
+    url: '/v1/shared-builds/{sharedBuildId}';
+};
+
+export type ReadSharedBuildErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadSharedBuildError = ReadSharedBuildErrors[keyof ReadSharedBuildErrors];
+
+export type ReadSharedBuildResponses = {
+    200: SharedBuildResponse;
+};
+
+export type ReadSharedBuildResponse = ReadSharedBuildResponses[keyof ReadSharedBuildResponses];
+
+export type RecordReferralData = {
+    body: RecordReferralRequest;
+    path: {
+        sharedBuildId: string;
+    };
+    query?: never;
+    url: '/v1/shared-builds/{sharedBuildId}/referrals';
+};
+
+export type RecordReferralErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type RecordReferralError = RecordReferralErrors[keyof RecordReferralErrors];
+
+export type RecordReferralResponses = {
+    201: ReferralResponse;
+};
+
+export type RecordReferralResponse = RecordReferralResponses[keyof RecordReferralResponses];
+
+export type ListReferralCountsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+    };
+    url: '/v1/referral-counts';
+};
+
+export type ListReferralCountsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListReferralCountsError = ListReferralCountsErrors[keyof ListReferralCountsErrors];
+
+export type ListReferralCountsResponses = {
+    200: ReferralCountsPageResponse;
+};
+
+export type ListReferralCountsResponse = ListReferralCountsResponses[keyof ListReferralCountsResponses];
+
+export type ReadVendorsReferralCountData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/referral-count';
+};
+
+export type ReadVendorsReferralCountErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVendorsReferralCountError = ReadVendorsReferralCountErrors[keyof ReadVendorsReferralCountErrors];
+
+export type ReadVendorsReferralCountResponses = {
+    200: ReferralCountResponse;
+};
+
+export type ReadVendorsReferralCountResponse = ReadVendorsReferralCountResponses[keyof ReadVendorsReferralCountResponses];

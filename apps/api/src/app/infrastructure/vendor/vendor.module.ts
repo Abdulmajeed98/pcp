@@ -37,7 +37,8 @@ import { DatabaseVendorStore } from './store/DatabaseVendorStore';
     ReadVisibleVendorQuery,
   ],
   // Every Vendor portal endpoint, those of other modules among them, decides
-  // by the rule for which Vendor a request acts for.
-  exports: [VendorAccessRule],
+  // by the rule for which Vendor a request acts for. A Referral reads the
+  // Vendor it names from the Vendors' own Store.
+  exports: [VendorAccessRule, VendorStore],
 })
 export class VendorModule {}

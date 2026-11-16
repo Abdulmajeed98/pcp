@@ -1972,6 +1972,241 @@
         "summary": "Set the Platform Rate, in whole dinars per dollar, as a new setting, also when it equals the current one, and answer it as the current one",
         "tags": ["PlatformRate"]
       }
+    },
+    "/v1/shared-builds": {
+      "post": {
+        "operationId": "shareBuild",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareBuildRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The Shared Build an earlier share of the same Build stored, as it was stored.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildSharedResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "A new Shared Build, stored now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildSharedResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Share a Build: freeze the Parts of it the catalog holds, with their quantities, as a Shared Build that never changes, and answer it, a new one, or the one an earlier share of the same Build stored",
+        "tags": ["SharedBuild"]
+      }
+    },
+    "/v1/shared-builds/{sharedBuildId}": {
+      "get": {
+        "operationId": "readSharedBuild",
+        "parameters": [
+          {
+            "name": "sharedBuildId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedBuildResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "A Shared Build's frozen Parts and quantities, as `GET v1/build` takes them, never changed since it was shared, and when it was shared",
+        "tags": ["SharedBuild"]
+      }
+    },
+    "/v1/shared-builds/{sharedBuildId}/referrals": {
+      "post": {
+        "operationId": "recordReferral",
+        "parameters": [
+          {
+            "name": "sharedBuildId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordReferralRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Record a Referral: one tap on \"send on WhatsApp\", which sends a Shared Build to an active Vendor that gave a WhatsApp number, and answer the Vendor with its number, so that the chat can be opened. Each call is one Referral, and nothing about the Shopper is recorded",
+        "tags": ["Referral"]
+      }
+    },
+    "/v1/referral-counts": {
+      "get": {
+        "operationId": "listReferralCounts",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page, counted from 0.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "description": "How many items a page holds.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralCountsPageResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "One page of every Vendor, active and deactivated, with its Referral count, zeros included, the most Referrals first, for the Admin",
+        "tags": ["Referral"]
+      }
+    },
+    "/v1/vendors/{vendorId}/referral-count": {
+      "get": {
+        "operationId": "readVendorsReferralCount",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralCountResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "A Vendor's Referral count, over all time, for the Admin or for the Vendor's own Login",
+        "tags": ["Referral"]
+      }
     }
   },
   "info": {
@@ -4492,6 +4727,11 @@
             "description": "The Vendor's name, as the Vendor writes it.",
             "example": "Made-up Computer Shop"
           },
+          "hasWhatsAppNumber": {
+            "type": "boolean",
+            "description": "Whether the Vendor gave a WhatsApp number, so that a page offers to send the Build to it only where a chat can be opened. The number itself is answered by recording a Referral.",
+            "example": true
+          },
           "total": {
             "description": "The Vendor's total: each Shown Price of the Parts it has in stock times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. Null when none of them has a Shown Price, which happens only when no Platform Rate has been set.",
             "nullable": true,
@@ -4518,7 +4758,14 @@
             }
           }
         },
-        "required": ["id", "name", "total", "partsInStock", "partsLacked"]
+        "required": [
+          "id",
+          "name",
+          "hasWhatsAppNumber",
+          "total",
+          "partsInStock",
+          "partsLacked"
+        ]
       },
       "BuildResponse": {
         "type": "object",
@@ -4656,6 +4903,203 @@
           }
         },
         "required": ["iqdPerUsd"]
+      },
+      "ShareBuildRequest": {
+        "type": "object",
+        "properties": {
+          "part": {
+            "description": "The Build to share, as `GET v1/build` takes it. Each value is a Part's identifier, followed for a RAM kit or a drive by `:` and its quantity, a whole number from 1 to 16 in Western digits, repeated for each Part. A Part the catalog does not hold is left out of the Build. Refused, naming `part`, for a value that is not an identifier; a quantity on a Part that is not a RAM kit or a drive, or none on one that is; a quantity outside 1 to 16; two Parts of a Category a Build holds one of; one Part given twice; and more than 8 different RAM kits, or more than 8 different drives. Also refused, naming `part`, with the reason `empty`, for a Build that holds no Part once those the catalog does not hold are left out.",
+            "example": [
+              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["part"]
+      },
+      "BuildSharedResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Shared Build's identifier, a random UUID, which the Shared Build page's address names.",
+            "example": "7c1e2f3a-4b5d-4e6f-8a9b-0c1d2e3f4a5b"
+          },
+          "sharedAt": {
+            "type": "string",
+            "description": "When the Build was first shared, by the API's clock.",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "sharedAt"]
+      },
+      "SharedBuildResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Shared Build's identifier, a random UUID.",
+            "example": "7c1e2f3a-4b5d-4e6f-8a9b-0c1d2e3f4a5b"
+          },
+          "sharedAt": {
+            "type": "string",
+            "description": "When the Build was first shared, by the API's clock.",
+            "format": "date-time"
+          },
+          "part": {
+            "description": "The Build's Parts and quantities as they were shared, never changed since, as `GET v1/build` takes them in `part`: lower-case identifiers, in the catalog's order of Categories, then the Build's order for RAM kits and drives, each kit or drive followed by `:` and its quantity. A Part that has left the catalog since stays among them, and `GET v1/build` leaves it out.",
+            "example": [
+              "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "9d2b6c1e-0f3a-4b7d-8e5c-1a2b3c4d5e6f:2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["id", "sharedAt", "part"]
+      },
+      "RecordReferralRequest": {
+        "type": "object",
+        "properties": {
+          "vendorId": {
+            "type": "string",
+            "description": "The identifier of the Vendor the Shared Build is sent to: an active Vendor that gave a WhatsApp number. Refused, naming `vendorId`, with the reason `noWhatsAppNumber`, for a Vendor that gave none.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          }
+        },
+        "required": ["vendorId"]
+      },
+      "ReferredVendorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as the Vendor writes it.",
+            "example": "Made-up Computer Shop"
+          },
+          "whatsAppNumber": {
+            "description": "The Vendor's WhatsApp number, which the chat is opened with.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PhoneNumberResponse"
+              }
+            ]
+          }
+        },
+        "required": ["id", "name", "whatsAppNumber"]
+      },
+      "ReferralResponse": {
+        "type": "object",
+        "properties": {
+          "vendor": {
+            "$ref": "#/components/schemas/ReferredVendorResponse"
+          },
+          "referredAt": {
+            "type": "string",
+            "description": "When the Referral was recorded, by the API's clock.",
+            "format": "date-time"
+          }
+        },
+        "required": ["vendor", "referredAt"]
+      },
+      "VendorsReferralCountResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Vendor's identifier on the platform.",
+            "example": "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Vendor's name, as the Vendor writes it.",
+            "example": "Made-up Computer Shop"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the Vendor is active, or a deactivated Vendor.",
+            "example": true
+          },
+          "count": {
+            "type": "number",
+            "description": "How many Referrals name the Vendor, over all time.",
+            "example": 12
+          }
+        },
+        "required": ["id", "name", "active", "count"]
+      },
+      "ReferralCountsPageResponse": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "number",
+            "description": "The page, counted from 0.",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "How many items a page holds.",
+            "example": 20
+          },
+          "totalElements": {
+            "type": "number",
+            "description": "How many items were found, on all the pages together.",
+            "example": 42
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "How many pages there are.",
+            "example": 3
+          },
+          "first": {
+            "type": "boolean",
+            "description": "Whether this is the first page.",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "description": "Whether this is the last page, or past it.",
+            "example": false
+          },
+          "content": {
+            "description": "The page's Vendors, active and deactivated, those with none among them: the most Referrals first, then by name, then by identifier.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorsReferralCountResponse"
+            }
+          }
+        },
+        "required": [
+          "pageNumber",
+          "pageSize",
+          "totalElements",
+          "totalPages",
+          "first",
+          "last",
+          "content"
+        ]
+      },
+      "ReferralCountResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "description": "How many Referrals name the Vendor, over all time.",
+            "example": 12
+          }
+        },
+        "required": ["count"]
       }
     }
   },

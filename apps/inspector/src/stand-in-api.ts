@@ -928,6 +928,8 @@ function theSecondView(
       return {
         id: vendor.id,
         name: vendor.name,
+        // From the Vendor's own details, as the API reads its row.
+        hasWhatsAppNumber: vendor.whatsAppNumber !== null,
         total: totalOf(partsInStock.flatMap((has) => has.timesQuantity ?? [])),
         partsInStock,
         partsLacked: stocked
