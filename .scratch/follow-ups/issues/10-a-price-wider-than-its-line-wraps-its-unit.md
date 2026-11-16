@@ -4,7 +4,7 @@
 
 **Category:** enhancement
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **From:** builder ticket 06's follow-up, which builder ticket 08 put to the owner as its question 3. The owner answered on 13 November 2026 and chose option A, as a Shown Price ticket of its own after `builder`.
 
