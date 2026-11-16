@@ -4,7 +4,7 @@
 
 **Category:** bug
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **From:** follow-up ticket 12's Comments, the follow-ups of both its rounds, measured on 16 November 2026. The owner asked for them to be fixed on 16 November 2026.
 
@@ -18,14 +18,116 @@ Follow-up ticket 12's measuring scripts and results are in the owner's `.taste-s
 
 **Done when:**
 
-- [ ] With the browser's text at 200%, on a phone 390, 360 and 320 pixels wide, in Kurdish, Arabic and English, no sheet's group heading widens its sheet: the Vendor pages of `…001`, `…002`, `…003` and `…009` do not scroll sideways, and nothing of them reaches past the window.
-- [ ] A word in Arabic script in a heading that is wider than its sheet keeps its letters joined or breaks inside them as the owner chooses; follow-up ticket 12's answer, the smaller size, likely settles it. Where a fix needs a design choice, the options are rendered on a page for the owner, the recommended one first, and the owner answers before it is built.
-- [ ] On a Part page at a phone's largest text, no specification's label is squeezed inside its words, however wide its value: the GIGABYTE B650 AORUS ELITE AX's "PCIe slots" keeps its words whole.
-- [ ] A Part's name on its box label keeps a long word whole where the plate's name does, or as the owner chooses.
-- [ ] With the text at its own size, no page changes. Every page that draws a sheet's group heading, a Part's specifications or its box label (the home page, a Category page, a Part page, a Vendor page and the not-found page) is measured before and after at 1440, 1280, 1024, 768, 390, 360 and 320 pixels in Kurdish and English, and matches.
-- [ ] The tests come first. An end-to-end line beside the 200% lines in `shopper-languages.spec.ts` reads these at twice the text, and each new check is seen red, for the right reason, before the change.
-- [ ] A fault is shown once and then reverted: with a change undone by one edit, the end-to-end line fails.
-- [ ] Emil's `break-ui` on the worst headings, values and names, and Impeccable's `harden` for Kurdish, Arabic and right to left.
-- [ ] `pnpm shopper:inspect` on the Vendor page of `…002` and the Part pages of the 7800X3D and the GIGABYTE B650 AORUS ELITE AX, in Kurdish and English, light and dark, at 1440, 1280, 1024, 768 and 390 pixels: 0 FAIL, and no WARN beyond browse ticket 14's for a Vendor page and a Part page.
-- [ ] `apps/shopper/DESIGN.md` records the change: the sections it touches and its head comment.
-- [ ] `pnpm check` and `pnpm platform:check` pass, and the work is committed and merged into `builder/integration`.
+- [x] With the browser's text at 200%, on a phone 390, 360 and 320 pixels wide, in Kurdish, Arabic and English, no sheet's group heading widens its sheet: the Vendor pages of `…001`, `…002`, `…003` and `…009` do not scroll sideways, and nothing of them reaches past the window.
+- [x] A word in Arabic script in a heading that is wider than its sheet keeps its letters joined or breaks inside them as the owner chooses; follow-up ticket 12's answer, the smaller size, likely settles it. Where a fix needs a design choice, the options are rendered on a page for the owner, the recommended one first, and the owner answers before it is built.
+- [x] On a Part page at a phone's largest text, no specification's label is squeezed inside its words, however wide its value: the GIGABYTE B650 AORUS ELITE AX's "PCIe slots" keeps its words whole.
+- [x] A Part's name on its box label keeps a long word whole where the plate's name does, or as the owner chooses.
+- [x] With the text at its own size, no page changes but the specification rows whose label was squeezed inside its words, which the owner chose on 16 November 2026 to fix at every size (this box was reworded after that answer; it first read "no page changes"). Every page that draws a sheet's group heading, a Part's specifications or its box label (the home page, a Category page, a Part page, a Vendor page, the not-found page and the Build page) is measured before and after at 1440, 1280, 1024, 768, 390, 360 and 320 pixels in Kurdish and English, and matches but for those rows.
+- [x] The tests come first. An end-to-end line beside the 200% lines in `shopper-languages.spec.ts` reads these at twice the text, and each new check is seen red, for the right reason, before the change.
+- [x] A fault is shown once and then reverted: with a change undone by one edit, the end-to-end line fails.
+- [x] Emil's `break-ui` on the worst headings, values and names, and Impeccable's `harden` for Kurdish, Arabic and right to left.
+- [x] `pnpm shopper:inspect` on the Vendor page of `…002` and the Part pages of the 7800X3D and the GIGABYTE B650 AORUS ELITE AX, in Kurdish and English, light and dark, at 1440, 1280, 1024, 768 and 390 pixels: 0 FAIL, and no WARN beyond browse ticket 14's for a Vendor page and a Part page; but for the GIGABYTE's `focal-point` and `small-title`, which the inspector gives on `builder/integration`'s code as well and which are a follow-up under Comments.
+- [x] `apps/shopper/DESIGN.md` records the change: the sections it touches and its head comment.
+- [x] `pnpm check` and `pnpm platform:check` pass, and the work is committed and merged into `builder/integration`.
+
+## Comments
+
+### 16 November 2026: what was measured, and three questions for the owner
+
+**Read first**: the ticket, follow-up ticket 12 and its Comments, `CLAUDE.md`, `docs/agents/design-skills.md`, `apps/shopper/DESIGN.md` (Typography's Label and sizes for Arabic script, the Long Name Rule, the printed sheet, the box label, the specifications, Widths and On a phone, its head comment), the implementer brief in the owner's `.taste-skill/builder-briefs/`, the lessons it names, and the 200% lines in `shopper-languages.spec.ts`. Follow-up ticket 12's scripts were copied into this worktree's ignored `.taste-skill/follow-up-13/work/` and pointed at it; every script and result named below is there.
+
+**How each skill was run.** `mattpocock-skills:tdd` at one seam, the end-to-end lines beside the 200% lines, which the brief named: each line seen red for its reason before its change, then green, one slice at a time. Emil's `break-ui` on the worst headings, values and names, below; the pages are drawn on the server from the stand-in, so the worst case came through the made-up shop and the end-to-end tests' rows rather than a toggle. Impeccable's `harden` for Kurdish, Arabic and right to left. Taste's inspector through `pnpm shopper:inspect`. Choices were rendered for the owner on the made-up shop's real pages, with each option's rules added to the pictures only (`options.mjs`, the owner's page `owner/index.html`, served on port 4113 while it was asked).
+
+**Measured** in headless Chromium over this worktree's Shopper on the made-up shop (3130 over the stand-in on 3131, the catalog read once through this worktree's API on 3133) and over the development database (3135), with the browser's own text size at 16 and 32 pixels as the 200% lines set it, reduced motion and the light scheme (`probe.mjs`, `layout.mjs`).
+
+- **A sheet's group heading.** At twice the text, the Vendor pages of `…001` to `…004` scroll 7 pixels sideways at 360 in Kurdish and 47 at 320, and 4 at 320 in English; `…009` 4 at 320 in English. Every heading drawn on the made-up shop's pages was measured in all three languages (`probe-before.json`): only two words are wider than a sheet, "ساردکەرەوەی" (CPU cooler), 275 pixels at the Label's 40, and "Motherboard", 232 at its 44. A sheet's words are 278 pixels across at 390 with twice the text, 248 at 360 and 208 at 320. The widest word in Arabic, "العشوائية", is 195; the Build page's group headings and the rules' counts fit too.
+- **A specification's label.** Squeezed to a letter a line wherever the value, its column `auto` and at most 18rem, left the label less than its longest word: at twice the text nearly every label of the GIGABYTE B650 AORUS ELITE AX, the AMD Ryzen 7 7800X3D and the EVGA Superclocked GeForce GT 740 at 390, 360 and 320 pixels ("P|CIe s|lots", "E|thernet", "L|ithography"), and **with the text at its own size too**: the GIGABYTE's "PCIe slots", "M.2 slots", "Ethernet" and "Back panel ports" from 320 to 768 pixels, the 7800X3D's "Lithography" up to 1024, "L1 cache" and "Integrated graphics" (`probe-before-x1.log`).
+- **The box label's key lines** (`break-ui`, not in the ticket): at twice the text every value is squeezed, "A|M5", "D|DR5", "G|eForce", since the label's column is a fixed 9rem, 288 pixels there, wider than the whole label.
+- **The box label's name**: "Superclo|cked" at 390 with twice the text and "7800X|3D" at 360 and 320, at the Sheet title's 72 pixels, where the plate keeps them whole at the Facts size.
+
+**`break-ui`**:
+
+| # | Severity | Case | What happened | Fix |
+| --- | --- | --- | --- | --- |
+| 1 | Broken | A sheet's group heading of a word wider than the sheet, twice the text, 360 and 320 pixels | The sheet held open past the window, 7 and 47 pixels in Kurdish, 4 in English | The heading steps down on a narrow sheet (`shared/ui/sheet.tsx`, the theme's `type-label-narrow` and `type-label-narrowest`) |
+| 2 | Broken | The box label's key lines, twice the text | Every value a letter a line | Each key line stacks on a label narrower than 12em of its text (`box-label.tsx`) |
+| 3 | Ugly | A specification whose value leaves its label less than its longest word, at every text size | The label a letter a line | The row stacks where it must (`specification-list.tsx`) |
+| 4 | Ugly | The box label's name, twice the text | A long word broken at 72 pixels that the plate keeps whole | The plate's smaller name (`box-label.tsx`) |
+| 5 | Ugly, held | A label's one word wider than the whole row, twice the text, 360 and 320 pixels: "Microarchitecture", "multithreading", "Performance", "manufacturer" | Breaks inside, alone on its line | A word of Latin letters breaks where it must, as DESIGN.md has it |
+| 6 | Ugly, left | The barcode's printed number at twice the text | "02G-P4-2742-K\|R" | A follow-up, below |
+| 7 | Known | A price of six figures at 320 pixels with twice the text | Holds its sheet 12 to 17 pixels wider than its room, inside the window, as on `…002` ("≈ 171,750 IQD") | Follow-up ticket 10's recorded limit |
+
+What held up: the headings in Arabic script on Arabic pages and every Label heading of the Build page; a name of Latin script on a Kurdish page; a part number's hyphens, where a label such as "PCIe 6-pin power sockets" may wrap; and no page past the window at the text's own size.
+
+**For the owner**, with pictures on `owner/index.html`, my recommendation first in each: (1) the heading set smaller, 1rem below 12em of its sheet's text, as follow-up ticket 12's names are, or broken inside its word; (2) a specification's row stacked where it must, or kept side by side with the label holding its longest word, and whether those rows may change with the text at its own size, against this ticket's "no page changes"; (3) the plate's smaller name on the box label too, or the name as it is.
+
+### 16 November 2026: the owner's answers
+
+Relayed by the coordinating session: the owner answered "Keep every A" to "Keep all of ticket 13's recommendations, including fixing squeezed labels at normal size?".
+
+1. The group heading: A, set smaller, 1rem below 12em of its sheet's text.
+2. The specifications: A, the row stacks where it must, and each key line on a narrow box label; the squeezed rows are fixed at every size, the text's own size included. The owner accepted that change at the text's own size, against the brief's "no page changes at normal size", so the fifth box was reworded to say so.
+3. The box label's name: A, the plate's smaller name (`nameTypeOnANarrowPiece`).
+
+### 16 November 2026: a correction to the first answer, and the owner's second answer
+
+Building the heading at 1rem, the end-to-end line found "ساردکەرەوە|ی" broken at 320 pixels with twice the text. I had told the owner it kept whole there: its picture was of `…002`, whose sheet a price of six figures, "≈ 171,750 IQD", holds 17 pixels wider (break-ui's case 7). On a sheet that nothing else widens a sheet's words are 208 pixels across at 320, and the word at 1rem is 220. The correction and its pictures, on the end-to-end tests' own made-up Vendor, were put to the owner (`owner/index.html#d4`): a second step, 0.875rem below 6.5em, or 1rem alone with the word's last letter breaking at 320.
+
+The owner answered on 16 November 2026, relayed by the coordinating session: "Yes, second step". The heading takes 1rem below 12em of its sheet's text and 0.875rem below 6.5em, which only a phone 320 pixels wide with twice the text reaches, so that "ساردکەرەوەی" keeps its letters joined at every width.
+
+### 16 November 2026: built
+
+**What changed**:
+
+- `c090d46`: a specification's row is a row that wraps, its label asking for no more than its longest word and taking what the value leaves, so that where the value would leave the label less, the value takes the next line, at the end, and every other row keeps its one line (`specification-list.tsx`). The box label's start side is the container `piece`: on a label narrower than 12em of its text each key line stacks, and the Part's name takes `nameTypeOnANarrowPiece`, as on the plate (`box-label.tsx`).
+- `950e233`: a sheet's group is the container `sheet-group`, and its heading steps to 1rem below 12em of its text and to 0.875rem below 6.5em (the theme's `type-label-narrow` and `type-label-narrowest`, whose settings for Arabic script come after the Label's, as `type-facts` does for a name), breaking a word still wider where it must (`sheet.tsx`, `sheetGroup` and `sheetGroupHeading`). The Build page's sheet and rules' sheet take the same, so that every sheet's groups follow one rule.
+- DESIGN.md's Label, Long Name Rule, box label, specifications and head comment say so.
+
+**The tests** (`9af2e0b`): three lines beside the 200% lines in `shopper-languages.spec.ts`, over a made-up Vendor offering a made-up CPU cooler and a motherboard with the GIGABYTE's slots and Ethernet, at prices of five figures, which every line holds at 320 pixels with twice the text. At 360 and 320 pixels with twice the text, in Kurdish and English, the Vendor page lies within the window and its group headings keep their words whole; at 390, 360 and 320 pixels, at the text's own size and twice it, no specification's label and no key line on the box label is broken inside a word; and at 390 pixels with twice the text, the box label's name, "Made-up test board Superclocked" with eight of the run's digits, keeps whole the words its plate keeps whole.
+
+- **Red, for its reason**, with the lines alone (`red-1.log`): the Vendor page in Kurdish at 360, its sheet 7 pixels past the window; the Part page in Kurdish at 390 with the text at its own size, "M.|2", "slo|ts", "Eth|ernet"; the box label's name in Kurdish, "Superclo|cked".
+- **Green** with each change, one slice at a time: the name (`green-3.log`), the rows and key lines (`green-2.log`); the heading at 1rem stayed red at Kurdish 320, "ساردکەرەوە|ی" (`green-1.log`), the correction above; with the second step all three passed (`green-1c.log`). One run never started, my API's `nx serve` in this worktree holding Nx's API task (`green-1b.log`); it was stopped before the next.
+
+**The faults**, each planted by one exact edit on `9af2e0b`, the tree clean, by a script that refused a dirty one, ran the three lines under the lock and reverted by the inverse edit (`fault.py`); `git status` was clean after each:
+
+| Fault | Edit | Failed |
+| --- | --- | --- |
+| The heading without its second step | `@max-[6.5em]/sheet-group:type-label-narrowest` taken out of `sheetGroupHeading` | the Vendor page's line, in Kurdish at 320: "ساردکەرەوە\|ی" (`fault-1.log`) |
+| A row that cannot stack | `flex-wrap` taken out of the specification's row | the specifications' line, in Kurdish at 390 with the text at its own size: "M.\|2", "slo\|ts", "Ethern\|et" (`fault-2.log`) |
+| The box label not a container | `@container/piece` taken off its start side | the specifications' line at twice the text, "A\|M5", "D\|DR5", and the name's line, "Superclo\|cked" (`fault-3.log`) |
+
+**Measured** before and after, as above, on the made-up shop's home page, a Category page (CPU coolers), the not-found page, the Vendor pages of `…002`, `…007`, `…009` and `…016`, the Part pages of the GIGABYTE, the EVGA Superclocked, the 7800X3D and the catalog's two longest names (276 and 210 characters), in Kurdish and English at 1440, 1280, 1024, 768, 390, 360 and 320 pixels, at the text's own size and twice it (`before.json`, `after-2.json`, `compare-2.txt`, `per-page-2.txt`); a second run before the change matched the first box by box (`before-2.json`). And the Build page with the made-up worst-case and complete Builds, its two files set back to `builder/integration`'s for the measurement before and restored from the commit (`build-before.json`).
+
+- **At the text's own size**: 168 pages, 83,524 boxes and 29,722 runs of text compared; 143 the same box by box, within half a pixel. The other 25 are Part pages, the GIGABYTE at 768, 390, 360 and 320, the 7800X3D at 1024, 768, 390, 360 and 320 and the 210-character name at 768, 390, 360 and 320 in Kurdish or English, and in each the runs of text that moved are only the squeezed labels, each now on one line, and their own values, now under them: each label among those `probe-before-x1.log` found broken inside, and the 210-character cooler's "Sockets", which had been "Sock|ets" in a column 37 pixels wide. Most of these pages are shorter, by up to 433 pixels, the squeezed labels' lines gone; three are taller, by 29 to 48, their values on lines of their own; three keep their height. The Build page: 28 pages, 50,470 boxes and 17,920 runs, every one the same.
+- **At twice the text**, pixels scrolled sideways, before and after: `…002` 4 at 320 in English, 7 at 360 and 47 at 320 in Kurdish, now 0; `…009` 4 at 320 in English, now 0; no other page scrolled before or after. The headings take 1rem at 390 and 360 and 0.875rem at 320 on a sheet nothing else widens, and no heading word breaks on the pages probed, `…001`, `…002` and `…009`, the home page, the CPU coolers' page and the not-found page in Kurdish, Arabic and English (`probe-headings-2.log`), and `…003` and `…004` at 1rem before the second step (`probe-headings.log`); on `…002` at 320 in Kurdish, whose sheet a price holds wider, the heading keeps 1rem and its word whole. No specification's label nor key line breaks inside a word but break-ui's case 5 (`probe-rows.log`).
+
+**`harden`.** The changes use logical properties alone (`ms-auto`, `text-end`), and the heading's steps set Arabic script, Kurdish and Arabic pages and a name marked `data-script="arabic"`, after the Label's own settings. Photographed right to left (`owner/rtl-*.png`): on a Kurdish or Arabic page a stacked value stands at the row's end, the left, as a value already stood, its English kept left to right, and a stacked key line's label and value at its start, the right. The smallest text of the change is the heading's 0.875rem, 28 pixels where it is drawn; with the text at its own size no Arabic script is set smaller than before.
+
+**`pnpm shopper:inspect`**, with the Shopper's sheet in place and this worktree's API on 3133 for the made-up shop's one reading of the catalog, under the lock, on `9af2e0b` with these records (`inspect.sh`, `inspect-final/`): the Vendor page of `…002` and the Part pages of the 7800X3D and the GIGABYTE B650 AORUS ELITE AX, each in Kurdish and English, light and dark, at 1440, 1280, 1024, 768 and 390 pixels, 12 runs of 37 to 48 seconds.
+
+- `…002`: 0 FAIL in all four; WARN `dashed` and `no-footage` at 1440 and 1280, and `blank-gap` at 768, browse ticket 14's for a Vendor page, as follow-up ticket 12 found them.
+- The 7800X3D: 0 FAIL in all four; WARN `dashed`, `no-footage` at 1440 and 1280, and `grey-body` in light, browse ticket 14's for a Part page.
+- The GIGABYTE: FAIL `focal-point` at 768 pixels, the largest type of the first screen the plate's name at 26.8 pixels, and WARN `small-title` at 1024, 768 and 390, beside browse ticket 14's three. Neither is this ticket's: its name of 41 characters takes the Facts size by the Long Name Rule, and the Part has no photo, whose icon fills its half of the plate only from 64rem (browse ticket 12). The first screen is the same box for box before and after (the highest box that moved is a specification's label, 3,163 pixels down), and the inspector on `builder/integration`'s code, this ticket's seven source files set back to `aa7cd1c` and restored from the commit, gives the same FAIL and WARNs (`inspect-base/`; its Kurdish dark run stopped on a refused connection to the inspection's Shopper app, the other three agree). No earlier ticket inspected this page. It is a follow-up, below, so this ticket's box holds for what it changed.
+
+The photographs were looked at: the specifications at 768 pixels in two columns, "PCIe slots" and "M.2 slots" each with its value under it and every other row on its line, and the plate as before.
+
+**Follow-ups**, outside this ticket and not changed by it:
+
+- A Part page whose name passes 40 characters and whose Part has no photo fails Taste's `focal-point` at 768 pixels and warns `small-title` from 390 to 1024, the GIGABYTE B650 AORUS ELITE AX's among them: its name takes the Facts size and its icon fills only part of its half of the plate below 64rem.
+- At twice the text the box label's barcode number breaks before its last letter, "02G-P4-2742-K|R" on the EVGA Superclocked GeForce GT 740.
+- The heading's steps are sized to today's longest Category name, "ساردکەرەوەی": a longer name, or a sheet a price of six figures holds wider at 320 pixels (follow-up ticket 10's limit), moves where they are needed.
+- Next.js 16.4.3 reports a known security advisory for the installed release, and stops to say so: its development server stopped one end-to-end run, and `next build` some runs of `pnpm check` after building every route, each exiting with code 1 and passing on another run. Whether and when to upgrade is the owner's choice.
+
+**The gates.**
+
+- Each commit passed `pnpm check` on exactly what it held, the other changed files set aside as `HEAD` had them (`gate.sh`). `pnpm integration:check` was not run: the API is unchanged.
+- `pnpm platform:check` under the lock on `9af2e0b`, the last commit of code: **430 passed** in 19.9 minutes, the three new lines among them (`platform-check-2.log`). A first run stopped after a few seconds, when Next.js's development server exited to show the advisory above (`platform-check.log`). The Shopper app logged once that "the destination stream errored", a line leaving a page before its answer ended, as earlier runs did; no line failed for it.
+- The last commit, of these records, passed `pnpm check --skip-nx-cache` with every `*.tsbuildinfo` outside `node_modules` deleted first, on a run where `next build` did not stop for the advisory above; on the others it stopped after building every route (`gate-docs*.log`). `builder/integration` was still at `aa7cd1c`, an ancestor of this branch, so there was nothing of it to merge first; the branch was then merged into it.
+
+**The pieces**:
+
+- `58fcaa3` docs: file follow-up ticket 13
+- `c090d46` fix(shopper): stack squeezed specifications and the box label's lines
+- `950e233` fix: set a sheet's group heading smaller on a narrow sheet
+- `9af2e0b` test(e2e): read headings and specifications at a phone's largest text
+- this record, with DESIGN.md's
