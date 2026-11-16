@@ -9,7 +9,10 @@ import type { VisibleVendorResponse } from '@pcp/api-client';
 //
 // Most have every contact detail. "Pretend Tech" has only its phone number,
 // beside the address and city every Vendor gives, and "Imaginary Gaming
-// Corner" has no Visible Offer.
+// Corner" has no Visible Offer. Three more give every detail but a WhatsApp
+// number, so that the second price view shows Vendors with "send on
+// WhatsApp" and Vendors without it: one among the complete Build's, and
+// four among the worst case's, with Pretend Tech (sharing ticket 02).
 //
 // Erbil is the API's only city, so every city and address names it; no
 // Vendor's name or Instagram name does, since the app will reach beyond
@@ -71,6 +74,11 @@ function withEveryDetail(
   };
 }
 
+// A Vendor that gave every other detail, but no WhatsApp number.
+function withNoWhatsApp(vendor: VisibleVendorResponse): VisibleVendorResponse {
+  return { ...vendor, whatsAppNumber: null };
+}
+
 // The dashboard's shop, as it always was.
 export const theFirstVendor: VisibleVendorResponse = {
   id: madeUpIdentifier(1),
@@ -110,11 +118,13 @@ export const madeUpVendors: readonly VisibleVendorResponse[] = [
   withEveryDetail(7, 'تەکنەلۆجیای نموونە', 'sample.technology', kurdish),
   withEveryDetail(8, 'عالم الحاسوب الافتراضي', 'virtual.computer.world', arabic),
   withEveryDetail(9, 'Placeholder Computers', 'placeholder.computers', latin),
-  withEveryDetail(10, 'Mock Hardware House', 'mock.hardware.house', latin),
+  withNoWhatsApp(withEveryDetail(10, 'Mock Hardware House', 'mock.hardware.house', latin)),
   withEveryDetail(11, 'ئەلیکترۆنیاتی خەیاڵ', 'imagination.electronics', kurdish),
-  withEveryDetail(12, 'متجر التجربة للإلكترونيات', 'trial.electronics', arabic),
+  withNoWhatsApp(
+    withEveryDetail(12, 'متجر التجربة للإلكترونيات', 'trial.electronics', arabic),
+  ),
   withEveryDetail(13, 'Not-a-Real PC Shop', 'not.a.real.pc.shop', latin),
-  withEveryDetail(14, 'Demo Devices', 'demo.devices', latin),
+  withNoWhatsApp(withEveryDetail(14, 'Demo Devices', 'demo.devices', latin)),
   withEveryDetail(15, 'کۆمپیوتەری وەهمی', 'illusory.computer', kurdish),
   withEveryDetail(
     16,
