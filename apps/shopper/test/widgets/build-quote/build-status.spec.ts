@@ -2,7 +2,7 @@ import type { BuildResponse } from '@pcp/api-client';
 import type { Language } from '@pcp/i18n';
 import { describe, expect, it } from 'vitest';
 
-import { type StatusPiece, statusOf } from '@/_pages/build';
+import { type StatusPiece, statusOf } from '@/widgets/build-quote';
 
 type Answered = Pick<
   BuildResponse,

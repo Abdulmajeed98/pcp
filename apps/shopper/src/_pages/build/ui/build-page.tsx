@@ -9,15 +9,12 @@ import { type Photograph, photographs } from '@/shared/photographs';
 import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { DimPhotograph, NotRead } from '@/shared/ui';
 import { BackCover } from '@/widgets/back-cover';
+import { BuildSlip, RulesSheet, statusOf, VendorsSheet } from '@/widgets/build-quote';
 import { Stub } from '@/widgets/frame-header';
 
 import { readTheBuildPage } from '../api/read-the-build-page';
-import { statusOf } from '../model/status';
 import { BuildRefused } from './build-refused';
 import { BuildSheet } from './build-sheet';
-import { BuildSlip } from './build-slip';
-import { RulesSheet } from './rules-sheet';
-import { VendorsSheet } from './vendors-sheet';
 
 // The Build page, at `/<language>/build` (DESIGN.md's The Build page): the
 // stub, its way to the Build marked as the page the Shopper is on; then,
