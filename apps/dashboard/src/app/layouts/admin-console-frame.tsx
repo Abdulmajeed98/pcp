@@ -6,6 +6,7 @@ import {
   ClockAlertIcon,
   type LucideIcon,
   PackageSearchIcon,
+  SendIcon,
   StoreIcon,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -29,6 +30,7 @@ const sections: { to: string; name: string; Icon: LucideIcon }[] = [
   },
   { to: '/expiring-offers', name: 'Expiring Offers', Icon: ClockAlertIcon },
   { to: '/platform-rate', name: 'Platform Rate', Icon: ArrowRightLeftIcon },
+  { to: '/referrals', name: 'Referrals', Icon: SendIcon },
 ];
 
 // The surface's name. No logo is decided (PRODUCT.md's Brand Commitments).
