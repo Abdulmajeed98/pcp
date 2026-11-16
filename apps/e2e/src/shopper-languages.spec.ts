@@ -4,7 +4,7 @@ import { type BuildPart, pick } from './build-page';
 import { createAMadeUpPart } from './catalog';
 import { choiceOf, currencies, currencySwitch, setThePlatformRate } from './currencies';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
-import { categories, endOf, linkOf } from './home-page';
+import { categories, endOf, linkOf, theFirstPageOf, thePartForThePlate } from './home-page';
 import {
   addressIn,
   alternateAddresses,
@@ -25,7 +25,7 @@ import {
   readInEveryLanguage,
 } from './languages';
 import { aWordUniqueToTheRun } from './made-up';
-import { addAnOffer } from './offers';
+import { addAnOffer, removeAnOffer } from './offers';
 import { pickerPath } from './picker';
 import { shopperUrl } from './platform';
 import { createAMadeUpVendor, type MadeUpVendor } from './vendors';
@@ -448,6 +448,140 @@ test("the home page's counts, prices and figures are the same Western digits in 
 
   expectTheSameInEveryLanguage(read);
 });
+
+// The home page's price slip lies on the plate's end half, its lines 256
+// pixels long in a window 768 pixels wide. From 48rem a slip's line keeps its
+// name whole and its price whole, so "Highest in stock" with a price of six
+// figures, "≈ 628,500 IQD", is wider than its line, and a line that cannot
+// hold its name and its price side by side stacks: its name keeps its line,
+// and its leader runs to its price on the next, as the owner chose on 16
+// November 2026 (follow-up ticket 11). Before, the price ran past the slip,
+// 11 pixels in English and 21 in Kurdish, with the text at its own size.
+test.describe("the home page's price slip in a window 768 pixels wide", () => {
+  test.use({ viewport: { width: 768, height: 1024 }, reducedMotion: 'reduce' });
+  // The Platform Rate behind the run's Converted Price.
+  const rate = 1500;
+  let part: { id: string; name: string };
+  let offers: { vendorId: string; offerId: string }[] = [];
+
+  // The plate shows the Visible Part with the most Vendors on the first
+  // pages of the eight lists, which the development database holds from
+  // earlier runs. So the run makes its own: a CPU offered by one Vendor more
+  // than that Part has, first on its list at a price of one dinar, and
+  // highest in stock at 419 dollars, converted, "≈ 628,500 IQD", as the
+  // made-up shop's 7800X3D is.
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(120_000);
+    const context = await browser.newContext({ javaScriptEnabled: true });
+    try {
+      const request = context.request;
+      const authorization = await authorizationOfTheDevelopmentAdmin(
+        await context.newPage(),
+      );
+      await setThePlatformRate(request, authorization, rate);
+      const firstPages = await Promise.all(
+        categories.map(({ key }) => theFirstPageOf(request, key, 'IQD')),
+      );
+      const most = thePartForThePlate(firstPages)?.vendorCount ?? 0;
+      const named = { name: `Made-up test CPU ${aWordUniqueToTheRun().slice(-8)}` };
+      const { id, name } = await createAMadeUpPart(
+        request,
+        authorization,
+        {},
+        'cpu',
+        named,
+      );
+      part = { id, name };
+      const vendorCount = Math.max(most + 1, 2);
+      for (let index = 0; index < vendorCount; index += 1) {
+        const details =
+          index === 0
+            ? { iqdPrice: 1 }
+            : index === vendorCount - 1
+              ? { usdPrice: '419.00' }
+              : { iqdPrice: 300_000 };
+        const { id: vendorId } = await createAMadeUpVendor(request, authorization);
+        const offerId = await addAnOffer(
+          request,
+          authorization,
+          vendorId,
+          part.id,
+          details,
+        );
+        offers.push({ vendorId, offerId });
+      }
+    } finally {
+      await context.close();
+    }
+  });
+
+  // The run's Offers go, so that its CPU leaves the plate to the Part an
+  // earlier run or the owner put there.
+  test.afterAll(async ({ browser }) => {
+    test.setTimeout(120_000);
+    const context = await browser.newContext({ javaScriptEnabled: true });
+    try {
+      const authorization = await authorizationOfTheDevelopmentAdmin(
+        await context.newPage(),
+      );
+      for (const { vendorId, offerId } of offers) {
+        await removeAnOffer(context.request, authorization, vendorId, offerId);
+      }
+      offers = [];
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('in Kurdish and English, no word and no price of a line of the slip runs past the slip', async ({
+    page,
+  }) => {
+    for (const language of [kurdish, english]) {
+      await test.step(language.name, async () => {
+        await page.goto(addressIn(language));
+        const plate = page.getByTestId('plate');
+        await expect(plate, 'the plate shows the run’s CPU').toHaveAttribute(
+          'data-part',
+          part.id,
+        );
+        await page.evaluate(() => document.fonts.ready);
+        const slip = plate.getByTestId('price-slip');
+        await slip.scrollIntoViewIfNeeded();
+        await expect(slip.getByTestId('slip-highest')).toContainText('≈ 628,500 IQD');
+
+        expect(await linesPastTheirSlip(slip)).toEqual([]);
+      });
+    }
+  });
+});
+
+// Each line of a price slip whose words or price run past the slip, read
+// character by character against the box that holds the slip's lines, so
+// that how the line is laid out does not matter: what it says, and by how
+// many pixels.
+async function linesPastTheirSlip(slip: Locator): Promise<string[]> {
+  return slip.locator('[data-slip-line]').evaluateAll((lines) =>
+    lines.flatMap((line) => {
+      const edges = (line.parentElement ?? line).getBoundingClientRect();
+      let past = 0;
+      const texts = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
+      for (let text = texts.nextNode(); text !== null; text = texts.nextNode()) {
+        const content = text.textContent ?? '';
+        for (let index = 0; index < content.length; index += 1) {
+          if (/\s/.test(content[index])) continue;
+          const one = document.createRange();
+          one.setStart(text, index);
+          one.setEnd(text, index + 1);
+          const { left, right, width } = one.getBoundingClientRect();
+          if (width === 0) continue;
+          past = Math.max(past, right - edges.right, edges.left - left);
+        }
+      }
+      const says = (line as HTMLElement).innerText.replace(/\s+/g, ' ').trim();
+      return past > 0.5 ? [`"${says}" runs ${Math.round(past)} px past the slip`] : [];
+    }),
+  );
+}
 
 // next-intl's proxy sees an address with a dot in it, as a file's would have,
 // only under a language, and the "not found" screen of an address that

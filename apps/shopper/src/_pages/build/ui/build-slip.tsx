@@ -160,8 +160,11 @@ export async function BuildSlip({
 // One line of the slip, as a Part page's slip draws it: its name at the
 // start, a dotted leader, and its figure at the end, at weight 600. On a slip
 // too narrow for its own text its name takes the whole line, and the leader
-// runs to the figure on the next (the theme's `data-slip-line` rule). A
-// line drawn only `fromTheDesk` is left out below 64rem.
+// runs to the figure on the next (the theme's `data-slip-line` rule). From
+// 48rem it is a row that wraps, as a Part page's slip's line is, so that a
+// line that cannot hold its name and its figure side by side stacks alone
+// (follow-up ticket 11). A line drawn only `fromTheDesk` is left out below
+// 64rem, and is that row from there.
 function Line({
   name,
   figure,
@@ -178,15 +181,17 @@ function Line({
       data-testid={`slip-${figure}`}
       data-slip-line=""
       className={cn(
-        'grid grid-cols-[minmax(0,max-content)_minmax(0.5rem,1fr)_auto] items-end gap-2 md:grid-cols-[max-content_minmax(1rem,1fr)_auto]',
-        fromTheDesk && 'max-lg:hidden',
+        'grid grid-cols-[minmax(0,max-content)_minmax(0.5rem,1fr)_auto] items-end gap-2 md:flex-wrap md:gap-x-2 md:gap-y-1',
+        fromTheDesk ? 'max-lg:hidden lg:flex' : 'md:flex',
       )}
     >
-      <span>{name}</span>
-      <span aria-hidden="true" className="leader" />
-      <b data-figure={figure} className="font-semibold">
-        {children}
-      </b>
+      <span className="md:shrink-0">{name}</span>
+      <span className="contents md:flex md:grow md:items-end md:gap-2">
+        <span aria-hidden="true" className="leader md:min-w-4 md:grow" />
+        <b data-figure={figure} className="font-semibold">
+          {children}
+        </b>
+      </span>
     </li>
   );
 }
