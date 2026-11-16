@@ -603,10 +603,13 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
     // The finished page: a price settling into its column comes 16 pixels
     // from the side (Motion 2), and reduced motion shows it settled.
     test.use({ reducedMotion: 'reduce' });
-    // The run's Parts are found by a word of eight digits in their names:
-    // the run's whole word, sixteen digits with nowhere to break, widens a
-    // Part page's plate past a phone's window at twice the text.
-    const word = aWordUniqueToTheRun().slice(-8);
+    // The run's Parts are found by the run's word in their names, sixteen
+    // digits with nowhere to break, as a made-up Vendor's name and a made-up
+    // Part's part number hold one too. At twice the text such a word is
+    // wider than a phone's line, and breaks where it must rather than widen
+    // its page past the window, as a sheet's title does (follow-up ticket
+    // 12): the Part page's plate and the Vendor page's coupon grew to it.
+    const word = aWordUniqueToTheRun();
     // The Platform Rate behind the run's Converted Prices.
     const rate = 1500;
 
@@ -659,7 +662,7 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
       }
     });
 
-    test('in Kurdish and English, no Shown Price runs past its line on the Build page, the picker, a Category page, a Part page or a Vendor page; at the text’s own size each keeps one line', async ({
+    test('in Kurdish and English, no Shown Price runs past its line, and nothing reaches past the window, on the Build page, the picker, a Category page, a Part page or a Vendor page, their names holding the run’s word; at the text’s own size each price keeps one line', async ({
       page,
     }) => {
       test.setTimeout(180_000);
@@ -709,12 +712,13 @@ test.describe("with the browser's text at 200% on a phone 390 pixels wide", () =
                     'at its own size, the text keeps every price on one line',
                   ).toEqual([]);
                 }
-                // The page does not scroll sideways at the text's own size.
-                // At twice the text a Vendor's name of one long word, as a
-                // made-up Vendor's is, still widens its coupon past the
-                // window, which is not a price's to settle, so there each
-                // price is read against the window as well as its line.
-                if (size === 16) await expectNoSidewaysScroll(page);
+                // The page does not scroll sideways, and none of its words
+                // reaches past the window, even where a piece's edge would
+                // cut it: a name's word of sixteen digits breaks where it
+                // must, on the Vendor's coupon and the Part's plate as in
+                // its part number and on every list.
+                expect(await piecesPastTheWindow(page.getByRole('main'))).toEqual([]);
+                await expectNoSidewaysScroll(page);
               });
             }
           }
