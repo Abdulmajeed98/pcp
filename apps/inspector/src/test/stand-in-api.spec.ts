@@ -844,6 +844,7 @@ describe('the stand-in API', () => {
       expect(vendors[0]).toEqual({
         id: madeUpIdentifier(1),
         name: 'Made-up PC Parts',
+        hasWhatsAppNumber: true,
         total: iqd('710000'),
         partsInStock: [
           { partId: cpu, shownPrice: iqd('575000'), timesQuantity: iqd('575000') },
@@ -854,6 +855,7 @@ describe('the stand-in API', () => {
       expect(vendors[2]).toEqual({
         id: madeUpIdentifier(4),
         name: 'Pretend Tech',
+        hasWhatsAppNumber: false,
         total: iqd('559000'),
         partsInStock: [
           { partId: cpu, shownPrice: iqd('559000'), timesQuantity: iqd('559000') },
@@ -870,6 +872,7 @@ describe('the stand-in API', () => {
         {
           id: madeUpIdentifier(1),
           name: 'Made-up PC Parts',
+          hasWhatsAppNumber: true,
           total: { currency: 'USD', amount: '327.00', converted: false },
           partsInStock: [
             {

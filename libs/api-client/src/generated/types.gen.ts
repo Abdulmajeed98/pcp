@@ -1405,6 +1405,10 @@ export type BuildVendorResponse = {
      */
     name: string;
     /**
+     * Whether the Vendor gave a WhatsApp number, so that a page offers to send the Build to it only where a chat can be opened. The number itself is answered by recording a Referral.
+     */
+    hasWhatsAppNumber: boolean;
+    /**
      * The Vendor's total: each Shown Price of the Parts it has in stock times its quantity, added up as answered, after rounding, marked converted when any of them is a Converted Price. Null when none of them has a Shown Price, which happens only when no Platform Rate has been set.
      */
     total: ShownPriceResponse | null;

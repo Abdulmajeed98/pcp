@@ -9,6 +9,7 @@ import {
   InStockOffers,
   LowestPrice,
   OfferVendor,
+  StockingVendor,
 } from '~/domain/build/in-stock-offers';
 import { Currency } from '~/domain/currency/currency';
 import { ShownPrice } from '~/domain/offer/shown-price';
@@ -23,10 +24,12 @@ import { partPhoto } from '~/infrastructure/photo/photo.schema';
 import { vendor } from '~/infrastructure/vendor/vendor.schema';
 
 // One of a Part's in-stock Visible Offers, as the statement gives it in JSON:
-// its Vendor, and its Shown Price in the currency's unit, or null.
+// its Vendor, whether the Vendor gave a WhatsApp number, and its Shown Price
+// in the currency's unit, or null.
 type InStockOfferRow = {
   vendorId: string;
   vendorName: string;
+  vendorHasWhatsAppNumber: boolean;
   amount: number | null;
   converted: boolean;
 };
@@ -54,15 +57,16 @@ export class DatabaseBuildStore implements BuildStore {
     // the answer is at one rate and every Offer judged at one moment.
     const { currentRate, offered } = whatTheirOffersSay(client, currency, now);
     const shownPrice = shownPriceIn(currency, sql`${currentRate.iqdPerUsd}`);
-    // Each Part's in-stock Visible Offers, each Vendor's, with its Shown
-    // Price, as one list beside the Part. The alias is one no table in the
+    // Each Part's in-stock Visible Offers, each Vendor's, with whether the
+    // Vendor gave a WhatsApp number and its Shown Price, as one list beside
+    // the Part. The alias is one no table in the
     // statement has as a column, since Drizzle names a subquery's field by
     // its alias alone.
     const stocked = client
       .select({
         offers: sql<
           InStockOfferRow[]
-        >`coalesce(json_agg(json_build_object('vendorId', ${vendor.id}, 'vendorName', ${vendor.name}, 'amount', ${shownPrice.amount}, 'converted', ${shownPrice.converted})), '[]'::json)`.as(
+        >`coalesce(json_agg(json_build_object('vendorId', ${vendor.id}, 'vendorName', ${vendor.name}, 'vendorHasWhatsAppNumber', ${vendor.whatsAppNumber} IS NOT NULL, 'amount', ${shownPrice.amount}, 'converted', ${shownPrice.converted})), '[]'::json)`.as(
           'in_stock_offers',
         ),
       })
@@ -113,7 +117,11 @@ export class DatabaseBuildStore implements BuildStore {
                   row.inStockOffers.map(
                     (each) =>
                       new InStockOffer(
-                        new OfferVendor(each.vendorId, each.vendorName),
+                        new StockingVendor(
+                          each.vendorId,
+                          each.vendorName,
+                          each.vendorHasWhatsAppNumber,
+                        ),
                         each.amount === null
                           ? null
                           : new ShownPrice(currency, each.amount, each.converted),
