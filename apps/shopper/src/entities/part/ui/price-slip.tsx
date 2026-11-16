@@ -130,7 +130,13 @@ export async function PriceSlip({
 // figure at the end, at weight 600. On a slip too narrow for its own text,
 // as with a phone's text made larger, its name takes the whole line and the
 // leader runs to the figure on the next (the theme's `data-slip-line` rule,
-// break-ui, browse ticket 12).
+// break-ui, browse ticket 12). From 48rem the line keeps its name and its
+// figure whole, and is a row that wraps, its leader and figure one piece:
+// where the line cannot hold its name and its figure side by side, as on
+// the home page's plate at 768 pixels, that piece goes under the name, the
+// leader running from the start to the figure, and the line stacks alone
+// (the owner's choice of 16 November 2026, follow-up ticket 11). Below
+// 48rem the piece is no box of its own, so the line keeps its grid.
 function Line({
   name,
   testId,
@@ -144,11 +150,13 @@ function Line({
     <li
       data-testid={testId}
       data-slip-line=""
-      className="grid grid-cols-[minmax(0,max-content)_minmax(0.5rem,1fr)_auto] items-end gap-2 md:grid-cols-[max-content_minmax(1rem,1fr)_auto]"
+      className="grid grid-cols-[minmax(0,max-content)_minmax(0.5rem,1fr)_auto] items-end gap-2 md:flex md:flex-wrap md:gap-x-2 md:gap-y-1"
     >
-      <span>{name}</span>
-      <span aria-hidden="true" className="leader" />
-      <b className="font-semibold">{children}</b>
+      <span className="md:shrink-0">{name}</span>
+      <span className="contents md:flex md:grow md:items-end md:gap-2">
+        <span aria-hidden="true" className="leader md:min-w-4 md:grow" />
+        <b className="font-semibold">{children}</b>
+      </span>
     </li>
   );
 }
