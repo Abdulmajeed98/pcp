@@ -18,5 +18,7 @@ import { DatabaseSharedBuildStore } from './store/DatabaseSharedBuildStore';
     ShareBuildCommand,
     ReadSharedBuildQuery,
   ],
+  // A Referral names the Shared Build it is sent from.
+  exports: [SharedBuildStore],
 })
 export class SharedBuildModule {}

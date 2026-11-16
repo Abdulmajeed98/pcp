@@ -1511,6 +1511,93 @@ export type SharedBuildResponse = {
     part: Array<string>;
 };
 
+export type RecordReferralRequest = {
+    /**
+     * The identifier of the Vendor the Shared Build is sent to: an active Vendor that gave a WhatsApp number. Refused, naming `vendorId`, with the reason `noWhatsAppNumber`, for a Vendor that gave none.
+     */
+    vendorId: string;
+};
+
+export type ReferredVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+    /**
+     * The Vendor's WhatsApp number, which the chat is opened with.
+     */
+    whatsAppNumber: PhoneNumberResponse;
+};
+
+export type ReferralResponse = {
+    vendor: ReferredVendorResponse;
+    /**
+     * When the Referral was recorded, by the API's clock.
+     */
+    referredAt: string;
+};
+
+export type VendorsReferralCountResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+    /**
+     * Whether the Vendor is active, or a deactivated Vendor.
+     */
+    active: boolean;
+    /**
+     * How many Referrals name the Vendor, over all time.
+     */
+    count: number;
+};
+
+export type ReferralCountsPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Vendors, active and deactivated, those with none among them: the most Referrals first, then by name, then by identifier.
+     */
+    content: Array<VendorsReferralCountResponse>;
+};
+
+export type ReferralCountResponse = {
+    /**
+     * How many Referrals name the Vendor, over all time.
+     */
+    count: number;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -2612,3 +2699,82 @@ export type ReadSharedBuildResponses = {
 };
 
 export type ReadSharedBuildResponse = ReadSharedBuildResponses[keyof ReadSharedBuildResponses];
+
+export type RecordReferralData = {
+    body: RecordReferralRequest;
+    path: {
+        sharedBuildId: string;
+    };
+    query?: never;
+    url: '/v1/shared-builds/{sharedBuildId}/referrals';
+};
+
+export type RecordReferralErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type RecordReferralError = RecordReferralErrors[keyof RecordReferralErrors];
+
+export type RecordReferralResponses = {
+    201: ReferralResponse;
+};
+
+export type RecordReferralResponse = RecordReferralResponses[keyof RecordReferralResponses];
+
+export type ListReferralCountsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+    };
+    url: '/v1/referral-counts';
+};
+
+export type ListReferralCountsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListReferralCountsError = ListReferralCountsErrors[keyof ListReferralCountsErrors];
+
+export type ListReferralCountsResponses = {
+    200: ReferralCountsPageResponse;
+};
+
+export type ListReferralCountsResponse = ListReferralCountsResponses[keyof ListReferralCountsResponses];
+
+export type ReadVendorsReferralCountData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/referral-count';
+};
+
+export type ReadVendorsReferralCountErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadVendorsReferralCountError = ReadVendorsReferralCountErrors[keyof ReadVendorsReferralCountErrors];
+
+export type ReadVendorsReferralCountResponses = {
+    200: ReferralCountResponse;
+};
+
+export type ReadVendorsReferralCountResponse = ReadVendorsReferralCountResponses[keyof ReadVendorsReferralCountResponses];

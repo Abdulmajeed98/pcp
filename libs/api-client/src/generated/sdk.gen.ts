@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ListVisibleOffersOfVendorData, ListVisibleOffersOfVendorErrors, ListVisibleOffersOfVendorResponses, ListVisiblePartsData, ListVisiblePartsErrors, ListVisiblePartsResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadBuildData, ReadBuildErrors, ReadBuildResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadPlatformFiguresData, ReadPlatformFiguresErrors, ReadPlatformFiguresResponses, ReadPlatformRateData, ReadPlatformRateErrors, ReadPlatformRateResponses, ReadSharedBuildData, ReadSharedBuildErrors, ReadSharedBuildResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ReadVisiblePartData, ReadVisiblePartErrors, ReadVisiblePartResponses, ReadVisiblePartsFiltersData, ReadVisiblePartsFiltersErrors, ReadVisiblePartsFiltersResponses, ReadVisibleVendorData, ReadVisibleVendorErrors, ReadVisibleVendorResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses, SetPlatformRateData, SetPlatformRateErrors, SetPlatformRateResponses, ShareBuildData, ShareBuildErrors, ShareBuildResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListReferralCountsData, ListReferralCountsErrors, ListReferralCountsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ListVisibleOffersOfVendorData, ListVisibleOffersOfVendorErrors, ListVisibleOffersOfVendorResponses, ListVisiblePartsData, ListVisiblePartsErrors, ListVisiblePartsResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadBuildData, ReadBuildErrors, ReadBuildResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadPlatformFiguresData, ReadPlatformFiguresErrors, ReadPlatformFiguresResponses, ReadPlatformRateData, ReadPlatformRateErrors, ReadPlatformRateResponses, ReadSharedBuildData, ReadSharedBuildErrors, ReadSharedBuildResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ReadVendorsReferralCountData, ReadVendorsReferralCountErrors, ReadVendorsReferralCountResponses, ReadVisiblePartData, ReadVisiblePartErrors, ReadVisiblePartResponses, ReadVisiblePartsFiltersData, ReadVisiblePartsFiltersErrors, ReadVisiblePartsFiltersResponses, ReadVisibleVendorData, ReadVisibleVendorErrors, ReadVisibleVendorResponses, RecordReferralData, RecordReferralErrors, RecordReferralResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses, SetPlatformRateData, SetPlatformRateErrors, SetPlatformRateResponses, ShareBuildData, ShareBuildErrors, ShareBuildResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -355,3 +355,33 @@ export const shareBuild = <ThrowOnError extends boolean = false>(options: Option
  * A Shared Build's frozen Parts and quantities, as `GET v1/build` takes them, never changed since it was shared, and when it was shared
  */
 export const readSharedBuild = <ThrowOnError extends boolean = false>(options: Options<ReadSharedBuildData, ThrowOnError>): RequestResult<ReadSharedBuildResponses, ReadSharedBuildErrors, ThrowOnError> => (options.client ?? client).get<ReadSharedBuildResponses, ReadSharedBuildErrors, ThrowOnError>({ url: '/v1/shared-builds/{sharedBuildId}', ...options });
+
+/**
+ * Record a Referral: one tap on "send on WhatsApp", which sends a Shared Build to an active Vendor that gave a WhatsApp number, and answer the Vendor with its number, so that the chat can be opened. Each call is one Referral, and nothing about the Shopper is recorded
+ */
+export const recordReferral = <ThrowOnError extends boolean = false>(options: Options<RecordReferralData, ThrowOnError>): RequestResult<RecordReferralResponses, RecordReferralErrors, ThrowOnError> => (options.client ?? client).post<RecordReferralResponses, RecordReferralErrors, ThrowOnError>({
+    url: '/v1/shared-builds/{sharedBuildId}/referrals',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * One page of every Vendor, active and deactivated, with its Referral count, zeros included, the most Referrals first, for the Admin
+ */
+export const listReferralCounts = <ThrowOnError extends boolean = false>(options?: Options<ListReferralCountsData, ThrowOnError>): RequestResult<ListReferralCountsResponses, ListReferralCountsErrors, ThrowOnError> => (options?.client ?? client).get<ListReferralCountsResponses, ListReferralCountsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/referral-counts',
+    ...options
+});
+
+/**
+ * A Vendor's Referral count, over all time, for the Admin or for the Vendor's own Login
+ */
+export const readVendorsReferralCount = <ThrowOnError extends boolean = false>(options: Options<ReadVendorsReferralCountData, ThrowOnError>): RequestResult<ReadVendorsReferralCountResponses, ReadVendorsReferralCountErrors, ThrowOnError> => (options.client ?? client).get<ReadVendorsReferralCountResponses, ReadVendorsReferralCountErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/referral-count',
+    ...options
+});
