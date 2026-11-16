@@ -701,15 +701,6 @@
 }
 
 /*
- * An item with no picture that stacks the same way on a list too narrow for
- * its text, as an Offer on a Part page does (break-ui, browse ticket 12): its
- * name takes the whole line, and its leader runs to its price on the next.
- * A line of the price slip does the same on a slip too narrow for its text.
- * Below 11em, as with a phone's text at twice its size, its leader gives way
- * to its price down to nothing, as an item's with a picture does, so that a
- * Vendor's total of seven figures keeps its line (follow-up ticket 10).
- */
-/*
  * From 48rem a slip's line keeps its name whole on one line, and a price on
  * it keeps whole too, as it did before a price could wrap its unit, so that
  * no page changes at the text's own size (follow-up ticket 10). A slip too
@@ -722,6 +713,15 @@
   }
 }
 
+/*
+ * An item with no picture that stacks the same way on a list too narrow for
+ * its text, as an Offer on a Part page does (break-ui, browse ticket 12): its
+ * name takes the whole line, and its leader runs to its price on the next.
+ * A line of the price slip does the same on a slip too narrow for its text.
+ * Below 11em, as with a phone's text at twice its size, its leader gives way
+ * to its price down to nothing, as an item's with a picture does, so that a
+ * Vendor's total of seven figures keeps its line (follow-up ticket 10).
+ */
 @container (width < 15em) {
   [data-slip-line] {
     grid-template-columns: minmax(0, 1fr) auto;
