@@ -130,6 +130,10 @@ _Avoid_: User, customer, builder
 A Shopper's chosen set of Parts intended to make one PC.
 _Avoid_: Cart, basket, configuration, list
 
+**Shared Build**:
+A frozen copy of a Build's Parts and quantities, stored by the platform behind a link, which never changes.
+_Avoid_: Saved build, snapshot, public build, build link
+
 **Complete Build**:
 A Build with a CPU, motherboard, RAM, storage, case and PSU, plus a GPU and a CPU cooler where the CPU does not provide them.
 _Avoid_: Finished build, valid build
