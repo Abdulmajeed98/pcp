@@ -4,7 +4,7 @@
 
 **Category:** bug
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **From:** follow-up ticket 10's Comments, its first follow-up, measured on 16 November 2026. The owner asked for it to be fixed on 16 November 2026.
 
