@@ -4,7 +4,7 @@ import { cn } from 'cn';
 import { getTranslations } from 'next-intl/server';
 
 import { type ContactLink, contactLinksOf, WrittenOnLines } from '@/entities/vendor';
-import { nameType, TearOffTabs } from '@/shared/ui';
+import { nameTypeOnANarrowPiece, TearOffTabs } from '@/shared/ui';
 
 // How many tear-off tabs the coupon's foot is cut into, each a call: two rows
 // of three on a phone, and one row from 48rem.
@@ -38,10 +38,13 @@ function inLatinScript(name: string): boolean {
 // a phone's messages are; what the platform writes, the page's. From 48rem
 // to 64rem each half has 32 pixels of padding, so that the name and the
 // hours keep their lines in a half of a coupon 768 pixels wide, and 48 from
-// 64rem. A word of a name in Latin script wider than its half, as a made-up
-// Vendor's sixteen digits at a phone's largest text, breaks where it must,
-// as a sheet's title does, rather than widen the coupon past the window
-// (follow-up ticket 12).
+// 64rem. On words narrower than 12em of their text, which only a phone's
+// largest text makes, a name in the Sheet title takes the Facts size, so
+// that a long word keeps whole where it can, in Arabic script as in Latin;
+// a word of the name, the address or the hours still wider than its half,
+// as a made-up Vendor's sixteen digits, breaks where it must, as a sheet's
+// title does, rather than widen the coupon past the window (the owner's
+// choice of 16 November 2026, follow-up ticket 12).
 // On its end half, past the perforation, the links, each a cell 56 pixels
 // tall of Deep Green with what it does at the start and the detail at the
 // end: Call, the first, turned over in Coupon Ink with green words, a `tel:`
@@ -73,16 +76,13 @@ export async function Coupon({ vendor }: { vendor: VisibleVendorResponse }) {
         data-testid="coupon"
         className="grid grid-cols-[minmax(0,1fr)] md:aspect-[2.2/1] md:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]"
       >
-        <div className="coupon-words flex min-w-0 flex-col justify-between gap-8 bg-coupon px-5 py-6 md:p-8 lg:p-12">
+        <div className="coupon-words @container/piece flex min-w-0 flex-col justify-between gap-8 bg-coupon px-5 py-6 wrap-anywhere md:p-8 lg:p-12">
           <div className="grid gap-3">
             <h1
               id="vendor-name"
               lang={latin ? 'en' : undefined}
               data-script={latin ? undefined : 'arabic'}
-              className={cn(
-                latin ? 'wrap-anywhere' : 'wrap-break-word',
-                nameType(vendor.name, 'facts'),
-              )}
+              className={nameTypeOnANarrowPiece(vendor.name, 'facts')}
             >
               {/* Lines 1.4 apart whatever the script, as Kurdish and Arabic
                   need and the renderings had them. */}

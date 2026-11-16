@@ -12,7 +12,7 @@ import { categoryAddress } from '@/entities/category';
 import { PartPicture, slipOf } from '@/entities/part';
 import { chosenCurrency, currencies, currencyMarks } from '@/shared/currency';
 import { ShownPrice } from '@/shared/price';
-import { buttonVariants, nameType } from '@/shared/ui';
+import { buttonVariants, nameTypeOnANarrowPiece } from '@/shared/ui';
 import { CurrencySwitch } from '@/widgets/frame-header';
 
 // A Part page's square plate (DESIGN.md's A Part page and The square
@@ -33,12 +33,15 @@ import { CurrencySwitch } from '@/widgets/frame-header';
 // Paper to its Category's page. The name, the manufacturer and the part
 // numbers are English in every language (LANG-3), the part numbers one
 // left-to-right list, as a box prints them. On a phone it stacks, its words
-// first and the photograph after them, its cells one above the other. A word
-// of the name or a part number wider than the column, as a made-up Part's
-// sixteen digits or a list of sockets joined by slashes at a phone's largest
-// text, breaks where it must, as a sheet's title does, rather than widen the
-// plate past the window (follow-up ticket 12); the part numbers' label, in
-// the page's language, keeps its words whole.
+// first and the photograph after them, its cells one above the other. On a
+// column narrower than 12em of its text, which only a phone's largest text
+// makes, a name in the Sheet title takes the Facts size, so that a long word
+// keeps whole where it can (the owner's choice of 16 November 2026); a word
+// of the name or a part number still wider than the column, as a made-up
+// Part's sixteen digits or a list of sockets joined by slashes, breaks where
+// it must, as a sheet's title does, rather than widen the plate past the
+// window (follow-up ticket 12); the part numbers' label, in the page's
+// language, keeps its words whole.
 export async function PartPlate({
   part,
   offers,
@@ -65,7 +68,7 @@ export async function PartPlate({
       data-testid="part-plate"
       className="grid min-h-[88svh] bg-secondary px-[max(env(safe-area-inset-left),env(safe-area-inset-right))] text-secondary-foreground md:grid-cols-2"
     >
-      <div className="flex min-w-0 flex-col justify-between gap-8 p-4 md:col-start-2 md:row-start-1 md:p-10">
+      <div className="@container/piece flex min-w-0 flex-col justify-between gap-8 p-4 md:col-start-2 md:row-start-1 md:p-10">
         <CurrencySwitch
           language={language}
           current={currency}
@@ -82,7 +85,7 @@ export async function PartPlate({
           <h1
             id="part-name"
             lang="en"
-            className={cn('max-w-full wrap-anywhere', nameType(part.name))}
+            className={cn('max-w-full wrap-anywhere', nameTypeOnANarrowPiece(part.name))}
           >
             <AlwaysEnglish>{part.name}</AlwaysEnglish>
           </h1>
