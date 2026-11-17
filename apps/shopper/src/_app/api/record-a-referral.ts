@@ -1,4 +1,4 @@
-import { apiClient } from '@/shared/api';
+import { apiClient, type ReferralRefused, whyAReferralWasRefused } from '@/shared/api';
 
 // The Vendor a Referral was recorded for, as the API answers it: its name as
 // it wrote it, and the WhatsApp number its chat is opened with.
@@ -7,17 +7,11 @@ export interface Referred {
   whatsAppNumber: { international: string };
 }
 
-// What recording a Referral came to: the Vendor, its Referral recorded; a
-// Vendor the platform can no longer reach, deactivated, unknown or with no
-// WhatsApp number now, which the API refuses with 404 `VENDOR_NOT_FOUND` or
-// 400 naming `vendorId`; a Shared Build the API does not hold, 404
-// `SHARED_BUILD_NOT_FOUND`, which only an address changed by hand names; or
-// nothing, when the API did not answer, or failed.
-export type Referral =
-  | { kind: 'referred'; vendor: Referred }
-  | { kind: 'not-reachable' }
-  | { kind: 'no-shared-build' }
-  | { kind: 'not-answered' };
+// What recording a Referral came to: the Vendor, its Referral recorded; or
+// why it was not (`whyAReferralWasRefused`): a Vendor the platform can no
+// longer reach, a Shared Build the API does not hold, or an API that did
+// not answer.
+export type Referral = { kind: 'referred'; vendor: Referred } | { kind: ReferralRefused };
 
 // Records a Referral on the server, for "send on WhatsApp" (`POST
 // v1/shared-builds/{id}/referrals`, SHR-6): one tap, one Referral, holding
@@ -35,17 +29,5 @@ export async function recordAReferral(
     body: { vendorId },
   });
   if (data !== undefined) return { kind: 'referred', vendor: data.vendor };
-  const codes = error?.errors.map(({ code }) => code) ?? [];
-  if (response?.status === 404 && codes.includes('SHARED_BUILD_NOT_FOUND')) {
-    return { kind: 'no-shared-build' };
-  }
-  if (response?.status === 404 && codes.includes('VENDOR_NOT_FOUND')) {
-    return { kind: 'not-reachable' };
-  }
-  const namesTheVendor =
-    error?.errors.some(
-      ({ additionalInformation }) => additionalInformation?.field === 'vendorId',
-    ) ?? false;
-  if (response?.status === 400 && namesTheVendor) return { kind: 'not-reachable' };
-  return { kind: 'not-answered' };
+  return { kind: whyAReferralWasRefused({ status: response?.status, error }) };
 }
