@@ -4,6 +4,11 @@ import { cookies } from 'next/headers';
 
 import { buildAddress, buildIn, partsCountedIn, writeTheBuild } from '@/entities/build';
 import { ChangesInPlace, refusalIn } from '@/features/change-the-build';
+import {
+  refusedSendIn,
+  SendRefusedSaid,
+  vendorLineAnchor,
+} from '@/features/send-on-whatsapp';
 import { refusedShareIn, ShareThisBuild } from '@/features/share-a-build';
 import { chosenCurrency } from '@/shared/currency';
 import { type Photograph, photographs } from '@/shared/photographs';
@@ -42,7 +47,10 @@ import { BuildSheet } from './build-sheet';
 // Its slip carries Share this Build when the Build holds a Part, and none
 // when it is empty or refused; a share refused is said under it, as the
 // address after it says (`refusedShareIn`), and on an empty Build's slip in
-// its place.
+// its place. Its Vendors' sheet carries "send on WhatsApp" on each Vendor's
+// line, sent to `/<language>/build/send`, and says a send refused under the
+// Vendor's line (`refusedSendIn`); one refused when the page has no Vendors'
+// sheet any more is said under the slip's action.
 export async function BuildPage({ searchParams }: { searchParams: Promise<AddressQuery> }) {
   const [address, language, currency, sent, t] = await Promise.all([
     searchParams,
@@ -57,6 +65,7 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
   const query = new URLSearchParams(fieldsOf(address));
   const refused = refusalIn(query);
   const shareRefused = refusedShareIn(query);
+  const sendRefused = refusedSendIn(query);
 
   return (
     <>
@@ -97,12 +106,32 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
                     </output>
                   )
                 )}
+                {sendRefused !== undefined && answer.vendors.length === 0 && (
+                  <SendRefusedSaid
+                    id={
+                      sendRefused.vendor === undefined
+                        ? undefined
+                        : vendorLineAnchor(sendRefused.vendor)
+                    }
+                    words={
+                      sendRefused.refused === 'notReachable'
+                        ? t('send.refused.notReachableUnnamed')
+                        : t('send.refused.notOpened')
+                    }
+                  />
+                )}
               </BuildSlip>
               <BuildSheet answer={answer} refused={refused} />
             </div>
           </main>
           {answer.parts.length > 0 && <RulesSheet answer={answer} />}
-          {answer.vendors.length > 0 && <VendorsSheet answer={answer} />}
+          {answer.vendors.length > 0 && (
+            <VendorsSheet
+              answer={answer}
+              sendTo={`${buildAddress(language)}/send`}
+              sendRefused={sendRefused}
+            />
+          )}
         </ChangesInPlace>
       )}
       <BackCover photographs={photographsOf(answer)} />

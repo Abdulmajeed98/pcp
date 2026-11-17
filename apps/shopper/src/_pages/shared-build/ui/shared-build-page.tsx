@@ -6,6 +6,11 @@ import { notFound } from 'next/navigation';
 import { buildIn, holdsTheSharedBuild, partsCountedIn } from '@/entities/build';
 import { sharedBuildAddress } from '@/entities/shared-build';
 import { refusedCopyIn } from '@/features/copy-a-shared-build';
+import {
+  refusedSendIn,
+  SendRefusedSaid,
+  vendorLineAnchor,
+} from '@/features/send-on-whatsapp';
 import { chosenCurrency } from '@/shared/currency';
 import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { type Photograph, photographs } from '@/shared/photographs';
@@ -41,7 +46,11 @@ import { TheSlipsAction } from './what-the-reader-can-do';
 // copy. A Shared Build that does not exist answers the not-found page with
 // 404; one whose Parts have all left the catalog says so on one sheet, with
 // nothing to copy; and one the API did not answer shows the sheet that says
-// it cannot be read just now, with Try again.
+// it cannot be read just now, with Try again. Its Vendors' sheet carries
+// "send on WhatsApp" on each Vendor's line, sent to
+// `/<language>/builds/<sharedBuildId>/send`, and says a send refused under
+// the Vendor's line (`refusedSendIn`); one refused when the page has no
+// Vendors' sheet any more is said under the slip's action.
 export async function SharedBuildPage({
   params,
   searchParams,
@@ -64,6 +73,8 @@ export async function SharedBuildPage({
   const answer = read.kind === 'read' ? read.answer : undefined;
   const own = buildIn(sent);
   const isYours = read.kind === 'read' && holdsTheSharedBuild(own, read.shared.part);
+  const query = new URLSearchParams(fieldsOf(address));
+  const sendRefused = refusedSendIn(query);
 
   return (
     <>
@@ -97,8 +108,22 @@ export async function SharedBuildPage({
                   parts={partsCountedIn(read.answer.parts)}
                   ownParts={partsCountedIn(own)}
                   isYours={isYours}
-                  refused={refusedCopyIn(new URLSearchParams(fieldsOf(address)))}
+                  refused={refusedCopyIn(query)}
                 />
+                {sendRefused !== undefined && read.answer.vendors.length === 0 && (
+                  <SendRefusedSaid
+                    id={
+                      sendRefused.vendor === undefined
+                        ? undefined
+                        : vendorLineAnchor(sendRefused.vendor)
+                    }
+                    words={
+                      sendRefused.refused === 'notReachable'
+                        ? buildWords('send.refused.notReachableUnnamed')
+                        : buildWords('send.refused.notOpened')
+                    }
+                  />
+                )}
               </BuildSlip>
               <SharedBuildSheet
                 shared={read.shared}
@@ -110,7 +135,12 @@ export async function SharedBuildPage({
           </main>
           <RulesSheet answer={read.answer} whose="shared" />
           {read.answer.vendors.length > 0 && (
-            <VendorsSheet answer={read.answer} whose="shared" />
+            <VendorsSheet
+              answer={read.answer}
+              whose="shared"
+              sendTo={`${sharedBuildAddress(language, read.shared.id)}/send`}
+              sendRefused={sendRefused}
+            />
           )}
         </div>
       )}

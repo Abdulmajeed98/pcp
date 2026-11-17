@@ -5,6 +5,13 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { vendorAddress } from '@/entities/vendor';
 import { underlinedAction } from '@/features/change-the-build';
+import {
+  NoWhatsAppNumber,
+  SendOnWhatsApp,
+  type SendRefused,
+  SendRefusedSaid,
+  vendorLineAnchor,
+} from '@/features/send-on-whatsapp';
 import { photographs } from '@/shared/photographs';
 import { ShownPrice, shownPriceText } from '@/shared/price';
 import {
@@ -50,27 +57,44 @@ const sideBySide = 52;
 // converted. A Build no Vendor stocks any Part of has no Vendors' sheet. A
 // Shared Build's sheet counts its Parts, "Has 4 of its 18 Parts".
 //
-// Each Vendor's line is where `sharing`'s "send on WhatsApp" will stand
-// (SHR-5): it is a list item of its own, `data-vendor` naming its Vendor.
-// It is below the first screen, so it prints as it comes into view (Motion
-// 1); each line and each total a change in place may bring or alter is
-// named for the page's script (Motion 11).
+// Each Vendor's line carries "send on WhatsApp" (SHR-5, DESIGN.md's Send on
+// WhatsApp), a plain form sent to `sendTo` in a new tab, at the end of the
+// row whose start is "Its Parts", or, for a Vendor that gave no WhatsApp
+// number, says so in its place. It is a list item of its own, `data-vendor`
+// naming its Vendor, and the anchor a refused send opens the page at. It is
+// below the first screen, so it prints as it comes into view (Motion 1);
+// each line and each total a change in place may bring or alter is named
+// for the page's script (Motion 11).
+//
+// A send refused (`sendRefused`, read from the page's address) is said under
+// its Vendor's line, which comes unfolded when it is past the fifth. A
+// Vendor no longer on the page, as one deactivated since the page was
+// drawn, has no line, so its refusal is said at the sheet's head, under its
+// note, where the address's anchor finds it, without the Vendor's name,
+// which the page no longer has.
 export async function VendorsSheet({
   answer,
   whose = 'yours',
+  sendTo,
+  sendRefused,
 }: {
   answer: BuildResponse;
   whose?: Whose;
+  // The address "send on WhatsApp" is sent to, on this page.
+  sendTo: string;
+  sendRefused?: SendRefused;
 }) {
-  const [language, t, categoryPage] = await Promise.all([
+  const [language, t, categoryPage, send] = await Promise.all([
     getLocale(),
     getTranslations('BuildPage.vendors'),
     getTranslations('CategoryPage'),
+    getTranslations('BuildPage.send'),
   ]);
   const parts = new Map(answer.parts.map((part) => [part.id, part]));
   const unstocked = answer.parts.filter((part) => part.unstocked).length;
   const shown = answer.vendors.slice(0, shownBeforeTheFold);
   const folded = answer.vendors.slice(shown.length);
+  const refusedLine = answer.vendors.find(({ id }) => id === sendRefused?.vendor);
   const line = (vendor: Vendor, place: number) => (
     <VendorLine
       key={vendor.id}
@@ -79,6 +103,12 @@ export async function VendorsSheet({
       place={place}
       whose={whose}
       address={vendorAddress(language, vendor.id)}
+      sendTo={sendTo}
+      refused={
+        sendRefused === undefined || vendor !== refusedLine
+          ? undefined
+          : send(`refused.${sendRefused.refused}`, { vendor: vendor.name })
+      }
     />
   );
 
@@ -95,12 +125,34 @@ export async function VendorsSheet({
         <Sheet print="in-view">
           <SheetTitle id="vendors-title">{t('title')}</SheetTitle>
           <SheetNote>{t('note')}</SheetNote>
+          {sendRefused !== undefined && refusedLine === undefined && (
+            <div className="mt-group">
+              <SendRefusedSaid
+                id={
+                  sendRefused.vendor === undefined
+                    ? undefined
+                    : vendorLineAnchor(sendRefused.vendor)
+                }
+                words={
+                  sendRefused.refused === 'notReachable'
+                    ? send('refused.notReachableUnnamed')
+                    : send('refused.notOpened')
+                }
+              />
+            </div>
+          )}
           <div data-space="vendors" className="grid grid-cols-[minmax(0,1fr)]">
             <ul className="mt-group grid grid-cols-[minmax(0,1fr)] gap-7">
               {shown.map(line)}
             </ul>
             {folded.length > 0 && (
-              <details data-testid="more-vendors" className="unfolds-in-place mt-7">
+              <details
+                data-testid="more-vendors"
+                open={
+                  (refusedLine !== undefined && folded.includes(refusedLine)) || undefined
+                }
+                className="unfolds-in-place mt-7"
+              >
                 <summary
                   className={buttonVariants({
                     kind: 'board',
@@ -141,23 +193,29 @@ export async function VendorsSheet({
 }
 
 // One Vendor of the second price view, with its total, what it has of the
-// Build and what it lacks.
+// Build and what it lacks, "send on WhatsApp" or why it has none, and a
+// send to it refused.
 async function VendorLine({
   vendor,
   parts,
   place,
   whose,
   address,
+  sendTo,
+  refused,
 }: {
   vendor: Vendor;
   parts: ReadonlyMap<string, Part>;
   place: number;
   whose: Whose;
   address: string;
+  sendTo: string;
+  refused: string | undefined;
 }) {
-  const [t, shared] = await Promise.all([
+  const [t, shared, send] = await Promise.all([
     getTranslations('BuildPage.vendors'),
     getTranslations('SharedBuildPage.vendors'),
+    getTranslations('BuildPage.send'),
   ]);
   const has = vendor.partsInStock.length;
   const lacks = vendor.partsLacked.length;
@@ -176,10 +234,11 @@ async function VendorLine({
 
   return (
     <li
+      id={vendorLineAnchor(vendor.id)}
       data-line={`vendor-${vendor.id}`}
       data-testid="build-vendor"
       data-vendor={vendor.id}
-      className="grid grid-cols-[minmax(0,1fr)] gap-1"
+      className="grid scroll-mt-6 grid-cols-[minmax(0,1fr)] gap-1"
     >
       <ul className="@container grid grid-cols-[minmax(0,1fr)]">
         <Item
@@ -210,74 +269,92 @@ async function VendorLine({
           }
         />
       </ul>
-      <details
-        open={place === 0 || undefined}
-        data-testid="vendor-parts"
-        className="unfolds-in-place"
-      >
-        <summary
-          className={`${underlinedAction} pressable no-callout list-none [&::-webkit-details-marker]:hidden`}
+      <div data-testid="vendor-row" className="flow-root">
+        {vendor.hasWhatsAppNumber ? (
+          <SendOnWhatsApp
+            action={sendTo}
+            vendorId={vendor.id}
+            words={{
+              button: send('button'),
+              busy: send('busy'),
+              name: send('name', { vendor: vendor.name }),
+            }}
+          />
+        ) : (
+          <NoWhatsAppNumber words={send('noNumber')} />
+        )}
+        <details
+          open={place === 0 || undefined}
+          data-testid="vendor-parts"
+          className="unfolds-in-place [&::details-content]:clear-both"
         >
-          {t('itsParts')}
-        </summary>
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 pt-3">
-          <p className="text-sm font-semibold text-muted-foreground">{t('inStockThere')}</p>
-          <ul className="@container grid grid-cols-[minmax(0,1fr)] gap-2.5">
-            {vendor.partsInStock.map((inStock, at) => {
-              const part = parts.get(inStock.partId);
-              if (part === undefined) return null;
-              return (
-                <Item
-                  key={part.id}
-                  testId="vendor-has-part"
-                  data={{ 'data-item': 'text', 'data-part': part.id }}
-                  place={at}
-                  className="text-base"
-                  nameAlone={whereAPartsNameStands(part.name)}
-                  name={<AlwaysEnglish>{part.name}</AlwaysEnglish>}
-                  end={
-                    inStock.timesQuantity === null ? (
-                      '—'
-                    ) : (
-                      <ShownPrice price={inStock.timesQuantity} />
-                    )
-                  }
-                  second={
-                    part.quantity !== null &&
-                    part.quantity > 1 &&
-                    inStock.shownPrice !== null ? (
-                      <AlwaysEnglish>
-                        {formatNumber(part.quantity)} ×{' '}
-                        <ShownPrice price={inStock.shownPrice} className="font-normal" />
-                      </AlwaysEnglish>
-                    ) : undefined
-                  }
-                />
-              );
-            })}
-          </ul>
-          {lacks > 0 && (
-            <>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground">
-                {t('notThere')}
-              </p>
-              <ul
-                data-testid="vendor-lacks"
-                className="grid grid-cols-[minmax(0,1fr)] gap-1.5 text-base text-muted-foreground"
-              >
-                {vendor.partsLacked.map((id) => {
-                  const part = parts.get(id);
-                  return part === undefined ? null : (
-                    <li key={id} data-part={id} className="min-w-0 wrap-break-word">
-                      <AlwaysEnglish>{part.name}</AlwaysEnglish>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
-        </div>
-      </details>
+          <summary
+            className={`${underlinedAction} pressable no-callout list-none [&::-webkit-details-marker]:hidden`}
+          >
+            {t('itsParts')}
+          </summary>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3 pt-3">
+            <p className="text-sm font-semibold text-muted-foreground">
+              {t('inStockThere')}
+            </p>
+            <ul className="@container grid grid-cols-[minmax(0,1fr)] gap-2.5">
+              {vendor.partsInStock.map((inStock, at) => {
+                const part = parts.get(inStock.partId);
+                if (part === undefined) return null;
+                return (
+                  <Item
+                    key={part.id}
+                    testId="vendor-has-part"
+                    data={{ 'data-item': 'text', 'data-part': part.id }}
+                    place={at}
+                    className="text-base"
+                    nameAlone={whereAPartsNameStands(part.name)}
+                    name={<AlwaysEnglish>{part.name}</AlwaysEnglish>}
+                    end={
+                      inStock.timesQuantity === null ? (
+                        '—'
+                      ) : (
+                        <ShownPrice price={inStock.timesQuantity} />
+                      )
+                    }
+                    second={
+                      part.quantity !== null &&
+                      part.quantity > 1 &&
+                      inStock.shownPrice !== null ? (
+                        <AlwaysEnglish>
+                          {formatNumber(part.quantity)} ×{' '}
+                          <ShownPrice price={inStock.shownPrice} className="font-normal" />
+                        </AlwaysEnglish>
+                      ) : undefined
+                    }
+                  />
+                );
+              })}
+            </ul>
+            {lacks > 0 && (
+              <>
+                <p className="mt-2 text-sm font-semibold text-muted-foreground">
+                  {t('notThere')}
+                </p>
+                <ul
+                  data-testid="vendor-lacks"
+                  className="grid grid-cols-[minmax(0,1fr)] gap-1.5 text-base text-muted-foreground"
+                >
+                  {vendor.partsLacked.map((id) => {
+                    const part = parts.get(id);
+                    return part === undefined ? null : (
+                      <li key={id} data-part={id} className="min-w-0 wrap-break-word">
+                        <AlwaysEnglish>{part.name}</AlwaysEnglish>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </div>
+        </details>
+      </div>
+      {refused !== undefined && <SendRefusedSaid words={refused} />}
     </li>
   );
 }
