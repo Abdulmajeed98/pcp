@@ -1,7 +1,7 @@
 import type { VendorWithExpiringOffersResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { callTo, whatsAppChatWith } from '@pcp/links';
-import { AlwaysEnglish, AsWritten } from '@pcp/ui';
+import { AlwaysEnglish } from '@pcp/ui';
 import { cn } from 'cn';
 import {
   CircleAlertIcon,
@@ -10,18 +10,10 @@ import {
   PhoneIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Link } from 'react-router';
 
+import { VendorLink } from '@/entities/vendor';
 import { type ShownRow, movingProps } from '@/shared/lib';
-import {
-  linkOverRow,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 
 // A Vendor to remind, as the dashboard's DESIGN.md lays it out (redesign
 // ticket 10): its name as it writes it, why it is on the list, in Action Red
@@ -52,14 +44,6 @@ function whyToRemind({ counts }: VendorWithExpiringOffersResponse): string {
     reasons.push(`${formatNumber(counts.aboutToExpire)} about to expire`);
   }
   return reasons.join(' · ');
-}
-
-function VendorLink({ vendor }: { vendor: VendorWithExpiringOffersResponse }) {
-  return (
-    <Link to={`/vendors/${vendor.id}`} className={cn('font-[550]', linkOverRow)}>
-      <AsWritten>{vendor.name}</AsWritten>
-    </Link>
-  );
 }
 
 function WhyToRemind({ vendor }: { vendor: VendorWithExpiringOffersResponse }) {

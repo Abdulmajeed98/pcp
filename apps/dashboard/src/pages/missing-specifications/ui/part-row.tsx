@@ -3,16 +3,15 @@ import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
 import { cn } from 'cn';
 import { CircleAlertIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
 import { Link, type To, useMatch } from 'react-router';
 
 import { categoryName } from '@/entities/category';
 import { type ShownRow, useAddressKeepingTheQuery, movingProps } from '@/shared/lib';
 import {
   linkOverRow,
+  RowCell,
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -103,24 +102,6 @@ export function PartRow({ part }: { part: PartMissingSpecificationsResponse }) {
   );
 }
 
-// A table cell's content, which starts at the row's top, so that a Part
-// whose name takes two lines keeps the rest level with its first line. It
-// holds the cell's padding inside the theme's `leaves`, so that a leaving
-// row's space closes whole. A figure is end aligned, its cell with it.
-function Cell({ figure = false, children }: { figure?: boolean; children: ReactNode }) {
-  return (
-    <TableCell className={cn('h-auto p-0 align-top', figure && 'text-end')}>
-      <div className="leaves">
-        <div>
-          <div className={cn('px-2 py-3.5', figure && 'text-end tabular-nums')}>
-            {children}
-          </div>
-        </div>
-      </div>
-    </TableCell>
-  );
-}
-
 // From 64rem: a table of three columns, the Part with its manufacturer and
 // Category below its name given half the width, its Offers, a count end
 // aligned in tabular figures, and what it lacks. The rows bleed 8 pixels past
@@ -159,7 +140,7 @@ function PartTableRow({ row }: { row: ShownRow<PartMissingSpecificationsResponse
 
   return (
     <TableRow className={cn('leaves-rule', rowGround(opened))} {...movingProps(row)}>
-      <Cell>
+      <RowCell>
         <span className="font-[550]">
           <PartLink part={part} />
         </span>
@@ -168,13 +149,13 @@ function PartTableRow({ row }: { row: ShownRow<PartMissingSpecificationsResponse
           {' · '}
           {categoryName(part.category)}
         </p>
-      </Cell>
-      <Cell figure>
+      </RowCell>
+      <RowCell figure>
         <span data-testid="offer-count">{formatNumber(part.offerCount)}</span>
-      </Cell>
-      <Cell>
+      </RowCell>
+      <RowCell>
         <Lacks part={part} said="" />
-      </Cell>
+      </RowCell>
     </TableRow>
   );
 }

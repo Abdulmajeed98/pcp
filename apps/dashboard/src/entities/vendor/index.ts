@@ -17,3 +17,4 @@ export { useVendorShown, type VendorShown } from './model/vendor-shown';
 export { DeactivatedMark } from './ui/deactivated-mark';
 export { MapLocationField } from './ui/map-location-field';
 export { Detail, DetailList, PhoneNumberShown, WrittenOnLines } from './ui/vendor-details';
+export { VendorLink } from './ui/vendor-link';
