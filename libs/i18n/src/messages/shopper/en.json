@@ -247,6 +247,15 @@
       "confirm": "{count, plural, one {Remove the {countText} Part} other {Remove all {countText} Parts}}",
       "keep": "{count, plural, one {Keep it} other {Keep them}}"
     },
+    "share": {
+      "button": "Share this Build",
+      "busy": "Sharing…",
+      "refused": {
+        "notShared": "Your Build could not be shared just now. Try again in a moment.",
+        "notReadable": "Your Build cannot be read, so it cannot be shared. Empty it to start a new Build.",
+        "nothingToShare": "Your Build holds no Part yet, so there is nothing to share."
+      }
+    },
     "notRead": {
       "title": "Your Build cannot be read just now",
       "note": "Try again in a moment."
@@ -401,6 +410,58 @@
     "buildRefused": "Your Build cannot be read, so no Part can be judged against it.",
     "backToYourBuild": "Back to your Build"
   },
+  "SharedBuildPage": {
+    "title": "A shared Build",
+    "slip": "{count, plural, one {Shared Build · {countText} Part} other {Shared Build · {countText} Parts}}",
+    "stamp": "Shared {date}",
+    "when": "{days, plural, =0 {Shared today, {date}.} one {Shared {daysText} day ago, on {date}.} other {Shared {daysText} days ago, on {date}.}}",
+    "fixed": "Its Parts stay as they were shared; its prices are today's.",
+    "leftTheCatalog": "{count, plural, one {{countText} of its Parts has left the catalog since, so it is not shown.} other {{countText} of its Parts have left the catalog since, so they are not shown.}}",
+    "longDate": "{day} {month, select, january {January} february {February} march {March} april {April} may {May} june {June} july {July} august {August} september {September} october {October} november {November} december {December} other {}} {year}",
+    "shortDate": "{day} {month, select, january {Jan} february {Feb} march {Mar} april {Apr} may {May} june {Jun} july {Jul} august {Aug} september {Sep} october {Oct} november {Nov} december {Dec} other {}} {year}",
+    "quantity": "Quantity {quantity}",
+    "status": {
+      "hasGraphics": "Its CPU has integrated graphics, so a GPU is not needed.",
+      "includesCooler": "Its CPU comes with a cooler, so a CPU cooler is not needed.",
+      "graphicsNotKnown": "Its CPU does not say whether it has integrated graphics, so a GPU is counted as needed.",
+      "coolerNotKnown": "Its CPU does not say whether it comes with a cooler, so a CPU cooler is counted as needed."
+    },
+    "rules": {
+      "note": "The {rules} Compatibility Rules, judged on the Parts in this Build.",
+      "noneApply": "No rule applies yet: the rules judge Parts that work together.",
+      "kept": "Copy it into your Build to change a Part."
+    },
+    "vendors": {
+      "has": "{count, plural, one {Has {hasText} of its {countText} Part · lacks {lacksText}} other {Has {hasText} of its {countText} Parts · lacks {lacksText}}}"
+    },
+    "copy": {
+      "button": "Copy into my Build",
+      "busy": "Copying…",
+      "warning": "{mine, plural, one {This replaces the {mineText} Part in your Build with this Build's {theirsText}. Nothing brings yours back.} other {This replaces the {mineText} Parts in your Build with this Build's {theirsText}. Nothing brings yours back.}}",
+      "confirm": "{mine, plural, one {Replace my {mineText} Part} other {Replace my {mineText} Parts}}",
+      "keep": "Keep mine",
+      "refused": "The Build could not be copied just now. Try again in a moment."
+    },
+    "yours": {
+      "title": "This is the Build your browser holds now.",
+      "note": "Changing it later does not change this link: share it again for a new one.",
+      "goTo": "Go to your Build"
+    },
+    "link": {
+      "label": "The link",
+      "share": "Share the link",
+      "copy": "Copy the link",
+      "copied": "Link copied"
+    },
+    "allGone": {
+      "sentence": "{count, plural, one {The {countText} Part of this Build is not in the catalog any more, so there is nothing to show or copy.} other {None of this Build's {countText} Parts is in the catalog any more, so there is nothing to show or copy.}}",
+      "start": "Start your own Build"
+    },
+    "notRead": {
+      "title": "This Build cannot be read just now",
+      "note": "Try again in a moment."
+    }
+  },
   "NotFoundPage": {
     "title": "Page not found",
     "description": "This Part or Vendor may no longer be on the platform, or the address may be mistyped.",
@@ -428,6 +489,10 @@
     "build": {
       "title": "Your Build",
       "description": "The PC Parts you have chosen, Category by Category, and what your Build still needs."
+    },
+    "sharedBuild": {
+      "title": "{count, plural, one {A shared Build of {countText} Part} other {A shared Build of {countText} Parts}}",
+      "description": "{holds, select, both {A PC with the {cpu} and the {gpu}. See its Parts, whether they work together, and what each Vendor charges for them.} cpu {A PC with the {cpu}. See its Parts, whether they work together, and what each Vendor charges for them.} gpu {A PC with the {gpu}. See its Parts, whether they work together, and what each Vendor charges for them.} other {A PC planned Part by Part. See its Parts, whether they work together, and what each Vendor charges for them.}}"
     },
     "picker": {
       "description": "{category, select, cpu {Choose a CPU for your Build among those Vendors have in stock now, lowest price first.} cpuCooler {Choose a CPU cooler for your Build among those Vendors have in stock now, lowest price first.} motherboard {Choose a motherboard for your Build among those Vendors have in stock now, lowest price first.} ram {Choose RAM for your Build among those Vendors have in stock now, lowest price first.} storage {Choose storage for your Build among those Vendors have in stock now, lowest price first.} gpu {Choose a GPU for your Build among those Vendors have in stock now, lowest price first.} case {Choose a case for your Build among those Vendors have in stock now, lowest price first.} psu {Choose a PSU for your Build among those Vendors have in stock now, lowest price first.} other {Choose a Part for your Build among those Vendors have in stock now, lowest price first.}}"

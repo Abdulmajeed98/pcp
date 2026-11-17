@@ -105,6 +105,55 @@ export function heldByTheCatalog(build: Build, answered: readonly string[]): Bui
   return build.filter((each) => answered.includes(each.part));
 }
 
+// The catalog's order of the eight Categories, which a Shared Build's
+// values and the API's answer of a Build keep (BLD-1, the catalog's fixed
+// order).
+const inTheCatalogsOrder = Object.keys(holds) as Category[];
+
+// Whether the Build is a Shared Build, whose frozen `part` values the API
+// stores as `GET v1/build` takes them: the same Parts, each with the same
+// quantity, in the catalog's order of Categories and then the Build's order
+// for kits and drives. A browser's Build keeps its Parts in the order they
+// were picked, so it is set in the catalog's order of Categories first,
+// keeping its own order of kits and of drives, which the API counts: kits in
+// another order are another Shared Build. An identifier is read in small
+// letters, as the API reads it. An empty Build is never one, since no Shared
+// Build is empty.
+export function holdsTheSharedBuild(build: Build, shared: readonly string[]): boolean {
+  const placeOf = (category: Category) => inTheCatalogsOrder.indexOf(category);
+  const values = partValuesOf(
+    build.toSorted((one, other) => placeOf(one.category) - placeOf(other.category)),
+  );
+  return (
+    values.length > 0 &&
+    values.length === shared.length &&
+    values.every((value, place) => value === shared[place]?.toLowerCase())
+  );
+}
+
+// A copy of a Shared Build, as the browser keeps a Build: its frozen `part`
+// values, in their order, each Part under the Category the API answers it
+// in when it reads them (`GET v1/build`), and a kit or a drive with its
+// quantity. A Part the catalog no longer holds is left out of the API's
+// answer, so it is left out of the copy, as a change keeps only the Parts
+// the API answers (`heldByTheCatalog`), and the copy is within the cookie's
+// limits, since the Shared Build was read within them.
+export function copyOfTheSharedBuild(
+  shared: readonly string[],
+  answered: readonly Pick<BuildPartResponse, 'id' | 'category'>[],
+): Build {
+  const categories = new Map(answered.map(({ id, category }) => [id, category]));
+  return shared.flatMap((value): BuildPart[] => {
+    const [partText = '', quantityText = ''] = value.split(':');
+    const part = identifierIn(partText);
+    const category = part === undefined ? undefined : categories.get(part);
+    if (part === undefined || category === undefined) return [];
+    if (!isKitOrDrive(category)) return [{ category, part }];
+    const quantity = quantityIn(quantityText);
+    return quantity === undefined ? [] : [{ category, part, quantity }];
+  });
+}
+
 // How many Parts the Build holds, as the frame's way to the Build page, the
 // Build's slip and its one confirmation say it: each Part once, whatever its
 // quantity, as the Build's sheet lists each once (DESIGN.md's The way to the

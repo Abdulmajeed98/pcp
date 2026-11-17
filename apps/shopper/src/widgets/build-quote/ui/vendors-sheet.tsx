@@ -18,6 +18,8 @@ import {
   whereAPartsNameStands,
 } from '@/shared/ui';
 
+import type { Whose } from '../model/status';
+
 type Vendor = BuildResponse['vendors'][number];
 type Part = BuildResponse['parts'][number];
 
@@ -45,14 +47,21 @@ const sideBySide = 52;
 // first Vendor comes unfolded; past the fifth the others fold behind a cell
 // of the Board. The sheet closes with how many Parts no Vendor has in stock,
 // which are in no Vendor's list, and with what "≈" means when a total is
-// converted. A Build no Vendor stocks any Part of has no Vendors' sheet.
+// converted. A Build no Vendor stocks any Part of has no Vendors' sheet. A
+// Shared Build's sheet counts its Parts, "Has 4 of its 18 Parts".
 //
 // Each Vendor's line is where `sharing`'s "send on WhatsApp" will stand
 // (SHR-5): it is a list item of its own, `data-vendor` naming its Vendor.
 // It is below the first screen, so it prints as it comes into view (Motion
 // 1); each line and each total a change in place may bring or alter is
 // named for the page's script (Motion 11).
-export async function VendorsSheet({ answer }: { answer: BuildResponse }) {
+export async function VendorsSheet({
+  answer,
+  whose = 'yours',
+}: {
+  answer: BuildResponse;
+  whose?: Whose;
+}) {
   const [language, t, categoryPage] = await Promise.all([
     getLocale(),
     getTranslations('BuildPage.vendors'),
@@ -68,6 +77,7 @@ export async function VendorsSheet({ answer }: { answer: BuildResponse }) {
       vendor={vendor}
       parts={parts}
       place={place}
+      whose={whose}
       address={vendorAddress(language, vendor.id)}
     />
   );
@@ -136,14 +146,19 @@ async function VendorLine({
   vendor,
   parts,
   place,
+  whose,
   address,
 }: {
   vendor: Vendor;
   parts: ReadonlyMap<string, Part>;
   place: number;
+  whose: Whose;
   address: string;
 }) {
-  const t = await getTranslations('BuildPage.vendors');
+  const [t, shared] = await Promise.all([
+    getTranslations('BuildPage.vendors'),
+    getTranslations('SharedBuildPage.vendors'),
+  ]);
   const has = vendor.partsInStock.length;
   const lacks = vendor.partsLacked.length;
   const total = vendor.total === null ? undefined : shownPriceText(vendor.total);
@@ -185,7 +200,7 @@ async function VendorLine({
             <span data-testid="vendor-has">
               {lacks === 0
                 ? t('hasEvery')
-                : t('has', {
+                : (whose === 'shared' ? shared : t)('has', {
                     count: has + lacks,
                     countText: formatNumber(has + lacks),
                     hasText: formatNumber(has),

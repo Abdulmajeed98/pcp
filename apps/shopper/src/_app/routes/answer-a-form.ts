@@ -20,19 +20,29 @@ export interface FormAnswered {
 // does not send it a second time. The address is relative, so that the
 // Shopper returns to the host they asked, whatever the server is known by
 // behind it. An address in no language the Shopper app knows answers 404.
-export function answerAForm(
-  answered: (language: Language, form: FormData) => FormAnswered | Promise<FormAnswered>,
+// A form whose address names something more, as a Shared Build's copy names
+// the Shared Build, is handed what its address names besides the language.
+export function answerAForm<Named extends Record<string, string> = Record<never, string>>(
+  answered: (
+    language: Language,
+    form: FormData,
+    named: Named,
+  ) => FormAnswered | Promise<FormAnswered>,
 ) {
   return async function answer(
     request: Request,
-    { params }: { params: Promise<{ locale: string }> },
+    { params }: { params: Promise<{ locale: string } & Named> },
   ): Promise<Response> {
-    const { locale } = await params;
+    const { locale, ...named } = await params;
     if (!hasLocale(routing.locales, locale)) {
       return new NextResponse(null, { status: 404 });
     }
 
-    const { address, write } = await answered(locale, await request.formData());
+    const { address, write } = await answered(
+      locale,
+      await request.formData(),
+      named as unknown as Named,
+    );
     const response = new NextResponse(null, {
       status: 303,
       headers: { Location: address },

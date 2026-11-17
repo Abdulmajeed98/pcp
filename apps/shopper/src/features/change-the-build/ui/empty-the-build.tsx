@@ -14,7 +14,9 @@ import { buttonVariants } from '@/shared/ui';
 // and "Keep them", a cell of the Board, which folds it again: with script in
 // place, without it as a link to the Build page, which opens folded. It is
 // the Build's one confirmation. Its space opens and folds as the filters'
-// fold does.
+// fold does, and in 150 ms each way with reduced motion, where the filters'
+// fold opens at once, so that the confirmation never jumps the sheet
+// (`data-confirmation`, the owner's answer of 17 November 2026).
 export function EmptyTheBuild({
   action,
   buildAddress,
@@ -38,6 +40,7 @@ export function EmptyTheBuild({
     <details
       ref={disclosure}
       data-testid="empty-the-build"
+      data-confirmation=""
       className="unfolds-in-place mt-group text-center"
     >
       <summary
