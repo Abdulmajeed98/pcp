@@ -1,5 +1,5 @@
 import { type Build, copyOfTheSharedBuild } from '@/entities/build';
-import { apiClient, namesNothingShown } from '@/shared/api';
+import { readASharedBuild } from '@/shared/api';
 import { chosenCurrency } from '@/shared/currency';
 
 // What a copy of a Shared Build can be: the Build it writes; nothing, for a
@@ -12,22 +12,14 @@ export type ToCopy =
   | { kind: 'not-found' }
   | { kind: 'not-read' };
 
-// The Build a copy writes, read on the server for each copy, with no cache
-// (the sharing spec's The Shopper app): the Shared Build's frozen `part`
-// values (`GET v1/shared-builds/{id}`), then the Parts the catalog still
-// holds of them (`GET v1/build`), each under the Category the API answers it
-// in, so that a Part that has left the catalog is left out of the copy.
+// The Build a copy writes, read on the server for each copy, with no cache,
+// as the Shared Build page reads it (`readASharedBuild`): the Shared Build's
+// frozen `part` values, then the Parts the catalog still holds of them, each
+// under the Category the API answers it in, so that a Part that has left the
+// catalog is left out of the copy.
 export async function readASharedBuildToCopy(sharedBuildId: string): Promise<ToCopy> {
-  const api = apiClient();
-  const shared = await api.readSharedBuild({ path: { sharedBuildId }, cache: 'no-store' });
-  if (namesNothingShown(shared.response?.status)) return { kind: 'not-found' };
-  if (shared.data === undefined) return { kind: 'not-read' };
-
-  const read = await api.readBuild({
-    query: { currency: await chosenCurrency(), part: shared.data.part },
-    cache: 'no-store',
-  });
-  if (read.data === undefined) return { kind: 'not-read' };
-  const build = copyOfTheSharedBuild(shared.data.part, read.data.parts);
+  const read = await readASharedBuild(sharedBuildId, await chosenCurrency());
+  if (read.kind !== 'read') return read;
+  const build = copyOfTheSharedBuild(read.shared.part, read.answer.parts);
   return build.length === 0 ? { kind: 'nothing' } : { kind: 'copy', build };
 }

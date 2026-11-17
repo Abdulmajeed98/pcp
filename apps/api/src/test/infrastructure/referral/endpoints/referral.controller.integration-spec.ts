@@ -101,7 +101,7 @@ describe('Referrals', () => {
   // when it is given null. It calls Keycloak, so it runs with the clock
   // running.
   async function aVendor(
-    name = 'Made-up Computer Shop',
+    name = 'Made-up Computer Corner',
     whatsAppNumber?: string | null,
   ): Promise<VendorBody> {
     vendors += 1;
@@ -237,17 +237,17 @@ describe('Referrals', () => {
 
   describe('recording a Referral', () => {
     it("answers 201 with the Vendor's identifier, name and WhatsApp number in both forms, and the moment by the API's clock", async () => {
-      const shop = await aVendor('Made-up Computer Shop', '0770 123 4567');
+      const vendor = await aVendor('Made-up Computer Corner', '0770 123 4567');
       const sharedBuild = await aSharedBuild();
       moveTheClockTo(aMovedMoment);
 
-      const response = await refer(sharedBuild, { vendorId: shop.id });
+      const response = await refer(sharedBuild, { vendorId: vendor.id });
 
       expect(response.status).toBe(201);
       expect(await response.json()).toEqual({
         vendor: {
-          id: shop.id,
-          name: 'Made-up Computer Shop',
+          id: vendor.id,
+          name: 'Made-up Computer Corner',
           whatsAppNumber: { international: '+9647701234567', national: '0770 123 4567' },
         },
         referredAt: aMovedMoment.toISOString(),
@@ -255,34 +255,34 @@ describe('Referrals', () => {
     });
 
     it('counts each call as one Referral: two for one Vendor and one Shared Build are two, and each raises its count by one', async () => {
-      const shop = await aVendor();
+      const vendor = await aVendor();
       const sharedBuild = await aSharedBuild();
-      expect(await countOf(shop.id)).toBe(0);
+      expect(await countOf(vendor.id)).toBe(0);
 
-      await referred(sharedBuild, shop.id);
-      expect(await countOf(shop.id)).toBe(1);
+      await referred(sharedBuild, vendor.id);
+      expect(await countOf(vendor.id)).toBe(1);
 
-      await referred(sharedBuild, shop.id);
-      expect(await countOf(shop.id)).toBe(2);
+      await referred(sharedBuild, vendor.id);
+      expect(await countOf(vendor.id)).toBe(2);
 
-      await referred(await aSharedBuild(), shop.id);
-      expect(await countOf(shop.id)).toBe(3);
+      await referred(await aSharedBuild(), vendor.id);
+      expect(await countOf(vendor.id)).toBe(3);
     });
 
     it("records a Referral to a Vendor that has none of the Shared Build's Parts in stock, or no Offer at all", async () => {
-      const shop = await aVendor();
+      const vendor = await aVendor();
 
-      await referred(await aSharedBuild(), shop.id);
+      await referred(await aSharedBuild(), vendor.id);
 
-      expect(await countOf(shop.id)).toBe(1);
+      expect(await countOf(vendor.id)).toBe(1);
     });
 
     describe('its refusals', () => {
       it('refuse an unknown Shared Build, and a text that is not an identifier, 404 with SHARED_BUILD_NOT_FOUND, whatever the Vendor, and count nothing', async () => {
-        const shop = await aVendor();
+        const vendor = await aVendor();
 
         for (const sharedBuildId of [randomUUID(), 'not-a-shared-build']) {
-          for (const vendorId of [shop.id, randomUUID()]) {
+          for (const vendorId of [vendor.id, randomUUID()]) {
             await expectErrorResponse(
               await refer(sharedBuildId, { vendorId }),
               404,
@@ -290,7 +290,7 @@ describe('Referrals', () => {
             );
           }
         }
-        expect(await countOf(shop.id)).toBe(0);
+        expect(await countOf(vendor.id)).toBe(0);
       });
 
       it('refuse an unknown Vendor, and a text that is not an identifier, 404 with VENDOR_NOT_FOUND', async () => {
@@ -306,58 +306,58 @@ describe('Referrals', () => {
       });
 
       it('refuse a deactivated Vendor 404 with VENDOR_NOT_FOUND, with a WhatsApp number, and count nothing', async () => {
-        const shop = await aVendor();
+        const vendor = await aVendor();
         const sharedBuild = await aSharedBuild();
-        await deactivate(shop.id);
+        await deactivate(vendor.id);
 
         await expectErrorResponse(
-          await refer(sharedBuild, { vendorId: shop.id }),
+          await refer(sharedBuild, { vendorId: vendor.id }),
           404,
           vendorNotFound,
         );
-        expect(await countOf(shop.id)).toBe(0);
+        expect(await countOf(vendor.id)).toBe(0);
       });
 
       it('refuse a Vendor with no WhatsApp number, naming `vendorId`, with the reason `noWhatsAppNumber`, and count nothing', async () => {
-        const shop = await aVendor('Made-up Computer Shop', null);
+        const vendor = await aVendor('Made-up Computer Corner', null);
         const sharedBuild = await aSharedBuild();
 
         await expectErrorResponse(
-          await refer(sharedBuild, { vendorId: shop.id }),
+          await refer(sharedBuild, { vendorId: vendor.id }),
           400,
           noWhatsAppNumber,
         );
-        expect(await countOf(shop.id)).toBe(0);
+        expect(await countOf(vendor.id)).toBe(0);
       });
 
       it('refuse a request with no `vendorId`, or one that is not a text, naming it, and a field the request does not take, naming it', async () => {
-        const shop = await aVendor();
+        const vendor = await aVendor();
         const sharedBuild = await aSharedBuild();
 
         for (const body of [
           {},
           { vendorId: null },
           { vendorId: 7 },
-          { vendorId: [shop.id] },
+          { vendorId: [vendor.id] },
         ]) {
           await expectErrorResponse(await refer(sharedBuild, body), 400, [
             notValid('vendorId'),
           ]);
         }
         await expectErrorResponse(
-          await refer(sharedBuild, { vendorId: shop.id, phoneNumber: '0750 123 4567' }),
+          await refer(sharedBuild, { vendorId: vendor.id, phoneNumber: '0750 123 4567' }),
           400,
           [notValid('phoneNumber')],
         );
-        expect(await countOf(shop.id)).toBe(0);
+        expect(await countOf(vendor.id)).toBe(0);
       });
     });
 
     it("answers the same without a token and with any token, an Admin's or a Vendor's among them, and counts each call", async () => {
-      const shop = await aVendor();
+      const vendor = await aVendor();
       const sharedBuild = await aSharedBuild();
       moveTheClockTo(aMovedMoment);
-      const withoutAToken = await referred(sharedBuild, shop.id);
+      const withoutAToken = await referred(sharedBuild, vendor.id);
 
       const tokens = [
         await adminToken(),
@@ -372,40 +372,40 @@ describe('Referrals', () => {
       for (const token of tokens) {
         const response = await refer(
           sharedBuild,
-          { vendorId: shop.id },
+          { vendorId: vendor.id },
           bearerHeader(token),
         );
         expect(response.status).toBe(201);
         expect(await response.json()).toEqual(withoutAToken);
       }
       await expectErrorResponse(
-        await refer(randomUUID(), { vendorId: shop.id }, bearerHeader('nonsense')),
+        await refer(randomUUID(), { vendorId: vendor.id }, bearerHeader('nonsense')),
         404,
         sharedBuildNotFound,
       );
       letTheClockRun();
-      expect(await countOf(shop.id)).toBe(6);
+      expect(await countOf(vendor.id)).toBe(6);
     });
   });
 
   describe("the Admin's list of Referral counts", () => {
     it('holds every Vendor, active and deactivated, with its identifier, name, whether it is active and its count, zeros included', async () => {
-      const shop = await aVendor('Made-up Computer Shop');
-      const store = await aVendor('Made-up Computer Store');
-      const quiet = await aVendor('Made-up Quiet Shop', null);
-      const gone = await aVendor('Made-up Gone Shop');
+      const vendor = await aVendor('Made-up Computer Corner');
+      const otherVendor = await aVendor('Made-up Computer House');
+      const quiet = await aVendor('Made-up Quiet Corner', null);
+      const gone = await aVendor('Made-up Gone Corner');
       const sharedBuild = await aSharedBuild();
-      await referred(sharedBuild, shop.id);
-      await referred(sharedBuild, shop.id);
+      await referred(sharedBuild, vendor.id);
+      await referred(sharedBuild, vendor.id);
       await referred(sharedBuild, gone.id);
       await deactivate(gone.id);
 
       expect(await theCounts()).toEqual({
         content: [
-          { id: shop.id, name: 'Made-up Computer Shop', active: true, count: 2 },
-          { id: gone.id, name: 'Made-up Gone Shop', active: false, count: 1 },
-          { id: store.id, name: 'Made-up Computer Store', active: true, count: 0 },
-          { id: quiet.id, name: 'Made-up Quiet Shop', active: true, count: 0 },
+          { id: vendor.id, name: 'Made-up Computer Corner', active: true, count: 2 },
+          { id: gone.id, name: 'Made-up Gone Corner', active: false, count: 1 },
+          { id: otherVendor.id, name: 'Made-up Computer House', active: true, count: 0 },
+          { id: quiet.id, name: 'Made-up Quiet Corner', active: true, count: 0 },
         ],
         pageNumber: 0,
         pageSize: 100,
@@ -450,7 +450,7 @@ describe('Referrals', () => {
     it('pages through the catalog paging: 10 a page unless asked, the pages in order with no Vendor twice, and a page past the end empty with the total', async () => {
       const made: VendorBody[] = [];
       for (let number = 1; number <= 5; number += 1) {
-        made.push(await aVendor(`Made-up Shop ${String(number)}`));
+        made.push(await aVendor(`Made-up Vendor ${String(number)}`));
       }
       const sharedBuild = await aSharedBuild();
       await referred(sharedBuild, made[4].id);
@@ -512,10 +512,10 @@ describe('Referrals', () => {
     });
 
     it("is the Admin's alone: a Vendor's own Login is refused 403 with ACCESS_DENIED, and no token 401", async () => {
-      const shop = await aVendor();
+      const vendor = await aVendor();
 
       await expectErrorResponse(
-        await listCounts({}, await tokenOfTheOwnLogin(shop)),
+        await listCounts({}, await tokenOfTheOwnLogin(vendor)),
         403,
         accessDenied,
       );
@@ -526,29 +526,29 @@ describe('Referrals', () => {
 
   describe("a Vendor's own Referral count", () => {
     it("is read by the Vendor's own Login and by the Admin, and is unchanged by Referrals to any other Vendor", async () => {
-      const shop = await aVendor('Made-up Computer Shop');
-      const store = await aVendor('Made-up Computer Store');
+      const vendor = await aVendor('Made-up Computer Corner');
+      const otherVendor = await aVendor('Made-up Computer House');
       const sharedBuild = await aSharedBuild();
-      await referred(sharedBuild, shop.id);
-      await referred(sharedBuild, store.id);
-      await referred(sharedBuild, store.id);
+      await referred(sharedBuild, vendor.id);
+      await referred(sharedBuild, otherVendor.id);
+      await referred(sharedBuild, otherVendor.id);
 
-      const own = await readCount(shop.id, await tokenOfTheOwnLogin(shop));
+      const own = await readCount(vendor.id, await tokenOfTheOwnLogin(vendor));
       expect(own.status).toBe(200);
       expect(await own.json()).toEqual({ count: 1 });
-      expect(await countOf(shop.id)).toBe(1);
-      expect(await countOf(store.id)).toBe(2);
+      expect(await countOf(vendor.id)).toBe(1);
+      expect(await countOf(otherVendor.id)).toBe(2);
 
-      await referred(sharedBuild, store.id);
-      expect(await countOf(shop.id)).toBe(1);
+      await referred(sharedBuild, otherVendor.id);
+      expect(await countOf(vendor.id)).toBe(1);
     });
 
     it("refuses another Vendor's count to a Vendor's own Login 403 with VENDOR_ACCESS_DENIED, whether that Vendor exists or not", async () => {
-      const shop = await aVendor('Made-up Computer Shop');
-      const store = await aVendor('Made-up Computer Store');
-      const token = await tokenOfTheOwnLogin(shop);
+      const vendor = await aVendor('Made-up Computer Corner');
+      const otherVendor = await aVendor('Made-up Computer House');
+      const token = await tokenOfTheOwnLogin(vendor);
 
-      for (const vendorId of [store.id, randomUUID(), 'not-a-vendor']) {
+      for (const vendorId of [otherVendor.id, randomUUID(), 'not-a-vendor']) {
         await expectErrorResponse(
           await readCount(vendorId, token),
           403,
@@ -558,20 +558,20 @@ describe('Referrals', () => {
     });
 
     it("refuses a deactivated Vendor's own Login 403 with VENDOR_DEACTIVATED, while the Admin still reads its count", async () => {
-      const shop = await aVendor();
-      await referred(await aSharedBuild(), shop.id);
-      const token = await tokenOfTheOwnLogin(shop);
-      await deactivate(shop.id);
+      const vendor = await aVendor();
+      await referred(await aSharedBuild(), vendor.id);
+      const token = await tokenOfTheOwnLogin(vendor);
+      await deactivate(vendor.id);
 
-      await expectErrorResponse(await readCount(shop.id, token), 403, vendorDeactivated);
-      expect(await countOf(shop.id)).toBe(1);
+      await expectErrorResponse(await readCount(vendor.id, token), 403, vendorDeactivated);
+      expect(await countOf(vendor.id)).toBe(1);
     });
 
     it('answers a call without a token, or with a token that is not good, 401, and an unknown Vendor 404 with VENDOR_NOT_FOUND for the Admin', async () => {
-      const shop = await aVendor();
+      const vendor = await aVendor();
 
-      await expectErrorResponse(await readCount(shop.id, null), 401, unauthorized);
-      await expectErrorResponse(await readCount(shop.id, 'nonsense'), 401, unauthorized);
+      await expectErrorResponse(await readCount(vendor.id, null), 401, unauthorized);
+      await expectErrorResponse(await readCount(vendor.id, 'nonsense'), 401, unauthorized);
       for (const vendorId of [randomUUID(), 'not-a-vendor']) {
         await expectErrorResponse(
           await readCount(vendorId, await adminToken()),

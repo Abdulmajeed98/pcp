@@ -1,8 +1,4 @@
-'use client';
-
-import { type MouseEvent, useRef } from 'react';
-
-import { buttonVariants, SubmitOnce } from '@/shared/ui';
+import { buttonVariants, FoldItAgain, SubmitOnce } from '@/shared/ui';
 
 // Copy into my Build (DESIGN.md's The Shared Build page): the page's one
 // primary button, in Print Green, as wide as the slip and 52 pixels tall, a
@@ -34,16 +30,6 @@ export function CopyIntoMyBuild({
   ownParts: number;
   words: { button: string; busy: string; warning: string; confirm: string; keep: string };
 }) {
-  const disclosure = useRef<HTMLDetailsElement>(null);
-
-  function keep(event: MouseEvent<HTMLAnchorElement>) {
-    const details = disclosure.current;
-    if (details === null) return;
-    event.preventDefault();
-    details.open = false;
-    details.querySelector('summary')?.focus();
-  }
-
   if (ownParts === 0) {
     return (
       <form action={action} method="post" className="grid grid-cols-[minmax(0,1fr)]">
@@ -59,7 +45,6 @@ export function CopyIntoMyBuild({
 
   return (
     <details
-      ref={disclosure}
       data-testid="copy-into-my-build"
       data-confirmation=""
       className="unfolds-in-place text-center"
@@ -85,14 +70,13 @@ export function CopyIntoMyBuild({
             words={{ idle: words.confirm, busy: words.busy }}
             className="w-full"
           />
-          <a
+          <FoldItAgain
             href={sharedBuildAddress}
-            data-testid="keep-mine"
-            onClick={keep}
+            testId="keep-mine"
             className={buttonVariants({ kind: 'board', className: 'w-full' })}
           >
             {words.keep}
-          </a>
+          </FoldItAgain>
         </form>
       </div>
     </details>

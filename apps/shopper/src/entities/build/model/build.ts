@@ -1,5 +1,7 @@
 import type { BuildPartResponse } from '@pcp/api-client';
 
+import { identifierIn } from '@/shared/lib';
+
 // A Category, by the API's own key for it.
 export type Category = BuildPartResponse['category'];
 
@@ -47,15 +49,6 @@ export function isCategory(text: string): text is Category {
 
 export function isKitOrDrive(category: Category): category is KitOrDrive {
   return holds[category] === 'many';
-}
-
-// A Part's identifier, as the API writes it: a UUID, in small letters. One
-// written in capitals is the same identifier.
-const identifier = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-
-export function identifierIn(text: string): string | undefined {
-  const lower = text.toLowerCase();
-  return identifier.test(lower) ? lower : undefined;
 }
 
 // A quantity a Build can hold: a whole number from 1 to 16, in Western digits

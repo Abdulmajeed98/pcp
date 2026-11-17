@@ -20,7 +20,11 @@ import {
   offersOfTheFirstVendor,
   theShopsPlatformRate,
 } from './made-up-offers.ts';
-import { madeUpReferralCounts } from './made-up-referral-counts.ts';
+import {
+  madeUpReferralCounts,
+  type ReferralCountsShown,
+  referralCountsAtTheirWorst,
+} from './made-up-referral-counts.ts';
 import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
 
 // The made-up shop's first Vendor (`made-up-vendors.ts`) as the dashboard's
@@ -73,11 +77,16 @@ function before(now: Date, milliseconds: number): string {
 // with the Parts the catalog gave for their names. Its Platform Rate is
 // 1,575 dinars to the dollar, about the Erbil market rate of October 2026
 // (PRODUCT.md's Evidence on Hand), set three days before; or, for a look at
-// the Platform Rate screen before the Admin sets the first, none.
+// the Platform Rate screen before the Admin sets the first, none. Its
+// Referral counts are the made-up Vendors', or, for `break-ui` on the
+// Referrals screen, the list at its worst, one Vendor, or none.
 export function madeUpShop(
   now: Date,
   catalogParts: ReadonlyMap<string, PartSummaryResponse>,
-  { platformRate = true }: { platformRate?: boolean } = {},
+  {
+    platformRate = true,
+    referrals = 'madeUp',
+  }: { platformRate?: boolean; referrals?: ReferralCountsShown } = {},
 ): MadeUpShop {
   const vendor: VendorResponse = {
     ...theFirstVendor,
@@ -113,7 +122,8 @@ export function madeUpShop(
         ? { iqdPerUsd: theShopsPlatformRate, setAt: before(now, 3 * aDay) }
         : null,
     },
-    referralCounts: madeUpReferralCounts,
+    referralCounts:
+      referrals === 'madeUp' ? madeUpReferralCounts : referralCountsAtTheirWorst[referrals],
   };
 }
 

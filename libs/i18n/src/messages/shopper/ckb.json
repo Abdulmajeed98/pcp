@@ -199,14 +199,14 @@
       "listComma": "، ",
       "listAnd": " و ",
       "category": "{category, select, cpu {پرۆسێسەر} cpuCooler {ساردکەرەوەی پرۆسێسەر} motherboard {مازەربۆرد} ram {ڕام} storage {بیرگەی هەڵگرتن} gpu {کارتی گرافیک} case {کەیس} psu {پاوەر سەپلای} other {پارچە}}",
-      "hasGraphics": "پرۆسێسەرەکەت گرافیکی تێدایە، بۆیە کارتی گرافیک پێویست نییە.",
-      "includesCooler": "پرۆسێسەرەکەت ساردکەرەوەی لەگەڵدایە، بۆیە ساردکەرەوەی پرۆسێسەر پێویست نییە.",
-      "graphicsNotKnown": "پرۆسێسەرەکەت ناڵێت گرافیکی تێدایە یان نا، بۆیە کارتی گرافیک بە پێویست دادەنرێت.",
-      "coolerNotKnown": "پرۆسێسەرەکەت ناڵێت ساردکەرەوەی لەگەڵدایە یان نا، بۆیە ساردکەرەوەی پرۆسێسەر بە پێویست دادەنرێت."
+      "hasGraphics": "{whose, select, shared {پرۆسێسەرەکەی گرافیکی تێدایە، بۆیە کارتی گرافیک پێویست نییە.} other {پرۆسێسەرەکەت گرافیکی تێدایە، بۆیە کارتی گرافیک پێویست نییە.}}",
+      "includesCooler": "{whose, select, shared {پرۆسێسەرەکەی ساردکەرەوەی لەگەڵدایە، بۆیە ساردکەرەوەی پرۆسێسەر پێویست نییە.} other {پرۆسێسەرەکەت ساردکەرەوەی لەگەڵدایە، بۆیە ساردکەرەوەی پرۆسێسەر پێویست نییە.}}",
+      "graphicsNotKnown": "{whose, select, shared {پرۆسێسەرەکەی ناڵێت گرافیکی تێدایە یان نا، بۆیە کارتی گرافیک بە پێویست دادەنرێت.} other {پرۆسێسەرەکەت ناڵێت گرافیکی تێدایە یان نا، بۆیە کارتی گرافیک بە پێویست دادەنرێت.}}",
+      "coolerNotKnown": "{whose, select, shared {پرۆسێسەرەکەی ناڵێت ساردکەرەوەی لەگەڵدایە یان نا، بۆیە ساردکەرەوەی پرۆسێسەر بە پێویست دادەنرێت.} other {پرۆسێسەرەکەت ناڵێت ساردکەرەوەی لەگەڵدایە یان نا، بۆیە ساردکەرەوەی پرۆسێسەر بە پێویست دادەنرێت.}}"
     },
     "stamp": "بیڵدی تەواو",
     "slip": {
-      "yourBuild": "{count, plural, one {بیڵدەکەت · {countText} پارچە} other {بیڵدەکەت · {countText} پارچە}}",
+      "heading": "{whose, select, shared {{count, plural, one {بیڵدی هاوبەشکراو · {countText} پارچە} other {بیڵدی هاوبەشکراو · {countText} پارچە}}} other {{count, plural, one {بیڵدەکەت · {countText} پارچە} other {بیڵدەکەت · {countText} پارچە}}}}",
       "parts": "پارچە",
       "complete": "تەواوە",
       "yes": "بەڵێ",
@@ -263,7 +263,7 @@
       "noNumber": "ژمارەی واتسئاپی نەداوە",
       "message": "سڵاو {vendor}، ئەم کۆمپیوتەرەم لە {site} داناوە: ئایا پارچەکانیتان هەیە؟",
       "refused": {
-        "notReachable": "ئیتر ناتوانرێت لە ڕێگەی پلاتفۆرمەوە پەیوەندی بە {vendor} بکرێت.",
+        "notReachable": "ئیتر ناتوانرێت لە ڕێگەی پلاتفۆرمەوە پەیوەندی بە <written>{vendor}</written> بکرێت.",
         "notReachableUnnamed": "ئیتر ناتوانرێت لە ڕێگەی پلاتفۆرمەوە پەیوەندی بەو فرۆشیارە بکرێت کە هەڵتبژارد.",
         "notOpened": "ئێستا واتسئاپ ناکرێتەوە. دوای کەمێک دووبارە هەوڵ بدەرەوە."
       }
@@ -373,8 +373,8 @@
     },
     "rules": {
       "title": "ئەنجامی یاساکان",
-      "note": "{rules} یاسای گونجان، لەسەر پارچەکانی بیڵدەکەت.",
-      "noneApply": "هێشتا هیچ یاسایەک ناگرێتەوە: یاساکان ئەو پارچانە دەپشکنن کە پێکەوە کار دەکەن، کاتێک هەڵیاندەبژێریت.",
+      "note": "{whose, select, shared {{rules} یاسای گونجان، لەسەر پارچەکانی ئەم بیڵدە.} other {{rules} یاسای گونجان، لەسەر پارچەکانی بیڵدەکەت.}}",
+      "noneApply": "{whose, select, shared {هێشتا هیچ یاسایەک ناگرێتەوە: یاساکان ئەو پارچانە دەپشکنن کە پێکەوە کار دەکەن.} other {هێشتا هیچ یاسایەک ناگرێتەوە: یاساکان ئەو پارچانە دەپشکنن کە پێکەوە کار دەکەن، کاتێک هەڵیاندەبژێریت.}}",
       "allPassed": "{count, plural, one {هیچ کێشەیەک نییە: ئەو یەک یاسایەی دەگرێتەوە پشکنرا و دەرچوو.} other {هیچ کێشەیەک نییە: هەر {countText} یاساکەی دەگرێتەوە پشکنران و دەرچوون.}}",
       "problems": "{count, plural, one {{countText} کێشەی گونجان} other {{countText} کێشەی گونجان}}",
       "warnings": "{count, plural, one {{countText} ئاگاداریی گونجان} other {{countText} ئاگاداریی گونجان}}",
@@ -385,13 +385,13 @@
       "notInTheCatalog": "لە کاتالۆگدا نییە: <english>{specification}</english>",
       "more": "{count, plural, one {{countText} دانەی تر} other {{countText} دانەی تر}}",
       "fewer": "کەمتر",
-      "kept": "بیڵدەکەت وەک خۆی دەهێڵرێتەوە: هەر کاتێک ویستت پارچەیەک بگۆڕە."
+      "kept": "{whose, select, shared {بۆ گۆڕینی پارچەیەک، کۆپیی بکە بۆ بیڵدەکەت.} other {بیڵدەکەت وەک خۆی دەهێڵرێتەوە: هەر کاتێک ویستت پارچەیەک بگۆڕە.}}"
     },
     "vendors": {
       "title": "لە یەک فرۆشیار بیکڕە",
       "note": "کۆی هەر فرۆشیارێک بۆ ئەو پارچانەی لە کۆگادا هەیەتی. کەمترین پارچەی نەبوو لە پێشەوە، پاشان کەمترین کۆ. هیچ فرۆشیارێک پارە بۆ شوێنەکەی نادات.",
       "hasEvery": "هەموو پارچەکانی هەیە",
-      "has": "{count, plural, one {{hasText} لە {countText} پارچەکەت هەیە · {lacksText} نییە} other {{hasText} لە {countText} پارچەکەت هەیە · {lacksText} نییە}}",
+      "has": "{whose, select, shared {{count, plural, one {{hasText} لە {countText} پارچەکەی هەیە · {lacksText} نییە} other {{hasText} لە {countText} پارچەکەی هەیە · {lacksText} نییە}}} other {{count, plural, one {{hasText} لە {countText} پارچەکەت هەیە · {lacksText} نییە} other {{hasText} لە {countText} پارچەکەت هەیە · {lacksText} نییە}}}}",
       "itsParts": "پارچەکانی",
       "inStockThere": "لە کۆگای ئەودا هەیە",
       "notThere": "لای ئەو نییە",
@@ -424,28 +424,17 @@
   },
   "SharedBuildPage": {
     "title": "بیڵدێکی هاوبەشکراو",
-    "slip": "{count, plural, one {بیڵدی هاوبەشکراو · {countText} پارچە} other {بیڵدی هاوبەشکراو · {countText} پارچە}}",
     "stamp": "هاوبەشکرا {date}",
-    "when": "{days, plural, =0 {ئەمڕۆ هاوبەش کراوە، {date}.} one {{daysText} ڕۆژ لەمەوبەر هاوبەش کراوە، لە {date}.} other {{daysText} ڕۆژ لەمەوبەر هاوبەش کراوە، لە {date}.}}",
+    "when": {
+      "today": "ئەمڕۆ هاوبەش کراوە، {date}.",
+      "yesterday": "دوێنێ هاوبەش کراوە، {date}.",
+      "daysAgo": "{days, plural, one {{daysText} ڕۆژ لەمەوبەر هاوبەش کراوە، لە {date}.} other {{daysText} ڕۆژ لەمەوبەر هاوبەش کراوە، لە {date}.}}"
+    },
     "fixed": "پارچەکانی وەک کاتی هاوبەشکردن دەمێننەوە؛ نرخەکانی هی ئەمڕۆن.",
     "leftTheCatalog": "{count, plural, one {{countText} لە پارچەکانی لەو کاتەوە لە کاتالۆگ دەرچووە، بۆیە پیشان نادرێت.} other {{countText} لە پارچەکانی لەو کاتەوە لە کاتالۆگ دەرچوون، بۆیە پیشان نادرێن.}}",
     "longDate": "{day}ی {month, select, january {کانوونی دووەم} february {شوبات} march {ئازار} april {نیسان} may {ئایار} june {حوزەیران} july {تەممووز} august {ئاب} september {ئەیلوول} october {تشرینی یەکەم} november {تشرینی دووەم} december {کانوونی یەکەم} other {}}ی {year}",
     "shortDate": "{year}/{month, select, january {1} february {2} march {3} april {4} may {5} june {6} july {7} august {8} september {9} october {10} november {11} december {12} other {}}/{day}",
     "quantity": "ژمارە {quantity}",
-    "status": {
-      "hasGraphics": "پرۆسێسەرەکەی گرافیکی تێدایە، بۆیە کارتی گرافیک پێویست نییە.",
-      "includesCooler": "پرۆسێسەرەکەی ساردکەرەوەی لەگەڵدایە، بۆیە ساردکەرەوەی پرۆسێسەر پێویست نییە.",
-      "graphicsNotKnown": "پرۆسێسەرەکەی ناڵێت گرافیکی تێدایە یان نا، بۆیە کارتی گرافیک بە پێویست دادەنرێت.",
-      "coolerNotKnown": "پرۆسێسەرەکەی ناڵێت ساردکەرەوەی لەگەڵدایە یان نا، بۆیە ساردکەرەوەی پرۆسێسەر بە پێویست دادەنرێت."
-    },
-    "rules": {
-      "note": "{rules} یاسای گونجان، لەسەر پارچەکانی ئەم بیڵدە.",
-      "noneApply": "هێشتا هیچ یاسایەک ناگرێتەوە: یاساکان ئەو پارچانە دەپشکنن کە پێکەوە کار دەکەن.",
-      "kept": "بۆ گۆڕینی پارچەیەک، کۆپیی بکە بۆ بیڵدەکەت."
-    },
-    "vendors": {
-      "has": "{count, plural, one {{hasText} لە {countText} پارچەکەی هەیە · {lacksText} نییە} other {{hasText} لە {countText} پارچەکەی هەیە · {lacksText} نییە}}"
-    },
     "copy": {
       "button": "کۆپیی بکە بۆ بیڵدەکەم",
       "busy": "کۆپی دەکرێت…",

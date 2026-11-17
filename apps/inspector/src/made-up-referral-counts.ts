@@ -49,13 +49,85 @@ const deactivated = new Set([madeUpIdentifier(5)]);
 // no fixed list could carry it.
 const byName = new Intl.Collator('en').compare;
 
-// Every made-up Vendor with its count, in the API's order: the most
-// Referrals first, then by name, then by identifier.
-export const madeUpReferralCounts: readonly VendorsReferralCountResponse[] = madeUpVendors
-  .map((vendor) => ({
+// Vendors with their counts in the API's order: the most Referrals first,
+// then by name, then by identifier.
+function inTheApisOrder(
+  vendors: readonly VendorsReferralCountResponse[],
+): VendorsReferralCountResponse[] {
+  return [...vendors].sort(
+    (a, b) => b.count - a.count || byName(a.name, b.name) || a.id.localeCompare(b.id),
+  );
+}
+
+// Every made-up Vendor with its count, in the API's order.
+export const madeUpReferralCounts: readonly VendorsReferralCountResponse[] = inTheApisOrder(
+  madeUpVendors.map((vendor) => ({
     id: vendor.id,
     name: vendor.name,
     active: !deactivated.has(vendor.id),
     count: counts.get(vendor.id) ?? 0,
-  }))
-  .sort((a, b) => b.count - a.count || byName(a.name, b.name) || a.id.localeCompare(b.id));
+  })),
+);
+
+// The Referrals screen's worst cases, for `break-ui` (the sharing spec's
+// The design comes first; the code review's fixes): every made-up Vendor
+// above with its count, and beside them the Vendors the screen meets at
+// its worst, each a value the API takes, spread across the first rows,
+// where the screen shows them first. A name is at most 100 characters
+// (`longestVendorName`), in any script; a count has no limit but the
+// years, so the most is a Vendor sent Builds a hundred times a day for
+// three and a half years.
+const worstVendors: readonly { name: string; count: number; active: boolean }[] = [
+  // The longest name the API takes, in Latin letters, ending in a stop.
+  {
+    name: 'Invented Components & Accessories Trading Company for Computers, Laptops, Gaming PCs and Networking.',
+    count: 128406,
+    active: true,
+  },
+  // A name written as its Instagram name, with no space to break at, and
+  // deactivated with a count in the tens of thousands.
+  {
+    name: 'pc.parts.and.gaming.accessories.wholesale.official',
+    count: 12750,
+    active: false,
+  },
+  // A long name in Arabic script and one in Kurdish.
+  {
+    name: 'شركة التقنيات الوهمية لتجارة الحاسبات وملحقاتها وأجهزة الألعاب والشبكات والكاميرات والطابعات',
+    count: 3108,
+    active: true,
+  },
+  {
+    name: 'کۆگای ئەلیکترۆنیاتی خەیاڵی بۆ پارچەکانی کۆمپیوتەر و لاپتۆپ و یاری و تۆڕ و کامێرا و چاپکەر',
+    count: 1999,
+    active: true,
+  },
+  // Names that start or end with what has no direction of its own: a
+  // digit, a mark, an emoji; and one in two scripts.
+  { name: 'PC 4U کۆمپیوتەر', count: 312, active: true },
+  { name: 'Gamer Zone 🎮', count: 312, active: true },
+  { name: '3D Hardware', count: 312, active: true },
+  // One word with no space, long enough to cross a phone's row.
+  { name: 'ComputerWarehouseWholesaleAndRetailPartsSupplier', count: 27, active: true },
+  // Two letters, one Referral.
+  { name: 'A1', count: 1, active: true },
+  // A deactivated Vendor with none.
+  { name: 'Ali & Sons!', count: 0, active: false },
+];
+
+// The list at its worst, in the API's order, and the list of one Vendor
+// with one Referral, which the screen counts as "1 Vendor" and "1
+// Referral"; and, for no Vendor at all, an empty list.
+export const referralCountsAtTheirWorst = {
+  worstCase: inTheApisOrder([
+    ...madeUpReferralCounts,
+    ...worstVendors.map((vendor, place) => ({
+      id: madeUpIdentifier(900001 + place),
+      ...vendor,
+    })),
+  ]),
+  one: [{ id: madeUpIdentifier(900101), name: 'Made-up PC Parts', active: true, count: 1 }],
+  none: [],
+} satisfies Record<string, readonly VendorsReferralCountResponse[]>;
+
+export type ReferralCountsShown = 'madeUp' | keyof typeof referralCountsAtTheirWorst;

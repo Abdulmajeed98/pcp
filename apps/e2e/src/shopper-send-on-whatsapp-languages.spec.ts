@@ -189,7 +189,10 @@ async function expectTheChat(
   expect(chat.number).toBe(await whatsAppDigitsOf(tab.request, vendor.vendorId));
   expect(chat.lines, 'one sentence, then the link').toHaveLength(2);
   const [sentence, link] = chat.lines as [string, string];
-  expect(sentence).toContain(vendor.vendorName);
+  // The name as the Vendor wrote it, kept apart in its own direction
+  // between a first-strong isolate and its end, since a message is plain
+  // text, where no `bdi` can go.
+  expect(sentence).toContain(`⁨${vendor.vendorName}⁩`);
   expectNoPriceIn(sentence, vendor.vendorName);
   return { sentence, link };
 }
@@ -493,6 +496,9 @@ test.describe('refusals come back to the page the form was sent from, with the r
     await expect(noWhatsAppNumberOf(tab, echo.id)).toBeVisible();
     const said = vendorLineOf(tab, echo.id).getByTestId('send-refused');
     await expect(said).toContainText(echo.name);
+    // The name is kept apart in its own direction, as every Vendor's name a
+    // page says is (`AsWritten`).
+    await expect(said.locator('bdi')).toHaveText(echo.name);
     expect(asked).toEqual([]);
     expect(await countOf(browser, echo.id)).toBe(0);
   });

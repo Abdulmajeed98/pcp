@@ -19,9 +19,9 @@ export class ShareParams {
   }
 }
 
-// The Shared Build that holds a Build, and whether this share stored it or
-// found it stored by an earlier one.
-export class Shared {
+// What a share came to: the Shared Build that holds the Build, and whether
+// this share stored it or found it stored by an earlier one.
+export class ShareOutcome {
   constructor(
     private readonly sharedBuild: SharedBuild,
     private readonly storedNow: boolean,
@@ -44,7 +44,9 @@ export abstract class SharedBuildStore {
   // given, or answers the one that already holds them, as it was stored. The
   // values are unique: the store alone decides whether they are stored, so
   // that two shares of one Build at once make one Shared Build.
-  abstract share(params: ShareParams): Promise<Either.Either<Shared, StructuredError>>;
+  abstract share(
+    params: ShareParams,
+  ): Promise<Either.Either<ShareOutcome, StructuredError>>;
 
   // The Shared Build with this identifier, or none when there is no such
   // Shared Build, as for a text that is not an identifier.

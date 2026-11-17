@@ -5,7 +5,7 @@ import { Either, Option } from 'effect';
 
 import { SharedBuild } from '~/domain/shared-build/SharedBuild';
 import {
-  Shared,
+  ShareOutcome,
   ShareParams,
   SharedBuildStore,
 } from '~/domain/shared-build/SharedBuildStore';
@@ -35,7 +35,7 @@ export class DatabaseSharedBuildStore implements SharedBuildStore {
 
   constructor(private readonly databaseProvider: DatabaseProvider) {}
 
-  async share(params: ShareParams): Promise<Either.Either<Shared, StructuredError>> {
+  async share(params: ShareParams): Promise<Either.Either<ShareOutcome, StructuredError>> {
     const text = textOf(params.getPartValues());
     const client = this.databaseProvider.getClient();
     try {
@@ -49,7 +49,8 @@ export class DatabaseSharedBuildStore implements SharedBuildStore {
         .values({ partValues: text, sharedAt: params.getSharedAt() })
         .onConflictDoNothing({ target: sharedBuild.partValues })
         .returning();
-      if (stored !== undefined) return Either.right(new Shared(toDomain(stored), true));
+      if (stored !== undefined)
+        return Either.right(new ShareOutcome(toDomain(stored), true));
 
       const [earlier] = await client
         .select()
@@ -60,7 +61,7 @@ export class DatabaseSharedBuildStore implements SharedBuildStore {
           ServerError.of('A Build met a Shared Build that could not be read back'),
         );
       }
-      return Either.right(new Shared(toDomain(earlier), false));
+      return Either.right(new ShareOutcome(toDomain(earlier), false));
     } catch (error) {
       this.logger.error(error, 'A Build could not be shared');
       return Either.left(databaseErrorOf(error, 'A Build could not be shared'));

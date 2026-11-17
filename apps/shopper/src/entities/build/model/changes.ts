@@ -1,9 +1,10 @@
 import { westernNumberIn } from '@pcp/i18n';
 
+import { identifierIn } from '@/shared/lib';
+
 import {
   type Build,
   type BuildPart,
-  identifierIn,
   isCategory,
   isKitOrDrive,
   type KitOrDrive,

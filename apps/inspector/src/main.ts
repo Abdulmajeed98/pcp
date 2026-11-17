@@ -11,6 +11,7 @@ import {
 } from './chrome.ts';
 import { BadScheme, emulatedMedia, type Scheme, takeTheScheme } from './colour-scheme.ts';
 import { developmentAdmin } from './development-admin.ts';
+import type { ReferralCountsShown } from './made-up-referral-counts.ts';
 import { madeUpShop } from './made-up-shop.ts';
 import { runTheInspector, tastesBrowser } from './taste.ts';
 import { ignoreARefusedTypeOfService } from './type-of-service.ts';
@@ -20,7 +21,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // made-up shop, whose Vendor is listed among the real ones. Run it from the
 // repository root:
 //
-//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [the inspector's options]
+//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [the inspector's options]
 //
 // It launches the inspector's Chrome, logs in once as the development Admin
 // before the first tab, so that Keycloak's cookie carries to every width,
@@ -30,7 +31,13 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // every tab in the light or the dark scheme; without it Chrome follows the
 // computer's appearance. The shop holds a Platform Rate, and
 // `--no-platform-rate` shows the Platform Rate screen as it is before the
-// Admin sets the first. The Vendor portal's screens are the Admin acting as
+// Admin sets the first. `--referrals worstCase` answers the Referrals screen
+// with the list at its worst beside the made-up Vendors, for `break-ui`
+// (the longest names, a name with no space, Arabic and Kurdish names, names
+// that start or end with no direction of their own, a count of one, counts
+// in the tens of thousands, deactivated Vendors), `one` with one Vendor of
+// one Referral, and `none` with no Vendor at all. The Vendor portal's
+// screens are the Admin acting as
 // the shop's Vendor, under `/vendors/00000000-0000-4000-8000-000000000001/portal`.
 //
 // It exits with the inspector's own status, 0 with no FAIL findings and 1
@@ -40,7 +47,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // though the screen was opened twice.
 
 const usage =
-  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--widths 1440,768,390] [--out DIR] [--app] [other options of inspect.mjs]';
+  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [--widths 1440,768,390] [--out DIR] [--app] [other options of inspect.mjs]';
 
 // Before any read: a refused type of service would stop the command where
 // nothing can catch it (`type-of-service.ts`).
@@ -75,12 +82,20 @@ function commandLine(args: readonly string[]) {
   const withoutARate = passed.indexOf('--no-platform-rate');
   const platformRate = withoutARate === -1;
   if (!platformRate) passed.splice(withoutARate, 1);
+  let referrals: ReferralCountsShown = 'madeUp';
+  const atReferrals = passed.indexOf('--referrals');
+  if (atReferrals !== -1) {
+    const shown = passed[atReferrals + 1];
+    if (shown !== 'worstCase' && shown !== 'one' && shown !== 'none') stop(usage);
+    referrals = shown;
+    passed.splice(atReferrals, 2);
+  }
   const address = passed[0];
   if (address === undefined || !/^https?:\/\//.test(address)) stop(usage);
-  return { address, language, scheme, platformRate, inspectorArgs: passed };
+  return { address, language, scheme, platformRate, referrals, inspectorArgs: passed };
 }
 
-const { address, language, scheme, platformRate, inspectorArgs } = commandLine(
+const { address, language, scheme, platformRate, referrals, inspectorArgs } = commandLine(
   process.argv.slice(2),
 );
 let login: Login;
@@ -107,7 +122,7 @@ try {
     }
     return ((await response.json()) as PartPageResponse).content;
   });
-  const shop = madeUpShop(new Date(), parts, { platformRate });
+  const shop = madeUpShop(new Date(), parts, { platformRate, referrals });
 
   // Every tab the inspector opens is answered from the shop, and lands on
   // the dashboard, drawn, before it is judged; the inspector's own launch

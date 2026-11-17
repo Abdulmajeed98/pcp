@@ -7,3 +7,4 @@ export {
 } from './model/refused-send';
 export { chatWithTheVendor, theMessage } from './model/the-message';
 export { NoWhatsAppNumber, SendOnWhatsApp, SendRefusedSaid } from './ui/send-on-whatsapp';
+export { SendRefusedWithoutItsLine } from './ui/send-refused-without-its-line';

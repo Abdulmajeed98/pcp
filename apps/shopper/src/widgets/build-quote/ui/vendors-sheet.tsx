@@ -2,6 +2,7 @@ import type { BuildResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { getLocale, getTranslations } from 'next-intl/server';
+import type { ReactNode } from 'react';
 
 import { vendorAddress } from '@/entities/vendor';
 import { underlinedAction } from '@/features/change-the-build';
@@ -10,6 +11,7 @@ import {
   SendOnWhatsApp,
   type SendRefused,
   SendRefusedSaid,
+  SendRefusedWithoutItsLine,
   vendorLineAnchor,
 } from '@/features/send-on-whatsapp';
 import { photographs } from '@/shared/photographs';
@@ -67,7 +69,8 @@ const sideBySide = 52;
 // for the page's script (Motion 11).
 //
 // A send refused (`sendRefused`, read from the page's address) is said under
-// its Vendor's line, which comes unfolded when it is past the fifth. A
+// its Vendor's line, which comes unfolded when it is past the fifth, naming
+// the Vendor as it wrote its name, in its own direction (`AsWritten`). A
 // Vendor no longer on the page, as one deactivated since the page was
 // drawn, has no line, so its refusal is said at the sheet's head, under its
 // note, where the address's anchor finds it, without the Vendor's name,
@@ -107,7 +110,12 @@ export async function VendorsSheet({
       refused={
         sendRefused === undefined || vendor !== refusedLine
           ? undefined
-          : send(`refused.${sendRefused.refused}`, { vendor: vendor.name })
+          : sendRefused.refused === 'notReachable'
+            ? send.rich('refused.notReachable', {
+                vendor: vendor.name,
+                written: (chunks: ReactNode) => <AsWritten>{chunks}</AsWritten>,
+              })
+            : send('refused.notOpened')
       }
     />
   );
@@ -127,18 +135,7 @@ export async function VendorsSheet({
           <SheetNote>{t('note')}</SheetNote>
           {sendRefused !== undefined && refusedLine === undefined && (
             <div className="mt-group">
-              <SendRefusedSaid
-                id={
-                  sendRefused.vendor === undefined
-                    ? undefined
-                    : vendorLineAnchor(sendRefused.vendor)
-                }
-                words={
-                  sendRefused.refused === 'notReachable'
-                    ? send('refused.notReachableUnnamed')
-                    : send('refused.notOpened')
-                }
-              />
+              <SendRefusedWithoutItsLine refused={sendRefused} />
             </div>
           )}
           <div data-space="vendors" className="grid grid-cols-[minmax(0,1fr)]">
@@ -210,11 +207,10 @@ async function VendorLine({
   whose: Whose;
   address: string;
   sendTo: string;
-  refused: string | undefined;
+  refused: ReactNode;
 }) {
-  const [t, shared, send] = await Promise.all([
+  const [t, send] = await Promise.all([
     getTranslations('BuildPage.vendors'),
-    getTranslations('SharedBuildPage.vendors'),
     getTranslations('BuildPage.send'),
   ]);
   const has = vendor.partsInStock.length;
@@ -259,7 +255,8 @@ async function VendorLine({
             <span data-testid="vendor-has">
               {lacks === 0
                 ? t('hasEvery')
-                : (whose === 'shared' ? shared : t)('has', {
+                : t('has', {
+                    whose,
                     count: has + lacks,
                     countText: formatNumber(has + lacks),
                     hasText: formatNumber(has),

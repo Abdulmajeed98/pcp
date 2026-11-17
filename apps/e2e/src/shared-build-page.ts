@@ -84,6 +84,12 @@ export function thisIsYourBuild(page: Page): Locator {
   return page.getByTestId('this-is-your-build');
 }
 
+// The rules' sheet's closing line, which on a reader's Shared Build page says
+// how to change a Part: copy the Build.
+export function theRulesClosingLine(page: Page): Locator {
+  return page.getByTestId('rules-closing');
+}
+
 // The Parts a page lists, each by its identifier, in the page's order.
 export async function partsListed(page: Page): Promise<string[]> {
   return page

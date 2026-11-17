@@ -6,11 +6,7 @@ import { notFound } from 'next/navigation';
 import { buildIn, holdsTheSharedBuild, partsCountedIn } from '@/entities/build';
 import { sharedBuildAddress } from '@/entities/shared-build';
 import { refusedCopyIn } from '@/features/copy-a-shared-build';
-import {
-  refusedSendIn,
-  SendRefusedSaid,
-  vendorLineAnchor,
-} from '@/features/send-on-whatsapp';
+import { refusedSendIn, SendRefusedWithoutItsLine } from '@/features/send-on-whatsapp';
 import { chosenCurrency } from '@/shared/currency';
 import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { type Photograph, photographs } from '@/shared/photographs';
@@ -90,7 +86,7 @@ export async function SharedBuildPage({
       ) : read.answer.parts.length === 0 ? (
         <AllGone
           parts={read.shared.part.length}
-          when={whenShared(language, read.shared.sharedAt, read.readAt).note}
+          when={whenShared(language, read.shared).note}
         />
       ) : (
         <div className="flex flex-1 flex-col">
@@ -111,29 +107,17 @@ export async function SharedBuildPage({
                   refused={refusedCopyIn(query)}
                 />
                 {sendRefused !== undefined && read.answer.vendors.length === 0 && (
-                  <SendRefusedSaid
-                    id={
-                      sendRefused.vendor === undefined
-                        ? undefined
-                        : vendorLineAnchor(sendRefused.vendor)
-                    }
-                    words={
-                      sendRefused.refused === 'notReachable'
-                        ? buildWords('send.refused.notReachableUnnamed')
-                        : buildWords('send.refused.notOpened')
-                    }
-                  />
+                  <SendRefusedWithoutItsLine refused={sendRefused} />
                 )}
               </BuildSlip>
               <SharedBuildSheet
                 shared={read.shared}
                 answer={read.answer}
-                now={read.readAt}
                 isYours={isYours}
               />
             </div>
           </main>
-          <RulesSheet answer={read.answer} whose="shared" />
+          <RulesSheet answer={read.answer} whose="shared" isYours={isYours} />
           {read.answer.vendors.length > 0 && (
             <VendorsSheet
               answer={read.answer}

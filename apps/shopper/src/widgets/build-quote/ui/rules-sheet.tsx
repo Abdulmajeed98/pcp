@@ -48,7 +48,9 @@ const groupsOf = {
 // the rules find fault with (BLD-4). An empty Build has no rules' sheet. A
 // Shared Build's sheet speaks of the Parts in this Build and closes with how
 // to change one, copying it into your Build (DESIGN.md's The Shared Build
-// page).
+// page); for the browser that holds that very Build it closes with nothing,
+// since its page already says the Build is theirs and offers no copy (story
+// 30, the code review's fixes).
 //
 // It is below the first screen, so it prints as it comes into view (Motion
 // 1). Each line a change in place may bring or take, a group and an
@@ -58,16 +60,17 @@ const groupsOf = {
 export async function RulesSheet({
   answer,
   whose = 'yours',
+  isYours = false,
 }: {
   answer: BuildResponse;
   whose?: Whose;
+  // Whether the browser holds this very Shared Build.
+  isYours?: boolean;
 }) {
-  const [language, t, shared] = await Promise.all([
+  const [language, t] = await Promise.all([
     getLocale(),
     getTranslations('BuildPage.rules'),
-    getTranslations('SharedBuildPage.rules'),
   ]);
-  const its = whose === 'shared';
   const findings = findingsOf(answer, language);
   const power = powerDrawOf(answer);
   const groups = (['problem', 'warning', 'unchecked'] as const).map((found) => ({
@@ -92,9 +95,7 @@ export async function RulesSheet({
       >
         <Sheet print="in-view">
           <SheetTitle id="rules-title">{t('title')}</SheetTitle>
-          <SheetNote>
-            {(its ? shared : t)('note', { rules: formatNumber(rulesInAll) })}
-          </SheetNote>
+          <SheetNote>{t('note', { whose, rules: formatNumber(rulesInAll) })}</SheetNote>
           {/* What the rules found, read to a screen reader when a change in
               place alters it, its space moving with what it says. */}
           <div data-space="rules" className="grid grid-cols-[minmax(0,1fr)]">
@@ -105,7 +106,7 @@ export async function RulesSheet({
                 className="mx-auto mt-4 block max-w-[34ch] text-center text-lg text-balance"
               >
                 {findings.passed === 0
-                  ? (its ? shared : t)('noneApply')
+                  ? t('noneApply', { whose })
                   : t('allPassed', {
                       count: findings.passed,
                       countText: formatNumber(findings.passed),
@@ -187,9 +188,14 @@ export async function RulesSheet({
               />
             )}
           </ul>
-          <p className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground">
-            {(its ? shared : t)('kept')}
-          </p>
+          {!(whose === 'shared' && isYours) && (
+            <p
+              data-testid="rules-closing"
+              className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground"
+            >
+              {t('kept', { whose })}
+            </p>
+          )}
         </Sheet>
       </div>
     </section>

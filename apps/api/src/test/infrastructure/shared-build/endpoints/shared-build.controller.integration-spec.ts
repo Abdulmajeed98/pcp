@@ -27,8 +27,13 @@ import { emptyTheRealm } from '../../../test-utils/keycloak/keycloak-administrat
 // A Shared Build as sharing answers it.
 type SharedBody = { id: string; sharedAt: string };
 
-// A Shared Build as reading it answers it: its frozen `part` values too.
-type SharedBuildBody = SharedBody & { part: string[] };
+// A Shared Build as reading it answers it: its frozen `part` values too, and
+// the day it was shared with the calendar days since.
+type SharedBuildBody = SharedBody & {
+  sharedOn: string;
+  daysSinceShared: number;
+  part: string[];
+};
 
 // A Part as the API answers its creation, and a Vendor, as far as these tests
 // read them.
@@ -400,7 +405,7 @@ describe('a Shared Build', () => {
   });
 
   describe('reading a Shared Build', () => {
-    it("answers its frozen `part` values, lower-case identifiers in the catalog's order of Categories and the Build's order of RAM kits and drives, each kit or drive with its quantity, and the moment it was shared", async () => {
+    it("answers its frozen `part` values, lower-case identifiers in the catalog's order of Categories and the Build's order of RAM kits and drives, each kit or drive with its quantity, and the moment it was shared, with its day and the days since", async () => {
       const [psu, driveA, cpu, kitX, driveB, kitY, board] = [
         await aPart({ category: 'psu', name: 'Made-up 750 W PSU' }),
         await aPart({ category: 'storage', name: 'Made-up drive A' }),
@@ -425,6 +430,8 @@ describe('a Shared Build', () => {
       expect(await theSharedBuild(body.id)).toEqual({
         id: body.id,
         sharedAt: aMovedMoment.toISOString(),
+        sharedOn: '2027-03-14',
+        daysSinceShared: 1,
         part: [
           cpu.id,
           board.id,
@@ -434,6 +441,47 @@ describe('a Shared Build', () => {
           `${driveB.id}:16`,
           psu.id,
         ],
+      });
+    });
+
+    describe("answers the day it was shared in Iraq's time, and the calendar days since, by the API's clock", () => {
+      // Iraq is three hours ahead of UTC all year, so 20:00 in UTC is 23:00
+      // in Iraq, and 21:30 in UTC 00:30 the next day there.
+      async function sharedAndReadAt(sharedAt: string, readAt: string) {
+        const ryzen = await aPart();
+        moveTheClockTo(new Date(sharedAt));
+        const { body } = await shared([ryzen.id]);
+        moveTheClockTo(new Date(readAt));
+        return theSharedBuild(body.id);
+      }
+
+      it('1 day for a Build shared at 23:00 and read at 08:00 the next morning, its day the one it was shared on', async () => {
+        expect(
+          await sharedAndReadAt('2026-11-16T20:00:00.000Z', '2026-11-17T05:00:00.000Z'),
+        ).toMatchObject({
+          sharedAt: '2026-11-16T20:00:00.000Z',
+          sharedOn: '2026-11-16',
+          daysSinceShared: 1,
+        });
+      });
+
+      it("0 days for a Build shared at 00:30 and read at 23:30 the same day, its day Iraq's, not UTC's", async () => {
+        expect(
+          await sharedAndReadAt('2026-11-15T21:30:00.000Z', '2026-11-16T20:30:00.000Z'),
+        ).toMatchObject({
+          sharedAt: '2026-11-15T21:30:00.000Z',
+          sharedOn: '2026-11-16',
+          daysSinceShared: 0,
+        });
+      });
+
+      it("counts calendar days across a month's end and a year's, from Iraq's first minute of the year to the last of the twelfth day", async () => {
+        expect(
+          await sharedAndReadAt('2026-12-31T21:00:00.000Z', '2027-01-12T20:59:59.999Z'),
+        ).toMatchObject({ sharedOn: '2027-01-01', daysSinceShared: 11 });
+        expect(
+          await sharedAndReadAt('2026-11-30T20:59:59.999Z', '2026-12-01T21:00:00.000Z'),
+        ).toMatchObject({ sharedOn: '2026-11-30', daysSinceShared: 2 });
       });
     });
 
@@ -457,8 +505,8 @@ describe('a Shared Build', () => {
       async function aSharedBuildOnSale(): Promise<{
         ryzen: string;
         kit: string;
-        shop: VendorBody;
-        store: VendorBody;
+        cpuVendor: VendorBody;
+        kitVendor: VendorBody;
         ryzenOffer: string;
         kitOffer: string;
         sharedBuild: SharedBody;
@@ -466,13 +514,16 @@ describe('a Shared Build', () => {
       }> {
         const ryzen = (await aPart({ name: 'Made-up Ryzen 5 7600' })).id;
         const kit = (await aPart({ category: 'ram', name: 'Made-up 32 GB kit' })).id;
-        const shop = await aVendor('Made-up Computer Shop');
-        const store = await aVendor('Made-up Computer Store');
-        const ryzenOffer = await anOffer(shop.id, ryzen, {
+        const cpuVendor = await aVendor('Made-up Computer Corner');
+        const kitVendor = await aVendor('Made-up Computer House');
+        const ryzenOffer = await anOffer(cpuVendor.id, ryzen, {
           iqdPrice: 300000,
           inStock: true,
         });
-        const kitOffer = await anOffer(store.id, kit, { iqdPrice: 100000, inStock: true });
+        const kitOffer = await anOffer(kitVendor.id, kit, {
+          iqdPrice: 100000,
+          inStock: true,
+        });
         const frozen = [ryzen, `${kit}:2`];
         moveTheClockTo(aMovedMoment);
         const sharedBuild = (await shared(frozen)).body;
@@ -483,15 +534,24 @@ describe('a Shared Build', () => {
           today.parts.map(({ lowestPrice }) => lowestPrice?.shownPrice.amount),
         ).toEqual(['300000', '100000']);
         expect(today.vendors.map(({ id }) => id).sort()).toEqual(
-          [shop.id, store.id].sort(),
+          [cpuVendor.id, kitVendor.id].sort(),
         );
-        return { ryzen, kit, shop, store, ryzenOffer, kitOffer, sharedBuild, frozen };
+        return {
+          ryzen,
+          kit,
+          cpuVendor,
+          kitVendor,
+          ryzenOffer,
+          kitOffer,
+          sharedBuild,
+          frozen,
+        };
       }
 
       // The Shared Build still holds what it was shared with, when it was
       // shared, and sharing the same Build again still answers it.
       async function expectItAsShared(sharedBuild: SharedBody, frozen: string[]) {
-        expect(await theSharedBuild(sharedBuild.id)).toEqual({
+        expect(await theSharedBuild(sharedBuild.id)).toMatchObject({
           ...sharedBuild,
           part: frozen,
         });
@@ -499,9 +559,10 @@ describe('a Shared Build', () => {
       }
 
       it("when an Offer's price changes, while `GET v1/build` with its values answers the new price", async () => {
-        const { ryzen, shop, ryzenOffer, sharedBuild, frozen } = await aSharedBuildOnSale();
+        const { ryzen, cpuVendor, ryzenOffer, sharedBuild, frozen } =
+          await aSharedBuildOnSale();
 
-        await admin(`/v1/vendors/${shop.id}/offers/${ryzenOffer}`, {
+        await admin(`/v1/vendors/${cpuVendor.id}/offers/${ryzenOffer}`, {
           iqdPrice: 280000,
           inStock: true,
         });
@@ -514,9 +575,10 @@ describe('a Shared Build', () => {
       });
 
       it('when an Offer is put out of stock, while `GET v1/build` with its values answers its Part as an Unstocked Part', async () => {
-        const { kit, store, kitOffer, sharedBuild, frozen } = await aSharedBuildOnSale();
+        const { kit, kitVendor, kitOffer, sharedBuild, frozen } =
+          await aSharedBuildOnSale();
 
-        await admin(`/v1/vendors/${store.id}/offers/${kitOffer}`, {
+        await admin(`/v1/vendors/${kitVendor.id}/offers/${kitOffer}`, {
           iqdPrice: 100000,
           inStock: false,
         });
@@ -527,13 +589,13 @@ describe('a Shared Build', () => {
           unstocked: true,
           lowestPrice: null,
         });
-        expect(today.vendors.map(({ id }) => id)).not.toContain(store.id);
+        expect(today.vendors.map(({ id }) => id)).not.toContain(kitVendor.id);
       });
 
       it('when a Vendor is deactivated, while `GET v1/build` with its values answers its Part as no longer a Visible Part and the Vendor gone from the second view', async () => {
-        const { ryzen, shop, sharedBuild, frozen } = await aSharedBuildOnSale();
+        const { ryzen, cpuVendor, sharedBuild, frozen } = await aSharedBuildOnSale();
 
-        await deactivate(shop.id);
+        await deactivate(cpuVendor.id);
 
         await expectItAsShared(sharedBuild, frozen);
         const today = await theBuildOf(frozen);
@@ -541,7 +603,7 @@ describe('a Shared Build', () => {
           visible: false,
           unstocked: true,
         });
-        expect(today.vendors.map(({ id }) => id)).not.toContain(shop.id);
+        expect(today.vendors.map(({ id }) => id)).not.toContain(cpuVendor.id);
       });
 
       it('when a Part is edited, while `GET v1/build` with its values answers the Part as it now is', async () => {
@@ -565,14 +627,14 @@ describe('a Shared Build', () => {
         const sharedBuild = (await shared(frozen)).body;
 
         await takeThePartOutOfTheCatalog(board);
-        expect(await theSharedBuild(sharedBuild.id)).toEqual({
+        expect(await theSharedBuild(sharedBuild.id)).toMatchObject({
           ...sharedBuild,
           part: frozen,
         });
         expect((await theBuildOf(frozen)).parts.map(({ id }) => id)).toEqual([ryzen]);
 
         await takeThePartOutOfTheCatalog(ryzen);
-        expect(await theSharedBuild(sharedBuild.id)).toEqual({
+        expect(await theSharedBuild(sharedBuild.id)).toMatchObject({
           ...sharedBuild,
           part: frozen,
         });

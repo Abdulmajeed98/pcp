@@ -54,7 +54,7 @@ pnpm dashboard:inspect http://localhost:3002/catalog --scheme light --app --widt
 pnpm dashboard:inspect http://localhost:3002/vendors/00000000-0000-4000-8000-000000000001/portal --language ckb --scheme dark --app --widths 1440,768,390 --out .taste-skill/<folder>
 ```
 
-The made-up shop also holds a Platform Rate, 1,575 dinars to the dollar; `--no-platform-rate` shows the Platform Rate screen as it is before the first rate is set.
+The made-up shop also holds a Platform Rate, 1,575 dinars to the dollar; `--no-platform-rate` shows the Platform Rate screen as it is before the first rate is set. Its Referral counts are the made-up Vendors' (`made-up-referral-counts.ts`); for `break-ui` on the Referrals screen, `--referrals worstCase` answers the list at its worst beside them (the longest name the API takes, a name with no space, long Arabic and Kurdish names, names that start or end with no direction of their own, a count of one, counts in the tens of thousands and deactivated Vendors), `--referrals one` one Vendor with one Referral, and `--referrals none` no Vendor at all (sharing's code review).
 
 It needs the services, the API (3001) and the dashboard (3002) running and the catalog imported. Every ticket that builds or changes a dashboard screen runs it on each screen it changed, in both schemes, the Vendor portal's in Kurdish and in English, before it closes: every FAIL fixed, every WARN fixed or defended in the ticket. The MVP spec's **The redesign's conventions** says the rest.
 

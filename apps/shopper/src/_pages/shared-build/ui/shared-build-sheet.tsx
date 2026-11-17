@@ -33,12 +33,10 @@ import { TheLinkOnTheSheet } from './what-the-reader-can-do';
 export async function SharedBuildSheet({
   shared,
   answer,
-  now,
   isYours,
 }: {
   shared: SharedBuildResponse;
   answer: BuildResponse;
-  now: Date;
   // Whether the browser holds this very Build.
   isYours: boolean;
 }) {
@@ -49,7 +47,7 @@ export async function SharedBuildSheet({
     getTranslations('CategoryPage'),
   ]);
   const status = statusOf(answer, language, 'shared');
-  const when = whenShared(language, shared.sharedAt, now);
+  const when = whenShared(language, shared);
   const left = shared.part.length - answer.parts.length;
   const converted = answer.parts.some(
     (part) => part.lowestPrice?.timesQuantity.converted === true,

@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { OutArrow, SubmitOnce } from '@/shared/ui';
 
 // Send on WhatsApp (DESIGN.md's Send on WhatsApp, SHR-5): a cell of the
@@ -69,7 +71,7 @@ export function NoWhatsAppNumber({ words }: { words: string }) {
 // tab opened at that line (DESIGN.md's Send on WhatsApp): that line alone
 // prints in, 150 ms after the first paint, so that the eye finds it, its
 // space the page's from the first frame (Motion 12).
-export function SendRefusedSaid({ words, id }: { words: string; id?: string }) {
+export function SendRefusedSaid({ words, id }: { words: ReactNode; id?: string }) {
   return (
     <output
       id={id}

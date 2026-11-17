@@ -23,16 +23,16 @@ const names = [
 describe('the WhatsApp message', () => {
   it('is, in English, the sentence the owner chose, then the link', () => {
     expect(theMessage('en', 'Made-up PC Parts', linkIn('en'))).toBe(
-      `Hello Made-up PC Parts, I planned this PC on PC Parts and Prices: do you have its Parts?\n${linkIn('en')}`,
+      `Hello \u2068Made-up PC Parts\u2069, I planned this PC on PC Parts and Prices: do you have its Parts?\n${linkIn('en')}`,
     );
   });
 
   it('is, in Kurdish and in Arabic, the drafts for LANG-7, then the link', () => {
     expect(theMessage('ckb', 'Made-up PC Parts', linkIn('ckb'))).toBe(
-      `سڵاو Made-up PC Parts، ئەم کۆمپیوتەرەم لە پارچە و نرخی کۆمپیوتەر داناوە: ئایا پارچەکانیتان هەیە؟\n${linkIn('ckb')}`,
+      `سڵاو \u2068Made-up PC Parts\u2069، ئەم کۆمپیوتەرەم لە پارچە و نرخی کۆمپیوتەر داناوە: ئایا پارچەکانیتان هەیە؟\n${linkIn('ckb')}`,
     );
     expect(theMessage('ar', 'Made-up PC Parts', linkIn('ar'))).toBe(
-      `مرحبًا Made-up PC Parts، خطّطت لهذا الحاسوب على قطع الحاسوب وأسعارها: هل لديكم قطعه؟\n${linkIn('ar')}`,
+      `مرحبًا \u2068Made-up PC Parts\u2069، خطّطت لهذا الحاسوب على قطع الحاسوب وأسعارها: هل لديكم قطعه؟\n${linkIn('ar')}`,
     );
   });
 
@@ -41,6 +41,18 @@ describe('the WhatsApp message', () => {
       const [sentence, ...rest] = theMessage(language, name, linkIn(language)).split('\n');
       expect(sentence).toContain(name);
       expect(rest).toEqual([linkIn(language)]);
+    });
+
+    // A message is plain text, where no `bdi` can go, so the name is kept
+    // apart as `AsWritten` keeps it on a page: between a first-strong
+    // isolate and its end (U+2068, U+2069), which takes its direction from
+    // its own first letter. Without them a Latin name that ends in a stop
+    // or a mark, "Tech Co." or "Ali & Sons!", is drawn ".Tech Co" inside a
+    // Kurdish or Arabic sentence, as a chat app draws it.
+    it.each(names)('keeps the Vendor %j apart, in its own direction', (name) => {
+      const [sentence] = theMessage(language, name, linkIn(language)).split('\n');
+      expect(sentence).toContain(`⁨${name}⁩`);
+      expect(sentence.match(/[⁦-⁩]/g)).toEqual(['⁨', '⁩']);
     });
 
     it('holds the link in its language on a line of its own, last', () => {
@@ -75,8 +87,9 @@ describe("the chat's address", () => {
       chatWithTheVendor(
         'ar',
         {
+          id: '0b7f4c2e-9a31-4d58-8e6f-2c1a5d9b3e70',
           name: 'متجر التجربة للإلكترونيات',
-          whatsAppNumber: { international: '+9647501234567' },
+          whatsAppNumber: { international: '+9647501234567', national: '0750 123 4567' },
         },
         linkIn('ar'),
       ),

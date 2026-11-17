@@ -4,11 +4,7 @@ import { cookies } from 'next/headers';
 
 import { buildAddress, buildIn, partsCountedIn, writeTheBuild } from '@/entities/build';
 import { ChangesInPlace, refusalIn } from '@/features/change-the-build';
-import {
-  refusedSendIn,
-  SendRefusedSaid,
-  vendorLineAnchor,
-} from '@/features/send-on-whatsapp';
+import { refusedSendIn, SendRefusedWithoutItsLine } from '@/features/send-on-whatsapp';
 import { refusedShareIn, ShareThisBuild } from '@/features/share-a-build';
 import { chosenCurrency } from '@/shared/currency';
 import { type Photograph, photographs } from '@/shared/photographs';
@@ -107,18 +103,7 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
                   )
                 )}
                 {sendRefused !== undefined && answer.vendors.length === 0 && (
-                  <SendRefusedSaid
-                    id={
-                      sendRefused.vendor === undefined
-                        ? undefined
-                        : vendorLineAnchor(sendRefused.vendor)
-                    }
-                    words={
-                      sendRefused.refused === 'notReachable'
-                        ? t('send.refused.notReachableUnnamed')
-                        : t('send.refused.notOpened')
-                    }
-                  />
+                  <SendRefusedWithoutItsLine refused={sendRefused} />
                 )}
               </BuildSlip>
               <BuildSheet answer={answer} refused={refused} />

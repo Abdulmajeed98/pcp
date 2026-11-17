@@ -50,11 +50,11 @@ export class SharedBuildController {
 
     return result.pipe(
       Either.map((output) => {
-        const shared = output.getShared();
+        const outcome = output.getOutcome();
         // 201 when this share stored it, which a POST answers unless told,
         // and 200 when an earlier share had.
-        if (!shared.isStoredNow()) response.status(HttpStatus.OK);
-        return BuildSharedResponse.of(shared.getSharedBuild());
+        if (!outcome.isStoredNow()) response.status(HttpStatus.OK);
+        return BuildSharedResponse.of(outcome.getSharedBuild());
       }),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
@@ -76,7 +76,9 @@ export class SharedBuildController {
     );
 
     return result.pipe(
-      Either.map((output) => SharedBuildResponse.of(output.getSharedBuild())),
+      Either.map((output) =>
+        SharedBuildResponse.of(output.getSharedBuild(), output.getReadAt()),
+      ),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }
