@@ -189,7 +189,10 @@ async function expectTheChat(
   expect(chat.number).toBe(await whatsAppDigitsOf(tab.request, vendor.vendorId));
   expect(chat.lines, 'one sentence, then the link').toHaveLength(2);
   const [sentence, link] = chat.lines as [string, string];
-  expect(sentence).toContain(vendor.vendorName);
+  // The name as the Vendor wrote it, kept apart in its own direction
+  // between a first-strong isolate and its end, since a message is plain
+  // text, where no `bdi` can go.
+  expect(sentence).toContain(`⁨${vendor.vendorName}⁩`);
   expectNoPriceIn(sentence, vendor.vendorName);
   return { sentence, link };
 }

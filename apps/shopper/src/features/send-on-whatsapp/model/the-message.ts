@@ -10,12 +10,19 @@ import { createTranslator } from 'next-intl';
 // the Shared Build's link on a line of its own. It names no price, so that a
 // chat the Vendor keeps never shows a price that has since changed, and no
 // city. The name is handed to the sentence as it is, never read as words of
-// the message, and no invisible direction mark is put around it, since some
-// phones draw one as a box: the message takes its direction from its first
-// word, and the name keeps its own inside it.
+// the message. The message takes its direction from its first word, and the
+// name keeps its own inside it, kept apart between a first-strong isolate
+// and its end (U+2068 and U+2069), as `AsWritten` keeps a name apart on a
+// page, since a message is plain text, where no `bdi` can go: without them
+// a Latin name that ends in a stop or a mark, "Tech Co.", is drawn
+// ".Tech Co" inside a Kurdish or Arabic sentence (sharing's code review).
+// Both are invisible characters a renderer must not draw (Unicode's default
+// ignorables, since 2013); how the WhatsApp app draws them is a check on a
+// phone after hosting.
 export function theMessage(language: Language, vendorName: string, link: string): string {
   const t = createTranslator({ locale: language, messages: shopperMessages[language] });
-  return `${t('BuildPage.send.message', { vendor: vendorName, site: t('Site.name') })}\n${link}`;
+  const vendor = `\u2068${vendorName}\u2069`;
+  return `${t('BuildPage.send.message', { vendor, site: t('Site.name') })}\n${link}`;
 }
 
 // The chat a tap on "send on WhatsApp" opens in its new tab: WhatsApp's chat
