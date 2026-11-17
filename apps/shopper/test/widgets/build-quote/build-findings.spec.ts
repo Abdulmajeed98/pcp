@@ -2,7 +2,7 @@ import type { BuildResponse } from '@pcp/api-client';
 import type { Language } from '@pcp/i18n';
 import { describe, expect, it } from 'vitest';
 
-import { findingsOf, type Found, powerDrawOf } from '@/_pages/build';
+import { findingsOf, type Found, powerDrawOf } from '@/widgets/build-quote';
 
 type Answered = Pick<BuildResponse, 'parts' | 'outcomes' | 'estimatedPowerDraw'>;
 type Category = BuildResponse['stillNeeded'][number];

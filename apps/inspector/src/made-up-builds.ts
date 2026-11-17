@@ -127,7 +127,10 @@ export function buildCookieOf(shop: ShoppersShop, build: MadeUpBuild): string {
 // A made-up Build as the API's `part` values give it, in its order: each
 // Part's identifier in the shop, followed for a RAM kit or a drive by `:`
 // and its quantity. A Part the shop does not offer stops the command.
-export function partValuesOf(shop: ShoppersShop, build: MadeUpBuild): string[] {
+export function partValuesOf(
+  shop: Pick<ShoppersShop, 'parts'>,
+  build: MadeUpBuild,
+): string[] {
   return build.map(({ part, quantity }) => {
     const read = [...shop.parts.values()].find(
       ({ summary }) => summary.category === part.category && summary.name === part.name,

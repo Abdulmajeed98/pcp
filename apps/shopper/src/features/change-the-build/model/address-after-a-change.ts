@@ -3,12 +3,12 @@ import type { Language } from '@pcp/i18n';
 import {
   buildAddress,
   type Category,
-  identifierIn,
   isCategory,
   isKitOrDrive,
   type Refusal,
 } from '@/entities/build';
 import { nameInTheAddress } from '@/entities/category';
+import { identifierIn } from '@/shared/lib';
 
 // The address each form that changes the Build is answered with, 303, as the
 // switches' forms are: the Build page, in the form's language, at the place

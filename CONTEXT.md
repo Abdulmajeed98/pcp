@@ -69,8 +69,12 @@ An Offer a Shopper may see: one that is not an Expired Offer and whose Vendor is
 _Avoid_: Live offer, active offer, current offer, published offer
 
 **Referral**:
-One tap by a Shopper on the button that sends their Build to a Vendor over WhatsApp.
+One tap by a Shopper on the button that sends a Shared Build's link to a Vendor over WhatsApp, from the Build page or from the Shared Build's own page.
 _Avoid_: Lead, order, enquiry, click
+
+**Referral count**:
+How many Referrals name a Vendor, over all time; only the Admin and that Vendor see it.
+_Avoid_: Leads, clicks, score
 
 ### Logins
 
@@ -129,6 +133,10 @@ _Avoid_: User, customer, builder
 **Build**:
 A Shopper's chosen set of Parts intended to make one PC.
 _Avoid_: Cart, basket, configuration, list
+
+**Shared Build**:
+A frozen copy of a Build's Parts and quantities, stored by the platform behind a link, which never changes.
+_Avoid_: Saved build, snapshot, public build, build link
 
 **Complete Build**:
 A Build with a CPU, motherboard, RAM, storage, case and PSU, plus a GPU and a CPU cooler where the CPU does not provide them.

@@ -24,6 +24,7 @@ import {
   rulesInAll,
   type WordedOutcome,
 } from '../model/findings';
+import type { Whose } from '../model/status';
 import { NamedUnder, PartName } from './named-under';
 
 // The heading of each group, keyed by what its outcomes found.
@@ -44,14 +45,28 @@ const groupsOf = {
 // sheet, how many rules were checked and passed and the Estimated power
 // draw, or the Parts whose TDP is missing; and its closing line, that the
 // Build is kept as it is: the page never stops the Shopper keeping a Build
-// the rules find fault with (BLD-4). An empty Build has no rules' sheet.
+// the rules find fault with (BLD-4). An empty Build has no rules' sheet. A
+// Shared Build's sheet speaks of the Parts in this Build and closes with how
+// to change one, copying it into your Build (DESIGN.md's The Shared Build
+// page); for the browser that holds that very Build it closes with nothing,
+// since its page already says the Build is theirs and offers no copy (story
+// 30, the code review's fixes).
 //
 // It is below the first screen, so it prints as it comes into view (Motion
 // 1). Each line a change in place may bring or take, a group and an
 // outcome, is named for the page's script, and so are the space they share
 // and each figure a change may alter, so that what a change brings prints
 // in and nothing below it jumps (Motion 11).
-export async function RulesSheet({ answer }: { answer: BuildResponse }) {
+export async function RulesSheet({
+  answer,
+  whose = 'yours',
+  isYours = false,
+}: {
+  answer: BuildResponse;
+  whose?: Whose;
+  // Whether the browser holds this very Shared Build.
+  isYours?: boolean;
+}) {
   const [language, t] = await Promise.all([
     getLocale(),
     getTranslations('BuildPage.rules'),
@@ -80,7 +95,7 @@ export async function RulesSheet({ answer }: { answer: BuildResponse }) {
       >
         <Sheet print="in-view">
           <SheetTitle id="rules-title">{t('title')}</SheetTitle>
-          <SheetNote>{t('note', { rules: formatNumber(rulesInAll) })}</SheetNote>
+          <SheetNote>{t('note', { whose, rules: formatNumber(rulesInAll) })}</SheetNote>
           {/* What the rules found, read to a screen reader when a change in
               place alters it, its space moving with what it says. */}
           <div data-space="rules" className="grid grid-cols-[minmax(0,1fr)]">
@@ -91,7 +106,7 @@ export async function RulesSheet({ answer }: { answer: BuildResponse }) {
                 className="mx-auto mt-4 block max-w-[34ch] text-center text-lg text-balance"
               >
                 {findings.passed === 0
-                  ? t('noneApply')
+                  ? t('noneApply', { whose })
                   : t('allPassed', {
                       count: findings.passed,
                       countText: formatNumber(findings.passed),
@@ -173,9 +188,14 @@ export async function RulesSheet({ answer }: { answer: BuildResponse }) {
               />
             )}
           </ul>
-          <p className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground">
-            {t('kept')}
-          </p>
+          {!(whose === 'shared' && isYours) && (
+            <p
+              data-testid="rules-closing"
+              className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground"
+            >
+              {t('kept', { whose })}
+            </p>
+          )}
         </Sheet>
       </div>
     </section>

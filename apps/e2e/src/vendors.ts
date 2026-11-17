@@ -227,12 +227,14 @@ export async function logInForTheFirstTime(
 // browser of its own that is closed afterwards. It gives back what the Vendor
 // logs in with from then on, and its name and identifier, for a test that
 // needs a Vendor whose Login is set up, as a real Vendor's is after its first
-// login.
+// login. Both browsers run script, which the dashboard needs, since a
+// context made in a set-up hook takes the options of the worker's first line
+// (browse ticket 10), which may switch script off.
 export async function aMadeUpVendorThatHasLoggedIn(
   browser: Browser,
   details: MadeUpVendorDetails = {},
 ): Promise<VendorLoginDetails> {
-  const adminsContext = await browser.newContext();
+  const adminsContext = await browser.newContext({ javaScriptEnabled: true });
   let vendor: MadeUpVendor;
   try {
     vendor = await createAMadeUpVendorAsTheAdmin(

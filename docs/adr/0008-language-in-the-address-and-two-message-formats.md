@@ -10,6 +10,10 @@ Two decisions of the `languages` module, which are costly to undo once pages, li
 
 A Part's photo is served by the Shopper app at `/photos/{photoId}` (browse ticket 09), outside the language that starts every other Shopper address, and next-intl's proxy leaves it alone. The decision above is about pages, and a photo is not one: it is the same picture in every language, with nothing in it to read, so it has no language to carry, and a language in its address would only make three addresses of one picture. With one address a preview's Open Graph image names the same picture whatever the page's language, and a browser or a cache in front of the platform keeps it once. Every page's address still starts with its language. The browse module's code review raised it, and kept the address (Standards 4).
 
+## Amended 18 November 2026: a Shared Build's link keeps the rule
+
+The consequence below left it to `sharing` whether a shared link keeps the rule, and it does. A Shared Build's page, `/{language}/builds/{id}` ([ADR-0014](0014-shared-builds-as-frozen-part-values-and-referrals-as-rows.md)), is a Shopper address like any other, with its language first. Sharing answers with that page in the language of the page the Build was shared from, and "send on WhatsApp" writes the link in the page's language, so a Shared Build's link opens in its sender's language: the sender and whoever opens it read the same words. Opening it is remembered as opening any Shopper address is, so a reader who opens a Kurdish link then reads their own Build in Kurdish until they use the switch, and the switches keep the page, as they keep every page. The sharing spec took this on 17 November 2026, among the decisions the owner may want to revisit; a link opened in the reader's remembered language instead would show the sender and the reader different words. `sharing` ticket 06 recorded it.
+
 ## Considered Options
 
 For the Shopper's address:
@@ -24,7 +28,7 @@ For the dashboard's library:
 
 ## Consequences
 
-- Every Shopper link carries its language. A link handed to someone else opens in the language its sender read. Opening a link in another language changes what the Shopper app remembers, because next-intl remembers the language of the last address opened, and a use of the switch is such a visit. `sharing` decides whether a shared link keeps that rule.
+- Every Shopper link carries its language. A link handed to someone else opens in the language its sender read. Opening a link in another language changes what the Shopper app remembers, because next-intl remembers the language of the last address opened, and a use of the switch is such a visit. A Shared Build's link keeps that rule: it opens in its sender's language, and opening it is remembered as any Shopper address is (the amendment of 18 November 2026).
 - A Shopper page is never served without a language, so a cache can keep each language's page apart, and next-intl names each page's address in the other two languages for search engines.
 - The platform has two message formats. A sentence that counts is one ICU message with its plural forms inside it in the Shopper app's files, and one i18next key for each plural form in the dashboard's: six for Arabic. A value is `{name}` in one and an element such as `<name/>` in the other. The README beside the files says how each is corrected, and `pnpm check` fails on a fault in either.
 - Text that both frontends show with the same wording, such as the Category names, has to be plain text, in the shared terms.

@@ -9,6 +9,11 @@ import { developmentAdmin } from './development-admin.ts';
 import { buildCookieOf, madeUpBuilds } from './made-up-builds.ts';
 import { madeUpPhotos } from './made-up-photos.ts';
 import {
+  madeUpSharedBuildId,
+  madeUpSharedBuilds,
+  type MadeUpSharedBuildName,
+} from './made-up-shared-builds.ts';
+import {
   isTaken,
   shoppersOwnFiles,
   startTheShopperApp,
@@ -46,6 +51,13 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // (`made-up-builds.ts`) in every tab's Build cookie, as the Build page's
 // forms would; without it the Build is empty, as in a fresh browser. Both
 // servers are stopped when it ends, however it ends.
+//
+// A Shared Build page is opened by its path, `/builds/<identifier>`, with
+// one of the made-up Shared Builds' identifiers (`made-up-shared-builds.ts`),
+// which the command prints as it starts: the one made from `complete`, the
+// one made from `worstCase`, and one whose Parts have all left the catalog.
+// With `--build complete`, the browser holds the Build the first was made
+// from, so its page is in its "This is your Build" state.
 //
 // It exits with the inspector's own status, 0 with no FAIL findings and 1
 // with some, or with 3, before any finding is written, when it cannot start:
@@ -230,8 +242,11 @@ try {
   };
   Browser.launch = async () => browser;
 
+  const sharedBuildPages = (Object.keys(madeUpSharedBuilds) as MadeUpSharedBuildName[])
+    .map((name) => `/builds/${madeUpSharedBuildId(name)} (${name})`)
+    .join(', ');
   console.log(
-    `The stand-in API answers at ${standIn.url} from the made-up shop: ${shop.vendors.length} Vendors and ${shop.offers.length} Offers of ${shop.parts.size} real Parts. The inspection's Shopper app answers at ${shopperOrigin}.`,
+    `The stand-in API answers at ${standIn.url} from the made-up shop: ${shop.vendors.length} Vendors and ${shop.offers.length} Offers of ${shop.parts.size} real Parts, and ${shop.sharedBuilds.size} Shared Builds, whose pages are ${sharedBuildPages}. The inspection's Shopper app answers at ${shopperOrigin}.`,
   );
 } catch (error) {
   await browser.close();

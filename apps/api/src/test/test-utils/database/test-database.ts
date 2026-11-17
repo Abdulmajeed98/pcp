@@ -67,6 +67,22 @@ export async function keepSpecificationsAsTheyAre(
   }
 }
 
+// A Part taken out of the catalog, as no endpoint can: nothing in the
+// platform deletes a Part, yet a Shared Build must outlive one that leaves,
+// as an old Build does in a Shopper's cookie. The Part has no Offer and no
+// photo, whose references would refuse it. It is the fourth named exception
+// that arranges data through the database rather than the endpoints, after
+// `changeTheRateAndDeactivateAVendorWhileReading` below.
+export async function takeThePartOutOfTheCatalog(partId: string): Promise<void> {
+  const client = new Client(connectionOf(testDatabaseSettings()));
+  await client.connect();
+  try {
+    await client.query('DELETE FROM part WHERE id = $1', [partId]);
+  } finally {
+    await client.end();
+  }
+}
+
 // A row of the Offer history, as the database holds it.
 export type OfferHistoryRow = {
   changedAt: Date;
@@ -201,12 +217,13 @@ async function addARate(changing: Client, iqdPerUsd: number, setAt: Date): Promi
 }
 
 // A change made in one transaction, which holds one table locked from its
-// start until a read has had to wait for it, and only then commits; and what
-// the read answered.
+// start until as many requests as given, one read unless told, have had to
+// wait for it, and only then commits; and what the requests answered.
 async function changeWhileReading<T>(
   lockedTable: string,
   change: (changing: Client) => Promise<void>,
   read: () => Promise<T>,
+  waiting = 1,
 ): Promise<T> {
   const changing = new Client(connectionOf(testDatabaseSettings()));
   const watching = new Client(connectionOf(testDatabaseSettings()));
@@ -218,13 +235,17 @@ async function changeWhileReading<T>(
     await change(changing);
 
     const reading = read();
-    // Until the read waits for the lock.
+    // Until as many requests as given wait for the lock.
     for (let tries = 0; ; tries += 1) {
       const { rows } = await watching.query<{ waiting: number }>(
         'SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted',
       );
-      if (rows[0].waiting > 0) break;
-      if (tries > 200) throw new Error('No read waited for the locked table.');
+      if (rows[0].waiting >= waiting) break;
+      if (tries > 500) {
+        throw new Error(
+          `Fewer than ${String(waiting)} requests waited for the locked table.`,
+        );
+      }
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
     await changing.query('COMMIT');
@@ -234,6 +255,27 @@ async function changeWhileReading<T>(
     await changing.end();
     await watching.end();
   }
+}
+
+// Requests that meet a table at one moment, as requests sent at once can:
+// the table is held locked while they are sent, each waits for it, and it is
+// let go once as many as given are waiting, so that none of them reads or
+// writes it before the others have reached it. Requests sent at once without
+// it can reach the table one after another, each done before the next comes,
+// and then a read before an insert hides a missing unique rule (`offers`
+// ticket 01).
+//
+// It is the fifth named exception that arranges data through the database,
+// after `takeThePartOutOfTheCatalog`, for the same reason as
+// `changeTheRateAndTheOffersWhileReading`: no endpoint holds a table locked.
+// The two lock-and-wait helpers share `changeWhileReading`, this one making
+// no change while it holds the table.
+export function sentWhileTheTableIsHeld<T>(
+  lockedTable: 'shared_build',
+  waiting: number,
+  send: () => Promise<T>,
+): Promise<T> {
+  return changeWhileReading(lockedTable, async () => {}, send, waiting);
 }
 
 // A fault planted in the database for as long as the function runs: a rule

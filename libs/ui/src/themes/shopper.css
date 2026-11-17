@@ -258,6 +258,8 @@
   --scan: 700ms;
   --unfold: 250ms;
   --fold: 150ms;
+  --swap: 150ms;
+  --tick-print: 200ms;
   --line-print: 450ms;
   --settle-again: 300ms;
   --leave: 100ms;
@@ -1237,11 +1239,18 @@
 }
 
 /*
- * Emptying the Build is a disclosure whose space opens as the filters' fold
- * does, over 250 ms as its contents fade in, and folds in 150 ms, where the
- * browser can animate a disclosure's height, and at once where it cannot or
- * with reduced motion, so that the sheet's foot moves down rather than jumps.
- * Unlike the filters' fold it stays a fold at every width.
+ * A fold of the Build page, an outcome's Parts, a Vendor's Parts or the
+ * Vendors past the fifth, is a disclosure whose space opens as the filters'
+ * fold does, over 250 ms as its contents fade in, and folds in 150 ms, where
+ * the browser can animate a disclosure's height, and at once where it cannot
+ * or with reduced motion, so that what is below it moves down rather than
+ * jumps. Unlike the filters' fold it stays a fold at every width.
+ *
+ * The two confirmations, Empty the Build and Copy into my Build, are marked
+ * `data-confirmation`: with reduced motion they still open and fold, in 150
+ * ms each way, where the other folds open at once, so that a confirmation
+ * never jumps the sheet (the No Snap Rule, the owner's answer of 17 November
+ * 2026, sharing ticket 02).
  */
 @utility unfolds-in-place {
   interpolate-size: allow-keywords;
@@ -1266,6 +1275,127 @@
   @media (prefers-reduced-motion: reduce) {
     &::details-content {
       transition: none;
+    }
+
+    &[data-confirmation]::details-content {
+      transition:
+        block-size var(--fold) var(--ease-out),
+        opacity var(--fold) var(--ease-out),
+        content-visibility var(--fold) allow-discrete;
+    }
+
+    &[data-confirmation][open]::details-content {
+      transition-duration: var(--fold);
+    }
+  }
+}
+
+/*
+ * 12. Sharing, copying and sending: a button whose words change in place
+ * holds the width of its widest words, every label in one cell of a grid, so
+ * that nothing beside or under it moves (the No Snap Rule). The words shown
+ * are the label not hidden from readers; the others hold their room unseen.
+ * A busy button's words change at once, since the answer to a tap is
+ * instant. A button marked `data-swaps`, Copy the link, cross-fades its
+ * words (`--swap`, the leaving words blurring 2 pixels) and prints its tick
+ * in from its start edge (`--tick-print`, 60 ms after the words), the tick
+ * never mirrored itself. With reduced motion the words cross-fade with no
+ * blur and the tick is whole at once.
+ */
+@utility held-words {
+  display: inline-grid;
+  max-width: 100%;
+  align-items: center;
+  justify-items: center;
+
+  & > [data-words] {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  & > [data-words][aria-hidden='true'] {
+    visibility: hidden;
+  }
+
+  &[data-swaps] > [data-words] {
+    transition:
+      opacity var(--swap) var(--ease-out),
+      filter var(--swap) var(--ease-out),
+      visibility 0s linear;
+  }
+
+  &[data-swaps] > [data-words][aria-hidden='true'] {
+    opacity: 0;
+    filter: blur(2px);
+    transition:
+      opacity var(--swap) var(--ease-out),
+      filter var(--swap) var(--ease-out),
+      visibility 0s linear var(--swap);
+  }
+
+  & [data-tick] {
+    clip-path: inset(0);
+    transition: clip-path var(--tick-print) var(--ease-out) 60ms;
+  }
+
+  & > [aria-hidden='true'] [data-tick] {
+    clip-path: inset(0 100% 0 0);
+    transition: none;
+  }
+
+  &:where(:dir(rtl)) > [aria-hidden='true'] [data-tick] {
+    clip-path: inset(0 0 0 100%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &[data-swaps] > [data-words] {
+      filter: none;
+    }
+
+    & [data-tick],
+    & > [aria-hidden='true'] [data-tick] {
+      clip-path: none;
+      transition: none;
+    }
+  }
+}
+
+/*
+ * A Shared Build's link, printed on its slip (DESIGN.md's The link and Share
+ * the link): one left-to-right line that breaks anywhere, since an address
+ * has no word to break at, selected whole by one long press or click, which
+ * is how it is copied without script. It is content, so it keeps the phone's
+ * own copy menu.
+ */
+@utility printed-link {
+  direction: ltr;
+  unicode-bidi: isolate;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  text-align: left;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+/*
+ * A refused send (DESIGN.md's Motion 12): the page the new tab opens at the
+ * Vendor's line is shown printed, as a page opened at an anchor is, and the
+ * refusal under the line alone prints in, as a line the Build gains does
+ * (11's `line-prints`, `--line-print`, uncovered from its top edge while it
+ * slides 8 pixels down), 150 ms after the first paint, so that the eye finds
+ * it. It moves nothing around it: its space is the page's from the first
+ * frame. Without script or with reduced motion it is there at once, and on a
+ * page come back to it is shown printed.
+ */
+@utility prints-under-its-line {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    animation: line-prints var(--line-print) var(--ease-out) 150ms both;
+
+    :root[data-returned] & {
+      animation: none;
     }
   }
 }

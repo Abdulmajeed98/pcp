@@ -1,8 +1,4 @@
-'use client';
-
-import { type MouseEvent, useRef } from 'react';
-
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, FoldItAgain } from '@/shared/ui';
 
 // Emptying the Build (DESIGN.md's Emptying the Build): at the sheet's foot,
 // "Empty the Build", a cell of the Board, centred, is the summary of a
@@ -14,7 +10,9 @@ import { buttonVariants } from '@/shared/ui';
 // and "Keep them", a cell of the Board, which folds it again: with script in
 // place, without it as a link to the Build page, which opens folded. It is
 // the Build's one confirmation. Its space opens and folds as the filters'
-// fold does.
+// fold does, and in 150 ms each way with reduced motion, where the filters'
+// fold opens at once, so that the confirmation never jumps the sheet
+// (`data-confirmation`, the owner's answer of 17 November 2026).
 export function EmptyTheBuild({
   action,
   buildAddress,
@@ -24,20 +22,10 @@ export function EmptyTheBuild({
   buildAddress: string;
   words: { cell: string; warning: string; confirm: string; keep: string };
 }) {
-  const disclosure = useRef<HTMLDetailsElement>(null);
-
-  function keep(event: MouseEvent<HTMLAnchorElement>) {
-    const details = disclosure.current;
-    if (details === null) return;
-    event.preventDefault();
-    details.open = false;
-    details.querySelector('summary')?.focus();
-  }
-
   return (
     <details
-      ref={disclosure}
       data-testid="empty-the-build"
+      data-confirmation=""
       className="unfolds-in-place mt-group text-center"
     >
       <summary
@@ -58,14 +46,13 @@ export function EmptyTheBuild({
           >
             {words.confirm}
           </button>
-          <a
+          <FoldItAgain
             href={buildAddress}
-            data-testid="keep-them"
-            onClick={keep}
+            testId="keep-them"
             className={buttonVariants({ kind: 'board', className: 'max-w-full' })}
           >
             {words.keep}
-          </a>
+          </FoldItAgain>
         </form>
       </div>
     </details>

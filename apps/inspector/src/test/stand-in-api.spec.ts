@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import type {
   BuildResponse,
+  SharedBuildResponse,
   VisibleOfferOfVendorPageResponse,
   VisibleOfferResponse,
   VisiblePartPageResponse,
@@ -9,6 +10,8 @@ import type {
 } from '@pcp/api-client';
 
 import {
+  a650bn,
+  a850gl,
   b650Tomahawk,
   barraCuda,
   type CatalogPart,
@@ -21,6 +24,7 @@ import {
   palit4070Super,
   rm850e,
   ryzen5600,
+  ryzen7600X,
   ryzen7800X3D,
   samsung990Pro,
   theLongestName,
@@ -844,6 +848,7 @@ describe('the stand-in API', () => {
       expect(vendors[0]).toEqual({
         id: madeUpIdentifier(1),
         name: 'Made-up PC Parts',
+        hasWhatsAppNumber: true,
         total: iqd('710000'),
         partsInStock: [
           { partId: cpu, shownPrice: iqd('575000'), timesQuantity: iqd('575000') },
@@ -854,6 +859,7 @@ describe('the stand-in API', () => {
       expect(vendors[2]).toEqual({
         id: madeUpIdentifier(4),
         name: 'Pretend Tech',
+        hasWhatsAppNumber: false,
         total: iqd('559000'),
         partsInStock: [
           { partId: cpu, shownPrice: iqd('559000'), timesQuantity: iqd('559000') },
@@ -870,6 +876,7 @@ describe('the stand-in API', () => {
         {
           id: madeUpIdentifier(1),
           name: 'Made-up PC Parts',
+          hasWhatsAppNumber: true,
           total: { currency: 'USD', amount: '327.00', converted: false },
           partsInStock: [
             {
@@ -1062,13 +1069,96 @@ describe('the stand-in API', () => {
     });
   });
 
+  describe('a Shared Build', () => {
+    const sharedBuild = (counter: number) =>
+      get(`/v1/shared-builds/${madeUpIdentifier(counter)}`);
+
+    it("made from the complete made-up Build is answered with its Parts and quantities, in the catalog's order of Categories, and when it was shared, three hours before now, today in Iraq's time", () => {
+      const answer = sharedBuild(700001);
+
+      expect(answer.status).toBe(200);
+      expect(answer.refused).toBeUndefined();
+      expect(answer.body).toEqual({
+        id: madeUpIdentifier(700001),
+        sharedAt: '2026-10-21T06:00:00.000Z',
+        sharedOn: '2026-10-21',
+        daysSinceShared: 0,
+        part: [
+          idOf(ryzen7600X),
+          idOf(nhD15),
+          idOf(b650Tomahawk),
+          `${idOf(vengeance)}:2`,
+          `${idOf(samsung990Pro)}:1`,
+          idOf(palit4070Super),
+          idOf(theOnlyCase),
+          idOf(a850gl),
+        ],
+      });
+    });
+
+    it('made from the worst-case Build holds its 22 Parts, each of its 8 RAM kits and 8 drives with its quantity, shared 12 days before now', () => {
+      const body = sharedBuild(700002).body as SharedBuildResponse;
+
+      expect(body.sharedAt).toBe('2026-10-09T05:00:00.000Z');
+      expect(body.sharedOn).toBe('2026-10-09');
+      expect(body.daysSinceShared).toBe(12);
+      expect(body.part.length).toBe(22);
+      expect(body.part.slice(0, 4)).toEqual([
+        idOf(ryzen7800X3D),
+        idOf(theLongestName),
+        idOf(b650Tomahawk),
+        `${idOf(vengeance)}:2`,
+      ]);
+      expect(body.part.filter((value) => value.includes(':'))).toHaveLength(16);
+      expect(body.part.slice(-3)).toEqual([
+        idOf(dual2060Super),
+        idOf(theOnlyCase),
+        idOf(a650bn),
+      ]);
+    });
+
+    it('whose Parts no catalog holds is answered, shared 400 days before now, and the Build of its Parts holds none', () => {
+      const body = sharedBuild(700003).body as SharedBuildResponse;
+      const build = buildOf('IQD', ...body.part).body as BuildResponse;
+
+      expect(body.sharedAt).toBe('2025-09-16T09:00:00.000Z');
+      expect(body.sharedOn).toBe('2025-09-16');
+      expect(body.daysSinceShared).toBe(400);
+      expect(body.part).toHaveLength(8);
+      expect(body.part.filter((value) => value.includes(':'))).toHaveLength(3);
+      expect(build.parts).toEqual([]);
+      expect(build.vendors).toEqual([]);
+    });
+
+    it('is not found for an identifier the shop holds none of, or text that is not one, as the API answers either', () => {
+      for (const sharedBuildId of [madeUpIdentifier(799999), 'not-an-identifier']) {
+        const answer = get(`/v1/shared-builds/${sharedBuildId}`);
+
+        expect(answer.status).toBe(404);
+        expect(answer.refused).toBeUndefined();
+        expect(answer.body).toEqual({
+          errors: [
+            {
+              code: 'SHARED_BUILD_NOT_FOUND',
+              title: 'shared_build_not_found_title',
+              detail: 'shared_build_not_found_details',
+            },
+          ],
+        });
+      }
+    });
+  });
+
   describe('what it does not answer', () => {
-    it('refuses every write, whatever its address, and says why', () => {
+    it('refuses every write, whatever its address, sharing a Build and recording a Referral among them, and says why', () => {
       for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
         for (const path of [
           `/v1/visible-vendors/${madeUpIdentifier(2)}`,
           '/v1/vendors',
           '/v1/platform-rate',
+          '/v1/shared-builds',
+          `/v1/shared-builds/${madeUpIdentifier(700001)}`,
+          `/v1/shared-builds/${madeUpIdentifier(700001)}/referrals`,
         ]) {
           const answer = answerFromTheStandIn(shop, { method, path });
 
@@ -1078,11 +1168,15 @@ describe('the stand-in API', () => {
       }
     });
 
-    it('refuses every other read, the API status and the Admin endpoints among them, and says why', () => {
+    it('refuses every other read, the API status, the Admin endpoints and the Referral counts among them, and says why', () => {
       for (const path of [
         '/v1/status',
         '/v1/vendors',
         `/v1/vendors/${madeUpIdentifier(2)}`,
+        '/v1/referral-counts',
+        `/v1/vendors/${madeUpIdentifier(2)}/referral-count`,
+        '/v1/shared-builds',
+        `/v1/shared-builds/${madeUpIdentifier(700001)}/referrals`,
         '/v1/parts?search=ryzen',
         '/v1/platform-rate',
         '/v1/caller',
