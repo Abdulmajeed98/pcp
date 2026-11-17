@@ -199,14 +199,14 @@
       "listComma": ", ",
       "listAnd": " and ",
       "category": "{category, select, cpu {a CPU} cpuCooler {a CPU cooler} motherboard {a motherboard} ram {RAM} storage {storage} gpu {a GPU} case {a case} psu {a PSU} other {a Part}}",
-      "hasGraphics": "Your CPU has integrated graphics, so a GPU is not needed.",
-      "includesCooler": "Your CPU comes with a cooler, so a CPU cooler is not needed.",
-      "graphicsNotKnown": "Your CPU does not say whether it has integrated graphics, so a GPU is counted as needed.",
-      "coolerNotKnown": "Your CPU does not say whether it comes with a cooler, so a CPU cooler is counted as needed."
+      "hasGraphics": "{whose, select, shared {Its CPU has integrated graphics, so a GPU is not needed.} other {Your CPU has integrated graphics, so a GPU is not needed.}}",
+      "includesCooler": "{whose, select, shared {Its CPU comes with a cooler, so a CPU cooler is not needed.} other {Your CPU comes with a cooler, so a CPU cooler is not needed.}}",
+      "graphicsNotKnown": "{whose, select, shared {Its CPU does not say whether it has integrated graphics, so a GPU is counted as needed.} other {Your CPU does not say whether it has integrated graphics, so a GPU is counted as needed.}}",
+      "coolerNotKnown": "{whose, select, shared {Its CPU does not say whether it comes with a cooler, so a CPU cooler is counted as needed.} other {Your CPU does not say whether it comes with a cooler, so a CPU cooler is counted as needed.}}"
     },
     "stamp": "Complete Build",
     "slip": {
-      "yourBuild": "{count, plural, one {Your Build · {countText} Part} other {Your Build · {countText} Parts}}",
+      "heading": "{whose, select, shared {{count, plural, one {Shared Build · {countText} Part} other {Shared Build · {countText} Parts}}} other {{count, plural, one {Your Build · {countText} Part} other {Your Build · {countText} Parts}}}}",
       "parts": "Parts",
       "complete": "Complete",
       "yes": "Yes",
@@ -373,8 +373,8 @@
     },
     "rules": {
       "title": "What the rules found",
-      "note": "The {rules} Compatibility Rules, judged on the Parts in your Build.",
-      "noneApply": "No rule applies yet: the rules judge Parts that work together, as you choose them.",
+      "note": "{whose, select, shared {The {rules} Compatibility Rules, judged on the Parts in this Build.} other {The {rules} Compatibility Rules, judged on the Parts in your Build.}}",
+      "noneApply": "{whose, select, shared {No rule applies yet: the rules judge Parts that work together.} other {No rule applies yet: the rules judge Parts that work together, as you choose them.}}",
       "allPassed": "{count, plural, one {No Problem: the one rule that applies was checked and passed.} other {No Problem: all {countText} rules that apply were checked and passed.}}",
       "problems": "{count, plural, one {{countText} Problem} other {{countText} Problems}}",
       "warnings": "{count, plural, one {{countText} Warning} other {{countText} Warnings}}",
@@ -385,13 +385,13 @@
       "notInTheCatalog": "Not in the catalog: <english>{specification}</english>",
       "more": "{count, plural, one {{countText} more} other {{countText} more}}",
       "fewer": "Fewer",
-      "kept": "Your Build is kept as it is: change a Part when you choose to."
+      "kept": "{whose, select, shared {Copy it into your Build to change a Part.} other {Your Build is kept as it is: change a Part when you choose to.}}"
     },
     "vendors": {
       "title": "Buy from one Vendor",
       "note": "Each Vendor's total for the Parts it has in stock. Fewest missing first, then the lowest total. No Vendor pays for its place.",
       "hasEvery": "Has every Part",
-      "has": "{count, plural, one {Has {hasText} of your {countText} Part · lacks {lacksText}} other {Has {hasText} of your {countText} Parts · lacks {lacksText}}}",
+      "has": "{whose, select, shared {{count, plural, one {Has {hasText} of its {countText} Part · lacks {lacksText}} other {Has {hasText} of its {countText} Parts · lacks {lacksText}}}} other {{count, plural, one {Has {hasText} of your {countText} Part · lacks {lacksText}} other {Has {hasText} of your {countText} Parts · lacks {lacksText}}}}}",
       "itsParts": "Its Parts",
       "inStockThere": "In stock there",
       "notThere": "Not there",
@@ -424,7 +424,6 @@
   },
   "SharedBuildPage": {
     "title": "A shared Build",
-    "slip": "{count, plural, one {Shared Build · {countText} Part} other {Shared Build · {countText} Parts}}",
     "stamp": "Shared {date}",
     "when": {
       "today": "Shared today, {date}.",
@@ -436,20 +435,6 @@
     "longDate": "{day} {month, select, january {January} february {February} march {March} april {April} may {May} june {June} july {July} august {August} september {September} october {October} november {November} december {December} other {}} {year}",
     "shortDate": "{day} {month, select, january {Jan} february {Feb} march {Mar} april {Apr} may {May} june {Jun} july {Jul} august {Aug} september {Sep} october {Oct} november {Nov} december {Dec} other {}} {year}",
     "quantity": "Quantity {quantity}",
-    "status": {
-      "hasGraphics": "Its CPU has integrated graphics, so a GPU is not needed.",
-      "includesCooler": "Its CPU comes with a cooler, so a CPU cooler is not needed.",
-      "graphicsNotKnown": "Its CPU does not say whether it has integrated graphics, so a GPU is counted as needed.",
-      "coolerNotKnown": "Its CPU does not say whether it comes with a cooler, so a CPU cooler is counted as needed."
-    },
-    "rules": {
-      "note": "The {rules} Compatibility Rules, judged on the Parts in this Build.",
-      "noneApply": "No rule applies yet: the rules judge Parts that work together.",
-      "kept": "Copy it into your Build to change a Part."
-    },
-    "vendors": {
-      "has": "{count, plural, one {Has {hasText} of its {countText} Part · lacks {lacksText}} other {Has {hasText} of its {countText} Parts · lacks {lacksText}}}"
-    },
     "copy": {
       "button": "Copy into my Build",
       "busy": "Copying…",

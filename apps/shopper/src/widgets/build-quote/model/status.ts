@@ -18,7 +18,9 @@ export type StatusPiece = string | { category: Category; words: string };
 
 // Whose Build a page shows: the Shopper's own, on the Build page, or a
 // Shared Build, whose page speaks of it as the sender's, never the reader's
-// (DESIGN.md's The Shared Build page).
+// (DESIGN.md's The Shared Build page). The words that differ by it are each
+// one message of the Build page's that chooses by `whose`, so that the
+// pieces both pages draw read them alike and choose nothing themselves.
 export type Whose = 'yours' | 'shared';
 
 // The Build page's status (DESIGN.md's The status), in the page's language:
@@ -52,12 +54,6 @@ export function statusOf(
     messages: shopperMessages[language],
     namespace: 'BuildPage.status',
   });
-  const itsCpu = createTranslator({
-    locale: language,
-    messages: shopperMessages[language],
-    namespace: 'SharedBuildPage.status',
-  });
-  const aboutTheCpu = whose === 'yours' ? t : itsCpu;
   const problems = outcomeCountsOf(answer.outcomes).problem;
   const holds = (category: Category) =>
     answer.parts.some((part) => part.category === category);
@@ -71,9 +67,9 @@ export function statusOf(
       notKnown: 'graphicsNotKnown' | 'coolerNotKnown',
     ) => {
       if (holds(category)) return;
-      if (answer.cpuValuesNotKnown.includes(value)) lines.push(aboutTheCpu(notKnown));
+      if (answer.cpuValuesNotKnown.includes(value)) lines.push(t(notKnown, { whose }));
       else if (!answer.stillNeeded.includes(category)) {
-        lines.push(aboutTheCpu(provided));
+        lines.push(t(provided, { whose }));
       }
     };
     lineFor('gpu', 'integratedGraphics', 'hasGraphics', 'graphicsNotKnown');

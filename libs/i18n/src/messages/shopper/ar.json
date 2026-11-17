@@ -199,14 +199,14 @@
       "listComma": "، و",
       "listAnd": "، و",
       "category": "{category, select, cpu {معالج} cpuCooler {مبرّد معالج} motherboard {لوحة أم} ram {ذاكرة عشوائية} storage {وحدة تخزين} gpu {بطاقة رسومات} case {صندوق حاسوب} psu {مزوّد طاقة} other {قطعة}}",
-      "hasGraphics": "في معالجك رسوميات مدمجة، لذا لا حاجة إلى بطاقة رسومات.",
-      "includesCooler": "يأتي معالجك مع مبرّد، لذا لا حاجة إلى مبرّد معالج.",
-      "graphicsNotKnown": "لا يذكر معالجك إن كانت فيه رسوميات مدمجة، لذا تُحسب بطاقة الرسومات مطلوبة.",
-      "coolerNotKnown": "لا يذكر معالجك إن كان يأتي مع مبرّد، لذا يُحسب مبرّد المعالج مطلوبًا."
+      "hasGraphics": "{whose, select, shared {في معالجها رسوميات مدمجة، لذا لا حاجة إلى بطاقة رسومات.} other {في معالجك رسوميات مدمجة، لذا لا حاجة إلى بطاقة رسومات.}}",
+      "includesCooler": "{whose, select, shared {يأتي معالجها مع مبرّد، لذا لا حاجة إلى مبرّد معالج.} other {يأتي معالجك مع مبرّد، لذا لا حاجة إلى مبرّد معالج.}}",
+      "graphicsNotKnown": "{whose, select, shared {لا يذكر معالجها إن كانت فيه رسوميات مدمجة، لذا تُحسب بطاقة الرسومات مطلوبة.} other {لا يذكر معالجك إن كانت فيه رسوميات مدمجة، لذا تُحسب بطاقة الرسومات مطلوبة.}}",
+      "coolerNotKnown": "{whose, select, shared {لا يذكر معالجها إن كان يأتي مع مبرّد، لذا يُحسب مبرّد المعالج مطلوبًا.} other {لا يذكر معالجك إن كان يأتي مع مبرّد، لذا يُحسب مبرّد المعالج مطلوبًا.}}"
     },
     "stamp": "تجميعة مكتملة",
     "slip": {
-      "yourBuild": "{count, plural, zero {تجميعتك · لا قطع} one {تجميعتك · قطعة واحدة} two {تجميعتك · قطعتان} few {تجميعتك · {countText} قطع} many {تجميعتك · {countText} قطعة} other {تجميعتك · {countText} قطعة}}",
+      "heading": "{whose, select, shared {{count, plural, zero {تجميعة مُشارَكة · لا قطع} one {تجميعة مُشارَكة · قطعة واحدة} two {تجميعة مُشارَكة · قطعتان} few {تجميعة مُشارَكة · {countText} قطع} many {تجميعة مُشارَكة · {countText} قطعة} other {تجميعة مُشارَكة · {countText} قطعة}}} other {{count, plural, zero {تجميعتك · لا قطع} one {تجميعتك · قطعة واحدة} two {تجميعتك · قطعتان} few {تجميعتك · {countText} قطع} many {تجميعتك · {countText} قطعة} other {تجميعتك · {countText} قطعة}}}}",
       "parts": "القطع",
       "complete": "مكتملة",
       "yes": "نعم",
@@ -373,8 +373,8 @@
     },
     "rules": {
       "title": "ما وجدته القواعد",
-      "note": "قواعد التوافق الـ{rules}، مطبّقة على القطع في تجميعتك.",
-      "noneApply": "لا تنطبق أي قاعدة بعد: تفحص القواعد القطع التي تعمل معًا كلما اخترتها.",
+      "note": "{whose, select, shared {قواعد التوافق الـ{rules}، مطبّقة على القطع في هذه التجميعة.} other {قواعد التوافق الـ{rules}، مطبّقة على القطع في تجميعتك.}}",
+      "noneApply": "{whose, select, shared {لا تنطبق أي قاعدة بعد: تفحص القواعد القطع التي تعمل معًا.} other {لا تنطبق أي قاعدة بعد: تفحص القواعد القطع التي تعمل معًا كلما اخترتها.}}",
       "allPassed": "{count, plural, zero {لا مشكلة: لا تنطبق أي قاعدة بعد.} one {لا مشكلة: فُحصت القاعدة الوحيدة التي تنطبق ونجحت.} two {لا مشكلة: فُحصت القاعدتان اللتان تنطبقان ونجحتا.} few {لا مشكلة: فُحصت القواعد الـ{countText} التي تنطبق كلها ونجحت.} many {لا مشكلة: فُحصت القواعد الـ{countText} التي تنطبق كلها ونجحت.} other {لا مشكلة: فُحصت القواعد الـ{countText} التي تنطبق كلها ونجحت.}}",
       "problems": "{count, plural, zero {لا مشكلات توافق} one {مشكلة توافق واحدة} two {مشكلتا توافق} few {{countText} مشكلات توافق} many {{countText} مشكلة توافق} other {{countText} مشكلة توافق}}",
       "warnings": "{count, plural, zero {لا تحذيرات توافق} one {تحذير توافق واحد} two {تحذيرا توافق} few {{countText} تحذيرات توافق} many {{countText} تحذير توافق} other {{countText} تحذير توافق}}",
@@ -385,13 +385,13 @@
       "notInTheCatalog": "غير موجودة في الكتالوج: <english>{specification}</english>",
       "more": "{count, plural, zero {لا مزيد} one {واحدة أخرى} two {اثنتان أخريان} few {{countText} أخرى} many {{countText} أخرى} other {{countText} أخرى}}",
       "fewer": "أقل",
-      "kept": "تبقى تجميعتك كما هي: غيّر قطعة متى شئت."
+      "kept": "{whose, select, shared {انسخها إلى تجميعتك لتغيّر قطعة.} other {تبقى تجميعتك كما هي: غيّر قطعة متى شئت.}}"
     },
     "vendors": {
       "title": "اشترِ من بائع واحد",
       "note": "مجموع كل بائع للقطع التي لديه في المخزون. الأقل نقصًا أولًا، ثم الأدنى مجموعًا. لا يدفع أي بائع ثمن مكانه.",
       "hasEvery": "لديه كل القطع",
-      "has": "{count, plural, zero {لديه {hasText} · ينقصه {lacksText}} one {لديه {hasText} من قطعتك الواحدة · ينقصه {lacksText}} two {لديه {hasText} من قطعتيك · ينقصه {lacksText}} few {لديه {hasText} من قطعك الـ{countText} · ينقصه {lacksText}} many {لديه {hasText} من قطعك الـ{countText} · ينقصه {lacksText}} other {لديه {hasText} من قطعك الـ{countText} · ينقصه {lacksText}}}",
+      "has": "{whose, select, shared {{count, plural, zero {لديه {hasText} · ينقصه {lacksText}} one {لديه {hasText} من قطعتها الواحدة · ينقصه {lacksText}} two {لديه {hasText} من قطعتيها · ينقصه {lacksText}} few {لديه {hasText} من قطعها الـ{countText} · ينقصه {lacksText}} many {لديه {hasText} من قطعها الـ{countText} · ينقصه {lacksText}} other {لديه {hasText} من قطعها الـ{countText} · ينقصه {lacksText}}}} other {{count, plural, zero {لديه {hasText} · ينقصه {lacksText}} one {لديه {hasText} من قطعتك الواحدة · ينقصه {lacksText}} two {لديه {hasText} من قطعتيك · ينقصه {lacksText}} few {لديه {hasText} من قطعك الـ{countText} · ينقصه {lacksText}} many {لديه {hasText} من قطعك الـ{countText} · ينقصه {lacksText}} other {لديه {hasText} من قطعك الـ{countText} · ينقصه {lacksText}}}}}",
       "itsParts": "قطعه",
       "inStockThere": "في مخزونه",
       "notThere": "ليست لديه",
@@ -424,7 +424,6 @@
   },
   "SharedBuildPage": {
     "title": "تجميعة مُشارَكة",
-    "slip": "{count, plural, zero {تجميعة مُشارَكة · لا قطع} one {تجميعة مُشارَكة · قطعة واحدة} two {تجميعة مُشارَكة · قطعتان} few {تجميعة مُشارَكة · {countText} قطع} many {تجميعة مُشارَكة · {countText} قطعة} other {تجميعة مُشارَكة · {countText} قطعة}}",
     "stamp": "شوركت {date}",
     "when": {
       "today": "شوركت اليوم، {date}.",
@@ -436,20 +435,6 @@
     "longDate": "{day} {month, select, january {كانون الثاني} february {شباط} march {آذار} april {نيسان} may {أيار} june {حزيران} july {تموز} august {آب} september {أيلول} october {تشرين الأول} november {تشرين الثاني} december {كانون الأول} other {}} {year}",
     "shortDate": "{year}/{month, select, january {1} february {2} march {3} april {4} may {5} june {6} july {7} august {8} september {9} october {10} november {11} december {12} other {}}/{day}",
     "quantity": "العدد {quantity}",
-    "status": {
-      "hasGraphics": "في معالجها رسوميات مدمجة، لذا لا حاجة إلى بطاقة رسومات.",
-      "includesCooler": "يأتي معالجها مع مبرّد، لذا لا حاجة إلى مبرّد معالج.",
-      "graphicsNotKnown": "لا يذكر معالجها إن كانت فيه رسوميات مدمجة، لذا تُحسب بطاقة الرسومات مطلوبة.",
-      "coolerNotKnown": "لا يذكر معالجها إن كان يأتي مع مبرّد، لذا يُحسب مبرّد المعالج مطلوبًا."
-    },
-    "rules": {
-      "note": "قواعد التوافق الـ{rules}، مطبّقة على القطع في هذه التجميعة.",
-      "noneApply": "لا تنطبق أي قاعدة بعد: تفحص القواعد القطع التي تعمل معًا.",
-      "kept": "انسخها إلى تجميعتك لتغيّر قطعة."
-    },
-    "vendors": {
-      "has": "{count, plural, zero {لديه {hasText} · ينقصه {lacksText}} one {لديه {hasText} من قطعتها الواحدة · ينقصه {lacksText}} two {لديه {hasText} من قطعتيها · ينقصه {lacksText}} few {لديه {hasText} من قطعها الـ{countText} · ينقصه {lacksText}} many {لديه {hasText} من قطعها الـ{countText} · ينقصه {lacksText}} other {لديه {hasText} من قطعها الـ{countText} · ينقصه {lacksText}}}"
-    },
     "copy": {
       "button": "انسخها إلى تجميعتي",
       "busy": "يجري النسخ…",

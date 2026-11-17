@@ -66,9 +66,8 @@ export async function BuildSlip({
   actionNeedsScript?: boolean;
   children?: ReactNode;
 }) {
-  const [t, shared, site] = await Promise.all([
+  const [t, site] = await Promise.all([
     getTranslations('BuildPage'),
-    getTranslations('SharedBuildPage'),
     getTranslations('Site'),
   ]);
   const rule =
@@ -94,9 +93,7 @@ export async function BuildSlip({
       >
         <p className="type-label text-center">{site('name')}</p>
         <p data-testid="slip-heading" className={`mt-1 pb-3.5 text-center ${rule}`}>
-          {whose === 'shared'
-            ? shared('slip', { count: parts, countText: formatNumber(parts) })
-            : t('slip.yourBuild', { count: parts, countText: formatNumber(parts) })}
+          {t('slip.heading', { whose, count: parts, countText: formatNumber(parts) })}
         </p>
         <ul
           data-space="slip"

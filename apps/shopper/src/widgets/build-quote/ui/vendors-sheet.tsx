@@ -209,9 +209,8 @@ async function VendorLine({
   sendTo: string;
   refused: ReactNode;
 }) {
-  const [t, shared, send] = await Promise.all([
+  const [t, send] = await Promise.all([
     getTranslations('BuildPage.vendors'),
-    getTranslations('SharedBuildPage.vendors'),
     getTranslations('BuildPage.send'),
   ]);
   const has = vendor.partsInStock.length;
@@ -256,7 +255,8 @@ async function VendorLine({
             <span data-testid="vendor-has">
               {lacks === 0
                 ? t('hasEvery')
-                : (whose === 'shared' ? shared : t)('has', {
+                : t('has', {
+                    whose,
                     count: has + lacks,
                     countText: formatNumber(has + lacks),
                     hasText: formatNumber(has),

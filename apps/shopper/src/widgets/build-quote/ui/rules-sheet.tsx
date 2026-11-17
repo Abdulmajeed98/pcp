@@ -67,12 +67,10 @@ export async function RulesSheet({
   // Whether the browser holds this very Shared Build.
   isYours?: boolean;
 }) {
-  const [language, t, shared] = await Promise.all([
+  const [language, t] = await Promise.all([
     getLocale(),
     getTranslations('BuildPage.rules'),
-    getTranslations('SharedBuildPage.rules'),
   ]);
-  const its = whose === 'shared';
   const findings = findingsOf(answer, language);
   const power = powerDrawOf(answer);
   const groups = (['problem', 'warning', 'unchecked'] as const).map((found) => ({
@@ -97,9 +95,7 @@ export async function RulesSheet({
       >
         <Sheet print="in-view">
           <SheetTitle id="rules-title">{t('title')}</SheetTitle>
-          <SheetNote>
-            {(its ? shared : t)('note', { rules: formatNumber(rulesInAll) })}
-          </SheetNote>
+          <SheetNote>{t('note', { whose, rules: formatNumber(rulesInAll) })}</SheetNote>
           {/* What the rules found, read to a screen reader when a change in
               place alters it, its space moving with what it says. */}
           <div data-space="rules" className="grid grid-cols-[minmax(0,1fr)]">
@@ -110,7 +106,7 @@ export async function RulesSheet({
                 className="mx-auto mt-4 block max-w-[34ch] text-center text-lg text-balance"
               >
                 {findings.passed === 0
-                  ? (its ? shared : t)('noneApply')
+                  ? t('noneApply', { whose })
                   : t('allPassed', {
                       count: findings.passed,
                       countText: formatNumber(findings.passed),
@@ -192,12 +188,12 @@ export async function RulesSheet({
               />
             )}
           </ul>
-          {!(its && isYours) && (
+          {!(whose === 'shared' && isYours) && (
             <p
               data-testid="rules-closing"
               className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground"
             >
-              {(its ? shared : t)('kept')}
+              {t('kept', { whose })}
             </p>
           )}
         </Sheet>
