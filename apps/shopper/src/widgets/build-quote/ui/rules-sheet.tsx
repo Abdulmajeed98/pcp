@@ -48,7 +48,9 @@ const groupsOf = {
 // the rules find fault with (BLD-4). An empty Build has no rules' sheet. A
 // Shared Build's sheet speaks of the Parts in this Build and closes with how
 // to change one, copying it into your Build (DESIGN.md's The Shared Build
-// page).
+// page); for the browser that holds that very Build it closes with nothing,
+// since its page already says the Build is theirs and offers no copy (story
+// 30, the code review's fixes).
 //
 // It is below the first screen, so it prints as it comes into view (Motion
 // 1). Each line a change in place may bring or take, a group and an
@@ -58,9 +60,12 @@ const groupsOf = {
 export async function RulesSheet({
   answer,
   whose = 'yours',
+  isYours = false,
 }: {
   answer: BuildResponse;
   whose?: Whose;
+  // Whether the browser holds this very Shared Build.
+  isYours?: boolean;
 }) {
   const [language, t, shared] = await Promise.all([
     getLocale(),
@@ -187,9 +192,14 @@ export async function RulesSheet({
               />
             )}
           </ul>
-          <p className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground">
-            {(its ? shared : t)('kept')}
-          </p>
+          {!(its && isYours) && (
+            <p
+              data-testid="rules-closing"
+              className="mx-auto mt-group max-w-[34rem] text-center text-muted-foreground"
+            >
+              {(its ? shared : t)('kept')}
+            </p>
+          )}
         </Sheet>
       </div>
     </section>

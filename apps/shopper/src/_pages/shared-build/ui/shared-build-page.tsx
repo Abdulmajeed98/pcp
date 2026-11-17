@@ -132,7 +132,7 @@ export async function SharedBuildPage({
               />
             </div>
           </main>
-          <RulesSheet answer={read.answer} whose="shared" />
+          <RulesSheet answer={read.answer} whose="shared" isYours={isYours} />
           {read.answer.vendors.length > 0 && (
             <VendorsSheet
               answer={read.answer}

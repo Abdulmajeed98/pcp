@@ -53,6 +53,7 @@ import {
   theCopy,
   theCopysConfirmation,
   theLink,
+  theRulesClosingLine,
   theShareButton,
   theSharedBuildAsStored,
   thisIsYourBuild,
@@ -204,6 +205,9 @@ test("in Kurdish and English, sharing a Build lands on its Shared Build page, wh
       await expect(theSlip(page).getByTestId('share-the-link-button')).toBeAttached();
       await expect(theSlip(page).getByTestId('the-link')).toHaveCount(0);
       await expect(theSlip(page).getByTestId('this-is-your-build')).toHaveCount(0);
+      // The page already says the Build is theirs, so the rules' sheet does
+      // not close by telling them to copy it (the code review's fixes).
+      await expect(theRulesClosingLine(page)).toHaveCount(0);
       expect(await theFramesCount(page)).toBe(4);
       await expectNoSidewaysScroll(page);
 
@@ -223,6 +227,8 @@ test("in Kurdish and English, sharing a Build lands on its Shared Build page, wh
         await expect(theSlip(reader).getByTestId('copy-into-my-build')).toBeVisible();
         await expect(theSlip(reader).getByTestId('share-the-link-button')).toHaveCount(0);
         await expect(theLink(reader)).toBeVisible();
+        // A reader's rules' sheet closes with how to change a Part: copy it.
+        await expect(theRulesClosingLine(reader)).not.toHaveText('');
         await expect(reader.getByTestId('when-shared')).not.toHaveText('');
         await expect(reader.locator('[data-stamp="shared"]')).toBeAttached();
         await expectNoSidewaysScroll(reader);
