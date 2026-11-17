@@ -217,12 +217,13 @@ async function addARate(changing: Client, iqdPerUsd: number, setAt: Date): Promi
 }
 
 // A change made in one transaction, which holds one table locked from its
-// start until a read has had to wait for it, and only then commits; and what
-// the read answered.
+// start until as many requests as given, one read unless told, have had to
+// wait for it, and only then commits; and what the requests answered.
 async function changeWhileReading<T>(
   lockedTable: string,
   change: (changing: Client) => Promise<void>,
   read: () => Promise<T>,
+  waiting = 1,
 ): Promise<T> {
   const changing = new Client(connectionOf(testDatabaseSettings()));
   const watching = new Client(connectionOf(testDatabaseSettings()));
@@ -234,13 +235,17 @@ async function changeWhileReading<T>(
     await change(changing);
 
     const reading = read();
-    // Until the read waits for the lock.
+    // Until as many requests as given wait for the lock.
     for (let tries = 0; ; tries += 1) {
       const { rows } = await watching.query<{ waiting: number }>(
         'SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted',
       );
-      if (rows[0].waiting > 0) break;
-      if (tries > 200) throw new Error('No read waited for the locked table.');
+      if (rows[0].waiting >= waiting) break;
+      if (tries > 500) {
+        throw new Error(
+          `Fewer than ${String(waiting)} requests waited for the locked table.`,
+        );
+      }
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
     await changing.query('COMMIT');
@@ -263,36 +268,14 @@ async function changeWhileReading<T>(
 // It is the fifth named exception that arranges data through the database,
 // after `takeThePartOutOfTheCatalog`, for the same reason as
 // `changeTheRateAndTheOffersWhileReading`: no endpoint holds a table locked.
-export async function sentWhileTheTableIsHeld<T>(
+// The two lock-and-wait helpers share `changeWhileReading`, this one making
+// no change while it holds the table.
+export function sentWhileTheTableIsHeld<T>(
   lockedTable: 'shared_build',
   waiting: number,
   send: () => Promise<T>,
 ): Promise<T> {
-  const holding = new Client(connectionOf(testDatabaseSettings()));
-  const watching = new Client(connectionOf(testDatabaseSettings()));
-  await holding.connect();
-  await watching.connect();
-  try {
-    await holding.query('BEGIN');
-    await holding.query(`LOCK TABLE ${lockedTable} IN ACCESS EXCLUSIVE MODE`);
-
-    const sending = send();
-    // Until every request waits for the lock.
-    for (let tries = 0; ; tries += 1) {
-      const { rows } = await watching.query<{ waiting: number }>(
-        'SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted',
-      );
-      if (rows[0].waiting >= waiting) break;
-      if (tries > 500) throw new Error('Not every request waited for the locked table.');
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-    await holding.query('COMMIT');
-
-    return await sending;
-  } finally {
-    await holding.end();
-    await watching.end();
-  }
+  return changeWhileReading(lockedTable, async () => {}, send, waiting);
 }
 
 // A fault planted in the database for as long as the function runs: a rule

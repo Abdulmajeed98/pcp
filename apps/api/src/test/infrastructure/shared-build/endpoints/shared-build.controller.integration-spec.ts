@@ -457,8 +457,8 @@ describe('a Shared Build', () => {
       async function aSharedBuildOnSale(): Promise<{
         ryzen: string;
         kit: string;
-        shop: VendorBody;
-        store: VendorBody;
+        cpuVendor: VendorBody;
+        kitVendor: VendorBody;
         ryzenOffer: string;
         kitOffer: string;
         sharedBuild: SharedBody;
@@ -466,13 +466,16 @@ describe('a Shared Build', () => {
       }> {
         const ryzen = (await aPart({ name: 'Made-up Ryzen 5 7600' })).id;
         const kit = (await aPart({ category: 'ram', name: 'Made-up 32 GB kit' })).id;
-        const shop = await aVendor('Made-up Computer Shop');
-        const store = await aVendor('Made-up Computer Store');
-        const ryzenOffer = await anOffer(shop.id, ryzen, {
+        const cpuVendor = await aVendor('Made-up Computer Corner');
+        const kitVendor = await aVendor('Made-up Computer House');
+        const ryzenOffer = await anOffer(cpuVendor.id, ryzen, {
           iqdPrice: 300000,
           inStock: true,
         });
-        const kitOffer = await anOffer(store.id, kit, { iqdPrice: 100000, inStock: true });
+        const kitOffer = await anOffer(kitVendor.id, kit, {
+          iqdPrice: 100000,
+          inStock: true,
+        });
         const frozen = [ryzen, `${kit}:2`];
         moveTheClockTo(aMovedMoment);
         const sharedBuild = (await shared(frozen)).body;
@@ -483,9 +486,18 @@ describe('a Shared Build', () => {
           today.parts.map(({ lowestPrice }) => lowestPrice?.shownPrice.amount),
         ).toEqual(['300000', '100000']);
         expect(today.vendors.map(({ id }) => id).sort()).toEqual(
-          [shop.id, store.id].sort(),
+          [cpuVendor.id, kitVendor.id].sort(),
         );
-        return { ryzen, kit, shop, store, ryzenOffer, kitOffer, sharedBuild, frozen };
+        return {
+          ryzen,
+          kit,
+          cpuVendor,
+          kitVendor,
+          ryzenOffer,
+          kitOffer,
+          sharedBuild,
+          frozen,
+        };
       }
 
       // The Shared Build still holds what it was shared with, when it was
@@ -499,9 +511,10 @@ describe('a Shared Build', () => {
       }
 
       it("when an Offer's price changes, while `GET v1/build` with its values answers the new price", async () => {
-        const { ryzen, shop, ryzenOffer, sharedBuild, frozen } = await aSharedBuildOnSale();
+        const { ryzen, cpuVendor, ryzenOffer, sharedBuild, frozen } =
+          await aSharedBuildOnSale();
 
-        await admin(`/v1/vendors/${shop.id}/offers/${ryzenOffer}`, {
+        await admin(`/v1/vendors/${cpuVendor.id}/offers/${ryzenOffer}`, {
           iqdPrice: 280000,
           inStock: true,
         });
@@ -514,9 +527,10 @@ describe('a Shared Build', () => {
       });
 
       it('when an Offer is put out of stock, while `GET v1/build` with its values answers its Part as an Unstocked Part', async () => {
-        const { kit, store, kitOffer, sharedBuild, frozen } = await aSharedBuildOnSale();
+        const { kit, kitVendor, kitOffer, sharedBuild, frozen } =
+          await aSharedBuildOnSale();
 
-        await admin(`/v1/vendors/${store.id}/offers/${kitOffer}`, {
+        await admin(`/v1/vendors/${kitVendor.id}/offers/${kitOffer}`, {
           iqdPrice: 100000,
           inStock: false,
         });
@@ -527,13 +541,13 @@ describe('a Shared Build', () => {
           unstocked: true,
           lowestPrice: null,
         });
-        expect(today.vendors.map(({ id }) => id)).not.toContain(store.id);
+        expect(today.vendors.map(({ id }) => id)).not.toContain(kitVendor.id);
       });
 
       it('when a Vendor is deactivated, while `GET v1/build` with its values answers its Part as no longer a Visible Part and the Vendor gone from the second view', async () => {
-        const { ryzen, shop, sharedBuild, frozen } = await aSharedBuildOnSale();
+        const { ryzen, cpuVendor, sharedBuild, frozen } = await aSharedBuildOnSale();
 
-        await deactivate(shop.id);
+        await deactivate(cpuVendor.id);
 
         await expectItAsShared(sharedBuild, frozen);
         const today = await theBuildOf(frozen);
@@ -541,7 +555,7 @@ describe('a Shared Build', () => {
           visible: false,
           unstocked: true,
         });
-        expect(today.vendors.map(({ id }) => id)).not.toContain(shop.id);
+        expect(today.vendors.map(({ id }) => id)).not.toContain(cpuVendor.id);
       });
 
       it('when a Part is edited, while `GET v1/build` with its values answers the Part as it now is', async () => {

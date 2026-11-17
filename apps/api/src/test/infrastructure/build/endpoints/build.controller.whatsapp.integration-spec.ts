@@ -117,8 +117,8 @@ describe("the second price view's WhatsApp field", () => {
 
   it('answers for each Vendor whether it gave a WhatsApp number, and never the number', async () => {
     const ryzen = await aPart('Made-up Ryzen 5 7600');
-    const withNumber = await aVendor('Made-up WhatsApp Shop', '0770 123 4567');
-    const withoutNumber = await aVendor('Made-up Phone Shop', null);
+    const withNumber = await aVendor('Made-up WhatsApp Corner', '0770 123 4567');
+    const withoutNumber = await aVendor('Made-up Phone Corner', null);
     await anOffer(withNumber.id, ryzen.id, 300000);
     await anOffer(withoutNumber.id, ryzen.id, 310000);
 
@@ -133,27 +133,27 @@ describe("the second price view's WhatsApp field", () => {
     expect(JSON.stringify(build)).not.toContain('7701234567');
     expect(build.parts[0].lowestPrice?.vendor).toEqual({
       id: withNumber.id,
-      name: 'Made-up WhatsApp Shop',
+      name: 'Made-up WhatsApp Corner',
     });
   });
 
   it('follows the Vendor: a number cleared from its contact details answers no, and one added answers yes', async () => {
     const ryzen = await aPart('Made-up Ryzen 5 7600');
-    const shop = await aVendor('Made-up Computer Shop', '0770 123 4567');
-    await anOffer(shop.id, ryzen.id, 300000);
+    const vendor = await aVendor('Made-up Computer Corner', '0770 123 4567');
+    await anOffer(vendor.id, ryzen.id, 300000);
     const contactDetails = {
       address: 'Made-up Street, Erbil',
       phoneNumber: '066 223 4567',
     };
 
-    const cleared = await asTheAdmin('PUT', `/v1/vendors/${shop.id}/contact-details`, {
+    const cleared = await asTheAdmin('PUT', `/v1/vendors/${vendor.id}/contact-details`, {
       ...contactDetails,
       whatsAppNumber: null,
     });
     expect(cleared.status).toBe(200);
     expect((await theBuild([ryzen.id])).vendors[0].hasWhatsAppNumber).toBe(false);
 
-    const added = await asTheAdmin('PUT', `/v1/vendors/${shop.id}/contact-details`, {
+    const added = await asTheAdmin('PUT', `/v1/vendors/${vendor.id}/contact-details`, {
       ...contactDetails,
       whatsAppNumber: '0770 765 4321',
     });
