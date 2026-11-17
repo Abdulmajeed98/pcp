@@ -35,7 +35,7 @@
   - **Accessibility.** `expectAccessible` passes on both screens in the light and the dark scheme.
 - [x] **`pnpm dashboard:inspect`** runs on the Referrals screen and on the portal's screen with the count. It runs in both schemes, the portal in Kurdish and in English, at 1440, 768 and 390 pixels, and at 1024 and 1280 for desk layouts. Every FAIL is fixed, and every WARN is fixed or defended under Comments.
 - [ ] **Phone checks**, the Referrals screen and the portal's count read with a thumb in Kurdish and in English, are recorded under Comments as open, waiting for hosting.
-- [ ] `pnpm check` and `pnpm platform:check` pass, and the work is committed.
+- [x] `pnpm check` and `pnpm platform:check` pass, and the work is committed.
 
 ## Comments
 
@@ -110,3 +110,14 @@ The photographs were looked at: the line under the title in each, wrapping to tw
 **DESIGN.md** gained, as Impeccable records it: the Vendor's Referral count among the States, with the owner's choice and words; the line in the Vendor portal's layout; and Motion 11, the count's arrival, with its reduced-motion row.
 
 **Phone checks, open, waiting for hosting** (the owner's rule of 16 October 2026): the Referrals screen read and used with a thumb at 360 pixels, its rows leading to a Vendor's page, in English; and the Vendor portal's count read with a thumb in Kurdish and in English, its arrival felt on a real phone with reduced motion on and off. Ticket 06 adds them to the MVP spec's list.
+
+### 17 November 2026: the fault, the merge and the gates
+
+**The fault**, planted on `f7d25fc` by a script that refused a dirty tree, made its edits, ran the film's two lines under the lock and reverted by the inverse edits (`git status` clean after): the count's `ChangingInPlace` replaced by a plain `div`, so that the sentence replaced the sketch in one frame. Both lines failed, with and without reduced motion, on "the sentence fades in over several frames": 0 frames between transparent and opaque, where more than 2 were expected. The check of what is below the line stands behind it in the same line and was not reached.
+
+**The merge.** `sharing/integration` at `66ec786`, ticket 02 merged, came in with no conflict; `libs/api-client/src/index.ts` took both sides' exports. Ticket 02 left three made-up Vendors without a WhatsApp number, two of which held counts here, so `6298f7b` gave them none, as a Referral needs a number; the inspector's tests, 158, pass on the result.
+
+**The gates on the tip**:
+- `pnpm platform:check`, under the e2e lock, on `6298f7b` (the merge and the correction): 442 passed in 20.4 minutes, the 12 new lines of this ticket among them (`admin-referrals.spec.ts` 5, `vendor-referral-count.spec.ts` 4, `dashboard-languages.spec.ts` 3).
+- `pnpm check --skip-nx-cache`, after deleting every `*.tsbuildinfo` outside `node_modules`, on the commit that closes this record.
+- `pnpm integration:check` was not run: the ticket changes no API code, and the merge brought none.
