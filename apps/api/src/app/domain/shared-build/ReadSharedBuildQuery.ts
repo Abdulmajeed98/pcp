@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
-import { sharedBuildNotFound } from './shared-build-errors';
+import { existingSharedBuild } from './existing-shared-build';
 import { SharedBuild } from './SharedBuild';
 import { SharedBuildStore } from './SharedBuildStore';
 
@@ -52,10 +52,8 @@ export class ReadSharedBuildQuery {
     const found = await this.sharedBuildStore.readById(id);
     const now = new Date();
 
-    return Either.flatMap(found, (sharedBuild) =>
-      Either.fromOption(sharedBuild, () => sharedBuildNotFound(id)).pipe(
-        Either.map((read) => Output.of(read, now)),
-      ),
+    return Either.map(existingSharedBuild(id, found), (sharedBuild) =>
+      Output.of(sharedBuild, now),
     );
   }
 }

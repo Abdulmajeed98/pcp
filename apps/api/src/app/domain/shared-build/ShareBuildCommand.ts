@@ -5,7 +5,7 @@ import { Either } from 'effect';
 import { Build } from '../build/Build';
 import { BuildReading } from '../build/BuildReading';
 import { emptyBuildRefused } from './shared-build-errors';
-import { Shared, ShareParams, SharedBuildStore } from './SharedBuildStore';
+import { ShareOutcome, ShareParams, SharedBuildStore } from './SharedBuildStore';
 
 class Input {
   constructor(private readonly partValues: readonly string[]) {}
@@ -18,15 +18,16 @@ class Input {
 }
 
 class Output {
-  private constructor(private readonly shared: Shared) {}
+  private constructor(private readonly outcome: ShareOutcome) {}
 
-  static of(shared: Shared): Output {
-    return new Output(shared);
+  static of(outcome: ShareOutcome): Output {
+    return new Output(outcome);
   }
 
-  // The Shared Build that holds the Build, and whether this share stored it.
-  getShared(): Shared {
-    return this.shared;
+  // What the share came to: the Shared Build that holds the Build, and
+  // whether this share stored it.
+  getOutcome(): ShareOutcome {
+    return this.outcome;
   }
 }
 
@@ -67,8 +68,8 @@ export class ShareBuildCommand {
     const values = partValuesOf(build.right);
     if (values.length === 0) return Either.left(emptyBuildRefused());
 
-    const shared = await this.sharedBuildStore.share(new ShareParams(values, new Date()));
+    const outcome = await this.sharedBuildStore.share(new ShareParams(values, new Date()));
 
-    return Either.map(shared, Output.of);
+    return Either.map(outcome, Output.of);
   }
 }

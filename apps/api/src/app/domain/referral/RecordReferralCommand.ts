@@ -3,7 +3,7 @@ import { StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
 import { PhoneNumber } from '../phone-number/PhoneNumber';
-import { sharedBuildNotFound } from '../shared-build/shared-build-errors';
+import { existingSharedBuild } from '../shared-build/existing-shared-build';
 import { SharedBuildStore } from '../shared-build/SharedBuildStore';
 import { existingVendor } from '../vendor/existing-vendor';
 import { vendorNotFound } from '../vendor/vendor-errors';
@@ -86,9 +86,9 @@ export class RecordReferralCommand {
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const sharedBuildId = input.getSharedBuildId();
-    const sharedBuild = Either.flatMap(
+    const sharedBuild = existingSharedBuild(
+      sharedBuildId,
       await this.sharedBuildStore.readById(sharedBuildId),
-      (found) => Either.fromOption(found, () => sharedBuildNotFound(sharedBuildId)),
     );
     if (Either.isLeft(sharedBuild)) return Either.left(sharedBuild.left);
 

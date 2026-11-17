@@ -2111,7 +2111,7 @@
         },
         "security": [],
         "summary": "Record a Referral: one tap on \"send on WhatsApp\", which sends a Shared Build to an active Vendor that gave a WhatsApp number, and answer the Vendor with its number, so that the chat can be opened. Each call is one Referral, and nothing about the Shopper is recorded",
-        "tags": ["Referral"]
+        "tags": ["SharedBuildReferrals"]
       }
     },
     "/v1/referral-counts": {

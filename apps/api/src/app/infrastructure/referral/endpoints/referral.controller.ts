@@ -1,12 +1,6 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
-import {
-  CallerResolver,
-  ErrorStructureException,
-  PreAuthorize,
-  Public,
-  Role,
-} from '@pcp/core';
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { CallerResolver, ErrorStructureException, PreAuthorize, Role } from '@pcp/core';
 import { Either } from 'effect';
 
 import { ListReferralCountsQuery } from '~/domain/referral/ListReferralCountsQuery';
@@ -14,47 +8,23 @@ import {
   ReadVendorsReferralCountQuery,
   ReadVendorsReferralCountQueryInput,
 } from '~/domain/referral/ReadVendorsReferralCountQuery';
-import { RecordReferralCommand } from '~/domain/referral/RecordReferralCommand';
 
 import { ListReferralCountsRequest } from './ListReferralCountsRequest';
-import { RecordReferralRequest } from './RecordReferralRequest';
 import { ReferralCountResponse } from './ReferralCountResponse';
 import { ReferralCountsPageResponse } from './ReferralCountsPageResponse';
-import { ReferralResponse } from './ReferralResponse';
 
-// Referrals: recorded by anyone, since the Shopper app has no Login, and
-// counted for the Admin, or for a Vendor's own Login by the rule for which
-// Vendor a request acts for. No public endpoint answers a count.
+// Referral counts, for the Admin, or for a Vendor's own Login by the rule
+// for which Vendor a request acts for. Referrals are recorded by anyone, at
+// a public endpoint in a controller of its own
+// (`SharedBuildReferralsController`), and no public endpoint answers a
+// count.
 @Controller()
 export class ReferralController {
   constructor(
-    private readonly recordReferralCommand: RecordReferralCommand,
     private readonly listReferralCountsQuery: ListReferralCountsQuery,
     private readonly readVendorsReferralCountQuery: ReadVendorsReferralCountQuery,
     private readonly callerResolver: CallerResolver,
   ) {}
-
-  @ApiOperation({
-    summary:
-      'Record a Referral: one tap on "send on WhatsApp", which sends a Shared Build to an active Vendor that gave a WhatsApp number, and answer the Vendor with its number, so that the chat can be opened. Each call is one Referral, and nothing about the Shopper is recorded',
-    security: [],
-  })
-  @ApiCreatedResponse({ type: ReferralResponse })
-  @Public()
-  @Post('v1/shared-builds/:sharedBuildId/referrals')
-  async recordReferral(
-    @Param('sharedBuildId') sharedBuildId: string,
-    @Body() request: RecordReferralRequest,
-  ): Promise<ReferralResponse> {
-    const result = await this.recordReferralCommand.execute(
-      request.toCommandInput(sharedBuildId),
-    );
-
-    return result.pipe(
-      Either.map(ReferralResponse.of),
-      Either.getOrThrowWith(ErrorStructureException.of),
-    );
-  }
 
   @ApiOperation({
     summary:
