@@ -21,7 +21,7 @@ This makes success criterion 8 true.
   - From the Shared Build page it is sent to `/{language}/builds/{sharedBuildId}/send`.
   - Each then records the Referral through `POST v1/shared-builds/{id}/referrals`, and is answered by `answerAForm` with 303 and the chat's address. `whatsAppChatWith` from `@pcp/links` writes that address with the number the Referral answered.
 - [x] **The message** is one sentence in the page's language, naming the Vendor as it wrote its name, then the link. The link is `SHOPPER_PUBLIC_URL` followed by the Shared Build page's address in that language. It names no price and no city.
-- [ ] **Refusals.** A Vendor deactivated, or without a WhatsApp number, since the page was drawn, an empty or refused Build, and an API that does not answer each come back to the page the form was sent from, with the reason in the address. The page says the reason, and no chat is opened.
+- [x] **Refusals.** A Vendor deactivated, or without a WhatsApp number, since the page was drawn, an empty or refused Build, and an API that does not answer each come back to the page the form was sent from, with the reason in the address. The page says the reason, and no chat is opened.
 - [x] **With script**, the button cannot be pressed again while its first tap is being handled. Without script, each tap is a Referral, as SHR-6 says.
 - [x] **Words.** The message and the refusals are in the `i18n` library's Shopper set in all three languages, the Kurdish and Arabic drafts for LANG-7. Removing the Arabic text of the message is seen to fail `pnpm check` once, then reverted.
 - [x] **Seam 4**, the Shopper's unit tests:
@@ -147,3 +147,20 @@ So the box of the refusals stays open until the owner answers, and DESIGN.md is 
 - `pnpm platform:check`, under the lock, on `7071eea`: 466 passed in 22.7 minutes, none failed, this ticket's 12 lines among them and every earlier spec unchanged but `admin-referrals.spec.ts`, whose helpers moved.
 - `pnpm integration:check` was not run: the ticket changes no API code.
 - This record is gated with `pnpm check --skip-nx-cache` after deleting every `*.tsbuildinfo` outside `node_modules`. `sharing/integration` has not moved since `b65eb55`, which the branch starts from; the Finish merges it again once the owner has answered.
+
+### 17 November 2026: the owner's answers, and the Finish
+
+The coordinator put the three questions and the page in `.taste-skill/sharing-05/` to the owner, and relayed the owner's words: "All recommendations". So, each as built:
+
+1. **`#d1` A.** A send refused for a Vendor no longer on the page, as one deactivated since the page was drawn, is said at the head of the Vendors' sheet, under its note, without the Vendor's name: "The Vendor you chose can no longer be reached through the platform."; on a page left with no Vendors' sheet, under the slip's action.
+2. **`#d2` A.** A Vendor that took away its WhatsApp number since the page was drawn is said under its line in the deactivated Vendor's words, "<the Vendor as written> can no longer be reached through the platform.", the line now saying "Gave no WhatsApp number".
+3. **`#d3` A.** A send from the Build page of an emptied Build, or of one the API refuses, is answered as Share this Build's refusals are, since a send shares first.
+
+The refusals' box is ticked: every refusal the ticket names comes back to the page the form was sent from with its reason in the address, the page says it, no chat is opened, and seam 3 proves each that a line of the platform can cause, the API that does not answer seen by hand.
+
+**DESIGN.md**, merged by Impeccable as the file stands (its `document` reference's merge, the owner's answers being the instruction), in the file's own terms: the head comment; Components › The Build page › Send on WhatsApp, with the three answers and, from building, the refusal at the foot of its Vendor's line under "Its Parts", as ticket 02's rendering set it, and a Vendor past the fifth coming unfolded with its refusal; Layout › The feel on a phone › One tap, one Referral, a button sent to a new tab taking taps again once its page is seen again; and Motion 12's refused send, printing in at the sheet's head too. Nothing of ADR-0013 is replaced, so no ADR is written.
+
+**The Finish.**
+- `sharing/integration` is still `b65eb55`, the commit the branch starts from, so there was nothing to merge.
+- Every `*.tsbuildinfo` outside `node_modules` deleted, then `pnpm check --skip-nx-cache` on the commit that closes this record.
+- No code changed since `pnpm platform:check` passed on `7071eea` (466 passed), so it was not run again; `pnpm integration:check` was not needed, the ticket changing no API code.
