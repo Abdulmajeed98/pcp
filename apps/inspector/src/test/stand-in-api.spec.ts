@@ -1073,7 +1073,7 @@ describe('the stand-in API', () => {
     const sharedBuild = (counter: number) =>
       get(`/v1/shared-builds/${madeUpIdentifier(counter)}`);
 
-    it("made from the complete made-up Build is answered with its Parts and quantities, in the catalog's order of Categories, and when it was shared, three hours before now", () => {
+    it("made from the complete made-up Build is answered with its Parts and quantities, in the catalog's order of Categories, and when it was shared, three hours before now, today in Iraq's time", () => {
       const answer = sharedBuild(700001);
 
       expect(answer.status).toBe(200);
@@ -1081,6 +1081,8 @@ describe('the stand-in API', () => {
       expect(answer.body).toEqual({
         id: madeUpIdentifier(700001),
         sharedAt: '2026-10-21T06:00:00.000Z',
+        sharedOn: '2026-10-21',
+        daysSinceShared: 0,
         part: [
           idOf(ryzen7600X),
           idOf(nhD15),
@@ -1098,6 +1100,8 @@ describe('the stand-in API', () => {
       const body = sharedBuild(700002).body as SharedBuildResponse;
 
       expect(body.sharedAt).toBe('2026-10-09T05:00:00.000Z');
+      expect(body.sharedOn).toBe('2026-10-09');
+      expect(body.daysSinceShared).toBe(12);
       expect(body.part.length).toBe(22);
       expect(body.part.slice(0, 4)).toEqual([
         idOf(ryzen7800X3D),
@@ -1118,6 +1122,8 @@ describe('the stand-in API', () => {
       const build = buildOf('IQD', ...body.part).body as BuildResponse;
 
       expect(body.sharedAt).toBe('2025-09-16T09:00:00.000Z');
+      expect(body.sharedOn).toBe('2025-09-16');
+      expect(body.daysSinceShared).toBe(400);
       expect(body.part).toHaveLength(8);
       expect(body.part.filter((value) => value.includes(':'))).toHaveLength(3);
       expect(build.parts).toEqual([]);

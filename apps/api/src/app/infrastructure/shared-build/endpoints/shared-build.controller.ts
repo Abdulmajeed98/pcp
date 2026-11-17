@@ -76,7 +76,9 @@ export class SharedBuildController {
     );
 
     return result.pipe(
-      Either.map((output) => SharedBuildResponse.of(output.getSharedBuild())),
+      Either.map((output) =>
+        SharedBuildResponse.of(output.getSharedBuild(), output.getReadAt()),
+      ),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

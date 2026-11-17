@@ -4950,6 +4950,18 @@
             "description": "When the Build was first shared, by the API's clock.",
             "format": "date-time"
           },
+          "sharedOn": {
+            "type": "string",
+            "description": "The day it was shared, in Iraq's time (`Asia/Baghdad`), where everyone using the platform is, as a date.",
+            "format": "date",
+            "example": "2026-11-16"
+          },
+          "daysSinceShared": {
+            "type": "integer",
+            "description": "The calendar days, in Iraq's time, from the day it was shared to today, by the API's clock: 0 on the day it was shared and 1 on the next, whatever the hours between, so that the count always agrees with `sharedOn`.",
+            "minimum": 0,
+            "example": 1
+          },
           "part": {
             "description": "The Build's Parts and quantities as they were shared, never changed since, as `GET v1/build` takes them in `part`: lower-case identifiers, in the catalog's order of Categories, then the Build's order for RAM kits and drives, each kit or drive followed by `:` and its quantity. A Part that has left the catalog since stays among them, and `GET v1/build` leaves it out.",
             "example": [
@@ -4962,7 +4974,7 @@
             }
           }
         },
-        "required": ["id", "sharedAt", "part"]
+        "required": ["id", "sharedAt", "sharedOn", "daysSinceShared", "part"]
       },
       "RecordReferralRequest": {
         "type": "object",
