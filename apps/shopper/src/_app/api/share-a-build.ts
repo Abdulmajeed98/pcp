@@ -1,5 +1,5 @@
 import { type Build, partValuesOf } from '@/entities/build';
-import { apiClient, refusesTheBuild } from '@/shared/api';
+import { apiClient, refusesTheBuild, theApisErrors } from '@/shared/api';
 
 // What sharing a Build came to: the Shared Build that holds it, stored now
 // or by an earlier share of the same Build; a Build the API refuses, which
@@ -24,7 +24,8 @@ export async function shareABuild(build: Build): Promise<Shared> {
   });
   if (data !== undefined) return { kind: 'shared', sharedBuildId: data.id };
   if (!refusesTheBuild({ status: response?.status, error })) return { kind: 'not-shared' };
-  const empty =
-    error?.errors.some((each) => each.additionalInformation?.reason === 'empty') ?? false;
+  const empty = theApisErrors(error).some(
+    (each) => each.additionalInformation?.reason === 'empty',
+  );
   return empty ? { kind: 'empty' } : { kind: 'refused' };
 }

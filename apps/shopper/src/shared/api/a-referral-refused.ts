@@ -1,4 +1,6 @@
-import type { ErrorResponse, SubErrorResponse } from '@pcp/api-client';
+import type { ErrorResponse } from '@pcp/api-client';
+
+import { theApisErrors } from './the-apis-errors';
 
 // Why the API did not record a Referral, for "send on WhatsApp" (the
 // sharing spec's The API): a Vendor the platform can no longer reach,
@@ -7,14 +9,6 @@ import type { ErrorResponse, SubErrorResponse } from '@pcp/api-client';
 // `SHARED_BUILD_NOT_FOUND`), which only an address changed by hand names;
 // or an API that did not answer, or failed.
 export type ReferralRefused = 'not-reachable' | 'no-shared-build' | 'not-answered';
-
-// The API's own errors in what the client handed back, or none: with no
-// answer the client hands back what the request threw, and a proxy's page in
-// front of a failing API holds no list of errors.
-function theApisErrors(error: ErrorResponse | undefined): SubErrorResponse[] {
-  const errors: unknown = (error as { errors?: unknown } | undefined)?.errors;
-  return Array.isArray(errors) ? (errors as SubErrorResponse[]) : [];
-}
 
 // Why a Referral was refused, from the status the API answered with, none
 // when it did not answer, and the error the client handed back.

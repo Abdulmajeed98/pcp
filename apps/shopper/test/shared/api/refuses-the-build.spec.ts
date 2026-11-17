@@ -35,4 +35,21 @@ describe('whether the API refuses the Build it was given', () => {
     expect(refusesTheBuild({ status: 503, error: aRefusalOf('part') })).toBe(false);
     expect(refusesTheBuild({ status: 500, error: undefined })).toBe(false);
   });
+
+  // A proxy in front of the API, or one that stands in for it while it
+  // fails, can answer 400 with a body of its own: a page, or an error that
+  // is not the API's. The client hands that body back as the error, so such
+  // an answer is read as an API that did not answer, never thrown on.
+  it('is not so for a 400 whose body is not the API’s', () => {
+    for (const body of [
+      '<html><body>400 Bad Request</body></html>',
+      { message: 'Bad Request' },
+      { errors: 'part' },
+      null,
+    ]) {
+      expect(
+        refusesTheBuild({ status: 400, error: body as unknown as ErrorResponse }),
+      ).toBe(false);
+    }
+  });
 });
