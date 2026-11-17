@@ -63,7 +63,7 @@ Everything works before any script has loaded. This makes success criterion 7 tr
   - Copy into my Build and its confirmation with a thumb;
   - a Shared Build's link pasted into WhatsApp showing its preview in each language;
   - the motion felt on a real phone, with reduced motion on and off.
-- [ ] `pnpm check` and `pnpm platform:check` pass, and the work is committed.
+- [x] `pnpm check` and `pnpm platform:check` pass, and the work is committed.
 
 ## Comments
 
@@ -205,3 +205,9 @@ Every WARN is defended:
 - `first-action`, which had warned at desks, is gone on every page: the one action stands under the price lines.
 
 The pictures were looked at, one of each kind of page: the Kurdish "This is your Build" at 390 (Share the link on the slip, the title on the first screen), the Kurdish worst case at a desk (Copy into my Build under the price lines, the link and its button on the sheet), the Kurdish worst-case Build page at 768, the English reader's page at 390 in dark, the English Build page at a desk, and the Kurdish page whose Parts have all gone at 768 in dark: each piece on its paper, right to left in Kurdish, and nothing past its paper.
+
+### 17 November 2026: the Finish
+
+- `sharing/integration`'s tip, `e9e39eb` (ticket 03's dashboard), merged into the branch with no conflict (`b8aeaa6`); it changes no Shopper file and no API file, so `pnpm integration:check` was not needed.
+- Every `*.tsbuildinfo` outside `node_modules` deleted, then `pnpm check --skip-nx-cache` on the merge: 32 tasks, all passed.
+- `pnpm platform:check` under the lock on the merge: 454 passed in 21.9 minutes, none failed, the sharing spec's 12 lines among them. This record is the last commit, gated with `pnpm check --skip-nx-cache` once more.
