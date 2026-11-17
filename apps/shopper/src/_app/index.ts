@@ -9,3 +9,4 @@ export {
 export { chooseCurrency } from './routes/choose-currency';
 export { chooseScheme } from './routes/choose-scheme';
 export { passThePhotoThrough } from './routes/pass-the-photo-through';
+export { copyASharedBuild, shareTheBuild } from './routes/share-and-copy';

@@ -1,6 +1,7 @@
 export { buttonVariants } from './button';
 export { DimPhotograph } from './dim-photograph';
 export { drawnAgain, markDrawnAgain } from './drawn-again';
+export { HeldWords } from './held-words';
 export { Item, type NameAlone, whereAPartsNameStands } from './item';
 export { MarkADrawingAgain } from './mark-a-drawing-again';
 export { nameType, nameTypeOnANarrowPiece } from './name-type';
@@ -20,4 +21,5 @@ export {
   SheetTitle,
 } from './sheet';
 export { Stamp } from './stamp';
+export { SubmitOnce } from './submit-once';
 export { TearOffTabs } from './tear-off-tabs';

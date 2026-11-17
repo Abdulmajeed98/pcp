@@ -16,6 +16,11 @@ type Answered = Pick<
 // needs, which the page draws as a link to that Category's picker.
 export type StatusPiece = string | { category: Category; words: string };
 
+// Whose Build a page shows: the Shopper's own, on the Build page, or a
+// Shared Build, whose page speaks of it as the sender's, never the reader's
+// (DESIGN.md's The Shared Build page).
+export type Whose = 'yours' | 'shared';
+
 // The Build page's status (DESIGN.md's The status), in the page's language:
 // its sentence; a line for each value of the CPU that the rule for a Complete
 // Build read; and whether the slip is stamped "Complete Build".
@@ -35,13 +40,24 @@ export interface Status {
 // the Build holds a CPU and no Part of the Category the value stands in for:
 // that the CPU has integrated graphics or comes with a cooler, so that one is
 // not needed; or, when the API says the CPU does not hold the value, that it
-// does not say, so that one is counted as needed.
-export function statusOf(answer: Answered, language: Language): Status {
+// does not say, so that one is counted as needed. A Shared Build's lines
+// speak of its CPU, "Its CPU has integrated graphics…".
+export function statusOf(
+  answer: Answered,
+  language: Language,
+  whose: Whose = 'yours',
+): Status {
   const t = createTranslator({
     locale: language,
     messages: shopperMessages[language],
     namespace: 'BuildPage.status',
   });
+  const itsCpu = createTranslator({
+    locale: language,
+    messages: shopperMessages[language],
+    namespace: 'SharedBuildPage.status',
+  });
+  const aboutTheCpu = whose === 'yours' ? t : itsCpu;
   const problems = outcomeCountsOf(answer.outcomes).problem;
   const holds = (category: Category) =>
     answer.parts.some((part) => part.category === category);
@@ -55,8 +71,10 @@ export function statusOf(answer: Answered, language: Language): Status {
       notKnown: 'graphicsNotKnown' | 'coolerNotKnown',
     ) => {
       if (holds(category)) return;
-      if (answer.cpuValuesNotKnown.includes(value)) lines.push(t(notKnown));
-      else if (!answer.stillNeeded.includes(category)) lines.push(t(provided));
+      if (answer.cpuValuesNotKnown.includes(value)) lines.push(aboutTheCpu(notKnown));
+      else if (!answer.stillNeeded.includes(category)) {
+        lines.push(aboutTheCpu(provided));
+      }
     };
     lineFor('gpu', 'integratedGraphics', 'hasGraphics', 'graphicsNotKnown');
     lineFor('cpuCooler', 'includesCooler', 'includesCooler', 'coolerNotKnown');

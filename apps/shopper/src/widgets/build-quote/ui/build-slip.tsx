@@ -10,6 +10,7 @@ import { ShownPrice } from '@/shared/price';
 import { Stamp } from '@/shared/ui';
 
 import { outcomeCountsOf, powerDrawOf } from '../model/findings';
+import type { Whose } from '../model/status';
 
 // The Build's till slip (DESIGN.md's The Build's till slip): the price slip
 // of a Part page, the same paper, width, torn foot and rules, carrying the
@@ -38,16 +39,29 @@ import { outcomeCountsOf, powerDrawOf } from '../model/findings';
 // place 32 pixels from the top while the sheet scrolls past (Motion 7). It is
 // on the first screen, so it prints as the page opens (Motion 1). Each figure
 // a change in place may alter is named for the page's script, which settles
-// it again (Motion 11), and so is the space of its lines and of its foot.
+// it again (Motion 11), and so is the space of its lines, of what the
+// Shopper can do and of its foot.
+//
+// Under its lines and a dashed rule, above its foot, it carries what the
+// Shopper can do with the Build (`children`), each as wide as the slip and
+// 12 pixels apart, under a dashed rule of its own: the share button on the
+// Build page, and on a Shared Build's page Copy into my Build, or "This is
+// your Build", and the link (DESIGN.md's The share button and The Shared
+// Build page). A Shared Build's slip is headed "Shared Build · 8 Parts".
 export async function BuildSlip({
   answer,
   stamped,
+  whose = 'yours',
+  children,
 }: {
   answer: BuildResponse;
   stamped: boolean;
+  whose?: Whose;
+  children?: ReactNode;
 }) {
-  const [t, site] = await Promise.all([
+  const [t, shared, site] = await Promise.all([
     getTranslations('BuildPage'),
+    getTranslations('SharedBuildPage'),
     getTranslations('Site'),
   ]);
   const rule =
@@ -73,7 +87,9 @@ export async function BuildSlip({
       >
         <p className="type-label text-center">{site('name')}</p>
         <p data-testid="slip-heading" className={`mt-1 pb-3.5 text-center ${rule}`}>
-          {t('slip.yourBuild', { count: parts, countText: formatNumber(parts) })}
+          {whose === 'shared'
+            ? shared('slip', { count: parts, countText: formatNumber(parts) })
+            : t('slip.yourBuild', { count: parts, countText: formatNumber(parts) })}
         </p>
         <ul
           data-space="slip"
@@ -122,6 +138,12 @@ export async function BuildSlip({
             </>
           )}
         </ul>
+        <div
+          data-space="slip-actions"
+          className={`grid grid-cols-[minmax(0,1fr)] gap-3 py-4 empty:hidden ${rule}`}
+        >
+          {children}
+        </div>
         <div
           data-space="slip-foot"
           className="grid grid-cols-[minmax(0,1fr)] gap-3 pt-3.5 text-center text-sm text-muted-foreground"

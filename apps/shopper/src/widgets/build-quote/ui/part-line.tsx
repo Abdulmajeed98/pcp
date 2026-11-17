@@ -15,16 +15,25 @@ import { Item, whereAPartsNameStands } from '@/shared/ui';
 // Part page (a Visible Part only), the leader, its price at the end, and its
 // second line, its manufacturer and where its Lowest Price comes from; a long
 // name keeps the Long Name Rule. The Build page sets its controls under it.
+// A Shared Build's sheet has no controls, so a kit's or a drive's quantity is
+// in its second line, "Quantity 2" (`quantityShown`, DESIGN.md's The Shared
+// Build page).
 export async function PartLine({
   part,
   place,
+  quantityShown = false,
 }: {
   part: BuildPartResponse;
   // The line's place on the sheet, from 0, which staggers its price as the
   // sheet prints (Motion 2).
   place: number;
+  quantityShown?: boolean;
 }) {
-  const [language, t] = await Promise.all([getLocale(), getTranslations('BuildPage')]);
+  const [language, t, shared] = await Promise.all([
+    getLocale(),
+    getTranslations('BuildPage'),
+    getTranslations('SharedBuildPage'),
+  ]);
 
   // A Part's price on the Build's sheet (DESIGN.md's A Part's price on the
   // Build's sheet), the first price view (BLD-7): its Lowest Price times its
@@ -117,6 +126,14 @@ export async function PartLine({
         second={
           <>
             <AlwaysEnglish>{part.manufacturer}</AlwaysEnglish>
+            {quantityShown && part.quantity !== null && (
+              <>
+                {' · '}
+                <span data-testid="quantity-held" data-quantity={part.quantity}>
+                  {shared('quantity', { quantity: formatNumber(part.quantity) })}
+                </span>
+              </>
+            )}
             {whereItIsPriced()}
           </>
         }

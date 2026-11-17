@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 
 import { buildAddress, buildIn, partsCountedIn, writeTheBuild } from '@/entities/build';
 import { ChangesInPlace, refusalIn } from '@/features/change-the-build';
+import { refusedShareIn, ShareThisBuild } from '@/features/share-a-build';
 import { chosenCurrency } from '@/shared/currency';
 import { type Photograph, photographs } from '@/shared/photographs';
 import { type AddressQuery, fieldsOf } from '@/shared/lib';
@@ -35,6 +36,11 @@ import { BuildSheet } from './build-sheet';
 // says it cannot be read, with Empty the Build; and in both its cookie is
 // left as it is. Every piece the API's answer fills is drawn again in place
 // by a change with script (Motion 11).
+//
+// Its slip carries Share this Build when the Build holds a Part, and none
+// when it is empty or refused; a share refused is said under it, as the
+// address after it says (`refusedShareIn`), and on an empty Build's slip in
+// its place.
 export async function BuildPage({ searchParams }: { searchParams: Promise<AddressQuery> }) {
   const [address, language, currency, sent, t] = await Promise.all([
     searchParams,
@@ -46,7 +52,9 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
   const build = buildIn(sent);
   const read = await readTheBuildPage(build, currency);
   const answer = read.kind === 'read' ? read.answer : undefined;
-  const refused = refusalIn(new URLSearchParams(fieldsOf(address)));
+  const query = new URLSearchParams(fieldsOf(address));
+  const refused = refusalIn(query);
+  const shareRefused = refusedShareIn(query);
 
   return (
     <>
@@ -69,7 +77,25 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
           <main className="relative isolate flex-1 px-ground-edge py-section-phone md:page-margins md:py-section">
             <DimPhotograph photograph={photographs.builtPc} first />
             <div className="mx-auto grid w-full max-w-[40rem] grid-cols-[minmax(0,1fr)] justify-items-center gap-y-10 lg:max-w-none lg:grid-cols-[minmax(0,23rem)_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
-              <BuildSlip answer={answer} stamped={statusOf(answer, language).stamped} />
+              <BuildSlip answer={answer} stamped={statusOf(answer, language).stamped}>
+                {answer.parts.length > 0 ? (
+                  <ShareThisBuild
+                    action={`${buildAddress(language)}/share`}
+                    words={{ button: t('share.button'), busy: t('share.busy') }}
+                    refused={
+                      shareRefused === undefined
+                        ? undefined
+                        : t(`share.refused.${shareRefused}`)
+                    }
+                  />
+                ) : (
+                  shareRefused !== undefined && (
+                    <output data-testid="share-refused" className="block text-base">
+                      {t(`share.refused.${shareRefused}`)}
+                    </output>
+                  )
+                )}
+              </BuildSlip>
               <BuildSheet answer={answer} refused={refused} />
             </div>
           </main>

@@ -273,5 +273,42 @@ describe("the Build page's status", () => {
         statusOf(aBuild(['cpu', 'cpuCooler'], { stillNeeded: ['psu'] }), 'en').lines,
       ).toEqual(['Your CPU has integrated graphics, so a GPU is not needed.']);
     });
+
+    // A Shared Build's page speaks of the Build as the sender's, never the
+    // reader's (DESIGN.md's The Shared Build page).
+    it.each<[Language, string[]]>([
+      [
+        'en',
+        [
+          'Its CPU has integrated graphics, so a GPU is not needed.',
+          'Its CPU does not say whether it comes with a cooler, so a CPU cooler is counted as needed.',
+        ],
+      ],
+      [
+        'ckb',
+        [
+          'پرۆسێسەرەکەی گرافیکی تێدایە، بۆیە کارتی گرافیک پێویست نییە.',
+          'پرۆسێسەرەکەی ناڵێت ساردکەرەوەی لەگەڵدایە یان نا، بۆیە ساردکەرەوەی پرۆسێسەر بە پێویست دادەنرێت.',
+        ],
+      ],
+      [
+        'ar',
+        [
+          'في معالجها رسوميات مدمجة، لذا لا حاجة إلى بطاقة رسومات.',
+          'لا يذكر معالجها إن كان يأتي مع مبرّد، لذا يُحسب مبرّد المعالج مطلوبًا.',
+        ],
+      ],
+    ])("speak of a Shared Build's CPU as its own, in %s", (language, lines) => {
+      const status = statusOf(
+        aBuild(['cpu', 'motherboard'], {
+          stillNeeded: ['cpuCooler', 'ram', 'storage', 'case', 'psu'],
+          cpuValuesNotKnown: ['includesCooler'],
+        }),
+        language,
+        'shared',
+      );
+
+      expect(status.lines).toEqual(lines);
+    });
   });
 });

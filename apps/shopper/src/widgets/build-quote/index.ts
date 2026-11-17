@@ -10,7 +10,7 @@ export {
   powerDrawOf,
   type WordedOutcome,
 } from './model/findings';
-export { type Status, type StatusPiece, statusOf } from './model/status';
+export { type Status, type StatusPiece, statusOf, type Whose } from './model/status';
 export { BuildSlip } from './ui/build-slip';
 export { BuildStatus } from './ui/build-status';
 export { PartLine } from './ui/part-line';
