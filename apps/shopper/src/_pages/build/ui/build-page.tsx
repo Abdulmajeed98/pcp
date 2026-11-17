@@ -21,7 +21,9 @@ import { BuildSheet } from './build-sheet';
 // stub, its way to the Build marked as the page the Shopper is on; then,
 // over a dim photograph of a built PC, the Build's till slip beside the
 // Build's sheet, centred and 56 pixels apart, the slip pinned from 64rem,
-// and below 64rem the slip first, then the sheet; then the rules' sheet,
+// and below 64rem the slip first, then the sheet, 24 pixels apart, so that
+// the title stays on a phone's first screen under the slip and its share
+// button (sharing ticket 04); then the rules' sheet,
 // centred over a dim photograph of a board; then the sheet of the Vendors,
 // centred over the dim photograph of a water-cooled PC; the back cover. An
 // empty Build has its slip and its sheet, and no rules' sheet and no
@@ -76,7 +78,7 @@ export async function BuildPage({ searchParams }: { searchParams: Promise<Addres
         <ChangesInPlace drawnFor={writeTheBuild(build)} className="flex flex-1 flex-col">
           <main className="relative isolate flex-1 px-ground-edge py-section-phone md:page-margins md:py-section">
             <DimPhotograph photograph={photographs.builtPc} first />
-            <div className="mx-auto grid w-full max-w-[40rem] grid-cols-[minmax(0,1fr)] justify-items-center gap-y-10 lg:max-w-none lg:grid-cols-[minmax(0,23rem)_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
+            <div className="mx-auto grid w-full max-w-[40rem] grid-cols-[minmax(0,1fr)] justify-items-center gap-y-6 lg:max-w-none lg:grid-cols-[minmax(0,23rem)_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
               <BuildSlip answer={answer} stamped={statusOf(answer, language).stamped}>
                 {answer.parts.length > 0 ? (
                   <ShareThisBuild

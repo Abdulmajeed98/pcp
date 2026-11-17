@@ -26,7 +26,7 @@ import { TheSlipsAction } from './what-the-reader-can-do';
 // stamped with the day it was shared. The stub, its way to the Build leading
 // to the reader's own Build; then, over a dim photograph of a built PC, the
 // Shared Build's till slip beside its sheet, the slip pinned from 64rem and
-// first on a phone, carrying its reader's one action right under its price
+// first on a phone, 24 pixels above the sheet, carrying its reader's one action right under its price
 // lines, and the sheet the link and the rest its reader can do under its
 // note; then the rules' sheet and the Vendors' sheet over their
 // photographs; the back cover. Its words speak of the Build as the
@@ -85,7 +85,7 @@ export async function SharedBuildPage({
         <div className="flex flex-1 flex-col">
           <main className="relative isolate flex-1 px-ground-edge py-section-phone md:page-margins md:py-section">
             <DimPhotograph photograph={photographs.builtPc} first />
-            <div className="mx-auto grid w-full max-w-[40rem] grid-cols-[minmax(0,1fr)] justify-items-center gap-y-10 lg:max-w-none lg:grid-cols-[minmax(0,23rem)_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
+            <div className="mx-auto grid w-full max-w-[40rem] grid-cols-[minmax(0,1fr)] justify-items-center gap-y-6 lg:max-w-none lg:grid-cols-[minmax(0,23rem)_minmax(0,40rem)] lg:items-start lg:justify-center lg:gap-x-14">
               <BuildSlip
                 answer={read.answer}
                 stamped={statusOf(read.answer, language, 'shared').stamped}
