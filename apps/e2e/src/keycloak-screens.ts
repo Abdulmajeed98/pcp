@@ -42,12 +42,15 @@ export async function expectNewPasswordScreen(page: Page): Promise<void> {
 
 // Opens the dashboard in a browser of its own, which knows nothing of any
 // earlier login, and gives `use` its page once Keycloak's login screen shows.
-// The browser is closed afterwards, whatever happens.
+// The browser is closed afterwards, whatever happens. It runs script, which
+// the dashboard needs, whatever the line that asks for it uses, since a
+// context made in a set-up hook takes the options of the worker's first
+// line (browse ticket 10), which may switch script off.
 export async function atTheLoginScreenInABrowserOfItsOwn<Result>(
   browser: Browser,
   use: (page: Page) => Promise<Result>,
 ): Promise<Result> {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ javaScriptEnabled: true });
   try {
     const page = await context.newPage();
     await page.goto(dashboardUrl);

@@ -1381,6 +1381,26 @@
 }
 
 /*
+ * A refused send (DESIGN.md's Motion 12): the page the new tab opens at the
+ * Vendor's line is shown printed, as a page opened at an anchor is, and the
+ * refusal under the line alone prints in, as a line the Build gains does
+ * (11's `line-prints`, `--line-print`, uncovered from its top edge while it
+ * slides 8 pixels down), 150 ms after the first paint, so that the eye finds
+ * it. It moves nothing around it: its space is the page's from the first
+ * frame. Without script or with reduced motion it is there at once, and on a
+ * page come back to it is shown printed.
+ */
+@utility prints-under-its-line {
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    animation: line-prints var(--line-print) var(--ease-out) 150ms both;
+
+    :root[data-returned] & {
+      animation: none;
+    }
+  }
+}
+
+/*
  * 11. A change to the Build: with script, a change on the Build page applies
  * in place, and the page holds still but for what the change brought. The
  * page's script opens the space of a line the Build gains and folds the space

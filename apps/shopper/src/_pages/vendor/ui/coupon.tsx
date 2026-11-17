@@ -4,7 +4,7 @@ import { cn } from 'cn';
 import { getTranslations } from 'next-intl/server';
 
 import { type ContactLink, contactLinksOf, WrittenOnLines } from '@/entities/vendor';
-import { nameTypeOnANarrowPiece, TearOffTabs } from '@/shared/ui';
+import { nameTypeOnANarrowPiece, OutArrow, TearOffTabs } from '@/shared/ui';
 
 // How many tear-off tabs the coupon's foot is cut into, each a call: two rows
 // of three on a phone, and one row from 48rem.
@@ -133,28 +133,6 @@ export async function Coupon({ vendor }: { vendor: VisibleVendorResponse }) {
         />
       )}
     </div>
-  );
-}
-
-// An arrow out of the page, toward the end side and up, after Open in Google
-// Maps, which opens in a new tab: drawn, since none of the page's faces
-// draws an arrow, mirrored in Kurdish and Arabic, and hidden from readers,
-// the link saying in words that it opens in a new tab.
-function OutArrow() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      className="size-4 shrink-0 rtl:-scale-x-100"
-    >
-      <path
-        d="M4 12 L12 4 M6 4 H12 V10"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="square"
-      />
-    </svg>
   );
 }
 

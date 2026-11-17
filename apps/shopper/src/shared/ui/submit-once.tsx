@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { buttonVariants } from './button';
 import { HeldWords } from './held-words';
@@ -31,7 +31,9 @@ export function SubmitOnce({
   label,
 }: {
   kind: keyof typeof busyGrounds;
-  words: { idle: string; busy: string };
+  // Its words, and its words while busy; its idle words may carry a drawn
+  // mark after them, as Send on WhatsApp's arrow.
+  words: { idle: ReactNode; busy: string };
   className?: string;
   testId: string;
   // Its name for a screen reader, when its words alone do not say what it
@@ -63,12 +65,30 @@ export function SubmitOnce({
       sent.current = false;
       setBusy(false);
     }
+    // A form sent to a new tab, as Send on WhatsApp is, leaves its page in
+    // its own tab, hidden while the new tab or the app it hands over to is
+    // in front: the page is shown again when the Shopper comes back to it,
+    // and then takes its taps again.
+    let hiddenSinceSent = false;
+    function seenAgain() {
+      if (!sent.current) return;
+      if (document.visibilityState === 'hidden') {
+        hiddenSinceSent = true;
+        return;
+      }
+      if (!hiddenSinceSent) return;
+      hiddenSinceSent = false;
+      sent.current = false;
+      setBusy(false);
+    }
 
     form.addEventListener('submit', once);
     window.addEventListener('pageshow', shownAgain);
+    document.addEventListener('visibilitychange', seenAgain);
     return () => {
       form.removeEventListener('submit', once);
       window.removeEventListener('pageshow', shownAgain);
+      document.removeEventListener('visibilitychange', seenAgain);
     };
   }, []);
 

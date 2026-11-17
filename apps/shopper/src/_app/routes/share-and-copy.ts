@@ -1,3 +1,4 @@
+import type { Language } from '@pcp/i18n';
 import { cookies } from 'next/headers';
 
 import { buildIn, rememberTheBuild, writeTheBuild } from '@/entities/build';
@@ -7,23 +8,24 @@ import { addressAfterARefusedShare } from '@/features/share-a-build';
 
 import { readASharedBuildToCopy } from '../api/read-a-shared-build-to-copy';
 import { readTheBuildToChange } from '../api/read-the-build-to-change';
-import { shareABuild } from '../api/share-a-build';
-import { answerAForm } from './answer-a-form';
+import { type Shared, shareABuild } from '../api/share-a-build';
+import { answerAForm, type FormAnswered } from './answer-a-form';
 
-// `POST /<language>/build/share`, Share this Build (SHR-1, SHR-4): the Build
-// the browser's cookie holds, as the catalog holds it, which forgets the
-// Parts it no longer holds, as a change to the Build does
-// (`readTheBuildToChange`), is shared, and the answer sends the Shopper to
-// its Shared Build page, in the form's language, whose address is the link.
-// Sharing an unchanged Build again finds the same Shared Build, so it gives
-// the same link. A share refused comes back to the Build page with its
-// reason in the address: an empty Build, or one whose Parts have all left
-// the catalog, has nothing to share; a Build the API refuses cannot be read;
-// and an API that does not answer could not share it just now. When the
-// catalog no longer holds a Part, the cookie forgets it, so that the
-// browser's Build is the one shared. `answerAForm` says how the answer is
-// made.
-export const shareTheBuild = answerAForm(async (language) => {
+// What sharing the browser's Build came to, for the share form and for "send
+// on WhatsApp" from the Build page, which shares it first: the API's
+// answer, or nothing to share for an empty Build, which is not sent; and,
+// when the catalog no longer holds a Part of it, the cookie that forgets
+// the Part, so that the browser's Build is the one shared.
+export interface BrowsersBuildShared {
+  shared: Shared | { kind: 'nothing' };
+  forget: FormAnswered['write'];
+}
+
+// Shares the Build the browser's cookie holds, as the catalog holds it,
+// which forgets the Parts it no longer holds, as a change to the Build does
+// (`readTheBuildToChange`). Sharing an unchanged Build again finds the same
+// Shared Build.
+export async function shareTheBrowsersBuild(): Promise<BrowsersBuildShared> {
   const kept = buildIn(await cookies());
   const build = await readTheBuildToChange(kept);
   const forget =
@@ -31,17 +33,21 @@ export const shareTheBuild = answerAForm(async (language) => {
       ? undefined
       : (response: Parameters<typeof rememberTheBuild>[0]) =>
           rememberTheBuild(response, build);
-  if (build.length === 0) {
-    return {
-      address: addressAfterARefusedShare(language, 'nothingToShare'),
-      write: forget,
-    };
-  }
+  if (build.length === 0) return { shared: { kind: 'nothing' }, forget };
+  return { shared: await shareABuild(build), forget };
+}
 
-  const shared = await shareABuild(build);
+// The answer to a share of the Build page refused before its Shared Build
+// was stored, for the share form and for "send on WhatsApp", which shares
+// first: an empty Build, or one whose Parts have all left the catalog, has
+// nothing to share, and a Build the API refuses cannot be read, each said
+// on the Build page as a share refused is (DESIGN.md's The share button).
+export function aRefusedShare(
+  language: Language,
+  { shared, forget }: BrowsersBuildShared,
+): FormAnswered | undefined {
   switch (shared.kind) {
-    case 'shared':
-      return { address: sharedBuildAddress(language, shared.sharedBuildId), write: forget };
+    case 'nothing':
     case 'empty':
       return {
         address: addressAfterARefusedShare(language, 'nothingToShare'),
@@ -50,8 +56,31 @@ export const shareTheBuild = answerAForm(async (language) => {
     case 'refused':
       return { address: addressAfterARefusedShare(language, 'notReadable') };
     default:
-      return { address: addressAfterARefusedShare(language, 'notShared') };
+      return undefined;
   }
+}
+
+// `POST /<language>/build/share`, Share this Build (SHR-1, SHR-4): the Build
+// the browser's cookie holds, as the catalog holds it, is shared
+// (`shareTheBrowsersBuild`), and the answer sends the Shopper to its Shared
+// Build page, in the form's language, whose address is the link. Sharing an
+// unchanged Build again finds the same Shared Build, so it gives the same
+// link. A share refused comes back to the Build page with its reason in the
+// address: an empty Build, or one whose Parts have all left the catalog, has
+// nothing to share; a Build the API refuses cannot be read; and an API that
+// does not answer could not share it just now. When the catalog no longer
+// holds a Part, the cookie forgets it, so that the browser's Build is the
+// one shared. `answerAForm` says how the answer is made.
+export const shareTheBuild = answerAForm(async (language) => {
+  const sharing = await shareTheBrowsersBuild();
+  const refused = aRefusedShare(language, sharing);
+  if (refused !== undefined) return refused;
+  return sharing.shared.kind === 'shared'
+    ? {
+        address: sharedBuildAddress(language, sharing.shared.sharedBuildId),
+        write: sharing.forget,
+      }
+    : { address: addressAfterARefusedShare(language, 'notShared') };
 });
 
 // `POST /<language>/builds/<sharedBuildId>/copy`, Copy into my Build

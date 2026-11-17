@@ -256,6 +256,18 @@
         "nothingToShare": "Your Build holds no Part yet, so there is nothing to share."
       }
     },
+    "send": {
+      "button": "Send on WhatsApp",
+      "busy": "Opening WhatsApp…",
+      "name": "Send on WhatsApp to {vendor}, in a new tab",
+      "noNumber": "Gave no WhatsApp number",
+      "message": "Hello {vendor}, I planned this PC on {site}: do you have its Parts?",
+      "refused": {
+        "notReachable": "{vendor} can no longer be reached through the platform.",
+        "notReachableUnnamed": "The Vendor you chose can no longer be reached through the platform.",
+        "notOpened": "WhatsApp could not be opened just now. Try again in a moment."
+      }
+    },
     "notRead": {
       "title": "Your Build cannot be read just now",
       "note": "Try again in a moment."
