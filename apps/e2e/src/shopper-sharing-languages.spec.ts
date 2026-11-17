@@ -61,8 +61,10 @@ import {
 import { createAMadeUpVendor, type MadeUpVendor } from './vendors';
 
 const [kurdish, , english] = languages;
-// The ticket's lines are checked in Kurdish and in English, right to left
-// and left to right, in a window as wide as a narrow phone.
+// The lines of the sharing spec's seam 3 are checked in Kurdish, Arabic and
+// English, in a window as wide as a narrow phone (the code review's fixes:
+// Arabic was left out of most of them); accessibility and the motion are
+// checked in Kurdish and English, right to left and left to right.
 const kurdishAndEnglish = [kurdish, english] as const;
 
 // The word unique to this run in its Parts' names.
@@ -175,7 +177,7 @@ async function expectThePricesAnswered(page: Page, answered: AnsweredBuild): Pro
   }
 }
 
-test("in Kurdish and English, sharing a Build lands on its Shared Build page, whose link a fresh browser opens with the same Parts and today's prices, and the sender's browser is told it holds this Build", async ({
+test("in Kurdish, Arabic and English, sharing a Build lands on its Shared Build page, whose link a fresh browser opens with the same Parts and today's prices, and the sender's browser is told it holds this Build", async ({
   page,
   browser,
 }) => {
@@ -183,7 +185,7 @@ test("in Kurdish and English, sharing a Build lands on its Shared Build page, wh
   const answered = await theBuildAsAnswered(page.request, sharedValues());
   const ids = new Map<Language, string>();
 
-  for (const language of kurdishAndEnglish) {
+  for (const language of languages) {
     await test.step(`in ${language.name}`, async () => {
       const sharedBuildId = await shareFromTheBuildPage(page, language.tag);
       ids.set(language, sharedBuildId);
@@ -238,10 +240,11 @@ test("in Kurdish and English, sharing a Build lands on its Shared Build page, wh
     });
   }
   // One Build, one Shared Build, whichever language it was shared in.
-  expect(ids.get(kurdish)).toBe(ids.get(english));
+  expect(ids.size).toBe(3);
+  expect(new Set(ids.values()).size).toBe(1);
 });
 
-test('after the Admin changes the price of one of its Offers, the Shared Build page shows the new price', async ({
+test('in Kurdish, Arabic and English, after the Admin changes the price of one of its Offers, the Shared Build page shows the new price', async ({
   page,
   browser,
 }) => {
@@ -263,86 +266,108 @@ test('after the Admin changes the price of one of its Offers, the Shared Build p
   const after = await theBuildAsAnswered(page.request, sharedValues());
   expect(after.totalAcrossVendors).not.toEqual(before.totalAcrossVendors);
 
-  await page.goto(sharedBuildPageIn(english.tag, sharedBuildId));
-  await expect(priceOf(page, cpu.id)).toHaveText('250,000 IQD');
-  await expectThePricesAnswered(page, after);
+  for (const language of languages) {
+    await test.step(`in ${language.name}`, async () => {
+      await page.goto(sharedBuildPageIn(language.tag, sharedBuildId));
+      await expectPageIn(page, language);
+      await expect(priceOf(page, cpu.id)).toHaveText('250,000 IQD');
+      await expectThePricesAnswered(page, after);
+    });
+  }
   // The Shared Build itself never changed.
   expect((await theSharedBuildAsStored(page.request, sharedBuildId)).part).toEqual(
     sharedValues(),
   );
 });
 
-test('a fresh browser copies the Shared Build and changes the copy, and the link still shows the Shared Build unchanged; with a Build of its own the copy asks once first', async ({
+test('in Kurdish, Arabic and English, a fresh browser copies the Shared Build and changes the copy, and the link still shows the Shared Build unchanged; with a Build of its own the copy asks once first', async ({
   page,
   browser,
 }) => {
+  test.setTimeout(90_000);
   await aBuildToShare(page);
   const sharedBuildId = await shareFromTheBuildPage(page, english.tag);
-  const link = sharedBuildPageIn(english.tag, sharedBuildId);
   const listed = await partsListed(page);
 
-  const fresh = await aFreshBrowser(browser);
-  try {
-    const reader = await fresh.newPage();
-    await reader.goto(link);
-    await test.step('copied at once into an empty Build', async () => {
-      await theCopy(reader).click();
-      await expect(reader).toHaveURL(buildPageIn(english));
-      expect(await partsListed(reader)).toEqual(listed);
-      expect(await theFramesCount(reader)).toBe(4);
+  for (const language of languages) {
+    await test.step(`in ${language.name}`, async () => {
+      await aFreshBrowserCopies(language);
     });
+  }
 
-    await test.step('the copy changed, the GPU removed', async () => {
-      const sent = reader.waitForResponse((response) =>
-        response.url().endsWith('/build/remove'),
-      );
-      await removeOf(reader, gpu.id).click();
-      await sent;
-      await expect(lineOf(reader, gpu.id)).toHaveCount(0);
-    });
-
-    await test.step('the link still shows the Shared Build as it was shared', async () => {
+  // A browser of its own, which copies the Shared Build from its link in a
+  // language, changes the copy, opens the link again, and copies once more
+  // over its changed Build, asked once first.
+  async function aFreshBrowserCopies(language: Language): Promise<void> {
+    const link = sharedBuildPageIn(language.tag, sharedBuildId);
+    const fresh = await aFreshBrowser(browser);
+    try {
+      const reader = await fresh.newPage();
       await reader.goto(link);
-      expect(await partsListed(reader)).toEqual(listed);
-      expect((await theSharedBuildAsStored(reader.request, sharedBuildId)).part).toEqual(
-        sharedValues(),
-      );
-      await expect(thisIsYourBuild(reader)).toHaveCount(0);
-    });
+      await test.step('copied at once into an empty Build', async () => {
+        await theCopy(reader).click();
+        await expect(reader).toHaveURL(buildPageIn(language));
+        await expectPageIn(reader, language);
+        expect(await partsListed(reader)).toEqual(listed);
+        expect(await theFramesCount(reader)).toBe(4);
+      });
 
-    await test.step('with a Build of its own, the copy asks once first', async () => {
-      await theCopy(reader).locator('summary').click();
-      await expect(theCopysConfirmation(reader)).toBeVisible();
-      await theCopy(reader).getByTestId('keep-mine').click();
-      await expect(theCopy(reader)).not.toHaveAttribute('open');
-      await expect(reader).toHaveURL(link);
+      await test.step('the copy changed, the GPU removed', async () => {
+        const sent = reader.waitForResponse((response) =>
+          response.url().endsWith('/build/remove'),
+        );
+        await removeOf(reader, gpu.id).click();
+        await sent;
+        await expect(lineOf(reader, gpu.id)).toHaveCount(0);
+      });
 
-      await theCopy(reader).locator('summary').click();
-      await theCopysConfirmation(reader).click();
-      await expect(reader).toHaveURL(buildPageIn(english));
-      expect(await partsListed(reader)).toEqual(listed);
-    });
+      await test.step('the link still shows the Shared Build as it was shared', async () => {
+        await reader.goto(link);
+        expect(await partsListed(reader)).toEqual(listed);
+        expect((await theSharedBuildAsStored(reader.request, sharedBuildId)).part).toEqual(
+          sharedValues(),
+        );
+        await expect(thisIsYourBuild(reader)).toHaveCount(0);
+      });
 
-    await test.step('the copy is now the browser’s Build, so its link says so', async () => {
-      await reader.goto(link);
-      await expect(thisIsYourBuild(reader)).toBeVisible();
-    });
-  } finally {
-    await fresh.close();
+      await test.step('with a Build of its own, the copy asks once first', async () => {
+        await theCopy(reader).locator('summary').click();
+        await expect(theCopysConfirmation(reader)).toBeVisible();
+        await theCopy(reader).getByTestId('keep-mine').click();
+        await expect(theCopy(reader)).not.toHaveAttribute('open');
+        await expect(reader).toHaveURL(link);
+
+        await theCopy(reader).locator('summary').click();
+        await theCopysConfirmation(reader).click();
+        await expect(reader).toHaveURL(buildPageIn(language));
+        expect(await partsListed(reader)).toEqual(listed);
+      });
+
+      await test.step('the copy is now the browser’s Build, so its link says so', async () => {
+        await reader.goto(link);
+        await expect(thisIsYourBuild(reader)).toBeVisible();
+      });
+    } finally {
+      await fresh.close();
+    }
   }
 });
 
-test('sharing an unchanged Build again gives the same address, and sharing after a change gives a new one, the old link still showing what it showed', async ({
+test('in Kurdish, Arabic and English, sharing an unchanged Build again gives the same address, and sharing after a change gives a new one, the old link still showing what it showed', async ({
   page,
 }) => {
   await aBuildToShare(page);
   const first = await shareFromTheBuildPage(page, english.tag);
-  const again = await shareFromTheBuildPage(page, english.tag);
-  expect(again).toBe(first);
+  for (const language of languages) {
+    expect(await shareFromTheBuildPage(page, language.tag), language.name).toBe(first);
+  }
 
   await pick(page, otherKit);
   const changed = await shareFromTheBuildPage(page, english.tag);
   expect(changed).not.toBe(first);
+  for (const language of languages) {
+    expect(await shareFromTheBuildPage(page, language.tag), language.name).toBe(changed);
+  }
   expect((await theSharedBuildAsStored(page.request, changed)).part).toEqual([
     cpu.id,
     board.id,
@@ -351,35 +376,45 @@ test('sharing an unchanged Build again gives the same address, and sharing after
     gpu.id,
   ]);
 
-  await page.goto(sharedBuildPageIn(english.tag, first));
-  await expect(lineOf(page, otherKit.id)).toHaveCount(0);
-  expect(await partsListed(page)).toEqual([cpu.id, board.id, kit.id, gpu.id]);
-  // The browser now holds the changed Build, so the first link offers to
-  // copy it, with its one confirmation.
-  await expect(thisIsYourBuild(page)).toHaveCount(0);
-  await expect(theCopy(page).locator('summary')).toBeVisible();
+  for (const language of languages) {
+    await page.goto(sharedBuildPageIn(language.tag, first));
+    await expectPageIn(page, language);
+    await expect(lineOf(page, otherKit.id)).toHaveCount(0);
+    expect(await partsListed(page)).toEqual([cpu.id, board.id, kit.id, gpu.id]);
+    // The browser now holds the changed Build, so the first link offers to
+    // copy it, with its one confirmation.
+    await expect(thisIsYourBuild(page)).toHaveCount(0);
+    await expect(theCopy(page).locator('summary')).toBeVisible();
+  }
 });
 
-test('an empty Build has no share button, and a share sent all the same comes back saying there is nothing to share', async ({
+test('in Kurdish, Arabic and English, an empty Build has no share button, and a share sent all the same comes back saying there is nothing to share', async ({
   page,
 }) => {
-  await page.goto(buildPageIn(english));
-  await expect(theShareButton(page)).toHaveCount(0);
+  for (const language of languages) {
+    await test.step(`in ${language.name}`, async () => {
+      await page.goto(buildPageIn(language));
+      await expect(theShareButton(page)).toHaveCount(0);
 
-  const answer = await page.request.post(`${shopperUrl}/en/build/share`, {
-    form: {},
-    maxRedirects: 0,
-  });
-  expect(answer.status()).toBe(303);
-  expect(answer.headers().location).toBe('/en/build?refused=nothingToShare');
-  await page.goto(`${shopperUrl}${answer.headers().location}`);
-  await expect(page.getByTestId('share-refused')).not.toHaveText('');
+      const answer = await page.request.post(`${shopperUrl}/${language.tag}/build/share`, {
+        form: {},
+        maxRedirects: 0,
+      });
+      expect(answer.status()).toBe(303);
+      expect(answer.headers().location).toBe(
+        `/${language.tag}/build?refused=nothingToShare`,
+      );
+      await page.goto(`${shopperUrl}${answer.headers().location}`);
+      await expectPageIn(page, language);
+      await expect(page.getByTestId('share-refused')).not.toHaveText('');
+    });
+  }
 });
 
-test("an unknown Shared Build answers the not-found page with 404 in the page's language", async ({
+test("in Kurdish, Arabic and English, an unknown Shared Build answers the not-found page with 404 in the page's language", async ({
   page,
 }) => {
-  for (const language of kurdishAndEnglish) {
+  for (const language of languages) {
     const unknown = sharedBuildPageIn(language.tag, '00000000-0000-4000-8000-00000000dead');
     const response = await page.goto(unknown);
     expect(response?.status()).toBe(404);
@@ -392,38 +427,44 @@ test("an unknown Shared Build answers the not-found page with 404 in the page's 
 test.describe('with scripts switched off', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('sharing, and copying with its confirmation, work, and the link is shown as text to select', async ({
+  test('in Kurdish, Arabic and English, sharing, and copying with its confirmation, work, and the link is shown as text to select', async ({
     page,
     browser,
   }) => {
+    test.setTimeout(90_000);
     await aBuildToShare(page);
-    const sharedBuildId = await shareFromTheBuildPage(page, kurdish.tag);
-    expect(
-      await page.evaluate(() => matchMedia('(scripting: none)').matches),
-      'the browser runs no script',
-    ).toBe(true);
-    const link = sharedBuildPageIn(kurdish.tag, sharedBuildId);
-    await expect(theLink(page)).toHaveText(link);
-    await expect(theLink(page)).toHaveCSS('user-select', 'all');
-    // The button that shares or copies the link needs script.
-    await expect(shareTheLinkButton(page)).toBeHidden();
+    for (const language of languages) {
+      await test.step(`in ${language.name}`, async () => {
+        const sharedBuildId = await shareFromTheBuildPage(page, language.tag);
+        expect(
+          await page.evaluate(() => matchMedia('(scripting: none)').matches),
+          'the browser runs no script',
+        ).toBe(true);
+        const link = sharedBuildPageIn(language.tag, sharedBuildId);
+        await expectPageIn(page, language);
+        await expect(theLink(page)).toHaveText(link);
+        await expect(theLink(page)).toHaveCSS('user-select', 'all');
+        // The button that shares or copies the link needs script.
+        await expect(shareTheLinkButton(page)).toBeHidden();
 
-    const fresh = await aFreshBrowser(browser, false);
-    try {
-      const reader = await fresh.newPage();
-      await pick(reader, drive);
-      await reader.goto(link);
-      await theCopy(reader).locator('summary').click();
-      await theCopy(reader).getByTestId('keep-mine').click();
-      await expect(reader).toHaveURL(link);
-      await expect(theCopy(reader)).not.toHaveAttribute('open');
+        const fresh = await aFreshBrowser(browser, false);
+        try {
+          const reader = await fresh.newPage();
+          await pick(reader, drive);
+          await reader.goto(link);
+          await theCopy(reader).locator('summary').click();
+          await theCopy(reader).getByTestId('keep-mine').click();
+          await expect(reader).toHaveURL(link);
+          await expect(theCopy(reader)).not.toHaveAttribute('open');
 
-      await theCopy(reader).locator('summary').click();
-      await theCopysConfirmation(reader).click();
-      await expect(reader).toHaveURL(buildPageIn(kurdish));
-      expect(await partsListed(reader)).toEqual([cpu.id, board.id, kit.id, gpu.id]);
-    } finally {
-      await fresh.close();
+          await theCopy(reader).locator('summary').click();
+          await theCopysConfirmation(reader).click();
+          await expect(reader).toHaveURL(buildPageIn(language));
+          expect(await partsListed(reader)).toEqual([cpu.id, board.id, kit.id, gpu.id]);
+        } finally {
+          await fresh.close();
+        }
+      });
     }
   });
 });
@@ -448,7 +489,7 @@ function tagsIn(head: string, tag: RegExp): string[] {
   );
 }
 
-test("in Kurdish and English, a Shared Build page's head, read with no cookie as a crawler would, holds its title, a description naming its CPU and GPU with no price, and its image, and asks not to be indexed", async ({
+test("in Kurdish, Arabic and English, a Shared Build page's head, read with no cookie as a crawler would, holds its title, a description naming its CPU and GPU with no price, and its image, and asks not to be indexed", async ({
   page,
   playwright,
 }) => {
@@ -457,7 +498,7 @@ test("in Kurdish and English, a Shared Build page's head, read with no cookie as
   const crawler = await playwright.request.newContext();
   try {
     const titles = new Map<Language, string>();
-    for (const language of kurdishAndEnglish) {
+    for (const language of languages) {
       await test.step(`in ${language.name}`, async () => {
         const link = sharedBuildPageIn(language.tag, sharedBuildId);
         const head = await headOf(crawler, link);
@@ -490,7 +531,7 @@ test("in Kurdish and English, a Shared Build page's head, read with no cookie as
         ]);
       });
     }
-    expect(titles.get(kurdish)).not.toBe(titles.get(english));
+    expect(new Set(titles.values()).size).toBe(3);
   } finally {
     await crawler.dispose();
   }
