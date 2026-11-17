@@ -1,6 +1,7 @@
 export { buttonVariants } from './button';
 export { DimPhotograph } from './dim-photograph';
 export { drawnAgain, markDrawnAgain } from './drawn-again';
+export { FoldItAgain } from './fold-it-again';
 export { HeldWords } from './held-words';
 export { Item, type NameAlone, whereAPartsNameStands } from './item';
 export { MarkADrawingAgain } from './mark-a-drawing-again';

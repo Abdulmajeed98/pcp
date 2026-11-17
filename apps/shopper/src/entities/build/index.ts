@@ -7,7 +7,6 @@ export {
   heldByTheCatalog,
   type HoldsOne,
   holdsTheSharedBuild,
-  identifierIn,
   isCategory,
   isKitOrDrive,
   type KitOrDrive,

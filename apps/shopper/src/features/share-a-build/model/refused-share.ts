@@ -1,6 +1,7 @@
 import type { Language } from '@pcp/i18n';
 
 import { buildAddress } from '@/entities/build';
+import { addressWithARefusal, refusalIn } from '@/shared/lib';
 
 // Why sharing a Build was refused (DESIGN.md's The share button): the API
 // did not answer (`notShared`); the API refuses the Build its cookie holds,
@@ -24,7 +25,7 @@ export function addressAfterARefusedShare(
   language: Language,
   refused: ShareRefusal,
 ): string {
-  return `${buildAddress(language)}?${new URLSearchParams({ refused }).toString()}`;
+  return addressWithARefusal(buildAddress(language), { refused });
 }
 
 // Why a share was refused, as the Build page reads it from its address, or
@@ -33,6 +34,5 @@ export function addressAfterARefusedShare(
 export function refusedShareIn(query: {
   get(name: string): string | null;
 }): ShareRefusal | undefined {
-  const reason = query.get('refused');
-  return shareRefusals.find((each) => each === reason);
+  return refusalIn(query, shareRefusals);
 }

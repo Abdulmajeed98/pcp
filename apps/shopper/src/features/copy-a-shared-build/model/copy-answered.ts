@@ -2,6 +2,7 @@ import type { Language } from '@pcp/i18n';
 
 import { buildAddress } from '@/entities/build';
 import { sharedBuildAddress } from '@/entities/shared-build';
+import { addressWithARefusal, refusalIn } from '@/shared/lib';
 
 // Why copying a Shared Build was refused: the API did not answer, so the
 // Parts it still holds could not be read (DESIGN.md's Copy into my Build).
@@ -18,7 +19,7 @@ export function addressAfterACopy(
   refused?: CopyRefusal,
 ): string {
   if (refused === undefined) return buildAddress(language);
-  return `${sharedBuildAddress(language, sharedBuildId)}?${new URLSearchParams({ refused }).toString()}`;
+  return addressWithARefusal(sharedBuildAddress(language, sharedBuildId), { refused });
 }
 
 // Why a copy was refused, as the Shared Build page reads it from its
@@ -26,5 +27,5 @@ export function addressAfterACopy(
 export function refusedCopyIn(query: {
   get(name: string): string | null;
 }): CopyRefusal | undefined {
-  return query.get('refused') === 'notCopied' ? 'notCopied' : undefined;
+  return refusalIn(query, ['notCopied']);
 }

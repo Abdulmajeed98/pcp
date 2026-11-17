@@ -11,6 +11,7 @@ import {
   SendOnWhatsApp,
   type SendRefused,
   SendRefusedSaid,
+  SendRefusedWithoutItsLine,
   vendorLineAnchor,
 } from '@/features/send-on-whatsapp';
 import { photographs } from '@/shared/photographs';
@@ -134,18 +135,7 @@ export async function VendorsSheet({
           <SheetNote>{t('note')}</SheetNote>
           {sendRefused !== undefined && refusedLine === undefined && (
             <div className="mt-group">
-              <SendRefusedSaid
-                id={
-                  sendRefused.vendor === undefined
-                    ? undefined
-                    : vendorLineAnchor(sendRefused.vendor)
-                }
-                words={
-                  sendRefused.refused === 'notReachable'
-                    ? send('refused.notReachableUnnamed')
-                    : send('refused.notOpened')
-                }
-              />
+              <SendRefusedWithoutItsLine refused={sendRefused} />
             </div>
           )}
           <div data-space="vendors" className="grid grid-cols-[minmax(0,1fr)]">

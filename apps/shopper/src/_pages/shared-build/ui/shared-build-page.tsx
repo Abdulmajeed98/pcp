@@ -6,11 +6,7 @@ import { notFound } from 'next/navigation';
 import { buildIn, holdsTheSharedBuild, partsCountedIn } from '@/entities/build';
 import { sharedBuildAddress } from '@/entities/shared-build';
 import { refusedCopyIn } from '@/features/copy-a-shared-build';
-import {
-  refusedSendIn,
-  SendRefusedSaid,
-  vendorLineAnchor,
-} from '@/features/send-on-whatsapp';
+import { refusedSendIn, SendRefusedWithoutItsLine } from '@/features/send-on-whatsapp';
 import { chosenCurrency } from '@/shared/currency';
 import { type AddressQuery, fieldsOf } from '@/shared/lib';
 import { type Photograph, photographs } from '@/shared/photographs';
@@ -111,18 +107,7 @@ export async function SharedBuildPage({
                   refused={refusedCopyIn(query)}
                 />
                 {sendRefused !== undefined && read.answer.vendors.length === 0 && (
-                  <SendRefusedSaid
-                    id={
-                      sendRefused.vendor === undefined
-                        ? undefined
-                        : vendorLineAnchor(sendRefused.vendor)
-                    }
-                    words={
-                      sendRefused.refused === 'notReachable'
-                        ? buildWords('send.refused.notReachableUnnamed')
-                        : buildWords('send.refused.notOpened')
-                    }
-                  />
+                  <SendRefusedWithoutItsLine refused={sendRefused} />
                 )}
               </BuildSlip>
               <SharedBuildSheet

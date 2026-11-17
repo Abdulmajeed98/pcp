@@ -1,8 +1,4 @@
-'use client';
-
-import { type MouseEvent, useRef } from 'react';
-
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, FoldItAgain } from '@/shared/ui';
 
 // Emptying the Build (DESIGN.md's Emptying the Build): at the sheet's foot,
 // "Empty the Build", a cell of the Board, centred, is the summary of a
@@ -26,19 +22,8 @@ export function EmptyTheBuild({
   buildAddress: string;
   words: { cell: string; warning: string; confirm: string; keep: string };
 }) {
-  const disclosure = useRef<HTMLDetailsElement>(null);
-
-  function keep(event: MouseEvent<HTMLAnchorElement>) {
-    const details = disclosure.current;
-    if (details === null) return;
-    event.preventDefault();
-    details.open = false;
-    details.querySelector('summary')?.focus();
-  }
-
   return (
     <details
-      ref={disclosure}
       data-testid="empty-the-build"
       data-confirmation=""
       className="unfolds-in-place mt-group text-center"
@@ -61,14 +46,13 @@ export function EmptyTheBuild({
           >
             {words.confirm}
           </button>
-          <a
+          <FoldItAgain
             href={buildAddress}
-            data-testid="keep-them"
-            onClick={keep}
+            testId="keep-them"
             className={buttonVariants({ kind: 'board', className: 'max-w-full' })}
           >
             {words.keep}
-          </a>
+          </FoldItAgain>
         </form>
       </div>
     </details>

@@ -1,3 +1,5 @@
+import { addressWithARefusal, identifierIn, refusalIn } from '@/shared/lib';
+
 // Why "send on WhatsApp" was refused (DESIGN.md's Send on WhatsApp, the
 // sharing spec's The Shopper app): the Vendor can no longer be reached
 // through the platform, deactivated or without a WhatsApp number since the
@@ -16,12 +18,9 @@ export interface SendRefused {
   vendor: string | undefined;
 }
 
-// A Vendor's identifier, as the API writes it, in small letters.
-const identifier = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-
+// The Vendor a form or an address names by its identifier, or none.
 function vendorNamedBy(sent: string | null | undefined): string | undefined {
-  const vendor = sent?.toLowerCase();
-  return vendor !== undefined && identifier.test(vendor) ? vendor : undefined;
+  return sent === null || sent === undefined ? undefined : identifierIn(sent);
 }
 
 // The anchor of a Vendor's line in the second price view, where a send to it
@@ -43,10 +42,8 @@ export function addressAfterARefusedSend(
   vendor: string | undefined,
 ): string {
   const named = vendorNamedBy(vendor);
-  if (named === undefined) {
-    return `${page}?${new URLSearchParams({ refused }).toString()}#vendors`;
-  }
-  return `${page}?${new URLSearchParams({ refused, vendor: named }).toString()}#${vendorLineAnchor(named)}`;
+  if (named === undefined) return addressWithARefusal(page, { refused }, 'vendors');
+  return addressWithARefusal(page, { refused, vendor: named }, vendorLineAnchor(named));
 }
 
 // Why a send was refused, and to which Vendor, as a page reads it from its
@@ -56,8 +53,7 @@ export function addressAfterARefusedSend(
 export function refusedSendIn(query: {
   get(name: string): string | null;
 }): SendRefused | undefined {
-  const reason = query.get('refused');
-  const refused = sendRefusals.find((each) => each === reason);
+  const refused = refusalIn(query, sendRefusals);
   if (refused === undefined) return undefined;
   return { refused, vendor: vendorNamedBy(query.get('vendor')) };
 }
