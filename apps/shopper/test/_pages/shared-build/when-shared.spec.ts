@@ -6,87 +6,81 @@ import { whenShared } from '@/_pages/shared-build';
 // Arabic-Indic sets (LANG-5).
 const notWestern = /[٠-٩۰-۹]/;
 
-const now = new Date('2026-11-17T10:00:00Z');
-
 // When a Build was shared (DESIGN.md's The Shared Build page, Its sheet):
-// the note under the status, how many days ago and on which day, and the
-// stamp under the sheet's title, the day alone, short. The days are whole
-// days of 24 hours since it was shared, rounded down, as an Offer says how
-// many days ago it was confirmed; the day is written in Iraq's time, where
-// everyone using the platform is (the owner's answer of 17 November 2026).
-// Every number is in Western digits.
+// the note under the status, which day and how many days ago, and the stamp
+// under the sheet's title, the day alone, short. The day and the days are
+// the API's, the day it was shared in Iraq's time and the calendar days
+// there since (the owner's answer of 17 November 2026 to sharing's code
+// review): the page writes them and counts nothing. "Shared today" and
+// "Shared yesterday" are messages of their own. Every number is in Western
+// digits.
 describe('when a Build was shared', () => {
-  it('says how many whole days ago and the day, in English', () => {
-    expect(whenShared('en', '2026-11-05T09:00:00Z', now)).toEqual({
+  it('says today, yesterday, or how many days ago, each with its day, in English', () => {
+    expect(whenShared('en', { sharedOn: '2026-11-17', daysSinceShared: 0 })).toEqual({
+      note: 'Shared today, 17 November 2026.',
+      stamp: 'Shared 17 Nov 2026',
+    });
+    expect(whenShared('en', { sharedOn: '2026-11-16', daysSinceShared: 1 })).toEqual({
+      note: 'Shared yesterday, 16 November 2026.',
+      stamp: 'Shared 16 Nov 2026',
+    });
+    expect(whenShared('en', { sharedOn: '2026-11-15', daysSinceShared: 2 }).note).toBe(
+      'Shared 2 days ago, on 15 November 2026.',
+    );
+    expect(whenShared('en', { sharedOn: '2026-11-05', daysSinceShared: 12 })).toEqual({
       note: 'Shared 12 days ago, on 5 November 2026.',
       stamp: 'Shared 5 Nov 2026',
     });
-    expect(whenShared('en', '2026-11-16T09:00:00Z', now)).toEqual({
-      note: 'Shared 1 day ago, on 16 November 2026.',
-      stamp: 'Shared 16 Nov 2026',
-    });
-    expect(whenShared('en', '2025-10-13T09:00:00Z', now)).toEqual({
-      note: 'Shared 400 days ago, on 13 October 2025.',
-      stamp: 'Shared 13 Oct 2025',
-    });
   });
 
-  it('counts whole days of 24 hours, rounded down', () => {
-    expect(whenShared('en', '2026-11-16T10:00:01Z', now).note).toBe(
-      'Shared today, 16 November 2026.',
-    );
-    expect(whenShared('en', '2026-11-16T10:00:00Z', now).note).toBe(
-      'Shared 1 day ago, on 16 November 2026.',
-    );
-    expect(whenShared('en', '2026-11-14T10:30:00Z', now).note).toBe(
-      'Shared 2 days ago, on 14 November 2026.',
-    );
-  });
-
-  it('says today, with the day, for a Build shared less than a day ago', () => {
-    expect(whenShared('en', '2026-11-17T07:00:00Z', now).note).toBe(
-      'Shared today, 17 November 2026.',
-    );
-  });
-
-  it("writes the day in Iraq's time: a Build shared at 22:30 in UTC shows the next day", () => {
-    const lateInTheDay = new Date('2026-11-05T10:00:00Z');
-    expect(whenShared('en', '2026-11-04T22:30:00Z', lateInTheDay)).toEqual({
-      note: 'Shared today, 5 November 2026.',
-      stamp: 'Shared 5 Nov 2026',
+  it('writes the day and the count as the API answers them, counting nothing itself', () => {
+    expect(whenShared('en', { sharedOn: '2027-01-01', daysSinceShared: 400 })).toEqual({
+      note: 'Shared 400 days ago, on 1 January 2027.',
+      stamp: 'Shared 1 Jan 2027',
     });
-    expect(whenShared('en', '2026-11-04T20:59:59Z', lateInTheDay).stamp).toBe(
-      'Shared 4 Nov 2026',
+    expect(whenShared('en', { sharedOn: '2025-12-31', daysSinceShared: 0 }).note).toBe(
+      'Shared today, 31 December 2025.',
     );
-    expect(whenShared('en', '2026-12-31T22:30:00Z', now).stamp).toBe('Shared 1 Jan 2027');
   });
 
   it('says it in Kurdish, the day after its month as Kurdish writes it', () => {
-    expect(whenShared('ckb', '2026-11-05T09:00:00Z', now)).toEqual({
+    expect(whenShared('ckb', { sharedOn: '2026-11-05', daysSinceShared: 12 })).toEqual({
       note: '12 ڕۆژ لەمەوبەر هاوبەش کراوە، لە 5ی تشرینی دووەمی 2026.',
       stamp: 'هاوبەشکرا 2026/11/5',
     });
-    expect(whenShared('ckb', '2026-11-17T07:00:00Z', now).note).toBe(
+    expect(whenShared('ckb', { sharedOn: '2026-11-17', daysSinceShared: 0 }).note).toBe(
       'ئەمڕۆ هاوبەش کراوە، 17ی تشرینی دووەمی 2026.',
+    );
+    expect(whenShared('ckb', { sharedOn: '2026-11-16', daysSinceShared: 1 }).note).toBe(
+      'دوێنێ هاوبەش کراوە، 16ی تشرینی دووەمی 2026.',
     );
   });
 
   it("says it in Arabic, in the count's own plural", () => {
-    expect(whenShared('ar', '2026-11-05T09:00:00Z', now)).toEqual({
+    expect(whenShared('ar', { sharedOn: '2026-11-05', daysSinceShared: 12 })).toEqual({
       note: 'شوركت قبل 12 يومًا، في 5 تشرين الثاني 2026.',
       stamp: 'شوركت 2026/11/5',
     });
-    expect(whenShared('ar', '2026-11-14T09:00:00Z', now).note).toBe(
-      'شوركت قبل 3 أيام، في 14 تشرين الثاني 2026.',
+    expect(whenShared('ar', { sharedOn: '2026-11-17', daysSinceShared: 0 }).note).toBe(
+      'شوركت اليوم، 17 تشرين الثاني 2026.',
     );
-    expect(whenShared('ar', '2026-11-15T09:00:00Z', now).note).toBe(
+    expect(whenShared('ar', { sharedOn: '2026-11-16', daysSinceShared: 1 }).note).toBe(
+      'شوركت أمس، 16 تشرين الثاني 2026.',
+    );
+    expect(whenShared('ar', { sharedOn: '2026-11-15', daysSinceShared: 2 }).note).toBe(
       'شوركت قبل يومين، في 15 تشرين الثاني 2026.',
+    );
+    expect(whenShared('ar', { sharedOn: '2026-11-14', daysSinceShared: 3 }).note).toBe(
+      'شوركت قبل 3 أيام، في 14 تشرين الثاني 2026.',
     );
   });
 
   it('writes every number in Western digits, a year with no grouping', () => {
     for (const language of ['ckb', 'ar', 'en'] as const) {
-      const { note, stamp } = whenShared(language, '2023-01-02T09:00:00Z', now);
+      const { note, stamp } = whenShared(language, {
+        sharedOn: '2023-01-02',
+        daysSinceShared: 1415,
+      });
       expect(note).not.toMatch(notWestern);
       expect(stamp).not.toMatch(notWestern);
       expect(note).toContain('2023');

@@ -426,7 +426,11 @@
     "title": "بیڵدێکی هاوبەشکراو",
     "slip": "{count, plural, one {بیڵدی هاوبەشکراو · {countText} پارچە} other {بیڵدی هاوبەشکراو · {countText} پارچە}}",
     "stamp": "هاوبەشکرا {date}",
-    "when": "{days, plural, =0 {ئەمڕۆ هاوبەش کراوە، {date}.} one {{daysText} ڕۆژ لەمەوبەر هاوبەش کراوە، لە {date}.} other {{daysText} ڕۆژ لەمەوبەر هاوبەش کراوە، لە {date}.}}",
+    "when": {
+      "today": "ئەمڕۆ هاوبەش کراوە، {date}.",
+      "yesterday": "دوێنێ هاوبەش کراوە، {date}.",
+      "daysAgo": "{days, plural, one {{daysText} ڕۆژ لەمەوبەر هاوبەش کراوە، لە {date}.} other {{daysText} ڕۆژ لەمەوبەر هاوبەش کراوە، لە {date}.}}"
+    },
     "fixed": "پارچەکانی وەک کاتی هاوبەشکردن دەمێننەوە؛ نرخەکانی هی ئەمڕۆن.",
     "leftTheCatalog": "{count, plural, one {{countText} لە پارچەکانی لەو کاتەوە لە کاتالۆگ دەرچووە، بۆیە پیشان نادرێت.} other {{countText} لە پارچەکانی لەو کاتەوە لە کاتالۆگ دەرچوون، بۆیە پیشان نادرێن.}}",
     "longDate": "{day}ی {month, select, january {کانوونی دووەم} february {شوبات} march {ئازار} april {نیسان} may {ئایار} june {حوزەیران} july {تەممووز} august {ئاب} september {ئەیلوول} october {تشرینی یەکەم} november {تشرینی دووەم} december {کانوونی یەکەم} other {}}ی {year}",

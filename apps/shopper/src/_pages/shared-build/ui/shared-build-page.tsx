@@ -90,7 +90,7 @@ export async function SharedBuildPage({
       ) : read.answer.parts.length === 0 ? (
         <AllGone
           parts={read.shared.part.length}
-          when={whenShared(language, read.shared.sharedAt, read.readAt).note}
+          when={whenShared(language, read.shared).note}
         />
       ) : (
         <div className="flex flex-1 flex-col">
@@ -128,7 +128,6 @@ export async function SharedBuildPage({
               <SharedBuildSheet
                 shared={read.shared}
                 answer={read.answer}
-                now={read.readAt}
                 isYours={isYours}
               />
             </div>

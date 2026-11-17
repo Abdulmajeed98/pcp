@@ -426,7 +426,11 @@
     "title": "A shared Build",
     "slip": "{count, plural, one {Shared Build · {countText} Part} other {Shared Build · {countText} Parts}}",
     "stamp": "Shared {date}",
-    "when": "{days, plural, =0 {Shared today, {date}.} one {Shared {daysText} day ago, on {date}.} other {Shared {daysText} days ago, on {date}.}}",
+    "when": {
+      "today": "Shared today, {date}.",
+      "yesterday": "Shared yesterday, {date}.",
+      "daysAgo": "{days, plural, one {Shared {daysText} day ago, on {date}.} other {Shared {daysText} days ago, on {date}.}}"
+    },
     "fixed": "Its Parts stay as they were shared; its prices are today's.",
     "leftTheCatalog": "{count, plural, one {{countText} of its Parts has left the catalog since, so it is not shown.} other {{countText} of its Parts have left the catalog since, so they are not shown.}}",
     "longDate": "{day} {month, select, january {January} february {February} march {March} april {April} may {May} june {June} july {July} august {August} september {September} october {October} november {November} december {December} other {}} {year}",

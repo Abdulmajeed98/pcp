@@ -426,7 +426,11 @@
     "title": "تجميعة مُشارَكة",
     "slip": "{count, plural, zero {تجميعة مُشارَكة · لا قطع} one {تجميعة مُشارَكة · قطعة واحدة} two {تجميعة مُشارَكة · قطعتان} few {تجميعة مُشارَكة · {countText} قطع} many {تجميعة مُشارَكة · {countText} قطعة} other {تجميعة مُشارَكة · {countText} قطعة}}",
     "stamp": "شوركت {date}",
-    "when": "{days, plural, =0 {شوركت اليوم، {date}.} zero {شوركت اليوم، {date}.} one {شوركت قبل يوم، في {date}.} two {شوركت قبل يومين، في {date}.} few {شوركت قبل {daysText} أيام، في {date}.} many {شوركت قبل {daysText} يومًا، في {date}.} other {شوركت قبل {daysText} يوم، في {date}.}}",
+    "when": {
+      "today": "شوركت اليوم، {date}.",
+      "yesterday": "شوركت أمس، {date}.",
+      "daysAgo": "{days, plural, zero {شوركت اليوم، {date}.} one {شوركت قبل يوم، في {date}.} two {شوركت قبل يومين، في {date}.} few {شوركت قبل {daysText} أيام، في {date}.} many {شوركت قبل {daysText} يومًا، في {date}.} other {شوركت قبل {daysText} يوم، في {date}.}}"
+    },
     "fixed": "تبقى قطعها كما شوركت؛ وأسعارها أسعار اليوم.",
     "leftTheCatalog": "{count, plural, zero {لم تغادر أي قطعة منها الكتالوج.} one {غادرت قطعة واحدة منها الكتالوج منذ ذلك الحين، لذا لا تُعرض.} two {غادرت قطعتان منها الكتالوج منذ ذلك الحين، لذا لا تُعرضان.} few {غادرت {countText} قطع منها الكتالوج منذ ذلك الحين، لذا لا تُعرض.} many {غادرت {countText} قطعة منها الكتالوج منذ ذلك الحين، لذا لا تُعرض.} other {غادرت {countText} قطعة منها الكتالوج منذ ذلك الحين، لذا لا تُعرض.}}",
     "longDate": "{day} {month, select, january {كانون الثاني} february {شباط} march {آذار} april {نيسان} may {أيار} june {حزيران} july {تموز} august {آب} september {أيلول} october {تشرين الأول} november {تشرين الثاني} december {كانون الأول} other {}} {year}",

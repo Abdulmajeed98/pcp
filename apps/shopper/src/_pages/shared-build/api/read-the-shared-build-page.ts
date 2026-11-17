@@ -6,12 +6,11 @@ import { apiClient, namesNothingShown } from '@/shared/api';
 import type { Currency } from '@/shared/currency';
 
 // What the Shared Build page read: the Shared Build, its frozen `part`
-// values and when it was shared, with the API's answer of those values
-// today and the moment it was read, which the page counts the days since it
-// was shared from; that no Shared Build has the identifier; or nothing, when
-// the API did not answer.
+// values and when it was shared, the day and the calendar days since as
+// the API counts them, with the API's answer of those values today; that no
+// Shared Build has the identifier; or nothing, when the API did not answer.
 export type SharedBuildRead =
-  | { kind: 'read'; shared: SharedBuildResponse; answer: BuildResponse; readAt: Date }
+  | { kind: 'read'; shared: SharedBuildResponse; answer: BuildResponse }
   | { kind: 'not-found' }
   | { kind: 'not-read' };
 
@@ -44,6 +43,6 @@ export const readTheSharedBuildPage = cache(
       cache: 'no-store',
     });
     if (read.data === undefined) return { kind: 'not-read' };
-    return { kind: 'read', shared: shared.data, answer: read.data, readAt: new Date() };
+    return { kind: 'read', shared: shared.data, answer: read.data };
   },
 );
