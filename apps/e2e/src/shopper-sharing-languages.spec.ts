@@ -20,6 +20,7 @@ import {
   removeOf,
   theBuildAsAnswered,
   theFramesCount,
+  theSlip,
   theTotal,
   vendorLineOf,
   vendorsListed,
@@ -198,6 +199,11 @@ test("in Kurdish and English, sharing a Build lands on its Shared Build page, wh
       // no copy, though its Parts were picked in another order.
       await expect(thisIsYourBuild(page)).toBeVisible();
       await expect(theCopy(page)).toHaveCount(0);
+      // Its slip's one action is Share the link; the link and "This is your
+      // Build" stand on the sheet (the owner's answer of 17 November 2026).
+      await expect(theSlip(page).getByTestId('share-the-link-button')).toBeAttached();
+      await expect(theSlip(page).getByTestId('the-link')).toHaveCount(0);
+      await expect(theSlip(page).getByTestId('this-is-your-build')).toHaveCount(0);
       expect(await theFramesCount(page)).toBe(4);
       await expectNoSidewaysScroll(page);
 
@@ -212,6 +218,11 @@ test("in Kurdish and English, sharing a Build lands on its Shared Build page, wh
         await expect(thisIsYourBuild(reader)).toHaveCount(0);
         await expect(theCopy(reader)).toBeVisible();
         await expect(theCopy(reader).locator('summary')).toHaveCount(0);
+        // The copy is the slip's one action; the link and Share the link
+        // stand on the sheet.
+        await expect(theSlip(reader).getByTestId('copy-into-my-build')).toBeVisible();
+        await expect(theSlip(reader).getByTestId('share-the-link-button')).toHaveCount(0);
+        await expect(theLink(reader)).toBeVisible();
         await expect(reader.getByTestId('when-shared')).not.toHaveText('');
         await expect(reader.locator('[data-stamp="shared"]')).toBeAttached();
         await expectNoSidewaysScroll(reader);

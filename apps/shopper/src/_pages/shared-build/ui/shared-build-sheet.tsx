@@ -13,6 +13,7 @@ import { Sheet, sheetGroup, sheetGroupHeading, SheetTitle, Stamp } from '@/share
 import { BuildStatus, PartLine, statusOf } from '@/widgets/build-quote';
 
 import { whenShared } from '../model/when-shared';
+import { TheLinkOnTheSheet } from './what-the-reader-can-do';
 
 // A Shared Build's sheet (DESIGN.md's The Shared Build page, Its sheet): the
 // Build's sheet titled "A shared Build" as the page's `h1`; under it the
@@ -21,7 +22,8 @@ import { whenShared } from '../model/when-shared';
 // Categories as words and not links; then, in Body Soft Ink, at most 34rem
 // wide, when it was shared and that its Parts are fixed and its prices
 // today's, and, when some of its Parts have left the catalog since, how
-// many, counted from its values against the Parts the API answers. Then its
+// many, counted from its values against the Parts the API answers; under
+// it the link and what else its reader can do (`TheLinkOnTheSheet`). Then its
 // Categories as on the Build page, in the home page's two groups, each Part
 // with its photo, name, price and second line, a kit's or a drive's
 // quantity in its second line, and no form that changes it; a Category it
@@ -32,10 +34,13 @@ export async function SharedBuildSheet({
   shared,
   answer,
   now,
+  isYours,
 }: {
   shared: SharedBuildResponse;
   answer: BuildResponse;
   now: Date;
+  // Whether the browser holds this very Build.
+  isYours: boolean;
 }) {
   const [language, t, groups, categoryPage] = await Promise.all([
     getLocale(),
@@ -96,6 +101,7 @@ export async function SharedBuildSheet({
           </>
         )}
       </p>
+      <TheLinkOnTheSheet sharedBuildId={shared.id} isYours={isYours} />
 
       {group(groups('theCore'), theCore)}
       {group(groups('aroundIt'), aroundIt)}

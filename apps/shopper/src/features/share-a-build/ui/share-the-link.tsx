@@ -8,12 +8,11 @@ import { buttonVariants, HeldWords } from '@/shared/ui';
 // The link and Share the link).
 const copiedFor = 2500;
 
-// The link and Share the link (DESIGN.md's The Shared Build page): "The
-// link" in Small Soft Ink, then the address itself in Body, one left-to-right
-// line that breaks anywhere, selected whole by one long press or click,
-// which is how it is copied without script; and under it one cell of the
-// Board, 52 pixels tall and as wide as the slip, which needs script and is
-// not drawn without it.
+// Share the link (DESIGN.md's The Shared Build page): one cell of the
+// Board, 52 pixels tall and as wide as the piece it stands in, the slip's
+// one action for the browser that holds the Build, and under the printed
+// link on the sheet for a reader. It needs script, so it is not drawn
+// without it, where the printed link is copied by hand.
 //
 // It is "Share the link" where the browser has a share sheet, and calls it
 // in the tap itself, with nothing awaited before it, since a browser opens
@@ -24,12 +23,12 @@ const copiedFor = 2500;
 // (Motion 12); where copying is refused, as on an address that is not HTTPS,
 // the printed link stays to be copied by hand. A screen reader hears that
 // the link was copied.
-export function ShareTheLink({
+export function ShareTheLinkButton({
   link,
   words,
 }: {
   link: string;
-  words: { label: string; share: string; copy: string; copied: string };
+  words: { share: string; copy: string; copied: string };
 }) {
   const way = useSyncExternalStore(nothingChanges, theBrowsersWay, () => 'share' as const);
   const [copied, setCopied] = useState(false);
@@ -55,13 +54,7 @@ export function ShareTheLink({
   }
 
   return (
-    <div data-testid="share-the-link" className="grid grid-cols-[minmax(0,1fr)] gap-3">
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-1 text-start">
-        <p className="text-sm text-muted-foreground">{words.label}</p>
-        <p data-testid="the-link" className="printed-link text-base">
-          {link}
-        </p>
-      </div>
+    <>
       <button
         type="button"
         data-testid="share-the-link-button"
@@ -88,7 +81,7 @@ export function ShareTheLink({
         />
       </button>
       <output className="sr-only">{copied ? words.copied : ''}</output>
-    </div>
+    </>
   );
 }
 

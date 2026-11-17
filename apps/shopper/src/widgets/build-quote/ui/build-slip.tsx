@@ -23,10 +23,11 @@ import type { Whose } from '../model/status';
 // and, once it holds a Part, the Problems, the Warnings and the rules not
 // checked, the rules passed, and the Estimated power draw, "—" when it is
 // not known and left out without a CPU. Below 64rem, where it comes first,
-// it carries its price lines alone, from the Lowest total to Complete, and
-// leaves the rules' counts and the power draw to the rules' sheet, which
-// says them too, so that a phone's first screen holds the slip and the
-// Build's title (the owner, 13 November 2026). Then a dashed rule, and at its foot,
+// it carries its price lines alone, the Lowest total, the Vendors to visit
+// and Complete, and leaves the Parts, which its heading counts, and the
+// rules' counts and the power draw, which the rules' sheet says too, so that
+// a phone's first screen holds the slip, its one action and the Build's
+// title (the owner, 13 and 17 November 2026). Then a dashed rule, and at its foot,
 // in Small Soft Ink, that each Part is at its Lowest Price, read just now,
 // with, when it holds any, that the total leaves out the Parts no Vendor has
 // in stock, and the Parts whose price cannot be shown yet (PRC-5). No
@@ -42,21 +43,27 @@ import type { Whose } from '../model/status';
 // it again (Motion 11), and so is the space of its lines, of what the
 // Shopper can do and of its foot.
 //
-// Under its lines and a dashed rule, above its foot, it carries what the
-// Shopper can do with the Build (`children`), each as wide as the slip and
-// 12 pixels apart, under a dashed rule of its own: the share button on the
-// Build page, and on a Shared Build's page Copy into my Build, or "This is
-// your Build", and the link (DESIGN.md's The share button and The Shared
-// Build page). A Shared Build's slip is headed "Shared Build · 8 Parts".
+// Right under its price lines and a dashed rule, above the rules' counts a
+// desk shows, it carries its one action (`children`), as wide as the slip,
+// under a dashed rule of its own: Share this Build on the Build page, and on
+// a Shared Build's page Copy into my Build, or Share the link for the
+// browser that holds the Build, so that the one action is on the first
+// screen at every width (DESIGN.md's The share button and The Shared Build
+// page, the owner's answer of 17 November 2026). An action that needs
+// script, as Share the link does, leaves no space without it
+// (`actionNeedsScript`). A Shared Build's slip is headed "Shared Build · 8
+// Parts".
 export async function BuildSlip({
   answer,
   stamped,
   whose = 'yours',
+  actionNeedsScript = false,
   children,
 }: {
   answer: BuildResponse;
   stamped: boolean;
   whose?: Whose;
+  actionNeedsScript?: boolean;
   children?: ReactNode;
 }) {
   const [t, shared, site] = await Promise.all([
@@ -105,7 +112,7 @@ export async function BuildSlip({
           <Line name={t('slip.vendorsToVisit')} figure="vendors">
             {formatNumber(vendorsToVisit)}
           </Line>
-          <Line name={t('slip.parts')} figure="parts">
+          <Line name={t('slip.parts')} figure="parts" fromTheDesk>
             {formatNumber(parts)}
           </Line>
           <Line name={t('slip.complete')} figure="complete">
@@ -116,6 +123,21 @@ export async function BuildSlip({
                   countText: formatNumber(stillNeeded),
                 })}
           </Line>
+        </ul>
+        <div
+          data-space="slip-actions"
+          className={cn(
+            'grid grid-cols-[minmax(0,1fr)] gap-3 py-4 empty:hidden',
+            rule,
+            actionNeedsScript && '[@media(scripting:none)]:hidden',
+          )}
+        >
+          {children}
+        </div>
+        <ul
+          data-space="slip-desk"
+          className={`@container grid grid-cols-[minmax(0,1fr)] gap-2.5 py-4 empty:hidden max-lg:hidden ${rule}`}
+        >
           {answer.parts.length > 0 && (
             <>
               <Line name={t('slip.problems')} figure="problems" fromTheDesk>
@@ -138,12 +160,6 @@ export async function BuildSlip({
             </>
           )}
         </ul>
-        <div
-          data-space="slip-actions"
-          className={`grid grid-cols-[minmax(0,1fr)] gap-3 py-4 empty:hidden ${rule}`}
-        >
-          {children}
-        </div>
         <div
           data-space="slip-foot"
           className="grid grid-cols-[minmax(0,1fr)] gap-3 pt-3.5 text-center text-sm text-muted-foreground"

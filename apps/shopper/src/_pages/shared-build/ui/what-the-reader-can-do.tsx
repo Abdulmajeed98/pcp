@@ -5,19 +5,19 @@ import { buildAddress } from '@/entities/build';
 import { sharedBuildAddress, sharedBuildLink } from '@/entities/shared-build';
 import { underlinedAction } from '@/features/change-the-build';
 import { CopyIntoMyBuild, type CopyRefusal } from '@/features/copy-a-shared-build';
-import { ShareTheLink } from '@/features/share-a-build';
+import { PrintedLink, ShareTheLinkButton } from '@/features/share-a-build';
 import { publicAddress } from '@/shared/config';
 import { PrintedMark } from '@/shared/ui';
 
-// What the reader of a Shared Build can do, on its slip under a dashed rule
-// above its foot (DESIGN.md's The Shared Build page, Its slip), each 52
-// pixels tall and as wide as the slip, 12 pixels apart: Copy into my Build,
-// the page's one primary button, which asks once first when the browser
-// holds a Build of its own; or, for a browser that holds this very Build, as
-// the sender's does after sharing, "This is your Build" in the copy's place,
-// with no copy; a copy refused said under it; then the link and Share the
-// link.
-export async function WhatTheReaderCanDo({
+// The Shared Build slip's one action, right under its price lines and above
+// the rules' counts a desk shows (DESIGN.md's The Shared Build page, Its
+// slip; the owner's answer of 17 November 2026), as wide as the slip and 52
+// pixels tall, so that it is on the first screen at every width: Copy into
+// my Build, the page's one primary button, which asks once first when the
+// browser holds a Build of its own, with a copy refused said under it; or,
+// for a browser that holds this very Build, as the sender's does after
+// sharing, Share the link, since there is nothing to copy.
+export async function TheSlipsAction({
   sharedBuildId,
   parts,
   ownParts,
@@ -35,6 +35,14 @@ export async function WhatTheReaderCanDo({
     getLocale(),
     getTranslations('SharedBuildPage'),
   ]);
+  if (isYours) {
+    return (
+      <ShareTheLinkButton
+        link={sharedBuildLink(publicAddress(), language, sharedBuildId)}
+        words={{ share: t('link.share'), copy: t('link.copy'), copied: t('link.copied') }}
+      />
+    );
+  }
   const page = sharedBuildAddress(language, sharedBuildId);
   const counts = {
     mine: ownParts,
@@ -44,40 +52,65 @@ export async function WhatTheReaderCanDo({
 
   return (
     <>
-      {isYours ? (
-        <ThisIsYourBuild
-          words={{ title: t('yours.title'), note: t('yours.note'), goTo: t('yours.goTo') }}
-          buildAddress={buildAddress(language)}
-        />
-      ) : (
-        <CopyIntoMyBuild
-          action={`${page}/copy`}
-          sharedBuildAddress={page}
-          ownParts={ownParts}
-          words={{
-            button: t('copy.button'),
-            busy: t('copy.busy'),
-            warning: t('copy.warning', counts),
-            confirm: t('copy.confirm', counts),
-            keep: t('copy.keep'),
-          }}
-        />
-      )}
-      {refused !== undefined && !isYours && (
+      <CopyIntoMyBuild
+        action={`${page}/copy`}
+        sharedBuildAddress={page}
+        ownParts={ownParts}
+        words={{
+          button: t('copy.button'),
+          busy: t('copy.busy'),
+          warning: t('copy.warning', counts),
+          confirm: t('copy.confirm', counts),
+          keep: t('copy.keep'),
+        }}
+      />
+      {refused !== undefined && (
         <output data-testid="copy-refused" className="block text-base">
           {t('copy.refused')}
         </output>
       )}
-      <ShareTheLink
-        link={sharedBuildLink(publicAddress(), language, sharedBuildId)}
-        words={{
-          label: t('link.label'),
-          share: t('link.share'),
-          copy: t('link.copy'),
-          copied: t('link.copied'),
-        }}
-      />
     </>
+  );
+}
+
+// What else the reader can do, on the Shared Build's sheet under the note
+// of when it was shared (DESIGN.md's The Shared Build page, Its sheet; the
+// owner's answer of 17 November 2026), at most 24rem wide and centred, its
+// words set from their start: for the browser that holds this very Build,
+// "This is your Build"'s words; then the link, printed; and for a reader,
+// Share the link under it, as wide as the piece.
+export async function TheLinkOnTheSheet({
+  sharedBuildId,
+  isYours,
+}: {
+  sharedBuildId: string;
+  isYours: boolean;
+}) {
+  const [language, t] = await Promise.all([
+    getLocale(),
+    getTranslations('SharedBuildPage'),
+  ]);
+  const link = sharedBuildLink(publicAddress(), language, sharedBuildId);
+
+  return (
+    <div
+      data-testid="share-the-link"
+      className="mx-auto mt-8 grid w-full max-w-[24rem] grid-cols-[minmax(0,1fr)] gap-3"
+    >
+      {isYours && (
+        <ThisIsYourBuild
+          words={{ title: t('yours.title'), note: t('yours.note'), goTo: t('yours.goTo') }}
+          buildAddress={buildAddress(language)}
+        />
+      )}
+      <PrintedLink link={link} label={t('link.label')} />
+      {!isYours && (
+        <ShareTheLinkButton
+          link={link}
+          words={{ share: t('link.share'), copy: t('link.copy'), copied: t('link.copied') }}
+        />
+      )}
+    </div>
   );
 }
 

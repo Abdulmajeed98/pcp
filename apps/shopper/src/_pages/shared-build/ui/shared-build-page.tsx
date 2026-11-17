@@ -18,7 +18,7 @@ import { readTheSharedBuildPage } from '../api/read-the-shared-build-page';
 import { whenShared } from '../model/when-shared';
 import { AllGone } from './all-gone';
 import { SharedBuildSheet } from './shared-build-sheet';
-import { WhatTheReaderCanDo } from './what-the-reader-can-do';
+import { TheSlipsAction } from './what-the-reader-can-do';
 
 // The Shared Build page, at `/<language>/builds/<sharedBuildId>` (DESIGN.md's
 // The Shared Build page), the page a Shared Build's link opens: the Build
@@ -26,9 +26,11 @@ import { WhatTheReaderCanDo } from './what-the-reader-can-do';
 // stamped with the day it was shared. The stub, its way to the Build leading
 // to the reader's own Build; then, over a dim photograph of a built PC, the
 // Shared Build's till slip beside its sheet, the slip pinned from 64rem and
-// first on a phone, carrying what its reader can do; then the rules' sheet
-// and the Vendors' sheet over their photographs; the back cover. Its words
-// speak of the Build as the sender's, never the reader's.
+// first on a phone, carrying its reader's one action right under its price
+// lines, and the sheet the link and the rest its reader can do under its
+// note; then the rules' sheet and the Vendors' sheet over their
+// photographs; the back cover. Its words speak of the Build as the
+// sender's, never the reader's.
 //
 // It is drawn on the server for each request, in the language of its
 // address, which is its sender's (ADR-0008), and the chosen currency, from
@@ -61,6 +63,7 @@ export async function SharedBuildPage({
   if (read.kind === 'not-found') notFound();
   const answer = read.kind === 'read' ? read.answer : undefined;
   const own = buildIn(sent);
+  const isYours = read.kind === 'read' && holdsTheSharedBuild(own, read.shared.part);
 
   return (
     <>
@@ -87,12 +90,13 @@ export async function SharedBuildPage({
                 answer={read.answer}
                 stamped={statusOf(read.answer, language, 'shared').stamped}
                 whose="shared"
+                actionNeedsScript={isYours}
               >
-                <WhatTheReaderCanDo
+                <TheSlipsAction
                   sharedBuildId={read.shared.id}
                   parts={partsCountedIn(read.answer.parts)}
                   ownParts={partsCountedIn(own)}
-                  isYours={holdsTheSharedBuild(own, read.shared.part)}
+                  isYours={isYours}
                   refused={refusedCopyIn(new URLSearchParams(fieldsOf(address)))}
                 />
               </BuildSlip>
@@ -100,6 +104,7 @@ export async function SharedBuildPage({
                 shared={read.shared}
                 answer={read.answer}
                 now={read.readAt}
+                isYours={isYours}
               />
             </div>
           </main>
