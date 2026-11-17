@@ -263,7 +263,7 @@
       "noNumber": "Gave no WhatsApp number",
       "message": "Hello {vendor}, I planned this PC on {site}: do you have its Parts?",
       "refused": {
-        "notReachable": "{vendor} can no longer be reached through the platform.",
+        "notReachable": "<written>{vendor}</written> can no longer be reached through the platform.",
         "notReachableUnnamed": "The Vendor you chose can no longer be reached through the platform.",
         "notOpened": "WhatsApp could not be opened just now. Try again in a moment."
       }
