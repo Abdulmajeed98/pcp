@@ -465,6 +465,44 @@ describe("the made-up shop's Referral counts", () => {
   });
 });
 
+// The Referrals screen at its worst, for `break-ui` (the code review's
+// fixes of sharing): `pnpm dashboard:inspect --referrals worstCase`, `one`
+// or `none` answers the list from these instead.
+describe("the made-up shop's Referral counts at their worst", () => {
+  function listedBy(referrals: 'worstCase' | 'one' | 'none'): ReferralCountsPageResponse {
+    const answer = answerFromTheMadeUpShop(
+      madeUpShop(now, catalogPartsOfTheShop(), { referrals }),
+      now,
+      { method: 'GET', path: '/v1/referral-counts?page=0&size=100' },
+    );
+    expect(answer?.status).toBe(200);
+    return answer?.body as ReferralCountsPageResponse;
+  }
+
+  it('list the made-up Vendors and beside them the worst a Vendor can be, most first: the longest name the API takes, one with no space, long Arabic and Kurdish names, names that start or end with no direction of their own, a count of one, and deactivated Vendors with many and with none', () => {
+    const { content, totalElements } = listedBy('worstCase');
+    const named = (name: string) => content.find((vendor) => vendor.name === name);
+
+    expect(totalElements).toBe(madeUpVendors.length + 10);
+    expect(content[0]?.name).toHaveLength(100);
+    expect(content[0]?.count).toBe(128406);
+    expect(named('pc.parts.and.gaming.accessories.wholesale.official')).toMatchObject({
+      active: false,
+      count: 12750,
+    });
+    expect(named('A1')?.count).toBe(1);
+    expect(named('Ali & Sons!')).toMatchObject({ active: false, count: 0 });
+    expect(content.every((vendor) => vendor.name.length <= 100)).toBe(true);
+    const counts = content.map((vendor) => vendor.count);
+    expect(counts).toEqual([...counts].sort((a, b) => b - a));
+  });
+
+  it('list one Vendor with one Referral, or no Vendor at all', () => {
+    expect(listedBy('one')).toMatchObject({ totalElements: 1, content: [{ count: 1 }] });
+    expect(listedBy('none')).toMatchObject({ totalElements: 0, content: [] });
+  });
+});
+
 describe("the made-up shop's Platform Rate", () => {
   it('is the rate of 1,575 dinars to the dollar, set three days before, so that the Platform Rate screen shows its plate', () => {
     expect(answerTo('GET', '/v1/platform-rate')).toEqual({
