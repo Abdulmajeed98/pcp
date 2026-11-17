@@ -10,6 +10,7 @@ import { NewVendorPage } from '@/pages/new-vendor';
 import { NotFoundPage } from '@/pages/not-found';
 import { PartPage } from '@/pages/part';
 import { PlatformRatePage } from '@/pages/platform-rate';
+import { ReferralsPage } from '@/pages/referrals';
 import { VendorPage } from '@/pages/vendor';
 import { VendorsPage } from '@/pages/vendors';
 
@@ -22,8 +23,9 @@ import { vendorPortalScreens } from './vendor-portal-screens';
 // Part are the Catalog's children, and a Vendor's page, its edit form and a
 // new Vendor are the Vendors' children, which each shows beside its list on
 // a wide screen. A Part's edit form is also a child of the Missing
-// specifications, which saving returns to. The Expiring Offers lead to a
-// Vendor's page under the Vendors. The Platform Rate is a screen of its own.
+// specifications, which saving returns to. The Expiring Offers and the
+// Referrals lead to a Vendor's page under the Vendors. The Platform Rate is
+// a screen of its own.
 //
 // A Vendor's portal, for the Admin acting as that Vendor, is under the
 // Vendor's page: the Vendor portal's own screens, in the Vendor portal's
@@ -78,6 +80,7 @@ const routes = [
       },
       { path: 'expiring-offers', Component: ExpiringOffersPage },
       { path: 'platform-rate', Component: PlatformRatePage },
+      { path: 'referrals', Component: ReferralsPage },
       { path: '*', Component: NotFoundPage },
     ],
   },

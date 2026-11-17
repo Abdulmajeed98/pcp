@@ -1,5 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
-import type { VendorsOffersPageResponse } from '@pcp/api-client';
+import type {
+  ReferralCountsPageResponse,
+  VendorsOffersPageResponse,
+} from '@pcp/api-client';
 
 import {
   answerFromTheMadeUpShop,
@@ -9,6 +12,7 @@ import {
   partsWithTheShopsOffers,
   vendorsWithTheShops,
 } from '../made-up-shop.ts';
+import { madeUpIdentifier, madeUpVendors } from '../made-up-vendors.ts';
 import { aShopFromTheCatalog, catalogPartsOfTheShop, now } from './catalog-stand-in.ts';
 
 const shop = aShopFromTheCatalog();
@@ -362,6 +366,9 @@ describe("the made-up shop's other answers", () => {
     ['POST', '/v1/parts/11111111-1111-4111-8111-111111111111/photo'],
     ['PUT', '/v1/vendors/11111111-1111-4111-8111-111111111111'],
     ['PATCH', '/v1/categories'],
+    // Nor is a Build shared, or a Referral recorded (sharing ticket 03).
+    ['POST', '/v1/shared-builds'],
+    ['POST', '/v1/shared-builds/11111111-1111-4111-8111-111111111111/referrals'],
   ])('refuse a change, %s %s, which never reaches the API', (method, path) => {
     const answer = answerTo(method, path);
 
@@ -376,6 +383,85 @@ describe("the made-up shop's other answers", () => {
     ['GET', '/v1/parts/11111111-1111-4111-8111-111111111111'],
   ])('leave %s %s to the API', (method, path) => {
     expect(answerTo(method, path)).toBeUndefined();
+  });
+});
+
+describe("the made-up shop's Referral counts", () => {
+  function referralCounts(page: number, size: number): ReferralCountsPageResponse {
+    const answer = answerTo('GET', `/v1/referral-counts?page=${page}&size=${size}`);
+    expect(answer?.status).toBe(200);
+    return answer?.body as ReferralCountsPageResponse;
+  }
+
+  it('list every made-up Vendor with its count, most first: Vendors with none, a deactivated Vendor and a count in the thousands among them', () => {
+    const { content, totalElements } = referralCounts(0, 100);
+
+    expect(totalElements).toBe(madeUpVendors.length);
+    expect(content.map((vendor) => vendor.id).sort()).toEqual(
+      madeUpVendors.map((vendor) => vendor.id).sort(),
+    );
+    expect(content[0]).toEqual({
+      id: madeUpIdentifier(1),
+      name: 'Made-up PC Parts',
+      active: true,
+      count: 1284,
+    });
+    expect(content.filter((vendor) => vendor.count === 0).length).toBeGreaterThan(1);
+    expect(content.filter((vendor) => !vendor.active)).toEqual([
+      {
+        id: madeUpIdentifier(5),
+        name: 'Imaginary Gaming Corner',
+        active: false,
+        count: 46,
+      },
+    ]);
+    const counts = content.map((vendor) => vendor.count);
+    expect(counts).toEqual([...counts].sort((a, b) => b - a));
+  });
+
+  // The names' order is the development database's own (`en_US.utf8`), read
+  // from it with `ORDER BY name` on 17 November 2026: Latin before Arabic
+  // script, and ک after ع.
+  it('order Vendors with the same count by name, as the API does', () => {
+    const names = referralCounts(0, 100).content.map((vendor) => vendor.name);
+    const tied = ['Sample Systems', 'حاسبات المثال', 'کۆگای پارچەی خەیاڵی'];
+
+    expect(names.filter((name) => tied.includes(name))).toEqual(tied);
+    expect(names.slice(-6)).toEqual([
+      'Placeholder Computers',
+      'Pretend Tech',
+      'ئەلیکترۆنیاتی خەیاڵ',
+      'شركة التقنيات الوهمية لتجارة الحاسبات وملحقاتها',
+      'کۆمپیوتەری وەهمی',
+      'متجر التجربة للإلكترونيات',
+    ]);
+  });
+
+  it('come a page at a time, as the API pages them', () => {
+    const first = referralCounts(0, 20);
+    const second = referralCounts(1, 20);
+
+    expect(first).toMatchObject({
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: madeUpVendors.length,
+      totalPages: 2,
+      first: true,
+      last: false,
+    });
+    expect(first.content).toHaveLength(20);
+    expect(second).toMatchObject({ pageNumber: 1, first: false, last: true });
+    expect([...first.content, ...second.content]).toEqual(referralCounts(0, 100).content);
+  });
+
+  it("give the shop's Vendor its own count, the one the list gives it, and leave any other Vendor's to the API", () => {
+    expect(answerTo('GET', `/v1/vendors/${vendorId}/referral-count`)).toEqual({
+      status: 200,
+      body: { count: 1284 },
+    });
+    expect(
+      answerTo('GET', `/v1/vendors/${madeUpIdentifier(2)}/referral-count`),
+    ).toBeUndefined();
   });
 });
 
