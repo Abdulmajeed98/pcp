@@ -47,6 +47,7 @@ export type {
   ReadVisiblePartsFiltersData,
   ReferralCountResponse,
   ReferralCountsPageResponse,
+  ReferredVendorResponse,
   SetPlatformRateRequest,
   SharedBuildResponse,
   ShownPriceResponse,

@@ -87,8 +87,9 @@ describe("the chat's address", () => {
       chatWithTheVendor(
         'ar',
         {
+          id: '0b7f4c2e-9a31-4d58-8e6f-2c1a5d9b3e70',
           name: 'متجر التجربة للإلكترونيات',
-          whatsAppNumber: { international: '+9647501234567' },
+          whatsAppNumber: { international: '+9647501234567', national: '0750 123 4567' },
         },
         linkIn('ar'),
       ),

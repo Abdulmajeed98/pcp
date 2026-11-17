@@ -27,13 +27,13 @@ async function referAndOpenTheChat(
   language: Language,
   { page, sharedBuildId, vendor }: { page: string; sharedBuildId: string; vendor: string },
 ): Promise<FormAnswered> {
-  const referral = await recordAReferral(sharedBuildId, vendor);
-  switch (referral.kind) {
+  const recorded = await recordAReferral(sharedBuildId, vendor);
+  switch (recorded.kind) {
     case 'referred':
       return {
         address: chatWithTheVendor(
           language,
-          referral.vendor,
+          recorded.vendor,
           sharedBuildLink(publicAddress(), language, sharedBuildId),
         ),
       };

@@ -8,7 +8,7 @@ import { addressAfterARefusedShare } from '@/features/share-a-build';
 
 import { readASharedBuildToCopy } from '../api/read-a-shared-build-to-copy';
 import { readTheBuildToChange } from '../api/read-the-build-to-change';
-import { type Shared, shareABuild } from '../api/share-a-build';
+import { type ShareOutcome, shareABuild } from '../api/share-a-build';
 import { answerAForm, type FormAnswered } from './answer-a-form';
 
 // What sharing the browser's Build came to, for the share form and for "send
@@ -17,7 +17,7 @@ import { answerAForm, type FormAnswered } from './answer-a-form';
 // when the catalog no longer holds a Part of it, the cookie that forgets
 // the Part, so that the browser's Build is the one shared.
 export interface BrowsersBuildShared {
-  shared: Shared | { kind: 'nothing' };
+  shared: ShareOutcome | { kind: 'nothing' };
   forget: FormAnswered['write'];
 }
 

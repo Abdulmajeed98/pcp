@@ -6,7 +6,7 @@ import { apiClient, refusesTheBuild, theApisErrors } from '@/shared/api';
 // only a cookie edited by hand makes; a Build with no Part the catalog
 // holds, which the API refuses as `empty`; or nothing, when the API did not
 // answer.
-export type Shared =
+export type ShareOutcome =
   | { kind: 'shared'; sharedBuildId: string }
   | { kind: 'refused' }
   | { kind: 'empty' }
@@ -18,7 +18,7 @@ export type Shared =
 // not hold, and stores as a Shared Build, or answers the Shared Build an
 // earlier share of the same Build stored, so the Shopper app keeps no record
 // of what it has shared. The browser never calls the API.
-export async function shareABuild(build: Build): Promise<Shared> {
+export async function shareABuild(build: Build): Promise<ShareOutcome> {
   const { data, error, response } = await apiClient().shareBuild({
     body: { part: partValuesOf(build) },
   });

@@ -1,3 +1,4 @@
+import type { ReferredVendorResponse } from '@pcp/api-client';
 import { type Language, shopperMessages } from '@pcp/i18n';
 import { whatsAppChatWith } from '@pcp/links';
 import { createTranslator } from 'next-intl';
@@ -30,7 +31,7 @@ export function theMessage(language: Language, vendorName: string, link: string)
 // link out to WhatsApp is, with the message written in it.
 export function chatWithTheVendor(
   language: Language,
-  vendor: { name: string; whatsAppNumber: { international: string } },
+  vendor: ReferredVendorResponse,
   link: string,
 ): string {
   return whatsAppChatWith(
