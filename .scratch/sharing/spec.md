@@ -1,6 +1,6 @@
 # Spec: Sharing
 
-Status: ready-for-agent
+Status: resolved
 
 This is `sharing`, the ninth module in the build order of [the MVP spec](../mvp/spec.md)'s capability map, after `builder` and beside `part-requests`. It covers SHR-1 to SHR-7, success criteria 7 and 8, and the shared Build's half of criterion 12. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md), [ADR-0009](../../docs/adr/0009-vendors-in-the-database-logins-in-keycloak.md), [ADR-0011](../../docs/adr/0011-the-dashboards-look-is-framed-sheet.md) and [ADR-0013](../../docs/adr/0013-the-shopper-apps-look-is-the-printed-price-list.md). It builds on the conventions that every earlier module recorded in the MVP spec, and on `builder`'s above all: `GET v1/build`, the Build's cookie, its forms and the Vendors' sheet.
 

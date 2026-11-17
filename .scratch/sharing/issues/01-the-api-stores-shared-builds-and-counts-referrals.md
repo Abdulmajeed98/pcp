@@ -8,7 +8,7 @@ No page shows any of this yet. Tickets 03 to 05 do. For now the integration test
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The word.** **Shared Build** is added to CONTEXT.md under Shoppers and builds before any code uses it, as the spec defines it: a frozen copy of a Build's Parts and quantities, stored by the platform behind a link, which never changes. Its words to avoid are "saved build", "snapshot", "public build" and "build link".
 - [x] **Tests first.** The integration tests below are written before the code for three things, and are seen to fail for the right reason:

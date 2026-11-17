@@ -13,7 +13,7 @@ Everything works before any script has loaded. This makes success criterion 7 tr
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The pieces both pages draw, moved first**, in a commit of their own that changes nothing a Shopper sees.
   - The Build page's pieces that the Shared Build page also draws move down a layer, as Feature-Sliced Design asks, so that a second page may import them: the slip, the rules' sheet, the Vendors' sheet, the status and the words of the outcomes.

@@ -6,7 +6,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The inspector's made-up shop** answers `GET v1/referral-counts` and `GET v1/vendors/{vendorId}/referral-count` with:
   - Vendors with no Referral;
