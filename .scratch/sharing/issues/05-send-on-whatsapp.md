@@ -13,7 +13,7 @@ This makes success criterion 8 true.
 
 **Blocked by:** 03, 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The buttons**, built to DESIGN.md, on each Vendor's line of both pages' second price view. A Vendor that gave no WhatsApp number has no button, and its Vendor page stays linked.
 - [x] **The forms.** Each button is a plain form sent with POST, with `vendor`, and opens in a new tab (`target="_blank"`), as the Vendor page's WhatsApp cell does.

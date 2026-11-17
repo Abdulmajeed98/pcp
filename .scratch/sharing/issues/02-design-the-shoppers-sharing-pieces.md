@@ -6,7 +6,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The stand-in answers Shared Builds.**
   - It answers `GET v1/shared-builds/{id}` for three made-up Shared Builds:
@@ -16,7 +16,7 @@
   - `GET v1/build`'s Vendors answer whether they gave a WhatsApp number, and some of the made-up shop's Vendors have none.
   - It is typed by `@pcp/api-client`'s own types, so a change to the description that it does not follow fails `pnpm check`.
   - Writes are still refused with 405, and every other path with 404. No test of the platform relies on it.
-- [ ] **`pnpm shopper:inspect` opens a Shared Build page by its path.** With `--build complete` and the `complete` Shared Build, the page is in its "This is your Build" state. The commands table and the design skills guide say how.
+- [x] **`pnpm shopper:inspect` opens a Shared Build page by its path.** With `--build complete` and the `complete` Shared Build, the page is in its "This is your Build" state. The commands table and the design skills guide say how.
 - [x] **The guide is read first**, and so are DESIGN.md, ADR-0013 and `builder`'s design ticket 06.
 - [x] **The pieces to design**, Taste leading their composition inside the chosen direction:
   - the share button on the Build page, shown only when the Build holds a Part;
@@ -129,3 +129,7 @@ Do's and Don'ts gain a line each: hold a button's width when its words change, s
 The words of the new pieces are drafted in English and Kurdish in the renderings' `#words` (and the message in Arabic), for ticket 04 and 05 to put into the Shopper set; `words.md`'s Shared Build and Referral are committed with the first record.
 
 **`pnpm shopper:inspect` and "This is your Build".** The box stays open for ticket 04, which builds the Shared Build page; the command already opens the page's path, and with `--build complete` the browser holds the complete Shared Build's Build.
+
+### 18 November 2026: the last box, ticked by ticket 06
+
+The box for `pnpm shopper:inspect` opening a Shared Build page by its path, in its "This is your Build" state with `--build complete` and the `complete` Shared Build, is ticked. Ticket 04 built the page, and its `yours-*` runs drew that state, as its Comments say: with `--build complete` on `/builds/00000000-0000-4000-8000-000000700001` every run drew "This is your Build" and no copy, before the owner's `#d1` answer (`.taste-skill/sharing-04-inspect/yours-*`) and after it (`sharing-04-inspect-2/yours-*`, Share the link as the slip's one action). The code review's inspection drew it again (`sharing-review-inspect/yours-*`), and so did ticket 06's runs from a fresh clone, `yours-*` in Kurdish and English, light and dark, at five widths, and in dollars, each with Share the link as the slip's one action, "This is your Build" on the sheet and no copy, 0 FAIL (ticket 06's Comments). The commands table and the design skills guide have said how since this ticket.
