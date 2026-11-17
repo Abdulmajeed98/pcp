@@ -151,6 +151,7 @@ test('the Admin reaches the Platform Rate from the menu sheet, after the Expirin
     'Missing specifications',
     'Expiring Offers',
     'Platform Rate',
+    'Referrals',
   ]);
   await page.keyboard.press('Escape');
 

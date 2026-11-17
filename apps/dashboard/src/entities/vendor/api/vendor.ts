@@ -21,6 +21,23 @@ export function useVendor(vendorId: string) {
   });
 }
 
+// The key of the query about a Vendor's Referral count, beside the Vendor's
+// other keys, under its own: a change to the Vendor asks it again.
+export function referralCountKey(vendorId: string) {
+  return [...vendorKey(vendorId), 'referral-count'] as const;
+}
+
+// How many Referrals name the Vendor, over all time: how many times Shoppers
+// have sent it their Build on WhatsApp. The API answers it to the Vendor's
+// own Login and to the Admin, through its rule for which Vendor a request
+// acts for, so the Admin acting as the Vendor reads the same.
+export function useReferralCount(vendorId: string) {
+  return useQuery({
+    queryKey: referralCountKey(vendorId),
+    queryFn: () => dataOf(apiClient.readVendorsReferralCount({ path: { vendorId } })),
+  });
+}
+
 // The key of the query about the Caller's own Vendor.
 export const callersVendorKey = [...vendorsKey, 'caller'] as const;
 
