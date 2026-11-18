@@ -321,6 +321,48 @@ describe("Downloading a Vendor's Offer sheet", () => {
       ]);
     });
 
+    it('writes each cell under its own heading, in each language, wherever the layout puts the column', async () => {
+      const vendor = await platform.aVendor();
+      const part = await platform.aPart('Made-up Radeon RX 9070 XT', ['0012345']);
+      await platform.anOffer(vendor.id, part.id, {
+        usdPrice: '349.99',
+        iqdPrice: 1875000,
+        inStock: true,
+        warrantyMonths: 24,
+      });
+
+      for (const language of languages) {
+        const worksheet = await theOfferSheet(vendor.id, language);
+        // Each column found by its heading in row 1, not by its place.
+        const columnOf = new Map<string, number>();
+        worksheet.getRow(1).eachCell((cell, column) => {
+          columnOf.set(String(cell.value), column);
+        });
+        const cellUnder = (heading: string): CellRead => {
+          const column = columnOf.get(heading);
+          if (column === undefined) throw new Error(`No column is headed ${heading}.`);
+          return cellRead(worksheet.getRow(2).getCell(column));
+        };
+        const { headings, yes } = wordsIn(language);
+
+        expect({
+          partNumber: cellUnder(headings.partNumber),
+          name: cellUnder(headings.name),
+          usdPrice: cellUnder(headings.usdPrice),
+          iqdPrice: cellUnder(headings.iqdPrice),
+          inStock: cellUnder(headings.inStock),
+          warrantyMonths: cellUnder(headings.warrantyMonths),
+        }).toEqual({
+          partNumber: { text: '0012345' },
+          name: { text: 'Made-up Radeon RX 9070 XT' },
+          usdPrice: { number: 349.99, format: '0.00' },
+          iqdPrice: { number: 1875000, format: '0' },
+          inStock: { text: yes },
+          warrantyMonths: { number: 24, format: '0' },
+        });
+      }
+    });
+
     it('leaves a price not quoted and a warranty not stated empty, and writes a whole dollar price with two decimals', async () => {
       const vendor = await platform.aVendor();
       const inDollars = await platform.aPart('Made-up A Dollars Only GPU', ['MU-USD-1']);
