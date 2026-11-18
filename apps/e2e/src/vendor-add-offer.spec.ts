@@ -23,6 +23,10 @@ import {
   narrowWindow,
 } from './languages';
 import {
+  recordTheLiveRegionsAsTheyArrive,
+  wordsTheRegionArrivedWith,
+} from './live-regions';
+import {
   addAnOffer,
   foundParts,
   goToTheSection,
@@ -97,6 +101,7 @@ test.describe('a made-up Vendor with no Offer yet', () => {
   test("searches the catalog by a made-up Part's number, picks it, adds an Offer quoted only in USD with a warranty, returns to the search as it was, and sees the Offer in its list, confirmed today", async ({
     page,
   }) => {
+    await recordTheLiveRegionsAsTheyArrive(page);
     await openTheDashboardAs(page, vendor);
     await expect(noOffers(page)).toBeVisible();
 
@@ -125,6 +130,10 @@ test.describe('a made-up Vendor with no Offer yet', () => {
       part.partNumber,
     );
     await expect(page.getByTestId('offer-added')).toContainText(part.name);
+    expect(
+      await wordsTheRegionArrivedWith(page.getByTestId('offer-added')),
+      'the note arrived in a live region that was in the page before it',
+    ).toBe('');
     await expect(rowOfFoundPart(page, part.name)).toHaveAttribute('data-offered', 'true');
     await expectNoSidewaysScroll(page);
 

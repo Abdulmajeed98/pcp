@@ -66,5 +66,7 @@ import { DatabaseVisiblePartStore } from './store/DatabaseVisiblePartStore';
     ListVisibleOffersOfVendorQuery,
     ReadPlatformFiguresQuery,
   ],
+  // A fulfilled Part Request answers the Vendor's Offer for its Part.
+  exports: [OfferStore],
 })
 export class OfferModule {}

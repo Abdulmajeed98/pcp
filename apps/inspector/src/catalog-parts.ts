@@ -9,7 +9,7 @@ import { neededSpecificationsOf } from '@pcp/compatibility';
 
 import { theOtherGpus } from './made-up-gpus.ts';
 import { type CatalogPart, namedParts, theCategoryOfManyParts } from './made-up-offers.ts';
-import { partsTheShopOffers } from './made-up-shop.ts';
+import { partsTheShopReads } from './made-up-shop.ts';
 import { setAt, valueAt } from './specification-document.ts';
 import type { CpuValue, ReadPart, TheShoppersCatalog } from './the-shoppers-shop.ts';
 
@@ -23,10 +23,11 @@ export type SearchOfTheCatalog = (
 // Category and exact name (ADR-0001: no Part is invented). A name the
 // catalog does not hold once and once only stops the command, and says which
 // and in which of the shop's files, `file`. The dashboard's shop reads its
-// own Vendor's Parts, and the Shopper's every Part it offers.
+// own Vendor's Parts and those its Part Requests were fulfilled with, and
+// the Shopper's every Part it offers.
 export async function partsOfTheCatalog(
   searchTheCatalog: SearchOfTheCatalog,
-  wanted: readonly CatalogPart[] = partsTheShopOffers,
+  wanted: readonly CatalogPart[] = partsTheShopReads,
   file = 'made-up-offers.ts',
 ): Promise<Map<string, PartSummaryResponse>> {
   const parts = await Promise.all(

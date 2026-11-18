@@ -1610,6 +1610,364 @@ export type ReferralCountResponse = {
     count: number;
 };
 
+export type SendPartRequestRequest = {
+    /**
+     * The Quoted Price in USD, as a decimal number in Western digits, with at most two decimal places, more than 0 and at most 100000.00. It or the IQD price, or both, must be given.
+     */
+    usdPrice?: string | null;
+    /**
+     * The Quoted Price in IQD, in whole dinars, more than 0 and at most 150000000. It or the USD price, or both, must be given.
+     */
+    iqdPrice?: number | null;
+    /**
+     * Whether the Vendor has the Part in stock now.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months from 1 to 120, or null when the Vendor states none.
+     */
+    warrantyMonths?: number | null;
+    /**
+     * The Part's Category, as the Vendor thinks it is.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name, kept as the Vendor writes it.
+     */
+    name: string;
+    /**
+     * The manufacturer's part number, kept without invisible marks and without the space around it, as the catalog keeps one.
+     */
+    partNumber: string;
+};
+
+export type PartRequestResponse = {
+    /**
+     * The Part Request's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category, as the Vendor gave it.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name, as the Vendor wrote it.
+     */
+    name: string;
+    /**
+     * The manufacturer's part number, without invisible marks and without the space around it.
+     */
+    partNumber: string;
+    /**
+     * The Quoted Price in USD the Vendor would offer, as a decimal number with two decimal places, or null when it quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD the Vendor would offer, in whole dinars, or null when it quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor sent it, by the API's clock.
+     */
+    sentAt: string;
+    /**
+     * The day it was sent, in Iraq's time (`Asia/Baghdad`), where everyone using the platform is, as a date.
+     */
+    sentOn: string;
+    /**
+     * The calendar days, in Iraq's time, from the day it was sent to today, by the API's clock: 0 on the day it was sent and 1 on the next, whatever the hours between, so that the count always agrees with `sentOn`.
+     */
+    daysSinceSent: number;
+    /**
+     * Where it stands: open until the Admin resolves it, fulfilled once matched to a Part, or rejected with a reason.
+     */
+    state: 'open' | 'fulfilled' | 'rejected';
+    /**
+     * Whether the Offer a fulfilment makes, confirmed at the moment the request was sent, would be an Expired Offer today, by the API's clock: more than 14 days after it was sent. It is then listed as expired until the Vendor confirms it.
+     */
+    offerWouldBeExpired: boolean;
+    /**
+     * The Part that fulfilled it, as the catalog holds it, of any Category. Left out unless it is fulfilled.
+     */
+    part?: PartSummaryResponse;
+    /**
+     * The identifier of the Vendor's Offer for that Part now, or null once the Vendor has removed it. Left out unless it is fulfilled.
+     */
+    offerId?: string | null;
+    /**
+     * The Admin's reason for rejecting it, as the Admin wrote it. Left out unless it is rejected.
+     */
+    reason?: string;
+    /**
+     * When the Admin resolved it, by the API's clock. Left out while it is open.
+     */
+    resolvedAt?: string;
+};
+
+export type VendorsPartRequestsPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's Part Requests, in every state: newest first, then by identifier.
+     */
+    content: Array<PartRequestResponse>;
+};
+
+export type SendingVendorResponse = {
+    /**
+     * The Vendor's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Vendor's name, as the Vendor writes it.
+     */
+    name: string;
+    /**
+     * Whether the Vendor is active, or a Deactivated Vendor.
+     */
+    active: boolean;
+};
+
+export type PartRequestWithVendorResponse = {
+    /**
+     * The Part Request's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category, as the Vendor gave it.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name, as the Vendor wrote it.
+     */
+    name: string;
+    /**
+     * The manufacturer's part number, without invisible marks and without the space around it.
+     */
+    partNumber: string;
+    /**
+     * The Quoted Price in USD the Vendor would offer, as a decimal number with two decimal places, or null when it quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD the Vendor would offer, in whole dinars, or null when it quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor sent it, by the API's clock.
+     */
+    sentAt: string;
+    /**
+     * The day it was sent, in Iraq's time (`Asia/Baghdad`), where everyone using the platform is, as a date.
+     */
+    sentOn: string;
+    /**
+     * The calendar days, in Iraq's time, from the day it was sent to today, by the API's clock: 0 on the day it was sent and 1 on the next, whatever the hours between, so that the count always agrees with `sentOn`.
+     */
+    daysSinceSent: number;
+    /**
+     * Where it stands: open until the Admin resolves it, fulfilled once matched to a Part, or rejected with a reason.
+     */
+    state: 'open' | 'fulfilled' | 'rejected';
+    /**
+     * Whether the Offer a fulfilment makes, confirmed at the moment the request was sent, would be an Expired Offer today, by the API's clock: more than 14 days after it was sent. It is then listed as expired until the Vendor confirms it.
+     */
+    offerWouldBeExpired: boolean;
+    /**
+     * The Part that fulfilled it, as the catalog holds it, of any Category. Left out unless it is fulfilled.
+     */
+    part?: PartSummaryResponse;
+    /**
+     * The identifier of the Vendor's Offer for that Part now, or null once the Vendor has removed it. Left out unless it is fulfilled.
+     */
+    offerId?: string | null;
+    /**
+     * The Admin's reason for rejecting it, as the Admin wrote it. Left out unless it is rejected.
+     */
+    reason?: string;
+    /**
+     * When the Admin resolved it, by the API's clock. Left out while it is open.
+     */
+    resolvedAt?: string;
+    /**
+     * The Vendor that sent it.
+     */
+    vendor: SendingVendorResponse;
+};
+
+export type OpenPartRequestsPageResponse = {
+    /**
+     * The page, counted from 0.
+     */
+    pageNumber: number;
+    /**
+     * How many items a page holds.
+     */
+    pageSize: number;
+    /**
+     * How many items were found, on all the pages together.
+     */
+    totalElements: number;
+    /**
+     * How many pages there are.
+     */
+    totalPages: number;
+    /**
+     * Whether this is the first page.
+     */
+    first: boolean;
+    /**
+     * Whether this is the last page, or past it.
+     */
+    last: boolean;
+    /**
+     * The page's open Part Requests, of every Vendor, active and deactivated, each with its Vendor: oldest first, then by identifier.
+     */
+    content: Array<PartRequestWithVendorResponse>;
+};
+
+export type PartRequestFulfilmentResponse = {
+    /**
+     * What fulfilling the request with the Part would do to the Vendor's Offer for it, by the rule a fulfilment follows: `created` when the Vendor has none; `replaced` when the Vendor's Offer was last confirmed before the request was sent; `kept` when it was confirmed at or after that moment. A fulfilment judges again, and answers what it did.
+     */
+    offer: 'created' | 'replaced' | 'kept';
+    /**
+     * Whether the Vendor's Offer would then be an Expired Offer, by the API's clock: an Offer made or replaced is confirmed at the moment the request was sent, so it would be when that was more than 14 days ago. Always false when the Offer is kept, since a kept Offer keeps its own Confirmation.
+     */
+    offerWouldBeExpired: boolean;
+};
+
+export type FulfilPartRequestRequest = {
+    /**
+     * The identifier of the Part that fulfils the request, of any Category.
+     */
+    partId: string;
+};
+
+export type FulfilledPartRequestResponse = {
+    /**
+     * The Part Request's identifier on the platform.
+     */
+    id: string;
+    /**
+     * The Part's Category, as the Vendor gave it.
+     */
+    category: 'cpu' | 'cpuCooler' | 'motherboard' | 'ram' | 'storage' | 'gpu' | 'case' | 'psu';
+    /**
+     * The Part's name, as the Vendor wrote it.
+     */
+    name: string;
+    /**
+     * The manufacturer's part number, without invisible marks and without the space around it.
+     */
+    partNumber: string;
+    /**
+     * The Quoted Price in USD the Vendor would offer, as a decimal number with two decimal places, or null when it quotes none.
+     */
+    usdPrice: string | null;
+    /**
+     * The Quoted Price in IQD the Vendor would offer, in whole dinars, or null when it quotes none.
+     */
+    iqdPrice: number | null;
+    /**
+     * Whether the Vendor has the Part in stock.
+     */
+    inStock: boolean;
+    /**
+     * The warranty, in whole months, or null when the Vendor states none.
+     */
+    warrantyMonths: number | null;
+    /**
+     * When the Vendor sent it, by the API's clock.
+     */
+    sentAt: string;
+    /**
+     * The day it was sent, in Iraq's time (`Asia/Baghdad`), where everyone using the platform is, as a date.
+     */
+    sentOn: string;
+    /**
+     * The calendar days, in Iraq's time, from the day it was sent to today, by the API's clock: 0 on the day it was sent and 1 on the next, whatever the hours between, so that the count always agrees with `sentOn`.
+     */
+    daysSinceSent: number;
+    /**
+     * Where it stands: open until the Admin resolves it, fulfilled once matched to a Part, or rejected with a reason.
+     */
+    state: 'open' | 'fulfilled' | 'rejected';
+    /**
+     * Whether the Offer a fulfilment makes, confirmed at the moment the request was sent, would be an Expired Offer today, by the API's clock: more than 14 days after it was sent. It is then listed as expired until the Vendor confirms it.
+     */
+    offerWouldBeExpired: boolean;
+    /**
+     * The Part that fulfilled it, as the catalog holds it, of any Category. Left out unless it is fulfilled.
+     */
+    part?: PartSummaryResponse;
+    /**
+     * The identifier of the Vendor's Offer for that Part now, or null once the Vendor has removed it. Left out unless it is fulfilled.
+     */
+    offerId?: string | null;
+    /**
+     * The Admin's reason for rejecting it, as the Admin wrote it. Left out unless it is rejected.
+     */
+    reason?: string;
+    /**
+     * When the Admin resolved it, by the API's clock. Left out while it is open.
+     */
+    resolvedAt?: string;
+    /**
+     * The Vendor that sent it.
+     */
+    vendor: SendingVendorResponse;
+    /**
+     * What fulfilling it did to the Vendor's Offer for the Part: `created` when the Vendor had none, made with the request's details and confirmed at the moment the request was sent; `replaced` when the Vendor's Offer was confirmed before that moment, its prices, stock and warranty replaced by the request's and its Confirmation moved to that moment; `kept` when the Vendor's Offer was confirmed at or after that moment, left as it was.
+     */
+    offer: 'created' | 'replaced' | 'kept';
+};
+
+export type RejectPartRequestRequest = {
+    /**
+     * Why the Part is not added, kept as the Admin writes it, in any language, and shown to the Vendor so.
+     */
+    reason: string;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -2790,3 +3148,192 @@ export type ReadVendorsReferralCountResponses = {
 };
 
 export type ReadVendorsReferralCountResponse = ReadVendorsReferralCountResponses[keyof ReadVendorsReferralCountResponses];
+
+export type ListVendorsPartRequestsData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+    };
+    url: '/v1/vendors/{vendorId}/part-requests';
+};
+
+export type ListVendorsPartRequestsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListVendorsPartRequestsError = ListVendorsPartRequestsErrors[keyof ListVendorsPartRequestsErrors];
+
+export type ListVendorsPartRequestsResponses = {
+    200: VendorsPartRequestsPageResponse;
+};
+
+export type ListVendorsPartRequestsResponse = ListVendorsPartRequestsResponses[keyof ListVendorsPartRequestsResponses];
+
+export type SendPartRequestData = {
+    body: SendPartRequestRequest;
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/part-requests';
+};
+
+export type SendPartRequestErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type SendPartRequestError = SendPartRequestErrors[keyof SendPartRequestErrors];
+
+export type SendPartRequestResponses = {
+    201: PartRequestResponse;
+};
+
+export type SendPartRequestResponse = SendPartRequestResponses[keyof SendPartRequestResponses];
+
+export type ListOpenPartRequestsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The page, counted from 0.
+         */
+        page?: number;
+        /**
+         * How many items a page holds.
+         */
+        size?: number;
+    };
+    url: '/v1/part-requests';
+};
+
+export type ListOpenPartRequestsErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ListOpenPartRequestsError = ListOpenPartRequestsErrors[keyof ListOpenPartRequestsErrors];
+
+export type ListOpenPartRequestsResponses = {
+    200: OpenPartRequestsPageResponse;
+};
+
+export type ListOpenPartRequestsResponse = ListOpenPartRequestsResponses[keyof ListOpenPartRequestsResponses];
+
+export type ReadPartRequestData = {
+    body?: never;
+    path: {
+        partRequestId: string;
+    };
+    query?: never;
+    url: '/v1/part-requests/{partRequestId}';
+};
+
+export type ReadPartRequestErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPartRequestError = ReadPartRequestErrors[keyof ReadPartRequestErrors];
+
+export type ReadPartRequestResponses = {
+    200: PartRequestWithVendorResponse;
+};
+
+export type ReadPartRequestResponse = ReadPartRequestResponses[keyof ReadPartRequestResponses];
+
+export type ReadPartRequestFulfilmentData = {
+    body?: never;
+    path: {
+        partRequestId: string;
+    };
+    query: {
+        /**
+         * The identifier of the Part the request would be fulfilled with, of any Category.
+         */
+        partId: string;
+    };
+    url: '/v1/part-requests/{partRequestId}/fulfilment';
+};
+
+export type ReadPartRequestFulfilmentErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPartRequestFulfilmentError = ReadPartRequestFulfilmentErrors[keyof ReadPartRequestFulfilmentErrors];
+
+export type ReadPartRequestFulfilmentResponses = {
+    200: PartRequestFulfilmentResponse;
+};
+
+export type ReadPartRequestFulfilmentResponse = ReadPartRequestFulfilmentResponses[keyof ReadPartRequestFulfilmentResponses];
+
+export type FulfilPartRequestData = {
+    body: FulfilPartRequestRequest;
+    path: {
+        partRequestId: string;
+    };
+    query?: never;
+    url: '/v1/part-requests/{partRequestId}/fulfil';
+};
+
+export type FulfilPartRequestErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type FulfilPartRequestError = FulfilPartRequestErrors[keyof FulfilPartRequestErrors];
+
+export type FulfilPartRequestResponses = {
+    200: FulfilledPartRequestResponse;
+};
+
+export type FulfilPartRequestResponse = FulfilPartRequestResponses[keyof FulfilPartRequestResponses];
+
+export type RejectPartRequestData = {
+    body: RejectPartRequestRequest;
+    path: {
+        partRequestId: string;
+    };
+    query?: never;
+    url: '/v1/part-requests/{partRequestId}/reject';
+};
+
+export type RejectPartRequestErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type RejectPartRequestError = RejectPartRequestErrors[keyof RejectPartRequestErrors];
+
+export type RejectPartRequestResponses = {
+    200: PartRequestWithVendorResponse;
+};
+
+export type RejectPartRequestResponse = RejectPartRequestResponses[keyof RejectPartRequestResponses];

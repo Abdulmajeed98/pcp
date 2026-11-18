@@ -57,11 +57,31 @@ function PartLink({ part }: { part: PartMissingSpecificationsResponse }) {
 
 // What the Part lacks, by the needed specifications' labels, in Action Red
 // after a circled exclamation mark. On a phone the line says "Lacks"; in the
-// table its column does.
-function Lacks({ part, said }: { part: PartMissingSpecificationsResponse; said: string }) {
+// table its column does. On the row of the Part open beside the list,
+// Active Stone's ground leaves Action Red's words at 4.2:1 in the dark
+// scheme, under the 4.5:1 every text needs, so there they are in Ink, after
+// the mark in Action Red, as on the Part Requests' queue (part-requests
+// ticket 04, and the code review's follow-up).
+function Lacks({
+  part,
+  said,
+  opened,
+}: {
+  part: PartMissingSpecificationsResponse;
+  said: string;
+  opened: boolean;
+}) {
   return (
-    <p className="flex items-start gap-1.5 font-medium text-destructive">
-      <CircleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+    <p
+      className={cn(
+        'flex items-start gap-1.5 font-medium',
+        opened ? 'text-foreground' : 'text-destructive',
+      )}
+    >
+      <CircleAlertIcon
+        aria-hidden="true"
+        className="mt-0.5 size-4 shrink-0 text-destructive"
+      />
       <span data-testid="lacks">
         {said}
         {part.missingSpecifications.map(({ label }) => label).join(', ')}
@@ -97,7 +117,7 @@ export function PartRow({ part }: { part: PartMissingSpecificationsResponse }) {
         {' · '}
         <span data-testid="offer-count">{offersIn(part.offerCount)}</span>
       </p>
-      <Lacks part={part} said="Lacks " />
+      <Lacks part={part} said="Lacks " opened={opened} />
     </div>
   );
 }
@@ -154,7 +174,7 @@ function PartTableRow({ row }: { row: ShownRow<PartMissingSpecificationsResponse
         <span data-testid="offer-count">{formatNumber(part.offerCount)}</span>
       </RowCell>
       <RowCell>
-        <Lacks part={part} said="" />
+        <Lacks part={part} said="" opened={opened} />
       </RowCell>
     </TableRow>
   );

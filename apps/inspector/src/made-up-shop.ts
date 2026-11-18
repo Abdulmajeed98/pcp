@@ -2,6 +2,9 @@ import type {
   ErrorResponse,
   ListedOfferResponse,
   OfferResponse,
+  OpenPartRequestsPageResponse,
+  PartRequestFulfilmentResponse,
+  PartRequestWithVendorResponse,
   PartPageResponse,
   PartSummaryResponse,
   PlatformRateResponse,
@@ -11,6 +14,7 @@ import type {
   VendorResponse,
   VendorsOfferCountsResponse,
   VendorsOffersPageResponse,
+  VendorsPartRequestsPageResponse,
   VendorsReferralCountResponse,
   VendorsWithExpiringOffersPageResponse,
 } from '@pcp/api-client';
@@ -21,11 +25,25 @@ import {
   theShopsPlatformRate,
 } from './made-up-offers.ts';
 import {
+  asAnsweredAt,
+  type HeldPartRequest,
+  partRequestsShown,
+  type PartRequestsShown,
+  partsThePartRequestsWereFulfilledWith,
+  thePartRequestsAt,
+} from './made-up-part-requests.ts';
+import {
   madeUpReferralCounts,
   type ReferralCountsShown,
   referralCountsAtTheirWorst,
 } from './made-up-referral-counts.ts';
 import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
+import {
+  aDay,
+  daysAnOfferStaysCurrent,
+  daysOfWarning,
+  isExpiredAt,
+} from './offer-expiry.ts';
 
 // The made-up shop's first Vendor (`made-up-vendors.ts`) as the dashboard's
 // screens see it, with about a dozen Offers in every state a Vendor can see: confirmed today, confirmed some days ago, about to
@@ -42,21 +60,22 @@ import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
 // command starts. Everything here is typed by the API client's types, so a
 // change to the API's answers fails the type-check.
 
-// A day of 24 hours, and the rules of an Offer's expiry, as the API states
-// them in its description: an Offer is an Expired Offer when its last
-// Confirmation is more than 14 days old, and about to expire when it is not
-// expired and will be within 3 days. The stand-in API answers the 14 days
-// among the platform's figures.
-const aDay = 24 * 60 * 60 * 1000;
+// An hour. A day of 24 hours and the rules of an Offer's expiry are
+// `offer-expiry.ts`'s.
 const anHour = 60 * 60 * 1000;
-export const daysAnOfferStaysCurrent = 14;
-const daysOfWarning = 3;
 
 // The Parts of the catalog the shop offers, which the command reads from the
 // API before anything else.
 export const partsTheShopOffers: readonly CatalogPart[] = offersOfTheFirstVendor.map(
   (offer) => offer.part,
 );
+
+// Every Part of the catalog the command reads before anything else: those
+// the shop offers, and those its Part Requests were fulfilled with.
+export const partsTheShopReads: readonly CatalogPart[] = [
+  ...partsTheShopOffers,
+  ...partsThePartRequestsWereFulfilledWith,
+];
 
 // The shop as the API would hold it.
 export interface MadeUpShop {
@@ -67,6 +86,9 @@ export interface MadeUpShop {
   // Every made-up Vendor's Referral count, the shop's own among them, in
   // the API's order (`made-up-referral-counts.ts`).
   referralCounts: readonly VendorsReferralCountResponse[];
+  // The made-up Part Requests, the shop's Vendor's and other Vendors', in
+  // every state (`made-up-part-requests.ts`).
+  partRequests: readonly HeldPartRequest[];
 }
 
 function before(now: Date, milliseconds: number): string {
@@ -79,14 +101,20 @@ function before(now: Date, milliseconds: number): string {
 // (PRODUCT.md's Evidence on Hand), set three days before; or, for a look at
 // the Platform Rate screen before the Admin sets the first, none. Its
 // Referral counts are the made-up Vendors', or, for `break-ui` on the
-// Referrals screen, the list at its worst, one Vendor, or none.
+// Referrals screen, the list at its worst, one Vendor, or none; and so are
+// its Part Requests, for both lists of them and one request's screen.
 export function madeUpShop(
   now: Date,
   catalogParts: ReadonlyMap<string, PartSummaryResponse>,
   {
     platformRate = true,
     referrals = 'madeUp',
-  }: { platformRate?: boolean; referrals?: ReferralCountsShown } = {},
+    partRequests = 'madeUp',
+  }: {
+    platformRate?: boolean;
+    referrals?: ReferralCountsShown;
+    partRequests?: PartRequestsShown;
+  } = {},
 ): MadeUpShop {
   const vendor: VendorResponse = {
     ...theFirstVendor,
@@ -124,6 +152,12 @@ export function madeUpShop(
     },
     referralCounts:
       referrals === 'madeUp' ? madeUpReferralCounts : referralCountsAtTheirWorst[referrals],
+    partRequests: thePartRequestsAt(
+      now,
+      partRequestsShown[partRequests],
+      catalogParts,
+      new Map(offers.map((offer) => [offer.part.id, offer.id])),
+    ),
   };
 }
 
@@ -146,7 +180,7 @@ function listed(offer: OfferResponse, now: Date): ListedOfferResponse {
   const confirmedAt = new Date(offer.confirmedAt).getTime();
   const sinceConfirmation = now.getTime() - confirmedAt;
   const left = confirmedAt + daysAnOfferStaysCurrent * aDay - now.getTime();
-  const expired = sinceConfirmation > daysAnOfferStaysCurrent * aDay;
+  const expired = isExpiredAt(new Date(confirmedAt), now);
   return {
     ...offer,
     daysSinceConfirmation: Math.floor(sinceConfirmation / aDay),
@@ -233,7 +267,10 @@ const readOnly = refusal(
 // a rate or with none whatever the development database holds (the pricing
 // module's ticket 02), and the Referral counts, the Admin's list of every
 // made-up Vendor's and the shop's Vendor's own (sharing ticket 03), which
-// no Referral recorded through the API could make. The list of Vendors is the
+// no Referral recorded through the API could make, and the Part Requests,
+// the Admin's queue, one request and the shop's Vendor's own list
+// (part-requests ticket 02), whose states and days no request sent through
+// the API could have without writing to it. The list of Vendors is the
 // API's, with the shop's Vendor among them (`listsTheVendors`), and another
 // Vendor's page and its Offers are the API's alone, so that the Vendors'
 // screens show the shop among the development database's real Vendors (the
@@ -257,6 +294,11 @@ export function answerFromTheMadeUpShop(
   if (version === 'v1' && first === 'referral-counts' && second === undefined) {
     const body: ReferralCountsPageResponse = paged(address, shop.referralCounts);
     return { status: 200, body };
+  }
+  // The Part Requests screen's queue, of every made-up Vendor, and one
+  // request in any state, and none of the development database's.
+  if (version === 'v1' && first === 'part-requests') {
+    return answerAboutPartRequests(shop, now, address, second, rest);
   }
   const vendorsCall = first === 'vendors' || first === 'offers';
   const callersVendor = first === 'caller' && second === 'vendor';
@@ -292,6 +334,15 @@ export function answerFromTheMadeUpShop(
     const body: ReferralCountResponse = { count: referralCountOf(shop) };
     return { status: 200, body };
   }
+  if (offers === 'part-requests' && offerId === undefined) {
+    const body: VendorsPartRequestsPageResponse = paged(
+      address,
+      partRequestsOf(shop, now, (request) => request.vendor.id === shop.vendor.id)
+        .sort((a, b) => b.sentAt.localeCompare(a.sentAt) || a.id.localeCompare(b.id))
+        .map(({ vendor: _vendor, ...request }) => request),
+    );
+    return { status: 200, body };
+  }
   if (offers !== 'offers' || beyond.length > 0) return notFound;
   if (offerId !== undefined) {
     // One Offer is read with its expiry at the moment it is read, as the API
@@ -325,6 +376,96 @@ function listedOffersOf(shop: MadeUpShop, now: Date): ListedOfferResponse[] {
         a.confirmedAt.localeCompare(b.confirmedAt) ||
         a.part.name.localeCompare(b.part.name),
     );
+}
+
+// A request the shop does not hold, as the API answers one that does not
+// exist, or text that is not an identifier.
+const partRequestNotFound = refusal(
+  404,
+  'PART_REQUEST_NOT_FOUND',
+  'The made-up shop holds no such Part Request.',
+);
+
+// A request already fulfilled or rejected, as the API refuses to fulfil it
+// again.
+const partRequestResolved = refusal(
+  400,
+  'PART_REQUEST_RESOLVED',
+  'The made-up Part Request is already resolved.',
+);
+
+// What fulfilling an open request with a Part would do,
+// `GET v1/part-requests/{id}/fulfilment?partId=…`, as the API judges it by
+// the rule a fulfilment follows: made when the request's Vendor has no
+// Offer for the Part, replaced when its Offer was last confirmed before the
+// request was sent, and kept when at or after; and expired, when made or
+// replaced, as the request's own Offer would be. Only the shop's own Vendor
+// has Offers. The API's is the rule that counts; the shop states it because
+// no fixed data can carry what changes with the clock.
+function whatFulfillingWouldDo(
+  shop: MadeUpShop,
+  now: Date,
+  id: string,
+  partId: string | null,
+): ShopAnswer {
+  const [request] = partRequestsOf(shop, now, (each) => each.id === id);
+  if (request === undefined) return partRequestNotFound;
+  if (request.state !== 'open') return partRequestResolved;
+  if (partId === null) return refusal(400, 'NOT_VALID', 'No Part is named.');
+
+  const offer =
+    request.vendor.id === shop.vendor.id
+      ? shop.offers.find((each) => each.part.id === partId)
+      : undefined;
+  const fulfilment =
+    offer === undefined
+      ? 'created'
+      : Date.parse(offer.confirmedAt) < Date.parse(request.sentAt)
+        ? 'replaced'
+        : 'kept';
+  const body: PartRequestFulfilmentResponse = {
+    offer: fulfilment,
+    offerWouldBeExpired: fulfilment !== 'kept' && request.offerWouldBeExpired,
+  };
+  return { status: 200, body };
+}
+
+// The shop's Part Requests that `holds` keeps, as the API answers them at
+// `now`.
+function partRequestsOf(
+  shop: MadeUpShop,
+  now: Date,
+  holds: (request: HeldPartRequest) => boolean,
+): PartRequestWithVendorResponse[] {
+  return shop.partRequests.filter(holds).map((request) => asAnsweredAt(request, now));
+}
+
+// The queue, `GET v1/part-requests`: the open requests of every Vendor,
+// oldest first, then by identifier, as the API orders them; one request,
+// `GET v1/part-requests/{id}`, in any state; or what fulfilling one would
+// do.
+function answerAboutPartRequests(
+  shop: MadeUpShop,
+  now: Date,
+  address: URL,
+  id: string | undefined,
+  rest: readonly string[],
+): ShopAnswer {
+  if (id !== undefined && rest.length === 1 && rest[0] === 'fulfilment') {
+    return whatFulfillingWouldDo(shop, now, id, address.searchParams.get('partId'));
+  }
+  if (rest.length > 0) return notFound;
+  if (id !== undefined) {
+    const [request] = partRequestsOf(shop, now, (each) => each.id === id);
+    return request === undefined ? partRequestNotFound : { status: 200, body: request };
+  }
+  const body: OpenPartRequestsPageResponse = paged(
+    address,
+    partRequestsOf(shop, now, (request) => request.state === 'open').sort(
+      (a, b) => a.sentAt.localeCompare(b.sentAt) || a.id.localeCompare(b.id),
+    ),
+  );
+  return { status: 200, body };
 }
 
 // The shop's own Vendor's Referral count, as the Referrals screen lists it.

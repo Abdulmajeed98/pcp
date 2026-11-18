@@ -1,3 +1,4 @@
+import { formatNumber } from '@pcp/i18n';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from 'cn';
 import {
@@ -5,6 +6,7 @@ import {
   ClipboardListIcon,
   ClockAlertIcon,
   type LucideIcon,
+  PackagePlusIcon,
   PackageSearchIcon,
   SendIcon,
   StoreIcon,
@@ -13,7 +15,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, ScrollRestoration } from 'react-router';
 
 import { logOut } from '@/shared/auth';
-import { apiClient, dataOf } from '@/shared/api';
+import { apiClient, dataOf, partRequestsKey } from '@/shared/api';
 import { useWideScreen } from '@/shared/lib';
 import { Button, MenuSheet, ScreenSearchPlaceProvider } from '@/shared/ui';
 
@@ -31,7 +33,27 @@ const sections: { to: string; name: string; Icon: LucideIcon }[] = [
   { to: '/expiring-offers', name: 'Expiring Offers', Icon: ClockAlertIcon },
   { to: '/platform-rate', name: 'Platform Rate', Icon: ArrowRightLeftIcon },
   { to: '/referrals', name: 'Referrals', Icon: SendIcon },
+  // The seventh and last, the queue of open Part Requests, with a package
+  // and a plus, a Part to be added (the owner's d1, part-requests ticket 02).
+  { to: '/part-requests', name: 'Part Requests', Icon: PackagePlusIcon },
 ];
+
+// How many Part Requests are open, the queue's total as the API answers it,
+// read under the key of every query about Part Requests, so that a send, a
+// fulfilment or a rejection changes it at once, in place, with no motion.
+// The platform sends no message, so it is the Admin's one notice that a
+// Vendor waits (the owner's d2, part-requests ticket 02). It is asked as a
+// page of one request.
+function useOpenPartRequestsCount(): number | undefined {
+  const counted = useQuery({
+    queryKey: [...partRequestsKey, 'open', 'count'],
+    queryFn: () =>
+      dataOf(apiClient.listOpenPartRequests({ query: { page: 0, size: 1 } })).then(
+        ({ totalElements }) => totalElements,
+      ),
+  });
+  return counted.data;
+}
 
 // The surface's name. No logo is decided (PRODUCT.md's Brand Commitments).
 const surface = 'Admin console';
@@ -162,8 +184,11 @@ function PhoneBar({ callerName }: { callerName: string | undefined }) {
 
 // The sections: a link to each, as high as a control, with its icon and its
 // name in Note Grey, and the one the Admin is in on Active Stone, in Ink at
-// weight 600. Choosing one closes the menu sheet on a phone.
+// weight 600. Choosing one closes the menu sheet on a phone. The Part
+// Requests' link ends with the count of open requests, when there are any.
 function Sections({ onChosen }: { onChosen?: () => void }) {
+  const open = useOpenPartRequestsCount();
+
   return (
     <nav aria-label="Sections">
       <ul className="flex flex-col gap-0.5">
@@ -182,12 +207,39 @@ function Sections({ onChosen }: { onChosen?: () => void }) {
               }
             >
               <Icon aria-hidden="true" className="size-4 shrink-0" />
-              {name}
+              {to === '/part-requests' ? (
+                <>
+                  <span className="min-w-0 flex-1">{name}</span>
+                  <OpenCount count={open} />
+                </>
+              ) : (
+                name
+              )}
             </NavLink>
           </li>
         ))}
       </ul>
     </nav>
+  );
+}
+
+// The count of open Part Requests, on the end side of the section's link, in
+// Note Grey at weight 400 whether or not the Admin is in the section, in
+// tabular figures, and read as "9 open"; never a pill, a plate or red,
+// since nothing is wrong when requests wait. None is shown at zero, or
+// before the API has answered.
+function OpenCount({ count }: { count: number | undefined }) {
+  if (count === undefined || count === 0) return null;
+
+  return (
+    <span
+      data-testid="open-count"
+      className="font-normal text-muted-foreground tabular-nums"
+    >
+      {' '}
+      {formatNumber(count)}
+      <span className="sr-only"> open</span>
+    </span>
   );
 }
 

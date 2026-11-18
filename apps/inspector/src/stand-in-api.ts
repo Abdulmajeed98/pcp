@@ -39,7 +39,7 @@ import {
 
 import { currencies } from './currencies.ts';
 import { theShopsPlatformRate } from './made-up-offers.ts';
-import { daysAnOfferStaysCurrent } from './made-up-shop.ts';
+import { daysAnOfferStaysCurrent } from './offer-expiry.ts';
 import { valueAt } from './specification-document.ts';
 import type {
   Category,

@@ -152,6 +152,9 @@ test('the Admin reaches the Platform Rate from the menu sheet, after the Expirin
     'Expiring Offers',
     'Platform Rate',
     'Referrals',
+    // The seventh, with the count of open requests when there are any
+    // (part-requests ticket 04).
+    /^Part Requests( [\d,]+ open)?$/,
   ]);
   await page.keyboard.press('Escape');
 

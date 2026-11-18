@@ -9,6 +9,11 @@ import { ChooseCategoryPage, NewPartPage } from '@/pages/new-part';
 import { NewVendorPage } from '@/pages/new-vendor';
 import { NotFoundPage } from '@/pages/not-found';
 import { PartPage } from '@/pages/part';
+import {
+  NewPartFromARequestPage,
+  PartRequestPage,
+  PartRequestsPage,
+} from '@/pages/part-requests';
 import { PlatformRatePage } from '@/pages/platform-rate';
 import { ReferralsPage } from '@/pages/referrals';
 import { VendorPage } from '@/pages/vendor';
@@ -25,7 +30,10 @@ import { vendorPortalScreens } from './vendor-portal-screens';
 // a wide screen. A Part's edit form is also a child of the Missing
 // specifications, which saving returns to. The Expiring Offers and the
 // Referrals lead to a Vendor's page under the Vendors. The Platform Rate is
-// a screen of its own.
+// a screen of its own. One Part Request, and the form for a new Part filled
+// from it, are the Part Requests' children, which each shows beside the
+// queue on a wide screen; creating the Part leads to its page under the
+// Catalog.
 //
 // A Vendor's portal, for the Admin acting as that Vendor, is under the
 // Vendor's page: the Vendor portal's own screens, in the Vendor portal's
@@ -81,6 +89,14 @@ const routes = [
       { path: 'expiring-offers', Component: ExpiringOffersPage },
       { path: 'platform-rate', Component: PlatformRatePage },
       { path: 'referrals', Component: ReferralsPage },
+      {
+        path: 'part-requests',
+        Component: PartRequestsPage,
+        children: [
+          { path: ':partRequestId', Component: PartRequestPage },
+          { path: ':partRequestId/new-part', Component: NewPartFromARequestPage },
+        ],
+      },
       { path: '*', Component: NotFoundPage },
     ],
   },

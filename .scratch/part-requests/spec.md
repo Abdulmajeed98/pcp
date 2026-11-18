@@ -1,6 +1,6 @@
 # Spec: Part Requests
 
-Status: ready-for-agent
+Status: resolved
 
 This is `part-requests`, the tenth module in the build order of [the MVP spec](../mvp/spec.md)'s capability map. It comes after `sharing` and before `sheet`. It covers REQ-1 to REQ-4. It makes success criterion 10 true for a Part Request sent from the Vendor portal, and it builds the one endpoint that SHT-6 will use to turn a sheet's row into a Part Request. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md), [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0005](../../docs/adr/0005-specifications-as-one-document-per-part.md), [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md), [ADR-0009](../../docs/adr/0009-vendors-in-the-database-logins-in-keycloak.md), [ADR-0010](../../docs/adr/0010-offer-history-kept-apart-from-the-offer.md) and [ADR-0011](../../docs/adr/0011-the-dashboards-look-is-framed-sheet.md). It builds on the conventions that every earlier module recorded in the MVP spec, above all those of `catalog`, `accounts` and `offers`: the Part form, `VendorAccessRule`, acting as a Vendor, `OfferDetails`, the Offer history and the Catalog's kind of list.
 
@@ -39,7 +39,7 @@ The Vendor gives no manufacturer and no specification. Those are the Admin's to 
 - **Create the Part**: the form for a new Part, filled with the request's name, part number and Category, which the Admin completes with the manufacturer and specifications as for any Part.
 - **Reject it** with a reason.
 
-**Fulfilling a Part Request makes the Vendor's Offer.** When the Admin matches the request to a Part, or creates the Part from it, the Vendor's Offer for that Part is made with the details from the request. The Offer counts as confirmed at the moment the Vendor sent the request, because that is when the Vendor stated its price. If the Admin fulfils the request within 14 days of its sending, the Offer goes live at once. If the Vendor already has an Offer for that Part, the newer of the two statements wins.
+**Fulfilling a Part Request makes the Vendor's Offer.** When the Admin matches the request to a Part, or creates the Part from it, the Vendor's Offer for that Part is made with the details from the request. The Offer counts as confirmed at the moment the Vendor sent the request, because that is when the Vendor stated its price. If the Admin fulfils the request within 14 days of its sending, Shoppers see the Offer at once. If the Vendor already has an Offer for that Part, the newer of the two statements wins.
 
 The API gains endpoints to send a Part Request and to list a Vendor's own, for the Vendor's Login and for the Admin. It also gains Admin-only endpoints to list the queue, read one request, fulfil one with a Part, and reject one.
 
@@ -51,7 +51,7 @@ The API gains endpoints to send a Part Request and to list a Vendor's own, for t
 2. As a Vendor asking from an empty search, I want the form filled with my search's words and the Category I searched in, so that I type as little as possible.
 3. As a Vendor, I want a Part Requests section in my portal's top bar, so that I can send a request and see my requests at any time (REQ-4).
 4. As a Vendor, I want to give the Part's name, its manufacturer part number and its Category, so that the Admin can find out exactly which Part I mean (REQ-1).
-5. As a Vendor, I want to give my Quoted Price in USD, in IQD or in both, whether it is in stock, and its warranty, as I would for an Offer, so that my Offer goes live without my typing it again (REQ-1, REQ-3).
+5. As a Vendor, I want to give my Quoted Price in USD, in IQD or in both, whether it is in stock, and its warranty, as I would for an Offer, so that Shoppers see my Offer without my typing it again (REQ-1, REQ-3).
 6. As a Vendor, I want my prices checked by the same rules as an Offer's, so that a request never holds a price that an Offer could not.
 7. As a Vendor typing on a Kurdish or an Arabic keyboard, I want my digits, in prices and in the part number, read as Western digits, as the Offer form reads them.
 8. As a Vendor, I want a detail that does not fit to be named beside its field in my language, so that I can correct it.
@@ -87,7 +87,7 @@ The API gains endpoints to send a Part Request and to list a Vendor's own, for t
 29. As the Admin, I want to search the whole catalog from a request, starting with its part number, so that I find the Part the Vendor missed (REQ-2).
 30. As the Admin, I want the search to show whether the Vendor already offers each Part it finds, so that I know what fulfilling will do.
 31. As the Admin, I want to match the request to a Part of any Category, so that a Vendor's wrong Category does not stop me.
-32. As the Admin, I want matching to make the Vendor's Offer for that Part with the details from the request, so that its Offer goes live without my typing it (REQ-3).
+32. As the Admin, I want matching to make the Vendor's Offer for that Part with the details from the request, so that Shoppers see its Offer without my typing it (REQ-3).
 33. As the Admin matching a Part the Vendor already offers, I want the Offer kept as it is when the Vendor confirmed it after sending the request, and replaced by the request's details when it did not, so that the Vendor's newer statement wins, and I want to be told which happened.
 
 ### Creating the Part from a request
@@ -186,7 +186,7 @@ The API gains endpoints to send a Part Request and to list a Vendor's own, for t
   - **The Vendor's Offer was last confirmed before the request was sent:** the request's details replace the Offer's prices, stock and warranty, as an edit does, and its Confirmation becomes the moment the request was sent. The history gains a `changed` row only when a price or the stock changed, as for every edit.
   - **The Vendor's Offer was confirmed at or after the moment the request was sent:** the Offer is kept as it is, since the Vendor's own later statement wins, and the request is still fulfilled.
   - The answer says which of the three happened: `created`, `replaced` or `kept`.
-- **The Confirmation is the Vendor's statement.** CONTEXT.md defines a Confirmation as the Vendor saying that a price is correct "as of that moment", and the Vendor said so when it sent the request. A request fulfilled more than 14 days after it was sent therefore makes an Expired Offer. That Offer is listed in the portal as expired, appears on Expiring Offers and its banner, and goes live when the Vendor confirms it. The request's answer says when this would happen, `offerWouldBeExpired`, by the expiry rule written once, so that the Admin's screen can warn the Admin and no frontend holds the 14 days.
+- **The Confirmation is the Vendor's statement.** CONTEXT.md defines a Confirmation as the Vendor saying that a price is correct "as of that moment", and the Vendor said so when it sent the request. A request fulfilled more than 14 days after it was sent therefore makes an Expired Offer. That Offer is listed in the portal as expired, appears on Expiring Offers and its banner, and Shoppers see it once the Vendor confirms it. The request's answer says when this would happen, `offerWouldBeExpired`, by the expiry rule written once, so that the Admin's screen can warn the Admin and no frontend holds the 14 days.
 - **Whatever the Vendor's state.** A request of a Deactivated Vendor can be fulfilled or rejected. Its Offer is made, and it is hidden from Shoppers by the visibility rule until the Vendor is reactivated.
 - **Any Part, any Category.** The Part need not be of the request's Category. The request keeps the Category the Vendor gave, and the Part keeps its own.
 
@@ -329,7 +329,7 @@ Each new line is seen to fail once, through a deliberate fault that is then reve
 **Fulfilling**
 
 - **No Offer before.** The Vendor's Offer is made with the request's prices, stock and warranty. Its Confirmation is the moment sent and its making is now. One history row is `created`, by the Admin's Login. The answer says `created`, and the request answers `fulfilled`, the Part, the moment and `offerId`.
-- **It goes live.** Within 14 days of the sending, `GET v1/parts/{partId}/offers` answers the Offer as a Visible Offer, with its days since Confirmation counted from the sending. Past them, the Offer is listed as expired in the Vendor's Offers and is not visible, until confirming all makes it visible.
+- **Shoppers see it.** Within 14 days of the sending, `GET v1/parts/{partId}/offers` answers the Offer as a Visible Offer, with its days since Confirmation counted from the sending. Past them, the Offer is listed as expired in the Vendor's Offers and is not visible, until confirming all makes it visible.
 - **An older Offer.** A Vendor's Offer confirmed before the sending is replaced, with the Confirmation moved to the sending and a `changed` history row only when a price or the stock changed. The answer says `replaced`.
 - **A newer Offer.** An Offer confirmed at or after the sending is kept unchanged, with no history row. The answer says `kept`.
 - **A Deactivated Vendor's request** is fulfilled, and its Offer is not visible until the Vendor is reactivated.

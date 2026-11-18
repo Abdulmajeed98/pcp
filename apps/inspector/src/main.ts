@@ -11,6 +11,7 @@ import {
 } from './chrome.ts';
 import { BadScheme, emulatedMedia, type Scheme, takeTheScheme } from './colour-scheme.ts';
 import { developmentAdmin } from './development-admin.ts';
+import type { PartRequestsShown } from './made-up-part-requests.ts';
 import type { ReferralCountsShown } from './made-up-referral-counts.ts';
 import { madeUpShop } from './made-up-shop.ts';
 import { runTheInspector, tastesBrowser } from './taste.ts';
@@ -21,7 +22,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // made-up shop, whose Vendor is listed among the real ones. Run it from the
 // repository root:
 //
-//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [the inspector's options]
+//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [--part-requests worstCase|one|none] [the inspector's options]
 //
 // It launches the inspector's Chrome, logs in once as the development Admin
 // before the first tab, so that Keycloak's cookie carries to every width,
@@ -36,8 +37,15 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // (the longest names, a name with no space, Arabic and Kurdish names, names
 // that start or end with no direction of their own, a count of one, counts
 // in the tens of thousands, deactivated Vendors), `one` with one Vendor of
-// one Referral, and `none` with no Vendor at all. The Vendor portal's
-// screens are the Admin acting as
+// one Referral, and `none` with no Vendor at all. The shop's Part Requests
+// are made up in every state (`made-up-part-requests.ts`), and
+// `--part-requests worstCase` answers the queue, the Vendor's list and one
+// request at their worst, for `break-ui` (the longest name and part number
+// the API takes, a name with no space, names in Kurdish and Arabic script
+// and one that starts with a digit, prices at their limits, a reason of 300
+// characters in Kurdish, a request waiting hundreds of days and a queue of
+// thousands), `one` with one open request, and `none` with none. The Vendor
+// portal's screens are the Admin acting as
 // the shop's Vendor, under `/vendors/00000000-0000-4000-8000-000000000001/portal`.
 //
 // It exits with the inspector's own status, 0 with no FAIL findings and 1
@@ -47,7 +55,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // though the screen was opened twice.
 
 const usage =
-  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [--widths 1440,768,390] [--out DIR] [--app] [other options of inspect.mjs]';
+  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [--part-requests worstCase|one|none] [--widths 1440,768,390] [--out DIR] [--app] [other options of inspect.mjs]';
 
 // Before any read: a refused type of service would stop the command where
 // nothing can catch it (`type-of-service.ts`).
@@ -90,14 +98,29 @@ function commandLine(args: readonly string[]) {
     referrals = shown;
     passed.splice(atReferrals, 2);
   }
+  let partRequests: PartRequestsShown = 'madeUp';
+  const atPartRequests = passed.indexOf('--part-requests');
+  if (atPartRequests !== -1) {
+    const shown = passed[atPartRequests + 1];
+    if (shown !== 'worstCase' && shown !== 'one' && shown !== 'none') stop(usage);
+    partRequests = shown;
+    passed.splice(atPartRequests, 2);
+  }
   const address = passed[0];
   if (address === undefined || !/^https?:\/\//.test(address)) stop(usage);
-  return { address, language, scheme, platformRate, referrals, inspectorArgs: passed };
+  return {
+    address,
+    language,
+    scheme,
+    platformRate,
+    referrals,
+    partRequests,
+    inspectorArgs: passed,
+  };
 }
 
-const { address, language, scheme, platformRate, referrals, inspectorArgs } = commandLine(
-  process.argv.slice(2),
-);
+const { address, language, scheme, platformRate, referrals, partRequests, inspectorArgs } =
+  commandLine(process.argv.slice(2));
 let login: Login;
 try {
   login = developmentAdmin();
@@ -122,7 +145,7 @@ try {
     }
     return ((await response.json()) as PartPageResponse).content;
   });
-  const shop = madeUpShop(new Date(), parts, { platformRate, referrals });
+  const shop = madeUpShop(new Date(), parts, { platformRate, referrals, partRequests });
 
   // Every tab the inspector opens is answered from the shop, and lands on
   // the dashboard, drawn, before it is judged; the inspector's own launch
@@ -139,7 +162,7 @@ try {
   Browser.launch = async () => browser;
 
   console.log(
-    `Logged in as the development Admin. The made-up shop "${shop.vendor.name}" answers for Vendors and Offers, with ${shop.offers.length} Offers of real Parts.`,
+    `Logged in as the development Admin. The made-up shop "${shop.vendor.name}" answers for Vendors and Offers, with ${shop.offers.length} Offers of real Parts, and ${shop.partRequests.length} Part Requests.`,
   );
 } catch (error) {
   await browser.close();

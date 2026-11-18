@@ -31,8 +31,8 @@ A Specification that a Compatibility Rule reads.
 _Avoid_: Required field, key spec
 
 **Part Request**:
-A Vendor's request that the Admin add a Part missing from the catalog.
-_Avoid_: Suggestion, submission, new part
+A Vendor's request that the Admin add a Part missing from the catalog. It is **open** until the Admin resolves it: **fulfilled** once the Admin matches it to a Part, whether created from it or found in the catalog, or **rejected** once the Admin turns it down with a reason.
+_Avoid_: Suggestion, submission, new part; pending, approved, accepted, declined, denied, closed
 
 ### Vendors and offers
 

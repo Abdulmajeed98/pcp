@@ -1,8 +1,9 @@
 import type { CategoryResponse, PartResponse, SubErrorResponse } from '@pcp/api-client';
 import { cn } from 'cn';
-import { type TransitionEvent, useRef } from 'react';
+import { type ReactNode, type TransitionEvent, useEffect, useRef } from 'react';
 import { type FieldPath, FormProvider, useForm } from 'react-hook-form';
 
+import { categoryName } from '@/entities/category';
 import { setRefusalsBesideTheirFields } from '@/shared/api';
 import { aScroll, describedBy } from '@/shared/lib';
 import {
@@ -18,6 +19,9 @@ import {
   FieldLegend,
   FieldSet,
   Input,
+  NameField,
+  NativeSelect,
+  NativeSelectOption,
   OpeningSpace,
 } from '@/shared/ui';
 
@@ -29,7 +33,6 @@ import {
 } from '../model/form-values';
 import { fieldOf, messageOf, partFieldMessages, whyNotSaved } from '../model/refusals';
 import { errorOf } from './field-names';
-import { NameField } from './name-field';
 import { SpecificationField } from './specification-field';
 import { TextListField } from './text-list-field';
 
@@ -51,15 +54,35 @@ import { TextListField } from './text-list-field';
 // the list on a desk, where the form has five twelfths of the sheet, they go
 // one to a row; and its button is as wide as the form where the form is
 // narrower than that.
+//
+// A new Part may start from a name and part numbers given (`start`), as the
+// form for a new Part opened from a Part Request does, and may let the Admin
+// choose its Category at its head (`chooseCategory`): choosing another draws
+// that Category's specifications and keeps what was typed in the name, the
+// manufacturer and the part numbers (part-requests ticket 04). Once `closed`,
+// as when the Part was created and something after it failed, the form is
+// dimmed, takes no input and has no button, so that the Part is never
+// created twice.
 export function PartForm({
   category,
   part,
+  start,
+  chooseCategory,
+  closed = false,
   submitLabel,
   busyLabel,
   save,
 }: {
   category: CategoryResponse;
   part?: PartResponse;
+  start?: { name: string; partNumbers: readonly string[] };
+  chooseCategory?: {
+    categories: readonly CategoryResponse[];
+    // The sentence below the choice.
+    description: ReactNode;
+    onChoose: (category: CategoryResponse) => void;
+  };
+  closed?: boolean;
   submitLabel: string;
   busyLabel: string;
   // Sends the Part. It throws a `Refusal` when the API refuses it, and an
@@ -67,9 +90,20 @@ export function PartForm({
   save: (fields: PartFields) => Promise<unknown>;
 }) {
   const form = useForm<PartFormValues>({
-    defaultValues: formValuesOf(category.specifications, part),
+    defaultValues: startingWith(formValuesOf(category.specifications, part), start),
   });
-  const { register, handleSubmit, setError, formState } = form;
+  const { register, handleSubmit, setError, formState, getValues, reset } = form;
+
+  // Another Category chosen: its specifications, empty, and the Part's own
+  // fields as they were typed.
+  const drawnFor = useRef(category.key);
+  useEffect(() => {
+    if (drawnFor.current === category.key) return;
+    drawnFor.current = category.key;
+    const { name, manufacturer, partNumbers } = getValues();
+    reset({ ...formValuesOf(category.specifications), name, manufacturer, partNumbers });
+  }, [category, getValues, reset]);
+
   const nameError = errorOf(formState.errors, 'name');
   const manufacturerError = errorOf(formState.errors, 'manufacturer');
   const refusal = formState.errors.root?.refusal?.message;
@@ -142,12 +176,39 @@ export function PartForm({
     <FormProvider {...form}>
       <form
         noValidate
-        className="@container/part-form flex flex-col gap-8"
+        inert={closed}
+        className={cn('@container/part-form flex flex-col gap-8', closed && 'opacity-60')}
         onSubmit={handleSubmit(submit)}
       >
         <FieldSet>
           <FieldLegend>The Part</FieldLegend>
           <FieldGroup className="grid @min-[40rem]/part-form:grid-cols-2 @min-[40rem]/part-form:gap-x-6">
+            {chooseCategory !== undefined && (
+              <Field className="col-span-full">
+                <FieldLabel htmlFor="part-category">Category</FieldLabel>
+                <NativeSelect
+                  id="part-category"
+                  className="w-full"
+                  value={category.key}
+                  aria-describedby="part-category-description"
+                  onChange={(event) => {
+                    const chosen = chooseCategory.categories.find(
+                      ({ key }) => key === event.target.value,
+                    );
+                    if (chosen !== undefined) chooseCategory.onChoose(chosen);
+                  }}
+                >
+                  {chooseCategory.categories.map(({ key }) => (
+                    <NativeSelectOption key={key} value={key}>
+                      {categoryName(key)}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+                <FieldDescription id="part-category-description">
+                  {chooseCategory.description}
+                </FieldDescription>
+              </Field>
+            )}
             <Field className="col-span-full">
               <FieldLabel htmlFor="part-name">Name</FieldLabel>
               <NameField
@@ -193,7 +254,10 @@ export function PartForm({
             Leave a specification empty when it is not known. The needed ones are read by a
             Compatibility Rule, so fill those in first.
           </FieldDescription>
-          <FieldGroup className="grid items-start @min-[40rem]/part-form:grid-cols-2 @min-[40rem]/part-form:gap-x-6">
+          <FieldGroup
+            key={category.key}
+            className="grid items-start @min-[40rem]/part-form:grid-cols-2 @min-[40rem]/part-form:gap-x-6"
+          >
             {category.specifications.map((specification) => (
               <SpecificationField key={specification.path} specification={specification} />
             ))}
@@ -214,27 +278,42 @@ export function PartForm({
               </Alert>
             )}
           </OpeningSpace>
-          <Button
-            type="submit"
-            className={cn(
-              'self-start @max-[40rem]/part-form:self-stretch',
-              busy && 'disabled:opacity-100',
-            )}
-            disabled={busy}
-          >
-            {/* Both words in one cell, so that the button keeps the width of
-                the longer while it waits; only the shown one names it. */}
-            <span className="grid">
-              <span className={cn('col-start-1 row-start-1', busy && 'invisible')}>
-                {submitLabel}
+          {!closed && (
+            <Button
+              type="submit"
+              className={cn(
+                'self-start @max-[40rem]/part-form:self-stretch',
+                busy && 'disabled:opacity-100',
+              )}
+              disabled={busy}
+            >
+              {/* Both words in one cell, so that the button keeps the width of
+                  the longer while it waits; only the shown one names it. */}
+              <span className="grid">
+                <span className={cn('col-start-1 row-start-1', busy && 'invisible')}>
+                  {submitLabel}
+                </span>
+                <span className={cn('col-start-1 row-start-1', !busy && 'invisible')}>
+                  {busyLabel}
+                </span>
               </span>
-              <span className={cn('col-start-1 row-start-1', !busy && 'invisible')}>
-                {busyLabel}
-              </span>
-            </span>
-          </Button>
+            </Button>
+          )}
         </div>
       </form>
     </FormProvider>
   );
+}
+
+// A new Part's values with the name and part numbers it starts from, if any.
+function startingWith(
+  values: PartFormValues,
+  start: { name: string; partNumbers: readonly string[] } | undefined,
+): PartFormValues {
+  if (start === undefined) return values;
+  return {
+    ...values,
+    name: start.name,
+    partNumbers: start.partNumbers.map((value) => ({ value })),
+  };
 }

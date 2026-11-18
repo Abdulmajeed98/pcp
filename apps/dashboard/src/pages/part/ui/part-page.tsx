@@ -1,16 +1,18 @@
 import type { CategoryResponse, PartResponse } from '@pcp/api-client';
 import { AlwaysEnglish } from '@pcp/ui';
 import { CircleAlertIcon, PencilIcon } from 'lucide-react';
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 
 import { categoryName, useCategories } from '@/entities/category';
 import { PartPicture, usePart, valueAt } from '@/entities/part';
+import { createdFromARequestIn, ResolutionNote } from '@/entities/part-request';
 import { PhotoField } from '@/features/add-photo';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { dayWritten, useAddressKeepingTheQuery } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
+  Announced,
   BackLink,
   Button,
   buttonVariants,
@@ -85,11 +87,28 @@ function PartDetails({
 }) {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const missing = part.missingNeededSpecifications;
+  const createdFrom = createdFromARequestIn(useLocation().state);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
+        {/* After the Part was created from a Part Request, the note says so
+            at the head of its page, where the Admin adds its photo now that
+            it has its first Offer (part-requests ticket 04). It arrives in
+            a live region that is always there, below the way back, so that
+            it is announced; empty, the region takes no room. */}
+        <div className="flex flex-col">
+          <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
+          <output className="block">
+            {createdFrom !== null && (
+              <div className="pt-4">
+                <Announced>
+                  <ResolutionNote resolution={createdFrom} partCreated />
+                </Announced>
+              </div>
+            )}
+          </output>
+        </div>
         <div className="flex items-start gap-4">
           {/* A photo added while the page is open comes in smoothly, and
               the page itself never fades in; another Part is another

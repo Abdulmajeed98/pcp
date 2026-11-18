@@ -7,11 +7,12 @@ import {
   askAgainAfterAChangeToTheOffers,
   ConfirmationLook,
   confirmationOf,
+  offerDetailsTypedOf,
   OfferPlate,
   useOffer,
 } from '@/entities/offer';
 import { useVendorShown } from '@/entities/vendor';
-import { formValuesOf, OfferForm } from '@/features/offer-form';
+import { OfferForm } from '@/features/offer-form';
 import { RemoveOffer } from '@/features/remove-offer';
 import { apiClient, dataOf, Refusal, WhyNotAnsweredInThePortal } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
@@ -121,7 +122,7 @@ function ChangeTheOffer({
       </div>
       <OfferForm
         part={offer.part}
-        values={formValuesOf(offer)}
+        values={offerDetailsTypedOf(offer)}
         purpose="change"
         save={(details) => change.mutateAsync(details)}
         after={

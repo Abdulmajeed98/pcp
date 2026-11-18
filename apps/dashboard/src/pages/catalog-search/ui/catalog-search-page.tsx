@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router';
 import type { AddedOffer } from '@/entities/offer';
 import { useVendorShown } from '@/entities/vendor';
 import { Trans, useTranslation } from '@/shared/i18n';
-import { BackLink, Leaving } from '@/shared/ui';
+import { Announced, BackLink, Leaving } from '@/shared/ui';
 
 import { useSearchInTheAddress } from '../model/search';
 import { FoundParts } from './found-parts';
@@ -19,7 +19,9 @@ import { SearchForm } from './search-form';
 // redesign ticket 12): a back link, its title and one Note Grey sentence,
 // then the note after an Offer is added, the search with its Category, the
 // count in words and the rows. A Part the Vendor offers is marked and leads
-// to the Offer; any other opens the form for a new Offer of it.
+// to the Offer; any other opens the form for a new Offer of it. A search
+// that finds nothing offers to search every Category and to ask for the
+// Part to be added, with a Part Request (REQ-1).
 //
 // After a save the form returns here, with the search as it was, and a note,
 // announced when it appears, says the Offer was added and names its Part,
@@ -49,13 +51,15 @@ export function CatalogSearchPage() {
           <p className="text-sm text-muted-foreground">{t('CatalogSearch.intro')}</p>
         </div>
       </div>
-      {/* The live region is always there, so that the note is announced when
-          it appears in it. */}
+      {/* The live region is always there, and the note arrives in it once
+          it is in the page, so that the note is announced. */}
       <output className="block">
         <Leaving value={added}>
           {(name) => (
             <div className={gapAbove}>
-              <AddedNote name={name} />
+              <Announced>
+                <AddedNote name={name} />
+              </Announced>
             </div>
           )}
         </Leaving>

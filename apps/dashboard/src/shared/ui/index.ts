@@ -62,6 +62,7 @@ export { NothingToDo, PagedList, SketchedRows } from './paged-list';
 export { PastTheLastPage } from './past-the-last-page';
 export { OptionalMark } from './optional-mark';
 export { MenuSheet } from './menu-sheet';
+export { NameField } from './name-field';
 export { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from './native-select';
 export { Plate, PlateFigure } from './plate';
 export {
@@ -74,9 +75,10 @@ export {
   ScreenSearchPlaceProvider,
   useScreenSearchPlace,
 } from './screen-search';
+export { Announced } from './announced';
 export { OpeningSpace } from './opening-space';
 export { RowCell } from './row-cell';
-export { linkOverRow } from './row-link';
+export { linkAboveRow, linkOverRow } from './row-link';
 export { OpenedBesideAList, ScreenTitle, SectionTitle } from './screen-title';
 export { Separator } from './separator';
 export { Switch } from './switch';

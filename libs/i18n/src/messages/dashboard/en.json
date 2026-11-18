@@ -16,7 +16,8 @@
     "scheme": "Colour scheme",
     "light": "Light",
     "dark": "Dark",
-    "device": "Device"
+    "device": "Device",
+    "partRequests": "Part Requests"
   },
   "ActingAsVendor": {
     "actingAs": "You are acting as <name/>.",
@@ -128,7 +129,11 @@
     "firstPage": "Go to the first page",
     "addedTitle": "Offer added",
     "added": "Your Offer for <name/> is added. Find the next Part to offer.",
-    "seeOffers": "See your Offers"
+    "seeOffers": "See your Offers",
+    "askIntro": "If the catalog lacks it, the Admin can add it: the form starts with your words and this Category.",
+    "askIntroEveryCategory": "If the catalog lacks it, the Admin can add it: the form starts with your words.",
+    "searchEveryCategory": "Search every Category",
+    "ask": "Ask for it to be added"
   },
   "NewOffer": {
     "back": "Back to the search",
@@ -203,6 +208,80 @@
     "confirm": "Remove",
     "removing": "Removing…",
     "notRemoved": "Your Offer was not removed."
+  },
+  "PartRequestsScreen": {
+    "title": "Your Part Requests",
+    "intro": "Parts you asked the Admin to add to the catalog, newest first.",
+    "send": "Send a Part Request",
+    "reading": "Reading your Part Requests…",
+    "notListed": "Your Part Requests could not be listed.",
+    "counted_one": "<count/> Part Request",
+    "counted_other": "<count/> Part Requests",
+    "listLabel": "Your Part Requests",
+    "part": "Part",
+    "price": "Price",
+    "sent": "Sent",
+    "state": "State",
+    "sentToday": "Sent today",
+    "sentDaysAgo_one": "Sent <count/> day ago",
+    "sentDaysAgo_other": "Sent <count/> days ago",
+    "waitingToday": "Waiting, sent today",
+    "waiting_one": "Waiting for <count/> day",
+    "waiting_other": "Waiting for <count/> days",
+    "addedAs": "Added as",
+    "seeOffer": "See your Offer",
+    "offerRemoved": "You have since removed its Offer.",
+    "notAdded": "Not added",
+    "reason": "The Admin’s reason:",
+    "sendCorrected": "Send a corrected request",
+    "none": "No Part Request yet",
+    "noneDescription": "When a Part you sell is not in the catalog, ask the Admin to add it. Shoppers see your Offer once it is added.",
+    "sentTitle": "Part Request sent",
+    "sentNote": "You asked for <name/> to be added. The Admin adds it, or says here why not.",
+    "pages": "Pages of your Part Requests",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page <page/> of <pages/>",
+    "pastTheLast": "This page is past the last one.",
+    "firstPage": "Go to the first page"
+  },
+  "NewPartRequest": {
+    "backToTheList": "Your Part Requests",
+    "backToTheSearch": "Back to the search",
+    "title": "Send a Part Request",
+    "intro": "Name the Part as its box does, and give the Offer you would make.",
+    "nextTitle": "What happens next",
+    "nextFound": "The Admin finds the Part in the catalog or adds it, with its manufacturer and its specifications.",
+    "nextOffer": "Your Offer is then made with this price, stock and warranty, confirmed as of the day you send it.",
+    "nextFollowed": "You follow the request here, under Part Requests."
+  },
+  "PartRequestForm": {
+    "category": "Category",
+    "chooseCategory": "Choose its Category",
+    "name": "The Part’s name",
+    "nameDescription": "As its box or its maker names it.",
+    "partNumber": "Manufacturer part number",
+    "partNumberDescription": "The code printed on the box, such as <example/>.",
+    "fromTheSearch": "From your search for “<words/>”. Correct it before sending.",
+    "fromTheSearchInTheCategory": "From your search for “<words/>” in <category/>. Correct either before sending.",
+    "send": "Send the request",
+    "sending": "Sending…",
+    "notSent": "Your Part Request was not sent.",
+    "refused": {
+      "category": {
+        "missing": "Choose the Part’s Category.",
+        "notInTheSet": "Choose one of the Categories listed."
+      },
+      "name": {
+        "missing": "Give the Part’s name.",
+        "tooLong": "The name is over the limit."
+      },
+      "partNumber": {
+        "missing": "Give the part number printed on the box.",
+        "tooLong": "The part number is over the limit."
+      },
+      "other": "The platform did not accept this."
+    }
   },
   "VendorDetails": {
     "title": "Your details",
