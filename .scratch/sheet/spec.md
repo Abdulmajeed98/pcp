@@ -115,8 +115,8 @@ The API gains two endpoints: one gives the Vendor's Offer sheet in a language as
 8. As a Vendor, I want the part number written as text, so that my spreadsheet program does not drop a leading zero or turn a long code into a number.
 9. As a Vendor, I want "in stock" chosen from a list of my language's yes and no, so that I cannot type a value the platform will not read.
 10. As a Vendor, I want an empty warranty cell where I gave no warranty, so that the file says exactly what my Offer says.
-11. As a Vendor whose Part has several part numbers, I want the one written that names only that Part, so that my file matches my Offer again when I upload it.
-12. As a Vendor with no Offer yet, I want a file with the headings alone, so that I can fill in my whole stock in one go.
+11. As a Vendor whose Part has several part numbers, I want the one written that names only that Part, or else only that one of the Parts I offer, so that my file matches my Offer again when I upload it. Corrected by the code review of 18 November 2026: the story first asked for the number that names only that Part, which another Part may hold too.
+12. As a Vendor with no Offer yet, I want a file with the headings alone, so that I can add every Part I sell in one go. Corrected by the code review of 18 November 2026: the story first said "fill in my whole stock", and CONTEXT.md's Offer avoids "stock".
 13. As a Vendor, I want the headings to stay in view as I scroll, so that I know which column is which on row 300.
 14. As a Vendor, I want the file named with the day I downloaded it, so that I can tell two downloads apart.
 15. As the Admin acting as a Vendor, I want to download that Vendor's Offer sheet, so that I can help it in its shop (ACC-6).
@@ -128,7 +128,7 @@ The API gains two endpoints: one gives the Vendor's Offer sheet in a language as
 18. As a Vendor, I want to leave out a price I do not quote, so that my Offer is quoted in the other currency alone, as the Offer form allows (OFF-2).
 19. As a Vendor, I want to clear a warranty cell to remove my warranty, so that the row says my Offer whole, as saving the Offer form does.
 20. As a Vendor, I want to delete rows I do not want to touch, so that their Offers stay exactly as they are (SHT-4).
-21. As a Vendor with a large stock, I want to split my rows across several files and upload them one after another, so that no file is too large, since rows a file leaves out are left alone.
+21. As a Vendor with many Offers, I want to split my rows across several files and upload them one after another, so that no file is too large, since rows a file leaves out are left alone.
 22. As a Vendor typing on a Kurdish or an Arabic keyboard, I want digits I type into a cell read as Western digits, in prices and in part numbers, as the portal's forms read them.
 23. As a Vendor, I want thousands separators in a typed price ignored, as the Offer form ignores them, so that "1,875,000" is read as I meant it.
 24. As a Vendor, I want "in stock" read in any of the three languages, and as TRUE or FALSE, so that a file I changed in another language, or a sheet that turned my answer into TRUE, still uploads.
@@ -143,7 +143,7 @@ The API gains two endpoints: one gives the Vendor's Offer sheet in a language as
 30. As a Vendor, I want empty rows passed over and not counted, so that gaps I left do not show as problems.
 31. As a Vendor, I want either all of my valid rows applied or, if the platform fails partway, none of them, so that I never have half an upload.
 32. As a Vendor, I want to upload the same file twice without harm, so that I do not need to remember whether the first went through.
-33. As the Admin acting as a Vendor, I want to upload that Vendor's Offer sheet, so that I can set up its stock in one go (ACC-6).
+33. As the Admin acting as a Vendor, I want to upload that Vendor's Offer sheet, so that I can set up its Offers in one go (ACC-6).
 34. As a Vendor, I want no other Vendor to download or upload my Offer sheet.
 
 ### Matching rows to Parts
@@ -152,7 +152,7 @@ The API gains two endpoints: one gives the Vendor's Offer sheet in a language as
 36. As a Vendor, I want a part number matched whatever its letters' case, so that "bx8071513600k" finds "BX8071513600K".
 37. As a Vendor, I want a part number I pasted from a web page matched even when it carries an invisible mark, as the catalog cleans one.
 38. As a Vendor, I want a row matched to a Part only by its exact part number, so that a near miss never changes the wrong Offer.
-39. As a Vendor, I want a part number that names several Parts, of which I offer exactly one, matched to my Offer, so that my own downloaded file always uploads.
+39. As a Vendor, I want a part number that names several Parts, of which I offer exactly one, matched to my Offer, so that my own downloaded file uploads. Two of my Offers whose Parts hold exactly the same part numbers cannot be told apart by any number, and I change those on the Offers screen. Corrected by the code review of 18 November 2026: the story first said the file always uploads.
 40. As a Vendor, I want any row matched that way listed in the result with the Part it changed, so that I can see the choice the platform made.
 41. As a Vendor, I want a part number of a Part the Admin created, from a Part Request or otherwise, matched like any other.
 
@@ -193,7 +193,7 @@ The API gains two endpoints: one gives the Vendor's Offer sheet in a language as
 
 ### The Offers an upload changes
 
-68. As a Vendor, I want every applied row to count as a Confirmation at the moment of the upload, even when nothing changed, so that confirming my whole stock is one upload (OFF-5, SHT-3).
+68. As a Vendor, I want every applied row to count as a Confirmation at the moment of the upload, even when nothing changed, so that confirming all my Offers is one upload (OFF-5, SHT-3). Stories 21, 33 and 68 were corrected so by the code review of 18 November 2026, as story 12 was.
 69. As a Vendor whose Expired Offer is in an applied row, I want Shoppers to see it again at once (OFF-6).
 70. As the owner, I want every change of a price or of the stock that an upload makes recorded in the Offer history, by the Caller's Login, as every change is (OFF-10).
 71. As the owner, I want a row that changes only the warranty, or nothing, to add no history row, as an edit does.
@@ -284,15 +284,15 @@ The API gains two endpoints: one gives the Vendor's Offer sheet in a language as
   - The warranty is a whole number cell, empty when there is none.
   - Columns are wide enough for their headings.
 - **The rows** are every Offer of the Vendor, Expired Offers among them, ordered by Category in the catalog's order, then by the Part's name, then by the Offer's identifier. A Vendor with none gets row 1 alone.
-- **The part number a row is given.** It is the first of the Part's part numbers that no other Part holds, compared as the upload compares them. When another Part holds every one, the row is given the Part's first part number. When the Part has none, the cell is empty. The upload's tie-break below matches such a row back to the Vendor's Offer, so a file downloaded and uploaded unchanged applies every row whose Part has a part number.
+- **The part number a row is given.** It is the first of the Part's part numbers that no other Part holds, compared as the upload compares them. When another Part holds every one, it is the first that no other Part the Vendor offers holds, which the upload's tie-break below matches back to the Vendor's Offer. When another Part the Vendor offers holds every one too, the row is given the Part's first part number. When the Part has none, the cell is empty. The rule is written once, beside the fold. So a file downloaded and uploaded unchanged applies every row whose Part has a part number, but one kind: an Offer whose Part shares each of its part numbers with another Part the Vendor offers, as two colour editions of one GPU that hold exactly the same numbers do, cannot be told apart by any number. Such rows are skipped as several Parts, the portal's line leads to the catalog search, and the Vendor changes those Offers on the Offers screen. Corrected by the code review of 18 November 2026: the spec first gave a row whose numbers other Parts all hold the Part's first, and promised that every row with a part number applies; the development database holds 569 imported Parts, in 282 groups, with identical part numbers.
 - **The file's name** is the file's word in the language asked for, then the day in Iraq's time as year, month and day in Western digits, with `.xlsx` after them. The day is counted by the rule `sharing` wrote once. The API sends the name in the answer's `Content-Disposition`, encoded so that Kurdish and Arabic survive, and the dashboard saves the file under it.
 
 ### Reading an upload
 
 - **The file as a whole**, refused 400 `NOT_VALID` with `field: 'offerSheet'` and nothing applied, in this order:
   - `missing`: no file was sent;
-  - `tooLarge`: it is over 5 MB. A file far over that is refused as it arrives, before it fills the API's memory, as a photo is (`catalog`'s upload and its interceptor of Multer's refusals);
-  - `notReadable`: it is not an .xlsx file the library can read. A .csv, an old .xls, an .ods, a picture and a crafted file that unpacks past the library's bounds are all refused this way;
+  - `tooLarge`: it is over 5 MB, or more than the platform will unpack. A file far over 5 MB is refused as it arrives, before it fills the API's memory, as a photo is (`catalog`'s upload and its interceptor of Multer's refusals). A file whose parts unpack past the bound an upload is read within, a Vendor's own file of about 21,000 rows or a crafted one, is refused this way too, and the portal tells the Vendor to split it;
+  - `notReadable`: it is not an .xlsx file the library can read. A .csv, an old .xls, an .ods and a picture are all refused this way. Corrected by the code review of 18 November 2026: a file that unpacks past the bound was first `notReadable`, which told a Vendor with a large file to save it again rather than split it;
   - `notTheLayout`: its first worksheet's first row is not the six headings (SHT-7);
   - `tooManyRows`: it holds more than 5,000 rows that are not empty. That is more than the largest Category of the catalog. A Vendor with more splits its file, which SHT-4 makes safe.
 - **Rows.** Every row below row 1 is read in turn. A row whose six cells are all empty is passed over and not counted. Every other row is numbered by its row in the file.
@@ -399,7 +399,7 @@ Every text the result carries from a cell is cut so, to the most the platform ta
 
   Whether the form opens over the result or as its own screen is for the design ticket to propose and the owner to choose. Either way the result survives it.
 - **The query keys.** An upload changes Offers through one path, `askAgainAfterAChangeToTheOffers`, so the Offers screen, its counts and the expiry banner follow. The upload also asks every query about Parts again, since an added Offer moves a Part onto Missing specifications and changes a search's `offerId`.
-- **Words.** Every new text is in the `i18n` library's dashboard set in all three languages. That includes the screen, the six reasons a file is refused, the four problems, the two sheet reasons and the result's counts, every plural form given, with Arabic's one and two in words. No message formats a number: counts and row numbers reach it as text written by `formatNumber`. The Kurdish and Arabic are drafts for LANG-7.
+- **Words.** Every new text is in the `i18n` library's dashboard set in all three languages. That includes the screen, the five reasons a file is refused (corrected from "six" by the code review of 18 November 2026), the four problems, the two sheet reasons and the result's counts, every plural form given, with Arabic's one and two in words. No message formats a number: counts and row numbers reach it as text written by `formatNumber`. The Kurdish and Arabic are drafts for LANG-7.
 
 ### The design comes first
 
@@ -486,7 +486,7 @@ Each new line is seen to fail once, through a deliberate fault that is then reve
   - an empty warranty cell where there is none.
 - The headings, the yes and no, and the worksheet's and the file's names are in each of the three languages, and the worksheet reads right to left in Kurdish and Arabic.
 - A Vendor with no Offer gets the headings alone.
-- **The part number written.** A Part whose first part number another Part holds gets its first number that only it holds. A Part whose every number another Part holds gets its first. A Part with none gets an empty cell.
+- **The part number written.** A Part whose first part number another Part holds gets its first number that only it holds. A Part whose every number another Part holds gets its first that no other Part the Vendor offers holds, and its first when another Part the Vendor offers holds each. A Part with none gets an empty cell. (Corrected by the code review of 18 November 2026.)
 - **Who may.** Another Vendor's address is 403 `VENDOR_ACCESS_DENIED`, a Deactivated Vendor's own Login 403 `VENDOR_DEACTIVATED`, and no token 401. The Admin downloads any Vendor's, a Deactivated Vendor's among them, and an unknown Vendor is 404. A missing or unknown language is 400 naming `language`.
 
 **Reading an upload**
@@ -516,7 +516,7 @@ Each new line is seen to fail once, through a deliberate fault that is then reve
 - **Several Parts where the Vendor offers exactly one:** the row is applied to that Offer and listed under `matchedByYourOffer`. Where the Vendor offers two of them, the row is skipped as several Parts.
 - **No Part:** the row is skipped, carrying its name and its details. `partRequestOpen` is true when the Vendor has an open Part Request for that part number in another case, and false when the Vendor's request for it was rejected or the request is another Vendor's.
 - **The same Part twice**, by one number twice and by two numbers of one Part: every such row is skipped, naming the others.
-- **The round trip.** A downloaded Offer sheet uploaded unchanged applies every row whose Part has a part number as `confirmed`, a Part whose every number another Part holds among them. The row of a Part with none is skipped as `partNumber`, `missing`.
+- **The round trip.** A downloaded Offer sheet uploaded unchanged applies every row whose Part has a part number as `confirmed`, a Part whose every number another Part holds among them, by its first number that no other Part the Vendor offers holds. The row of a Part with none is skipped as `partNumber`, `missing`. The rows of two Offers whose Parts hold exactly the same part numbers are skipped as several Parts and change neither Offer, while every other row applies. (Corrected by the code review of 18 November 2026.)
 
 **Applying**
 
@@ -598,7 +598,7 @@ Prior art:
 - **Decisions this spec takes that the owner may want to revisit.** Each follows the MVP spec's words where they leave room:
   - **The API builds and reads the file**, and imports `@pcp/i18n` for its words and its digits, rather than the dashboard doing it in the browser.
   - **The tie-break.** A part number that names several Parts, one of which the Vendor offers, is that Offer's row, listed in the result.
-  - **The download writes the Part's first part number that only it holds**, else its first.
+  - **The download writes the Part's first part number that only it holds**, else its first that no other Part the Vendor offers holds, else its first (corrected by the code review of 18 November 2026).
   - **No hidden column.** The file has no hidden column holding the Offer's identifier. SHT-1 names six columns, and a Vendor who copies a row to add a new Part would carry the copied identifier, silently changing the wrong Offer.
   - **Matching folds case** and strips invisible marks, and is otherwise exact.
   - **A fourth problem.** SHT-5 names three problems; the spec adds **the same Part twice**, since two rows for one Part cannot both be applied.
@@ -616,7 +616,7 @@ Prior art:
   - 82 part numbers that differ from another only in case;
   - the most widely shared number, "OC", held by 81 GPUs. OpenDB lists fragments of some codes, such as "OC", "16" and "ac", as part numbers.
 
-  Without the tie-break, about 7 in 100 imported Parts could not be matched back from their own row. With it, only a Part with no part number, under 1 in 100, cannot be.
+  Without the tie-break, about 7 in 100 imported Parts could not be matched back from their own row. With it, only a Part with no part number, under 1 in 100, cannot be, and an Offer whose Part shares every number with another Part the same Vendor offers: 569 imported Parts, in 282 groups, hold exactly the same part numbers as another, such as two colour editions of one GPU, and a Vendor that offers two of one group changes those two on the Offers screen (corrected by the code review of 18 November 2026).
 - **Costly to undo.** Little. The module adds no table and stores nothing; the boundary change and every rule here are code, and undoing one loses no data. So no ADR is expected. The last ticket judges again with what the tickets found.
 - **Success criteria.** This module completes criterion 9, and criterion 10 for a row turned into a Part Request. It adds the Offer sheet screen and its result to criterion 13.
 - **Open checks.** This module's checks on a phone wait for hosting, as every module's do:
