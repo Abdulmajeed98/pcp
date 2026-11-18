@@ -1,10 +1,16 @@
 import type { CategoryResponse, PartResponse } from '@pcp/api-client';
-import { AlwaysEnglish } from '@pcp/ui';
-import { CircleAlertIcon, PencilIcon } from 'lucide-react';
-import { Link, useParams } from 'react-router';
+import { AlwaysEnglish, AsWritten } from '@pcp/ui';
+import { CircleAlertIcon, CircleCheckIcon, PencilIcon } from 'lucide-react';
+import { Link, useLocation, useParams } from 'react-router';
 
 import { categoryName, useCategories } from '@/entities/category';
-import { PartPicture, usePart, valueAt } from '@/entities/part';
+import {
+  createdFromARequestIn,
+  type PartCreatedFromARequest,
+  PartPicture,
+  usePart,
+  valueAt,
+} from '@/entities/part';
 import { PhotoField } from '@/features/add-photo';
 import { Refusal, WhyNotAnswered } from '@/shared/api';
 import { dayWritten, useAddressKeepingTheQuery } from '@/shared/lib';
@@ -85,11 +91,20 @@ function PartDetails({
 }) {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const missing = part.missingNeededSpecifications;
+  const createdFrom = createdFromARequestIn(useLocation().state);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
         <BackLink to={keepingTheQuery('/catalog')}>Catalog</BackLink>
+        {/* After the Part was created from a Part Request, the note says so
+            at the head of its page, where the Admin adds its photo now that
+            it has its first Offer (part-requests ticket 04). */}
+        {createdFrom !== null && (
+          <output className="block">
+            <CreatedFromARequestNote createdFrom={createdFrom} />
+          </output>
+        )}
         <div className="flex items-start gap-4">
           {/* A photo added while the page is open comes in smoothly, and
               the page itself never fades in; another Part is another
@@ -188,6 +203,44 @@ function Lacks({ part, category }: { part: PartResponse; category: CategoryRespo
       <CircleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       <span data-testid="lacks">Lacks {labels.join(', ')}</span>
     </p>
+  );
+}
+
+// What a fulfilment did to the Vendor's Offer for the Part, as the API
+// answered it, in the words that end the note's sentence, as the Part
+// Requests' queue says them.
+const offerWords: Record<PartCreatedFromARequest['createdFrom']['offer'], string> = {
+  created: 'was made with the request’s details.',
+  replaced: 'now has the request’s details, confirmed when the request was sent.',
+  kept: 'was kept as it was: the Vendor confirmed it after sending the request.',
+};
+
+// The note after the Part was created from a Part Request and the request
+// fulfilled with it, drawn as the note after a resolution is on the queue: a
+// Sheet panel with a Confirmed Green edge, a circled tick and its title in
+// Confirmed Green, and one sentence that names the request and says what
+// became of the Vendor's Offer. It arrives with the screen (Motion 6).
+function CreatedFromARequestNote({
+  createdFrom,
+}: {
+  createdFrom: PartCreatedFromARequest['createdFrom'];
+}) {
+  return (
+    <div
+      data-testid="created-from-a-request"
+      className="arrives flex flex-col gap-1 rounded-card border border-success bg-card px-4 py-3 text-sm"
+    >
+      <span className="flex items-center gap-2 text-base font-semibold text-success">
+        <CircleCheckIcon aria-hidden="true" className="size-4 shrink-0" />
+        Part created and request fulfilled
+      </span>
+      <span>
+        <AsWritten>{createdFrom.requestName}</AsWritten> is matched to{' '}
+        <AlwaysEnglish>{createdFrom.partName}</AlwaysEnglish>, and{' '}
+        <AsWritten>{createdFrom.vendorName}</AsWritten>’s Offer for it{' '}
+        {offerWords[createdFrom.offer]}
+      </span>
+    </div>
   );
 }
 
