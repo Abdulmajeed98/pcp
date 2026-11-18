@@ -187,3 +187,7 @@ No choice replaces part of ADR-0011, so no ADR is written.
 - This record's commit is gated on `pnpm check --skip-nx-cache`, with every `*.tsbuildinfo` outside `node_modules` deleted first.
 - `pnpm integration:check` was not run, since the ticket changes no API code, and `pnpm platform:check` was not run, since the ticket runs no end-to-end test and builds no screen. `pnpm boundaries:check` was not asked for: the inspector gains no import of another project.
 - The e2e lock was held once, for the inspection of the screens as they are and the capture, and released.
+
+### 18 November 2026: the made-up result follows the bound on several Parts
+
+On the owner's standing instruction (by the orchestrator, from this ticket's follow-up), the API now names at most the first 10 Parts a row of several Parts matched, and counts all of them in `partCount` (ticket 02's Comments, on branch `sheet/02b-bound-several-parts`). The made-up result follows it: `mostPartsNamed` is stated beside the API's in `made-up-offer-sheet-result.ts`, the worst case's rows of "OC" name the first 10 of the 81 GPUs and count 81, and `made-up-offer-sheet-result.spec.ts` holds the bound on every row of several Parts of the worst case. DESIGN.md's "three of them and an underlined 'Show all 81 Parts' when more than four" now unfolds at most the ten the result names, its count from `partCount`, with the catalog search for every one; ticket 04 builds it so.
