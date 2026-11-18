@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Role, StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
-import { OfferDetails } from '../offer/OfferDetails';
 import { VendorAccessRule } from '../vendor/VendorAccessRule';
 import { offerSheetRefused } from './offer-sheet-errors';
 import {
@@ -67,18 +66,6 @@ class Output {
 
 export { Input as UploadOfferSheetCommandInput };
 export { Output as UploadOfferSheetCommandOutput };
-
-// Whether a row changes a price, the stock or the warranty of the Offer it
-// replaced: changed when it does, only confirmed when it does not.
-function changes(details: OfferDetails, before: OfferDetails): boolean {
-  return (
-    details.changePricesOrStockOf({
-      usdPriceCents: before.getUsdPriceCents(),
-      iqdPrice: before.getIqdPrice(),
-      inStock: before.isInStock(),
-    }) || details.getWarrantyMonths() !== before.getWarrantyMonths()
-  );
-}
 
 // The first worksheet's row 1, the headings, or none when it holds none.
 function headingsOf(read: OfferSheetRead): OfferSheetRowRead | undefined {
@@ -150,7 +137,9 @@ export class UploadOfferSheetCommand {
       const done = applied.right[index];
       if (done.kind === 'added') {
         added.push(new AddedOffer(each.getRow().getRow(), each.getPart(), done.offerId));
-      } else if (changes(each.getRow().getDetails(), done.before)) {
+      } else if (each.getRow().getDetails().differFrom(done.before)) {
+        // A price, the stock or the warranty differs from the Offer it
+        // replaced; else the row only confirmed it.
         changed += 1;
       } else {
         confirmed += 1;

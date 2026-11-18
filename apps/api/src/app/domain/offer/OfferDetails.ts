@@ -176,6 +176,20 @@ export class OfferDetails {
       this.inStock !== before.inStock
     );
   }
+
+  // Whether these details differ from another Offer's: a Quoted Price,
+  // whether the Part is in stock, or the warranty. An Offer sheet's row
+  // that replaced an Offer whose details differ changed it, and one whose
+  // details are the same only confirmed it.
+  differFrom(other: OfferDetails): boolean {
+    return (
+      this.changePricesOrStockOf({
+        usdPriceCents: other.usdPriceCents,
+        iqdPrice: other.iqdPrice,
+        inStock: other.inStock,
+      }) || this.warrantyMonths !== other.warrantyMonths
+    );
+  }
 }
 
 // An Offer's Quoted Prices, USD in whole cents and IQD in whole dinars, each
