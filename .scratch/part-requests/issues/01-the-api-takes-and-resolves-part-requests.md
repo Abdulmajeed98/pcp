@@ -10,7 +10,7 @@ No screen shows any of this yet. Tickets 03 and 04 do. For now the integration t
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The term, before any code.** CONTEXT.md's **Part Request** names its three states: open (neither fulfilled nor rejected), fulfilled (matched to a Part, found or created) and rejected (turned down with a reason). Its words to avoid gain pending, approved, accepted, declined, denied and closed. `words.md` gains the Kurdish and Arabic words for the three states, as drafts under LANG-7.
 - [x] **The day rule, shared.** `sharing` wrote a rule for the day in Iraq's time and the calendar days since it. In a commit of its own, that rule moves to where both Shared Builds and Part Requests can read it. `sharing`'s tests pass unchanged.

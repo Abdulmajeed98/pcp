@@ -12,7 +12,7 @@ A fulfilment makes the Vendor's Offer go live (REQ-3), which a Shopper sees on t
 
 **Blocked by:** 01, 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The section.** The sidebar and the menu sheet gain Part Requests, with the icon ticket 02 recorded. `admin-platform-rate.spec.ts`, which lists the sections exactly, gains it.
 - [x] **The queue,** at `/part-requests`, is the Catalog's kind of list, drawn by `PagedList` with its page in the address, 20 a page. Each row:

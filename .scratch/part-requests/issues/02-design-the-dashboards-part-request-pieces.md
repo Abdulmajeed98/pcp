@@ -21,7 +21,7 @@ The inspector's made-up shop first learns to answer Part Requests, so that every
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The made-up Part Requests.** The dashboard's made-up shop answers the queue, one request and a Vendor's list. It answers a page at a time in the API's order, typed against `api-client`, and refuses every write as before. Its requests come in every state:
   - open ones, one of them sent 40 days ago, whose Offer would be expired;

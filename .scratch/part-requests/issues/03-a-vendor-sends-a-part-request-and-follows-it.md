@@ -11,7 +11,7 @@ This works in Kurdish, Arabic and English, at 360 pixels, and for the Admin acti
 
 **Blocked by:** 01, 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The price fields, shared.** In a commit of its own, the Offer form's price, in-stock and warranty fields move down a layer, where Feature-Sliced Design asks it, so that both forms draw the same fields. The Offer form's own tests pass unchanged.
 - [x] **The section.** The top bar gains Part Requests between Offers and Details, marked current as the other two are. Its addresses are `part-requests` and `part-requests/new`, relative to the route, so the portal's own frame and the acting frame serve the same screens.
