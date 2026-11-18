@@ -194,6 +194,26 @@ describe('Reading an uploaded Offer sheet', () => {
       expect((await platform.theVendorsOffers(vendor.id)).offers).toEqual(offers);
     });
 
+    it('refuses as too large a file under 5 MB whose rows unpack past what an upload reads, as a real file of tens of thousands of rows does, changing no Offer', async () => {
+      const { vendor, offers } = await aVendorWithAnOffer();
+      const file = await anOfferSheet(
+        Array.from({ length: 30_000 }, (_, index) => [
+          `MU-LARGE-${String(index)}`,
+          `Made-up Radeon RX 9070 XT number ${String(index)}`,
+          649.99,
+          950000,
+          yes,
+          24,
+        ]),
+      );
+      expect(file.length).toBeLessThan(5 * 1024 * 1024);
+
+      const response = await upload(vendor.id, file);
+
+      await expectErrorResponse(response, 400, fileRefused('tooLarge'));
+      expect((await platform.theVendorsOffers(vendor.id)).offers).toEqual(offers);
+    }, 60_000);
+
     it('refuses as not the layout a file whose headings were moved, misspelt, left out or put on another row, changing no Offer', async () => {
       const { vendor, offers } = await aVendorWithAnOffer();
       const [partNumberHeading, name, usd, iqd, inStock, warranty] = headingsIn('en');
@@ -263,7 +283,7 @@ describe('Reading an uploaded Offer sheet', () => {
   });
 
   describe('a crafted file', () => {
-    it('refuses as not readable, at once, a file of about a megabyte whose worksheet unpacks to a gibibyte, and the API still answers', async () => {
+    it('refuses as too large, at once, a file of about a megabyte whose worksheet unpacks to a gibibyte, and the API still answers', async () => {
       const { vendor, offers } = await aVendorWithAnOffer();
       const file = anArchiveOf(
         aWorkbookAround(
@@ -280,14 +300,14 @@ describe('Reading an uploaded Offer sheet', () => {
         upload(vendor.id, file),
       );
 
-      await expectErrorResponse(answered, 400, fileRefused('notReadable'));
+      await expectErrorResponse(answered, 400, fileRefused('tooLarge'));
       expect(Date.now() - started).toBeLessThan(5000);
       expect(grewBy).toBeLessThan(aQuarterOfAGibibyte);
       expect((await platform.theVendorsOffers(vendor.id)).offers).toEqual(offers);
       expect((await platform.downloaded(vendor.id, 'en')).length).toBeGreaterThan(0);
     }, 60_000);
 
-    it('refuses it in the same way when the archive says the worksheet unpacks to 5,000 bytes', async () => {
+    it('refuses it as too large in the same way when the archive says the worksheet unpacks to 5,000 bytes', async () => {
       const { vendor, offers } = await aVendorWithAnOffer();
       const worksheet = await aWorksheetOfAGibibyte(
         'xl/worksheets/sheet1.xml',
@@ -300,7 +320,7 @@ describe('Reading an uploaded Offer sheet', () => {
         upload(vendor.id, file),
       );
 
-      await expectErrorResponse(answered, 400, fileRefused('notReadable'));
+      await expectErrorResponse(answered, 400, fileRefused('tooLarge'));
       expect(Date.now() - started).toBeLessThan(5000);
       expect(grewBy).toBeLessThan(aQuarterOfAGibibyte);
       expect((await platform.theVendorsOffers(vendor.id)).offers).toEqual(offers);

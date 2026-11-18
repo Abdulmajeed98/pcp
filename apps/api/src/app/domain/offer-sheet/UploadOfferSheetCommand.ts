@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Role, StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
 import { OfferDetails } from '../offer/OfferDetails';
 import { VendorAccessRule } from '../vendor/VendorAccessRule';
@@ -186,8 +186,10 @@ export class UploadOfferSheetCommand {
 
   // The rows of the file that are not empty, below its headings, or why the
   // file is refused as a whole, in this order: none was sent; it is too
-  // large; it cannot be read; its first worksheet's first row is not the
-  // six headings; or it holds too many rows.
+  // large, over 5 MB; it cannot be read, or what it holds unpacks past the
+  // bound an upload is read within, which is too large too; its first
+  // worksheet's first row is not the six headings; or it holds too many
+  // rows.
   private async rowsOf(
     file: Uint8Array | undefined,
   ): Promise<Either.Either<readonly OfferSheetRowRead[], StructuredError>> {
@@ -196,12 +198,12 @@ export class UploadOfferSheetCommand {
       return Either.left(offerSheetRefused('tooLarge'));
 
     const read = await this.offerSheetFile.read(file);
-    if (Option.isNone(read)) return Either.left(offerSheetRefused('notReadable'));
-    if (!isTheLayout(headingsOf(read.value))) {
+    if (Either.isLeft(read)) return Either.left(offerSheetRefused(read.left));
+    if (!isTheLayout(headingsOf(read.right))) {
       return Either.left(offerSheetRefused('notTheLayout'));
     }
 
-    const rows = read.value.getRows().filter((row) => row.getRow() > 1 && !isEmptyRow(row));
+    const rows = read.right.getRows().filter((row) => row.getRow() > 1 && !isEmptyRow(row));
     if (rows.length > mostRowsOfAnOfferSheet) {
       return Either.left(offerSheetRefused('tooManyRows'));
     }

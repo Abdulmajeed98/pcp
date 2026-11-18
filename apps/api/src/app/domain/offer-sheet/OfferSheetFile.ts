@@ -1,6 +1,7 @@
 import { StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
+import { OfferSheetFileRefusal } from './offer-sheet-errors';
 import {
   mostRowsOfAnOfferSheet,
   OfferSheetColumnWritten,
@@ -121,6 +122,12 @@ export class OfferSheetRead {
   }
 }
 
+// Why an uploaded file was not read: it is not an .xlsx file that can be
+// read, `notReadable`; or what it holds unpacks past the bound of memory
+// an upload is read within, more than the platform takes, `tooLarge`,
+// whether it is a Vendor's very large file or a crafted one.
+export type OfferSheetNotRead = Extract<OfferSheetFileRefusal, 'notReadable' | 'tooLarge'>;
+
 // The port an Offer sheet is turned into a file through, and a file read
 // back through. Its implementation is the only code that names the file
 // library, so that the domain never does and the library can be replaced.
@@ -131,7 +138,8 @@ export abstract class OfferSheetFile {
   ): Promise<Either.Either<Uint8Array, StructuredError>>;
 
   // The first worksheet of an uploaded file, sent by a stranger, as it was
-  // read, within bounds of memory and time; or none, when it is not an
-  // .xlsx file that can be read so.
-  abstract read(file: Uint8Array): Promise<Option.Option<OfferSheetRead>>;
+  // read, within bounds of memory and time; or why it was not read.
+  abstract read(
+    file: Uint8Array,
+  ): Promise<Either.Either<OfferSheetRead, OfferSheetNotRead>>;
 }

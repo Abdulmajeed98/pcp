@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ServerError, StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 import {
   type Cell,
   type DataValidation,
@@ -15,6 +15,7 @@ import {
   OfferSheetCell,
   OfferSheetCellRead,
   OfferSheetFile,
+  OfferSheetNotRead,
   OfferSheetRead,
   OfferSheetRowRead,
   OfferSheetWritten,
@@ -25,7 +26,9 @@ import { archiveOf, partsUnpacked } from './bounded-archive';
 // The most the parts ExcelJS reads of an uploaded file may unpack to, all
 // together: 8 MiB, four times what the platform's own Offer sheet of 5,000
 // rows unpacks to, about 2 MB, and far below what takes the API down. Past
-// it, the file is not read.
+// it, the file is not read and is answered too large, whether it is
+// crafted or a Vendor's own file of about 21,000 rows or more, which the
+// portal then tells to split its rows (the code review of `sheet`).
 const mostUnpackedBytes = 8 * 1024 * 1024;
 
 // The parts of an .xlsx file ExcelJS reads to find the first worksheet and
@@ -241,13 +244,17 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
     }
   }
 
-  async read(file: Uint8Array): Promise<Option.Option<OfferSheetRead>> {
+  async read(file: Uint8Array): Promise<Either.Either<OfferSheetRead, OfferSheetNotRead>> {
     // The parts ExcelJS needs, unpacked within the bound before it sees any
     // of them, and only those handed to it, in an archive of their own. A
     // file with no workbook, such as an .ods, is not an .xlsx file.
-    const parts = await partsUnpacked(file, isReadForTheCells, mostUnpackedBytes);
-    const workbookPart = parts?.get('xl/workbook.xml');
-    if (parts === undefined || workbookPart === undefined) return Option.none();
+    const unpacked = await partsUnpacked(file, isReadForTheCells, mostUnpackedBytes);
+    if (Either.isLeft(unpacked)) {
+      return Either.left(unpacked.left === 'pastTheBound' ? 'tooLarge' : 'notReadable');
+    }
+    const parts = unpacked.right;
+    const workbookPart = parts.get('xl/workbook.xml');
+    if (workbookPart === undefined) return Either.left('notReadable');
     parts.set('xl/workbook.xml', withoutDefinedNames(workbookPart));
 
     try {
@@ -267,9 +274,9 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
           ),
         );
       });
-      return Option.some(new OfferSheetRead(rows));
+      return Either.right(new OfferSheetRead(rows));
     } catch {
-      return Option.none();
+      return Either.left('notReadable');
     }
   }
 }
