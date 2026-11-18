@@ -119,11 +119,13 @@ export abstract class PartRequestStore {
     pageable: PageableAttributes,
   ): Promise<Either.Either<PartRequestsPage, StructuredError>>;
 
-  // The Part Request with this identifier, in any state, or none, also for
-  // a text that is not an identifier, which the database is never asked.
+  // The Part Request with this identifier, in any state, with the Vendor's
+  // Offer for its Part now when it was fulfilled, read as a list reads it;
+  // or none, also for a text that is not an identifier, which the database
+  // is never asked.
   abstract readById(
     partRequestId: string,
-  ): Promise<Either.Either<Option.Option<PartRequest>, StructuredError>>;
+  ): Promise<Either.Either<Option.Option<PartRequestAndOffer>, StructuredError>>;
 
   // Fulfils the Part Request with the Part, in one transaction that holds
   // the request's row from the start: it is refused as resolved when it is

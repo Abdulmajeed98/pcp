@@ -10,9 +10,7 @@ import {
 } from '~/domain/part-request/PartRequestDetails';
 import { SendPartRequestCommandInput } from '~/domain/part-request/SendPartRequestCommand';
 import { OfferDetailsRequest } from '~/infrastructure/offer/endpoints/OfferDetailsRequest';
-
-// Whether a detail was given at all. Null is taken as not given.
-const given = (_request: object, value: unknown) => value != null;
+import { given } from '~/infrastructure/vendor/endpoints/ContactDetailsRequest';
 
 // A Part Request: the Part's Category, name and manufacturer part number,
 // and the Offer the Vendor would make, its details as an Offer takes them.

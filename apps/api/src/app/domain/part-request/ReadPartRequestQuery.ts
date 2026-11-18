@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
 import { Either } from 'effect';
 
-import { OfferStore } from '../offer/OfferStore';
-import { existingPartRequest, withTheVendorsOffer } from './existing-part-request';
+import { existingPartRequest } from './existing-part-request';
 import { PartRequestAndOffer } from './PartRequest';
 import { PartRequestStore } from './PartRequestStore';
 
@@ -45,18 +44,12 @@ export { Output as ReadPartRequestQueryOutput };
 // Vendor's Offer for its Part now, if it still has one.
 @Injectable()
 export class ReadPartRequestQuery {
-  constructor(
-    private readonly partRequestStore: PartRequestStore,
-    private readonly offerStore: OfferStore,
-  ) {}
+  constructor(private readonly partRequestStore: PartRequestStore) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
     const id = input.getPartRequestId();
     const now = new Date();
     const partRequest = existingPartRequest(id, await this.partRequestStore.readById(id));
-    if (Either.isLeft(partRequest)) return Either.left(partRequest.left);
-
-    const answered = await withTheVendorsOffer(partRequest.right, this.offerStore);
-    return Either.map(answered, (found) => Output.of(found, now));
+    return Either.map(partRequest, (found) => Output.of(found, now));
   }
 }

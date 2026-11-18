@@ -63,7 +63,9 @@ export class RejectPartRequestCommand {
     const id = input.getPartRequestId();
     const partRequest = existingPartRequest(id, await this.partRequestStore.readById(id));
     if (Either.isLeft(partRequest)) return Either.left(partRequest.left);
-    if (!partRequest.right.isOpen()) return Either.left(partRequestResolved(id));
+    if (!partRequest.right.getPartRequest().isOpen()) {
+      return Either.left(partRequestResolved(id));
+    }
 
     const reason = checkedRejectionReason(input.getReason());
     if (Either.isLeft(reason)) return Either.left(reason.left);
@@ -78,8 +80,6 @@ export class RejectPartRequestCommand {
 
     // Read again, as every read is.
     const read = existingPartRequest(id, await this.partRequestStore.readById(id));
-    return Either.map(read, (found) =>
-      Output.of(new PartRequestAndOffer(found, null), now),
-    );
+    return Either.map(read, (found) => Output.of(found, now));
   }
 }

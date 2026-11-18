@@ -126,7 +126,8 @@ function toDomain(row: ReadRow): Either.Either<PartRequest, StructuredError> {
   );
 }
 
-// The same, with the Vendor's Offer for its Part now, as a list answers it.
+// The same, with the Vendor's Offer for its Part now, which the row's own
+// join found, as every read answers it.
 function toDomainWithOffer(
   row: ReadRow,
 ): Either.Either<PartRequestAndOffer, StructuredError> {
@@ -215,10 +216,12 @@ export class DatabasePartRequestStore implements PartRequestStore {
     // Read again, as every read is, with its Vendor.
     const sent = await this.readById(partRequestId);
     return Either.flatMap(sent, (found) =>
-      Either.fromOption(found, () =>
-        ServerError.of(
-          `A Part Request was kept and could not be read back: ${partRequestId}`,
-        ),
+      Either.fromOption(
+        Option.map(found, (each) => each.getPartRequest()),
+        () =>
+          ServerError.of(
+            `A Part Request was kept and could not be read back: ${partRequestId}`,
+          ),
       ),
     );
   }
@@ -254,7 +257,7 @@ export class DatabasePartRequestStore implements PartRequestStore {
 
   async readById(
     partRequestId: string,
-  ): Promise<Either.Either<Option.Option<PartRequest>, StructuredError>> {
+  ): Promise<Either.Either<Option.Option<PartRequestAndOffer>, StructuredError>> {
     if (!couldBeIdentifier(partRequestId)) return Either.right(Option.none());
 
     try {
@@ -263,7 +266,7 @@ export class DatabasePartRequestStore implements PartRequestStore {
       );
 
       if (row === undefined) return Either.right(Option.none());
-      return Either.map(toDomain(row), Option.some);
+      return Either.map(toDomainWithOffer(row), Option.some);
     } catch (error) {
       this.logger.error(error, 'A Part Request could not be read');
       return Either.left(databaseErrorOf(error, 'A Part Request could not be read'));
