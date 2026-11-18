@@ -247,7 +247,7 @@ function MatchPart({
   const [open, setOpen] = useState(false);
   const backToTheQueue = useBackToTheQueue(partRequest);
   const fulfil = useFulfil(partRequest, (fulfilled, matched) =>
-    backToTheQueue(fulfilled.offer, matched.name),
+    backToTheQueue({ outcome: fulfilled.offer, partName: matched.name }),
   );
   const foreseen = useWhatFulfillingWouldDo(partRequest.id, part.id, open);
 

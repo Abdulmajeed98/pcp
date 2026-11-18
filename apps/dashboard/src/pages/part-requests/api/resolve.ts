@@ -6,10 +6,11 @@ import { type QueryClient, useMutation, useQueryClient } from '@tanstack/react-q
 import { useNavigate } from 'react-router';
 
 import { askAgainAfterAChangeToTheOffers } from '@/entities/offer';
+import type { Resolution } from '@/entities/part-request';
 import { apiClient, dataOf, partRequestsKey, partsKey, Refusal } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
 
-import type { Outcome, Resolved } from '../model/resolution';
+import type { Resolved } from '../model/resolution';
 
 type Request = PartRequestWithVendorResponse;
 
@@ -88,27 +89,32 @@ export function useReject(partRequest: Request) {
         }),
       ),
     onSuccess: async () => {
-      await backToTheQueue('rejected');
+      await backToTheQueue({ outcome: 'rejected' });
       await askAgainAboutThePartRequests(queryClient);
     },
   });
 }
 
+// What became of the request, as far as the Admin's own action says it:
+// rejected, or fulfilled with a Part, with what that did to the Vendor's
+// Offer.
+type HowItWasResolved = DistributiveOmit<Resolution, 'requestName' | 'vendorName'>;
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+
 // Returns to the queue, on the page it was on, with the note that names the
 // request and says what became of it.
 export function useBackToTheQueue(
   partRequest: Request,
-): (outcome: Outcome, partName?: string) => Promise<void> {
+): (how: HowItWasResolved) => Promise<void> {
   const navigate = useNavigate();
   const keepingTheQuery = useAddressKeepingTheQuery();
-  return async (outcome, partName) => {
+  return async (how) => {
     const state: Resolved = {
       resolved: {
+        ...how,
         requestId: partRequest.id,
         requestName: partRequest.name,
         vendorName: partRequest.vendor.name,
-        partName,
-        outcome,
       },
     };
     await navigate(keepingTheQuery('/part-requests'), { state });

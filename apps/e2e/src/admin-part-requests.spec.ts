@@ -658,7 +658,7 @@ test.describe('creating', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: partRequest.name }),
     ).toBeVisible();
-    const note = page.getByTestId('created-from-a-request');
+    const note = page.getByTestId('resolution-note');
     await expect(note).toContainText('Part created and request fulfilled');
     await expect(note).toContainText(
       `${vendor.name}’s Offer for it was made with the request’s details.`,
@@ -709,7 +709,7 @@ test.describe('creating', () => {
 
     await fulfil.click();
     await expect(page).toHaveURL(aPartsPage);
-    await expect(page.getByTestId('created-from-a-request')).toContainText(
+    await expect(page.getByTestId('resolution-note')).toContainText(
       'Part created and request fulfilled',
     );
     expect(await partsFound(request, partRequest.word)).toBe(1);

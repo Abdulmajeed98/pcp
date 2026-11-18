@@ -1,22 +1,11 @@
-import type { FulfilledPartRequestResponse } from '@pcp/api-client';
-
-// What became of a Part Request the Admin resolved: fulfilled, with what the
-// fulfilment did to the Vendor's Offer for the Part, as the API answers it,
-// or rejected.
-export type Outcome = FulfilledPartRequestResponse['offer'] | 'rejected';
+import type { Resolution } from '@/entities/part-request';
 
 // What a resolution leaves in the address's state for the queue it returns
-// to, whose note names the request and says what became of it: the
-// request's name as the Vendor wrote it, the Vendor's name as it writes it,
-// and, for a fulfilment, the catalog's name of the Part.
+// to, whose note names the request and says what became of it, with the
+// request's identifier, so that a second resolution's note is a note of its
+// own.
 export interface Resolved {
-  resolved: {
-    requestId: string;
-    requestName: string;
-    vendorName: string;
-    partName?: string;
-    outcome: Outcome;
-  };
+  resolved: Resolution & { requestId: string };
 }
 
 // What the address's state holds for the queue, if a resolution left it.

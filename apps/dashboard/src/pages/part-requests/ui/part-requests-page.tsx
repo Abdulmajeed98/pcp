@@ -1,12 +1,12 @@
 import { cn } from 'cn';
 import { useLocation, useOutlet } from 'react-router';
 
+import { ResolutionNote } from '@/entities/part-request';
 import { usePageInTheAddress, useWideScreen } from '@/shared/lib';
 import { Announced, OpenedBesideAList, OpeningSpace } from '@/shared/ui';
 
 import { resolvedIn } from '../model/resolution';
 import { ListedRequests } from './listed-requests';
-import { ResolutionNote } from './resolution-note';
 
 // The Admin console's Part Requests, its seventh section: the queue of open
 // Part Requests of every Vendor, the oldest first, a page at a time, so that
@@ -71,7 +71,7 @@ function TheQueue({ asATable }: { asATable: boolean }) {
           {resolved !== null && (
             <div className="pt-4">
               <Announced key={resolved.requestId}>
-                <ResolutionNote resolved={resolved} />
+                <ResolutionNote resolution={resolved} />
               </Announced>
             </div>
           )}

@@ -13,7 +13,8 @@ import { Link, Navigate, type To, useNavigate, useParams } from 'react-router';
 
 import { categoryName, useCategories } from '@/entities/category';
 import { OfferPlate } from '@/entities/offer';
-import { type PartCreatedFromARequest, partsKey } from '@/entities/part';
+import { partsKey } from '@/entities/part';
+import type { PartCreatedFromARequest } from '@/entities/part-request';
 import { type PartFields, PartForm } from '@/features/part-form';
 import { apiClient, dataOf, WhyNotAnswered } from '@/shared/api';
 import { aScroll, useAddressKeepingTheQuery } from '@/shared/lib';
@@ -139,7 +140,7 @@ function NewPart({
         requestName: partRequest.name,
         vendorName: partRequest.vendor.name,
         partName: part.name,
-        offer: fulfilled.offer,
+        outcome: fulfilled.offer,
       },
     };
     await navigate(`/catalog/parts/${part.id}`, { state });
