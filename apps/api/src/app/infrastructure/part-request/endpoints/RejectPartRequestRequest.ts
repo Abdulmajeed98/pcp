@@ -3,9 +3,7 @@ import { IsString, ValidateIf } from 'class-validator';
 
 import { RejectPartRequestCommandInput } from '~/domain/part-request/RejectPartRequestCommand';
 import { longestRejectionReason } from '~/domain/part-request/rejection-reason';
-
-// Whether a detail was given at all. Null is taken as not given.
-const given = (_request: object, value: unknown) => value != null;
+import { given } from '~/infrastructure/vendor/endpoints/ContactDetailsRequest';
 
 // The Admin's reason for rejecting a Part Request. It is checked here only
 // for its kind of JSON value; the use case refuses one that is missing or

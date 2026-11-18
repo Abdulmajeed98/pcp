@@ -77,12 +77,19 @@ function ThePart({ partRequest }: { partRequest: Request }) {
 }
 
 // The line that ends the row of a request whose Offer would be listed as
-// expired once it is fulfilled.
+// expired once it is fulfilled, the row's version of the request's
+// `WouldBeExpiredWarning`.
 // On the row of the request open beside the queue, Active Stone's ground
 // leaves Action Red's words at 4.2:1 in the dark scheme, under the 4.5:1
 // every text needs, so there they are in Ink, after the mark in Action Red
 // (the inspector, part-requests ticket 04).
-function WillBeExpired({ opened, className }: { opened: boolean; className?: string }) {
+function WouldBeExpiredLine({
+  opened,
+  className,
+}: {
+  opened: boolean;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
@@ -126,7 +133,7 @@ export function RequestRow({ partRequest }: { partRequest: Request }) {
             : `Waiting ${days(partRequest.daysSinceSent)}`}
         </span>
       </p>
-      {partRequest.offerWouldBeExpired && <WillBeExpired opened={opened} />}
+      {partRequest.offerWouldBeExpired && <WouldBeExpiredLine opened={opened} />}
     </div>
   );
 }
@@ -180,7 +187,7 @@ function RequestTableRow({ row }: { row: ShownRow<Request> }) {
               : days(partRequest.daysSinceSent)}
           </span>
           {partRequest.offerWouldBeExpired && (
-            <WillBeExpired opened={opened} className="text-end" />
+            <WouldBeExpiredLine opened={opened} className="text-end" />
           )}
         </span>
       </RowCell>

@@ -5,16 +5,18 @@ import {
   type ReactNode,
   type RefObject,
   type TransitionEvent,
+  useEffect,
   useRef,
   useState,
 } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, type To, useNavigate, useParams } from 'react-router';
 
 import { categoryName, useCategories } from '@/entities/category';
 import { OfferPlate } from '@/entities/offer';
-import { type PartCreatedFromARequest, partsKey } from '@/entities/part';
+import { partsKey } from '@/entities/part';
+import type { PartCreatedFromARequest } from '@/entities/part-request';
 import { type PartFields, PartForm } from '@/features/part-form';
-import { apiClient, dataOf, Refusal, WhyNotAnswered } from '@/shared/api';
+import { apiClient, dataOf, WhyNotAnswered } from '@/shared/api';
 import { aScroll, useAddressKeepingTheQuery } from '@/shared/lib';
 import {
   Alert,
@@ -22,6 +24,7 @@ import {
   BackLink,
   BusyLabel,
   Button,
+  buttonVariants,
   OpeningSpace,
   ScreenTitle,
   SectionTitle,
@@ -44,13 +47,20 @@ type Request = PartRequestWithVendorResponse;
 // If the fulfilment is refused or not answered, the Part is in the catalog
 // and the request still open: the screen says so above the form, which is
 // dimmed and loses its button, and offers to fulfil the request with that
-// Part, so that the Part is never created twice. A request already resolved
-// is shown on its own screen instead, which says how.
+// Part, so that the Part is never created twice. If it is refused because
+// the request was resolved meanwhile, as from another tab, the screen says
+// that the Part was created all the same, and offers it and how the request
+// was resolved (the code review's Spec finding 4). A request already
+// resolved when the form opens is shown on its own screen instead, which
+// says how.
 export function NewPartFromARequestPage() {
   const keepingTheQuery = useAddressKeepingTheQuery();
   const { partRequestId = '' } = useParams();
   const read = usePartRequest(partRequestId);
   const categories = useCategories();
+  // The Part created from the request, once it is. From then on the form
+  // stays, whatever becomes of the request, so that it can say so.
+  const [created, setCreated] = useState<Created | null>(null);
   const requestsAddress = keepingTheQuery(`/part-requests/${partRequestId}`);
   const back = <BackLink to={requestsAddress}>The request</BackLink>;
 
@@ -80,9 +90,20 @@ export function NewPartFromARequestPage() {
       </div>
     );
   }
-  if (read.data.state !== 'open') return <Navigate to={requestsAddress} replace />;
+  if (read.data.state !== 'open' && created === null) {
+    return <Navigate to={requestsAddress} replace />;
+  }
 
-  return <NewPart partRequest={read.data} categories={categories.data} back={back} />;
+  return (
+    <NewPart
+      partRequest={read.data}
+      categories={categories.data}
+      back={back}
+      requestsAddress={requestsAddress}
+      created={created}
+      onCreated={setCreated}
+    />
+  );
 }
 
 // The Part created, while the request is still open.
@@ -95,43 +116,45 @@ function NewPart({
   partRequest,
   categories,
   back,
+  requestsAddress,
+  created,
+  onCreated,
 }: {
   partRequest: Request;
   categories: readonly CategoryResponse[];
   back: ReactNode;
+  requestsAddress: To;
+  created: Created | null;
+  onCreated: (part: Created) => void;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [category, setCategory] = useState(
     () => categories.find(({ key }) => key === partRequest.category) ?? categories[0],
   );
-  const [created, setCreated] = useState<Created | null>(null);
   const [notFulfilled, setNotFulfilled] = useState<Error | null>(null);
   const halfway = useRef<HTMLDivElement>(null);
-  const fulfilAgain = useRef<HTMLButtonElement>(null);
   const fulfil = useFulfil(partRequest, async (fulfilled, part) => {
     const state: PartCreatedFromARequest = {
       createdFrom: {
         requestName: partRequest.name,
         vendorName: partRequest.vendor.name,
         partName: part.name,
-        offer: fulfilled.offer,
+        outcome: fulfilled.offer,
       },
     };
     await navigate(`/catalog/parts/${part.id}`, { state });
   });
 
-  // Fulfils the request with the Part created. A refusal that says it was
-  // resolved meanwhile shows the request's own screen, which says how;
-  // anything else keeps the halfway case on the screen, with why.
+  // Fulfils the request with the Part created. If it is not done, the
+  // halfway case is on the screen, with why; a refusal that says the
+  // request was resolved meanwhile also asks every query about Part
+  // Requests again, so that the queue and the request's screen show how.
   async function fulfilWith(part: Created): Promise<void> {
     try {
       await fulfil.mutateAsync(part);
     } catch (error) {
-      if (isResolvedAlready(error)) {
-        await askAgainAboutThePartRequests(queryClient);
-        return;
-      }
+      if (isResolvedAlready(error)) void askAgainAboutThePartRequests(queryClient);
       setNotFulfilled(error instanceof Error ? error : new Error(String(error)));
     }
   }
@@ -144,19 +167,20 @@ function NewPart({
       apiClient.createPart({ body: { ...fields, category: category.key } }),
     );
     const made = { id: part.id, name: part.name };
-    setCreated(made);
+    onCreated(made);
     void queryClient.invalidateQueries({ queryKey: partsKey });
     await fulfilWith(made);
   }
 
   // Once the halfway case's space has opened, it is scrolled into sight, and
-  // its action takes the focus, since the form's button that had it is gone.
+  // its first action takes the focus, since the form's button that had it
+  // is gone.
   function keepTheHalfwayInSight(event: TransitionEvent<HTMLDivElement>): void {
     const panel = halfway.current;
     if (event.propertyName !== 'grid-template-rows' || panel === null) return;
     if (!(event.target instanceof Node) || !event.target.contains(panel)) return;
     panel.scrollIntoView({ block: 'nearest', behavior: aScroll() });
-    fulfilAgain.current?.focus({ preventScroll: true });
+    firstActionOf(panel)?.focus({ preventScroll: true });
   }
 
   return (
@@ -177,9 +201,9 @@ function NewPart({
         {created !== null && notFulfilled !== null && (
           <Halfway
             ref={halfway}
-            actionRef={fulfilAgain}
             created={created}
             why={notFulfilled}
+            requestsAddress={requestsAddress}
             busy={fulfil.isPending}
             onFulfil={() => void fulfilWith(created)}
           />
@@ -238,31 +262,50 @@ function FromTheRequest({ partRequest }: { partRequest: Request }) {
   );
 }
 
-// Why a fulfilment was not answered, as the end of a sentence.
-function whyNot(error: Error): string {
-  return error instanceof Refusal
-    ? `the API refused, with ${error.status}, ${error.code}`
-    : 'the API could not be reached';
+// The first link or button of the halfway case, which takes the focus.
+function firstActionOf(panel: HTMLElement | null): HTMLElement | null {
+  return panel?.querySelector<HTMLElement>('a[href], button') ?? null;
 }
 
 // The halfway case: the refusal panel, its title saying what was done and
 // what was not, its sentence why, then the one action that finishes the
-// work, never a second create, and the way to the Part.
+// work, never a second create, and the way to the Part. When the request
+// was resolved meanwhile nothing can finish it: the panel says so, warns
+// that the Part may now be a second one, and leads to how the request was
+// resolved and to the Part.
 function Halfway({
   ref,
-  actionRef,
   created,
   why,
+  requestsAddress,
   busy,
   onFulfil,
 }: {
   ref: RefObject<HTMLDivElement | null>;
-  actionRef: RefObject<HTMLButtonElement | null>;
   created: Created;
   why: Error;
+  requestsAddress: To;
   busy: boolean;
   onFulfil: () => void;
 }) {
+  const resolved = isResolvedAlready(why);
+  // A second try that finds the request resolved takes away the button
+  // that had the focus, so the focus goes to the panel's first action.
+  const wasResolved = useRef(resolved);
+  useEffect(() => {
+    if (resolved && !wasResolved.current) firstActionOf(ref.current)?.focus();
+    wasResolved.current = resolved;
+  }, [ref, resolved]);
+  const part = <AlwaysEnglish>{created.name}</AlwaysEnglish>;
+  const toThePart = (
+    <Link
+      to={`/catalog/parts/${created.id}`}
+      className="hover-colour flex min-h-control items-center underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+    >
+      Open the Part
+    </Link>
+  );
+
   return (
     <div
       ref={ref}
@@ -271,23 +314,38 @@ function Halfway({
       className="flex scroll-my-4 flex-col gap-2 rounded-card border border-destructive bg-card p-4 text-sm"
     >
       <SectionTitle className="text-base font-semibold text-destructive">
-        The Part was created, but the request is still open
+        {resolved
+          ? 'The Part was created, but the request was already resolved'
+          : 'The Part was created, but the request is still open'}
       </SectionTitle>
-      <p>
-        <AlwaysEnglish>{created.name}</AlwaysEnglish> is in the catalog now. Fulfilling the
-        request with it was not answered: {whyNot(why)}. Fulfil it with this Part, rather
-        than creating the Part again.
-      </p>
+      {resolved ? (
+        <p>
+          {part} is in the catalog now. The request was resolved elsewhere before it could
+          be fulfilled with it. See how: if it was fulfilled with another Part, this one may
+          be a second copy of it.
+        </p>
+      ) : (
+        <p>
+          {part} is in the catalog now. The request was not fulfilled with it.{' '}
+          <WhyNotAnswered error={why} /> Fulfil it with this Part, rather than creating the
+          Part again.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Button ref={actionRef} disabled={busy} onClick={onFulfil}>
-          <BusyLabel busy={busy} label="Fulfil it with this Part" busyLabel="Fulfilling…" />
-        </Button>
-        <Link
-          to={`/catalog/parts/${created.id}`}
-          className="hover-colour flex min-h-control items-center underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          Open the Part
-        </Link>
+        {resolved ? (
+          <Link to={requestsAddress} className={buttonVariants()}>
+            See how it was resolved
+          </Link>
+        ) : (
+          <Button disabled={busy} onClick={onFulfil}>
+            <BusyLabel
+              busy={busy}
+              label="Fulfil it with this Part"
+              busyLabel="Fulfilling…"
+            />
+          </Button>
+        )}
+        {toThePart}
       </div>
     </div>
   );

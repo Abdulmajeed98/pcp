@@ -15,13 +15,17 @@ import {
   partRequestUrl,
   queuedRequests,
   sendAMadeUpPartRequest,
-  thePartRequestsSection,
+  theConsolesPartRequestsSection,
 } from './admin-part-requests';
 import { vendorPageUrl } from './admin-vendors';
 import { catalogHeading, createAMadeUpPart } from './catalog';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { addressIn, expectNoSidewaysScroll, languages, narrowWindow } from './languages';
 import { type DrawnFrame, filmTheList, jumpsIn } from './leaving-rows';
+import {
+  recordTheLiveRegionsAsTheyArrive,
+  wordsTheRegionArrivedWith,
+} from './live-regions';
 import { theMenuSheet } from './menu-sheet';
 import { snapsOf } from './motion-film';
 import { addAnOffer } from './offers';
@@ -33,6 +37,7 @@ import {
   vendorsPartRequests,
 } from './part-requests';
 import { apiUrl } from './platform';
+import { rowOfPartRequest, stateOf } from './vendor-part-requests';
 import { createAMadeUpVendor, type MadeUpVendor } from './vendors';
 
 // The Admin works the queue of open Part Requests from a phone, in a
@@ -102,11 +107,11 @@ test.describe('the section', () => {
     ]);
     // The count is the queue's, in Note Grey and never on a plate, at least
     // the request this test sent.
-    const count = thePartRequestsSection(page).getByTestId('open-count');
+    const count = theConsolesPartRequestsSection(page).getByTestId('open-count');
     await expect(count).toHaveText(/^ ?[\d,]+ open$/);
     expect(Number((await count.innerText()).replace(/\D/g, ''))).toBeGreaterThanOrEqual(1);
 
-    await thePartRequestsSection(page).click();
+    await theConsolesPartRequestsSection(page).click();
     await expect(partRequestsHeading(page)).toBeVisible();
     await expect(page).toHaveURL(partRequestsUrl);
   });
@@ -129,11 +134,14 @@ test.describe('the section', () => {
         /^Part Requests [\d,]+ open$/,
       ]);
       await expect(
-        thePartRequestsSection(page).locator('svg.lucide-package-plus'),
+        theConsolesPartRequestsSection(page).locator('svg.lucide-package-plus'),
       ).toHaveCount(1);
-      await thePartRequestsSection(page).click();
+      await theConsolesPartRequestsSection(page).click();
       await expect(partRequestsHeading(page)).toBeVisible();
-      await expect(thePartRequestsSection(page)).toHaveAttribute('aria-current', 'page');
+      await expect(theConsolesPartRequestsSection(page)).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
     });
   });
 });
@@ -341,10 +349,11 @@ test.describe('one request', () => {
 });
 
 test.describe('rejecting', () => {
-  test('a reason is asked for in the dialog, which says a missing one beside its field; given, the request leaves the queue, and the Vendor’s list holds the reason as written', async ({
+  test('a reason is asked for in the dialog, which says a missing one beside its field; given, the request leaves the queue, and the Vendor’s list in its portal shows the reason as written', async ({
     page,
     request,
   }) => {
+    await recordTheLiveRegionsAsTheyArrive(page);
     const row = await findOnTheQueue(page, request, authorization, partRequest);
     await row.getByRole('link', { name: partRequest.name }).click();
     await expect(theRequestsTitle(page, partRequest.name)).toBeVisible();
@@ -375,6 +384,10 @@ test.describe('rejecting', () => {
     await expect(note).toContainText('Request rejected');
     await expect(note).toContainText(partRequest.name);
     await expect(note).toContainText(`${vendor.name} reads your reason in its portal.`);
+    expect(
+      await wordsTheRegionArrivedWith(note),
+      'the note arrived in a live region that was in the page before it',
+    ).toBe('');
     await expect(queuedRequests(page).filter({ hasText: partRequest.name })).toHaveCount(0);
     expect(await placeOnTheQueue(request, authorization, partRequest.id)).toBeUndefined();
 
@@ -382,6 +395,16 @@ test.describe('rejecting', () => {
     expect(listed.id).toBe(partRequest.id);
     expect(listed.state).toBe('rejected');
     expect(listed.reason).toBe(written);
+
+    // The Vendor's own list, in its portal, as the Admin acting as the Vendor
+    // reads it under the band: the request not added, with the reason as
+    // the Admin wrote it, its line break kept.
+    await page.goto(`${vendorPageUrl(vendor.id)}/portal/part-requests`);
+    const listedRow = rowOfPartRequest(page, partRequest.partNumber);
+    await expect(stateOf(listedRow)).toHaveAttribute('data-state', 'rejected');
+    const reasonShown = listedRow.getByTestId('reason');
+    await expect(reasonShown).toBeVisible();
+    expect(await reasonShown.textContent()).toBe(written);
   });
 
   test('a request resolved meanwhile, as from another tab, is shown as resolved once the rejection is refused', async ({
@@ -492,9 +515,7 @@ test.describe('matching', () => {
     });
     await expect(dialog).toContainText(other.name);
     await expect(dialog).toContainText(`${vendor.name} has no Offer for this Part.`);
-    await expect(dialog).toContainText(
-      'The request is fulfilled either way, and leaves the queue.',
-    );
+    await expect(dialog).toContainText('The request is fulfilled, and leaves the queue.');
     await dialog.getByRole('button', { name: 'Match', exact: true }).click();
 
     await expect(dialog).toHaveCount(0);
@@ -518,7 +539,7 @@ test.describe('matching', () => {
     });
   });
 
-  test('a Part the Vendor already offers is matched after a question that says the newer statement wins, and its Offer, confirmed after the request was sent, is kept', async ({
+  test('a Part the Vendor already offers, confirmed after the request was sent, is matched after a question that says its Offer is kept, and it is', async ({
     page,
     request,
   }) => {
@@ -538,7 +559,13 @@ test.describe('matching', () => {
     const dialog = page.getByRole('alertdialog', {
       name: 'Match this request to the Part?',
     });
-    await expect(dialog).toContainText(`${vendor.name} already offers this Part.`);
+    await expect(dialog).toContainText(
+      `${vendor.name} already offers this Part, and confirmed it after this request was sent, so its Offer is kept as it is.`,
+    );
+    await expect(dialog).toContainText(
+      'The request is still fulfilled, and leaves the queue.',
+    );
+    await expect(dialog).not.toContainText('listed as expired');
     await dialog.getByRole('button', { name: 'Match', exact: true }).click();
 
     await expect(page.getByTestId('resolution-note')).toContainText(
@@ -547,6 +574,49 @@ test.describe('matching', () => {
     const [kept] = await theVendorsOffersFor(request, vendor.id, offered.word);
     expect(kept.usdPrice).toBe('99.00');
   });
+
+  test('a Part the Vendor already offers, confirmed before the request was sent, is matched after a question that says the request’s details replace its Offer’s, and they do', async ({
+    page,
+    request,
+  }) => {
+    const offered = await createAMadeUpPart(request, authorization, {}, 'psu');
+    // Confirmed before the request below was sent, so the request is the
+    // Vendor's newer statement, and replaces the Offer's details.
+    await addAnOffer(request, authorization, vendor.id, offered.id, { usdPrice: '99.00' });
+    const later = await sendAMadeUpPartRequest(request, authorization, vendor.id);
+    await page.goto(partRequestUrl(later.id));
+
+    // Its part number finds nothing, so the Admin searches by the Part's name.
+    const search = page.getByRole('searchbox', { name: 'Search the catalog' });
+    await search.fill(offered.word);
+    await search.press('Enter');
+    const row = page
+      .getByRole('list', { name: 'Parts to match' })
+      .getByRole('listitem')
+      .filter({ hasText: offered.name });
+    await expect(row.getByTestId('offered')).toHaveText(`${vendor.name} offers this Part`);
+    await row.getByRole('button', { name: /^Match/ }).click();
+    const dialog = page.getByRole('alertdialog', {
+      name: 'Match this request to the Part?',
+    });
+    await expect(dialog).toContainText(
+      `${vendor.name} already offers this Part, last confirmed before this request was sent, so the request’s price, stock and warranty replace its Offer’s.`,
+    );
+    await expect(dialog).toContainText('The request is fulfilled, and leaves the queue.');
+    await expect(dialog).not.toContainText('listed as expired');
+    await dialog.getByRole('button', { name: 'Match', exact: true }).click();
+
+    await expect(page.getByTestId('resolution-note')).toContainText(
+      `${vendor.name}’s Offer for it now has the request’s details, confirmed when the request was sent.`,
+    );
+    const [replaced] = await theVendorsOffersFor(request, vendor.id, offered.word);
+    expect(replaced).toMatchObject({
+      usdPrice: '79.00',
+      iqdPrice: 125_000,
+      inStock: true,
+      warrantyMonths: 36,
+    });
+  });
 });
 
 test.describe('creating', () => {
@@ -554,6 +624,7 @@ test.describe('creating', () => {
     page,
     request,
   }) => {
+    await recordTheLiveRegionsAsTheyArrive(page);
     await openFromTheQueue(page, request, partRequest);
     await page.getByRole('link', { name: 'Create the Part' }).click();
 
@@ -590,11 +661,15 @@ test.describe('creating', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: partRequest.name }),
     ).toBeVisible();
-    const note = page.getByTestId('created-from-a-request');
+    const note = page.getByTestId('resolution-note');
     await expect(note).toContainText('Part created and request fulfilled');
     await expect(note).toContainText(
       `${vendor.name}’s Offer for it was made with the request’s details.`,
     );
+    expect(
+      await wordsTheRegionArrivedWith(note),
+      'the note arrived in a live region that was in the page before it',
+    ).toBe('');
     await expect(page.getByText('Add a photo', { exact: true })).toBeVisible();
     expect(await placeOnTheQueue(request, authorization, partRequest.id)).toBeUndefined();
 
@@ -626,7 +701,7 @@ test.describe('creating', () => {
       'The Part was created, but the request is still open',
     );
     await expect(halfway).toContainText(
-      'Fulfilling the request with it was not answered: the API could not be reached.',
+      'The request was not fulfilled with it. The API cannot be reached.',
     );
     // The form takes no more input, and has no button: the Part is never
     // created twice.
@@ -637,11 +712,62 @@ test.describe('creating', () => {
 
     await fulfil.click();
     await expect(page).toHaveURL(aPartsPage);
-    await expect(page.getByTestId('created-from-a-request')).toContainText(
+    await expect(page.getByTestId('resolution-note')).toContainText(
       'Part created and request fulfilled',
     );
     expect(await partsFound(request, partRequest.word)).toBe(1);
     expect(await placeOnTheQueue(request, authorization, partRequest.id)).toBeUndefined();
+  });
+
+  test('the Part created after the request was resolved meanwhile, as from another tab: the screen says the Part was created and the request was already resolved, and offers the Part and how the request was resolved', async ({
+    page,
+    request,
+  }) => {
+    // The request is rejected, as from another tab, between the Part's
+    // create and its fulfilment.
+    let rejectedMeanwhile = false;
+    await page.route(`${apiUrl}/v1/parts`, async (route) => {
+      if (route.request().method() !== 'POST' || rejectedMeanwhile) {
+        await route.fallback();
+        return;
+      }
+      const created = await route.fetch();
+      await rejectAPartRequest(
+        request,
+        authorization,
+        partRequest.id,
+        'Rejected from another tab.',
+      );
+      rejectedMeanwhile = true;
+      await route.fulfill({ response: created });
+    });
+    const formUrl = `${partRequestUrl(partRequest.id)}/new-part`;
+    await page.goto(formUrl);
+    await page
+      .getByRole('textbox', { name: 'Manufacturer', exact: true })
+      .fill('Made-up Test Parts');
+    await page.getByRole('button', { name: 'Create the Part' }).click();
+
+    const halfway = page.getByTestId('halfway');
+    await expect(halfway).toContainText(
+      'The Part was created, but the request was already resolved',
+    );
+    await expect(halfway).toContainText(`${partRequest.name} is in the catalog now.`);
+    await expect(page).toHaveURL(formUrl);
+    // Nothing on the screen creates the Part again or fulfils the request.
+    await expect(page.getByRole('button', { name: 'Create the Part' })).toHaveCount(0);
+    await expect(halfway.getByRole('button')).toHaveCount(0);
+    const howItWasResolved = halfway.getByRole('link', { name: 'See how it was resolved' });
+    await expect(howItWasResolved).toBeFocused();
+    await expect(halfway.getByRole('link', { name: 'Open the Part' })).toBeVisible();
+    await expectNoSidewaysScroll(page);
+    expect(await partsFound(request, partRequest.word)).toBe(1);
+
+    await howItWasResolved.click();
+    await expect(page).toHaveURL(partRequestUrl(partRequest.id));
+    await expect(page.getByTestId('how-it-was-resolved').getByTestId('reason')).toHaveText(
+      'Rejected from another tab.',
+    );
   });
 });
 

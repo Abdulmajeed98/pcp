@@ -4,6 +4,7 @@ import { FulfilPartRequestCommand } from '~/domain/part-request/FulfilPartReques
 import { ListOpenPartRequestsQuery } from '~/domain/part-request/ListOpenPartRequestsQuery';
 import { ListVendorsPartRequestsQuery } from '~/domain/part-request/ListVendorsPartRequestsQuery';
 import { PartRequestStore } from '~/domain/part-request/PartRequestStore';
+import { ReadPartRequestFulfilmentQuery } from '~/domain/part-request/ReadPartRequestFulfilmentQuery';
 import { ReadPartRequestQuery } from '~/domain/part-request/ReadPartRequestQuery';
 import { RejectPartRequestCommand } from '~/domain/part-request/RejectPartRequestCommand';
 import { SendPartRequestCommand } from '~/domain/part-request/SendPartRequestCommand';
@@ -26,6 +27,7 @@ import { DatabasePartRequestStore } from './store/DatabasePartRequestStore';
     ListVendorsPartRequestsQuery,
     ListOpenPartRequestsQuery,
     ReadPartRequestQuery,
+    ReadPartRequestFulfilmentQuery,
     FulfilPartRequestCommand,
     RejectPartRequestCommand,
   ],

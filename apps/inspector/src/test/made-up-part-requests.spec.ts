@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import type {
   OpenPartRequestsPageResponse,
+  PartRequestFulfilmentResponse,
   PartRequestWithVendorResponse,
   VendorsPartRequestsPageResponse,
 } from '@pcp/api-client';
@@ -41,6 +42,15 @@ function oneRequestAt(moment: Date, id: string): PartRequestWithVendorResponse {
   });
   expect(answer?.status).toBe(200);
   return answer?.body as PartRequestWithVendorResponse;
+}
+
+// What fulfilling one request with a Part would do, as the shop answers it
+// at a moment.
+function whatFulfillingWouldDo(id: string, partId: string, moment = now) {
+  return answerFromTheMadeUpShop(shop, moment, {
+    method: 'GET',
+    path: `/v1/part-requests/${id}/fulfilment?partId=${encodeURIComponent(partId)}`,
+  });
 }
 
 // The Admin console's Part Requests screen: the queue of open Part Requests
@@ -169,6 +179,62 @@ describe("the made-up shop's Vendor's Part Requests", () => {
     expect(
       answerTo('GET', `/v1/vendors/${madeUpIdentifier(2)}/part-requests?page=0&size=20`),
     ).toBeUndefined();
+  });
+});
+
+// The match question, which asks what fulfilling a request with a Part
+// would do before it is done (the code review's Spec finding 1): the shop
+// answers it as the API judges it, by when its Vendor last confirmed its
+// Offer for the Part.
+describe('what fulfilling one of the made-up shop’s Part Requests would do', () => {
+  function offerFor(name: string) {
+    const offer = shop.offers.find((each) => each.part.name === name);
+    if (offer === undefined) throw new Error(`The shop offers no ${name}`);
+    return offer;
+  }
+
+  it('answers `replaced` for a Part the shop offers, confirmed before the request was sent, `kept` for one confirmed at or after it, and `created` for one it does not offer', () => {
+    // The Samsung 990 PRO request, sent two hours before now.
+    const sentToday = madeUpIdentifier(600001);
+    const confirmedBefore = offerFor('Samsung 990 Pro 2TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
+    const confirmedAtTheSending = offerFor('AMD Ryzen 7 7800X3D');
+
+    expect(whatFulfillingWouldDo(sentToday, confirmedBefore.part.id)).toEqual({
+      status: 200,
+      body: { offer: 'replaced', offerWouldBeExpired: false },
+    });
+    expect(whatFulfillingWouldDo(sentToday, confirmedAtTheSending.part.id)).toEqual({
+      status: 200,
+      body: { offer: 'kept', offerWouldBeExpired: false },
+    });
+    expect(whatFulfillingWouldDo(sentToday, 'a-part-the-shop-does-not-offer')).toEqual({
+      status: 200,
+      body: { offer: 'created', offerWouldBeExpired: false },
+    });
+  });
+
+  it('says the Offer would be expired for a request sent 40 days ago, unless it is kept', () => {
+    const sentLongAgo = madeUpIdentifier(600006);
+    const confirmedBefore = offerFor('Samsung 990 Pro 2TB SSD M.2-2280 PCIe 4.0 x4 NVMe');
+    const confirmedAfter = offerFor('AMD Ryzen 7 7800X3D');
+    const answers = [confirmedBefore, confirmedAfter].map(
+      (offer) =>
+        whatFulfillingWouldDo(sentLongAgo, offer.part.id)
+          ?.body as PartRequestFulfilmentResponse,
+    );
+
+    expect(answers).toEqual([
+      { offer: 'replaced', offerWouldBeExpired: true },
+      { offer: 'kept', offerWouldBeExpired: false },
+    ]);
+  });
+
+  it('refuses a request it does not hold, and one already resolved, as the API does', () => {
+    expect(whatFulfillingWouldDo(madeUpIdentifier(699999), 'any')?.status).toBe(404);
+    expect(whatFulfillingWouldDo(madeUpIdentifier(600004), 'any')).toMatchObject({
+      status: 400,
+      body: { errors: [{ code: 'PART_REQUEST_RESOLVED' }] },
+    });
   });
 });
 

@@ -11,6 +11,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  Announced,
   buttonVariants,
   Empty,
   EmptyContent,
@@ -88,13 +89,15 @@ export function VendorsPartRequestsPage() {
           </ScreenAction>
         )}
       </div>
-      {/* The live region is always there, so that the note is announced when
-          it appears in it. */}
+      {/* The live region is always there, and the note arrives in it once
+          it is in the page, so that the note is announced. */}
       <output className="block">
         <Leaving value={sent?.name ?? null}>
           {(name) => (
             <div className={gapAbove}>
-              <SentNote name={name} />
+              <Announced>
+                <SentNote name={name} />
+              </Announced>
             </div>
           )}
         </Leaving>

@@ -4,6 +4,7 @@ import { cn } from 'cn';
 import { Link } from 'react-router';
 
 import { DeactivatedMark } from '@/entities/vendor';
+import { linkAboveRow } from '@/shared/ui';
 
 // The Vendor that sent a Part Request: its name as it writes it, a link of
 // its own to its page under the Vendors, underlined and as high as a
@@ -25,10 +26,7 @@ export function VendorOfTheRequest({
     <span className="inline-flex max-w-full flex-wrap items-center gap-x-2">
       <Link
         to={`/vendors/${vendor.id}`}
-        className={cn(
-          'hover-colour relative z-10 inline-flex min-h-control max-w-full items-center underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2',
-          className,
-        )}
+        className={cn(linkAboveRow, 'max-w-full', className)}
       >
         <AsWritten className="wrap-anywhere">{vendor.name}</AsWritten>
       </Link>

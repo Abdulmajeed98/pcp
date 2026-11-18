@@ -311,6 +311,51 @@ export function sentWhileThePartRequestIsHeld<T>(
   );
 }
 
+// A call sent while the Vendor adds its own Offer for a Part, as a
+// fulfilment and the Vendor's own add can arrive at one moment: the Offer is
+// added in a transaction that stays open while the call is sent, and commits
+// only once the call waits for it. The call has then read the Vendor's
+// Offers before the Offer was there, and meets it only when it writes an
+// Offer for the same Part, which waits for the Vendor's. The Offer and the
+// first row of its history are written as the Vendor's own add writes them:
+// in US dollars alone, confirmed and made at `addedAt`, by the Vendor's
+// Login.
+//
+// It is the seventh named exception that arranges data through the
+// database, after `sentWhileThePartRequestIsHeld`, for the same reason: no
+// endpoint holds its transaction open while another call is sent. It holds
+// the Offer's row through `changeWhileReading`, as those hold a table or a
+// row.
+export function sentWhileTheVendorAddsAnOffer<T>(
+  added: {
+    vendorId: string;
+    partId: string;
+    usdPriceCents: number;
+    inStock: boolean;
+    addedAt: Date;
+    addedBy: string;
+  },
+  send: () => Promise<T>,
+): Promise<T> {
+  const { vendorId, partId, usdPriceCents, inStock, addedAt, addedBy } = added;
+  return changeWhileReading(
+    async (changing) => {
+      await changing.query(
+        `INSERT INTO offer (vendor_id, part_id, usd_price_cents, in_stock, confirmed_at, created_at)
+           VALUES ($1, $2, $3, $4, $5, $5)`,
+        [vendorId, partId, usdPriceCents, inStock, addedAt],
+      );
+      await changing.query(
+        `INSERT INTO offer_history (vendor_id, part_id, usd_price_cents, in_stock, changed_at, change, changed_by)
+           VALUES ($1, $2, $3, $4, $5, 'created', $6)`,
+        [vendorId, partId, usdPriceCents, inStock, addedAt, addedBy],
+      );
+    },
+    async () => {},
+    send,
+  );
+}
+
 // A fault planted in the database for as long as the function runs: a rule
 // that no Vendor meets, checked when a Vendor is stored and not against
 // those stored already, so that creating or editing one is refused.

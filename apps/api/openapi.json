@@ -2412,6 +2412,55 @@
         "tags": ["PartRequest"]
       }
     },
+    "/v1/part-requests/{partRequestId}/fulfilment": {
+      "get": {
+        "operationId": "readPartRequestFulfilment",
+        "parameters": [
+          {
+            "name": "partRequestId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partId",
+            "required": true,
+            "in": "query",
+            "description": "The identifier of the Part the request would be fulfilled with, of any Category.",
+            "schema": {
+              "example": "3b8f0c52-6a1e-4f3d-9c27-5e8a1d4b7f60",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartRequestFulfilmentResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "What fulfilling an open Part Request with a Part would do to the Vendor's Offer for it, and whether that Offer would then be expired, without doing it, for the Admin",
+        "tags": ["PartRequest"]
+      }
+    },
     "/v1/part-requests/{partRequestId}/fulfil": {
       "post": {
         "operationId": "fulfilPartRequest",
@@ -5850,6 +5899,23 @@
           "last",
           "content"
         ]
+      },
+      "PartRequestFulfilmentResponse": {
+        "type": "object",
+        "properties": {
+          "offer": {
+            "type": "string",
+            "description": "What fulfilling the request with the Part would do to the Vendor's Offer for it, by the rule a fulfilment follows: `created` when the Vendor has none; `replaced` when the Vendor's Offer was last confirmed before the request was sent; `kept` when it was confirmed at or after that moment. A fulfilment judges again, and answers what it did.",
+            "enum": ["created", "replaced", "kept"],
+            "example": "replaced"
+          },
+          "offerWouldBeExpired": {
+            "type": "boolean",
+            "description": "Whether the Vendor's Offer would then be an Expired Offer, by the API's clock: an Offer made or replaced is confirmed at the moment the request was sent, so it would be when that was more than 14 days ago. Always false when the Offer is kept, since a kept Offer keeps its own Confirmation.",
+            "example": false
+          }
+        },
+        "required": ["offer", "offerWouldBeExpired"]
       },
       "FulfilPartRequestRequest": {
         "type": "object",

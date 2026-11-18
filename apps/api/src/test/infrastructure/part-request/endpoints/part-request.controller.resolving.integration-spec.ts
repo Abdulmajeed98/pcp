@@ -18,6 +18,7 @@ import {
   emptyTheDatabase,
   offerHistoryRows,
   sentWhileThePartRequestIsHeld,
+  sentWhileTheVendorAddsAnOffer,
 } from '../../../test-utils/database/test-database';
 import {
   emptyTheRealm,
@@ -165,7 +166,7 @@ describe('resolving a Part Request', () => {
 
   // A made-up Vendor the Admin creates, with a Login of its own. It calls
   // Keycloak, so it runs with the clock running.
-  async function aVendor(name = 'Made-up Computer Shop'): Promise<MadeUpVendor> {
+  async function aVendor(name = 'Made-up Computer Corner'): Promise<MadeUpVendor> {
     vendors += 1;
     const response = await fetch(`${testApp.baseUrl}/v1/vendors`, {
       method: 'POST',
@@ -401,7 +402,7 @@ describe('resolving a Part Request', () => {
         });
         expect(answer).toEqual({
           ...partRequest,
-          vendor: { id: vendor.id, name: 'Made-up Computer Shop', active: true },
+          vendor: { id: vendor.id, name: 'Made-up Computer Corner', active: true },
           daysSinceSent: 3,
           state: 'fulfilled',
           part,
@@ -441,7 +442,7 @@ describe('resolving a Part Request', () => {
 
         expect(await theVisibleOffersOf(part.id)).toMatchObject([
           {
-            vendor: { id: vendor.id, name: 'Made-up Computer Shop' },
+            vendor: { id: vendor.id, name: 'Made-up Computer Corner' },
             usdPrice: '649.99',
             confirmedAt: aMovedMoment.toISOString(),
             daysSinceConfirmation: 5,
@@ -594,6 +595,49 @@ describe('resolving a Part Request', () => {
           ]);
         },
       );
+
+      it("keeps the Vendor's own Offer added while the fulfilment writes one, answers `kept`, and still fulfils the request", async () => {
+        const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
+        const addedAt = after(aMovedMoment, anHour);
+        moveTheClockTo(after(aMovedMoment, 2 * anHour));
+        const token = await adminToken();
+
+        const answer = await sentWhileTheVendorAddsAnOffer(
+          {
+            vendorId: vendor.id,
+            partId: part.id,
+            usdPriceCents: 59900,
+            inStock: false,
+            addedAt,
+            addedBy: vendor.loginId,
+          },
+          () => fulfil(partRequest.id, { partId: part.id }, token),
+        );
+
+        expect(answer.status).toBe(200);
+        const offers = await theVendorsOffers(vendor.id);
+        expect(offers).toMatchObject([
+          {
+            part,
+            usdPrice: '599.00',
+            iqdPrice: null,
+            inStock: false,
+            confirmedAt: addedAt.toISOString(),
+          },
+        ]);
+        expect(await answer.json()).toMatchObject({
+          state: 'fulfilled',
+          offer: 'kept',
+          offerId: offers[0].id,
+        });
+        expect(
+          (await offerHistoryRows()).map(({ change, changedBy }) => ({
+            change,
+            changedBy,
+          })),
+        ).toEqual([{ change: 'created', changedBy: vendor.loginId }]);
+        expect(await theQueue()).toEqual([]);
+      });
     });
 
     it("makes a Deactivated Vendor's Offer, which is not visible until the Vendor is reactivated", async () => {
@@ -635,7 +679,7 @@ describe('resolving a Part Request', () => {
     });
 
     it("answers the requesting Vendor's own Offer for the Part, not another Vendor's, and null in its list and on its own once the Vendor removes it, still fulfilled", async () => {
-      const other = await aVendor('Made-up Other Shop');
+      const other = await aVendor('Made-up Computer House');
       const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
       const othersOffer = await anOfferConfirmedAt(other.id, part.id, aMovedMoment);
       const answer = await fulfilled(partRequest.id, part.id);
@@ -758,6 +802,160 @@ describe('resolving a Part Request', () => {
     });
   });
 
+  describe('what fulfilling it with a Part would do, read before it is done', () => {
+    // What fulfilling the request with the Part would do, as a caller reads
+    // it at the time of the clock.
+    async function readTheFulfilment(
+      partRequestId: string,
+      partId: string | null,
+      token: string | null,
+    ): Promise<Response> {
+      const query = partId === null ? '' : `?partId=${encodeURIComponent(partId)}`;
+      return fetch(
+        `${testApp.baseUrl}/v1/part-requests/${partRequestId}/fulfilment${query}`,
+        { headers: token === null ? {} : bearerHeader(token) },
+      );
+    }
+
+    // What the Admin reads of it at the time of the clock.
+    async function whatFulfillingWouldDo(partRequestId: string, partId: string) {
+      const response = await readTheFulfilment(partRequestId, partId, await adminToken());
+      expect(response.status).toBe(200);
+      return (await response.json()) as unknown;
+    }
+
+    it('answers `created` for a Vendor with no Offer for the Part, its Offer expired once the request was sent more than 14 days before, and changes nothing', async () => {
+      const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
+
+      moveTheClockTo(after(aMovedMoment, 14 * aDay));
+      expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+        offer: 'created',
+        offerWouldBeExpired: false,
+      });
+      moveTheClockTo(after(aMovedMoment, 14 * aDay + 1));
+      expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+        offer: 'created',
+        offerWouldBeExpired: true,
+      });
+
+      expect(await theVendorsOffers(vendor.id)).toEqual([]);
+      expect(await theQueue()).toEqual([partRequest.id]);
+      expect(await fulfilled(partRequest.id, part.id)).toMatchObject({ offer: 'created' });
+    });
+
+    it('answers `replaced` for an Offer confirmed strictly before the request was sent, expired as a made one is, and changes nothing', async () => {
+      const vendor = await aVendor();
+      const part = await aPart();
+      await anOfferConfirmedAt(vendor.id, part.id, after(aMovedMoment, -1));
+      moveTheClockTo(aMovedMoment);
+      const partRequest = await aPartRequest(vendor.id);
+      const before = await theVendorsOffers(vendor.id);
+
+      moveTheClockTo(after(aMovedMoment, 14 * aDay));
+      expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+        offer: 'replaced',
+        offerWouldBeExpired: false,
+      });
+      moveTheClockTo(after(aMovedMoment, 14 * aDay + 1));
+      expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+        offer: 'replaced',
+        offerWouldBeExpired: true,
+      });
+
+      // What the Vendor stated of its Offer, which only a change would move.
+      const stated = ({
+        id,
+        usdPrice,
+        iqdPrice,
+        inStock,
+        warrantyMonths,
+        confirmedAt,
+      }: ListedOfferBody) => ({
+        id,
+        usdPrice,
+        iqdPrice,
+        inStock,
+        warrantyMonths,
+        confirmedAt,
+      });
+      expect((await theVendorsOffers(vendor.id)).map(stated)).toEqual(before.map(stated));
+      expect(await fulfilled(partRequest.id, part.id)).toMatchObject({ offer: 'replaced' });
+    });
+
+    it.each([
+      ['at the very moment', 0],
+      ['an hour after', anHour],
+    ])(
+      'answers `kept` for an Offer confirmed %s the request was sent, never expired by the fulfilment, even past 14 days',
+      async (_when, later) => {
+        const vendor = await aVendor();
+        const part = await aPart();
+        moveTheClockTo(aMovedMoment);
+        const partRequest = await aPartRequest(vendor.id);
+        await anOfferConfirmedAt(vendor.id, part.id, after(aMovedMoment, later));
+
+        moveTheClockTo(after(aMovedMoment, 20 * aDay));
+        expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+          offer: 'kept',
+          offerWouldBeExpired: false,
+        });
+
+        expect(await fulfilled(partRequest.id, part.id)).toMatchObject({ offer: 'kept' });
+      },
+    );
+
+    it('refuses as fulfilling refuses, in its order: an unknown request, or a text that is not one, 404 with PART_REQUEST_NOT_FOUND; a resolved one 400 with PART_REQUEST_RESOLVED; an unknown Part, or a text that is not one, 404 with PART_NOT_FOUND', async () => {
+      const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
+      const toReject = await aPartRequest(vendor.id, { name: 'Made-up Rejected' });
+      await rejected(toReject.id, 'Made-up reason');
+      const token = await adminToken();
+
+      for (const id of [randomUUID(), 'not-a-part-request']) {
+        for (const partId of [part.id, randomUUID()]) {
+          await expectErrorResponse(
+            await readTheFulfilment(id, partId, token),
+            404,
+            partRequestNotFound,
+          );
+        }
+      }
+      for (const partId of [part.id, randomUUID()]) {
+        await expectErrorResponse(
+          await readTheFulfilment(toReject.id, partId, token),
+          400,
+          partRequestResolved,
+        );
+      }
+      for (const partId of [randomUUID(), 'not-a-part']) {
+        await expectErrorResponse(
+          await readTheFulfilment(partRequest.id, partId, token),
+          404,
+          partNotFound,
+        );
+      }
+    });
+
+    it("refuses a read with no Part named, naming `partId`, a Vendor's own Login 403 with ACCESS_DENIED, even for its own request, and no token 401", async () => {
+      const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
+
+      await expectErrorResponse(
+        await readTheFulfilment(partRequest.id, null, await adminToken()),
+        400,
+        [notValid('partId')],
+      );
+      await expectErrorResponse(
+        await readTheFulfilment(partRequest.id, part.id, await tokenOfTheOwnLogin(vendor)),
+        403,
+        accessDenied,
+      );
+      await expectErrorResponse(
+        await readTheFulfilment(partRequest.id, part.id, null),
+        401,
+        unauthorized,
+      );
+    });
+  });
+
   describe('rejecting it', () => {
     it('keeps the reason as written and answers the request rejected, with its Vendor and the moment, which leaves the queue and which the Vendor lists so', async () => {
       const { vendor, partRequest } = await aRequestSentAt(aMovedMoment);
@@ -769,7 +967,7 @@ describe('resolving a Part Request', () => {
 
       expect(answer).toEqual({
         ...partRequest,
-        vendor: { id: vendor.id, name: 'Made-up Computer Shop', active: true },
+        vendor: { id: vendor.id, name: 'Made-up Computer Corner', active: true },
         state: 'rejected',
         reason,
         resolvedAt: now.toISOString(),

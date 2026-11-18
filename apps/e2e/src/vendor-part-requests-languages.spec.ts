@@ -21,6 +21,10 @@ import {
   narrowWindow,
   readInEveryLanguageOfTheVendorPortal,
 } from './languages';
+import {
+  recordTheLiveRegionsAsTheyArrive,
+  wordsTheRegionArrivedWith,
+} from './live-regions';
 import { aWordUniqueToTheRun } from './made-up';
 import { film, snapsOf } from './motion-film';
 import {
@@ -104,6 +108,7 @@ test.describe('a made-up Vendor with no Part Request yet', () => {
     page,
     browser,
   }) => {
+    await recordTheLiveRegionsAsTheyArrive(page);
     await openTheDashboardAs(page, vendor);
     await chooseInThePortal(page, kurdish);
     await goToThePartRequests(page);
@@ -127,6 +132,10 @@ test.describe('a made-up Vendor with no Part Request yet', () => {
 
     await expect(page).toHaveURL(partRequestsUrl);
     await expect(theSentNote(page)).toContainText(name);
+    expect(
+      await wordsTheRegionArrivedWith(theSentNote(page)),
+      'the note arrived in a live region that was in the page before it',
+    ).toBe('');
     const row = listedPartRequests(page).first();
     await expect(row.getByTestId('part-number')).toHaveText(partNumber);
     await expect(row.getByTestId('part-request-name')).toHaveText(name);

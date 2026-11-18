@@ -219,20 +219,23 @@ interface Drawn<Item> {
 // user was on it kept in their places, marked as leaving, until their space
 // has closed, and the rows new to it marked as arriving. Rows leave and
 // arrive only when the same page is answered again; a different page, or
-// the first answer, is drawn as it is, still, as paging is (Motion 9). A
-// leaving row that the next answer holds again is no longer leaving, and
-// comes back from wherever its leaving had reached. Each row takes
-// `movingProps(row)`.
+// the first answer, is drawn as it is, still, as paging is (Motion 9), but
+// for the row `arrivingFirst` names, which arrives with the list's first
+// drawing, as the request a Vendor has just sent does on the list it
+// returns to (Motion 12). A leaving row that the next answer holds again is
+// no longer leaving, and comes back from wherever its leaving had reached.
+// Each row takes `movingProps(row)`.
 export function useLeavingRows<Item>(
   items: readonly Item[],
   keyOf: (item: Item) => string,
   page: number,
+  arrivingFirst?: string,
 ): ShownRow<Item>[] {
   const [drawn, setDrawn] = useState<Drawn<Item>>({
     items,
     page,
     leaving: [],
-    arriving: new Set(),
+    arriving: new Set(arrivingFirst === undefined ? [] : [arrivingFirst]),
   });
 
   if (drawn.items !== items || drawn.page !== page) {

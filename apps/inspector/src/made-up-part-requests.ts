@@ -11,6 +11,7 @@ import {
   referralCountsAtTheirWorst,
 } from './made-up-referral-counts.ts';
 import { madeUpIdentifier, madeUpVendors } from './made-up-vendors.ts';
+import { aDay, isExpiredAt } from './offer-expiry.ts';
 import { calendarDaysBetween, theDayOf } from './the-platforms-day.ts';
 
 // The made-up Part Requests, which the dashboard's Part Request pieces are
@@ -30,12 +31,6 @@ import { calendarDaysBetween, theDayOf } from './the-platforms-day.ts';
 // answers fails the type-check.
 
 const anHour = 60 * 60 * 1000;
-const aDay = 24 * anHour;
-
-// How long an Offer stays current, as the API's expiry rule has it: an
-// Offer a fulfilment makes is confirmed at the moment its request was sent,
-// so it would be an Expired Offer more than 14 days after that moment.
-const daysAnOfferStaysCurrent = 14;
 
 type Category = PartSummaryResponse['category'];
 
@@ -521,6 +516,7 @@ export function asAnsweredAt(
     ...request,
     sentOn: theDayOf(sentAt),
     daysSinceSent: calendarDaysBetween(sentAt, now),
-    offerWouldBeExpired: now.getTime() - sentAt.getTime() > daysAnOfferStaysCurrent * aDay,
+    // Confirmed at the moment the request was sent, by the expiry rule.
+    offerWouldBeExpired: isExpiredAt(sentAt, now),
   };
 }

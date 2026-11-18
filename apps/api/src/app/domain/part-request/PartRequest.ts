@@ -3,6 +3,7 @@ import { OfferDetails } from '../offer/OfferDetails';
 import { Category } from '../part/Category';
 import { Part } from '../part/Part';
 import { calendarDaysBetween, theDayOf } from '../the-platforms-day';
+import type { OfferFulfilment } from './offer-fulfilment';
 
 // Where a Part Request stands: open until the Admin resolves it, fulfilled
 // once the Admin matches it to a Part, or rejected with a reason.
@@ -106,6 +107,15 @@ export class PartRequest {
   // 14 days it would.
   offerWouldBeExpired(now: Date): boolean {
     return this.sentAt.getTime() < expiredIfConfirmedBefore(now).getTime();
+  }
+
+  // Whether the Vendor's Offer would be an Expired Offer at now once a
+  // fulfilment has done this to it: one made or replaced is confirmed at the
+  // moment the request was sent, so it would be when the request's own
+  // Offer would be; one kept keeps its own Confirmation, which the
+  // fulfilment does not move, so never.
+  offerWouldBeExpiredOnceFulfilled(fulfilment: OfferFulfilment, now: Date): boolean {
+    return fulfilment !== 'kept' && this.offerWouldBeExpired(now);
   }
 
   getState(): PartRequestState {

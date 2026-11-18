@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 import { categoryName } from '@/entities/category';
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
 import { Trans, useTranslation } from '@/shared/i18n';
-import { useWideScreen } from '@/shared/lib';
+import { queryOfWordsAndCategory, useWideScreen } from '@/shared/lib';
 import {
   Alert,
   AlertDescription,
@@ -231,7 +231,10 @@ function NothingFound({
                 </Button>
               )}
               <Link
-                to={{ pathname: '../part-requests/new', search: askedFor(words, search) }}
+                to={{
+                  pathname: '../part-requests/new',
+                  search: queryOfWordsAndCategory({ words, category: search.category }),
+                }}
                 data-testid="ask-for-it"
                 className={buttonVariants({ variant: 'outline' })}
               >
@@ -244,14 +247,4 @@ function NothingFound({
       </Empty>
     </output>
   );
-}
-
-// The Part Request form's query for a search that found nothing: its words,
-// which start the form as the Part's name, and its Category, if one narrowed
-// it. The form's address is written relative to the search's route, so that
-// it leads to the form under either frame.
-function askedFor(words: string, { category }: CatalogSearch): string {
-  const query = new URLSearchParams({ search: words });
-  if (category !== undefined) query.set('category', category);
-  return `?${query.toString()}`;
 }

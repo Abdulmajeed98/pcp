@@ -1864,6 +1864,17 @@ export type OpenPartRequestsPageResponse = {
     content: Array<PartRequestWithVendorResponse>;
 };
 
+export type PartRequestFulfilmentResponse = {
+    /**
+     * What fulfilling the request with the Part would do to the Vendor's Offer for it, by the rule a fulfilment follows: `created` when the Vendor has none; `replaced` when the Vendor's Offer was last confirmed before the request was sent; `kept` when it was confirmed at or after that moment. A fulfilment judges again, and answers what it did.
+     */
+    offer: 'created' | 'replaced' | 'kept';
+    /**
+     * Whether the Vendor's Offer would then be an Expired Offer, by the API's clock: an Offer made or replaced is confirmed at the moment the request was sent, so it would be when that was more than 14 days ago. Always false when the Offer is kept, since a kept Offer keeps its own Confirmation.
+     */
+    offerWouldBeExpired: boolean;
+};
+
 export type FulfilPartRequestRequest = {
     /**
      * The identifier of the Part that fulfils the request, of any Category.
@@ -3249,6 +3260,35 @@ export type ReadPartRequestResponses = {
 };
 
 export type ReadPartRequestResponse = ReadPartRequestResponses[keyof ReadPartRequestResponses];
+
+export type ReadPartRequestFulfilmentData = {
+    body?: never;
+    path: {
+        partRequestId: string;
+    };
+    query: {
+        /**
+         * The identifier of the Part the request would be fulfilled with, of any Category.
+         */
+        partId: string;
+    };
+    url: '/v1/part-requests/{partRequestId}/fulfilment';
+};
+
+export type ReadPartRequestFulfilmentErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type ReadPartRequestFulfilmentError = ReadPartRequestFulfilmentErrors[keyof ReadPartRequestFulfilmentErrors];
+
+export type ReadPartRequestFulfilmentResponses = {
+    200: PartRequestFulfilmentResponse;
+};
+
+export type ReadPartRequestFulfilmentResponse = ReadPartRequestFulfilmentResponses[keyof ReadPartRequestFulfilmentResponses];
 
 export type FulfilPartRequestData = {
     body: FulfilPartRequestRequest;

@@ -1,6 +1,5 @@
 import type { PartRequestResponse, VendorsPartRequestsPageResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
-import { useState } from 'react';
 
 import { Trans, useTranslation } from '@/shared/i18n';
 import { useLeavingRows, useWideScreen } from '@/shared/lib';
@@ -32,17 +31,11 @@ export function ListedPartRequests({
   const { t } = useTranslation();
   const wide = useWideScreen();
   const { content, totalElements, pageNumber, totalPages, first, last } = listed;
-  const shown = useLeavingRows<PartRequestResponse>(content, ({ id }) => id, pageNumber);
-  // The request just sent arrives only with the list's first drawing, and
-  // not again once the Vendor has gone to another page.
-  const [arrivingFirst, setArrivingFirst] = useState(
-    arriving === undefined ? undefined : { key: arriving, page: pageNumber },
-  );
-  if (arrivingFirst !== undefined && arrivingFirst.page !== pageNumber) {
-    setArrivingFirst(undefined);
-  }
-  const rows = shown.map((row) =>
-    row.key === arrivingFirst?.key ? { ...row, arriving: true } : row,
+  const rows = useLeavingRows<PartRequestResponse>(
+    content,
+    ({ id }) => id,
+    pageNumber,
+    arriving,
   );
   const Rows = wide ? PartRequestsTable : PartRequestsList;
 

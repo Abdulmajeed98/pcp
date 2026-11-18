@@ -13,7 +13,15 @@ import type { ReactNode } from 'react';
 
 import { VendorLink } from '@/entities/vendor';
 import { type ShownRow, movingProps } from '@/shared/lib';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
+import {
+  linkAboveRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui';
 
 // A Vendor to remind, as the dashboard's DESIGN.md lays it out (redesign
 // ticket 10): its name as it writes it, why it is on the list, in Action Red
@@ -26,10 +34,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 // and takes a Raised Stone ground under the pointer. The owner chose the
 // numbers as underlined links on 20 October 2026, over outlined buttons.
 
-// A link that is a row's own action, drawn above the link that covers the
-// whole row, as high as a control.
-const numberLink =
-  'hover-colour relative z-10 inline-flex min-h-control items-center gap-1.5 underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2';
+// A number's link, a row's own action, drawn above the link that covers
+// the whole row, with its mark before it.
+const numberLink = cn(linkAboveRow, 'gap-1.5');
 
 // Why the Vendor is on the list, in plain words: how many of its Offers have
 // expired and how many are about to, leaving out a count of none.

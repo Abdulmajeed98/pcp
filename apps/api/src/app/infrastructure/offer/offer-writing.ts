@@ -69,34 +69,80 @@ export async function writeANewOffer(
   partId: string,
   writing: OfferWriting,
 ): Promise<string> {
-  const details = writing.details;
-  const pricesAndStock = {
-    usdPriceCents: details.getUsdPriceCents(),
-    iqdPrice: details.getIqdPrice(),
-    inStock: details.isInStock(),
-  };
-
   const [row] = await transaction
     .insert(offer)
-    .values({
-      vendorId,
-      partId,
-      ...pricesAndStock,
-      warrantyMonths: details.getWarrantyMonths(),
-      confirmedAt: writing.confirmedAt,
-      createdAt: writing.writtenAt,
-    })
+    .values(aNewOffer(vendorId, partId, writing))
     .returning({ id: offer.id });
+  await recordTheCreation(transaction, vendorId, partId, writing);
+
+  return row.id;
+}
+
+// Writes the Vendor's new Offer for the Part as `writeANewOffer` does,
+// unless the Vendor has one already, and answers its identifier; or writes
+// nothing and answers none when the unique pair, `oneOfferForAPart`, finds
+// the Vendor's own. The database finds it even when the Vendor's own add
+// commits while this one writes, after the caller read the Vendor's Offers
+// and found none: this one waits for that add, then leaves the Vendor's
+// Offer to the caller, which reads it as it now stands, rather than being
+// refused.
+export async function writeANewOfferUnlessOneIsThere(
+  transaction: Transaction,
+  vendorId: string,
+  partId: string,
+  writing: OfferWriting,
+): Promise<string | undefined> {
+  const [row] = await transaction
+    .insert(offer)
+    .values(aNewOffer(vendorId, partId, writing))
+    .onConflictDoNothing({ target: [offer.vendorId, offer.partId] })
+    .returning({ id: offer.id });
+  if (row === undefined) return undefined;
+  await recordTheCreation(transaction, vendorId, partId, writing);
+
+  return row.id;
+}
+
+// An Offer's row as a new Offer is written: made at the moment written, and
+// confirmed at the time given.
+function aNewOffer(vendorId: string, partId: string, writing: OfferWriting) {
+  const details = writing.details;
+  return {
+    vendorId,
+    partId,
+    ...pricesAndStockOf(details),
+    warrantyMonths: details.getWarrantyMonths(),
+    confirmedAt: writing.confirmedAt,
+    createdAt: writing.writtenAt,
+  };
+}
+
+// The first row of a new Offer's history, `created`, at the moment written,
+// by the Caller.
+async function recordTheCreation(
+  transaction: Transaction,
+  vendorId: string,
+  partId: string,
+  writing: OfferWriting,
+): Promise<void> {
   await transaction.insert(offerHistory).values({
     vendorId,
     partId,
-    ...pricesAndStock,
+    ...pricesAndStockOf(writing.details),
     changedAt: writing.writtenAt,
     change: 'created',
     changedBy: writing.callerId,
   });
+}
 
-  return row.id;
+// What the Offer history records of an Offer's details: its prices and its
+// stock.
+function pricesAndStockOf(details: OfferDetails) {
+  return {
+    usdPriceCents: details.getUsdPriceCents(),
+    iqdPrice: details.getIqdPrice(),
+    inStock: details.isInStock(),
+  };
 }
 
 // Replaces the prices, the stock and the warranty of an Offer held in the
@@ -110,11 +156,7 @@ export async function replaceTheDetailsOf(
   writing: OfferWriting,
 ): Promise<void> {
   const details = writing.details;
-  const pricesAndStock = {
-    usdPriceCents: details.getUsdPriceCents(),
-    iqdPrice: details.getIqdPrice(),
-    inStock: details.isInStock(),
-  };
+  const pricesAndStock = pricesAndStockOf(details);
 
   await transaction
     .update(offer)

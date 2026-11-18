@@ -19,7 +19,7 @@ import {
 import { usePartRequest } from '../api/part-requests';
 import { MatchIt } from './match-it';
 import { RejectIt } from './reject-it';
-import { HowItWasResolved, RequestDetails, WouldBeExpired } from './request-details';
+import { HowItWasResolved, RequestDetails, WouldBeExpiredWarning } from './request-details';
 
 type Request = PartRequestWithVendorResponse;
 
@@ -112,7 +112,7 @@ function TheRequest({ partRequest, back }: { partRequest: Request; back: ReactNo
         </div>
       </div>
       {open && partRequest.offerWouldBeExpired && (
-        <WouldBeExpired partRequest={partRequest} />
+        <WouldBeExpiredWarning partRequest={partRequest} />
       )}
       <RequestDetails partRequest={partRequest} />
       {open ? (

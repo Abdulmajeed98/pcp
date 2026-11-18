@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
-import { OfferStore } from '../offer/OfferStore';
-import { partNotFound } from '../part/part-errors';
 import { PartStore } from '../part/PartStore';
-import { existingPartRequest, withTheVendorsOffer } from './existing-part-request';
+import { existingPartRequest, toFulfil } from './existing-part-request';
 import { OfferFulfilment } from './offer-fulfilment';
-import { partRequestResolved } from './part-request-errors';
 import { PartRequestAndOffer } from './PartRequest';
 import { FulfilPartRequestParams, PartRequestStore } from './PartRequestStore';
 
@@ -78,7 +75,6 @@ export class FulfilPartRequestCommand {
   constructor(
     private readonly partRequestStore: PartRequestStore,
     private readonly partStore: PartStore,
-    private readonly offerStore: OfferStore,
   ) {}
 
   async execute(input: Input): Promise<Either.Either<Output, StructuredError>> {
@@ -86,27 +82,24 @@ export class FulfilPartRequestCommand {
     // then the Part. The Store asks again whether it is open, holding its
     // row, so that two calls at once resolve it once.
     const id = input.getPartRequestId();
-    const partRequest = existingPartRequest(id, await this.partRequestStore.readById(id));
-    if (Either.isLeft(partRequest)) return Either.left(partRequest.left);
-    if (!partRequest.right.isOpen()) return Either.left(partRequestResolved(id));
-
-    const partId = input.getPartId();
-    const part = await this.partStore.readById(partId);
-    if (Either.isLeft(part)) return Either.left(part.left);
-    if (Option.isNone(part.right)) return Either.left(partNotFound(partId));
+    const named = await toFulfil(
+      this.partRequestStore,
+      this.partStore,
+      id,
+      input.getPartId(),
+    );
+    if (Either.isLeft(named)) return Either.left(named.left);
 
     // The API's clock, never the database's, gives the moment it is
     // fulfilled, at which the Offer is made or changed.
     const now = new Date();
     const fulfilled = await this.partRequestStore.fulfil(
-      new FulfilPartRequestParams(id, part.right.value.getId(), now, input.getCallerId()),
+      new FulfilPartRequestParams(id, named.right.part.getId(), now, input.getCallerId()),
     );
     if (Either.isLeft(fulfilled)) return Either.left(fulfilled.left);
 
     // Read again, as every read is, with the Part and the Vendor's Offer.
     const read = existingPartRequest(id, await this.partRequestStore.readById(id));
-    if (Either.isLeft(read)) return Either.left(read.left);
-    const answered = await withTheVendorsOffer(read.right, this.offerStore);
-    return Either.map(answered, (found) => Output.of(found, fulfilled.right, now));
+    return Either.map(read, (found) => Output.of(found, fulfilled.right, now));
   }
 }

@@ -94,9 +94,9 @@ export async function findOnTheQueue(
   return row;
 }
 
-// The section's link in the sidebar or the menu sheet, whose name is
-// followed by the count of open requests when there are any.
-export function thePartRequestsSection(page: Page): Locator {
+// The Admin console's section's link in the sidebar or the menu sheet,
+// whose name is followed by the count of open requests when there are any.
+export function theConsolesPartRequestsSection(page: Page): Locator {
   return page
     .getByRole('navigation', { name: 'Sections' })
     .getByRole('link', { name: /^Part Requests( [\d,]+ open)?$/ });

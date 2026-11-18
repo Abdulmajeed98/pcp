@@ -1,22 +1,25 @@
-import type { PartRequestWithVendorResponse } from '@pcp/api-client';
+import type {
+  FulfilledPartRequestResponse,
+  PartRequestWithVendorResponse,
+} from '@pcp/api-client';
 import { type QueryClient, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 
 import { askAgainAfterAChangeToTheOffers } from '@/entities/offer';
+import type { Resolution } from '@/entities/part-request';
 import { apiClient, dataOf, partRequestsKey, partsKey, Refusal } from '@/shared/api';
 import { useAddressKeepingTheQuery } from '@/shared/lib';
 
-import type { Outcome, Resolved } from '../model/resolution';
+import type { Resolved } from '../model/resolution';
 
 type Request = PartRequestWithVendorResponse;
 
-// What a fulfilment answers, as far as the screens read it: what it did to
-// the Vendor's Offer for the Part.
-export interface Fulfilled {
-  offer: Exclude<Outcome, 'rejected'>;
-}
-
-function fulfil(partRequestId: string, partId: string): Promise<Fulfilled> {
+// The request fulfilled, with what the fulfilment did to the Vendor's Offer
+// for the Part, as the API answers it.
+function fulfil(
+  partRequestId: string,
+  partId: string,
+): Promise<FulfilledPartRequestResponse> {
   return dataOf(apiClient.fulfilPartRequest({ path: { partRequestId }, body: { partId } }));
 }
 
@@ -57,7 +60,10 @@ export async function askAgainAboutThePartRequests(
 // without the request, which leaves it as the Motion section says.
 export function useFulfil(
   partRequest: Request,
-  onFulfilled: (fulfilled: Fulfilled, part: { id: string; name: string }) => Promise<void>,
+  onFulfilled: (
+    fulfilled: FulfilledPartRequestResponse,
+    part: { id: string; name: string },
+  ) => Promise<void>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -83,27 +89,32 @@ export function useReject(partRequest: Request) {
         }),
       ),
     onSuccess: async () => {
-      await backToTheQueue('rejected');
+      await backToTheQueue({ outcome: 'rejected' });
       await askAgainAboutThePartRequests(queryClient);
     },
   });
 }
 
+// What became of the request, as far as the Admin's own action says it:
+// rejected, or fulfilled with a Part, with what that did to the Vendor's
+// Offer.
+type HowItWasResolved = DistributiveOmit<Resolution, 'requestName' | 'vendorName'>;
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+
 // Returns to the queue, on the page it was on, with the note that names the
 // request and says what became of it.
 export function useBackToTheQueue(
   partRequest: Request,
-): (outcome: Outcome, partName?: string) => Promise<void> {
+): (how: HowItWasResolved) => Promise<void> {
   const navigate = useNavigate();
   const keepingTheQuery = useAddressKeepingTheQuery();
-  return async (outcome, partName) => {
+  return async (how) => {
     const state: Resolved = {
       resolved: {
+        ...how,
         requestId: partRequest.id,
         requestName: partRequest.name,
         vendorName: partRequest.vendor.name,
-        partName,
-        outcome,
       },
     };
     await navigate(keepingTheQuery('/part-requests'), { state });

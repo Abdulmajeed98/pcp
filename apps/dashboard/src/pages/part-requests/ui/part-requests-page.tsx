@@ -1,12 +1,12 @@
 import { cn } from 'cn';
 import { useLocation, useOutlet } from 'react-router';
 
+import { ResolutionNote } from '@/entities/part-request';
 import { usePageInTheAddress, useWideScreen } from '@/shared/lib';
-import { OpenedBesideAList, OpeningSpace } from '@/shared/ui';
+import { Announced, OpenedBesideAList, OpeningSpace } from '@/shared/ui';
 
 import { resolvedIn } from '../model/resolution';
 import { ListedRequests } from './listed-requests';
-import { ResolutionNote } from './resolution-note';
 
 // The Admin console's Part Requests, its seventh section: the queue of open
 // Part Requests of every Vendor, the oldest first, a page at a time, so that
@@ -60,7 +60,8 @@ function TheQueue({ asATable }: { asATable: boolean }) {
           leaves the queue once you match it to a Part, create the Part or reject it.
         </p>
       </div>
-      {/* The note after a resolution, announced when it appears. Its space
+      {/* The note after a resolution, which arrives in the live region once
+          the region is in the page, so that it is announced. Its space
           opens in step with the resolved row's leaving, so that the list
           below moves down rather than jumps (Motion 12), and closes again on
           another page. The gap above it is its own, so that it closes with
@@ -69,7 +70,9 @@ function TheQueue({ asATable }: { asATable: boolean }) {
         <OpeningSpace inStep>
           {resolved !== null && (
             <div className="pt-4">
-              <ResolutionNote key={resolved.requestId} resolved={resolved} />
+              <Announced key={resolved.requestId}>
+                <ResolutionNote resolution={resolved} />
+              </Announced>
             </div>
           )}
         </OpeningSpace>

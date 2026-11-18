@@ -3,6 +3,7 @@ import type {
   ListedOfferResponse,
   OfferResponse,
   OpenPartRequestsPageResponse,
+  PartRequestFulfilmentResponse,
   PartRequestWithVendorResponse,
   PartPageResponse,
   PartSummaryResponse,
@@ -37,6 +38,12 @@ import {
   referralCountsAtTheirWorst,
 } from './made-up-referral-counts.ts';
 import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
+import {
+  aDay,
+  daysAnOfferStaysCurrent,
+  daysOfWarning,
+  isExpiredAt,
+} from './offer-expiry.ts';
 
 // The made-up shop's first Vendor (`made-up-vendors.ts`) as the dashboard's
 // screens see it, with about a dozen Offers in every state a Vendor can see: confirmed today, confirmed some days ago, about to
@@ -53,15 +60,9 @@ import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
 // command starts. Everything here is typed by the API client's types, so a
 // change to the API's answers fails the type-check.
 
-// A day of 24 hours, and the rules of an Offer's expiry, as the API states
-// them in its description: an Offer is an Expired Offer when its last
-// Confirmation is more than 14 days old, and about to expire when it is not
-// expired and will be within 3 days. The stand-in API answers the 14 days
-// among the platform's figures.
-const aDay = 24 * 60 * 60 * 1000;
+// An hour. A day of 24 hours and the rules of an Offer's expiry are
+// `offer-expiry.ts`'s.
 const anHour = 60 * 60 * 1000;
-export const daysAnOfferStaysCurrent = 14;
-const daysOfWarning = 3;
 
 // The Parts of the catalog the shop offers, which the command reads from the
 // API before anything else.
@@ -179,7 +180,7 @@ function listed(offer: OfferResponse, now: Date): ListedOfferResponse {
   const confirmedAt = new Date(offer.confirmedAt).getTime();
   const sinceConfirmation = now.getTime() - confirmedAt;
   const left = confirmedAt + daysAnOfferStaysCurrent * aDay - now.getTime();
-  const expired = sinceConfirmation > daysAnOfferStaysCurrent * aDay;
+  const expired = isExpiredAt(new Date(confirmedAt), now);
   return {
     ...offer,
     daysSinceConfirmation: Math.floor(sinceConfirmation / aDay),
@@ -385,6 +386,50 @@ const partRequestNotFound = refusal(
   'The made-up shop holds no such Part Request.',
 );
 
+// A request already fulfilled or rejected, as the API refuses to fulfil it
+// again.
+const partRequestResolved = refusal(
+  400,
+  'PART_REQUEST_RESOLVED',
+  'The made-up Part Request is already resolved.',
+);
+
+// What fulfilling an open request with a Part would do,
+// `GET v1/part-requests/{id}/fulfilment?partId=…`, as the API judges it by
+// the rule a fulfilment follows: made when the request's Vendor has no
+// Offer for the Part, replaced when its Offer was last confirmed before the
+// request was sent, and kept when at or after; and expired, when made or
+// replaced, as the request's own Offer would be. Only the shop's own Vendor
+// has Offers. The API's is the rule that counts; the shop states it because
+// no fixed data can carry what changes with the clock.
+function whatFulfillingWouldDo(
+  shop: MadeUpShop,
+  now: Date,
+  id: string,
+  partId: string | null,
+): ShopAnswer {
+  const [request] = partRequestsOf(shop, now, (each) => each.id === id);
+  if (request === undefined) return partRequestNotFound;
+  if (request.state !== 'open') return partRequestResolved;
+  if (partId === null) return refusal(400, 'NOT_VALID', 'No Part is named.');
+
+  const offer =
+    request.vendor.id === shop.vendor.id
+      ? shop.offers.find((each) => each.part.id === partId)
+      : undefined;
+  const fulfilment =
+    offer === undefined
+      ? 'created'
+      : Date.parse(offer.confirmedAt) < Date.parse(request.sentAt)
+        ? 'replaced'
+        : 'kept';
+  const body: PartRequestFulfilmentResponse = {
+    offer: fulfilment,
+    offerWouldBeExpired: fulfilment !== 'kept' && request.offerWouldBeExpired,
+  };
+  return { status: 200, body };
+}
+
 // The shop's Part Requests that `holds` keeps, as the API answers them at
 // `now`.
 function partRequestsOf(
@@ -396,8 +441,9 @@ function partRequestsOf(
 }
 
 // The queue, `GET v1/part-requests`: the open requests of every Vendor,
-// oldest first, then by identifier, as the API orders them; or one request,
-// `GET v1/part-requests/{id}`, in any state.
+// oldest first, then by identifier, as the API orders them; one request,
+// `GET v1/part-requests/{id}`, in any state; or what fulfilling one would
+// do.
 function answerAboutPartRequests(
   shop: MadeUpShop,
   now: Date,
@@ -405,6 +451,9 @@ function answerAboutPartRequests(
   id: string | undefined,
   rest: readonly string[],
 ): ShopAnswer {
+  if (id !== undefined && rest.length === 1 && rest[0] === 'fulfilment') {
+    return whatFulfillingWouldDo(shop, now, id, address.searchParams.get('partId'));
+  }
   if (rest.length > 0) return notFound;
   if (id !== undefined) {
     const [request] = partRequestsOf(shop, now, (each) => each.id === id);
