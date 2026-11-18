@@ -1,8 +1,13 @@
 import { describe, expect, it } from '@jest/globals';
 import type { FoundPartResponse } from '@pcp/api-client';
 
-import { partsOfTheCatalog, type SearchOfTheCatalog } from '../catalog-parts.ts';
+import {
+  partsHoldingAPartNumber,
+  partsOfTheCatalog,
+  type SearchOfTheCatalog,
+} from '../catalog-parts.ts';
 import { madeUpShop, partsTheShopOffers } from '../made-up-shop.ts';
+import { partsHoldingOc } from '../parts-holding-oc.ts';
 import { catalogPartsOfTheShop, now } from './catalog-stand-in.ts';
 
 function found(name: string, category: FoundPartResponse['category'], id: string) {
@@ -85,6 +90,64 @@ describe("the made-up shop's Parts", () => {
 
     await expect(partsOfTheCatalog(catalogWithTwo)).rejects.toThrow(
       `The catalog holds 2 ${twice.category} Parts named "${twice.name}"`,
+    );
+  });
+});
+
+// The worst of the made-up results of an upload names every Part that holds
+// "OC" (`parts-holding-oc.ts`), two of which share one name.
+describe('the Parts that hold a part number', () => {
+  const withNumbers = (
+    name: string,
+    id: string,
+    partNumbers: string[],
+  ): FoundPartResponse => ({ ...found(name, 'gpu', id), partNumbers });
+  const twiceNamed = partsHoldingOc[64].name;
+  // A catalog whose search for each name answers that Part holding "OC",
+  // beside another of the same name that does not and one whose name only
+  // holds the same words, and two holding it for the name two Parts share.
+  const catalogOfGpus: SearchOfTheCatalog = async ({ search }) => [
+    withNumbers(`${search} (another one)`, `another ${search}`, ['OC']),
+    withNumbers(search, `without ${search}`, ['GPU-1']),
+    withNumbers(search, `z ${search}`, ['gpu-2', 'oc']),
+    ...(search === twiceNamed ? [withNumbers(search, `a ${search}`, ['OC'])] : []),
+  ];
+
+  it('are every Part of each name that holds it, whatever its case, in the catalog’s order', async () => {
+    const parts = await partsHoldingAPartNumber(catalogOfGpus, partsHoldingOc, 'OC');
+
+    expect(parts).toHaveLength(81);
+    expect(parts.filter((part) => part.name === twiceNamed).map((part) => part.id)).toEqual(
+      [`a ${twiceNamed}`, `z ${twiceNamed}`],
+    );
+    expect(parts.every((part) => !part.id.startsWith('another'))).toBe(true);
+    const order = parts.map((part) => `${part.name} ${part.id}`);
+    expect(order).toEqual(
+      [...parts]
+        .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
+        .map((part) => `${part.name} ${part.id}`),
+    );
+    expect(parts[0]).toEqual({
+      id: `z ${parts[0].name}`,
+      category: 'gpu',
+      name: parts[0].name,
+      manufacturer: 'From the catalog',
+      partNumbers: ['gpu-2', 'oc'],
+      photoPath: null,
+    });
+  });
+
+  it('stop the command when a name holds no Part with the part number, and say which', async () => {
+    const lost = partsHoldingOc[3];
+    const catalogWithoutIt: SearchOfTheCatalog = async (query) =>
+      query.search === lost.name
+        ? [withNumbers(lost.name, 'without', ['GPU-1'])]
+        : catalogOfGpus(query);
+
+    await expect(
+      partsHoldingAPartNumber(catalogWithoutIt, partsHoldingOc, 'OC'),
+    ).rejects.toThrow(
+      `The catalog holds no gpu Part named "${lost.name}" that holds the part number "OC". Change the Part in apps/inspector/src/parts-holding-oc.ts.`,
     );
   });
 });
