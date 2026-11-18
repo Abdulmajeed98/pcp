@@ -504,7 +504,7 @@ The dashboard's own shadcn/ui components, on Base UI, are in `apps/dashboard/src
 
 ## Motion
 
-Led by Emil Kowalski's skills (`emil-design-eng` and `animate`), from the owner's `review-animations` of 21 October 2026. The dashboard is a working screen seen tens of times a day, so most of it stays still; what moves, moves to confirm what the user did, to show where something came from or went, or to keep their place when something leaves. Every movement is a CSS transition (or `@starting-style` for an arrival) on `transform` and `opacity`, so it runs off the main thread on a weak phone and is retargeted, not restarted, when it is interrupted. No animation library.
+Led by Emil Kowalski's skills (`emil-design-eng` and `animate`), from the owner's `review-animations` of 21 October 2026. The dashboard is a working screen seen tens of times a day, so most of it stays still; what moves, moves to confirm what the user did, to show where something came from or went, or to keep their place when something leaves. Every movement is a CSS transition (or `@starting-style` for an arrival) on `transform` and `opacity`, so it runs off the main thread on a weak phone and is retargeted, not restarted, when it is interrupted. One movement is the exception, and the only one: the busy mark of an Offer sheet's download or upload, lucide's `LoaderCircle`, turns with Tailwind's `animate-spin`, a keyframe animation on `transform`, one turn in 800 ms on a linear curve, for as long as the file is on its way (Motion 13). A wait has no end state to retarget towards, and a constant turn says only that the platform is working; with reduced motion the mark stops (`motion-reduce:animate-none`) and the button's words alone say it (the code review of `sheet`). No animation library.
 
 ### Tokens
 
@@ -602,7 +602,7 @@ Only the menu sheet and the switch's thumb travel sideways, and both follow the 
 - **Don't** put a photograph in the frame, the sidebar or behind text: the owner left the pictures of Erbil out of the dashboard's chrome.
 - **Don't** set text under 14 pixels (15 in Kurdish and Arabic), even where Taste's sheet says 12.
 - **Don't** animate a figure, a plate, a route change, a tab's line, the language or the scheme, or anything the keyboard repeats.
-- **Don't** use `ease-in`, Tailwind's built-in curves, `transition: all`, or a duration over 200 milliseconds.
+- **Don't** use `ease-in`, Tailwind's built-in curves, `transition: all`, or a duration over 200 milliseconds, or animate with keyframes; the busy mark's linear turn, Motion 13, is the one exception, and it stops with reduced motion.
 - **Don't** reach for a cold, grey corporate console, the gaming look of neon and dark glows, or a generic template's cards and gradients.
 - **Don't** let an empty search end the Vendor's way, or let a request's resolution take the Admin away from the queue; and don't put a count of requests on a pill, a plate or in red.
 - **Don't** draw thousands of an upload's rows at once, paint skipped rows red one by one, put a result's counts on plates, or let the Part Request form lose the result it was opened from.
