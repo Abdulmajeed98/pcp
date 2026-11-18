@@ -153,7 +153,9 @@ export function UploadResult({
 // The result's head: a Sheet panel with a Confirmed Green edge and 8-pixel
 // corners, a circled tick and its title in Confirmed Green, one sentence of
 // how many rows were read, applied and skipped, and the counts as words in
-// one list that wraps, each count at weight 650 in tabular figures, the
+// one list that wraps. The title takes the focus when the result arrives, so
+// that a screen reader starts there; it is no control, so it draws no focus
+// outline. The counts are each at weight 650 in tabular figures, the
 // rows skipped in Action Red.
 function ResultHead({
   result,
@@ -175,7 +177,7 @@ function ResultHead({
         ref={head}
         tabIndex={-1}
         data-testid="result-head"
-        className="flex items-center gap-2 text-base font-semibold text-success focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="flex items-center gap-2 text-base font-semibold text-success outline-none"
       >
         <CircleCheckIcon aria-hidden="true" className="size-4 shrink-0" />
         {t('OfferSheetScreen.resultTitle')}
