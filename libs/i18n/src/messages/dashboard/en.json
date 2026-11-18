@@ -376,5 +376,19 @@
     "loginPhoneNumber": "Phone number:",
     "temporaryPassword": "Temporary password:",
     "choosePassword": "When you first log in, you will be asked to choose your own password."
+  },
+  "OfferSheetFile": {
+    "headings": {
+      "partNumber": "Manufacturer part number",
+      "name": "Part name",
+      "usdPrice": "Price in USD",
+      "iqdPrice": "Price in IQD",
+      "inStock": "In stock",
+      "warrantyMonths": "Warranty in months"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "worksheet": "Offers",
+    "file": "Offer sheet"
   }
 }

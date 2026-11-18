@@ -3,8 +3,11 @@ const nxPreset = require('@nx/jest/preset').default;
 // Packages that are published as ES modules only. Jest loads CommonJS, and
 // leaves everything in node_modules as it is, so these are named here to be
 // transformed like the workspace's own source. `jose` is the API's check of
-// tokens; the rest are Keycloak's admin client and the packages it imports
-// that publish no CommonJS.
+// tokens; the next nine are Keycloak's admin client and the packages it
+// imports that publish no CommonJS; the last two are `@pcp/i18n`'s one
+// package, which picks a browser's language, and the package it imports,
+// which the API reaches since it imports `@pcp/i18n` for the Offer sheet's
+// words.
 const esModulesOnly = [
   'jose',
   '@keycloak/keycloak-admin-client',
@@ -16,6 +19,8 @@ const esModulesOnly = [
   '@microsoft/kiota-serialization-text',
   'camelize-ts',
   'url-template',
+  '@formatjs/intl-localematcher',
+  '@formatjs/fast-memoize',
 ];
 
 // pnpm keeps a package under two folders named node_modules, and the pattern

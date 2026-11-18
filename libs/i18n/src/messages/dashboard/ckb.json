@@ -376,5 +376,19 @@
     "loginPhoneNumber": "ژمارەی تەلەفۆن:",
     "temporaryPassword": "وشەی نهێنیی کاتی:",
     "choosePassword": "کاتێک بۆ یەکەمجار دەچیتە ژوورەوە، داوات لێ دەکرێت وشەی نهێنیی خۆت هەڵبژێریت."
+  },
+  "OfferSheetFile": {
+    "headings": {
+      "partNumber": "ژمارەی پارچەی دروستکەر",
+      "name": "ناوی پارچە",
+      "usdPrice": "نرخ بە دۆلار",
+      "iqdPrice": "نرخ بە دینار",
+      "inStock": "لە کۆگادا هەیە",
+      "warrantyMonths": "گەرەنتی بە مانگ"
+    },
+    "yes": "بەڵێ",
+    "no": "نەخێر",
+    "worksheet": "ئۆفەرەکان",
+    "file": "خشتەی ئۆفەرەکان"
   }
 }

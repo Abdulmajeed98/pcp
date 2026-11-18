@@ -12,7 +12,7 @@
         "depConstraints": [
           {
             "sourceTag": "scope:api",
-            "onlyDependOnLibsWithTags": ["scope:api", "scope:shared"]
+            "onlyDependOnLibsWithTags": ["scope:api", "scope:shared", "shared-with:api"]
           },
           {
             "sourceTag": "scope:web",
