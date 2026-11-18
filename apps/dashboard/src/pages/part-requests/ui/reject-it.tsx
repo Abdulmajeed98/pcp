@@ -145,7 +145,11 @@ export function RejectIt({ partRequest }: { partRequest: Request }) {
                 'rejection-reason-limit',
                 fieldError && 'rejection-reason-error',
               )}
-              onChange={(event) => setReason(event.target.value)}
+              onChange={(event) => {
+                setReason(event.target.value);
+                // A reason given takes away the word that one was missing.
+                if (event.target.value.trim() !== '') setMissing(false);
+              }}
             />
             <FieldDescription id="rejection-reason-limit">
               Up to 300 characters, in any language.
