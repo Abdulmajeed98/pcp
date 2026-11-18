@@ -33,6 +33,7 @@ import {
   vendorsPartRequests,
 } from './part-requests';
 import { apiUrl } from './platform';
+import { rowOfPartRequest, stateOf } from './vendor-part-requests';
 import { createAMadeUpVendor, type MadeUpVendor } from './vendors';
 
 // The Admin works the queue of open Part Requests from a phone, in a
@@ -341,7 +342,7 @@ test.describe('one request', () => {
 });
 
 test.describe('rejecting', () => {
-  test('a reason is asked for in the dialog, which says a missing one beside its field; given, the request leaves the queue, and the Vendor’s list holds the reason as written', async ({
+  test('a reason is asked for in the dialog, which says a missing one beside its field; given, the request leaves the queue, and the Vendor’s list in its portal shows the reason as written', async ({
     page,
     request,
   }) => {
@@ -382,6 +383,16 @@ test.describe('rejecting', () => {
     expect(listed.id).toBe(partRequest.id);
     expect(listed.state).toBe('rejected');
     expect(listed.reason).toBe(written);
+
+    // The Vendor's own list, in its portal, as the Admin acting as the Vendor
+    // reads it under the band: the request not added, with the reason as
+    // the Admin wrote it, its line break kept.
+    await page.goto(`${vendorPageUrl(vendor.id)}/portal/part-requests`);
+    const listedRow = rowOfPartRequest(page, partRequest.partNumber);
+    await expect(stateOf(listedRow)).toHaveAttribute('data-state', 'rejected');
+    const reasonShown = listedRow.getByTestId('reason');
+    await expect(reasonShown).toBeVisible();
+    expect(await reasonShown.textContent()).toBe(written);
   });
 
   test('a request resolved meanwhile, as from another tab, is shown as resolved once the rejection is refused', async ({
