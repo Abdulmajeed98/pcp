@@ -29,11 +29,11 @@ First, the inspector's made-up shop learns to answer an upload, so that every op
 - [x] **Reaching the result.** The result is reached through the inspector's own steps, a made-up file chosen first, as `part-requests`' dialogs were.
 - [x] **The screens as they are.** The Offers screen and the Part Request form are captured and critiqued before anything is proposed, by Taste's audit with Impeccable's `critique`.
 - [x] **What DESIGN.md lacks.** Impeccable adds to the dashboard's DESIGN.md whatever these pieces need and it does not yet say, before options are drawn.
-- [ ] **The options, rendered.** Each piece is shown in two or three options in the built-in browser, from a page served from the scratchpad, never `file://`.
+- [x] **The options, rendered.** Each piece is shown in two or three options in the built-in browser, from a page served from the scratchpad, never `file://`.
   - One option goes to an anchor, at most two columns.
   - Each is shown with the made-up shop's data, in Kurdish and English, at a phone's width and a desk's.
   - For a large options page, the owner looks and answers in chat before any choice dialog.
-- [ ] **The open choices, put to the owner:**
+- [x] **The open choices, put to the owner:**
   - whether the screen is also a fourth section of the sidebar and the menu sheet, or reached only from the Offers screen;
   - how the download and the file field stand, and how the upload says it is on its way;
   - the result's composition: the counts, the added Offers, the tie-break's rows and the skipped rows grouped by problem;
@@ -41,8 +41,8 @@ First, the inspector's made-up shop learns to answer an upload, so that every op
   - whether the Part Request form opens over the result or as its own screen, with the result kept either way;
   - the motion of the upload on its way and of the result arriving, led by Emil Kowalski's skills;
   - the copy, led by Impeccable: the refusals of a file, the four problems, a row already asked for, and why a part number is missing.
-- [ ] **The record.** The owner's choices go under Comments, and Impeccable writes them, with their motion, into the dashboard's DESIGN.md. An ADR is written only if a choice replaces part of ADR-0011.
-- [ ] **Gates.** `pnpm check --skip-nx-cache` passes. The made-up shop is typed against the client, and its tests pass.
+- [x] **The record.** The owner's choices go under Comments, and Impeccable writes them, with their motion, into the dashboard's DESIGN.md. An ADR is written only if a choice replaces part of ADR-0011.
+- [x] **Gates.** `pnpm check --skip-nx-cache` passes. The made-up shop is typed against the client, and its tests pass.
 
 ## Comments
 
@@ -118,3 +118,72 @@ Before any option was drawn, Impeccable added what the pieces need, whatever opt
 - **Rows and tables:** a row of an upload's result, with no plate.
 - **Plates:** the counts of an upload's result are words.
 - **States:** the four problems of a skipped row in words, and the skipped block's one red mark.
+
+### 18 November 2026: the options, rendered
+
+**The page** is in the scratchpad's `sheet-03/`, for the owner's `.taste-skill/sheet-03/`. It was served on port 4123 by a small static server that sends nothing cached (never `file://`) and shown in the built-in browser.
+
+`index.html` lays out the screens as they are (`#before`), then seven choices, `#d1` to `#d7`, one option to an anchor (`#d1a`, `#d1b`, …), 20 options in 60 windows. The option taken is marked on each, with why, and the others say why not. Then come the words (`#words`, 86 lines in English with Kurdish and Arabic drafts), the motion (`#motion-section`), the feel on a phone (`#phone`), the worst cases (`#worst`) and the record (`#record`). A bar switches both schemes, reduced motion and four times slower; Play buttons run the upload on its way and the result arriving, and "Show 50 more" works in its windows.
+
+**How each window is made.** Every window is the dashboard's own frame, captured with its markup from the running dashboard on the made-up shop (`captured/`, by the scratch driver above), drawn with the dashboard's built stylesheet and fonts (`base/`). Each piece is put into it by `pieces.js` with the theme's own class strings, copied from the captured markup and checked against the built stylesheet, from `data/`, the made-up shop's three results as the inspector makes them. The few rules the pieces add are in `pieces.css`, each a proposal: the screen's grid, the result's row (a container query on the list), a part number's run, a name's size by its own direction, the arriving result and the turning mark. The portal's pieces are in Kurdish and English at 390 and 1440, at 1024 for the screen and the result, and at 1280 for the worst case.
+
+**How each skill led its area:**
+- **Taste** (`design-taste-frontend`, `references/app-screens.md`): the composition, with no deal, inside Framed sheet: the screen's one question in each state (how to change many Offers; did the upload work and what needs me), what needs the Vendor first, the most frequent job one tap away, the evidence beside the answer, lists capped with "show more", and two-line rows on a phone.
+- **Impeccable:** the critique, what DESIGN.md lacked, the copy (`clarify`), right to left and accessibility, and the record.
+- **Emil Kowalski's `emil-design-eng`:** the motion, asked with the frequency; it added the turning mark to the busy button and kept the stagger out.
+- **Emil's `mobile-native`:** the feel on a phone, through DESIGN.md's own phone rules (redesign ticket 11) and the file picker a phone opens.
+- **Emil's `break-ui`:** the result at its worst, `--offer-sheet-result worstCase`, in both languages at every width.
+
+The design skills' own files were not changed.
+
+**Measured** in headless Chrome by a scratch script driving Taste's own `cdp.mjs`: every window at its width in light and in dark, and every phone window again at 320 pixels. No script error, nothing scrolling sideways, no text of the pieces under 14 pixels (15 in Kurdish), and every control of the pieces 44 pixels on a phone. What the probe still reports is the captured frame's own (the language switch's Kurdish and Arabic names at 14 pixels in the English portal, by the Tall Script Rule's page language; the Offers rows' name links, whose whole row is the tap target) and the result's own row links, whose whole row is theirs too. The reports are in the page's `measured/`.
+
+**Found and fixed on the page**, each written into DESIGN.md:
+- the result's rows set 14 pixels themselves and missed the theme's 15 in Kurdish; they take `--text-sm`;
+- the chosen file's name reordered its day and `.xlsx` in Kurdish, and `.xlsx` given a Kurdish suffix reordered too; a file's name keeps its own direction with its last Latin word isolated left to right, and `.xlsx` in a sentence is isolated with no suffix;
+- a part number drawn as a left-to-right block hung on the left of a Kurdish row; it is an isolated run inside a line of the row's direction;
+- a Vendor's Kurdish or Arabic name in the English portal was drawn at 14 pixels; what a Vendor wrote is sized by its own direction (`:dir(rtl)`).
+
+**The worst cases**, by `break-ui` on the options taken: 4,808 skipped rows draw ten a group and stay a few screens long, every group's count in its heading; row numbers in the thousands keep to their column; codes of 100 code points break inside their line, with spaces and without; "OC" names three of its 81 GPUs and "Show all 81 Parts"; the Part 300 rows name says ten rows "and 289 more"; Kurdish and Arabic names stand on their own side; the longest added Part name, 276 characters, wraps whole. **Defended:** a name of 300 code points in Kurdish runs six lines on a phone, kept whole, since it is what the Part Request form will carry and the Vendor corrects there.
+
+### 18 November 2026: the choices
+
+The owner was asleep. Each choice was rendered as the ticket asks and then taken, with no stop. The page was left ready for the owner to look at and answer in chat; no choice dialog was put.
+
+1. **d1, the way to the screen.** Taken on the owner's standing instruction of 18 November 2026: a fourth section of the sidebar and the menu sheet, "Offer sheet", second, after Offers, with lucide's `FileSpreadsheet`; and from the Offers screen, an underlined link with the file mark on the start side of its count line, "Change many at once in your Offer sheet", and the same in its empty state (PRODUCT.md keeps a phone-first portal and a file of bulk changes as equal routes, the Admin acting in a shop finds it at once, and the link costs the full phone head no height; the other options were the Offers screen alone, its second route hidden behind the first, and an outlined button on the Offers title row, which breaks DESIGN.md's rule of one outlined secondary).
+2. **d2, the download and the file field.** Taken on the owner's standing instruction of 18 November 2026: one column at most 40rem, "Download your Offers" with its outlined button, a Rule line, "Upload it changed" with the browser's own file field wearing an outlined button and the pane's one primary, "Upload the Offer sheet"; "What the file holds" beside it on Raised Stone from 64rem; on its way the busy label, a turning mark and a status line naming the file (the Part Request form's composition the owner chose; the other options were two equal halves on cards, which weigh the preparation as the work and leave no place for the explanation, and a place to drop the file, which a phone cannot use).
+3. **d3, the result's composition.** Taken on the owner's standing instruction of 18 November 2026: a Confirmed Green note with the counts in words, then the rows skipped grouped by problem with the block's one red mark, then the Offers added and the rows applied by the tie-break, each leading to its Offer (what needs the Vendor first, as DESIGN.md orders a screen; the other options were the evidence first, which buries the skipped rows below the fold, and tabs, which a result kept only in the page cannot hold in the address).
+4. **d4, thousands of skipped rows on a phone.** Taken on the owner's standing instruction of 18 November 2026: each group's first ten rows, then "Show 50 more" in place, with "10 of 3,290 shown" (every group's count on the screen and the place kept; the other options were pages of twenty a group, which lose the place with no address to keep it, and groups folded, which draw every row when opened).
+5. **d5, the Part Request form from a row.** Taken on the owner's standing instruction of 18 November 2026: its own screen, under the Offer sheet screen's route, which keeps the result, with "Back to the result" and a line naming the row and the file; after a send, back at the result scrolled to the row, which says "Asked for" (the portal's own form at every width, its refusals and "What happens next" kept; the other options were the form floating over the result, a full screen on a phone anyway and a third floating thing DESIGN.md does not have, and the Category and Send in the row, which sends details the Vendor has not seen as a form).
+6. **d6, the motion.** Taken on the owner's standing instruction of 18 November 2026: the result's space opens and it fades in (Motion 8's arrival), the page scrolls smoothly to its head, which takes the focus; the busy mark turns at constant speed; "Show 50 more" opens one block; "Asked for" changes in place (Emil's frequency rule, an occasional thing that shows where the answer is; the other options were the result taking the upload's place, which hides the way to upload again, and the result's parts staggered, which spends the portal's one stagger on content read for its facts).
+7. **d7, the copy.** Taken on the owner's standing instruction of 18 November 2026: plain sentences that say what to do, the cell's reasons as the Offer form says them and its column by the file's heading, no limit named (Impeccable's `clarify`: what happened, why, and what to do; the other option was the problems' names and the reasons' codes, which hand the Vendor the platform's words).
+
+**Nothing pulls against a hard rule**, so nothing was put to the owner as a conflict: every colour is one the file has measured, every control of the pieces is 44 pixels on a touchscreen, no text of the pieces is under 14 pixels or Arabic script under 15, nothing scrolls sideways at 320, and every side is logical.
+
+**What the spec left open, settled here:** the Part Request form from a row is a screen of its own whose parent route keeps the result; and the ticket's "a fourth section" is the fourth of four, placed second, since it belongs beside the Offers it changes.
+
+### 18 November 2026: the record
+
+Impeccable wrote the choices, with their motion, into `apps/dashboard/DESIGN.md`, in the file's own terms and with the owner's anchors:
+
+| Piece | In DESIGN.md |
+|---|---|
+| The Offer sheet screen | Layout |
+| The busy mark | Components › Buttons |
+| The Part Request form from a row | Components › Fields |
+| The upload's result, a skipped row by its problem, thousands of rows, a file refused | Components › States |
+| The section and the way from the Offers screen | Components › Navigation and the frame |
+| Motion 13, what stays still, and its reduced form | Motion |
+| The rest | Do's and Don'ts |
+
+No choice replaces part of ADR-0011, so no ADR is written.
+
+**Phone checks, open, waiting for hosting** (the owner's rule of 16 October 2026; the spec's Open checks list them): the result read with a thumb, a long one among it; a row turned into a Part Request; the file chosen from a phone's files; the motion on a real phone, with reduced motion on and off.
+
+### 18 November 2026: the gates
+
+- Each commit was gated on `pnpm check` before it was made: `e02af8a` (the made-up result, the inspector's 212 tests among it), `8407cb6` (the worst result made before its tests), `905c32b` (what DESIGN.md lacked, and the record so far), and this one (the choices and this record).
+- `sheet/integration` was still at `b2b60c0` when merged in, so the merge brought nothing.
+- This record's commit is gated on `pnpm check --skip-nx-cache`, with every `*.tsbuildinfo` outside `node_modules` deleted first.
+- `pnpm integration:check` was not run, since the ticket changes no API code, and `pnpm platform:check` was not run, since the ticket runs no end-to-end test and builds no screen. `pnpm boundaries:check` was not asked for: the inspector gains no import of another project.
+- The e2e lock was held once, for the inspection of the screens as they are and the capture, and released.
