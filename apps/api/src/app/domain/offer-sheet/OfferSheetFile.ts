@@ -1,5 +1,5 @@
 import { StructuredError } from '@pcp/core';
-import { Either } from 'effect';
+import { Either, Option } from 'effect';
 
 import {
   mostRowsOfAnOfferSheet,
@@ -77,12 +77,61 @@ export class OfferSheetWritten {
   }
 }
 
-// The port an Offer sheet is turned into a file through. Its implementation
-// is the only code that names the file library, so that the domain never
-// does and the library can be replaced.
+// A cell of an uploaded file as it was read, by the kind of value it holds:
+// nothing; text, rich text joined; a number; TRUE or FALSE; or a value that
+// cannot be read, such as an error or a formula saved with no value, with
+// its text as written, where it has one. A formula is read by the value it
+// was saved with.
+export type OfferSheetCellRead =
+  | { readonly kind: 'empty' }
+  | { readonly kind: 'text'; readonly text: string }
+  | { readonly kind: 'number'; readonly number: number }
+  | { readonly kind: 'trueOrFalse'; readonly value: boolean }
+  | { readonly kind: 'notReadable'; readonly text: string };
+
+// The empty cell.
+export const emptyCell: OfferSheetCellRead = { kind: 'empty' };
+
+// A row of an uploaded file's first worksheet, as it was read: its number,
+// as the spreadsheet numbers it, and its six cells, A to F.
+export class OfferSheetRowRead {
+  constructor(
+    private readonly row: number,
+    private readonly cells: readonly OfferSheetCellRead[],
+  ) {}
+
+  getRow(): number {
+    return this.row;
+  }
+
+  // The six cells, A to F, a cell the file does not hold empty.
+  getCells(): readonly OfferSheetCellRead[] {
+    return this.cells;
+  }
+}
+
+// An uploaded file's first worksheet as it was read: every row that holds
+// a value, in the order of their numbers, row 1 among them. A workbook with
+// no worksheet has none.
+export class OfferSheetRead {
+  constructor(private readonly rows: readonly OfferSheetRowRead[]) {}
+
+  getRows(): readonly OfferSheetRowRead[] {
+    return this.rows;
+  }
+}
+
+// The port an Offer sheet is turned into a file through, and a file read
+// back through. Its implementation is the only code that names the file
+// library, so that the domain never does and the library can be replaced.
 export abstract class OfferSheetFile {
   // The .xlsx file's bytes.
   abstract write(
     sheet: OfferSheetWritten,
   ): Promise<Either.Either<Uint8Array, StructuredError>>;
+
+  // The first worksheet of an uploaded file, sent by a stranger, as it was
+  // read, within bounds of memory and time; or none, when it is not an
+  // .xlsx file that can be read so.
+  abstract read(file: Uint8Array): Promise<Option.Option<OfferSheetRead>>;
 }

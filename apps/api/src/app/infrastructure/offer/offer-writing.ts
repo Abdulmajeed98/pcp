@@ -9,7 +9,8 @@ import { offer, offerHistory } from './offer.schema';
 // once and run inside a transaction it is handed: the Offer Store's own when
 // a Vendor adds or changes an Offer, or another Store's when the Offer has to
 // be written together with something else, as a fulfilled Part Request's
-// is. Each history row is written in the transaction that changes the Offer.
+// is, and as each of an Offer sheet's applied rows is, with every other. Each
+// history row is written in the transaction that changes the Offer.
 
 // An Offer as it stands, held until the transaction it was read in ends.
 export type HeldOffer = {
@@ -19,6 +20,7 @@ export type HeldOffer = {
   readonly usdPriceCents: number | null;
   readonly iqdPrice: number | null;
   readonly inStock: boolean;
+  readonly warrantyMonths: number | null;
   readonly confirmedAt: Date;
 };
 
@@ -40,7 +42,19 @@ export async function holdTheOffer(
   transaction: Transaction,
   which: SQL | undefined,
 ): Promise<HeldOffer | undefined> {
-  const [held] = await transaction
+  const [held] = await holdTheOffers(transaction, which);
+  return held;
+}
+
+// Every Offer that meets the condition, each held until the transaction
+// ends, as `holdTheOffer` holds one, read in one statement, so that a
+// writing of many Offers, such as an Offer sheet's upload, holds them all
+// before it changes any.
+export function holdTheOffers(
+  transaction: Transaction,
+  which: SQL | undefined,
+): Promise<HeldOffer[]> {
+  return transaction
     .select({
       id: offer.id,
       vendorId: offer.vendorId,
@@ -48,13 +62,12 @@ export async function holdTheOffer(
       usdPriceCents: offer.usdPriceCents,
       iqdPrice: offer.iqdPrice,
       inStock: offer.inStock,
+      warrantyMonths: offer.warrantyMonths,
       confirmedAt: offer.confirmedAt,
     })
     .from(offer)
     .where(which)
     .for('update');
-
-  return held;
 }
 
 // Writes the Vendor's new Offer for the Part, made at the moment written and

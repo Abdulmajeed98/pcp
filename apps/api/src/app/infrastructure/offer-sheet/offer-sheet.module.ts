@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { DownloadOfferSheetQuery } from '~/domain/offer-sheet/DownloadOfferSheetQuery';
 import { OfferSheetFile } from '~/domain/offer-sheet/OfferSheetFile';
 import { OfferSheetStore } from '~/domain/offer-sheet/OfferSheetStore';
+import { UploadOfferSheetCommand } from '~/domain/offer-sheet/UploadOfferSheetCommand';
 import { VendorModule } from '~/infrastructure/vendor/vendor.module';
 
 import { OfferSheetController } from './endpoints/offer-sheet.controller';
@@ -18,6 +19,7 @@ import { DatabaseOfferSheetStore } from './store/DatabaseOfferSheetStore';
     { provide: OfferSheetStore, useClass: DatabaseOfferSheetStore },
     { provide: OfferSheetFile, useClass: ExcelJsOfferSheetFile },
     DownloadOfferSheetQuery,
+    UploadOfferSheetCommand,
   ],
 })
 export class OfferSheetModule {}

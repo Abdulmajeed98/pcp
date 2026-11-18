@@ -1,5 +1,6 @@
 export { type ApiClient, type ApiClientOptions, createApiClient } from './api-client';
 export type {
+  AddedOfferResponse,
   BuildLowestPriceResponse,
   BuildMissingSpecificationResponse,
   BuildPartInStockResponse,
@@ -33,6 +34,7 @@ export type {
   MapLocationResponse,
   MissingSpecificationResponse,
   OfferResponse,
+  OfferSheetResultResponse,
   OpenPartRequestsPageResponse,
   OutcomeOfAnotherRuleResponse,
   OutcomeOfARuleThatCanWarnResponse,
@@ -56,11 +58,13 @@ export type {
   ReferralCountResponse,
   ReferralCountsPageResponse,
   ReferredVendorResponse,
+  RowMatchedByYourOfferResponse,
   SendingVendorResponse,
   SendPartRequestRequest,
   SetPlatformRateRequest,
   SharedBuildResponse,
   ShownPriceResponse,
+  SkippedRowResponse,
   SpecificationResponse,
   StatusResponse,
   SubErrorResponse,
