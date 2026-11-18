@@ -4,9 +4,10 @@ import type { CatalogPart } from './made-up-offers.ts';
 // of the catalog share: 81 GPUs at the commit of OpenDB the catalog import
 // is pinned to (`@pcp/opendb`), since OpenDB lists fragments of some codes
 // as part numbers (the sheet spec's Further Notes, measured on 18 November
-// 2026). The worst of the made-up results of an upload names them all for a
-// row whose part number is "OC", as the API names every Part that holds a
-// row's part number (`--offer-sheet-result worstCase`). Each is read by its
+// 2026). The worst of the made-up results of an upload names the first ten
+// of them for a row whose part number is "OC" and counts all 81, as the API
+// names the first ten Parts that hold a row's part number and counts every
+// one (`mostPartsNamed`, `--offer-sheet-result worstCase`). Each is read by its
 // Category and exact name, as the shop's other Parts are (ADR-0001: no Part
 // is invented); two of them share one name, so each name is read with every
 // Part of it that holds "OC" (`partsHoldingAPartNumber`).

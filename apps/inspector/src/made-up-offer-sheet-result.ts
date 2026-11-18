@@ -38,9 +38,10 @@ import { theSharedPartNumber } from './parts-holding-oc.ts';
 // Every Part a result names is a real Part of the catalog (ADR-0001), read
 // by its Category and exact name when the command starts, and everything is
 // typed by the API client's types, so a change to the API's answer fails
-// the type-check. Two of the API's rules are stated here, each beside the
+// the type-check. Three of the API's rules are stated here, each beside the
 // API's, which is the rule that counts: the rows a row of the same Part
-// twice names, and whether a row that matched no Part was already asked for.
+// twice names, the Parts a row of several Parts names, and whether a row
+// that matched no Part was already asked for.
 
 // The results shown: the made-up one; one with every row applied; and the
 // made-up one at its worst, for `break-ui`.
@@ -66,6 +67,11 @@ export const partsTheOfferSheetResultsName: readonly CatalogPart[] = [
 // The most other rows a row of the same Part twice names, as the API names
 // them (`mostOtherRowsNamed`).
 export const mostOtherRowsNamed = 10;
+
+// The most Parts a row of several Parts names, the first in the catalog's
+// order, as the API names them (`mostPartsNamed`); the catalog search with
+// the row's part number shows them all.
+export const mostPartsNamed = 10;
 
 // The longest name a row that matched no Part carries and the longest part
 // number a row carries, in code points, as the API cuts them: the longest a
@@ -375,7 +381,8 @@ export interface WhatTheResultNeeds {
 
 // A result as the API answers it, with the Parts the catalog gave for the
 // names. A row of the same Part twice names the first ten other rows of its
-// Part and counts all of them, and a row that matched no Part says whether
+// Part and counts all of them, a row of several Parts names the first ten
+// Parts and counts all of them, and a row that matched no Part says whether
 // the Vendor has an open Part Request of its part number, whatever the
 // case of its letters, as the API answers them.
 export function theOfferSheetResult(
@@ -424,13 +431,16 @@ export function theOfferSheetResult(
           partRequestOpen: openPartNumbers.has(partNumber.toLowerCase()),
         };
       }
-      case 'severalParts':
+      case 'severalParts': {
+        const parts = each.parts === 'oc' ? partsHoldingOc : each.parts.map(partOf);
         return {
           row,
           partNumber,
           problem: 'severalParts',
-          parts: each.parts === 'oc' ? [...partsHoldingOc] : each.parts.map(partOf),
+          parts: parts.slice(0, mostPartsNamed),
+          partCount: parts.length,
         };
+      }
       case 'samePart': {
         const others = (rowsOf.get(each.part.name) ?? []).filter((other) => other !== row);
         return {
