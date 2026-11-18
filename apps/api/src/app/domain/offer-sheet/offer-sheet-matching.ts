@@ -5,6 +5,7 @@ import {
   mostOtherRowsNamed,
   RowOfTheSamePart,
   RowWithNoPart,
+  mostPartsNamed,
   RowWithSeveralParts,
   SkippedRow,
 } from './OfferSheetResult';
@@ -76,7 +77,8 @@ function firstOtherRows(rowsOfThePart: readonly number[], row: number): number[]
 // - one Part holds its number: that Part;
 // - several do, and the Vendor offers exactly one of them: that Offer's
 //   Part, the tie-break;
-// - several do otherwise: skipped as several Parts, naming them all;
+// - several do otherwise: skipped as several Parts, naming the first of
+//   them, at most `mostPartsNamed`, and counting them all;
 // - none does: skipped as no Part, saying whether the Vendor has an open
 //   Part Request for the number.
 // The rows that matched one Part are compared last: when two or more
@@ -100,7 +102,14 @@ export function matchedRows(
     } else if (parts.length > 1 && offered.length === 1) {
       matched.push(new RowMatched(row, offered[0], true));
     } else if (parts.length > 1) {
-      skipped.push(new RowWithSeveralParts(row.getRow(), row.getPartNumber(), parts));
+      skipped.push(
+        new RowWithSeveralParts(
+          row.getRow(),
+          row.getPartNumber(),
+          parts.slice(0, mostPartsNamed),
+          parts.length,
+        ),
+      );
     } else {
       skipped.push(
         new RowWithNoPart(

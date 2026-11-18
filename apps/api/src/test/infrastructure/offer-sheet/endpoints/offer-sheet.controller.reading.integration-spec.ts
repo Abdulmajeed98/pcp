@@ -363,11 +363,13 @@ describe('Reading an uploaded Offer sheet', () => {
 
   describe("a result's size, which grows with its rows alone", () => {
     // The Admin's upload of a file, answered within 5 s with a result under
-    // 5 MB, the process holding under a quarter of a gibibyte more at its
-    // peak, and the API answering afterwards: the result as read.
+    // the size given, 5 MB unless told, the process holding under a quarter
+    // of a gibibyte more at its peak, and the API answering afterwards: the
+    // result as read.
     async function uploadedWithinBounds(
       vendorId: string,
       file: Buffer,
+      mostCharacters = 5 * 1024 * 1024,
     ): Promise<OfferSheetResultBody> {
       const started = Date.now();
       const { answered, grewBy } = await whileWatchingTheMemory(async () => {
@@ -377,7 +379,7 @@ describe('Reading an uploaded Offer sheet', () => {
 
       expect(answered.status).toBe(200);
       expect(Date.now() - started).toBeLessThan(5000);
-      expect(answered.text.length).toBeLessThan(5 * 1024 * 1024);
+      expect(answered.text.length).toBeLessThan(mostCharacters);
       expect(grewBy).toBeLessThan(aQuarterOfAGibibyte);
       expect((await platform.downloaded(vendorId, 'en')).length).toBeGreaterThan(0);
       return JSON.parse(answered.text) as OfferSheetResultBody;
@@ -405,6 +407,32 @@ describe('Reading an uploaded Offer sheet', () => {
         part,
         rows: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
         otherRows: 4999,
+      });
+    }, 60_000);
+
+    it('answers 5,000 rows of a number 81 Parts hold, each naming the first 10 of them and counting all', async () => {
+      const vendor = await platform.aVendor();
+      const parts = [];
+      for (let index = 0; index < 81; index++) {
+        parts.push(
+          await platform.aPart(`Made-up OC GPU ${String(index).padStart(2, '0')}`, ['OC']),
+        );
+      }
+      const file = await anOfferSheet(
+        Array.from({ length: 5000 }, () => ['OC', null, 100, null, yes, null]),
+      );
+
+      // Each row names 10 Parts, so the result holds 50,000 Part summaries:
+      // under 2 KB a row, 10 MB in all, where naming every Part held 64.7 MB.
+      const result = await uploadedWithinBounds(vendor.id, file, 10 * 1024 * 1024);
+
+      expect(result.skipped).toHaveLength(5000);
+      expect(result.skipped[4999]).toEqual({
+        row: 5001,
+        partNumber: 'OC',
+        problem: 'severalParts',
+        parts: parts.slice(0, 10),
+        partCount: 81,
       });
     }, 60_000);
 

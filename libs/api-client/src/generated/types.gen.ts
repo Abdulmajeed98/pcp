@@ -2032,9 +2032,13 @@ export type SkippedRowResponse = {
      */
     partRequestOpen?: boolean;
     /**
-     * Every Part that holds the row's part number, in the catalog's order. Left out unless the row matched several Parts.
+     * The first Parts that hold the row's part number, in the catalog's order, at most 10; the catalog search with the number shows them all. Left out unless the row matched several Parts.
      */
     parts?: Array<PartSummaryResponse>;
+    /**
+     * How many Parts hold the row's part number, every one of them, those `parts` names among them. Left out unless the row matched several Parts.
+     */
+    partCount?: number;
     /**
      * The Part the row and other rows matched. Left out unless another row matched the same Part.
      */

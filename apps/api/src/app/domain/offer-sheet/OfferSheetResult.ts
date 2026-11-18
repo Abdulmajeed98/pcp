@@ -8,6 +8,9 @@ import { OfferSheetRowNotValid } from './offer-sheet-row';
 // The most other rows a row skipped as the same Part twice names.
 export const mostOtherRowsNamed = 10;
 
+// The most Parts a row skipped as several Parts names.
+export const mostPartsNamed = 10;
+
 // An Offer an applied row made: the row's number, the Part and the Offer.
 export class AddedOffer {
   constructor(
@@ -89,6 +92,7 @@ export class RowWithSeveralParts {
     private readonly row: number,
     private readonly partNumber: string,
     private readonly parts: readonly Part[],
+    private readonly partCount: number,
   ) {}
 
   getRow(): number {
@@ -99,9 +103,17 @@ export class RowWithSeveralParts {
     return this.partNumber;
   }
 
-  // Every Part that holds the number, in the catalog's order.
+  // The first Parts that hold the number, in the catalog's order, at most
+  // `mostPartsNamed`, so that a number dozens of Parts hold, such as "OC",
+  // costs a row no more than any other; the catalog search with the number
+  // shows them all.
   getParts(): readonly Part[] {
     return this.parts;
+  }
+
+  // How many Parts hold the number, every one of them.
+  getPartCount(): number {
+    return this.partCount;
   }
 }
 
