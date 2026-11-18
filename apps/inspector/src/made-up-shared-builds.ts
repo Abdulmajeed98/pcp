@@ -2,6 +2,7 @@ import type { SharedBuildResponse } from '@pcp/api-client';
 
 import { type MadeUpBuild, madeUpBuilds, partValuesOf } from './made-up-builds.ts';
 import { madeUpIdentifier } from './made-up-vendors.ts';
+import { calendarDaysBetween, theDayOf } from './the-platforms-day.ts';
 import type { ShoppersShop } from './the-shoppers-shop.ts';
 
 // The made-up Shared Builds, which the Shared Build page is designed and
@@ -75,28 +76,6 @@ export function madeUpSharedBuildId(name: MadeUpSharedBuildName): string {
 
 const anHour = 60 * 60 * 1000;
 const aDay = 24 * anHour;
-
-// The day a moment falls on in Iraq's time, `2026-11-16`, and the calendar
-// days between two moments' days there, as the API answers a Shared Build's
-// `sharedOn` and `daysSinceShared`. The API's domain is the one that counts
-// (`the-platforms-day.ts` in `domain`); the stand-in cannot
-// import an app, so it states the same rule for its made-up Shared Builds,
-// and no test of the platform relies on it.
-const dayInIraq = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'Asia/Baghdad',
-  numberingSystem: 'latn',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
-function theDayOf(moment: Date): string {
-  return dayInIraq.format(moment);
-}
-
-function calendarDaysBetween(from: Date, to: Date): number {
-  return Math.round((Date.parse(theDayOf(to)) - Date.parse(theDayOf(from))) / aDay);
-}
 
 // The made-up Shared Builds at `now`, as `GET v1/shared-builds/{id}` answers
 // each, by its identifier; a made-up Build's Parts are the shop's, by its
