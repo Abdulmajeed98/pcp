@@ -1,6 +1,7 @@
 import type { SendPartRequestRequest } from '@pcp/api-client';
+import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { SearchIcon } from 'lucide-react';
+import { FileSpreadsheetIcon, SearchIcon } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { Controller, type FieldErrors, FormProvider, useForm } from 'react-hook-form';
 
@@ -19,6 +20,7 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
+  FileName,
   Input,
   NameField,
   NativeSelect,
@@ -37,11 +39,20 @@ export interface SearchedFor {
   category?: CategoryKey;
 }
 
+// A row of an Offer sheet a form was started from: its number in the file,
+// and the file's name.
+export interface FromARow {
+  row: number;
+  fileName: string;
+}
+
 // The Part Request form, in the Vendor portal's language, as the dashboard's
 // DESIGN.md lays it out (the owner's d4, taken under the standing instruction
 // of 18 November 2026, part-requests ticket 02): one column at most 40rem
 // wide. Opened from an empty catalog search, its head says so on a Raised
-// Stone line with a magnifier. Then the Part's three fields, in the API's
+// Stone line with a magnifier; started from a row of an Offer sheet that
+// matched no Part (SHT-6, the owner's d5, sheet ticket 03), the same line
+// with the file mark names the row and the file. Then the Part's three fields, in the API's
 // order of checks, with no legend of their own: its Category, the browser's
 // own select, starting at the search's Category or at none; its name, which
 // grows as a Part's name does and keeps its own direction; and its
@@ -61,12 +72,15 @@ export interface SearchedFor {
 export function PartRequestForm({
   values,
   searchedFor,
+  fromARow,
   save,
 }: {
   // What the form starts with.
   values: PartRequestFormValues;
   // The search it was opened from, if it was.
   searchedFor?: SearchedFor;
+  // The row of an Offer sheet it was started from, if it was.
+  fromARow?: FromARow;
   // Sends the request. It throws a `Refusal` when the API refuses it, and an
   // `Unreachable` when the API cannot be reached.
   save: (sent: SendPartRequestRequest) => Promise<unknown>;
@@ -99,6 +113,7 @@ export function PartRequestForm({
         onSubmit={handleSubmit(submit)}
       >
         {searchedFor !== undefined && <FromTheSearch searchedFor={searchedFor} />}
+        {fromARow !== undefined && <FromTheRow fromARow={fromARow} />}
 
         <PartField name="category" label={t('PartRequestForm.category')} errors={errors}>
           {(props) => (
@@ -221,6 +236,34 @@ function FromTheSearch({ searchedFor }: { searchedFor: SearchedFor }) {
               <AlwaysEnglish className="wrap-anywhere">{searchedFor.words}</AlwaysEnglish>
             ),
             category: <>{category === undefined ? '' : categoryName(category)}</>,
+          }}
+        />
+      </span>
+    </p>
+  );
+}
+
+// The line at the form's head when it was started from a row of an Offer
+// sheet: the row's number and the file's name, shown in its own direction
+// (DESIGN.md's Typography), on Raised Stone with 8-pixel corners after the
+// file mark, and what is left to do: choose the Category, which the file
+// does not hold, and send.
+function FromTheRow({ fromARow }: { fromARow: FromARow }) {
+  return (
+    <p
+      data-testid="from-a-row"
+      className="flex items-start gap-2 rounded-card bg-secondary px-3 py-2.5 text-sm"
+    >
+      <FileSpreadsheetIcon
+        aria-hidden="true"
+        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+      />
+      <span className="min-w-0">
+        <Trans
+          i18nKey="PartRequestForm.fromARow"
+          components={{
+            row: <span className="tabular-nums">{formatNumber(fromARow.row)}</span>,
+            file: <FileName name={fromARow.fileName} className="font-medium" />,
           }}
         />
       </span>
