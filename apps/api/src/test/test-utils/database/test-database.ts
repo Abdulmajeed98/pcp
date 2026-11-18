@@ -164,7 +164,7 @@ export function changeTheRateAndTheOffersWhileReading<T>(
   read: () => Promise<T>,
 ): Promise<T> {
   return changeWhileReading(
-    change.lockedTable,
+    lockingTheTable(change.lockedTable),
     async (changing) => {
       await addARate(changing, change.iqdPerUsd, change.setAt);
       await changing.query('UPDATE offer SET usd_price_cents = $1', [change.usdPriceCents]);
@@ -197,7 +197,7 @@ export function changeTheRateAndDeactivateAVendorWhileReading<T>(
   read: () => Promise<T>,
 ): Promise<T> {
   return changeWhileReading(
-    change.lockedTable,
+    lockingTheTable(change.lockedTable),
     async (changing) => {
       await addARate(changing, change.iqdPerUsd, change.setAt);
       await changing.query('UPDATE vendor SET active = false WHERE id = $1', [
@@ -216,11 +216,17 @@ async function addARate(changing: Client, iqdPerUsd: number, setAt: Date): Promi
   );
 }
 
-// A change made in one transaction, which holds one table locked from its
-// start until as many requests as given, one read unless told, have had to
-// wait for it, and only then commits; and what the requests answered.
+// What a change's transaction holds from its start: one table, locked.
+function lockingTheTable(lockedTable: string): (changing: Client) => Promise<unknown> {
+  return (changing) => changing.query(`LOCK TABLE ${lockedTable} IN ACCESS EXCLUSIVE MODE`);
+}
+
+// A change made in one transaction, which holds what it is told to hold, one
+// table or one row, from its start until as many requests as given, one read
+// unless told, have had to wait for it, and only then commits; and what the
+// requests answered.
 async function changeWhileReading<T>(
-  lockedTable: string,
+  hold: (changing: Client) => Promise<unknown>,
   change: (changing: Client) => Promise<void>,
   read: () => Promise<T>,
   waiting = 1,
@@ -231,7 +237,7 @@ async function changeWhileReading<T>(
   await watching.connect();
   try {
     await changing.query('BEGIN');
-    await changing.query(`LOCK TABLE ${lockedTable} IN ACCESS EXCLUSIVE MODE`);
+    await hold(changing);
     await change(changing);
 
     const reading = read();
@@ -275,7 +281,34 @@ export function sentWhileTheTableIsHeld<T>(
   waiting: number,
   send: () => Promise<T>,
 ): Promise<T> {
-  return changeWhileReading(lockedTable, async () => {}, send, waiting);
+  return changeWhileReading(lockingTheTable(lockedTable), async () => {}, send, waiting);
+}
+
+// Calls about one Part Request that meet its row at one moment, as calls
+// sent at once can: the row is held, as a resolution holds it, while they
+// are sent, and let go once as many as given wait for it. Each resolution
+// then has read the request before any other has changed it, unless it
+// waits for the row itself, which is what makes a request resolved once
+// (`part-requests` ticket 01). Only the row is held, so a read that does
+// not ask to hold it goes on, as it would beside a resolution.
+//
+// It is the sixth named exception that arranges data through the database,
+// after `sentWhileTheTableIsHeld`, for the same reason: no endpoint holds a
+// row.
+export function sentWhileThePartRequestIsHeld<T>(
+  partRequestId: string,
+  waiting: number,
+  send: () => Promise<T>,
+): Promise<T> {
+  return changeWhileReading(
+    (changing) =>
+      changing.query('SELECT id FROM part_request WHERE id = $1 FOR UPDATE', [
+        partRequestId,
+      ]),
+    async () => {},
+    send,
+    waiting,
+  );
 }
 
 // A fault planted in the database for as long as the function runs: a rule

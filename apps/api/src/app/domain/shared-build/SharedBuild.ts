@@ -1,4 +1,4 @@
-import { calendarDaysBetween, theDayOf } from './the-platforms-day';
+import { calendarDaysBetween, theDayOf } from '../the-platforms-day';
 
 // A Shared Build: a frozen copy of a Build's Parts and quantities, stored by
 // the platform behind a link, which never changes (SHR-1, SHR-3). It holds

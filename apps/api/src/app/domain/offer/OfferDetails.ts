@@ -135,6 +135,17 @@ export class OfferDetails {
     return Either.right(new OfferDetails(usdPriceCents, iqdPrice, inStock, warrantyMonths));
   }
 
+  // Details that were checked before they were kept, as they are read back
+  // from where they were kept, such as the Offer a Part Request would make.
+  static asKept(
+    usdPriceCents: number | null,
+    iqdPrice: number | null,
+    inStock: boolean,
+    warrantyMonths: number | null,
+  ): OfferDetails {
+    return new OfferDetails(usdPriceCents, iqdPrice, inStock, warrantyMonths);
+  }
+
   // The USD price in whole cents, or null when the Vendor quotes none.
   getUsdPriceCents(): number | null {
     return this.usdPriceCents;
