@@ -10,13 +10,25 @@ import { OfferOnTheSheet, PartNumbersOfAPart } from './OfferOnTheSheet';
 // Expired Offers among them, in the sheet's order, and which Parts of the
 // catalog hold each of their Parts' part numbers.
 export class OfferSheetContents {
+  private readonly offeredPartIds: ReadonlySet<string>;
+
   constructor(
-    private readonly offers: readonly OfferOnTheSheet[],
+    private readonly offersOfTheVendor: readonly OfferOnTheSheet[],
     private readonly holders: PartNumberHolders<PartNumbersOfAPart>,
-  ) {}
+  ) {
+    this.offeredPartIds = new Set(
+      offersOfTheVendor.map((offer) => offer.getPart().getId()),
+    );
+  }
 
   getOffers(): readonly OfferOnTheSheet[] {
-    return this.offers;
+    return this.offersOfTheVendor;
+  }
+
+  // Whether the Vendor has an Offer for the Part, an Expired Offer among
+  // them: every one of its Offers is a row.
+  offers(partId: string): boolean {
+    return this.offeredPartIds.has(partId);
   }
 
   getHolders(): PartNumberHolders<PartNumbersOfAPart> {

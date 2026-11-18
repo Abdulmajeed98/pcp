@@ -554,16 +554,44 @@ describe("Downloading a Vendor's Offer sheet", () => {
       expect(partNumber).toEqual({ text: 'MU-OWN-1' });
     });
 
-    it("is the Part's first when another Part holds each of its part numbers", async () => {
+    it('is the first that no other Part the Vendor offers holds, when another Part holds each of its part numbers, so that the tie-break matches it back', async () => {
       const vendor = await aVendor();
-      const offered = await aPart('Made-up Shared Numbers GPU', ['OC', 'MU-SHARED-2']);
-      await aPart('Made-up First Holder GPU', ['oc']);
-      await aPart('Made-up Second Holder GPU', ['MU-Shared-2', 'MU-HOLDER-OWN']);
+      const offered = await aPart('Made-up A Pair GPU Offered', ['MU-PAIR-1', 'MU-PAIR-2']);
+      await aPart('Made-up B Pair GPU Not Offered', ['mu-pair-1', 'MU-PAIR-2']);
+      const alsoOffered = await aPart('Made-up C Also Offered GPU', [
+        'MU-Pair-1',
+        'MU-ALSO-1',
+      ]);
       await anOffer(vendor.id, offered.id);
+      await anOffer(vendor.id, alsoOffered.id);
 
-      const [[partNumber]] = rowsBelowTheHeadings(await theOfferSheet(vendor.id, 'en'));
+      const rows = rowsBelowTheHeadings(await theOfferSheet(vendor.id, 'en'));
 
-      expect(partNumber).toEqual({ text: 'OC' });
+      expect(rows.map(([partNumber]) => partNumber)).toEqual([
+        { text: 'MU-PAIR-2' },
+        { text: 'MU-ALSO-1' },
+      ]);
+    });
+
+    it("is the Part's first when another Part the Vendor offers holds each of its part numbers", async () => {
+      const vendor = await aVendor();
+      const offered = await aPart('Made-up A Shared Numbers GPU', ['OC', 'MU-SHARED-2']);
+      const first = await aPart('Made-up B First Holder GPU', ['oc', 'MU-FIRST-OWN']);
+      const second = await aPart('Made-up C Second Holder GPU', [
+        'MU-Shared-2',
+        'MU-SECOND-OWN',
+      ]);
+      await anOffer(vendor.id, offered.id);
+      await anOffer(vendor.id, first.id);
+      await anOffer(vendor.id, second.id);
+
+      const rows = rowsBelowTheHeadings(await theOfferSheet(vendor.id, 'en'));
+
+      expect(rows.map(([partNumber]) => partNumber)).toEqual([
+        { text: 'OC' },
+        { text: 'MU-FIRST-OWN' },
+        { text: 'MU-SECOND-OWN' },
+      ]);
     });
 
     it('is an empty cell for a Part that has none', async () => {

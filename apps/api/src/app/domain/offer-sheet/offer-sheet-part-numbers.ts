@@ -44,18 +44,34 @@ export class PartNumberHolders<Holder extends HoldsPartNumbers> {
   }
 }
 
-// The part number an Offer sheet's row is given: the first of the Part's
-// part numbers that no other Part holds, compared by the fold, so that the
-// upload matches the row back to this Part alone; when another Part holds
-// every one, the Part's first, which the upload's tie-break matches back to
-// the Vendor's Offer; and none for a Part that has none.
+// The part number an Offer sheet's row is given, compared by the fold, so
+// that the upload matches the row back to the Vendor's Offer for the Part:
+// - the first of the Part's part numbers that no other Part holds, which
+//   the upload matches to this Part alone;
+// - else the first that no other Part the Vendor offers holds, which the
+//   upload's tie-break matches back to the Vendor's Offer;
+// - else the Part's first. Another Part the Vendor offers then holds each
+//   of its numbers, as two colour editions of one GPU hold the same ones,
+//   so that no number tells the two Offers apart, and the upload skips the
+//   row as several Parts;
+// - and none for a Part that has none.
 export function partNumberOfTheRow(
   part: HoldsPartNumbers,
   holders: PartNumberHolders<HoldsPartNumbers>,
+  offers: (partId: string) => boolean,
 ): string | null {
   const partNumbers = part.getPartNumbers();
-  const own = partNumbers.find((partNumber) =>
-    holders.of(partNumber).every((holder) => holder.getId() === part.getId()),
+  // The first of the Part's numbers that no other Part counted holds.
+  const heldByNoOther = (counted: (holder: HoldsPartNumbers) => boolean) =>
+    partNumbers.find((partNumber) =>
+      holders
+        .of(partNumber)
+        .every((holder) => holder.getId() === part.getId() || !counted(holder)),
+    );
+  return (
+    heldByNoOther(() => true) ??
+    heldByNoOther((holder) => offers(holder.getId())) ??
+    partNumbers[0] ??
+    null
   );
-  return own ?? partNumbers[0] ?? null;
 }

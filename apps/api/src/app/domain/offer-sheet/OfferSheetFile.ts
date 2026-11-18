@@ -31,7 +31,7 @@ export class OfferSheetWritten {
       const details = offer.getDetails();
       const cents = details.getUsdPriceCents();
       return [
-        partNumberOfTheRow(offer.getPart(), holders),
+        partNumberOfTheRow(offer.getPart(), holders, (partId) => contents.offers(partId)),
         offer.getPart().getName(),
         cents === null ? null : cents / 100,
         details.getIqdPrice(),

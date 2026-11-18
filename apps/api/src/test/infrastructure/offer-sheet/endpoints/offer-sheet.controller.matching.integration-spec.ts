@@ -452,6 +452,19 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
   });
 
   describe('the round trip', () => {
+    // The row of each Part in a downloaded file, found by the Part's name.
+    async function rowsNamedIn(file: Buffer): Promise<(name: string) => number> {
+      const workbook = new Workbook();
+      await workbook.xlsx.load(new Uint8Array(file).buffer);
+      return (name) => {
+        let found = 0;
+        workbook.worksheets[0].eachRow((row, number) => {
+          if (row.getCell(2).value === name) found = number;
+        });
+        return found;
+      };
+    }
+
     it('confirms every row of a downloaded Offer sheet uploaded unchanged, a Part whose every number another Part holds among them, and skips the row of a Part with none as its part number missing', async () => {
       const vendor = await platform.aVendor();
       const own = await platform.aPart('Made-up Own GPU', ['MU-OWN-1']);
@@ -467,6 +480,19 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
       await platform.aPart('Made-up Other GPU One', ['mu-all-1']);
       await platform.aPart('Made-up Other GPU Two', ['MU-ALL-2']);
       const none = await platform.aPart('Made-up Numberless GPU', []);
+      // A pair whose numbers are the same, of which the Vendor offers one,
+      // and a third Part, which the Vendor offers too, holding the pair's
+      // first number: only the pair's second number, which no other Part the
+      // Vendor offers holds, tells the Vendor's Offer apart.
+      const pairOffered = await platform.aPart('Made-up Pair GPU Offered', [
+        'MU-PAIR-1',
+        'MU-PAIR-2',
+      ]);
+      await platform.aPart('Made-up Pair GPU Not Offered', ['mu-pair-1', 'MU-PAIR-2']);
+      const alsoHolding = await platform.aPart('Made-up Also Holding GPU', [
+        'MU-PAIR-1',
+        'MU-ALSO-1',
+      ]);
       moveTheClockTo(aDayBefore);
       await platform.anOffer(vendor.id, own.id, {
         usdPrice: '349.99',
@@ -484,28 +510,24 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
         warrantyMonths: 6,
       });
       await platform.anOffer(vendor.id, none.id, { usdPrice: '99.50' });
+      await platform.anOffer(vendor.id, pairOffered.id, { usdPrice: '459.00' });
+      await platform.anOffer(vendor.id, alsoHolding.id, { usdPrice: '479.00' });
       const file = await platform.downloaded(vendor.id, 'ckb');
       const offersBefore = (await platform.theVendorsOffers(vendor.id)).offers;
       moveTheClockTo(theUpload);
 
       const result = await platform.uploaded(vendor.id, file);
 
-      // The rows the download wrote, found by the Part's name.
-      const workbook = new Workbook();
-      await workbook.xlsx.load(new Uint8Array(file).buffer);
-      const rowNamed = (name: string) => {
-        let found = 0;
-        workbook.worksheets[0].eachRow((row, number) => {
-          if (row.getCell(2).value === name) found = number;
-        });
-        return found;
-      };
+      const rowNamed = await rowsNamedIn(file);
       expect(result).toEqual({
-        rows: 4,
+        rows: 6,
         added: [],
         changed: 0,
-        confirmed: 3,
-        matchedByYourOffer: [{ row: rowNamed(allShared.name), part: allShared }],
+        confirmed: 5,
+        matchedByYourOffer: [
+          { row: rowNamed(allShared.name), part: allShared },
+          { row: rowNamed(pairOffered.name), part: pairOffered },
+        ],
         skipped: [
           {
             row: rowNamed(none.name),
@@ -525,6 +547,63 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
           inStock: before?.inStock,
           warrantyMonths: before?.warrantyMonths,
           confirmedAt: (offer.part.id === none.id ? aDayBefore : theUpload).toISOString(),
+        });
+      }
+    });
+
+    it('skips as several Parts the rows of two Offers whose Parts hold exactly the same part numbers, which no number tells apart, changing neither, and applies every other row', async () => {
+      const vendor = await platform.aVendor();
+      // Two colour editions of one GPU, holding the same numbers, the Vendor
+      // offering both.
+      const black = await platform.aPart('Made-up Twin GPU Black', [
+        'MU-TWIN-1',
+        'MU-TWIN-2',
+      ]);
+      const white = await platform.aPart('Made-up Twin GPU White', [
+        'mu-twin-1',
+        'MU-TWIN-2',
+      ]);
+      const own = await platform.aPart('Made-up Own GPU', ['MU-OWN-1']);
+      moveTheClockTo(aDayBefore);
+      await platform.anOffer(vendor.id, black.id, { usdPrice: '499.00' });
+      await platform.anOffer(vendor.id, white.id, { usdPrice: '519.00' });
+      await platform.anOffer(vendor.id, own.id, { usdPrice: '349.99' });
+      const file = await platform.downloaded(vendor.id, 'en');
+      const offersBefore = (await platform.theVendorsOffers(vendor.id)).offers;
+      moveTheClockTo(theUpload);
+
+      const result = await platform.uploaded(vendor.id, file);
+
+      const rowNamed = await rowsNamedIn(file);
+      expect(result).toEqual({
+        rows: 3,
+        added: [],
+        changed: 0,
+        confirmed: 1,
+        matchedByYourOffer: [],
+        skipped: [
+          {
+            row: rowNamed(black.name),
+            partNumber: 'MU-TWIN-1',
+            problem: 'severalParts',
+            parts: [black, white],
+            partCount: 2,
+          },
+          {
+            row: rowNamed(white.name),
+            partNumber: 'mu-twin-1',
+            problem: 'severalParts',
+            parts: [black, white],
+            partCount: 2,
+          },
+        ],
+      });
+      const offersAfter = (await platform.theVendorsOffers(vendor.id)).offers;
+      for (const offer of offersAfter) {
+        const before = offersBefore.find(({ id }) => id === offer.id);
+        expect(offer).toMatchObject({
+          usdPrice: before?.usdPrice,
+          confirmedAt: (offer.part.id === own.id ? theUpload : aDayBefore).toISOString(),
         });
       }
     });
