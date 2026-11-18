@@ -1,6 +1,5 @@
 import type { SendPartRequestRequest } from '@pcp/api-client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { PackagePlusIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import type { CategoryKey } from '@/entities/category';
@@ -10,6 +9,7 @@ import {
   partRequestFormValues,
   type SearchedFor,
   type SentPartRequest,
+  WhatHappensNext,
 } from '@/features/part-request-form';
 import { apiClient, dataOf, partRequestsKey } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
@@ -96,31 +96,4 @@ export function NewPartRequestPage() {
 function searchedForIn(params: URLSearchParams): SearchedFor | undefined {
   const { words, category } = wordsAndCategoryIn<CategoryKey>(params);
   return words.trim() === '' ? undefined : { words: words.trim(), category };
-}
-
-// What happens to a request once it is sent, in three sentences, on Raised
-// Stone with 8-pixel corners: what the Admin does with it, that the Offer
-// is made with these details, confirmed as of the day it is sent, and that
-// the request is followed under Part Requests.
-function WhatHappensNext() {
-  const { t } = useTranslation();
-
-  return (
-    <aside
-      data-testid="what-happens-next"
-      aria-labelledby="what-happens-next"
-      className="flex min-w-0 flex-col gap-3 rounded-card bg-secondary p-4 text-sm"
-    >
-      <h2
-        id="what-happens-next"
-        className="flex items-center gap-2 text-base font-semibold"
-      >
-        <PackagePlusIcon aria-hidden="true" className="size-4 shrink-0" />
-        {t('NewPartRequest.nextTitle')}
-      </h2>
-      <p>{t('NewPartRequest.nextFound')}</p>
-      <p>{t('NewPartRequest.nextOffer')}</p>
-      <p>{t('NewPartRequest.nextFollowed')}</p>
-    </aside>
-  );
 }
