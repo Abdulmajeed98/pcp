@@ -163,7 +163,7 @@ The API gains two endpoints: one gives the Vendor's Offer sheet in a language as
 44. As a Vendor, I want a row whose part number matched no Part reported as such, with the part number I wrote (SHT-5).
 45. As a Vendor, I want a row whose part number matched several Parts to name them, in English, with their manufacturer and Category, so that I know which Parts share that code (SHT-5).
 46. As a Vendor with such a row, I want a way to the catalog search with that part number, so that I can add the Offer for the Part I meant.
-47. As a Vendor, I want two rows naming the same Part both skipped and each to name the other, so that the platform never guesses which of my two prices is right.
+47. As a Vendor, I want two rows naming the same Part both skipped and each to name the other, the first ten others and how many there are when more rows name it, so that the platform never guesses which of my two prices is right.
 48. As a Vendor, I want a row that is not valid to name its column by the file's heading and say what is wrong, as the Offer form says it, for example that there is no price (SHT-5).
 49. As a Vendor, I want only the first problem of a row named, in the columns' order, so that the result stays short.
 50. As a Vendor, I want a row with no part number reported as such, so that I know to fill it in or change that Offer in the portal.
@@ -316,7 +316,7 @@ The API gains two endpoints: one gives the Vendor's Offer sheet in a language as
   - Several Parts hold it, and the Vendor has an Offer for exactly one of them: the row is that Offer's Part. This is the tie-break. The result lists every row applied this way with its Part.
   - Several Parts hold it otherwise: the row is skipped as **several Parts**, naming them all.
   - No Part holds it: the row is skipped as **no Part**.
-- **The same Part twice.** The rows that matched one Part are compared last. When two or more rows matched the same Part, by one part number or by two of its numbers, every one of them is skipped as **the same Part twice**, each naming the others' row numbers. The platform never chooses between two of a Vendor's prices.
+- **The same Part twice.** The rows that matched one Part are compared last. When two or more rows matched the same Part, by one part number or by two of its numbers, every one of them is skipped as **the same Part twice**, each naming the row numbers of the first ten others, by row number, and counting every other. The platform never chooses between two of a Vendor's prices. A row names at most ten, so that the result grows with its rows and never with the square of them: a file of 5,000 rows naming one Part would otherwise answer 25 million row numbers, 120 MB.
 - **One read for a whole file.** The catalog's matches, the Vendor's Offers for the Parts found, and the Vendor's open Part Requests' part numbers are each read once for the whole file, not once a row. At the catalog's size, about 37,000 part numbers, no new index is expected; the first ticket measures a file of 5,000 rows against the development database and adds one, with its migration, only if the measure asks for it.
 
 ### Applying the rows
@@ -342,13 +342,13 @@ The answer, 200, holds:
 - `added`: each added Offer, with its row number, its Part (the catalog's `PartSummaryResponse`) and its `offerId`;
 - `changed` and `confirmed`: their counts;
 - `matchedByYourOffer`: each applied row whose part number named several Parts, with its row number and the Part it was applied to;
-- `skipped`: every skipped row, ordered by row number. Each gives its `row`, its `partNumber` (as cleaned, or as written when its own cell was the problem) and its `problem`:
-  - `noPart`, with the row's details as they were checked: `name` as written or null, both prices as an Offer answers them, `inStock` and `warrantyMonths`. These are what `sendPartRequest` takes, but the Category. It also gives `partRequestOpen`: whether the Vendor has an open Part Request whose part number is the row's, folded as above;
+- `skipped`: every skipped row, ordered by row number. Each gives its `row`, its `partNumber` (as cleaned, or as written when its own cell was the problem, then cut to its first 100 code points, the longest a part number may be) and its `problem`:
+  - `noPart`, with the row's details as they were checked: `name` as written, cut to its first 300 code points, the longest name a Part Request takes, or null, both prices as an Offer answers them, `inStock` and `warrantyMonths`. These are what `sendPartRequest` takes, but the Category. It also gives `partRequestOpen`: whether the Vendor has an open Part Request whose part number is the row's, folded as above;
   - `severalParts`, with `parts`, each a `PartSummaryResponse`;
-  - `samePart`, with `part` and `rows`, the other rows that named it;
+  - `samePart`, with `part`, `rows`, the first ten other rows that named it, by row number, without the row itself, and `otherRows`, how many other rows named it;
   - `notValid`, with `field` and `reason`.
 
-A field a problem does not hold is left out, not null, as a Part Request's state fields are. `@pcp/api-client` exports the response types, so that no screen writes the problems by hand.
+Every text the result carries from a cell is cut so, to the most the platform takes for it, never inside a character, so that the result's size grows with its rows alone, whatever its cells hold: one cell of the shared strings, up to 32,767 characters, can stand in every row of a file. A field a problem does not hold is left out, not null, as a Part Request's state fields are. `@pcp/api-client` exports the response types, so that no screen writes the problems by hand.
 
 ### The API
 
@@ -391,7 +391,7 @@ A field a problem does not hold is left out, not null, as a Part Request's state
   - The skipped rows, grouped by problem, each with its row number and the part number `AsWritten`, left to right:
     - **no Part** offers "Ask for it to be added", or says it was already asked for, with a link to the Vendor's Part Requests, when `partRequestOpen` says so;
     - **several Parts** names each Part `AlwaysEnglish` with its manufacturer and Category, and leads to the catalog search with the part number as its search;
-    - **the same Part twice** names the Part and the other rows;
+    - **the same Part twice** names the Part and the other rows, the first ten and how many there are;
     - **not valid** names the column by the file's heading in the portal's language, and says the reason as the Offer form says it. A part number that is missing says that a row needs one, and that an Offer whose Part has none is changed on the Offers screen.
 
   How a result of thousands of skipped rows stays readable on a phone, folded, paged or otherwise, is the design ticket's to propose.
