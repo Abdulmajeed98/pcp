@@ -1,5 +1,5 @@
 import { Part } from '../part/Part';
-import { foldedPartNumber } from './offer-sheet-layout';
+import { foldedPartNumber, PartNumberHolders } from './offer-sheet-part-numbers';
 import { OfferSheetRow } from './offer-sheet-row';
 import {
   mostOtherRowsNamed,
@@ -47,20 +47,6 @@ export type RowsMatched = {
   readonly skipped: readonly SkippedRow[];
 };
 
-// The Parts that hold each part number, folded, in the catalog's order.
-function holdersIn(matches: OfferSheetMatches): Map<string, Part[]> {
-  const holders = new Map<string, Part[]>();
-  for (const part of matches.getParts()) {
-    for (const partNumber of part.getPartNumbers()) {
-      const folded = foldedPartNumber(partNumber);
-      const parts = holders.get(folded) ?? [];
-      if (!parts.includes(part)) parts.push(part);
-      holders.set(folded, parts);
-    }
-  }
-  return holders;
-}
-
 // The first rows of a Part other than one of them, in order, at most
 // `mostOtherRowsNamed`: read only as far as they go, so that a Part that
 // every row of a file names costs each row no more than any other.
@@ -88,14 +74,14 @@ export function matchedRows(
   rows: readonly OfferSheetRow[],
   matches: OfferSheetMatches,
 ): RowsMatched {
-  const holders = holdersIn(matches);
+  // The Parts that hold each part number, in the catalog's order.
+  const holders = new PartNumberHolders(matches.getParts());
   const requested = new Set(matches.getOpenPartRequestNumbers().map(foldedPartNumber));
 
   const matched: RowMatched[] = [];
   const skipped: SkippedRow[] = [];
   for (const row of rows) {
-    const folded = foldedPartNumber(row.getPartNumber());
-    const parts = holders.get(folded) ?? [];
+    const parts = holders.of(row.getPartNumber());
     const offered = parts.filter((part) => matches.offers(part.getId()));
     if (parts.length === 1) {
       matched.push(new RowMatched(row, parts[0], false));
@@ -117,7 +103,7 @@ export function matchedRows(
           row.getPartNumber(),
           row.getName(),
           row.getDetails(),
-          requested.has(folded),
+          requested.has(foldedPartNumber(row.getPartNumber())),
         ),
       );
     }

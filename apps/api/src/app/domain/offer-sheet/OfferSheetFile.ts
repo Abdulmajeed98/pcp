@@ -6,7 +6,7 @@ import {
   OfferSheetColumnWritten,
   OfferSheetLayout,
 } from './offer-sheet-layout';
-import { partNumberOfTheRow } from './OfferOnTheSheet';
+import { partNumberOfTheRow } from './offer-sheet-part-numbers';
 import { OfferSheetContents } from './OfferSheetStore';
 
 // A cell of an Offer sheet as it is written: text, a number, or nothing.

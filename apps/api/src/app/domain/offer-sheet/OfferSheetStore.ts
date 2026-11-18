@@ -3,7 +3,8 @@ import { Either } from 'effect';
 
 import { OfferDetails } from '../offer/OfferDetails';
 import { Part } from '../part/Part';
-import { OfferOnTheSheet, PartNumberHolders } from './OfferOnTheSheet';
+import { PartNumberHolders } from './offer-sheet-part-numbers';
+import { OfferOnTheSheet, PartNumbersOfAPart } from './OfferOnTheSheet';
 
 // What a Vendor's Offer sheet is written from: every Offer of the Vendor,
 // Expired Offers among them, in the sheet's order, and which Parts of the
@@ -11,14 +12,14 @@ import { OfferOnTheSheet, PartNumberHolders } from './OfferOnTheSheet';
 export class OfferSheetContents {
   constructor(
     private readonly offers: readonly OfferOnTheSheet[],
-    private readonly holders: PartNumberHolders,
+    private readonly holders: PartNumberHolders<PartNumbersOfAPart>,
   ) {}
 
   getOffers(): readonly OfferOnTheSheet[] {
     return this.offers;
   }
 
-  getHolders(): PartNumberHolders {
+  getHolders(): PartNumberHolders<PartNumbersOfAPart> {
     return this.holders;
   }
 }

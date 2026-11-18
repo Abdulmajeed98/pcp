@@ -4,11 +4,13 @@ import { and, asc, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { Either } from 'effect';
 
 import { OfferDetails } from '~/domain/offer/OfferDetails';
-import { foldedPartNumber } from '~/domain/offer-sheet/offer-sheet-layout';
+import {
+  foldedPartNumber,
+  PartNumberHolders,
+} from '~/domain/offer-sheet/offer-sheet-part-numbers';
 import {
   OfferOnTheSheet,
-  PartNumberHeld,
-  PartNumberHolders,
+  PartNumbersOfAPart,
   PartOnTheSheet,
 } from '~/domain/offer-sheet/OfferOnTheSheet';
 import {
@@ -153,10 +155,8 @@ export class DatabaseOfferSheetStore extends OfferSheetStore {
             ),
           ),
       );
-      const held = holders.flatMap((holder) =>
-        holder.partNumbers.map(
-          (partNumber) => new PartNumberHeld(holder.partId, partNumber),
-        ),
+      const held = holders.map(
+        (holder) => new PartNumbersOfAPart(holder.partId, holder.partNumbers),
       );
       return Either.right(new OfferSheetContents(offers, new PartNumberHolders(held)));
     } catch (error) {

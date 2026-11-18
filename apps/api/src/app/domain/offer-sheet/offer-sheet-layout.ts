@@ -8,7 +8,6 @@ import {
 } from '@pcp/i18n';
 import { Either } from 'effect';
 
-import { cleanPartNumber } from '../part/part-numbers';
 import { holdsText } from '../vendor/detail-text';
 import { offerSheetLanguageRefused } from './offer-sheet-errors';
 import type { OfferSheetCellRead } from './OfferSheetFile';
@@ -93,14 +92,6 @@ export function inStockSaidBy(word: string): boolean | undefined {
   if (inEveryLanguage((words) => words.yes).has(said)) return true;
   if (inEveryLanguage((words) => words.no).has(said)) return false;
   return undefined;
-}
-
-// A part number folded as the upload compares it and the download chooses
-// it: cleaned as the catalog cleans one, then in lower case, as the
-// catalog's search text folds it. Nothing else of it is dropped, so a match
-// is exact but for case and invisible marks.
-export function foldedPartNumber(partNumber: string): string {
-  return cleanPartNumber(partNumber).toLowerCase();
 }
 
 // The language an Offer sheet was asked for in, or why it was refused: none

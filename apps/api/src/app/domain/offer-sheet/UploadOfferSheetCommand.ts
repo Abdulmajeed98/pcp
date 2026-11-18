@@ -6,12 +6,12 @@ import { OfferDetails } from '../offer/OfferDetails';
 import { VendorAccessRule } from '../vendor/VendorAccessRule';
 import { offerSheetRefused } from './offer-sheet-errors';
 import {
-  foldedPartNumber,
   isTheLayout,
   largestOfferSheetBytes,
   mostRowsOfAnOfferSheet,
 } from './offer-sheet-layout';
 import { matchedRows } from './offer-sheet-matching';
+import { foldedPartNumber } from './offer-sheet-part-numbers';
 import { checkedRow, isEmptyRow } from './offer-sheet-row';
 import {
   emptyCell,

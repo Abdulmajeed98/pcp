@@ -1,9 +1,9 @@
 import { OfferDetails } from '../offer/OfferDetails';
-import { foldedPartNumber } from './offer-sheet-layout';
+import { HoldsPartNumbers } from './offer-sheet-part-numbers';
 
 // A Part as an Offer sheet's row needs it: its name, in English as the
 // catalog holds it (LANG-3), and its part numbers, in the catalog's order.
-export class PartOnTheSheet {
+export class PartOnTheSheet implements HoldsPartNumbers {
   constructor(
     private readonly id: string,
     private readonly name: string,
@@ -45,56 +45,19 @@ export class OfferOnTheSheet {
   }
 }
 
-// A part number of a Part in the catalog, as it is kept: the Part that holds
-// it and the number.
-export class PartNumberHeld {
+// A Part of the catalog as far as its part numbers go, as the download
+// reads the Parts that hold its rows' numbers.
+export class PartNumbersOfAPart implements HoldsPartNumbers {
   constructor(
-    private readonly partId: string,
-    private readonly partNumber: string,
+    private readonly id: string,
+    private readonly partNumbers: readonly string[],
   ) {}
 
-  getPartId(): string {
-    return this.partId;
+  getId(): string {
+    return this.id;
   }
 
-  getPartNumber(): string {
-    return this.partNumber;
+  getPartNumbers(): readonly string[] {
+    return this.partNumbers;
   }
-}
-
-// Which Parts of the catalog hold each part number, compared by the fold, as
-// far as the part numbers asked about go.
-export class PartNumberHolders {
-  private readonly holders = new Map<string, Set<string>>();
-
-  constructor(held: readonly PartNumberHeld[]) {
-    for (const each of held) {
-      const folded = foldedPartNumber(each.getPartNumber());
-      const parts = this.holders.get(folded) ?? new Set<string>();
-      parts.add(each.getPartId());
-      this.holders.set(folded, parts);
-    }
-  }
-
-  // Whether a Part other than this one holds the part number.
-  heldByAnotherPart(partNumber: string, partId: string): boolean {
-    const parts = this.holders.get(foldedPartNumber(partNumber)) ?? new Set<string>();
-    return [...parts].some((holder) => holder !== partId);
-  }
-}
-
-// The part number an Offer sheet's row is given: the first of the Part's
-// part numbers that no other Part holds, compared by the fold, so that the
-// upload matches the row back to this Part alone; when another Part holds
-// every one, the Part's first, which the upload's tie-break matches back to
-// the Vendor's Offer; and none for a Part that has none.
-export function partNumberOfTheRow(
-  part: PartOnTheSheet,
-  holders: PartNumberHolders,
-): string | null {
-  const partNumbers = part.getPartNumbers();
-  const own = partNumbers.find(
-    (partNumber) => !holders.heldByAnotherPart(partNumber, part.getId()),
-  );
-  return own ?? partNumbers[0] ?? null;
 }
