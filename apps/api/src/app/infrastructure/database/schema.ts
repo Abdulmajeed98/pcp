@@ -1,5 +1,6 @@
 import * as offerSchema from '~/infrastructure/offer/offer.schema';
 import * as partSchema from '~/infrastructure/part/part.schema';
+import * as partRequestSchema from '~/infrastructure/part-request/part-request.schema';
 import * as photoSchema from '~/infrastructure/photo/photo.schema';
 import * as platformRateSchema from '~/infrastructure/platform-rate/platform-rate.schema';
 import * as referralSchema from '~/infrastructure/referral/referral.schema';
@@ -10,6 +11,7 @@ import * as vendorSchema from '~/infrastructure/vendor/vendor.schema';
 export const schema = {
   ...offerSchema,
   ...partSchema,
+  ...partRequestSchema,
   ...photoSchema,
   ...platformRateSchema,
   ...referralSchema,

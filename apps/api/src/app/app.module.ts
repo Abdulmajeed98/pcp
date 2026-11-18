@@ -10,6 +10,7 @@ import { validate } from '~/infrastructure/configuration/env.validation';
 import { DatabaseModule } from '~/infrastructure/database/database.module';
 import { OfferModule } from '~/infrastructure/offer/offer.module';
 import { PartModule } from '~/infrastructure/part/part.module';
+import { PartRequestModule } from '~/infrastructure/part-request/part-request.module';
 import { PlatformRateModule } from '~/infrastructure/platform-rate/platform-rate.module';
 import { ReferralModule } from '~/infrastructure/referral/referral.module';
 import { SharedBuildModule } from '~/infrastructure/shared-build/shared-build.module';
@@ -36,6 +37,7 @@ import { VendorModule } from '~/infrastructure/vendor/vendor.module';
     BuildModule,
     SharedBuildModule,
     ReferralModule,
+    PartRequestModule,
   ],
 })
 export class AppModule {}

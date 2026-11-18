@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListReferralCountsData, ListReferralCountsErrors, ListReferralCountsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ListVisibleOffersOfVendorData, ListVisibleOffersOfVendorErrors, ListVisibleOffersOfVendorResponses, ListVisiblePartsData, ListVisiblePartsErrors, ListVisiblePartsResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadBuildData, ReadBuildErrors, ReadBuildResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadPlatformFiguresData, ReadPlatformFiguresErrors, ReadPlatformFiguresResponses, ReadPlatformRateData, ReadPlatformRateErrors, ReadPlatformRateResponses, ReadSharedBuildData, ReadSharedBuildErrors, ReadSharedBuildResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ReadVendorsReferralCountData, ReadVendorsReferralCountErrors, ReadVendorsReferralCountResponses, ReadVisiblePartData, ReadVisiblePartErrors, ReadVisiblePartResponses, ReadVisiblePartsFiltersData, ReadVisiblePartsFiltersErrors, ReadVisiblePartsFiltersResponses, ReadVisibleVendorData, ReadVisibleVendorErrors, ReadVisibleVendorResponses, RecordReferralData, RecordReferralErrors, RecordReferralResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses, SetPlatformRateData, SetPlatformRateErrors, SetPlatformRateResponses, ShareBuildData, ShareBuildErrors, ShareBuildResponses } from './types.gen';
+import type { AddPartPhotoData, AddPartPhotoErrors, AddPartPhotoResponses, ConfirmAllOffersData, ConfirmAllOffersErrors, ConfirmAllOffersResponses, CreateOfferData, CreateOfferErrors, CreateOfferResponses, CreatePartData, CreatePartErrors, CreatePartResponses, CreateVendorData, CreateVendorErrors, CreateVendorResponses, DeactivateVendorData, DeactivateVendorErrors, DeactivateVendorResponses, EditContactDetailsData, EditContactDetailsErrors, EditContactDetailsResponses, EditOfferData, EditOfferErrors, EditOfferResponses, EditPartData, EditPartErrors, EditPartResponses, EditVendorData, EditVendorErrors, EditVendorResponses, FulfilPartRequestData, FulfilPartRequestErrors, FulfilPartRequestResponses, GetCallerData, GetCallerErrors, GetCallerResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListOpenPartRequestsData, ListOpenPartRequestsErrors, ListOpenPartRequestsResponses, ListPartsMissingSpecificationsData, ListPartsMissingSpecificationsErrors, ListPartsMissingSpecificationsResponses, ListReferralCountsData, ListReferralCountsErrors, ListReferralCountsResponses, ListVendorsData, ListVendorsErrors, ListVendorsOffersData, ListVendorsOffersErrors, ListVendorsOffersResponses, ListVendorsPartRequestsData, ListVendorsPartRequestsErrors, ListVendorsPartRequestsResponses, ListVendorsResponses, ListVendorsWithExpiringOffersData, ListVendorsWithExpiringOffersErrors, ListVendorsWithExpiringOffersResponses, ListVisibleOffersOfPartData, ListVisibleOffersOfPartErrors, ListVisibleOffersOfPartResponses, ListVisibleOffersOfVendorData, ListVisibleOffersOfVendorErrors, ListVisibleOffersOfVendorResponses, ListVisiblePartsData, ListVisiblePartsErrors, ListVisiblePartsResponses, ReactivateVendorData, ReactivateVendorErrors, ReactivateVendorResponses, ReadBuildData, ReadBuildErrors, ReadBuildResponses, ReadCallersVendorData, ReadCallersVendorErrors, ReadCallersVendorResponses, ReadCategoriesData, ReadCategoriesErrors, ReadCategoriesResponses, ReadOfferData, ReadOfferErrors, ReadOfferResponses, ReadPartData, ReadPartErrors, ReadPartRequestData, ReadPartRequestErrors, ReadPartRequestResponses, ReadPartResponses, ReadPhotoData, ReadPhotoErrors, ReadPhotoResponses, ReadPlatformFiguresData, ReadPlatformFiguresErrors, ReadPlatformFiguresResponses, ReadPlatformRateData, ReadPlatformRateErrors, ReadPlatformRateResponses, ReadSharedBuildData, ReadSharedBuildErrors, ReadSharedBuildResponses, ReadVendorData, ReadVendorErrors, ReadVendorResponses, ReadVendorsReferralCountData, ReadVendorsReferralCountErrors, ReadVendorsReferralCountResponses, ReadVisiblePartData, ReadVisiblePartErrors, ReadVisiblePartResponses, ReadVisiblePartsFiltersData, ReadVisiblePartsFiltersErrors, ReadVisiblePartsFiltersResponses, ReadVisibleVendorData, ReadVisibleVendorErrors, ReadVisibleVendorResponses, RecordReferralData, RecordReferralErrors, RecordReferralResponses, RejectPartRequestData, RejectPartRequestErrors, RejectPartRequestResponses, RemoveOfferData, RemoveOfferErrors, RemoveOfferResponses, ResetVendorPasswordData, ResetVendorPasswordErrors, ResetVendorPasswordResponses, SearchPartsData, SearchPartsErrors, SearchPartsResponses, SendPartRequestData, SendPartRequestErrors, SendPartRequestResponses, SetPlatformRateData, SetPlatformRateErrors, SetPlatformRateResponses, ShareBuildData, ShareBuildErrors, ShareBuildResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -384,4 +384,70 @@ export const readVendorsReferralCount = <ThrowOnError extends boolean = false>(o
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/vendors/{vendorId}/referral-count',
     ...options
+});
+
+/**
+ * One page of a Vendor's Part Requests in every state, newest first, for the Vendor's own Login or the Admin
+ */
+export const listVendorsPartRequests = <ThrowOnError extends boolean = false>(options: Options<ListVendorsPartRequestsData, ThrowOnError>): RequestResult<ListVendorsPartRequestsResponses, ListVendorsPartRequestsErrors, ThrowOnError> => (options.client ?? client).get<ListVendorsPartRequestsResponses, ListVendorsPartRequestsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/part-requests',
+    ...options
+});
+
+/**
+ * Send a Part Request for a Part the catalog lacks: its Category, name and manufacturer part number, and the Offer the Vendor would make. For the Vendor's own Login, or the Admin acting for any Vendor
+ */
+export const sendPartRequest = <ThrowOnError extends boolean = false>(options: Options<SendPartRequestData, ThrowOnError>): RequestResult<SendPartRequestResponses, SendPartRequestErrors, ThrowOnError> => (options.client ?? client).post<SendPartRequestResponses, SendPartRequestErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/vendors/{vendorId}/part-requests',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * One page of the queue of open Part Requests of every Vendor, active and deactivated, oldest first, for the Admin
+ */
+export const listOpenPartRequests = <ThrowOnError extends boolean = false>(options?: Options<ListOpenPartRequestsData, ThrowOnError>): RequestResult<ListOpenPartRequestsResponses, ListOpenPartRequestsErrors, ThrowOnError> => (options?.client ?? client).get<ListOpenPartRequestsResponses, ListOpenPartRequestsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/part-requests',
+    ...options
+});
+
+/**
+ * One Part Request in any state, with its Vendor, for the Admin
+ */
+export const readPartRequest = <ThrowOnError extends boolean = false>(options: Options<ReadPartRequestData, ThrowOnError>): RequestResult<ReadPartRequestResponses, ReadPartRequestErrors, ThrowOnError> => (options.client ?? client).get<ReadPartRequestResponses, ReadPartRequestErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/part-requests/{partRequestId}',
+    ...options
+});
+
+/**
+ * Fulfil an open Part Request with a Part of any Category, which makes, replaces or keeps the Vendor's Offer for the Part, the newer statement winning, for the Admin
+ */
+export const fulfilPartRequest = <ThrowOnError extends boolean = false>(options: Options<FulfilPartRequestData, ThrowOnError>): RequestResult<FulfilPartRequestResponses, FulfilPartRequestErrors, ThrowOnError> => (options.client ?? client).post<FulfilPartRequestResponses, FulfilPartRequestErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/part-requests/{partRequestId}/fulfil',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Reject an open Part Request with a reason, for the Admin
+ */
+export const rejectPartRequest = <ThrowOnError extends boolean = false>(options: Options<RejectPartRequestData, ThrowOnError>): RequestResult<RejectPartRequestResponses, RejectPartRequestErrors, ThrowOnError> => (options.client ?? client).post<RejectPartRequestResponses, RejectPartRequestErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/part-requests/{partRequestId}/reject',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
