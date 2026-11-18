@@ -15,6 +15,7 @@ import { Either } from 'effect';
 import { FulfilPartRequestCommand } from '~/domain/part-request/FulfilPartRequestCommand';
 import { ListOpenPartRequestsQuery } from '~/domain/part-request/ListOpenPartRequestsQuery';
 import { ListVendorsPartRequestsQuery } from '~/domain/part-request/ListVendorsPartRequestsQuery';
+import { ReadPartRequestFulfilmentQuery } from '~/domain/part-request/ReadPartRequestFulfilmentQuery';
 import {
   ReadPartRequestQuery,
   ReadPartRequestQueryInput,
@@ -27,8 +28,10 @@ import { FulfilPartRequestRequest } from './FulfilPartRequestRequest';
 import { ListOpenPartRequestsRequest } from './ListOpenPartRequestsRequest';
 import { ListVendorsPartRequestsRequest } from './ListVendorsPartRequestsRequest';
 import { OpenPartRequestsPageResponse } from './OpenPartRequestsPageResponse';
+import { PartRequestFulfilmentResponse } from './PartRequestFulfilmentResponse';
 import { PartRequestResponse } from './PartRequestResponse';
 import { PartRequestWithVendorResponse } from './PartRequestWithVendorResponse';
+import { ReadPartRequestFulfilmentRequest } from './ReadPartRequestFulfilmentRequest';
 import { RejectPartRequestRequest } from './RejectPartRequestRequest';
 import { SendPartRequestRequest } from './SendPartRequestRequest';
 import { VendorsPartRequestsPageResponse } from './VendorsPartRequestsPageResponse';
@@ -43,6 +46,7 @@ export class PartRequestController {
     private readonly listVendorsPartRequestsQuery: ListVendorsPartRequestsQuery,
     private readonly listOpenPartRequestsQuery: ListOpenPartRequestsQuery,
     private readonly readPartRequestQuery: ReadPartRequestQuery,
+    private readonly readPartRequestFulfilmentQuery: ReadPartRequestFulfilmentQuery,
     private readonly fulfilPartRequestCommand: FulfilPartRequestCommand,
     private readonly rejectPartRequestCommand: RejectPartRequestCommand,
     private readonly callerResolver: CallerResolver,
@@ -135,6 +139,27 @@ export class PartRequestController {
       Either.map((output) =>
         PartRequestWithVendorResponse.of(output.getPartRequest(), output.getReadAt()),
       ),
+      Either.getOrThrowWith(ErrorStructureException.of),
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      "What fulfilling an open Part Request with a Part would do to the Vendor's Offer for it, and whether that Offer would then be expired, without doing it, for the Admin",
+  })
+  @ApiOkResponse({ type: PartRequestFulfilmentResponse })
+  @PreAuthorize([Role.ADMIN])
+  @Get('v1/part-requests/:partRequestId/fulfilment')
+  async readPartRequestFulfilment(
+    @Param('partRequestId') partRequestId: string,
+    @Query() request: ReadPartRequestFulfilmentRequest,
+  ): Promise<PartRequestFulfilmentResponse> {
+    const result = await this.readPartRequestFulfilmentQuery.execute(
+      request.toQueryInput(partRequestId),
+    );
+
+    return result.pipe(
+      Either.map(PartRequestFulfilmentResponse.of),
       Either.getOrThrowWith(ErrorStructureException.of),
     );
   }

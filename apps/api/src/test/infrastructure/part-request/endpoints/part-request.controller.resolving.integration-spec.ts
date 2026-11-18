@@ -802,6 +802,160 @@ describe('resolving a Part Request', () => {
     });
   });
 
+  describe('what fulfilling it with a Part would do, read before it is done', () => {
+    // What fulfilling the request with the Part would do, as a caller reads
+    // it at the time of the clock.
+    async function readTheFulfilment(
+      partRequestId: string,
+      partId: string | null,
+      token: string | null,
+    ): Promise<Response> {
+      const query = partId === null ? '' : `?partId=${encodeURIComponent(partId)}`;
+      return fetch(
+        `${testApp.baseUrl}/v1/part-requests/${partRequestId}/fulfilment${query}`,
+        { headers: token === null ? {} : bearerHeader(token) },
+      );
+    }
+
+    // What the Admin reads of it at the time of the clock.
+    async function whatFulfillingWouldDo(partRequestId: string, partId: string) {
+      const response = await readTheFulfilment(partRequestId, partId, await adminToken());
+      expect(response.status).toBe(200);
+      return (await response.json()) as unknown;
+    }
+
+    it('answers `created` for a Vendor with no Offer for the Part, its Offer expired once the request was sent more than 14 days before, and changes nothing', async () => {
+      const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
+
+      moveTheClockTo(after(aMovedMoment, 14 * aDay));
+      expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+        offer: 'created',
+        offerWouldBeExpired: false,
+      });
+      moveTheClockTo(after(aMovedMoment, 14 * aDay + 1));
+      expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+        offer: 'created',
+        offerWouldBeExpired: true,
+      });
+
+      expect(await theVendorsOffers(vendor.id)).toEqual([]);
+      expect(await theQueue()).toEqual([partRequest.id]);
+      expect(await fulfilled(partRequest.id, part.id)).toMatchObject({ offer: 'created' });
+    });
+
+    it('answers `replaced` for an Offer confirmed strictly before the request was sent, expired as a made one is, and changes nothing', async () => {
+      const vendor = await aVendor();
+      const part = await aPart();
+      await anOfferConfirmedAt(vendor.id, part.id, after(aMovedMoment, -1));
+      moveTheClockTo(aMovedMoment);
+      const partRequest = await aPartRequest(vendor.id);
+      const before = await theVendorsOffers(vendor.id);
+
+      moveTheClockTo(after(aMovedMoment, 14 * aDay));
+      expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+        offer: 'replaced',
+        offerWouldBeExpired: false,
+      });
+      moveTheClockTo(after(aMovedMoment, 14 * aDay + 1));
+      expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+        offer: 'replaced',
+        offerWouldBeExpired: true,
+      });
+
+      // What the Vendor stated of its Offer, which only a change would move.
+      const stated = ({
+        id,
+        usdPrice,
+        iqdPrice,
+        inStock,
+        warrantyMonths,
+        confirmedAt,
+      }: ListedOfferBody) => ({
+        id,
+        usdPrice,
+        iqdPrice,
+        inStock,
+        warrantyMonths,
+        confirmedAt,
+      });
+      expect((await theVendorsOffers(vendor.id)).map(stated)).toEqual(before.map(stated));
+      expect(await fulfilled(partRequest.id, part.id)).toMatchObject({ offer: 'replaced' });
+    });
+
+    it.each([
+      ['at the very moment', 0],
+      ['an hour after', anHour],
+    ])(
+      'answers `kept` for an Offer confirmed %s the request was sent, never expired by the fulfilment, even past 14 days',
+      async (_when, later) => {
+        const vendor = await aVendor();
+        const part = await aPart();
+        moveTheClockTo(aMovedMoment);
+        const partRequest = await aPartRequest(vendor.id);
+        await anOfferConfirmedAt(vendor.id, part.id, after(aMovedMoment, later));
+
+        moveTheClockTo(after(aMovedMoment, 20 * aDay));
+        expect(await whatFulfillingWouldDo(partRequest.id, part.id)).toEqual({
+          offer: 'kept',
+          offerWouldBeExpired: false,
+        });
+
+        expect(await fulfilled(partRequest.id, part.id)).toMatchObject({ offer: 'kept' });
+      },
+    );
+
+    it('refuses as fulfilling refuses, in its order: an unknown request, or a text that is not one, 404 with PART_REQUEST_NOT_FOUND; a resolved one 400 with PART_REQUEST_RESOLVED; an unknown Part, or a text that is not one, 404 with PART_NOT_FOUND', async () => {
+      const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
+      const toReject = await aPartRequest(vendor.id, { name: 'Made-up Rejected' });
+      await rejected(toReject.id, 'Made-up reason');
+      const token = await adminToken();
+
+      for (const id of [randomUUID(), 'not-a-part-request']) {
+        for (const partId of [part.id, randomUUID()]) {
+          await expectErrorResponse(
+            await readTheFulfilment(id, partId, token),
+            404,
+            partRequestNotFound,
+          );
+        }
+      }
+      for (const partId of [part.id, randomUUID()]) {
+        await expectErrorResponse(
+          await readTheFulfilment(toReject.id, partId, token),
+          400,
+          partRequestResolved,
+        );
+      }
+      for (const partId of [randomUUID(), 'not-a-part']) {
+        await expectErrorResponse(
+          await readTheFulfilment(partRequest.id, partId, token),
+          404,
+          partNotFound,
+        );
+      }
+    });
+
+    it("refuses a read with no Part named, naming `partId`, a Vendor's own Login 403 with ACCESS_DENIED, even for its own request, and no token 401", async () => {
+      const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
+
+      await expectErrorResponse(
+        await readTheFulfilment(partRequest.id, null, await adminToken()),
+        400,
+        [notValid('partId')],
+      );
+      await expectErrorResponse(
+        await readTheFulfilment(partRequest.id, part.id, await tokenOfTheOwnLogin(vendor)),
+        403,
+        accessDenied,
+      );
+      await expectErrorResponse(
+        await readTheFulfilment(partRequest.id, part.id, null),
+        401,
+        unauthorized,
+      );
+    });
+  });
+
   describe('rejecting it', () => {
     it('keeps the reason as written and answers the request rejected, with its Vendor and the moment, which leaves the queue and which the Vendor lists so', async () => {
       const { vendor, partRequest } = await aRequestSentAt(aMovedMoment);
