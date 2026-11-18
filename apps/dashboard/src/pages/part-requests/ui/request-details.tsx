@@ -43,9 +43,16 @@ export function RequestDetails({ partRequest }: { partRequest: Request }) {
             {partRequest.partNumber}
           </AlwaysEnglish>
         </Detail>
-        <Detail name="offer" label="Its Offer">
-          <span className="flex flex-col items-start gap-1.5">
-            <OfferPlate offer={partRequest} />
+        {/* The plate takes the whole row under its name, as a list of rows
+            does on a Part's page, so that the widest prices the API takes
+            fit the pane beside the queue (the inspector, at 1024). */}
+        <div
+          data-detail="offer"
+          className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-4 gap-y-2 py-3.5"
+        >
+          <dt className="col-span-full text-muted-foreground">Its Offer</dt>
+          <dd className="col-span-full flex min-w-0 flex-col items-start gap-1.5">
+            <OfferPlate offer={partRequest} narrow />
             <span className="flex flex-wrap gap-x-3">
               {partRequest.inStock ? (
                 <span className="text-success">In stock</span>
@@ -60,8 +67,8 @@ export function RequestDetails({ partRequest }: { partRequest: Request }) {
                     } warranty`}
               </span>
             </span>
-          </span>
-        </Detail>
+          </dd>
+        </div>
       </DetailList>
     </div>
   );

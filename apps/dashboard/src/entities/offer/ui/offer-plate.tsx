@@ -1,5 +1,6 @@
 import type { OfferResponse } from '@pcp/api-client';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 
 import { Trans } from '@/shared/i18n';
 import { Plate, PlateFigure } from '@/shared/ui';
@@ -14,13 +15,18 @@ import { iqdAmountWritten, usdAmountWritten } from '../model/prices';
 // language, and is named as one image with its words, "169 dollars, 266,000
 // dinars", in the portal's language. An Offer out of stock has its plate
 // muted, so that no one reads a price that cannot be bought as a live one.
-// On an Offer's own screen it is the screen's leading plate, `lead`.
+// On an Offer's own screen it is the screen's leading plate, `lead`. In a
+// column narrow at every width, `narrow`, such as a Part Request's pane
+// beside the queue on a desk, the dinars take the second line on a desk too
+// when both do not fit (part-requests ticket 04's inspection).
 export function OfferPlate({
   offer,
   lead = false,
+  narrow = false,
 }: {
   offer: Pick<OfferResponse, 'usdPrice' | 'iqdPrice' | 'inStock'>;
   lead?: boolean;
+  narrow?: boolean;
 }) {
   const usd = offer.usdPrice === null ? null : usdAmountWritten(offer.usdPrice);
   const iqd = offer.iqdPrice === null ? null : iqdAmountWritten(offer.iqdPrice);
@@ -41,7 +47,10 @@ export function OfferPlate({
       </span>
       <AlwaysEnglish
         aria-hidden="true"
-        className="inline-flex flex-wrap items-baseline gap-x-3.5 gap-y-0.5 lg:flex-nowrap"
+        className={cn(
+          'inline-flex flex-wrap items-baseline gap-x-3.5 gap-y-0.5',
+          !narrow && 'lg:flex-nowrap',
+        )}
       >
         {usd !== null && <Price testId="usd-price" figure={usd} unit="$" />}
         {iqd !== null && <Price testId="iqd-price" figure={iqd} unit="IQD" />}

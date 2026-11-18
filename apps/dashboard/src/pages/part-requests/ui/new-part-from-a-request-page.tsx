@@ -230,7 +230,7 @@ function FromTheRequest({ partRequest }: { partRequest: Request }) {
           {partRequest.partNumber}
         </AlwaysEnglish>
       </p>
-      <OfferPlate offer={partRequest} />
+      <OfferPlate offer={partRequest} narrow />
       <p className="text-muted-foreground">
         Its Offer is made with these details once the Part is created.
       </p>

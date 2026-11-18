@@ -78,10 +78,23 @@ function ThePart({ partRequest }: { partRequest: Request }) {
 
 // The line that ends the row of a request whose Offer would be listed as
 // expired once it is fulfilled.
-function WillBeExpired({ className }: { className?: string }) {
+// On the row of the request open beside the queue, Active Stone's ground
+// leaves Action Red's words at 4.2:1 in the dark scheme, under the 4.5:1
+// every text needs, so there they are in Ink, after the mark in Action Red
+// (the inspector, part-requests ticket 04).
+function WillBeExpired({ opened, className }: { opened: boolean; className?: string }) {
   return (
-    <span className={cn('flex items-start gap-1.5 font-[550] text-destructive', className)}>
-      <CircleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+    <span
+      className={cn(
+        'flex items-start gap-1.5 font-[550]',
+        opened ? 'text-foreground' : 'text-destructive',
+        className,
+      )}
+    >
+      <CircleAlertIcon
+        aria-hidden="true"
+        className="mt-0.5 size-4 shrink-0 text-destructive"
+      />
       Its Offer will be listed as expired
     </span>
   );
@@ -113,7 +126,7 @@ export function RequestRow({ partRequest }: { partRequest: Request }) {
             : `Waiting ${days(partRequest.daysSinceSent)}`}
         </span>
       </p>
-      {partRequest.offerWouldBeExpired && <WillBeExpired />}
+      {partRequest.offerWouldBeExpired && <WillBeExpired opened={opened} />}
     </div>
   );
 }
@@ -166,7 +179,9 @@ function RequestTableRow({ row }: { row: ShownRow<Request> }) {
               ? 'Sent today'
               : days(partRequest.daysSinceSent)}
           </span>
-          {partRequest.offerWouldBeExpired && <WillBeExpired className="text-end" />}
+          {partRequest.offerWouldBeExpired && (
+            <WillBeExpired opened={opened} className="text-end" />
+          )}
         </span>
       </RowCell>
     </TableRow>
