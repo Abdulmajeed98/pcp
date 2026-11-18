@@ -21,7 +21,7 @@ No screen shows any of this yet; ticket 04 builds it. For now, integration tests
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **Receiving the file.** `POST v1/vendors/{vendorId}/offer-sheet` takes a multipart form with one file, `offerSheet`, through `UploadOfferSheetCommand`. It asks `VendorAccessRule` first.
   - The file is received into memory, and one far over the limit is refused as it arrives, as a Part's photo is.

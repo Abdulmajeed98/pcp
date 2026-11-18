@@ -13,7 +13,7 @@ First, the inspector's made-up shop learns to answer an upload, so that every op
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The made-up result.** The dashboard's made-up shop answers an upload with a made-up result and writes nothing, as for every other call. It is typed against `api-client`, with the inspector's tests of it. Its result holds:
   - added Offers of real Parts;
