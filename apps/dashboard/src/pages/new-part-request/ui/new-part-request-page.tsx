@@ -13,6 +13,7 @@ import {
 } from '@/features/part-request-form';
 import { apiClient, dataOf, partRequestsKey } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
+import { queryOfWordsAndCategory, wordsAndCategoryIn } from '@/shared/lib';
 import { BackLink } from '@/shared/ui';
 
 // The Vendor portal's Part Request form, `part-requests/new` below the
@@ -64,7 +65,9 @@ export function NewPartRequestPage() {
       {searchedFor === undefined ? (
         <BackLink to="..">{t('NewPartRequest.backToTheList')}</BackLink>
       ) : (
-        <BackLink to={{ pathname: '../../add', search: searchIn(searchedFor) }}>
+        <BackLink
+          to={{ pathname: '../../add', search: queryOfWordsAndCategory(searchedFor) }}
+        >
           {t('NewPartRequest.backToTheSearch')}
         </BackLink>
       )}
@@ -88,21 +91,11 @@ export function NewPartRequestPage() {
 }
 
 // The search the address carries, when the form was opened from one: its
-// words, and its Category if one narrowed it. The API refuses a Category it
-// does not have, and the form says so beside its field, so the address's
-// Category is taken as it is.
+// words, and its Category if one narrowed it, as the catalog search writes
+// them, so that the way back returns to the search as it was.
 function searchedForIn(params: URLSearchParams): SearchedFor | undefined {
-  const words = (params.get('search') ?? '').trim();
-  if (words === '') return undefined;
-  const category = (params.get('category') || undefined) as CategoryKey | undefined;
-  return { words, category };
-}
-
-// The catalog search's query for the same search, to return to it.
-function searchIn({ words, category }: SearchedFor): string {
-  const query = new URLSearchParams({ search: words });
-  if (category !== undefined) query.set('category', category);
-  return `?${query.toString()}`;
+  const { words, category } = wordsAndCategoryIn<CategoryKey>(params);
+  return words.trim() === '' ? undefined : { words: words.trim(), category };
 }
 
 // What happens to a request once it is sent, in three sentences, on Raised

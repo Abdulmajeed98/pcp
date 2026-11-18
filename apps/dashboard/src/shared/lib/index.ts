@@ -1,6 +1,6 @@
 export { useAddressKeepingTheQuery } from './address';
 export { useCentredInTheWindow } from './centred-in-the-window';
-export { dayWritten } from './day-written';
+export { dateWritten, dayWritten } from './day-written';
 export { describedBy } from './described-by';
 export {
   atTheLatest,
@@ -22,3 +22,9 @@ export { aFade, aFlap, aMovement, aScroll, motionIsReduced } from './motion';
 export { pageIn, usePageInTheAddress, writePageInto } from './page-in-the-address';
 export { chooseScheme, type Scheme, schemes, useScheme } from './scheme';
 export { useWideScreen } from './wide-screen';
+export {
+  queryOfWordsAndCategory,
+  type WordsAndCategory,
+  wordsAndCategoryIn,
+  writeWordsAndCategoryInto,
+} from './words-and-category';
