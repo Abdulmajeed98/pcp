@@ -46,6 +46,7 @@ import { currentPlatformRate } from '~/infrastructure/platform-rate/current-plat
 import { vendor } from '~/infrastructure/vendor/vendor.schema';
 
 import { offer, offerHistory, OfferRow, oneOfferForAPart } from '../offer.schema';
+import { holdTheOffer, replaceTheDetailsOf, writeANewOffer } from '../offer-writing';
 import { shownPriceIn } from '../shown-price-in-the-database';
 import { visibleOffer } from '../visible-offer';
 import {
@@ -172,37 +173,18 @@ export class DatabaseOfferStore implements OfferStore {
   constructor(private readonly databaseProvider: DatabaseProvider) {}
 
   async create(params: CreateOfferParams): Promise<Either.Either<Offer, StructuredError>> {
-    const details = params.getDetails();
-    const vendorAndPart = { vendorId: params.getVendorId(), partId: params.getPartId() };
-    const pricesAndStock = {
-      usdPriceCents: details.getUsdPriceCents(),
-      iqdPrice: details.getIqdPrice(),
-      inStock: details.isInStock(),
-    };
-
     let offerId: string;
     try {
-      offerId = await this.databaseProvider.getClient().transaction(async (transaction) => {
-        const [row] = await transaction
-          .insert(offer)
-          .values({
-            ...vendorAndPart,
-            ...pricesAndStock,
-            warrantyMonths: details.getWarrantyMonths(),
-            confirmedAt: params.getConfirmedAt(),
-            createdAt: params.getConfirmedAt(),
-          })
-          .returning({ id: offer.id });
-        await transaction.insert(offerHistory).values({
-          ...vendorAndPart,
-          ...pricesAndStock,
-          changedAt: params.getConfirmedAt(),
-          change: 'created',
-          changedBy: params.getCallerId(),
-        });
-
-        return row.id;
-      });
+      // Added by the Vendor, or the Admin for it, it is confirmed at the
+      // moment it is made.
+      offerId = await this.databaseProvider.getClient().transaction((transaction) =>
+        writeANewOffer(transaction, params.getVendorId(), params.getPartId(), {
+          details: params.getDetails(),
+          confirmedAt: params.getConfirmedAt(),
+          writtenAt: params.getConfirmedAt(),
+          callerId: params.getCallerId(),
+        }),
+      );
     } catch (error) {
       if (brokeUniqueRule(error, oneOfferForAPart)) {
         return Either.left(offerDetailRefused('partId', 'taken'));
@@ -228,49 +210,22 @@ export class DatabaseOfferStore implements OfferStore {
     if (!couldBeIdentifier(vendorId) || !couldBeIdentifier(offerId)) {
       return Either.right(Option.none());
     }
-    const details = params.getDetails();
-    const pricesAndStock = {
-      usdPriceCents: details.getUsdPriceCents(),
-      iqdPrice: details.getIqdPrice(),
-      inStock: details.isInStock(),
-    };
-
     let found: boolean;
     try {
       found = await this.databaseProvider.getClient().transaction(async (transaction) => {
         // The Offer as it stands, held until the transaction ends, so that a
         // change made at the same time waits and is compared with this one's.
-        const [before] = await transaction
-          .select({
-            partId: offer.partId,
-            usdPriceCents: offer.usdPriceCents,
-            iqdPrice: offer.iqdPrice,
-            inStock: offer.inStock,
-          })
-          .from(offer)
-          .where(ofTheVendor(vendorId, offerId))
-          .for('update');
+        const before = await holdTheOffer(transaction, ofTheVendor(vendorId, offerId));
         if (before === undefined) return false;
 
-        await transaction
-          .update(offer)
-          .set({
-            ...pricesAndStock,
-            warrantyMonths: details.getWarrantyMonths(),
-            confirmedAt: params.getConfirmedAt(),
-          })
-          .where(eq(offer.id, offerId));
-        if (details.changePricesOrStockOf(before)) {
-          await transaction.insert(offerHistory).values({
-            vendorId,
-            partId: before.partId,
-            ...pricesAndStock,
-            changedAt: params.getConfirmedAt(),
-            change: 'changed',
-            changedBy: params.getCallerId(),
-          });
-        }
-
+        // Saved by the Vendor, or the Admin for it, it is confirmed at the
+        // moment it is saved.
+        await replaceTheDetailsOf(transaction, before, {
+          details: params.getDetails(),
+          confirmedAt: params.getConfirmedAt(),
+          writtenAt: params.getConfirmedAt(),
+          callerId: params.getCallerId(),
+        });
         return true;
       });
     } catch (error) {
