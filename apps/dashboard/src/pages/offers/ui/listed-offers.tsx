@@ -222,9 +222,9 @@ function NothingFound({ words }: { words: string }) {
 
 // What the screen says to a Vendor with no Offer yet, in place of the tabs,
 // the search and the list, with the way to add one from the catalog search,
-// and below it the way to fill in its whole stock in an Offer sheet, since a
-// file of headings alone is the way to fill a whole stock (the owner's d1,
-// sheet ticket 03).
+// and below it the way to add every Part it sells in one Offer sheet, since
+// a file of headings alone is the way to add them all at once (the owner's
+// d1, sheet ticket 03; its words, the code review of `sheet`).
 export function NoOffers() {
   const { t } = useTranslation();
 
