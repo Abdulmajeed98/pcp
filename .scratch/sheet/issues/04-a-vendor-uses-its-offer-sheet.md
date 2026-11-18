@@ -14,7 +14,7 @@ This completes success criterion 9 and, once the Admin fulfils that request, cri
 
 **Blocked by:** 01, 02, 03
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The screen** at `offer-sheet`, relative to the portal's frame, reached as ticket 03 chose. Its address is relative to the route, so the frame for acting as a Vendor serves it too.
 - [x] **Downloading** asks `downloadOfferSheet` in the portal's current language, and saves the file under the name the API gives.

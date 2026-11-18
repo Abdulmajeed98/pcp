@@ -18,7 +18,7 @@ No screen shows the download yet; ticket 04 builds it. For now, integration test
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] **The library, chosen by the owner, before anything is installed.**
   - **Research.** Research against current sources, as the spec's **The library** says, and recommend one library. Name the most widely used, and say how its adoption compares with the others. SheetJS's `xlsx` and ExcelJS are expected to be weighed. Confirm or correct the spec's note on the npm registry's `xlsx`.

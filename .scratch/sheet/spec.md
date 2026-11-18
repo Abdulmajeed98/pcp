@@ -1,6 +1,6 @@
 # Spec: The Offer sheet
 
-Status: ready-for-agent
+Status: resolved
 
 This is `sheet`, the eleventh and last module in the build order of [the MVP spec](../mvp/spec.md)'s capability map. It comes after `part-requests`. It covers SHT-1 to SHT-7 and the sheet's part of OFF-5: uploading an Offer's row counts as a Confirmation. It completes success criterion 9, and criterion 10 for a row of an Offer sheet turned into a Part Request.
 
