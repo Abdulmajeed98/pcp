@@ -100,10 +100,18 @@ export class SkippedRowResponse {
 
   @ApiPropertyOptional({
     description:
-      "Every Part that holds the row's part number, in the catalog's order. Left out unless the row matched several Parts.",
+      "The first Parts that hold the row's part number, in the catalog's order, at most 10; the catalog search with the number shows them all. Left out unless the row matched several Parts.",
     type: [PartSummaryResponse],
   })
   readonly parts?: PartSummaryResponse[];
+
+  @ApiPropertyOptional({
+    description:
+      "How many Parts hold the row's part number, every one of them, those `parts` names among them. Left out unless the row matched several Parts.",
+    type: 'integer',
+    example: 2,
+  })
+  readonly partCount?: number;
 
   @ApiPropertyOptional({
     description:
@@ -161,6 +169,7 @@ export class SkippedRowResponse {
     } else if (skipped instanceof RowWithSeveralParts) {
       this.problem = 'severalParts';
       this.parts = skipped.getParts().map((part) => PartSummaryResponse.of(part));
+      this.partCount = skipped.getPartCount();
     } else if (skipped instanceof RowOfTheSamePart) {
       this.problem = 'samePart';
       this.part = PartSummaryResponse.of(skipped.getPart());

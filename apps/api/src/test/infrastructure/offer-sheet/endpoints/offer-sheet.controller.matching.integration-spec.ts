@@ -129,9 +129,42 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
       );
 
       expect(result.skipped).toEqual([
-        { row: 2, partNumber: 'OC', problem: 'severalParts', parts: [cooler, gpuA, gpuB] },
+        {
+          row: 2,
+          partNumber: 'OC',
+          problem: 'severalParts',
+          parts: [cooler, gpuA, gpuB],
+          partCount: 3,
+        },
       ]);
       expect(result.added).toEqual([]);
+    });
+
+    it("names at most the first 10 Parts that hold the number, in the catalog's order, and counts every one", async () => {
+      const vendor = await platform.aVendor();
+      // Twelve GPUs and a CPU, made out of the catalog's order: the CPU comes
+      // first in it, then the GPUs by name.
+      const gpus = [];
+      for (const letter of 'LKJIHGFEDCBA') {
+        gpus.push(await platform.aPart(`Made-up OC GPU ${letter}`, ['OC']));
+      }
+      const cpu = await platform.aPart('Made-up OC CPU', ['oc'], 'cpu');
+
+      const result = await platform.uploaded(
+        vendor.id,
+        await anOfferSheet([['OC', null, 500, null, yes, null]]),
+      );
+
+      const inTheCatalogsOrder = [cpu, ...[...gpus].reverse()];
+      expect(result.skipped).toEqual([
+        {
+          row: 2,
+          partNumber: 'OC',
+          problem: 'severalParts',
+          parts: inTheCatalogsOrder.slice(0, 10),
+          partCount: 13,
+        },
+      ]);
     });
 
     it('applies a row whose number several Parts hold to the one the Vendor offers, listing it under matchedByYourOffer', async () => {
@@ -174,7 +207,13 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
       );
 
       expect(result.skipped).toEqual([
-        { row: 2, partNumber: 'OC', problem: 'severalParts', parts: [first, second] },
+        {
+          row: 2,
+          partNumber: 'OC',
+          problem: 'severalParts',
+          parts: [first, second],
+          partCount: 2,
+        },
       ]);
       expect([result.changed, result.matchedByYourOffer]).toEqual([0, []]);
     });

@@ -85,6 +85,7 @@ export type SkippedRowBody = {
   warrantyMonths?: number | null;
   partRequestOpen?: boolean;
   parts?: PartBody[];
+  partCount?: number;
   part?: PartBody;
   rows?: number[];
   otherRows?: number;

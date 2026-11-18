@@ -6291,11 +6291,16 @@
             "example": false
           },
           "parts": {
-            "description": "Every Part that holds the row's part number, in the catalog's order. Left out unless the row matched several Parts.",
+            "description": "The first Parts that hold the row's part number, in the catalog's order, at most 10; the catalog search with the number shows them all. Left out unless the row matched several Parts.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PartSummaryResponse"
             }
+          },
+          "partCount": {
+            "type": "integer",
+            "description": "How many Parts hold the row's part number, every one of them, those `parts` names among them. Left out unless the row matched several Parts.",
+            "example": 2
           },
           "part": {
             "description": "The Part the row and other rows matched. Left out unless another row matched the same Part.",

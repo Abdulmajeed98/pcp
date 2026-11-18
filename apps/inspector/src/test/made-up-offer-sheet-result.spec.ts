@@ -6,6 +6,7 @@ import type {
   VendorsOffersPageResponse,
 } from '@pcp/api-client';
 
+import { mostPartsNamed } from '../made-up-offer-sheet-result.ts';
 import { answerFromTheMadeUpShop, madeUpShop, type MadeUpShop } from '../made-up-shop.ts';
 import { madeUpIdentifier } from '../made-up-vendors.ts';
 import { partsHoldingOc } from '../parts-holding-oc.ts';
@@ -146,7 +147,7 @@ describe("the made-up shop's answer to an upload of its Offer sheet", () => {
     });
   });
 
-  it('names every Part that holds a code several Parts hold', () => {
+  it('names the Parts that hold a code several Parts hold, and counts them', () => {
     const catalog = catalogPartsOfTheShop();
 
     expect(skippedRow(theResultOf(), 20)).toEqual({
@@ -154,6 +155,7 @@ describe("the made-up shop's answer to an upload of its Offer sheet", () => {
       partNumber: 'BX8071512400',
       problem: 'severalParts',
       parts: [catalog.get('Intel Core i5 12400'), catalog.get('Intel Core i5 12400F')],
+      partCount: 2,
     });
   });
 
@@ -329,14 +331,26 @@ describe('the result at its worst', () => {
     expect(longest.some((each) => !/\s/.test(each))).toBe(true);
   });
 
-  it('names 81 Parts for a row whose part number is "OC", in the catalog’s order', () => {
+  it('names the first 10 of the 81 Parts that hold "OC", in the catalog’s order, and counts all 81', () => {
     const oc = added.filter((each) => each.partNumber === 'OC');
 
     expect(oc.length).toBeGreaterThan(0);
     for (const row of oc) {
       expect(row.problem).toBe('severalParts');
-      expect(row.parts).toEqual(holders);
-      expect(row.parts).toHaveLength(81);
+      expect(row.parts).toEqual(holders.slice(0, 10));
+      expect(row.partCount).toBe(81);
+    }
+  });
+
+  it('names at most ten Parts for every row of several Parts, as the API does, and counts every one', () => {
+    const several = worst.skipped.filter((each) => each.problem === 'severalParts');
+
+    expect(several.length).toBeGreaterThan(100);
+    for (const row of several) {
+      const parts = row.parts ?? [];
+      expect(parts.length).toBeLessThanOrEqual(mostPartsNamed);
+      expect(row.partCount).toBe(row.partNumber === 'OC' ? 81 : 2);
+      expect(parts).toHaveLength(Math.min(row.partCount ?? 0, mostPartsNamed));
     }
   });
 
