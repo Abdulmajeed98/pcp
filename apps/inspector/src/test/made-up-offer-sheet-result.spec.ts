@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import type {
   OfferSheetResultResponse,
   PartSummaryResponse,
@@ -270,13 +270,20 @@ function theGpusHoldingOc(): PartSummaryResponse[] {
 // `pnpm dashboard:inspect --offer-sheet-result worstCase`, for `break-ui`.
 describe('the result at its worst', () => {
   const holders = theGpusHoldingOc();
-  const worstShop = madeUpShop(now, catalogPartsOfTheShop(), {
-    offerSheetResult: 'worstCase',
-    partsHoldingOc: holders,
+  let worst: OfferSheetResultResponse;
+  let madeUp: OfferSheetResultResponse;
+  // The rows the worst case adds after the made-up result's.
+  let added: SkippedRowResponse[];
+
+  beforeAll(() => {
+    const worstShop = madeUpShop(now, catalogPartsOfTheShop(), {
+      offerSheetResult: 'worstCase',
+      partsHoldingOc: holders,
+    });
+    worst = theResultOf(worstShop);
+    madeUp = theResultOf();
+    added = worst.skipped.filter((each) => each.row > 24);
   });
-  const worst = theResultOf(worstShop);
-  const madeUp = theResultOf();
-  const added = worst.skipped.filter((each) => each.row > 24);
 
   it('keeps the made-up result', () => {
     for (const row of madeUp.skipped) expect(worst.skipped).toContainEqual(row);
