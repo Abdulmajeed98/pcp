@@ -1,3 +1,5 @@
+import type { FulfilledPartRequestResponse } from '@pcp/api-client';
+
 // What the form for a new Part opened from a Part Request leaves in the
 // address's state after it creates the Part and fulfils the request with
 // it, for the Part's page it leads to, whose note says so: the request's
@@ -9,7 +11,7 @@ export interface PartCreatedFromARequest {
     requestName: string;
     vendorName: string;
     partName: string;
-    offer: 'created' | 'replaced' | 'kept';
+    offer: FulfilledPartRequestResponse['offer'];
   };
 }
 

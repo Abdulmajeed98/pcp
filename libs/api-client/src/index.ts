@@ -24,6 +24,7 @@ export type {
   FilterKind,
   FilterResponse,
   FoundPartResponse,
+  FulfilledPartRequestResponse,
   LabelledSpecificationResponse,
   ListedOfferResponse,
   ListOpenPartRequestsData,

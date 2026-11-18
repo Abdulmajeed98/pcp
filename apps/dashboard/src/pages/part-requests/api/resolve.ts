@@ -1,4 +1,7 @@
-import type { PartRequestWithVendorResponse } from '@pcp/api-client';
+import type {
+  FulfilledPartRequestResponse,
+  PartRequestWithVendorResponse,
+} from '@pcp/api-client';
 import { type QueryClient, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 
@@ -10,13 +13,12 @@ import type { Outcome, Resolved } from '../model/resolution';
 
 type Request = PartRequestWithVendorResponse;
 
-// What a fulfilment answers, as far as the screens read it: what it did to
-// the Vendor's Offer for the Part.
-export interface Fulfilled {
-  offer: Exclude<Outcome, 'rejected'>;
-}
-
-function fulfil(partRequestId: string, partId: string): Promise<Fulfilled> {
+// The request fulfilled, with what the fulfilment did to the Vendor's Offer
+// for the Part, as the API answers it.
+function fulfil(
+  partRequestId: string,
+  partId: string,
+): Promise<FulfilledPartRequestResponse> {
   return dataOf(apiClient.fulfilPartRequest({ path: { partRequestId }, body: { partId } }));
 }
 
@@ -57,7 +59,10 @@ export async function askAgainAboutThePartRequests(
 // without the request, which leaves it as the Motion section says.
 export function useFulfil(
   partRequest: Request,
-  onFulfilled: (fulfilled: Fulfilled, part: { id: string; name: string }) => Promise<void>,
+  onFulfilled: (
+    fulfilled: FulfilledPartRequestResponse,
+    part: { id: string; name: string },
+  ) => Promise<void>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({

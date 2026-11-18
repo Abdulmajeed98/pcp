@@ -1,7 +1,9 @@
+import type { FulfilledPartRequestResponse } from '@pcp/api-client';
+
 // What became of a Part Request the Admin resolved: fulfilled, with what the
 // fulfilment did to the Vendor's Offer for the Part, as the API answers it,
 // or rejected.
-export type Outcome = 'created' | 'replaced' | 'kept' | 'rejected';
+export type Outcome = FulfilledPartRequestResponse['offer'] | 'rejected';
 
 // What a resolution leaves in the address's state for the queue it returns
 // to, whose note names the request and says what became of it: the
