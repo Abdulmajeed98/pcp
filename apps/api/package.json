@@ -11,6 +11,7 @@
     "@nestjs/swagger": "^11.4.7",
     "@pcp/compatibility": "workspace:*",
     "@pcp/core": "workspace:*",
+    "@pcp/i18n": "workspace:*",
     "@pcp/opendb": "workspace:*",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.4",

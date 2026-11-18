@@ -19,7 +19,8 @@
   "nx": {
     "tags": [
       "scope:web",
-      "type:lib"
+      "type:lib",
+      "shared-with:api"
     ]
   }
 }

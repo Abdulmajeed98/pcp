@@ -35,7 +35,7 @@ const domainMayNotImportInfrastructure =
 const webMayNotLeaveItsScope =
   'A project tagged with "scope:web" can only depend on libs tagged with "scope:web", "scope:shared"';
 const apiMayNotLeaveItsScope =
-  'A project tagged with "scope:api" can only depend on libs tagged with "scope:api", "scope:shared"';
+  'A project tagged with "scope:api" can only depend on libs tagged with "scope:api", "scope:shared", "shared-with:api"';
 const libraryMayImportNoLibrary =
   'A project tagged with "type:lib" cannot depend on any libs with tags';
 const noPathIntoAnotherProject =
@@ -124,6 +124,27 @@ const casesBetweenProjects = [
     'src/app/domain/boundary-proof/imports-ui',
     '@pcp/ui',
     apiMayNotLeaveItsScope,
+  ),
+  // The API imports one web library, `@pcp/i18n`, for the words it writes
+  // into an Offer sheet and its reading of typed digits: the first text the
+  // API writes for a person to read (the sheet module's spec). The library's
+  // tag `shared-with:api` lets it in, and every other web library stays out.
+  inTheApi.refused(
+    "an import of the frontends' client",
+    'src/app/domain/boundary-proof/imports-api-client',
+    '@pcp/api-client',
+    apiMayNotLeaveItsScope,
+  ),
+  inTheApi.refused(
+    'an import of the addresses the frontends link out to',
+    'src/app/infrastructure/boundary-proof/imports-links',
+    '@pcp/links',
+    apiMayNotLeaveItsScope,
+  ),
+  inTheApi.allowed(
+    'an import of @pcp/i18n',
+    'src/app/domain/boundary-proof/imports-i18n',
+    '@pcp/i18n',
   ),
   inALibrary.refused(
     'an import of another library',

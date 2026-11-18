@@ -461,6 +461,9 @@ importers:
       '@pcp/core':
         specifier: workspace:*
         version: link:../../libs/core
+      '@pcp/i18n':
+        specifier: workspace:*
+        version: link:../../libs/i18n
       '@pcp/opendb':
         specifier: workspace:*
         version: link:../../libs/opendb

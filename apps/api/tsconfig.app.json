@@ -23,6 +23,9 @@
     },
     {
       "path": "../../libs/opendb/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/i18n/tsconfig.lib.json"
     }
   ]
 }
