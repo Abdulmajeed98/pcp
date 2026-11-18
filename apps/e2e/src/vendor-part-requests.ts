@@ -7,7 +7,7 @@ import { closeTheMenu, openTheMenuOnAPhone } from './menu-sheet';
 
 // The portal's Part Requests section: in the frame's sidebar from 64rem, and
 // in the menu sheet on a phone.
-export function thePartRequestsSection(page: Page): Locator {
+export function thePortalsPartRequestsSection(page: Page): Locator {
   return page.getByTestId('portal-sections').locator('a[href$="/part-requests"]');
 }
 
@@ -15,14 +15,14 @@ export function thePartRequestsSection(page: Page): Locator {
 // the menu sheet, which choosing a section closes.
 export async function goToThePartRequests(page: Page): Promise<void> {
   await openTheMenuOnAPhone(page);
-  await thePartRequestsSection(page).click();
+  await thePortalsPartRequestsSection(page).click();
 }
 
 // The section is marked as the one the Vendor is in, read in the menu sheet
 // on a phone.
 export async function expectThePartRequestsSectionCurrent(page: Page): Promise<void> {
   const opened = await openTheMenuOnAPhone(page);
-  await expect(thePartRequestsSection(page)).toHaveAttribute('aria-current', 'page');
+  await expect(thePortalsPartRequestsSection(page)).toHaveAttribute('aria-current', 'page');
   if (opened) await closeTheMenu(page);
 }
 

@@ -15,7 +15,7 @@ import {
   partRequestUrl,
   queuedRequests,
   sendAMadeUpPartRequest,
-  thePartRequestsSection,
+  theConsolesPartRequestsSection,
 } from './admin-part-requests';
 import { vendorPageUrl } from './admin-vendors';
 import { catalogHeading, createAMadeUpPart } from './catalog';
@@ -107,11 +107,11 @@ test.describe('the section', () => {
     ]);
     // The count is the queue's, in Note Grey and never on a plate, at least
     // the request this test sent.
-    const count = thePartRequestsSection(page).getByTestId('open-count');
+    const count = theConsolesPartRequestsSection(page).getByTestId('open-count');
     await expect(count).toHaveText(/^ ?[\d,]+ open$/);
     expect(Number((await count.innerText()).replace(/\D/g, ''))).toBeGreaterThanOrEqual(1);
 
-    await thePartRequestsSection(page).click();
+    await theConsolesPartRequestsSection(page).click();
     await expect(partRequestsHeading(page)).toBeVisible();
     await expect(page).toHaveURL(partRequestsUrl);
   });
@@ -134,11 +134,14 @@ test.describe('the section', () => {
         /^Part Requests [\d,]+ open$/,
       ]);
       await expect(
-        thePartRequestsSection(page).locator('svg.lucide-package-plus'),
+        theConsolesPartRequestsSection(page).locator('svg.lucide-package-plus'),
       ).toHaveCount(1);
-      await thePartRequestsSection(page).click();
+      await theConsolesPartRequestsSection(page).click();
       await expect(partRequestsHeading(page)).toBeVisible();
-      await expect(thePartRequestsSection(page)).toHaveAttribute('aria-current', 'page');
+      await expect(theConsolesPartRequestsSection(page)).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
     });
   });
 });

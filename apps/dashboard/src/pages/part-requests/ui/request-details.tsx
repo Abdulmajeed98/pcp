@@ -80,7 +80,7 @@ export function RequestDetails({ partRequest }: { partRequest: Request }) {
 // frontend holds the 14 days. A Sheet panel with an Action Red edge, as the
 // expiry banner is, since it asks the Admin to remind the Vendor; the
 // dashboard has no warning colour.
-export function WouldBeExpired({ partRequest }: { partRequest: Request }) {
+export function WouldBeExpiredWarning({ partRequest }: { partRequest: Request }) {
   return (
     <section
       data-testid="offer-would-be-expired"
