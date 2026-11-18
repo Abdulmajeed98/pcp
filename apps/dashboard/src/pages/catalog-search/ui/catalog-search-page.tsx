@@ -19,7 +19,9 @@ import { SearchForm } from './search-form';
 // redesign ticket 12): a back link, its title and one Note Grey sentence,
 // then the note after an Offer is added, the search with its Category, the
 // count in words and the rows. A Part the Vendor offers is marked and leads
-// to the Offer; any other opens the form for a new Offer of it.
+// to the Offer; any other opens the form for a new Offer of it. A search
+// that finds nothing offers to search every Category and to ask for the
+// Part to be added, with a Part Request (REQ-1).
 //
 // After a save the form returns here, with the search as it was, and a note,
 // announced when it appears, says the Offer was added and names its Part,

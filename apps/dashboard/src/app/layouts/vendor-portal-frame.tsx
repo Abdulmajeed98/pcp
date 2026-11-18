@@ -5,6 +5,7 @@ import {
   CircleSlashIcon,
   type LucideIcon,
   PackageIcon,
+  PackagePlusIcon,
   StoreIcon,
   UserXIcon,
 } from 'lucide-react';
@@ -340,8 +341,11 @@ function ScopeInTheMenu({ name }: { name: string | undefined }) {
   );
 }
 
-// The portal's sections: the Offers, its first screen, and the Vendor's
-// details. Each is a link as high as a control, with its icon and its name
+// The portal's sections: the Offers, its first screen, the Vendor's Part
+// Requests, with a package and a plus (`PackagePlus`, the owner's d1, taken
+// under the standing instruction of 18 November 2026, part-requests ticket
+// 02), and the Vendor's details. Each is a link as high as a control, with
+// its icon and its name
 // in Note Grey, and the one the Vendor is in on Active Stone, in Ink at
 // weight 600, as the Admin console's sections are. Their addresses are
 // relative to the frame's route, so they lead to the same screens under
@@ -350,6 +354,12 @@ function Sections({ onChosen }: { onChosen?: () => void }) {
   const { t } = useTranslation();
   const sections: { to: string; end: boolean; name: string; Icon: LucideIcon }[] = [
     { to: '.', end: true, name: t('VendorPortalFrame.offers'), Icon: PackageIcon },
+    {
+      to: 'part-requests',
+      end: false,
+      name: t('VendorPortalFrame.partRequests'),
+      Icon: PackagePlusIcon,
+    },
     { to: 'details', end: false, name: t('VendorPortalFrame.details'), Icon: StoreIcon },
   ];
 
