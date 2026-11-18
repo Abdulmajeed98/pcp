@@ -40,6 +40,20 @@ describe("the made-up shop's Parts", () => {
     }
   });
 
+  it('are read with the Parts its Part Requests were fulfilled with, which it does not offer', async () => {
+    const parts = await partsOfTheCatalog(catalogWithEveryPart);
+
+    expect(parts.get('AMD Ryzen 7 9800X3D')).toMatchObject({ category: 'cpu' });
+    expect(
+      parts.get(
+        'Corsair Hydro Series H100i RGB PLATINUM Extreme Performance Liquid CPU Cooler, Mounting kit for most modern CPU sockets, Two ML PRO RGB Series PWM 140mm fans, Fan and radiator mounting screws, USB 2.0 motherboard header cable, Thermal compound (pre-applied), Quick Start Guide',
+      ),
+    ).toMatchObject({ category: 'cpuCooler' });
+    expect(partsTheShopOffers.map((wanted) => wanted.name)).not.toContain(
+      'AMD Ryzen 7 9800X3D',
+    );
+  });
+
   it('are what its Offers name', () => {
     const parts = catalogPartsOfTheShop();
     const shop = madeUpShop(now, parts);
