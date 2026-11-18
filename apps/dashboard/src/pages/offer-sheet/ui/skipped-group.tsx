@@ -38,10 +38,11 @@ const underlined =
 // count stand on the screen.
 export function SkippedGroup({
   group,
-  asked,
+  askedFor,
 }: {
   group: Group;
-  asked: ReadonlySet<number>;
+  // Whether a part number was asked to be added, from any of its rows.
+  askedFor: (partNumber: string) => boolean;
 }) {
   const { t } = useTranslation();
   const { problem, rows } = group;
@@ -74,7 +75,7 @@ export function SkippedGroup({
           const list = (
             <ul>
               {rows.slice(from, from + size).map((row) => (
-                <SkippedRow key={row.row} row={row} asked={asked.has(row.row)} />
+                <SkippedRow key={row.row} row={row} asked={askedFor(row.partNumber)} />
               ))}
             </ul>
           );
@@ -312,7 +313,7 @@ function SamePart({ row }: { row: SkippedRowResponse }) {
 
 // A row's one action, in its fixed place: for a row that matched no Part,
 // "Ask for it to be added", which opens the Part Request form from the row;
-// once asked, "Asked for"; and when the Vendor already has an open request
+// once it or another row of its part number is asked for, "Asked for"; and when the Vendor already has an open request
 // of its part number, that it was asked for, with a way to its Part
 // Requests, and no second request. For a row of several Parts, the catalog
 // search with its part number. The other problems are corrected in the

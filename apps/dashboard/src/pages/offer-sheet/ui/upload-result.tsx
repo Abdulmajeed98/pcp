@@ -15,7 +15,7 @@ import { Trans, useTranslation } from '@/shared/i18n';
 import { aScroll, motionIsReduced } from '@/shared/lib';
 import { linkOverRow } from '@/shared/ui';
 
-import { type KeptResult, resultShown } from '../model/kept-result';
+import { isAskedFor, type KeptResult, resultShown } from '../model/kept-result';
 import { groupsOf } from '../model/skipped-rows';
 import { PartLine, RowNumber } from './rows';
 import { SkippedGroup } from './skipped-group';
@@ -110,7 +110,11 @@ export function UploadResult({
               </p>
             </div>
             {groups.map((group) => (
-              <SkippedGroup key={group.problem} group={group} asked={kept.asked} />
+              <SkippedGroup
+                key={group.problem}
+                group={group}
+                askedFor={(partNumber) => isAskedFor(kept, partNumber)}
+              />
             ))}
           </section>
         )}
