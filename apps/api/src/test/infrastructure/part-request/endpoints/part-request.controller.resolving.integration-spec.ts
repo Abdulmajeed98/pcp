@@ -165,7 +165,7 @@ describe('resolving a Part Request', () => {
 
   // A made-up Vendor the Admin creates, with a Login of its own. It calls
   // Keycloak, so it runs with the clock running.
-  async function aVendor(name = 'Made-up Computer Shop'): Promise<MadeUpVendor> {
+  async function aVendor(name = 'Made-up Computer Corner'): Promise<MadeUpVendor> {
     vendors += 1;
     const response = await fetch(`${testApp.baseUrl}/v1/vendors`, {
       method: 'POST',
@@ -401,7 +401,7 @@ describe('resolving a Part Request', () => {
         });
         expect(answer).toEqual({
           ...partRequest,
-          vendor: { id: vendor.id, name: 'Made-up Computer Shop', active: true },
+          vendor: { id: vendor.id, name: 'Made-up Computer Corner', active: true },
           daysSinceSent: 3,
           state: 'fulfilled',
           part,
@@ -441,7 +441,7 @@ describe('resolving a Part Request', () => {
 
         expect(await theVisibleOffersOf(part.id)).toMatchObject([
           {
-            vendor: { id: vendor.id, name: 'Made-up Computer Shop' },
+            vendor: { id: vendor.id, name: 'Made-up Computer Corner' },
             usdPrice: '649.99',
             confirmedAt: aMovedMoment.toISOString(),
             daysSinceConfirmation: 5,
@@ -635,7 +635,7 @@ describe('resolving a Part Request', () => {
     });
 
     it("answers the requesting Vendor's own Offer for the Part, not another Vendor's, and null in its list and on its own once the Vendor removes it, still fulfilled", async () => {
-      const other = await aVendor('Made-up Other Shop');
+      const other = await aVendor('Made-up Computer House');
       const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
       const othersOffer = await anOfferConfirmedAt(other.id, part.id, aMovedMoment);
       const answer = await fulfilled(partRequest.id, part.id);
@@ -769,7 +769,7 @@ describe('resolving a Part Request', () => {
 
       expect(answer).toEqual({
         ...partRequest,
-        vendor: { id: vendor.id, name: 'Made-up Computer Shop', active: true },
+        vendor: { id: vendor.id, name: 'Made-up Computer Corner', active: true },
         state: 'rejected',
         reason,
         resolvedAt: now.toISOString(),

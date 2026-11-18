@@ -166,7 +166,7 @@ describe('Part Requests', () => {
 
   // A made-up Vendor the Admin creates, with a Login of its own. It calls
   // Keycloak, so it runs with the clock running.
-  async function aVendor(name = 'Made-up Computer Shop'): Promise<MadeUpVendor> {
+  async function aVendor(name = 'Made-up Computer Corner'): Promise<MadeUpVendor> {
     vendors += 1;
     const response = await fetch(`${testApp.baseUrl}/v1/vendors`, {
       method: 'POST',
@@ -384,7 +384,7 @@ describe('Part Requests', () => {
 
     it('lets the Admin send one for any Vendor, a Deactivated Vendor among them, which that Vendor lists', async () => {
       const vendor = await aVendor();
-      const gone = await aVendor('Made-up Gone Shop');
+      const gone = await aVendor('Made-up Gone Corner');
       await deactivate(gone.id);
 
       const forVendor = await aPartRequest(vendor.id);
@@ -540,7 +540,7 @@ describe('Part Requests', () => {
 
     it("refuses a Vendor's token at another Vendor's address 403 with VENDOR_ACCESS_DENIED, whether that Vendor exists or not", async () => {
       const vendor = await aVendor();
-      const other = await aVendor('Made-up Other Shop');
+      const other = await aVendor('Made-up Computer House');
       const token = await tokenOfTheOwnLogin(vendor);
 
       await expectErrorResponse(
@@ -594,7 +594,7 @@ describe('Part Requests', () => {
   describe("a Vendor's list of its Part Requests", () => {
     it("holds its own in every state, newest first, then by identifier on requests sent at the same moment, and no other Vendor's", async () => {
       const vendor = await aVendor();
-      const other = await aVendor('Made-up Other Shop');
+      const other = await aVendor('Made-up Computer House');
       const part = await aPart();
       moveTheClockTo(aMovedMoment);
       const oldest = await aPartRequest(vendor.id, { name: 'Made-up Oldest' });
@@ -714,7 +714,7 @@ describe('Part Requests', () => {
 
     it("is read by the Vendor's own Login, and refuses another Vendor's to it 403 with VENDOR_ACCESS_DENIED, whether that Vendor exists or not", async () => {
       const vendor = await aVendor();
-      const other = await aVendor('Made-up Other Shop');
+      const other = await aVendor('Made-up Computer House');
       const sent = await aPartRequest(vendor.id);
       const token = await tokenOfTheOwnLogin(vendor);
 
@@ -760,18 +760,18 @@ describe('Part Requests', () => {
 
   describe("the Admin's queue of open Part Requests", () => {
     it('holds the open requests of every Vendor, active and deactivated, oldest first, then by identifier on requests sent at the same moment, each with its Vendor; a fulfilled or rejected request leaves it', async () => {
-      const shop = await aVendor('Made-up Computer Shop');
-      const gone = await aVendor('Made-up Gone Shop');
+      const vendor = await aVendor('Made-up Computer Corner');
+      const gone = await aVendor('Made-up Gone Corner');
       const part = await aPart();
       moveTheClockTo(aMovedMoment);
       const oldest = await aPartRequest(gone.id, { name: 'Made-up Oldest' });
-      const toFulfil = await aPartRequest(shop.id, { name: 'Made-up Fulfilled' });
+      const toFulfil = await aPartRequest(vendor.id, { name: 'Made-up Fulfilled' });
       moveTheClockTo(after(aMovedMoment, anHour));
-      const twinA = await aPartRequest(shop.id, { name: 'Made-up Twin' });
+      const twinA = await aPartRequest(vendor.id, { name: 'Made-up Twin' });
       const twinB = await aPartRequest(gone.id, { name: 'Made-up Twin' });
-      const toReject = await aPartRequest(shop.id, { name: 'Made-up Rejected' });
+      const toReject = await aPartRequest(vendor.id, { name: 'Made-up Rejected' });
       moveTheClockTo(after(aMovedMoment, 2 * anHour));
-      const newest = await aPartRequest(shop.id, { name: 'Made-up Newest' });
+      const newest = await aPartRequest(vendor.id, { name: 'Made-up Newest' });
       await fulfil(toFulfil.id, part.id);
       await reject(toReject.id, 'Made-up reason');
       letTheClockRun();
@@ -780,18 +780,18 @@ describe('Part Requests', () => {
       const [lowerTwin, higherTwin] = [twinA, twinB].sort((a, b) =>
         a.id.localeCompare(b.id),
       );
-      const shopsVendor = { id: shop.id, name: 'Made-up Computer Shop', active: true };
-      const gonesVendor = { id: gone.id, name: 'Made-up Gone Shop', active: false };
+      const activeVendor = { id: vendor.id, name: 'Made-up Computer Corner', active: true };
+      const deactivatedVendor = { id: gone.id, name: 'Made-up Gone Corner', active: false };
       const vendorOf = (request: PartRequestBody) =>
-        request === twinA || request === newest ? shopsVendor : gonesVendor;
+        request === twinA || request === newest ? activeVendor : deactivatedVendor;
 
       const queue = await theQueue();
 
       expect(queue.content).toEqual([
-        { ...oldest, daysSinceSent: 0, vendor: gonesVendor },
+        { ...oldest, daysSinceSent: 0, vendor: deactivatedVendor },
         { ...lowerTwin, vendor: vendorOf(lowerTwin) },
         { ...higherTwin, vendor: vendorOf(higherTwin) },
-        { ...newest, vendor: shopsVendor },
+        { ...newest, vendor: activeVendor },
       ]);
       expect(queue).toMatchObject({ totalElements: 4, totalPages: 1 });
     });
@@ -905,7 +905,11 @@ describe('Part Requests', () => {
       const rejected = await aPartRequest(vendor.id, { name: 'Made-up Rejected' });
       await fulfil(fulfilled.id, part.id);
       await reject(rejected.id, 'Made-up reason, as written ');
-      const sendingVendor = { id: vendor.id, name: 'Made-up Computer Shop', active: true };
+      const sendingVendor = {
+        id: vendor.id,
+        name: 'Made-up Computer Corner',
+        active: true,
+      };
       const listed = (await theVendorsList(vendor.id)).content;
 
       expect(await thePartRequest(open.id)).toEqual({ ...open, vendor: sendingVendor });
