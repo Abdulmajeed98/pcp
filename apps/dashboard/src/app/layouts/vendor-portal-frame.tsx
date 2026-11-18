@@ -3,6 +3,7 @@ import { AsWritten } from '@pcp/ui';
 import { cn } from 'cn';
 import {
   CircleSlashIcon,
+  FileSpreadsheetIcon,
   type LucideIcon,
   PackageIcon,
   PackagePlusIcon,
@@ -341,10 +342,13 @@ function ScopeInTheMenu({ name }: { name: string | undefined }) {
   );
 }
 
-// The portal's sections: the Offers, its first screen, the Vendor's Part
-// Requests, with a package and a plus (`PackagePlus`, the owner's d1, taken
-// under the standing instruction of 18 November 2026, part-requests ticket
-// 02), and the Vendor's details. Each is a link as high as a control, with
+// The portal's sections: the Offers, its first screen; the Offer sheet,
+// second, beside the Offers it changes, with a file of rows
+// (`FileSpreadsheet`, the owner's d1, taken under the standing instruction of
+// 18 November 2026, sheet ticket 03), lit while its screen and the Part
+// Request form opened from it are open; the Vendor's Part Requests, with a
+// package and a plus (`PackagePlus`, the owner's d1, taken under the same
+// instruction, part-requests ticket 02); and the Vendor's details. Each is a link as high as a control, with
 // its icon and its name
 // in Note Grey, and the one the Vendor is in on Active Stone, in Ink at
 // weight 600, as the Admin console's sections are. Their addresses are
@@ -354,6 +358,12 @@ function Sections({ onChosen }: { onChosen?: () => void }) {
   const { t } = useTranslation();
   const sections: { to: string; end: boolean; name: string; Icon: LucideIcon }[] = [
     { to: '.', end: true, name: t('VendorPortalFrame.offers'), Icon: PackageIcon },
+    {
+      to: 'offer-sheet',
+      end: false,
+      name: t('VendorPortalFrame.offerSheet'),
+      Icon: FileSpreadsheetIcon,
+    },
     {
       to: 'part-requests',
       end: false,

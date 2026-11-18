@@ -1,7 +1,7 @@
 import type { ListedOfferResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { PackageIcon, PlusIcon, SearchXIcon } from 'lucide-react';
+import { FileSpreadsheetIcon, PackageIcon, PlusIcon, SearchXIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -23,7 +23,11 @@ import {
 import { OffersList, OffersTable } from './offer-rows';
 
 // The Vendor's Offers the search found in the tab the Vendor is in: how many,
-// in words on the end side of the filter bar, never on a plate, then the
+// in words on the end side of the filter bar, never on a plate, with the way
+// to the Offer sheet on its start side, an underlined link with the file
+// mark, which costs the phone's full head no height (the owner's d1, taken
+// under the standing instruction of 18 November 2026, sheet ticket 03); then
+// the
 // Offers of this page, oldest Confirmation first, a table from 64rem and
 // two-line rows on a phone, then the way to the other pages. While a later
 // answer is on its way, the last one stays, at full strength, and a line
@@ -55,24 +59,27 @@ export function ListedOffers({
       aria-busy={searching}
       className="flex flex-col gap-4"
     >
-      <p className="flex min-h-control flex-wrap items-center justify-end gap-x-3 text-sm text-muted-foreground">
-        <span aria-live="polite">{searching && t('OffersScreen.searching')}</span>
-        <span id="offers-listed" data-testid="offers-counted">
-          {totalElements > 0 && (
-            <Trans
-              i18nKey={searched ? 'OffersScreen.found' : 'OffersScreen.counted'}
-              count={totalElements}
-              components={{
-                count: (
-                  <span data-testid="offers-count" className="tabular-nums">
-                    {formatNumber(totalElements)}
-                  </span>
-                ),
-              }}
-            />
-          )}
-        </span>
-      </p>
+      <div className="flex min-h-control flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
+        <ToTheOfferSheet testId="to-offer-sheet" words={t('OffersScreen.toOfferSheet')} />
+        <p className="ms-auto flex flex-wrap items-center justify-end gap-x-3">
+          <span aria-live="polite">{searching && t('OffersScreen.searching')}</span>
+          <span id="offers-listed" data-testid="offers-counted">
+            {totalElements > 0 && (
+              <Trans
+                i18nKey={searched ? 'OffersScreen.found' : 'OffersScreen.counted'}
+                count={totalElements}
+                components={{
+                  count: (
+                    <span data-testid="offers-count" className="tabular-nums">
+                      {formatNumber(totalElements)}
+                    </span>
+                  ),
+                }}
+              />
+            )}
+          </span>
+        </p>
+      </div>
 
       {/* The rows of one answer to one search, tab and page: another is drawn
           afresh, as changing what is listed is still (Motion 9). */}
@@ -209,7 +216,10 @@ function NothingFound({ words }: { words: string }) {
 }
 
 // What the screen says to a Vendor with no Offer yet, in place of the tabs,
-// the search and the list, with the way to add one from the catalog search.
+// the search and the list, with the way to add one from the catalog search,
+// and below it the way to fill in its whole stock in an Offer sheet, since a
+// file of headings alone is the way to fill a whole stock (the owner's d1,
+// sheet ticket 03).
 export function NoOffers() {
   const { t } = useTranslation();
 
@@ -231,7 +241,26 @@ export function NoOffers() {
           <PlusIcon data-icon="inline-start" />
           {t('OffersScreen.addFirst')}
         </Link>
+        <ToTheOfferSheet
+          testId="fill-in-an-offer-sheet"
+          words={t('OffersScreen.fillInAnOfferSheet')}
+        />
       </EmptyContent>
     </Empty>
+  );
+}
+
+// The way to the Offer sheet screen, an underlined link as high as a
+// control, with the file mark, in Ink.
+function ToTheOfferSheet({ testId, words }: { testId: string; words: string }) {
+  return (
+    <Link
+      to="offer-sheet"
+      data-testid={testId}
+      className="hover-colour inline-flex min-h-control items-center gap-1.5 text-sm text-foreground underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+    >
+      <FileSpreadsheetIcon aria-hidden="true" className="size-4 shrink-0" />
+      {words}
+    </Link>
   );
 }
