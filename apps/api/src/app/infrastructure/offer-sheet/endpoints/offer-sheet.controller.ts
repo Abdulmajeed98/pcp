@@ -28,11 +28,11 @@ import {
   UploadOfferSheetCommand,
   UploadOfferSheetCommandInput,
 } from '~/domain/offer-sheet/UploadOfferSheetCommand';
+import { UploadErrorsInterceptor } from '~/infrastructure/upload/upload-errors.interceptor';
 
 import { attachmentNamed } from './attachment-named';
 import { DownloadOfferSheetRequest } from './DownloadOfferSheetRequest';
 import { OfferSheetResultResponse } from './OfferSheetResultResponse';
-import { OfferSheetUploadErrorsInterceptor } from './offer-sheet-upload-errors.interceptor';
 
 // The type of an .xlsx file.
 const xlsx = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -118,7 +118,7 @@ export class OfferSheetController {
   // refuses it naming the field. One far over it is refused as it arrives,
   // before it fills the API's memory, as a Part's photo is.
   @UseInterceptors(
-    OfferSheetUploadErrorsInterceptor,
+    UploadErrorsInterceptor('offerSheet'),
     FileInterceptor('offerSheet', {
       limits: { fileSize: largestOfferSheetBytes + 2 * 1024 * 1024 },
     }),

@@ -31,6 +31,7 @@ import { EditPartCommand } from '~/domain/part/EditPartCommand';
 import { ListPartsMissingSpecificationsQuery } from '~/domain/part/ListPartsMissingSpecificationsQuery';
 import { ReadPartQuery, ReadPartQueryInput } from '~/domain/part/ReadPartQuery';
 import { SearchPartsQuery } from '~/domain/part/SearchPartsQuery';
+import { UploadErrorsInterceptor } from '~/infrastructure/upload/upload-errors.interceptor';
 
 import { CreatePartRequest } from './CreatePartRequest';
 import { EditPartRequest } from './EditPartRequest';
@@ -38,7 +39,6 @@ import { ListPartsMissingSpecificationsRequest } from './ListPartsMissingSpecifi
 import { PartPageResponse } from './PartPageResponse';
 import { PartsMissingSpecificationsPageResponse } from './PartsMissingSpecificationsPageResponse';
 import { PartResponse } from './PartResponse';
-import { PictureUploadErrorsInterceptor } from './picture-upload-errors.interceptor';
 import { SearchPartsRequest } from './SearchPartsRequest';
 
 @Controller()
@@ -145,7 +145,7 @@ export class PartController {
   // case refuses it naming the field. One far over it is refused as it
   // arrives, before it fills the API's memory.
   @UseInterceptors(
-    PictureUploadErrorsInterceptor,
+    UploadErrorsInterceptor('photo'),
     FileInterceptor('photo', {
       limits: { fileSize: LARGEST_PICTURE_BYTES + 2 * 1024 * 1024 },
     }),
