@@ -673,7 +673,7 @@ test.describe('creating', () => {
       'The Part was created, but the request is still open',
     );
     await expect(halfway).toContainText(
-      'Fulfilling the request with it was not answered: the API could not be reached.',
+      'The request was not fulfilled with it. The API cannot be reached.',
     );
     // The form takes no more input, and has no button: the Part is never
     // created twice.
@@ -689,6 +689,57 @@ test.describe('creating', () => {
     );
     expect(await partsFound(request, partRequest.word)).toBe(1);
     expect(await placeOnTheQueue(request, authorization, partRequest.id)).toBeUndefined();
+  });
+
+  test('the Part created after the request was resolved meanwhile, as from another tab: the screen says the Part was created and the request was already resolved, and offers the Part and how the request was resolved', async ({
+    page,
+    request,
+  }) => {
+    // The request is rejected, as from another tab, between the Part's
+    // create and its fulfilment.
+    let rejectedMeanwhile = false;
+    await page.route(`${apiUrl}/v1/parts`, async (route) => {
+      if (route.request().method() !== 'POST' || rejectedMeanwhile) {
+        await route.fallback();
+        return;
+      }
+      const created = await route.fetch();
+      await rejectAPartRequest(
+        request,
+        authorization,
+        partRequest.id,
+        'Rejected from another tab.',
+      );
+      rejectedMeanwhile = true;
+      await route.fulfill({ response: created });
+    });
+    const formUrl = `${partRequestUrl(partRequest.id)}/new-part`;
+    await page.goto(formUrl);
+    await page
+      .getByRole('textbox', { name: 'Manufacturer', exact: true })
+      .fill('Made-up Test Parts');
+    await page.getByRole('button', { name: 'Create the Part' }).click();
+
+    const halfway = page.getByTestId('halfway');
+    await expect(halfway).toContainText(
+      'The Part was created, but the request was already resolved',
+    );
+    await expect(halfway).toContainText(`${partRequest.name} is in the catalog now.`);
+    await expect(page).toHaveURL(formUrl);
+    // Nothing on the screen creates the Part again or fulfils the request.
+    await expect(page.getByRole('button', { name: 'Create the Part' })).toHaveCount(0);
+    await expect(halfway.getByRole('button')).toHaveCount(0);
+    const howItWasResolved = halfway.getByRole('link', { name: 'See how it was resolved' });
+    await expect(howItWasResolved).toBeFocused();
+    await expect(halfway.getByRole('link', { name: 'Open the Part' })).toBeVisible();
+    await expectNoSidewaysScroll(page);
+    expect(await partsFound(request, partRequest.word)).toBe(1);
+
+    await howItWasResolved.click();
+    await expect(page).toHaveURL(partRequestUrl(partRequest.id));
+    await expect(page.getByTestId('how-it-was-resolved').getByTestId('reason')).toHaveText(
+      'Rejected from another tab.',
+    );
   });
 });
 
