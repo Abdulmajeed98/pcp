@@ -234,7 +234,7 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
         usdPrice: '649.99',
         inStock: true,
       };
-      await platform.aPartRequest(vendor.id, { ...request, partNumber: 'mu-open-1' });
+      await platform.aPartRequest(vendor.id, { ...request, partNumber: 'MU-OPEN-1' });
       const rejected = await platform.aPartRequest(vendor.id, {
         ...request,
         partNumber: 'MU-REJECTED-1',
@@ -245,7 +245,7 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
       const result = await platform.uploaded(
         vendor.id,
         await anOfferSheet([
-          ['MU-OPEN-1', null, 100, null, yes, null],
+          ['mu-open-1', null, 100, null, yes, null],
           ['MU-REJECTED-1', null, 100, null, yes, null],
           ['MU-OTHERS-1', null, 100, null, yes, null],
         ]),
