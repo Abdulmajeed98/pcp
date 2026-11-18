@@ -10,7 +10,6 @@ import { and, asc, count, desc, eq, SQL } from 'drizzle-orm';
 import { Either, Option } from 'effect';
 
 import { OfferDetails } from '~/domain/offer/OfferDetails';
-import { offerDetailRefused } from '~/domain/offer/offer-errors';
 import { Category } from '~/domain/part/Category';
 import { OfferFulfilment, offerFulfilmentOf } from '~/domain/part-request/offer-fulfilment';
 import {
@@ -34,12 +33,12 @@ import {
 import { DatabaseProvider } from '~/infrastructure/database/DatabaseProvider';
 import { couldBeIdentifier } from '~/infrastructure/database/identifiers';
 import { Transaction } from '~/infrastructure/database/transaction';
-import { brokeUniqueRule } from '~/infrastructure/database/unique-rule';
-import { offer, oneOfferForAPart } from '~/infrastructure/offer/offer.schema';
+import { offer } from '~/infrastructure/offer/offer.schema';
 import {
   holdTheOffer,
+  OfferWriting,
   replaceTheDetailsOf,
-  writeANewOffer,
+  writeANewOfferUnlessOneIsThere,
 } from '~/infrastructure/offer/offer-writing';
 import { part, PartRow } from '~/infrastructure/part/part.schema';
 import { partOf } from '~/infrastructure/part/part-of-row';
@@ -177,6 +176,43 @@ async function holdThePartRequest(
   };
 }
 
+// What fulfilling the request with the Part does to the Vendor's Offer for
+// it, by the rule in `offer-fulfilment.ts`, written through the Offer
+// module's own writing in the transaction handed: made when the Vendor has
+// none, replaced when it was confirmed before the request was sent, kept
+// otherwise; or none, when the Vendor's Offer came and went while this
+// looked. The Vendor's Offer is held, so that the Vendor's own change made
+// at the same time waits and is judged after this one. The Vendor's own add
+// can still arrive between this reading, which found none, and this
+// writing: the database's unique pair then finds it, and it is held as it
+// now stands and judged by the same rule, confirmed after the request was
+// sent, and so kept, the Vendor's later word (the code review's Spec
+// finding 3).
+async function theOfferFulfilled(
+  transaction: Transaction,
+  held: HeldPartRequest,
+  partId: string,
+  writing: OfferWriting,
+): Promise<OfferFulfilment | undefined> {
+  const theVendorsOffer = and(eq(offer.vendorId, held.vendorId), eq(offer.partId, partId));
+  let before = await holdTheOffer(transaction, theVendorsOffer);
+  if (before === undefined) {
+    const made = await writeANewOfferUnlessOneIsThere(
+      transaction,
+      held.vendorId,
+      partId,
+      writing,
+    );
+    if (made !== undefined) return 'created';
+    before = await holdTheOffer(transaction, theVendorsOffer);
+    if (before === undefined) return undefined;
+  }
+
+  const fulfilment = offerFulfilmentOf(before.confirmedAt, held.sentAt);
+  if (fulfilment === 'replaced') await replaceTheDetailsOf(transaction, before, writing);
+  return fulfilment;
+}
+
 @Injectable()
 export class DatabasePartRequestStore implements PartRequestStore {
   private readonly logger = new Logger(DatabasePartRequestStore.name);
@@ -288,25 +324,20 @@ export class DatabasePartRequestStore implements PartRequestStore {
         if (held === undefined) return Either.left(partRequestNotFound(id));
         if (held.state !== 'open') return Either.left(partRequestResolved(id));
 
-        // The Vendor's Offer for the Part, held too, so that the Vendor's own
-        // change made at the same time waits and is judged after this one.
-        const before = await holdTheOffer(
-          transaction,
-          and(eq(offer.vendorId, held.vendorId), eq(offer.partId, partId)),
-        );
-        const fulfilment = offerFulfilmentOf(before?.confirmedAt ?? null, held.sentAt);
         // Confirmed at the moment the request was sent, the Vendor's
         // statement of its prices; written now, by the Admin.
-        const writing = {
+        const fulfilment = await theOfferFulfilled(transaction, held, partId, {
           details: held.details,
           confirmedAt: held.sentAt,
           writtenAt: params.getFulfilledAt(),
           callerId: params.getCallerId(),
-        };
-        if (before === undefined) {
-          await writeANewOffer(transaction, held.vendorId, partId, writing);
-        } else if (fulfilment === 'replaced') {
-          await replaceTheDetailsOf(transaction, before, writing);
+        });
+        if (fulfilment === undefined) {
+          return Either.left(
+            ServerError.of(
+              `The Vendor's Offer for the Part came and went while the Part Request ${id} was fulfilled`,
+            ),
+          );
         }
 
         await transaction
@@ -316,12 +347,6 @@ export class DatabasePartRequestStore implements PartRequestStore {
         return Either.right(fulfilment);
       });
     } catch (error) {
-      // The Vendor added its own Offer for the Part between this one's
-      // reading and its writing, and the unique pair refused this one. The
-      // request is left open, and a second fulfilment keeps the Vendor's.
-      if (brokeUniqueRule(error, oneOfferForAPart)) {
-        return Either.left(offerDetailRefused('partId', 'taken'));
-      }
       this.logger.error(error, 'A Part Request could not be fulfilled');
       return Either.left(databaseErrorOf(error, 'A Part Request could not be fulfilled'));
     }

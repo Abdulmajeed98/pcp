@@ -18,6 +18,7 @@ import {
   emptyTheDatabase,
   offerHistoryRows,
   sentWhileThePartRequestIsHeld,
+  sentWhileTheVendorAddsAnOffer,
 } from '../../../test-utils/database/test-database';
 import {
   emptyTheRealm,
@@ -594,6 +595,49 @@ describe('resolving a Part Request', () => {
           ]);
         },
       );
+
+      it("keeps the Vendor's own Offer added while the fulfilment writes one, answers `kept`, and still fulfils the request", async () => {
+        const { vendor, part, partRequest } = await aRequestSentAt(aMovedMoment);
+        const addedAt = after(aMovedMoment, anHour);
+        moveTheClockTo(after(aMovedMoment, 2 * anHour));
+        const token = await adminToken();
+
+        const answer = await sentWhileTheVendorAddsAnOffer(
+          {
+            vendorId: vendor.id,
+            partId: part.id,
+            usdPriceCents: 59900,
+            inStock: false,
+            addedAt,
+            addedBy: vendor.loginId,
+          },
+          () => fulfil(partRequest.id, { partId: part.id }, token),
+        );
+
+        expect(answer.status).toBe(200);
+        const offers = await theVendorsOffers(vendor.id);
+        expect(offers).toMatchObject([
+          {
+            part,
+            usdPrice: '599.00',
+            iqdPrice: null,
+            inStock: false,
+            confirmedAt: addedAt.toISOString(),
+          },
+        ]);
+        expect(await answer.json()).toMatchObject({
+          state: 'fulfilled',
+          offer: 'kept',
+          offerId: offers[0].id,
+        });
+        expect(
+          (await offerHistoryRows()).map(({ change, changedBy }) => ({
+            change,
+            changedBy,
+          })),
+        ).toEqual([{ change: 'created', changedBy: vendor.loginId }]);
+        expect(await theQueue()).toEqual([]);
+      });
     });
 
     it("makes a Deactivated Vendor's Offer, which is not visible until the Vendor is reactivated", async () => {
