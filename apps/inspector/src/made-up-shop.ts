@@ -2,6 +2,7 @@ import type {
   ErrorResponse,
   ListedOfferResponse,
   OfferResponse,
+  OfferSheetResultResponse,
   OpenPartRequestsPageResponse,
   PartRequestFulfilmentResponse,
   PartRequestWithVendorResponse,
@@ -24,6 +25,11 @@ import {
   offersOfTheFirstVendor,
   theShopsPlatformRate,
 } from './made-up-offers.ts';
+import {
+  type OfferSheetResultShown,
+  partsTheOfferSheetResultsName,
+  theOfferSheetResult,
+} from './made-up-offer-sheet-result.ts';
 import {
   asAnsweredAt,
   type HeldPartRequest,
@@ -70,11 +76,17 @@ export const partsTheShopOffers: readonly CatalogPart[] = offersOfTheFirstVendor
   (offer) => offer.part,
 );
 
-// Every Part of the catalog the command reads before anything else: those
-// the shop offers, and those its Part Requests were fulfilled with.
+// Every Part of the catalog the command reads before anything else, once
+// each: those the shop offers, those its Part Requests were fulfilled with,
+// and those the made-up results of an upload of its Offer sheet name.
 export const partsTheShopReads: readonly CatalogPart[] = [
-  ...partsTheShopOffers,
-  ...partsThePartRequestsWereFulfilledWith,
+  ...new Map(
+    [
+      ...partsTheShopOffers,
+      ...partsThePartRequestsWereFulfilledWith,
+      ...partsTheOfferSheetResultsName,
+    ].map((part) => [`${part.category} ${part.name}`, part]),
+  ).values(),
 ];
 
 // The shop as the API would hold it.
@@ -89,6 +101,9 @@ export interface MadeUpShop {
   // The made-up Part Requests, the shop's Vendor's and other Vendors', in
   // every state (`made-up-part-requests.ts`).
   partRequests: readonly HeldPartRequest[];
+  // What an upload of its Vendor's Offer sheet answers, whatever the file
+  // (`made-up-offer-sheet-result.ts`).
+  offerSheetResult: OfferSheetResultResponse;
 }
 
 function before(now: Date, milliseconds: number): string {
@@ -102,7 +117,10 @@ function before(now: Date, milliseconds: number): string {
 // the Platform Rate screen before the Admin sets the first, none. Its
 // Referral counts are the made-up Vendors', or, for `break-ui` on the
 // Referrals screen, the list at its worst, one Vendor, or none; and so are
-// its Part Requests, for both lists of them and one request's screen.
+// its Part Requests, for both lists of them and one request's screen. An
+// upload of its Vendor's Offer sheet answers the made-up result, one with
+// every row applied, or, for `break-ui`, the made-up one at its worst, which
+// names the Parts that hold "OC", `partsHoldingOc`, in the catalog's order.
 export function madeUpShop(
   now: Date,
   catalogParts: ReadonlyMap<string, PartSummaryResponse>,
@@ -110,10 +128,14 @@ export function madeUpShop(
     platformRate = true,
     referrals = 'madeUp',
     partRequests = 'madeUp',
+    offerSheetResult = 'madeUp',
+    partsHoldingOc = [],
   }: {
     platformRate?: boolean;
     referrals?: ReferralCountsShown;
     partRequests?: PartRequestsShown;
+    offerSheetResult?: OfferSheetResultShown;
+    partsHoldingOc?: readonly PartSummaryResponse[];
   } = {},
 ): MadeUpShop {
   const vendor: VendorResponse = {
@@ -142,6 +164,13 @@ export function madeUpShop(
     };
   });
 
+  const heldPartRequests = thePartRequestsAt(
+    now,
+    partRequestsShown[partRequests],
+    catalogParts,
+    new Map(offers.map((offer) => [offer.part.id, offer.id])),
+  );
+
   return {
     vendor,
     offers,
@@ -152,12 +181,17 @@ export function madeUpShop(
     },
     referralCounts:
       referrals === 'madeUp' ? madeUpReferralCounts : referralCountsAtTheirWorst[referrals],
-    partRequests: thePartRequestsAt(
-      now,
-      partRequestsShown[partRequests],
-      catalogParts,
-      new Map(offers.map((offer) => [offer.part.id, offer.id])),
-    ),
+    partRequests: heldPartRequests,
+    offerSheetResult: theOfferSheetResult(offerSheetResult, catalogParts, {
+      // Folded as the API folds a part number (`foldedPartNumber`); the
+      // made-up ones are already clean.
+      openPartNumbers: new Set(
+        heldPartRequests
+          .filter((request) => request.vendor.id === vendor.id && request.state === 'open')
+          .map((request) => request.partNumber.toLowerCase()),
+      ),
+      partsHoldingOc,
+    }),
   };
 }
 
@@ -283,6 +317,9 @@ export function answerFromTheMadeUpShop(
   now: Date,
   call: ApiCall,
 ): ShopAnswer | undefined {
+  if (uploadsTheShopsOfferSheet(shop, call)) {
+    return { status: 200, body: shop.offerSheetResult };
+  }
   if (call.method !== 'GET') return readOnly;
   const address = new URL(call.path, 'http://api');
   const [version, first, second, ...rest] = address.pathname.split('/').filter(Boolean);
@@ -364,6 +401,17 @@ export function answerFromTheMadeUpShop(
     counts: counts(listedOffers),
   };
   return { status: 200, body };
+}
+
+// Whether a call uploads the shop's Vendor's Offer sheet,
+// `POST v1/vendors/{vendorId}/offer-sheet`, which the shop answers with its
+// made-up result whatever the file, and which writes nothing: nothing of the
+// shop changes, as an upload's result is never stored (the sheet spec), so
+// the shop's Offers stay as they were. Any other Vendor's upload is refused
+// as every write is.
+function uploadsTheShopsOfferSheet(shop: MadeUpShop, call: ApiCall): boolean {
+  const { pathname } = new URL(call.path, 'http://api');
+  return call.method === 'POST' && pathname === `/v1/vendors/${shop.vendor.id}/offer-sheet`;
 }
 
 // The shop's Offers as its list shows them at `now`: oldest Confirmation

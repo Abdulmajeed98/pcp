@@ -49,6 +49,56 @@ export async function partsOfTheCatalog(
   return new Map(parts);
 }
 
+// Every Part of the catalog of each of the names `wanted` gives, by its
+// Category and exact name, that holds `partNumber`, compared whatever the
+// case of its letters, as the API compares a row's part number: more than
+// one of a name where the catalog holds more, as two of the GPUs that hold
+// "OC" share a name (`parts-holding-oc.ts`). They are read a few at a time,
+// and given in the catalog's order, by name and then identifier. A name of
+// which the catalog holds no such Part stops the command, and says which.
+export async function partsHoldingAPartNumber(
+  searchTheCatalog: SearchOfTheCatalog,
+  wanted: readonly CatalogPart[],
+  partNumber: string,
+  file = 'parts-holding-oc.ts',
+): Promise<PartSummaryResponse[]> {
+  const folded = partNumber.toLowerCase();
+  const each = await aFewAtATime(wanted, async (one) => {
+    const answer = await searchTheCatalog({ ...one, search: one.name });
+    const holding = answer.filter(
+      (part) =>
+        part.name === one.name &&
+        part.category === one.category &&
+        part.partNumbers.some((held) => held.toLowerCase() === folded),
+    );
+    if (holding.length === 0) {
+      throw new Error(
+        `The catalog holds no ${one.category} Part named "${one.name}" that holds the part number "${partNumber}". Change the Part in apps/inspector/src/${file}.`,
+      );
+    }
+    return holding.map(
+      ({
+        id,
+        category,
+        name,
+        manufacturer,
+        partNumbers,
+        photoPath,
+      }): PartSummaryResponse => ({
+        id,
+        category,
+        name,
+        manufacturer,
+        partNumbers,
+        photoPath,
+      }),
+    );
+  });
+  return each
+    .flat()
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+}
+
 // The reads of the catalog the Shopper's command makes as the development
 // Admin: a page of a search, one Part with its specifications, and the
 // Categories' specification lists.

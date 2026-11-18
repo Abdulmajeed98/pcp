@@ -5,6 +5,7 @@ import { EditContactDetailsPage } from '@/pages/edit-contact-details';
 import { NewOfferPage } from '@/pages/new-offer';
 import { NewPartRequestPage } from '@/pages/new-part-request';
 import { OfferPage } from '@/pages/offer';
+import { OfferSheetPage, PartRequestFromARowPage } from '@/pages/offer-sheet';
 import { OffersPage } from '@/pages/offers';
 import { PortalNotFoundPage } from '@/pages/portal-not-found';
 import { VendorDetailsPage } from '@/pages/vendor-details';
@@ -17,10 +18,15 @@ import { VendorsPartRequestsPage } from '@/pages/vendors-part-requests';
 // under a Vendor's page, for the Admin acting as that Vendor.
 //
 // The Offers screen is the portal's first address, and the first of its
-// three sections. The Vendor's Part Requests, the second, has an address of
-// its own, `part-requests`, and the Part Request form is below it,
+// four sections. The Offer sheet screen, the second, has an address of its
+// own, `offer-sheet`, and the Part Request form started from a row of its
+// upload's result is below it, `offer-sheet/rows/<row>/part-request`, so
+// that the form's way back, and its way after a send, `..`, lead to the
+// result, which the screen keeps for the visit. The Vendor's Part Requests,
+// the third, has an address of its own, `part-requests`, and the Part
+// Request form is below it,
 // `part-requests/new`, so that the form's way back, and its way after a
-// send, `..`, lead to the list. The details screen, the third, has an
+// send, `..`, lead to the list. The details screen, the fourth, has an
 // address of its own, `details`, and the form for the contact details is
 // below it, so that the form's way back, `..`, leads to it. An address that
 // matches no screen shows a "not found" message in the portal's language.
@@ -40,6 +46,13 @@ export const vendorPortalScreens: RouteObject[] = [
     ],
   },
   { path: 'offers/:offerId', Component: OfferPage },
+  {
+    path: 'offer-sheet',
+    children: [
+      { index: true, Component: OfferSheetPage },
+      { path: 'rows/:row/part-request', Component: PartRequestFromARowPage },
+    ],
+  },
   {
     path: 'part-requests',
     children: [

@@ -2,7 +2,7 @@ import { NotValidError } from '@pcp/core';
 import { Either } from 'effect';
 
 import { holdsText } from '../vendor/detail-text';
-import { OfferDetailRefusal, offerDetailRefused } from './offer-errors';
+import { OfferDetailsRefusal, offerDetailRefused } from './offer-errors';
 
 // The largest Quoted Prices: 100,000.00 USD, in cents, and 150,000,000 IQD.
 export const largestUsdPriceCents = 10_000_000;
@@ -18,7 +18,7 @@ const decimalNumber = /^(-?)(\d+)(?:\.(\d+))?$/;
 // A USD price in cents, or why it was refused. It is read from its text,
 // digit by digit, so that no binary fraction comes between what the Vendor
 // typed and what is stored.
-function usdPriceCentsOf(text: string): Either.Either<number, OfferDetailRefusal> {
+function usdPriceCentsOf(text: string): Either.Either<number, OfferDetailsRefusal> {
   const match = decimalNumber.exec(text);
   if (match === null) return Either.left('notANumber');
   const [, sign, whole, fraction = ''] = match;
@@ -36,7 +36,7 @@ function usdPriceCentsOf(text: string): Either.Either<number, OfferDetailRefusal
 }
 
 // An IQD price in whole dinars, or why it was refused.
-function iqdPriceOf(dinars: number): Either.Either<number, OfferDetailRefusal> {
+function iqdPriceOf(dinars: number): Either.Either<number, OfferDetailsRefusal> {
   if (dinars <= 0) return Either.left('notPositive');
   if (!Number.isInteger(dinars)) return Either.left('tooManyDecimals');
   if (dinars > largestIqdPrice) return Either.left('tooLarge');
@@ -45,7 +45,7 @@ function iqdPriceOf(dinars: number): Either.Either<number, OfferDetailRefusal> {
 }
 
 // A warranty in whole months, or why it was refused.
-function warrantyMonthsOf(months: number): Either.Either<number, OfferDetailRefusal> {
+function warrantyMonthsOf(months: number): Either.Either<number, OfferDetailsRefusal> {
   if (!Number.isInteger(months)) return Either.left('notWholeMonths');
   if (months < 1) return Either.left('notPositive');
   if (months > longestWarrantyMonths) return Either.left('tooLarge');
@@ -174,6 +174,20 @@ export class OfferDetails {
       this.usdPriceCents !== before.usdPriceCents ||
       this.iqdPrice !== before.iqdPrice ||
       this.inStock !== before.inStock
+    );
+  }
+
+  // Whether these details differ from another Offer's: a Quoted Price,
+  // whether the Part is in stock, or the warranty. An Offer sheet's row
+  // that replaced an Offer whose details differ changed it, and one whose
+  // details are the same only confirmed it.
+  differFrom(other: OfferDetails): boolean {
+    return (
+      this.changePricesOrStockOf({
+        usdPriceCents: other.usdPriceCents,
+        iqdPrice: other.iqdPrice,
+        inStock: other.inStock,
+      }) || this.warrantyMonths !== other.warrantyMonths
     );
   }
 }

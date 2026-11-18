@@ -23,16 +23,29 @@ export const newOfferDetailsTyped: OfferDetailsTyped = {
   warrantyMonths: '',
 };
 
-// The details of an Offer that is changed, as its form starts: each price
-// written as the portal shows it, in Western digits grouped in thousands,
-// which the form takes back as typed, and a detail it does not state left
-// empty.
-export function offerDetailsTypedOf(offer: OfferResponse): OfferDetailsTyped {
+// An Offer's details as the API answers them: an Offer's own, or those a
+// row of an Offer sheet's result states, which each are left out unless the
+// row matched no Part (`SkippedRowResponse`).
+export type OfferDetailsAnswered = Partial<
+  Pick<OfferResponse, 'usdPrice' | 'iqdPrice' | 'inStock' | 'warrantyMonths'>
+>;
+
+// The details of an Offer as its form starts from them, an Offer that is
+// changed or the Offer a Part Request would make: each price written as the
+// portal shows it, in Western digits grouped in thousands, which the form
+// takes back as typed; a detail not stated, null or left out, empty; and
+// the stock, when left out, as a new Offer's.
+export function offerDetailsTypedOf({
+  usdPrice = null,
+  iqdPrice = null,
+  inStock = newOfferDetailsTyped.inStock,
+  warrantyMonths = null,
+}: OfferDetailsAnswered): OfferDetailsTyped {
   return {
-    usdPrice: offer.usdPrice === null ? '' : usdAmountWritten(offer.usdPrice),
-    iqdPrice: offer.iqdPrice === null ? '' : iqdAmountWritten(offer.iqdPrice),
-    inStock: offer.inStock,
-    warrantyMonths: offer.warrantyMonths === null ? '' : String(offer.warrantyMonths),
+    usdPrice: usdPrice === null ? '' : usdAmountWritten(usdPrice),
+    iqdPrice: iqdPrice === null ? '' : iqdAmountWritten(iqdPrice),
+    inStock,
+    warrantyMonths: warrantyMonths === null ? '' : String(warrantyMonths),
   };
 }
 

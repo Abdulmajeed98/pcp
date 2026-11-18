@@ -17,7 +17,8 @@
     "light": "Light",
     "dark": "Dark",
     "device": "Device",
-    "partRequests": "Part Requests"
+    "partRequests": "Part Requests",
+    "offerSheet": "Offer sheet"
   },
   "ActingAsVendor": {
     "actingAs": "You are acting as <name/>.",
@@ -66,7 +67,9 @@
     "lastConfirmed": "Last confirmed",
     "stock": "Stock",
     "warranty": "Warranty",
-    "noWarranty": "No warranty stated"
+    "noWarranty": "No warranty stated",
+    "toOfferSheet": "Change many at once in your Offer sheet",
+    "fillInAnOfferSheet": "Or add every Part you sell in one Offer sheet"
   },
   "Offer": {
     "inStock": "In stock",
@@ -281,7 +284,8 @@
         "tooLong": "The part number is over the limit."
       },
       "other": "The platform did not accept this."
-    }
+    },
+    "fromARow": "From row <row/> of <file/>. Choose its Category, then send; correct any detail first."
   },
   "VendorDetails": {
     "title": "Your details",
@@ -376,5 +380,125 @@
     "loginPhoneNumber": "Phone number:",
     "temporaryPassword": "Temporary password:",
     "choosePassword": "When you first log in, you will be asked to choose your own password."
+  },
+  "OfferSheetFile": {
+    "headings": {
+      "partNumber": "Manufacturer part number",
+      "name": "Part name",
+      "usdPrice": "Price in USD",
+      "iqdPrice": "Price in IQD",
+      "inStock": "In stock",
+      "warrantyMonths": "Warranty in months"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "worksheet": "Offers",
+    "file": "Offer sheet"
+  },
+  "OfferSheetScreen": {
+    "title": "Your Offer sheet",
+    "intro": "Change many Offers at once: download them as one file, change it, and upload it here.",
+    "downloadTitle": "Download your Offers",
+    "inTheFile_one": "The file holds a row for your <count/> Offer, with English headings.",
+    "inTheFile_other": "The file holds a row for each of your <count/> Offers, expired ones too, with English headings.",
+    "inTheFileNone": "You have no Offer yet, so the file holds its English headings alone, ready to fill.",
+    "readingOffers": "Reading your Offers…",
+    "download": "Download the Offer sheet",
+    "downloading": "Downloading…",
+    "notDownloaded": "Your Offer sheet was not downloaded.",
+    "uploadTitle": "Upload it changed",
+    "uploadIntro": "A row you change changes its Offer, a row you add makes one, and an Offer whose row you delete is left as it is.",
+    "fileLabel": "Your Offer sheet",
+    "chooseFile": "Choose the file",
+    "chooseAnother": "Choose another file",
+    "noFile": "No file chosen",
+    "fileDescription": "The <xlsx/> file you downloaded here and changed.",
+    "upload": "Upload the Offer sheet",
+    "uploading": "Uploading…",
+    "uploadingStatus": "Applying the rows of <file/>. A file of thousands of rows takes a few seconds.",
+    "notUploaded": "Your Offer sheet was not uploaded.",
+    "refused": {
+      "missing": "Choose your Offer sheet first.",
+      "tooLarge": "The file is too large. Split its rows into two files and upload each.",
+      "notReadable": "This file cannot be read. Save it again as an <xlsx/> file and upload it.",
+      "notTheLayout": "This is not an Offer sheet. Only a file downloaded from this screen is taken, with its six headings in the first row.",
+      "tooManyRows": "The file has too many rows. Split them into two files and upload each: rows a file leaves out are left as they are."
+    },
+    "holdsTitle": "What the file holds",
+    "holdsColumns": "Six columns, in this order: the part number, the Part’s name, the price in dollars and in dinars, whether it is in stock, and the warranty in months.",
+    "holdsMatch": "A row finds its Part by its part number alone. The name is there for you to read.",
+    "holdsEmpty": "An empty price is one you do not quote, and an empty warranty is none.",
+    "holdsConfirms": "Uploading confirms every Offer a row applies to, even one you did not change.",
+    "resultTitle": "Your Offer sheet was uploaded",
+    "read_one": "<count/> row read: <applied/> applied and <skipped/> skipped. Your Offers already show the change.",
+    "read_other": "<count/> rows read: <applied/> applied and <skipped/> skipped. Your Offers already show the change.",
+    "readAllApplied_one": "<count/> row read and applied. Your Offers already show the change.",
+    "readAllApplied_other": "<count/> rows read, all applied. Your Offers already show the change.",
+    "readNone": "The file holds no row below its headings, so nothing was changed.",
+    "added_one": "<count/> Offer added",
+    "added_other": "<count/> Offers added",
+    "changed_one": "<count/> changed",
+    "changed_other": "<count/> changed",
+    "confirmed_one": "<count/> confirmed, unchanged",
+    "confirmed_other": "<count/> confirmed, unchanged",
+    "skipped_one": "<count/> row skipped",
+    "skipped_other": "<count/> rows skipped",
+    "skippedTitle": "Rows skipped",
+    "skippedIntro": "These rows changed nothing. Correct them in the file and upload it again: rows already applied are only confirmed again.",
+    "problems": {
+      "noPart": {
+        "title": "No Part has the part number",
+        "intro": "If the catalog lacks the Part, ask for it to be added: the form starts with the row."
+      },
+      "severalParts": {
+        "title": "Several Parts have the part number",
+        "intro": "Add the Offer for the Part you mean from the catalog search, then delete the row."
+      },
+      "samePart": {
+        "title": "Another row names the same Part",
+        "intro": "Neither row was applied, so that neither price wins. Keep one row for the Part."
+      },
+      "notValid": {
+        "title": "A cell does not fit",
+        "intro": "Each row says its first cell that does not fit, by the file’s heading."
+      }
+    },
+    "addedTitle": "Offers added",
+    "addedIntro": "Each new row found its Part. Shoppers see these Offers now.",
+    "matchedTitle": "Applied to the Offer you have",
+    "matchedIntro": "Several Parts share these rows’ part numbers. Each row was applied to the one you offer.",
+    "row": "Row <row/>",
+    "noName": "No name given",
+    "ask": "Ask for it to be added",
+    "alreadyAsked": "You have already asked for it.",
+    "seeRequests": "See your Part Requests",
+    "asked": "Asked for",
+    "askedStatus": "Part Request sent for row <row/>.",
+    "holding_one": "<count/> Part has this part number.",
+    "holding_other": "<count/> Parts have this part number.",
+    "showAll_one": "Show the <count/> Part",
+    "showAll_other": "Show all <count/> Parts",
+    "showFirst_one": "Show the first <count/>",
+    "showFirst_other": "Show the first <count/>",
+    "moreInTheSearch_one": "And <count/> more, which the catalog search shows.",
+    "moreInTheSearch_other": "And <count/> more, which the catalog search shows.",
+    "searchCatalog": "Search the catalog for <partNumber/>",
+    "alsoInRows_one": "Also in row <rows/>",
+    "alsoInRows_other": "Also in rows <rows/>",
+    "andMore_one": "and <count/> more",
+    "andMore_other": "and <count/> more",
+    "showMore_one": "Show <count/> more",
+    "showMore_other": "Show <count/> more",
+    "shown_one": "<shown/> of <count/> shown",
+    "shown_other": "<shown/> of <count/> shown",
+    "listSeparator": ", ",
+    "cellRefused": "<heading/>: <reason/>",
+    "cell": {
+      "partNumberMissing": "A row needs a part number. An Offer whose Part has none is changed on your Offers screen.",
+      "partNumberTooLong": "The part number is over the limit.",
+      "notYesOrNo": "Write yes or no.",
+      "notReadable": "This cell cannot be read. Write a value in it, not a formula that gives none."
+    },
+    "backToTheResult": "Back to the result"
   }
 }

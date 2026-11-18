@@ -9,6 +9,7 @@ import { CategoryModule } from '~/infrastructure/category/category.module';
 import { validate } from '~/infrastructure/configuration/env.validation';
 import { DatabaseModule } from '~/infrastructure/database/database.module';
 import { OfferModule } from '~/infrastructure/offer/offer.module';
+import { OfferSheetModule } from '~/infrastructure/offer-sheet/offer-sheet.module';
 import { PartModule } from '~/infrastructure/part/part.module';
 import { PartRequestModule } from '~/infrastructure/part-request/part-request.module';
 import { PlatformRateModule } from '~/infrastructure/platform-rate/platform-rate.module';
@@ -38,6 +39,7 @@ import { VendorModule } from '~/infrastructure/vendor/vendor.module';
     SharedBuildModule,
     ReferralModule,
     PartRequestModule,
+    OfferSheetModule,
   ],
 })
 export class AppModule {}

@@ -105,7 +105,7 @@ test.describe('a made-up Vendor with no Offer yet', () => {
     await openTheDashboardAs(page, vendor);
     await expect(noOffers(page)).toBeVisible();
 
-    await noOffers(page).getByRole('link').click();
+    await noOffers(page).getByTestId('add-first-offer').click();
     await expect(page).toHaveURL(`${dashboardUrl}/add`);
     await searchTheCatalogFor(page, part.partNumber);
     await expect(foundParts(page)).toHaveCount(1);

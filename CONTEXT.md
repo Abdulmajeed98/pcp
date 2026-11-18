@@ -68,6 +68,10 @@ _Avoid_: Stale offer, outdated offer, inactive offer
 An Offer a Shopper may see: one that is not an Expired Offer and whose Vendor is active.
 _Avoid_: Live offer, active offer, current offer, published offer
 
+**Offer sheet**:
+A spreadsheet file of one Vendor's Offers, one row to an Offer, in the platform's own layout. The Vendor downloads it, changes it and uploads it to change many Offers at once. "Sheet" is never written alone, in code or in interface text: the dashboard's look, Framed sheet, and its menu sheet already use the word.
+_Avoid_: Spreadsheet, Excel file, export, import, price list, CSV
+
 **Referral**:
 One tap by a Shopper on the button that sends a Shared Build's link to a Vendor over WhatsApp, from the Build page or from the Shared Build's own page.
 _Avoid_: Lead, order, enquiry, click

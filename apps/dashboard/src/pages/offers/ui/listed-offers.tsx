@@ -1,7 +1,8 @@
 import type { ListedOfferResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { PackageIcon, PlusIcon, SearchXIcon } from 'lucide-react';
+import { cn } from 'cn';
+import { FileSpreadsheetIcon, PackageIcon, PlusIcon, SearchXIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -16,6 +17,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
+  linkInText,
   ListPages,
   PastTheLastPage,
 } from '@/shared/ui';
@@ -23,7 +25,11 @@ import {
 import { OffersList, OffersTable } from './offer-rows';
 
 // The Vendor's Offers the search found in the tab the Vendor is in: how many,
-// in words on the end side of the filter bar, never on a plate, then the
+// in words on the end side of the filter bar, never on a plate, with the way
+// to the Offer sheet on its start side, an underlined link with the file
+// mark, which costs the phone's full head no height (the owner's d1, taken
+// under the standing instruction of 18 November 2026, sheet ticket 03); then
+// the
 // Offers of this page, oldest Confirmation first, a table from 64rem and
 // two-line rows on a phone, then the way to the other pages. While a later
 // answer is on its way, the last one stays, at full strength, and a line
@@ -55,24 +61,32 @@ export function ListedOffers({
       aria-busy={searching}
       className="flex flex-col gap-4"
     >
-      <p className="flex min-h-control flex-wrap items-center justify-end gap-x-3 text-sm text-muted-foreground">
-        <span aria-live="polite">{searching && t('OffersScreen.searching')}</span>
-        <span id="offers-listed" data-testid="offers-counted">
-          {totalElements > 0 && (
-            <Trans
-              i18nKey={searched ? 'OffersScreen.found' : 'OffersScreen.counted'}
-              count={totalElements}
-              components={{
-                count: (
-                  <span data-testid="offers-count" className="tabular-nums">
-                    {formatNumber(totalElements)}
-                  </span>
-                ),
-              }}
-            />
-          )}
-        </span>
-      </p>
+      <div className="flex min-h-control flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
+        <ToTheOfferSheet testId="to-offer-sheet" words={t('OffersScreen.toOfferSheet')} />
+        {/* On a phone the count takes a line of its own, below the way to
+            the Offer sheet, whatever it says, and keeps a line's height when
+            it says nothing, as on a tab whose last rows have just left, so
+            that the rows below never move in one frame (the No Snap Rule);
+            from 40rem it stands on the same line, on its end side. */}
+        <p className="ms-auto flex min-h-[1lh] basis-full flex-wrap items-center justify-end gap-x-3 sm:basis-auto">
+          <span aria-live="polite">{searching && t('OffersScreen.searching')}</span>
+          <span id="offers-listed" data-testid="offers-counted">
+            {totalElements > 0 && (
+              <Trans
+                i18nKey={searched ? 'OffersScreen.found' : 'OffersScreen.counted'}
+                count={totalElements}
+                components={{
+                  count: (
+                    <span data-testid="offers-count" className="tabular-nums">
+                      {formatNumber(totalElements)}
+                    </span>
+                  ),
+                }}
+              />
+            )}
+          </span>
+        </p>
+      </div>
 
       {/* The rows of one answer to one search, tab and page: another is drawn
           afresh, as changing what is listed is still (Motion 9). */}
@@ -209,7 +223,10 @@ function NothingFound({ words }: { words: string }) {
 }
 
 // What the screen says to a Vendor with no Offer yet, in place of the tabs,
-// the search and the list, with the way to add one from the catalog search.
+// the search and the list, with the way to add one from the catalog search,
+// and below it the way to add every Part it sells in one Offer sheet, since
+// a file of headings alone is the way to add them all at once (the owner's
+// d1, sheet ticket 03; its words, the code review of `sheet`).
 export function NoOffers() {
   const { t } = useTranslation();
 
@@ -231,7 +248,26 @@ export function NoOffers() {
           <PlusIcon data-icon="inline-start" />
           {t('OffersScreen.addFirst')}
         </Link>
+        <ToTheOfferSheet
+          testId="fill-in-an-offer-sheet"
+          words={t('OffersScreen.fillInAnOfferSheet')}
+        />
       </EmptyContent>
     </Empty>
+  );
+}
+
+// The way to the Offer sheet screen, an underlined link as high as a
+// control, with the file mark, in Ink.
+function ToTheOfferSheet({ testId, words }: { testId: string; words: string }) {
+  return (
+    <Link
+      to="offer-sheet"
+      data-testid={testId}
+      className={cn(linkInText, 'gap-1.5 text-sm text-foreground')}
+    >
+      <FileSpreadsheetIcon aria-hidden="true" className="size-4 shrink-0" />
+      {words}
+    </Link>
   );
 }

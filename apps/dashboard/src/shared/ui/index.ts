@@ -41,6 +41,7 @@ export {
   FieldSet,
   FieldTitle,
 } from './field';
+export { FileName } from './file-name';
 export { InANewTab } from './in-a-new-tab';
 export { Input } from './input';
 export {
@@ -78,7 +79,7 @@ export {
 export { Announced } from './announced';
 export { OpeningSpace } from './opening-space';
 export { RowCell } from './row-cell';
-export { linkAboveRow, linkOverRow } from './row-link';
+export { linkAboveRow, linkInText, linkOverRow } from './row-link';
 export { OpenedBesideAList, ScreenTitle, SectionTitle } from './screen-title';
 export { Separator } from './separator';
 export { Switch } from './switch';
