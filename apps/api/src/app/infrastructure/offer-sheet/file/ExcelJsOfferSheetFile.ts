@@ -191,26 +191,26 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
   private readonly logger = new Logger(ExcelJsOfferSheetFile.name);
 
   async write(
-    sheet: OfferSheetWritten,
+    offerSheet: OfferSheetWritten,
   ): Promise<Either.Either<Uint8Array, StructuredError>> {
     try {
       const workbook = new Workbook();
       // Row 1, the headings, stays in view as the Vendor scrolls, and the
       // worksheet reads in the language's direction.
-      const worksheet = workbook.addWorksheet(sheet.getWorksheetName(), {
+      const worksheet = workbook.addWorksheet(offerSheet.getWorksheetName(), {
         views: [
           {
             state: 'frozen',
             xSplit: 0,
             ySplit: 1,
             topLeftCell: 'A2',
-            rightToLeft: sheet.readsRightToLeft(),
+            rightToLeft: offerSheet.readsRightToLeft(),
           },
         ],
       }) as WithDataValidations;
 
-      const columns = sheet.getColumns();
-      const rows = sheet.getRows();
+      const columns = offerSheet.getColumns();
+      const rows = offerSheet.getRows();
       worksheet.columns = columns.map((column, index) => ({
         header: column.getHeading(),
         width: widthOf(
@@ -224,8 +224,8 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
 
       // "In stock" is chosen from the language's yes and no, on every row
       // written and on the rows below, where the Vendor adds a Part's row.
-      const [yes, no] = sheet.getChoices();
-      const lastRow = 1 + sheet.getRowsTheListCovers();
+      const [yes, no] = offerSheet.getChoices();
+      const lastRow = 1 + offerSheet.getRowsTheListCovers();
       columns.forEach((column, index) => {
         if (column.getKind() !== 'yesOrNo') return;
         const letter = letterOf(index + 1);

@@ -7,7 +7,7 @@ import { PartNumberHolders } from './offer-sheet-part-numbers';
 import { OfferOnTheSheet, PartNumbersOfAPart } from './OfferOnTheSheet';
 
 // What a Vendor's Offer sheet is written from: every Offer of the Vendor,
-// Expired Offers among them, in the sheet's order, and which Parts of the
+// Expired Offers among them, in the Offer sheet's order, and which Parts of the
 // catalog hold each of their Parts' part numbers.
 export class OfferSheetContents {
   private readonly offeredPartIds: ReadonlySet<string>;

@@ -76,15 +76,18 @@ export class OfferSheetController {
     const result = await this.downloadOfferSheetQuery.execute(
       request.toQueryInput(caller.getId(), caller.getRoles(), vendorId),
     );
-    const sheet = result.pipe(Either.getOrThrowWith(ErrorStructureException.of));
+    const offerSheet = result.pipe(Either.getOrThrowWith(ErrorStructureException.of));
 
     // The dashboard, at another origin, saves the file under its name, which
     // a browser lets it read only when the answer says so.
     response.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
     response.setHeader('X-Content-Type-Options', 'nosniff');
-    return new StreamableFile(sheet.getFile(), {
+    return new StreamableFile(offerSheet.getFile(), {
       type: xlsx,
-      disposition: attachmentNamed(sheet.getFileName(), sheet.getFileNameInEnglish()),
+      disposition: attachmentNamed(
+        offerSheet.getFileName(),
+        offerSheet.getFileNameInEnglish(),
+      ),
     });
   }
 

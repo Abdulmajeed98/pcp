@@ -134,7 +134,7 @@ export type OfferSheetNotRead = Extract<OfferSheetFileRefusal, 'notReadable' | '
 export abstract class OfferSheetFile {
   // The .xlsx file's bytes.
   abstract write(
-    sheet: OfferSheetWritten,
+    offerSheet: OfferSheetWritten,
   ): Promise<Either.Either<Uint8Array, StructuredError>>;
 
   // The first worksheet of an uploaded file, sent by a stranger, as it was
