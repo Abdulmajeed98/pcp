@@ -3,6 +3,7 @@ import type {
   ListedOfferResponse,
   OfferResponse,
   OpenPartRequestsPageResponse,
+  PartRequestFulfilmentResponse,
   PartRequestWithVendorResponse,
   PartPageResponse,
   PartSummaryResponse,
@@ -385,6 +386,50 @@ const partRequestNotFound = refusal(
   'The made-up shop holds no such Part Request.',
 );
 
+// A request already fulfilled or rejected, as the API refuses to fulfil it
+// again.
+const partRequestResolved = refusal(
+  400,
+  'PART_REQUEST_RESOLVED',
+  'The made-up Part Request is already resolved.',
+);
+
+// What fulfilling an open request with a Part would do,
+// `GET v1/part-requests/{id}/fulfilment?partId=…`, as the API judges it by
+// the rule a fulfilment follows: made when the request's Vendor has no
+// Offer for the Part, replaced when its Offer was last confirmed before the
+// request was sent, and kept when at or after; and expired, when made or
+// replaced, as the request's own Offer would be. Only the shop's own Vendor
+// has Offers. The API's is the rule that counts; the shop states it because
+// no fixed data can carry what changes with the clock.
+function whatFulfillingWouldDo(
+  shop: MadeUpShop,
+  now: Date,
+  id: string,
+  partId: string | null,
+): ShopAnswer {
+  const [request] = partRequestsOf(shop, now, (each) => each.id === id);
+  if (request === undefined) return partRequestNotFound;
+  if (request.state !== 'open') return partRequestResolved;
+  if (partId === null) return refusal(400, 'NOT_VALID', 'No Part is named.');
+
+  const offer =
+    request.vendor.id === shop.vendor.id
+      ? shop.offers.find((each) => each.part.id === partId)
+      : undefined;
+  const fulfilment =
+    offer === undefined
+      ? 'created'
+      : Date.parse(offer.confirmedAt) < Date.parse(request.sentAt)
+        ? 'replaced'
+        : 'kept';
+  const body: PartRequestFulfilmentResponse = {
+    offer: fulfilment,
+    offerWouldBeExpired: fulfilment !== 'kept' && request.offerWouldBeExpired,
+  };
+  return { status: 200, body };
+}
+
 // The shop's Part Requests that `holds` keeps, as the API answers them at
 // `now`.
 function partRequestsOf(
@@ -396,8 +441,9 @@ function partRequestsOf(
 }
 
 // The queue, `GET v1/part-requests`: the open requests of every Vendor,
-// oldest first, then by identifier, as the API orders them; or one request,
-// `GET v1/part-requests/{id}`, in any state.
+// oldest first, then by identifier, as the API orders them; one request,
+// `GET v1/part-requests/{id}`, in any state; or what fulfilling one would
+// do.
 function answerAboutPartRequests(
   shop: MadeUpShop,
   now: Date,
@@ -405,6 +451,9 @@ function answerAboutPartRequests(
   id: string | undefined,
   rest: readonly string[],
 ): ShopAnswer {
+  if (id !== undefined && rest.length === 1 && rest[0] === 'fulfilment') {
+    return whatFulfillingWouldDo(shop, now, id, address.searchParams.get('partId'));
+  }
   if (rest.length > 0) return notFound;
   if (id !== undefined) {
     const [request] = partRequestsOf(shop, now, (each) => each.id === id);

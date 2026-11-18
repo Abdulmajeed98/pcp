@@ -38,6 +38,7 @@ export type {
   OutcomeOfARuleThatCanWarnResponse,
   PartMissingSpecificationsResponse,
   PartPageResponse,
+  PartRequestFulfilmentResponse,
   PartRequestResponse,
   PartRequestWithVendorResponse,
   PartResponse,

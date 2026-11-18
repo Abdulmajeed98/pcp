@@ -492,9 +492,7 @@ test.describe('matching', () => {
     });
     await expect(dialog).toContainText(other.name);
     await expect(dialog).toContainText(`${vendor.name} has no Offer for this Part.`);
-    await expect(dialog).toContainText(
-      'The request is fulfilled either way, and leaves the queue.',
-    );
+    await expect(dialog).toContainText('The request is fulfilled, and leaves the queue.');
     await dialog.getByRole('button', { name: 'Match', exact: true }).click();
 
     await expect(dialog).toHaveCount(0);
@@ -518,7 +516,7 @@ test.describe('matching', () => {
     });
   });
 
-  test('a Part the Vendor already offers is matched after a question that says the newer statement wins, and its Offer, confirmed after the request was sent, is kept', async ({
+  test('a Part the Vendor already offers, confirmed after the request was sent, is matched after a question that says its Offer is kept, and it is', async ({
     page,
     request,
   }) => {
@@ -538,7 +536,13 @@ test.describe('matching', () => {
     const dialog = page.getByRole('alertdialog', {
       name: 'Match this request to the Part?',
     });
-    await expect(dialog).toContainText(`${vendor.name} already offers this Part.`);
+    await expect(dialog).toContainText(
+      `${vendor.name} already offers this Part, and confirmed it after this request was sent, so its Offer is kept as it is.`,
+    );
+    await expect(dialog).toContainText(
+      'The request is still fulfilled, and leaves the queue.',
+    );
+    await expect(dialog).not.toContainText('listed as expired');
     await dialog.getByRole('button', { name: 'Match', exact: true }).click();
 
     await expect(page.getByTestId('resolution-note')).toContainText(
@@ -546,6 +550,49 @@ test.describe('matching', () => {
     );
     const [kept] = await theVendorsOffersFor(request, vendor.id, offered.word);
     expect(kept.usdPrice).toBe('99.00');
+  });
+
+  test('a Part the Vendor already offers, confirmed before the request was sent, is matched after a question that says the request’s details replace its Offer’s, and they do', async ({
+    page,
+    request,
+  }) => {
+    const offered = await createAMadeUpPart(request, authorization, {}, 'psu');
+    // Confirmed before the request below was sent, so the request is the
+    // Vendor's newer statement, and replaces the Offer's details.
+    await addAnOffer(request, authorization, vendor.id, offered.id, { usdPrice: '99.00' });
+    const later = await sendAMadeUpPartRequest(request, authorization, vendor.id);
+    await page.goto(partRequestUrl(later.id));
+
+    // Its part number finds nothing, so the Admin searches by the Part's name.
+    const search = page.getByRole('searchbox', { name: 'Search the catalog' });
+    await search.fill(offered.word);
+    await search.press('Enter');
+    const row = page
+      .getByRole('list', { name: 'Parts to match' })
+      .getByRole('listitem')
+      .filter({ hasText: offered.name });
+    await expect(row.getByTestId('offered')).toHaveText(`${vendor.name} offers this Part`);
+    await row.getByRole('button', { name: /^Match/ }).click();
+    const dialog = page.getByRole('alertdialog', {
+      name: 'Match this request to the Part?',
+    });
+    await expect(dialog).toContainText(
+      `${vendor.name} already offers this Part, last confirmed before this request was sent, so the request’s price, stock and warranty replace its Offer’s.`,
+    );
+    await expect(dialog).toContainText('The request is fulfilled, and leaves the queue.');
+    await expect(dialog).not.toContainText('listed as expired');
+    await dialog.getByRole('button', { name: 'Match', exact: true }).click();
+
+    await expect(page.getByTestId('resolution-note')).toContainText(
+      `${vendor.name}’s Offer for it now has the request’s details, confirmed when the request was sent.`,
+    );
+    const [replaced] = await theVendorsOffersFor(request, vendor.id, offered.word);
+    expect(replaced).toMatchObject({
+      usdPrice: '79.00',
+      iqdPrice: 125_000,
+      inStock: true,
+      warrantyMonths: 36,
+    });
   });
 });
 

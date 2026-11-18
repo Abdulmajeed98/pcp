@@ -35,6 +35,30 @@ export function usePartRequest(partRequestId: string) {
   });
 }
 
+// What fulfilling the request with a Part would do to the Vendor's Offer
+// for it, and whether that Offer would then be expired, as the API judges
+// it by the rule a fulfilment follows, so that the match question says the
+// one outcome (the code review's Spec finding 1). It is read only while
+// `asked`, when the question is open, and under the key of every query
+// about Part Requests, so that a resolution asks it again.
+export function useWhatFulfillingWouldDo(
+  partRequestId: string,
+  partId: string,
+  asked: boolean,
+) {
+  return useQuery({
+    queryKey: [...partRequestsKey, 'fulfilment', partRequestId, partId],
+    queryFn: () =>
+      dataOf(
+        apiClient.readPartRequestFulfilment({
+          path: { partRequestId },
+          query: { partId },
+        }),
+      ),
+    enabled: asked,
+  });
+}
+
 // How many Parts a page of the match search holds.
 export const matchesOnAPage = 20;
 

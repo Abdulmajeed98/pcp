@@ -1,9 +1,13 @@
-import type { FoundPartResponse, PartRequestWithVendorResponse } from '@pcp/api-client';
+import type {
+  FoundPartResponse,
+  PartRequestFulfilmentResponse,
+  PartRequestWithVendorResponse,
+} from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish, AsWritten } from '@pcp/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { CircleCheckIcon, SearchIcon } from 'lucide-react';
-import { type FormEvent, useId, useState } from 'react';
+import { type FormEvent, type ReactNode, useId, useState } from 'react';
 
 import { categoryName } from '@/entities/category';
 import { PartNumbers } from '@/entities/part';
@@ -30,7 +34,7 @@ import {
   SectionTitle,
 } from '@/shared/ui';
 
-import { useMatchSearch } from '../api/part-requests';
+import { useMatchSearch, useWhatFulfillingWouldDo } from '../api/part-requests';
 import {
   askAgainAboutThePartRequests,
   isResolvedAlready,
@@ -220,11 +224,15 @@ function PartToMatch({
 }
 
 // Match, which asks once, in shadcn/ui's alert dialog, saying what fulfilling
-// will do with the Vendor's Offer, by what the search said of it: made with
-// the request's details, or, for a Part the Vendor already offers, replaced
-// or kept by which statement is newer; and that the request is fulfilled
-// either way (the dashboard's DESIGN.md, Matching a Part Request). Its action
-// is the primary button, not red, since it destroys nothing. A refusal is
+// will do with the Vendor's Offer: made with the request's details,
+// replaced by them, or kept, as the API answers when the dialog opens, with
+// the warning that the Offer would be listed as expired only when that
+// answer says so (the code review's Spec finding 1). While the answer is on
+// its way, or if none comes, it says the rule by what the search said of
+// the Vendor, and that the request is fulfilled either way (the dashboard's
+// DESIGN.md, Matching a Part Request). Its action is the primary button, not
+// red, since it destroys nothing, and never waits for the answer: the
+// fulfilment judges again, and the note says what it did. A refusal is
 // said in the dialog, which stays open to try again; one that says the
 // request was resolved meanwhile closes it, and the screen shows how.
 function MatchPart({
@@ -241,7 +249,7 @@ function MatchPart({
   const fulfil = useFulfil(partRequest, (fulfilled, matched) =>
     backToTheQueue(fulfilled.offer, matched.name),
   );
-  const vendor = <AsWritten>{partRequest.vendor.name}</AsWritten>;
+  const foreseen = useWhatFulfillingWouldDo(partRequest.id, part.id, open);
 
   function openOrClose(next: boolean): void {
     // A fulfilment on its way finishes before the dialog closes.
@@ -276,25 +284,11 @@ function MatchPart({
             </AlwaysEnglish>
           </p>
           <AlertDialogDescription id={`${id}-description`}>
-            {part.offerId === null ? (
-              <>
-                {vendor} has no Offer for this Part. Its Offer is made with the request’s
-                price, stock and warranty.
-              </>
+            {foreseen.data === undefined ? (
+              <TheRule partRequest={partRequest} part={part} />
             ) : (
-              <>
-                {vendor} already offers this Part. If its Offer was last confirmed before
-                this request was sent, the request’s price, stock and warranty replace it;
-                if not, its Offer is kept as it is.
-              </>
-            )}{' '}
-            {partRequest.offerWouldBeExpired && (
-              <>
-                It counts as confirmed {formatNumber(partRequest.daysSinceSent)} days ago,
-                so it is listed as expired until the Vendor confirms it.{' '}
-              </>
+              <TheOutcome partRequest={partRequest} foreseen={foreseen.data} />
             )}
-            The request is fulfilled either way, and leaves the queue.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogRefusal>
@@ -312,5 +306,85 @@ function MatchPart({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+// The question's words once the API has said what fulfilling will do: the
+// one outcome for the Vendor's Offer, the warning only when the Offer would
+// be expired, and the request fulfilled.
+function TheOutcome({
+  partRequest,
+  foreseen,
+}: {
+  partRequest: Request;
+  foreseen: PartRequestFulfilmentResponse;
+}) {
+  const vendor = <AsWritten>{partRequest.vendor.name}</AsWritten>;
+  const offer: Record<PartRequestFulfilmentResponse['offer'], ReactNode> = {
+    created: (
+      <>
+        {vendor} has no Offer for this Part. Its Offer is made with the request’s price,
+        stock and warranty.
+      </>
+    ),
+    replaced: (
+      <>
+        {vendor} already offers this Part, last confirmed before this request was sent, so
+        the request’s price, stock and warranty replace its Offer’s.
+      </>
+    ),
+    kept: (
+      <>
+        {vendor} already offers this Part, and confirmed it after this request was sent, so
+        its Offer is kept as it is.
+      </>
+    ),
+  };
+
+  return (
+    <>
+      {offer[foreseen.offer]}{' '}
+      {foreseen.offerWouldBeExpired && <Expired partRequest={partRequest} />}
+      {foreseen.offer === 'kept'
+        ? 'The request is still fulfilled, and leaves the queue.'
+        : 'The request is fulfilled, and leaves the queue.'}
+    </>
+  );
+}
+
+// The question's words while the API's answer is on its way, or when none
+// came: the rule, by what the search said of the Vendor, since only the API
+// knows when the Vendor last confirmed its Offer.
+function TheRule({ partRequest, part }: { partRequest: Request; part: FoundPartResponse }) {
+  const vendor = <AsWritten>{partRequest.vendor.name}</AsWritten>;
+
+  return (
+    <>
+      {part.offerId === null ? (
+        <>
+          {vendor} has no Offer for this Part. Its Offer is made with the request’s price,
+          stock and warranty.
+        </>
+      ) : (
+        <>
+          {vendor} already offers this Part. If its Offer was last confirmed before this
+          request was sent, the request’s price, stock and warranty replace it; if not, its
+          Offer is kept as it is.
+        </>
+      )}{' '}
+      {partRequest.offerWouldBeExpired && <Expired partRequest={partRequest} />}
+      The request is fulfilled either way, and leaves the queue.
+    </>
+  );
+}
+
+// That the Offer, confirmed when the request was sent, would be listed as
+// expired, by the days the API counted since.
+function Expired({ partRequest }: { partRequest: Request }) {
+  return (
+    <>
+      It counts as confirmed {formatNumber(partRequest.daysSinceSent)} days ago, so it is
+      listed as expired until the Vendor confirms it.{' '}
+    </>
   );
 }
