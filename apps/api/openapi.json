@@ -2558,6 +2558,65 @@
         "summary": "Reject an open Part Request with a reason, for the Admin",
         "tags": ["PartRequest"]
       }
+    },
+    "/v1/vendors/{vendorId}/offer-sheet": {
+      "get": {
+        "operationId": "downloadOfferSheet",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "language",
+            "required": true,
+            "in": "query",
+            "description": "The language of the file's headings, its yes and no, its worksheet's name and its own name, the portal's current one.",
+            "schema": {
+              "example": "ckb",
+              "type": "string",
+              "enum": ["ckb", "ar", "en"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "Content-Disposition": {
+                "description": "The file's name in the language asked for, with the day in Iraq, as `filename*`, and in English as `filename`.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "A Vendor's Offer sheet, an .xlsx file with one row for each of its Offers, Expired Offers among them, in the language asked for, its name in Content-Disposition. For the Vendor's own Login, or the Admin acting for any Vendor",
+        "tags": ["OfferSheet"]
+      }
     }
   },
   "info": {

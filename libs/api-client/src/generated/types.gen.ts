@@ -3337,3 +3337,32 @@ export type RejectPartRequestResponses = {
 };
 
 export type RejectPartRequestResponse = RejectPartRequestResponses[keyof RejectPartRequestResponses];
+
+export type DownloadOfferSheetData = {
+    body?: never;
+    path: {
+        vendorId: string;
+    };
+    query: {
+        /**
+         * The language of the file's headings, its yes and no, its worksheet's name and its own name, the portal's current one.
+         */
+        language: 'ckb' | 'ar' | 'en';
+    };
+    url: '/v1/vendors/{vendorId}/offer-sheet';
+};
+
+export type DownloadOfferSheetErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type DownloadOfferSheetError = DownloadOfferSheetErrors[keyof DownloadOfferSheetErrors];
+
+export type DownloadOfferSheetResponses = {
+    200: Blob | File;
+};
+
+export type DownloadOfferSheetResponse = DownloadOfferSheetResponses[keyof DownloadOfferSheetResponses];
