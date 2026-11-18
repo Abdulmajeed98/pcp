@@ -51,7 +51,7 @@ The inspector's made-up shop first learns to answer Part Requests, so that every
 
   Any piece that pulls against a hard rule is put to the owner too.
 - [x] **The record.** The owner's choices go under Comments, and Impeccable writes them, with their motion, into the dashboard's DESIGN.md. An ADR is written only if a choice replaces part of ADR-0011.
-- [ ] **Gates.** `pnpm check --skip-nx-cache` passes. The made-up shop is typed against the client, and its tests pass.
+- [x] **Gates.** `pnpm check --skip-nx-cache` passes. The made-up shop is typed against the client, and its tests pass.
 
 ## Comments
 
@@ -234,3 +234,11 @@ No choice replaces part of ADR-0011, so no ADR is written.
 - the Vendor's list with a long Kurdish reason;
 - the queue, a request and its three ways at 360 pixels;
 - the motion on a real phone, with reduced motion on and off.
+
+### 18 November 2026: the gates
+
+- Each commit was gated on `pnpm check` before it was made: `64f0c43` (the move), `f577c13` (the made-up Part Requests, the inspector's 182 tests among it), `115cfd0` and `d68cbc5` (DESIGN.md and this record).
+- `part-requests/integration` was still at `7409b58` when merged in, so the merge brought nothing.
+- This record's commit is gated on `pnpm check --skip-nx-cache`, with every `*.tsbuildinfo` outside `node_modules` deleted first.
+- `pnpm integration:check` was not run, since the ticket changes no API code. `pnpm platform:check` was not run either, since the ticket runs no end-to-end test and builds no screen.
+- The e2e lock was held once, for the inspection and the capture, and released.
