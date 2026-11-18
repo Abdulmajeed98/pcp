@@ -86,6 +86,38 @@ export async function fulfilAPartRequest(
   return ((await answered.json()) as { offer: 'created' | 'replaced' | 'kept' }).offer;
 }
 
+// The most open Part Requests the API gives in one answer of the queue.
+const requestsInAnAnswer = 100;
+
+// The request's place on the Admin's queue, counted from 0, in the API's
+// order, or none when the queue does not hold it. The queue is oldest first,
+// so a request a test has just sent is among the last, whatever earlier
+// runs left: the API is asked for its pages from the last back, and answers
+// in one or two.
+export async function placeOnTheQueue(
+  request: APIRequestContext,
+  authorization: string,
+  partRequestId: string,
+): Promise<number | undefined> {
+  const pageOf = async (number: number) => {
+    const answered = await request.get(`${apiUrl}/v1/part-requests`, {
+      headers: { authorization },
+      params: { page: number, size: requestsInAnAnswer },
+    });
+    expect(answered.status()).toBe(200);
+    return (await answered.json()) as { content: { id: string }[]; totalPages: number };
+  };
+
+  const { totalPages } = await pageOf(0);
+  for (let number = totalPages - 1; number >= 0; number--) {
+    const place = (await pageOf(number)).content.findIndex(
+      (each) => each.id === partRequestId,
+    );
+    if (place >= 0) return number * requestsInAnAnswer + place;
+  }
+  return undefined;
+}
+
 // Rejects a Part Request with a reason over HTTP, as the Admin.
 export async function rejectAPartRequest(
   request: APIRequestContext,

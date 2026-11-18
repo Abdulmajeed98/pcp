@@ -9,17 +9,13 @@ import {
 import { expectAccessible } from './accessibility';
 import {
   findOnTheQueue,
-  fulfilByTheApi,
   type MadeUpPartRequest,
   partRequestsHeading,
   partRequestsUrl,
   partRequestUrl,
-  placeOnTheQueue,
   queuedRequests,
-  rejectByTheApi,
   sendAMadeUpPartRequest,
   thePartRequestsSection,
-  theVendorsPartRequests,
 } from './admin-part-requests';
 import { vendorPageUrl } from './admin-vendors';
 import { catalogHeading, createAMadeUpPart } from './catalog';
@@ -30,6 +26,12 @@ import { theMenuSheet } from './menu-sheet';
 import { snapsOf } from './motion-film';
 import { addAnOffer } from './offers';
 import { offerOf, switchTheVendor } from './part-page';
+import {
+  fulfilAPartRequest,
+  placeOnTheQueue,
+  rejectAPartRequest,
+  vendorsPartRequests,
+} from './part-requests';
 import { apiUrl } from './platform';
 import { createAMadeUpVendor, type MadeUpVendor } from './vendors';
 
@@ -308,7 +310,7 @@ test.describe('one request', () => {
     request,
   }) => {
     const reason = 'ژمارەی پارچەکە هەڵەیە. The part number is not the maker’s.';
-    await rejectByTheApi(request, authorization, partRequest.id, reason);
+    await rejectAPartRequest(request, authorization, partRequest.id, reason);
 
     await page.goto(partRequestUrl(partRequest.id));
 
@@ -326,7 +328,7 @@ test.describe('one request', () => {
     // A fulfilled one names the Part it was fulfilled with, leading to it.
     const fulfilled = await sendAMadeUpPartRequest(request, authorization, vendor.id);
     const part = await createAMadeUpPart(request, authorization, {}, 'psu');
-    await fulfilByTheApi(request, authorization, fulfilled.id, part.id);
+    await fulfilAPartRequest(request, authorization, fulfilled.id, part.id);
     await page.goto(partRequestUrl(fulfilled.id));
     const how = page.getByTestId('how-it-was-resolved');
     await expect(how).toContainText('Fulfilled on ');
@@ -376,7 +378,7 @@ test.describe('rejecting', () => {
     await expect(queuedRequests(page).filter({ hasText: partRequest.name })).toHaveCount(0);
     expect(await placeOnTheQueue(request, authorization, partRequest.id)).toBeUndefined();
 
-    const [listed] = await theVendorsPartRequests(request, authorization, vendor.id);
+    const [listed] = await vendorsPartRequests(request, authorization, vendor.id);
     expect(listed.id).toBe(partRequest.id);
     expect(listed.state).toBe('rejected');
     expect(listed.reason).toBe(written);
@@ -388,7 +390,7 @@ test.describe('rejecting', () => {
   }) => {
     await page.goto(partRequestUrl(partRequest.id));
     await expect(theRequestsTitle(page, partRequest.name)).toBeVisible();
-    await rejectByTheApi(
+    await rejectAPartRequest(
       request,
       authorization,
       partRequest.id,
