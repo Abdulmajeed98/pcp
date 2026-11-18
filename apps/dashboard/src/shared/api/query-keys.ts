@@ -17,3 +17,8 @@ export const vendorsKey = ['vendors'] as const;
 // lists Vendors, so it is under the Vendors' key, and a change to a Vendor,
 // such as its name or its deactivation, asks for it again.
 export const referralCountsKey = [...vendorsKey, 'referral-counts'] as const;
+
+// Every query about Part Requests is under this key: a Vendor's list, the
+// Admin's queue and one request. So a send, a fulfilment or a rejection asks
+// each of them again.
+export const partRequestsKey = ['part-requests'] as const;
