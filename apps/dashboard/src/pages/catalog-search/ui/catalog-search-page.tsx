@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router';
 import type { AddedOffer } from '@/entities/offer';
 import { useVendorShown } from '@/entities/vendor';
 import { Trans, useTranslation } from '@/shared/i18n';
-import { BackLink, Leaving } from '@/shared/ui';
+import { Announced, BackLink, Leaving } from '@/shared/ui';
 
 import { useSearchInTheAddress } from '../model/search';
 import { FoundParts } from './found-parts';
@@ -51,13 +51,15 @@ export function CatalogSearchPage() {
           <p className="text-sm text-muted-foreground">{t('CatalogSearch.intro')}</p>
         </div>
       </div>
-      {/* The live region is always there, so that the note is announced when
-          it appears in it. */}
+      {/* The live region is always there, and the note arrives in it once
+          it is in the page, so that the note is announced. */}
       <output className="block">
         <Leaving value={added}>
           {(name) => (
             <div className={gapAbove}>
-              <AddedNote name={name} />
+              <Announced>
+                <AddedNote name={name} />
+              </Announced>
             </div>
           )}
         </Leaving>

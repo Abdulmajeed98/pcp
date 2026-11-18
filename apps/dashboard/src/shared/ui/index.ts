@@ -74,6 +74,7 @@ export {
   ScreenSearchPlaceProvider,
   useScreenSearchPlace,
 } from './screen-search';
+export { Announced } from './announced';
 export { OpeningSpace } from './opening-space';
 export { RowCell } from './row-cell';
 export { linkOverRow } from './row-link';

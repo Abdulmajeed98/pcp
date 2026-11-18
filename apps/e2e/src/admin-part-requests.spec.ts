@@ -22,6 +22,10 @@ import { catalogHeading, createAMadeUpPart } from './catalog';
 import { authorizationOfTheDevelopmentAdmin } from './development-logins';
 import { addressIn, expectNoSidewaysScroll, languages, narrowWindow } from './languages';
 import { type DrawnFrame, filmTheList, jumpsIn } from './leaving-rows';
+import {
+  recordTheLiveRegionsAsTheyArrive,
+  wordsTheRegionArrivedWith,
+} from './live-regions';
 import { theMenuSheet } from './menu-sheet';
 import { snapsOf } from './motion-film';
 import { addAnOffer } from './offers';
@@ -346,6 +350,7 @@ test.describe('rejecting', () => {
     page,
     request,
   }) => {
+    await recordTheLiveRegionsAsTheyArrive(page);
     const row = await findOnTheQueue(page, request, authorization, partRequest);
     await row.getByRole('link', { name: partRequest.name }).click();
     await expect(theRequestsTitle(page, partRequest.name)).toBeVisible();
@@ -376,6 +381,10 @@ test.describe('rejecting', () => {
     await expect(note).toContainText('Request rejected');
     await expect(note).toContainText(partRequest.name);
     await expect(note).toContainText(`${vendor.name} reads your reason in its portal.`);
+    expect(
+      await wordsTheRegionArrivedWith(note),
+      'the note arrived in a live region that was in the page before it',
+    ).toBe('');
     await expect(queuedRequests(page).filter({ hasText: partRequest.name })).toHaveCount(0);
     expect(await placeOnTheQueue(request, authorization, partRequest.id)).toBeUndefined();
 
@@ -612,6 +621,7 @@ test.describe('creating', () => {
     page,
     request,
   }) => {
+    await recordTheLiveRegionsAsTheyArrive(page);
     await openFromTheQueue(page, request, partRequest);
     await page.getByRole('link', { name: 'Create the Part' }).click();
 
@@ -653,6 +663,10 @@ test.describe('creating', () => {
     await expect(note).toContainText(
       `${vendor.name}’s Offer for it was made with the request’s details.`,
     );
+    expect(
+      await wordsTheRegionArrivedWith(note),
+      'the note arrived in a live region that was in the page before it',
+    ).toBe('');
     await expect(page.getByText('Add a photo', { exact: true })).toBeVisible();
     expect(await placeOnTheQueue(request, authorization, partRequest.id)).toBeUndefined();
 
