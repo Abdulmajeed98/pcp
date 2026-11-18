@@ -62,6 +62,7 @@ export { NothingToDo, PagedList, SketchedRows } from './paged-list';
 export { PastTheLastPage } from './past-the-last-page';
 export { OptionalMark } from './optional-mark';
 export { MenuSheet } from './menu-sheet';
+export { NameField } from './name-field';
 export { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from './native-select';
 export { Plate, PlateFigure } from './plate';
 export {

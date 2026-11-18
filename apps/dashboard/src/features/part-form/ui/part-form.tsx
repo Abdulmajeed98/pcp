@@ -19,6 +19,7 @@ import {
   FieldLegend,
   FieldSet,
   Input,
+  NameField,
   NativeSelect,
   NativeSelectOption,
   OpeningSpace,
@@ -32,7 +33,6 @@ import {
 } from '../model/form-values';
 import { fieldOf, messageOf, partFieldMessages, whyNotSaved } from '../model/refusals';
 import { errorOf } from './field-names';
-import { NameField } from './name-field';
 import { SpecificationField } from './specification-field';
 import { TextListField } from './text-list-field';
 

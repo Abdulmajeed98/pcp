@@ -1,8 +1,7 @@
 import type { SendPartRequestRequest } from '@pcp/api-client';
 import { AlwaysEnglish } from '@pcp/ui';
-import { cn } from 'cn';
 import { SearchIcon } from 'lucide-react';
-import { type ComponentProps, type ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Controller, type FieldErrors, FormProvider, useForm } from 'react-hook-form';
 
 import { type CategoryKey, categoryName, useCategories } from '@/entities/category';
@@ -21,10 +20,10 @@ import {
   FieldError,
   FieldLabel,
   Input,
+  NameField,
   NativeSelect,
   NativeSelectOption,
   OpeningSpace,
-  Textarea,
 } from '@/shared/ui';
 
 import { partRequestOf, type PartRequestFormValues } from '../model/form-values';
@@ -279,44 +278,5 @@ function PartField({
         {refusal === undefined ? undefined : <RefusalText message={refusal} />}
       </FieldError>
     </Field>
-  );
-}
-
-// The Part's name, as a Part's name is written in the Part form (the owner's
-// "Field that grows", redesign ticket 08): it wraps and grows, so that a long
-// name is seen whole while it is written, and is as high as a control while
-// it fits one line. It is one line of text all the same: Enter sends the
-// form, and a line break pasted into it becomes a space. It keeps the
-// direction of what is written in it, as the name is kept as written.
-function NameField({
-  onChange,
-  className,
-  ...props
-}: ControlProps & ComponentProps<'textarea'>) {
-  return (
-    <Textarea
-      rows={1}
-      dir="auto"
-      autoComplete="off"
-      enterKeyHint="done"
-      className={cn(
-        'min-h-control py-[calc((var(--spacing-control)-1.625rem)/2)]',
-        className,
-      )}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-          event.preventDefault();
-          event.currentTarget.form?.requestSubmit();
-        }
-      }}
-      onChange={(event) => {
-        const field = event.currentTarget;
-        if (/[\r\n]/.test(field.value)) {
-          field.value = field.value.replace(/\s*[\r\n]+\s*/g, ' ');
-        }
-        void onChange?.(event);
-      }}
-      {...props}
-    />
   );
 }
