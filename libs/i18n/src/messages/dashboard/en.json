@@ -235,7 +235,7 @@
     "reason": "The Admin’s reason:",
     "sendCorrected": "Send a corrected request",
     "none": "No Part Request yet",
-    "noneDescription": "When a Part you sell is not in the catalog, ask the Admin to add it. Your Offer goes live once it is added.",
+    "noneDescription": "When a Part you sell is not in the catalog, ask the Admin to add it. Shoppers see your Offer once it is added.",
     "sentTitle": "Part Request sent",
     "sentNote": "You asked for <name/> to be added. The Admin adds it, or says here why not.",
     "pages": "Pages of your Part Requests",
