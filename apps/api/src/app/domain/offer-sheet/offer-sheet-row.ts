@@ -48,14 +48,14 @@ export type OfferSheetRowRefusal = (typeof offerSheetRowRefusals)[number];
 // Offer it states.
 export class OfferSheetRow {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly partNumber: string,
     private readonly name: string | null,
     private readonly details: OfferDetails,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   // In Western digits, without invisible marks and without the space
@@ -79,14 +79,14 @@ export class OfferSheetRow {
 // its one problem.
 export class OfferSheetRowNotValid {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly partNumber: string,
     private readonly field: OfferSheetRowField,
     private readonly reason: OfferSheetRowRefusal,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   getPartNumber(): string {
@@ -236,14 +236,14 @@ function standingIn<T>(read: Read<T>, fits: T): T | null {
 export function checkedRow(
   read: OfferSheetRowRead,
 ): Either.Either<OfferSheetRow, OfferSheetRowNotValid> {
-  const row = read.getRow();
+  const rowNumber = read.getRowNumber();
   const partNumberCell = read.cellOf('partNumber');
 
   const partNumber = partNumberIn(partNumberCell);
   if (Either.isLeft(partNumber)) {
     return Either.left(
       new OfferSheetRowNotValid(
-        row,
+        rowNumber,
         partNumberAsWritten(partNumberCell),
         'partNumber',
         partNumber.left,
@@ -251,7 +251,7 @@ export function checkedRow(
     );
   }
   const notValid = (field: OfferSheetRowField, reason: OfferSheetRowRefusal) =>
-    new OfferSheetRowNotValid(row, partNumber.right, field, reason);
+    new OfferSheetRowNotValid(rowNumber, partNumber.right, field, reason);
 
   const usdPrice = usdPriceIn(read.cellOf('usdPrice'));
   const iqdPrice = numberIn(read.cellOf('iqdPrice'));
@@ -295,6 +295,11 @@ export function checkedRow(
   }
 
   return Either.right(
-    new OfferSheetRow(row, partNumber.right, nameIn(read.cellOf('name')), details.right),
+    new OfferSheetRow(
+      rowNumber,
+      partNumber.right,
+      nameIn(read.cellOf('name')),
+      details.right,
+    ),
   );
 }

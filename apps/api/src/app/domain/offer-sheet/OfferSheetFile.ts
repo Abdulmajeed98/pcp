@@ -105,12 +105,12 @@ export const emptyCell: OfferSheetCellRead = { kind: 'empty' };
 // `offerSheetColumns`' order.
 export class OfferSheetRowRead {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly cells: readonly OfferSheetCellRead[],
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   // The six cells, A to F, a cell the file does not hold empty.

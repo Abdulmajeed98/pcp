@@ -21,7 +21,7 @@ export class RowMatchedByYourOfferResponse {
   readonly part: PartSummaryResponse;
 
   private constructor(matched: RowMatchedByYourOffer) {
-    this.row = matched.getRow();
+    this.row = matched.getRowNumber();
     this.part = PartSummaryResponse.of(matched.getPart());
   }
 

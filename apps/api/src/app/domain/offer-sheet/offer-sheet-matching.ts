@@ -90,7 +90,7 @@ export function matchedRows(
     } else if (parts.length > 1) {
       skipped.push(
         new RowWithSeveralParts(
-          row.getRow(),
+          row.getRowNumber(),
           row.getPartNumber(),
           parts.slice(0, mostPartsNamed),
           parts.length,
@@ -99,7 +99,7 @@ export function matchedRows(
     } else {
       skipped.push(
         new RowWithNoPart(
-          row.getRow(),
+          row.getRowNumber(),
           row.getPartNumber(),
           row.getName(),
           row.getDetails(),
@@ -114,23 +114,23 @@ export function matchedRows(
   for (const each of matched) {
     const partId = each.getPart().getId();
     const rowsOfThePart = rowsOf.get(partId) ?? [];
-    rowsOfThePart.push(each.getRow().getRow());
+    rowsOfThePart.push(each.getRow().getRowNumber());
     rowsOf.set(partId, rowsOfThePart);
   }
 
   const once: RowMatched[] = [];
   for (const each of matched) {
-    const row = each.getRow().getRow();
+    const rowNumber = each.getRow().getRowNumber();
     const rowsOfThePart = rowsOf.get(each.getPart().getId()) ?? [];
     if (rowsOfThePart.length === 1) {
       once.push(each);
     } else {
       skipped.push(
         new RowOfTheSamePart(
-          row,
+          rowNumber,
           each.getRow().getPartNumber(),
           each.getPart(),
-          firstOtherRows(rowsOfThePart, row),
+          firstOtherRows(rowsOfThePart, rowNumber),
           rowsOfThePart.length - 1,
         ),
       );

@@ -70,7 +70,7 @@ export { Output as UploadOfferSheetCommandOutput };
 // The first worksheet's row 1, the headings, or none when it holds none.
 function headingsOf(read: OfferSheetRead): OfferSheetRowRead | undefined {
   const [first] = read.getRows();
-  return first?.getRow() === 1 ? first : undefined;
+  return first?.getRowNumber() === 1 ? first : undefined;
 }
 
 // A Vendor uploads its Offer sheet to change many Offers at once, or the
@@ -136,7 +136,9 @@ export class UploadOfferSheetCommand {
     matched.forEach((each, index) => {
       const done = applied.right[index];
       if (done.kind === 'added') {
-        added.push(new AddedOffer(each.getRow().getRow(), each.getPart(), done.offerId));
+        added.push(
+          new AddedOffer(each.getRow().getRowNumber(), each.getPart(), done.offerId),
+        );
       } else if (each.getRow().getDetails().differFrom(done.before)) {
         // A price, the stock or the warranty differs from the Offer it
         // replaced; else the row only confirmed it.
@@ -146,8 +148,8 @@ export class UploadOfferSheetCommand {
       }
     });
 
-    const byRow = (one: { getRow(): number }, other: { getRow(): number }) =>
-      one.getRow() - other.getRow();
+    const byRow = (one: { getRowNumber(): number }, other: { getRowNumber(): number }) =>
+      one.getRowNumber() - other.getRowNumber();
     return Either.right(
       Output.of(
         new OfferSheetResult(
@@ -158,7 +160,8 @@ export class UploadOfferSheetCommand {
           matched
             .filter((each) => each.isByYourOffer())
             .map(
-              (each) => new RowMatchedByYourOffer(each.getRow().getRow(), each.getPart()),
+              (each) =>
+                new RowMatchedByYourOffer(each.getRow().getRowNumber(), each.getPart()),
             ),
           [...notValid, ...skipped].sort(byRow) satisfies SkippedRow[],
         ),
@@ -185,7 +188,9 @@ export class UploadOfferSheetCommand {
       return Either.left(offerSheetRefused('notTheLayout'));
     }
 
-    const rows = read.right.getRows().filter((row) => row.getRow() > 1 && !isEmptyRow(row));
+    const rows = read.right
+      .getRows()
+      .filter((row) => row.getRowNumber() > 1 && !isEmptyRow(row));
     if (rows.length > mostRowsOfAnOfferSheet) {
       return Either.left(offerSheetRefused('tooManyRows'));
     }
