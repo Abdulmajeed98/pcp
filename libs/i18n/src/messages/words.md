@@ -44,6 +44,16 @@ A word in _Notes_ that is marked **to choose** is one the drafter was least sure
 
 Left out, because no Shopper or Vendor reads them: Specification list and Needed specification, which only the Admin console shows, in English, and Caller, which only the Vendor portal's placeholder page showed.
 
+## The states of a Part Request
+
+**For the owner's reading.** Added with `part-requests`' ticket 01, on 18 November 2026, as drafts like the rest. CONTEXT.md names the three states a Part Request is in. The Vendor's Part Requests in the portal say each in plain words, which these are: the Part is waiting to be added, it was added, or it was not added. The Admin console says them in English only.
+
+| State     | The portal says | Kurdish (Sorani) | Arabic      | Notes                                                                                                                                                                                    |
+| --------- | --------------- | ---------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| open      | Waiting         | چاوەڕوانە        | قيد الانتظار | Neither fulfilled nor rejected yet. Kurdish "it is waiting", Arabic "awaiting". The portal adds how many days it has waited.                                                             |
+| fulfilled | Added           | زیادکرا          | أُضيفت       | The Admin matched it to a Part, created from it or found in the catalog, and the Vendor's Offer was made. Kurdish "it was added"; Arabic "it was added", of the Part, قطعة, so feminine. |
+| rejected  | Not added       | زیاد نەکرا       | لم تُضَف      | The Admin turned it down with a reason, which the portal shows as the Admin wrote it. Kurdish "it was not added", Arabic "it was not added".                                             |
+
 ## The platform's own names
 
 | Name          | Kurdish (Sorani)  | Arabic            |
