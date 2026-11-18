@@ -1,6 +1,7 @@
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
-import { SearchXIcon } from 'lucide-react';
+import { PackagePlusIcon, SearchIcon, SearchXIcon } from 'lucide-react';
+import { Link } from 'react-router';
 
 import { categoryName } from '@/entities/category';
 import { WhyNotAnsweredInThePortal } from '@/shared/api';
@@ -10,7 +11,10 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  Button,
+  buttonVariants,
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -54,7 +58,9 @@ export function FoundParts({
     );
   }
   if (found.data === undefined) return <Searching wide={wide} />;
-  if (found.data.totalElements === 0) return <NothingFound search={search} />;
+  if (found.data.totalElements === 0) {
+    return <NothingFound search={search} onSearch={onSearch} />;
+  }
 
   const { content, totalElements, pageNumber, totalPages, first, last } = found.data;
 
@@ -155,40 +161,97 @@ function Searching({ wide }: { wide: boolean }) {
   );
 }
 
-// A search that found nothing: the words searched, `AlwaysEnglish`, and the
-// Category it was limited to, if any. Turning it into a Part Request waits
-// for `part-requests`.
-function NothingFound({ search }: { search: CatalogSearch }) {
+// A search that found nothing, as the dashboard's DESIGN.md has it (the
+// owner's d3, taken under the standing instruction of 18 November 2026,
+// part-requests ticket 02): the empty state, its title a heading and the
+// whole result a status (`output`), so that it is announced; the words searched,
+// `AlwaysEnglish`, and the Category it was limited to, if any; and, since a
+// Part the catalog lacks can be asked for, the way on. One Note Grey
+// sentence says that the Admin can add it and that the form starts with the
+// Vendor's words; then, when a Category narrowed the search, the outlined
+// Search every Category, which searches the same words in every Category,
+// so that a Part filed under another Category is found before it is asked
+// for; and after it the outlined Ask for it to be added, which opens the
+// Part Request form with the words as the Part's name and the Category,
+// carried in the address. A search of no words keeps no request action.
+function NothingFound({
+  search,
+  onSearch,
+}: {
+  search: CatalogSearch;
+  onSearch: (search: CatalogSearch) => void;
+}) {
   const { t } = useTranslation();
   const words = search.words.trim();
   const category =
     search.category === undefined ? undefined : categoryName(search.category);
 
   return (
-    <Empty data-testid="nothing-found" className="border-y border-rule">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <SearchXIcon />
-        </EmptyMedia>
-        <EmptyTitle>{t('CatalogSearch.nothingFound')}</EmptyTitle>
-        <EmptyDescription>
-          {words === '' ? (
-            t('CatalogSearch.nothingInTheCategory')
-          ) : (
-            <Trans
-              i18nKey={
-                category === undefined
-                  ? 'CatalogSearch.nothingFoundDescription'
-                  : 'CatalogSearch.nothingFoundInTheCategory'
-              }
-              components={{
-                words: <AlwaysEnglish className="wrap-anywhere">{words}</AlwaysEnglish>,
-                category: <>{category}</>,
-              }}
-            />
-          )}
-        </EmptyDescription>
-      </EmptyHeader>
-    </Empty>
+    <output className="block">
+      <Empty data-testid="nothing-found" className="border-y border-rule">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <SearchXIcon />
+          </EmptyMedia>
+          <EmptyTitle level={2}>{t('CatalogSearch.nothingFound')}</EmptyTitle>
+          <EmptyDescription>
+            {words === '' ? (
+              t('CatalogSearch.nothingInTheCategory')
+            ) : (
+              <Trans
+                i18nKey={
+                  category === undefined
+                    ? 'CatalogSearch.nothingFoundDescription'
+                    : 'CatalogSearch.nothingFoundInTheCategory'
+                }
+                components={{
+                  words: <AlwaysEnglish className="wrap-anywhere">{words}</AlwaysEnglish>,
+                  category: <>{category}</>,
+                }}
+              />
+            )}
+          </EmptyDescription>
+        </EmptyHeader>
+        {words !== '' && (
+          <EmptyContent>
+            <p className="text-muted-foreground">
+              {search.category === undefined
+                ? t('CatalogSearch.askIntroEveryCategory')
+                : t('CatalogSearch.askIntro')}
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {search.category !== undefined && (
+                <Button
+                  variant="outline"
+                  data-testid="search-every-category"
+                  onClick={() => onSearch({ words: search.words, page: 0 })}
+                >
+                  <SearchIcon data-icon="inline-start" />
+                  {t('CatalogSearch.searchEveryCategory')}
+                </Button>
+              )}
+              <Link
+                to={{ pathname: '../part-requests/new', search: askedFor(words, search) }}
+                data-testid="ask-for-it"
+                className={buttonVariants({ variant: 'outline' })}
+              >
+                <PackagePlusIcon data-icon="inline-start" />
+                {t('CatalogSearch.ask')}
+              </Link>
+            </div>
+          </EmptyContent>
+        )}
+      </Empty>
+    </output>
   );
+}
+
+// The Part Request form's query for a search that found nothing: its words,
+// which start the form as the Part's name, and its Category, if one narrowed
+// it. The form's address is written relative to the search's route, so that
+// it leads to the form under either frame.
+function askedFor(words: string, { category }: CatalogSearch): string {
+  const query = new URLSearchParams({ search: words });
+  if (category !== undefined) query.set('category', category);
+  return `?${query.toString()}`;
 }

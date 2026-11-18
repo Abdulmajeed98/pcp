@@ -55,6 +55,7 @@ export type {
   ReferralCountsPageResponse,
   ReferredVendorResponse,
   SendingVendorResponse,
+  SendPartRequestRequest,
   SetPlatformRateRequest,
   SharedBuildResponse,
   ShownPriceResponse,

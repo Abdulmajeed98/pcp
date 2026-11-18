@@ -3,10 +3,12 @@ import type { RouteObject } from 'react-router';
 import { CatalogSearchPage } from '@/pages/catalog-search';
 import { EditContactDetailsPage } from '@/pages/edit-contact-details';
 import { NewOfferPage } from '@/pages/new-offer';
+import { NewPartRequestPage } from '@/pages/new-part-request';
 import { OfferPage } from '@/pages/offer';
 import { OffersPage } from '@/pages/offers';
 import { PortalNotFoundPage } from '@/pages/portal-not-found';
 import { VendorDetailsPage } from '@/pages/vendor-details';
+import { VendorsPartRequestsPage } from '@/pages/vendors-part-requests';
 
 // The Vendor portal's screens, by their addresses relative to the portal's
 // first one. They are the children of a frame's route, which gives each the
@@ -14,11 +16,14 @@ import { VendorDetailsPage } from '@/pages/vendor-details';
 // router mounts them at `/`, and the Admin console's mounts the same screens
 // under a Vendor's page, for the Admin acting as that Vendor.
 //
-// The Offers screen is the portal's first address, and the first of the top
-// bar's two sections. The details screen, the second, has an address of its
-// own, `details`, and the form for the contact details is below it, so that
-// the form's way back, `..`, leads to it. An address that matches no screen
-// shows a "not found" message in the portal's language.
+// The Offers screen is the portal's first address, and the first of its
+// three sections. The Vendor's Part Requests, the second, has an address of
+// its own, `part-requests`, and the Part Request form is below it,
+// `part-requests/new`, so that the form's way back, and its way after a
+// send, `..`, lead to the list. The details screen, the third, has an
+// address of its own, `details`, and the form for the contact details is
+// below it, so that the form's way back, `..`, leads to it. An address that
+// matches no screen shows a "not found" message in the portal's language.
 //
 // Below the Offers screen, `add` is the catalog search from which an Offer is
 // added, with the form for a new Offer of a Part below it, `add/<partId>`,
@@ -35,6 +40,13 @@ export const vendorPortalScreens: RouteObject[] = [
     ],
   },
   { path: 'offers/:offerId', Component: OfferPage },
+  {
+    path: 'part-requests',
+    children: [
+      { index: true, Component: VendorsPartRequestsPage },
+      { path: 'new', Component: NewPartRequestPage },
+    ],
+  },
   {
     path: 'details',
     children: [
