@@ -1,6 +1,6 @@
 # Spec: Part Requests
 
-Status: ready-for-agent
+Status: resolved
 
 This is `part-requests`, the tenth module in the build order of [the MVP spec](../mvp/spec.md)'s capability map. It comes after `sharing` and before `sheet`. It covers REQ-1 to REQ-4. It makes success criterion 10 true for a Part Request sent from the Vendor portal, and it builds the one endpoint that SHT-6 will use to turn a sheet's row into a Part Request. This spec uses the vocabulary of [CONTEXT.md](../../CONTEXT.md) and follows [ADR-0001](../../docs/adr/0001-seed-catalog-from-buildcores-opendb.md), [ADR-0003](../../docs/adr/0003-three-apps-one-api-keycloak.md), [ADR-0004](../../docs/adr/0004-architecture-per-app.md), [ADR-0005](../../docs/adr/0005-specifications-as-one-document-per-part.md), [ADR-0008](../../docs/adr/0008-language-in-the-address-and-two-message-formats.md), [ADR-0009](../../docs/adr/0009-vendors-in-the-database-logins-in-keycloak.md), [ADR-0010](../../docs/adr/0010-offer-history-kept-apart-from-the-offer.md) and [ADR-0011](../../docs/adr/0011-the-dashboards-look-is-framed-sheet.md). It builds on the conventions that every earlier module recorded in the MVP spec, above all those of `catalog`, `accounts` and `offers`: the Part form, `VendorAccessRule`, acting as a Vendor, `OfferDetails`, the Offer history and the Catalog's kind of list.
 
