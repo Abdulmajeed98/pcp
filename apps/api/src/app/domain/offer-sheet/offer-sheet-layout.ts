@@ -1,10 +1,17 @@
 import { NotValidError } from '@pcp/core';
-import { dashboardMessages, directions, type Language, languages } from '@pcp/i18n';
+import {
+  type DashboardMessages,
+  dashboardMessages,
+  directions,
+  type Language,
+  languages,
+} from '@pcp/i18n';
 import { Either } from 'effect';
 
 import { cleanPartNumber } from '../part/part-numbers';
 import { holdsText } from '../vendor/detail-text';
 import { offerSheetLanguageRefused } from './offer-sheet-errors';
+import type { OfferSheetCellRead } from './OfferSheetFile';
 
 // The Offer sheet's layout, written once, for the download that writes it and
 // the upload that reads it back (SHT-7), so that a downloaded file is always
@@ -42,6 +49,51 @@ const kindOf: Record<OfferSheetColumn, OfferSheetCellKind> = {
 // The most rows that are not empty an upload takes, more than the largest
 // Category of the catalog holds. A Vendor with more splits its file.
 export const mostRowsOfAnOfferSheet = 5_000;
+
+// The largest file an upload takes, 5 MB, many times what a file of 5,000
+// rows weighs.
+export const largestOfferSheetBytes = 5 * 1024 * 1024;
+
+// A heading or a word as an upload compares it: trimmed, its case folded.
+function compared(text: string): string {
+  return text.trim().toLowerCase();
+}
+
+// A word of the file in each of the three languages, as compared. The words
+// are read when they are needed, never as the module loads, as every reading
+// of `@pcp/i18n`'s words in the API is.
+function inEveryLanguage(
+  word: (words: DashboardMessages['OfferSheetFile']) => string,
+): ReadonlySet<string> {
+  return new Set(
+    languages.map((language) => compared(word(dashboardMessages[language].OfferSheetFile))),
+  );
+}
+
+// Whether a file is the platform's layout (SHT-7): each of its first row's
+// cells A to F holds its column's heading in any of the three languages,
+// trimmed and with its case folded. Each column is matched on its own, so
+// headings of different languages are taken together, and the columns after
+// F are not read.
+export function isTheLayout(headings: readonly OfferSheetCellRead[]): boolean {
+  return offerSheetColumns.every((column, index) => {
+    const cell = headings[index];
+    return (
+      cell?.kind === 'text' &&
+      inEveryLanguage((words) => words.headings[column]).has(compared(cell.text))
+    );
+  });
+}
+
+// Whether a word says the Part is in stock, in any of the three languages,
+// trimmed and with its case folded: true for yes, false for no, and none for
+// any other word.
+export function inStockSaidBy(word: string): boolean | undefined {
+  const said = compared(word);
+  if (inEveryLanguage((words) => words.yes).has(said)) return true;
+  if (inEveryLanguage((words) => words.no).has(said)) return false;
+  return undefined;
+}
 
 // A part number folded as the upload compares it and the download chooses
 // it: cleaned as the catalog cleans one, then in lower case, as the

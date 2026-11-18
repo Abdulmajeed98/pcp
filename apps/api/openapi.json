@@ -2616,6 +2616,61 @@
         },
         "summary": "A Vendor's Offer sheet, an .xlsx file with one row for each of its Offers, Expired Offers among them, in the language asked for, its name in Content-Disposition. For the Vendor's own Login, or the Admin acting for any Vendor",
         "tags": ["OfferSheet"]
+      },
+      "post": {
+        "operationId": "uploadOfferSheet",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["offerSheet"],
+                "properties": {
+                  "offerSheet": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The Offer sheet, an .xlsx file of up to 5 MB in the platform's own layout, as its download writes it."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferSheetResultResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request was refused, or it failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Upload a Vendor's Offer sheet: each row matched to a Part by its part number changes or adds the Vendor's Offer for it, all in one transaction, a Confirmation at the upload's moment; a row with a problem is skipped. Answers the upload's result. For the Vendor's own Login, or the Admin acting for any Vendor",
+        "tags": ["OfferSheet"]
       }
     }
   },
@@ -6138,6 +6193,199 @@
           }
         },
         "required": ["reason"]
+      },
+      "AddedOfferResponse": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "integer",
+            "description": "The row's number in the file, as the spreadsheet numbers it.",
+            "example": 14
+          },
+          "part": {
+            "description": "The Part the row matched, as the catalog holds it.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartSummaryResponse"
+              }
+            ]
+          },
+          "offerId": {
+            "type": "string",
+            "description": "The identifier of the Offer the row added.",
+            "example": "8e1f2a3b-4c5d-4e6f-8a7b-9c0d1e2f3a4b"
+          }
+        },
+        "required": ["row", "part", "offerId"]
+      },
+      "RowMatchedByYourOfferResponse": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "integer",
+            "description": "The row's number in the file, as the spreadsheet numbers it.",
+            "example": 37
+          },
+          "part": {
+            "description": "The Part the row was applied to: the one the Vendor offers of the Parts that hold the row's part number.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartSummaryResponse"
+              }
+            ]
+          }
+        },
+        "required": ["row", "part"]
+      },
+      "SkippedRowResponse": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "integer",
+            "description": "The row's number in the file, as the spreadsheet numbers it.",
+            "example": 23
+          },
+          "partNumber": {
+            "type": "string",
+            "description": "The row's part number, in Western digits, without invisible marks and without the space around it; as written when its own cell was the problem.",
+            "example": "11348-03-20G"
+          },
+          "problem": {
+            "type": "string",
+            "description": "Why the row was skipped: its part number matched no Part, matched several Parts, or another row matched the same Part; or one of its cells does not fit.",
+            "enum": ["noPart", "severalParts", "samePart", "notValid"],
+            "example": "noPart"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Part's name as the row writes it, or null when it gives none. Left out unless the row matched no Part.",
+            "nullable": true,
+            "example": "Sapphire Pulse Radeon RX 9070 XT 16GB"
+          },
+          "usdPrice": {
+            "type": "string",
+            "description": "The Quoted Price in USD the row states, as a decimal number with two decimal places, or null when it quotes none. Left out unless the row matched no Part.",
+            "nullable": true,
+            "example": "649.99"
+          },
+          "iqdPrice": {
+            "type": "number",
+            "description": "The Quoted Price in IQD the row states, in whole dinars, or null when it quotes none. Left out unless the row matched no Part.",
+            "nullable": true,
+            "example": 950000
+          },
+          "inStock": {
+            "type": "boolean",
+            "description": "Whether the row says the Part is in stock. Left out unless the row matched no Part.",
+            "example": true
+          },
+          "warrantyMonths": {
+            "type": "number",
+            "description": "The warranty the row states, in whole months, or null when it states none. Left out unless the row matched no Part.",
+            "nullable": true,
+            "example": 24
+          },
+          "partRequestOpen": {
+            "type": "boolean",
+            "description": "Whether the Vendor has an open Part Request whose part number is the row's, compared whatever the case of its letters. Left out unless the row matched no Part.",
+            "example": false
+          },
+          "parts": {
+            "description": "Every Part that holds the row's part number, in the catalog's order. Left out unless the row matched several Parts.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartSummaryResponse"
+            }
+          },
+          "part": {
+            "description": "The Part the row and other rows matched. Left out unless another row matched the same Part.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartSummaryResponse"
+              }
+            ]
+          },
+          "rows": {
+            "description": "The numbers of the other rows that matched the same Part, in order. Left out unless another row matched the same Part.",
+            "example": [31],
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "field": {
+            "type": "string",
+            "description": "The column of the row's first cell that does not fit, in the columns' order. Left out unless a cell does not fit.",
+            "enum": ["partNumber", "usdPrice", "iqdPrice", "inStock", "warrantyMonths"],
+            "example": "usdPrice"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the cell does not fit: the part number's own reasons as a Part Request's, the Offer's as an Offer's details are refused, a word that is neither yes nor no, or a cell that cannot be read, such as an error. Left out unless a cell does not fit.",
+            "enum": [
+              "missing",
+              "tooLong",
+              "notANumber",
+              "notPositive",
+              "tooManyDecimals",
+              "tooLarge",
+              "notWholeMonths",
+              "notYesOrNo",
+              "notReadable"
+            ],
+            "example": "missing"
+          }
+        },
+        "required": ["row", "partNumber", "problem"]
+      },
+      "OfferSheetResultResponse": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "description": "How many rows were read, not counting empty ones.",
+            "example": 312
+          },
+          "added": {
+            "description": "Each Offer the upload added, by row number.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddedOfferResponse"
+            }
+          },
+          "changed": {
+            "type": "integer",
+            "description": "How many Offers the upload changed: a price, the stock or the warranty differs from the Offer's.",
+            "example": 41
+          },
+          "confirmed": {
+            "type": "integer",
+            "description": "How many Offers the upload confirmed without changing anything.",
+            "example": 265
+          },
+          "matchedByYourOffer": {
+            "description": "Each applied row whose part number several Parts hold, applied to the one of them the Vendor offers, by row number.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RowMatchedByYourOfferResponse"
+            }
+          },
+          "skipped": {
+            "description": "Every skipped row, by row number, with its problem.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkippedRowResponse"
+            }
+          }
+        },
+        "required": [
+          "rows",
+          "added",
+          "changed",
+          "confirmed",
+          "matchedByYourOffer",
+          "skipped"
+        ]
       }
     }
   },

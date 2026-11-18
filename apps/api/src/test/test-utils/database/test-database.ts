@@ -337,23 +337,101 @@ export function sentWhileTheVendorAddsAnOffer<T>(
   },
   send: () => Promise<T>,
 ): Promise<T> {
-  const { vendorId, partId, usdPriceCents, inStock, addedAt, addedBy } = added;
   return changeWhileReading(
-    async (changing) => {
-      await changing.query(
-        `INSERT INTO offer (vendor_id, part_id, usd_price_cents, in_stock, confirmed_at, created_at)
-           VALUES ($1, $2, $3, $4, $5, $5)`,
-        [vendorId, partId, usdPriceCents, inStock, addedAt],
-      );
-      await changing.query(
-        `INSERT INTO offer_history (vendor_id, part_id, usd_price_cents, in_stock, changed_at, change, changed_by)
-           VALUES ($1, $2, $3, $4, $5, 'created', $6)`,
-        [vendorId, partId, usdPriceCents, inStock, addedAt, addedBy],
-      );
-    },
+    theVendorsOwnAdd({ ...added, iqdPrice: null, warrantyMonths: null }),
     async () => {},
     send,
   );
+}
+
+// An Offer the Vendor adds for itself, as its own add writes it: confirmed
+// and made at `addedAt`, with the first row of its history by the Vendor's
+// Login, in the transaction it is handed, which holds the Offer's row until
+// it ends.
+function theVendorsOwnAdd(added: {
+  vendorId: string;
+  partId: string;
+  usdPriceCents: number | null;
+  iqdPrice: number | null;
+  inStock: boolean;
+  warrantyMonths: number | null;
+  addedAt: Date;
+  addedBy: string;
+}): (changing: Client) => Promise<void> {
+  const { vendorId, partId, usdPriceCents, iqdPrice, inStock, warrantyMonths } = added;
+  return async (changing) => {
+    await changing.query(
+      `INSERT INTO offer (vendor_id, part_id, usd_price_cents, iqd_price, in_stock, warranty_months, confirmed_at, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
+      [vendorId, partId, usdPriceCents, iqdPrice, inStock, warrantyMonths, added.addedAt],
+    );
+    await changing.query(
+      `INSERT INTO offer_history (vendor_id, part_id, usd_price_cents, iqd_price, in_stock, changed_at, change, changed_by)
+         VALUES ($1, $2, $3, $4, $5, $6, 'created', $7)`,
+      [vendorId, partId, usdPriceCents, iqdPrice, inStock, added.addedAt, added.addedBy],
+    );
+  };
+}
+
+// A fault planted in the database for as long as the function runs: a rule
+// that the Vendor's Offer for one Part breaks, checked whenever that Offer
+// is written and not against Offers stored already, so that the database
+// refuses one row's write of an Offer sheet's upload, which then has to
+// leave every other Offer as it was.
+//
+// It is the eighth named exception, after `sentWhileTheVendorAddsAnOffer`:
+// no endpoint can make the database refuse one write among many it accepts,
+// as `whileTheDatabaseRefusesEveryVendor` makes it refuse every Vendor.
+export async function whileTheDatabaseRefusesTheOfferOf(
+  vendorId: string,
+  partId: string,
+  run: () => Promise<void>,
+): Promise<void> {
+  // A rule takes no parameters, so the identifiers are checked to be
+  // identifiers before they are written into it.
+  for (const identifier of [vendorId, partId]) {
+    if (!/^[0-9a-f-]{36}$/.test(identifier)) {
+      throw new Error(`Not an identifier: ${identifier}`);
+    }
+  }
+  await inTheDatabase(
+    `ALTER TABLE offer ADD CONSTRAINT planted_refusal_of_one_offer
+       CHECK (NOT (vendor_id = '${vendorId}' AND part_id = '${partId}')) NOT VALID`,
+  );
+  try {
+    await run();
+  } finally {
+    await inTheDatabase('ALTER TABLE offer DROP CONSTRAINT planted_refusal_of_one_offer');
+  }
+}
+
+// An Offer sheet's upload sent while the Vendor adds its own Offer for one
+// of the file's Parts, as the upload and the Vendor's own add in the portal
+// can arrive at one moment: the Offer is added, with every detail an Offer
+// holds, in a transaction that stays open while the upload is sent, and
+// commits only once the upload waits for it. The upload has then read the
+// Vendor's Offers before the Offer was there, and meets it only when it
+// writes an Offer for the same Part, which waits for the Vendor's.
+//
+// It is the ninth named exception that arranges data through the database,
+// after `whileTheDatabaseRefusesTheOfferOf`, for the same reason as
+// `sentWhileTheVendorAddsAnOffer`, the seventh, which it is built as, on
+// `changeWhileReading`, and whose add it writes: no endpoint holds its
+// transaction open while another call is sent.
+export function uploadedWhileTheVendorAddsAnOffer<T>(
+  added: {
+    vendorId: string;
+    partId: string;
+    usdPriceCents: number | null;
+    iqdPrice: number | null;
+    inStock: boolean;
+    warrantyMonths: number | null;
+    addedAt: Date;
+    addedBy: string;
+  },
+  upload: () => Promise<T>,
+): Promise<T> {
+  return changeWhileReading(theVendorsOwnAdd(added), async () => {}, upload);
 }
 
 // A fault planted in the database for as long as the function runs: a rule

@@ -1968,6 +1968,118 @@ export type RejectPartRequestRequest = {
     reason: string;
 };
 
+export type AddedOfferResponse = {
+    /**
+     * The row's number in the file, as the spreadsheet numbers it.
+     */
+    row: number;
+    /**
+     * The Part the row matched, as the catalog holds it.
+     */
+    part: PartSummaryResponse;
+    /**
+     * The identifier of the Offer the row added.
+     */
+    offerId: string;
+};
+
+export type RowMatchedByYourOfferResponse = {
+    /**
+     * The row's number in the file, as the spreadsheet numbers it.
+     */
+    row: number;
+    /**
+     * The Part the row was applied to: the one the Vendor offers of the Parts that hold the row's part number.
+     */
+    part: PartSummaryResponse;
+};
+
+export type SkippedRowResponse = {
+    /**
+     * The row's number in the file, as the spreadsheet numbers it.
+     */
+    row: number;
+    /**
+     * The row's part number, in Western digits, without invisible marks and without the space around it; as written when its own cell was the problem.
+     */
+    partNumber: string;
+    /**
+     * Why the row was skipped: its part number matched no Part, matched several Parts, or another row matched the same Part; or one of its cells does not fit.
+     */
+    problem: 'noPart' | 'severalParts' | 'samePart' | 'notValid';
+    /**
+     * The Part's name as the row writes it, or null when it gives none. Left out unless the row matched no Part.
+     */
+    name?: string | null;
+    /**
+     * The Quoted Price in USD the row states, as a decimal number with two decimal places, or null when it quotes none. Left out unless the row matched no Part.
+     */
+    usdPrice?: string | null;
+    /**
+     * The Quoted Price in IQD the row states, in whole dinars, or null when it quotes none. Left out unless the row matched no Part.
+     */
+    iqdPrice?: number | null;
+    /**
+     * Whether the row says the Part is in stock. Left out unless the row matched no Part.
+     */
+    inStock?: boolean;
+    /**
+     * The warranty the row states, in whole months, or null when it states none. Left out unless the row matched no Part.
+     */
+    warrantyMonths?: number | null;
+    /**
+     * Whether the Vendor has an open Part Request whose part number is the row's, compared whatever the case of its letters. Left out unless the row matched no Part.
+     */
+    partRequestOpen?: boolean;
+    /**
+     * Every Part that holds the row's part number, in the catalog's order. Left out unless the row matched several Parts.
+     */
+    parts?: Array<PartSummaryResponse>;
+    /**
+     * The Part the row and other rows matched. Left out unless another row matched the same Part.
+     */
+    part?: PartSummaryResponse;
+    /**
+     * The numbers of the other rows that matched the same Part, in order. Left out unless another row matched the same Part.
+     */
+    rows?: Array<number>;
+    /**
+     * The column of the row's first cell that does not fit, in the columns' order. Left out unless a cell does not fit.
+     */
+    field?: 'partNumber' | 'usdPrice' | 'iqdPrice' | 'inStock' | 'warrantyMonths';
+    /**
+     * Why the cell does not fit: the part number's own reasons as a Part Request's, the Offer's as an Offer's details are refused, a word that is neither yes nor no, or a cell that cannot be read, such as an error. Left out unless a cell does not fit.
+     */
+    reason?: 'missing' | 'tooLong' | 'notANumber' | 'notPositive' | 'tooManyDecimals' | 'tooLarge' | 'notWholeMonths' | 'notYesOrNo' | 'notReadable';
+};
+
+export type OfferSheetResultResponse = {
+    /**
+     * How many rows were read, not counting empty ones.
+     */
+    rows: number;
+    /**
+     * Each Offer the upload added, by row number.
+     */
+    added: Array<AddedOfferResponse>;
+    /**
+     * How many Offers the upload changed: a price, the stock or the warranty differs from the Offer's.
+     */
+    changed: number;
+    /**
+     * How many Offers the upload confirmed without changing anything.
+     */
+    confirmed: number;
+    /**
+     * Each applied row whose part number several Parts hold, applied to the one of them the Vendor offers, by row number.
+     */
+    matchedByYourOffer: Array<RowMatchedByYourOfferResponse>;
+    /**
+     * Every skipped row, by row number, with its problem.
+     */
+    skipped: Array<SkippedRowResponse>;
+};
+
 export type GetCallerData = {
     body?: never;
     path?: never;
@@ -3366,3 +3478,32 @@ export type DownloadOfferSheetResponses = {
 };
 
 export type DownloadOfferSheetResponse = DownloadOfferSheetResponses[keyof DownloadOfferSheetResponses];
+
+export type UploadOfferSheetData = {
+    body: {
+        /**
+         * The Offer sheet, an .xlsx file of up to 5 MB in the platform's own layout, as its download writes it.
+         */
+        offerSheet: Blob | File;
+    };
+    path: {
+        vendorId: string;
+    };
+    query?: never;
+    url: '/v1/vendors/{vendorId}/offer-sheet';
+};
+
+export type UploadOfferSheetErrors = {
+    /**
+     * The request was refused, or it failed.
+     */
+    default: ErrorResponse;
+};
+
+export type UploadOfferSheetError = UploadOfferSheetErrors[keyof UploadOfferSheetErrors];
+
+export type UploadOfferSheetResponses = {
+    200: OfferSheetResultResponse;
+};
+
+export type UploadOfferSheetResponse = UploadOfferSheetResponses[keyof UploadOfferSheetResponses];
