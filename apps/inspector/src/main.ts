@@ -1,7 +1,7 @@
 import type { PartPageResponse } from '@pcp/api-client';
 
 import { askedAgainIfItDrops } from './asked-again.ts';
-import { partsOfTheCatalog } from './catalog-parts.ts';
+import { partsHoldingAPartNumber, partsOfTheCatalog } from './catalog-parts.ts';
 import {
   answerFromTheShopIn,
   CannotInspect,
@@ -11,9 +11,11 @@ import {
 } from './chrome.ts';
 import { BadScheme, emulatedMedia, type Scheme, takeTheScheme } from './colour-scheme.ts';
 import { developmentAdmin } from './development-admin.ts';
+import type { OfferSheetResultShown } from './made-up-offer-sheet-result.ts';
 import type { PartRequestsShown } from './made-up-part-requests.ts';
 import type { ReferralCountsShown } from './made-up-referral-counts.ts';
 import { madeUpShop } from './made-up-shop.ts';
+import { partsHoldingOc, theSharedPartNumber } from './parts-holding-oc.ts';
 import { runTheInspector, tastesBrowser } from './taste.ts';
 import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 
@@ -22,7 +24,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // made-up shop, whose Vendor is listed among the real ones. Run it from the
 // repository root:
 //
-//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [--part-requests worstCase|one|none] [the inspector's options]
+//   pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [--part-requests worstCase|one|none] [--offer-sheet-result worstCase|clean] [the inspector's options]
 //
 // It launches the inspector's Chrome, logs in once as the development Admin
 // before the first tab, so that Keycloak's cookie carries to every width,
@@ -44,7 +46,18 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // the API takes, a name with no space, names in Kurdish and Arabic script
 // and one that starts with a digit, prices at their limits, a reason of 300
 // characters in Kurdish, a request waiting hundreds of days and a queue of
-// thousands), `one` with one open request, and `none` with none. The Vendor
+// thousands), `one` with one open request, and `none` with none. An upload
+// of the shop's Vendor's Offer sheet is answered with a made-up result
+// whatever the file, and writes nothing (`made-up-offer-sheet-result.ts`):
+// added Offers of real Parts, a row applied by the tie-break and a skipped
+// row of each problem. `--offer-sheet-result clean` answers every row
+// applied, and `worstCase` the made-up result with 4,800 skipped rows
+// added, for `break-ui` (row numbers in the thousands, part numbers of 100
+// code points with and without spaces, a part number 81 Parts hold, names
+// in Kurdish and Arabic script, and the catalog's longest Part name among
+// the added). The result is reached through the inspector's own steps, a
+// made-up file chosen in the screen's file field and uploaded before the
+// inspector looks, since no address opens it. The Vendor
 // portal's screens are the Admin acting as
 // the shop's Vendor, under `/vendors/00000000-0000-4000-8000-000000000001/portal`.
 //
@@ -55,7 +68,7 @@ import { ignoreARefusedTypeOfService } from './type-of-service.ts';
 // though the screen was opened twice.
 
 const usage =
-  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [--part-requests worstCase|one|none] [--widths 1440,768,390] [--out DIR] [--app] [other options of inspect.mjs]';
+  'usage: pnpm dashboard:inspect <dashboard address> [--language ckb|ar|en] [--scheme light|dark] [--no-platform-rate] [--referrals worstCase|one|none] [--part-requests worstCase|one|none] [--offer-sheet-result worstCase|clean] [--widths 1440,768,390] [--out DIR] [--app] [other options of inspect.mjs]';
 
 // Before any read: a refused type of service would stop the command where
 // nothing can catch it (`type-of-service.ts`).
@@ -106,6 +119,14 @@ function commandLine(args: readonly string[]) {
     partRequests = shown;
     passed.splice(atPartRequests, 2);
   }
+  let offerSheetResult: OfferSheetResultShown = 'madeUp';
+  const atOfferSheetResult = passed.indexOf('--offer-sheet-result');
+  if (atOfferSheetResult !== -1) {
+    const shown = passed[atOfferSheetResult + 1];
+    if (shown !== 'worstCase' && shown !== 'clean') stop(usage);
+    offerSheetResult = shown;
+    passed.splice(atOfferSheetResult, 2);
+  }
   const address = passed[0];
   if (address === undefined || !/^https?:\/\//.test(address)) stop(usage);
   return {
@@ -115,12 +136,21 @@ function commandLine(args: readonly string[]) {
     platformRate,
     referrals,
     partRequests,
+    offerSheetResult,
     inspectorArgs: passed,
   };
 }
 
-const { address, language, scheme, platformRate, referrals, partRequests, inspectorArgs } =
-  commandLine(process.argv.slice(2));
+const {
+  address,
+  language,
+  scheme,
+  platformRate,
+  referrals,
+  partRequests,
+  offerSheetResult,
+  inspectorArgs,
+} = commandLine(process.argv.slice(2));
 let login: Login;
 try {
   login = developmentAdmin();
@@ -132,7 +162,13 @@ const browser = await Browser.launch();
 
 try {
   const authorization = await logIn(browser, address, apiUrl, login, language);
-  const parts = await partsOfTheCatalog(async ({ category, search }) => {
+  const searchTheCatalog = async ({
+    category,
+    search,
+  }: {
+    category: string;
+    search: string;
+  }) => {
     const query = new URLSearchParams({ category, search, page: '0', size: '50' });
     // Asked again when its connection drops, as the Shopper's reading is.
     const response = await askedAgainIfItDrops(() =>
@@ -144,8 +180,21 @@ try {
       );
     }
     return ((await response.json()) as PartPageResponse).content;
+  };
+  const parts = await partsOfTheCatalog(searchTheCatalog);
+  // Only the worst result names the Parts that hold "OC", so only it reads
+  // them.
+  const holdersOfOc =
+    offerSheetResult === 'worstCase'
+      ? await partsHoldingAPartNumber(searchTheCatalog, partsHoldingOc, theSharedPartNumber)
+      : [];
+  const shop = madeUpShop(new Date(), parts, {
+    platformRate,
+    referrals,
+    partRequests,
+    offerSheetResult,
+    partsHoldingOc: holdersOfOc,
   });
-  const shop = madeUpShop(new Date(), parts, { platformRate, referrals, partRequests });
 
   // Every tab the inspector opens is answered from the shop, and lands on
   // the dashboard, drawn, before it is judged; the inspector's own launch
@@ -162,7 +211,7 @@ try {
   Browser.launch = async () => browser;
 
   console.log(
-    `Logged in as the development Admin. The made-up shop "${shop.vendor.name}" answers for Vendors and Offers, with ${shop.offers.length} Offers of real Parts, and ${shop.partRequests.length} Part Requests.`,
+    `Logged in as the development Admin. The made-up shop "${shop.vendor.name}" answers for Vendors and Offers, with ${shop.offers.length} Offers of real Parts, and ${shop.partRequests.length} Part Requests. An upload of its Offer sheet answers ${shop.offerSheetResult.rows} rows read, ${shop.offerSheetResult.skipped.length} of them skipped.`,
   );
 } catch (error) {
   await browser.close();
