@@ -1,6 +1,7 @@
 import { westernDigitsIn, westernNumberIn } from '@pcp/i18n';
 import { Either } from 'effect';
 
+import { offerDetailsRefusals } from '../offer/offer-errors';
 import { OfferDetails, UncheckedOfferDetails } from '../offer/OfferDetails';
 import { cleanPartNumber } from '../part/part-numbers';
 import {
@@ -28,18 +29,14 @@ export const offerSheetRowFields = [
 
 export type OfferSheetRowField = (typeof offerSheetRowFields)[number];
 
-// Why a cell does not fit: the part number's own reasons, `missing` and
-// `tooLong`, as a Part Request's; the Offer's, as `OfferDetails` gives them;
-// and the Offer sheet's own two, a word that is neither yes nor no, and a
-// cell that cannot be read.
+// Why a cell does not fit: the Offer's reasons, as `OfferDetails` gives
+// them, taken from the Offer's own list, so that a reason the Offer gains
+// is a row's too; the part number's own, `missing`, which the Offer's list
+// holds, and `tooLong`, as a Part Request's; and the Offer sheet's own two,
+// a word that is neither yes nor no, and a cell that cannot be read.
 export const offerSheetRowRefusals = [
-  'missing',
+  ...offerDetailsRefusals,
   'tooLong',
-  'notANumber',
-  'notPositive',
-  'tooManyDecimals',
-  'tooLarge',
-  'notWholeMonths',
   'notYesOrNo',
   'notReadable',
 ] as const;
@@ -290,8 +287,8 @@ export function checkedRow(
   }
   if (Either.isLeft(details)) {
     const { field, reason } = details.left.getAdditionalInformation();
-    // `OfferDetails` names only the Offer's own fields, and gives only its
-    // own reasons, each of them a row's.
+    // `OfferDetails` names only the Offer's own fields, and gives only the
+    // reasons of `offerDetailsRefusals`, each of them a row's.
     return Either.left(
       notValid(field as OfferSheetRowField, reason as OfferSheetRowRefusal),
     );

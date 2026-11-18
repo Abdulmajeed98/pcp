@@ -2058,7 +2058,7 @@ export type SkippedRowResponse = {
     /**
      * Why the cell does not fit: the part number's own reasons as a Part Request's, the Offer's as an Offer's details are refused, a word that is neither yes nor no, or a cell that cannot be read, such as an error. Left out unless a cell does not fit.
      */
-    reason?: 'missing' | 'tooLong' | 'notANumber' | 'notPositive' | 'tooManyDecimals' | 'tooLarge' | 'notWholeMonths' | 'notYesOrNo' | 'notReadable';
+    reason?: 'missing' | 'notANumber' | 'notPositive' | 'tooManyDecimals' | 'tooLarge' | 'notWholeMonths' | 'tooLong' | 'notYesOrNo' | 'notReadable';
 };
 
 export type OfferSheetResultResponse = {
