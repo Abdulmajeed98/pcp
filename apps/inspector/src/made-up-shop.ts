@@ -38,6 +38,12 @@ import {
   referralCountsAtTheirWorst,
 } from './made-up-referral-counts.ts';
 import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
+import {
+  aDay,
+  daysAnOfferStaysCurrent,
+  daysOfWarning,
+  isExpiredAt,
+} from './offer-expiry.ts';
 
 // The made-up shop's first Vendor (`made-up-vendors.ts`) as the dashboard's
 // screens see it, with about a dozen Offers in every state a Vendor can see: confirmed today, confirmed some days ago, about to
@@ -54,15 +60,9 @@ import { madeUpIdentifier, theFirstVendor } from './made-up-vendors.ts';
 // command starts. Everything here is typed by the API client's types, so a
 // change to the API's answers fails the type-check.
 
-// A day of 24 hours, and the rules of an Offer's expiry, as the API states
-// them in its description: an Offer is an Expired Offer when its last
-// Confirmation is more than 14 days old, and about to expire when it is not
-// expired and will be within 3 days. The stand-in API answers the 14 days
-// among the platform's figures.
-const aDay = 24 * 60 * 60 * 1000;
+// An hour. A day of 24 hours and the rules of an Offer's expiry are
+// `offer-expiry.ts`'s.
 const anHour = 60 * 60 * 1000;
-export const daysAnOfferStaysCurrent = 14;
-const daysOfWarning = 3;
 
 // The Parts of the catalog the shop offers, which the command reads from the
 // API before anything else.
@@ -180,7 +180,7 @@ function listed(offer: OfferResponse, now: Date): ListedOfferResponse {
   const confirmedAt = new Date(offer.confirmedAt).getTime();
   const sinceConfirmation = now.getTime() - confirmedAt;
   const left = confirmedAt + daysAnOfferStaysCurrent * aDay - now.getTime();
-  const expired = sinceConfirmation > daysAnOfferStaysCurrent * aDay;
+  const expired = isExpiredAt(new Date(confirmedAt), now);
   return {
     ...offer,
     daysSinceConfirmation: Math.floor(sinceConfirmation / aDay),
