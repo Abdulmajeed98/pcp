@@ -13,12 +13,7 @@ import {
 import { matchedRows } from './offer-sheet-matching';
 import { foldedPartNumber } from './offer-sheet-part-numbers';
 import { checkedRow, isEmptyRow } from './offer-sheet-row';
-import {
-  emptyCell,
-  OfferSheetFile,
-  OfferSheetRead,
-  OfferSheetRowRead,
-} from './OfferSheetFile';
+import { OfferSheetFile, OfferSheetRead, OfferSheetRowRead } from './OfferSheetFile';
 import {
   AddedOffer,
   OfferSheetResult,
@@ -85,12 +80,10 @@ function changes(details: OfferDetails, before: OfferDetails): boolean {
   );
 }
 
-// The first worksheet's row 1, the headings, six cells, A to F.
-function headingsOf(read: OfferSheetRead) {
+// The first worksheet's row 1, the headings, or none when it holds none.
+function headingsOf(read: OfferSheetRead): OfferSheetRowRead | undefined {
   const [first] = read.getRows();
-  return first?.getRow() === 1
-    ? first.getCells()
-    : Array.from({ length: 6 }, () => emptyCell);
+  return first?.getRow() === 1 ? first : undefined;
 }
 
 // A Vendor uploads its Offer sheet to change many Offers at once, or the

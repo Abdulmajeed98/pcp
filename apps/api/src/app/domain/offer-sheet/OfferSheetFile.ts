@@ -4,6 +4,8 @@ import { Either } from 'effect';
 import { OfferSheetFileRefusal } from './offer-sheet-errors';
 import {
   mostRowsOfAnOfferSheet,
+  OfferSheetColumn,
+  offerSheetColumns,
   OfferSheetColumnWritten,
   OfferSheetLayout,
 } from './offer-sheet-layout';
@@ -15,7 +17,9 @@ export type OfferSheetCell = string | number | null;
 
 // An Offer sheet as it is written, in one language: its one worksheet, its
 // direction, its six columns with their headings, the two words "in stock"
-// is chosen from, and its rows below the headings, six cells each.
+// is chosen from, and its rows below the headings, six cells each. The
+// columns and each row's cells are in `offerSheetColumns`' order, so that
+// a heading and the cells below it always move together.
 export class OfferSheetWritten {
   private constructor(
     private readonly worksheetName: string,
@@ -31,14 +35,17 @@ export class OfferSheetWritten {
     const rows = contents.getOffers().map((offer) => {
       const details = offer.getDetails();
       const cents = details.getUsdPriceCents();
-      return [
-        partNumberOfTheRow(offer.getPart(), holders, (partId) => contents.offers(partId)),
-        offer.getPart().getName(),
-        cents === null ? null : cents / 100,
-        details.getIqdPrice(),
-        layout.inStockWord(details.isInStock()),
-        details.getWarrantyMonths(),
-      ];
+      const cells: Record<OfferSheetColumn, OfferSheetCell> = {
+        partNumber: partNumberOfTheRow(offer.getPart(), holders, (partId) =>
+          contents.offers(partId),
+        ),
+        name: offer.getPart().getName(),
+        usdPrice: cents === null ? null : cents / 100,
+        iqdPrice: details.getIqdPrice(),
+        inStock: layout.inStockWord(details.isInStock()),
+        warrantyMonths: details.getWarrantyMonths(),
+      };
+      return offerSheetColumns.map((column) => cells[column]);
     });
     return new OfferSheetWritten(
       layout.getWorksheetName(),
@@ -94,7 +101,8 @@ export type OfferSheetCellRead =
 export const emptyCell: OfferSheetCellRead = { kind: 'empty' };
 
 // A row of an uploaded file's first worksheet, as it was read: its number,
-// as the spreadsheet numbers it, and its six cells, A to F.
+// as the spreadsheet numbers it, and its six cells, A to F, in
+// `offerSheetColumns`' order.
 export class OfferSheetRowRead {
   constructor(
     private readonly row: number,
@@ -108,6 +116,12 @@ export class OfferSheetRowRead {
   // The six cells, A to F, a cell the file does not hold empty.
   getCells(): readonly OfferSheetCellRead[] {
     return this.cells;
+  }
+
+  // The cell of a column, in the place the layout gives the column, empty
+  // when the file holds none.
+  cellOf(column: OfferSheetColumn): OfferSheetCellRead {
+    return this.cells[offerSheetColumns.indexOf(column)] ?? emptyCell;
   }
 }
 

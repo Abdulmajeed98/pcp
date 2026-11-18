@@ -9,7 +9,10 @@ import {
   type Worksheet,
 } from 'exceljs';
 
-import { OfferSheetCellKind } from '~/domain/offer-sheet/offer-sheet-layout';
+import {
+  OfferSheetCellKind,
+  offerSheetColumns,
+} from '~/domain/offer-sheet/offer-sheet-layout';
 import {
   emptyCell,
   OfferSheetCell,
@@ -266,11 +269,12 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
 
       const [worksheet] = workbook.worksheets;
       const rows: OfferSheetRowRead[] = [];
+      // A cell for each of the layout's columns, from A, in its order.
       worksheet?.eachRow((row, number) => {
         rows.push(
           new OfferSheetRowRead(
             number,
-            [1, 2, 3, 4, 5, 6].map((column) => cellRead(row.getCell(column))),
+            offerSheetColumns.map((_, index) => cellRead(row.getCell(index + 1))),
           ),
         );
       });

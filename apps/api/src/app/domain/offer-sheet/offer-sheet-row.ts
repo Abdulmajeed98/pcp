@@ -240,8 +240,7 @@ export function checkedRow(
   read: OfferSheetRowRead,
 ): Either.Either<OfferSheetRow, OfferSheetRowNotValid> {
   const row = read.getRow();
-  const [partNumberCell, nameCell, usdCell, iqdCell, inStockCell, warrantyCell] =
-    read.getCells();
+  const partNumberCell = read.cellOf('partNumber');
 
   const partNumber = partNumberIn(partNumberCell);
   if (Either.isLeft(partNumber)) {
@@ -257,10 +256,10 @@ export function checkedRow(
   const notValid = (field: OfferSheetRowField, reason: OfferSheetRowRefusal) =>
     new OfferSheetRowNotValid(row, partNumber.right, field, reason);
 
-  const usdPrice = usdPriceIn(usdCell);
-  const iqdPrice = numberIn(iqdCell);
-  const inStock = inStockIn(inStockCell);
-  const warrantyMonths = numberIn(warrantyCell);
+  const usdPrice = usdPriceIn(read.cellOf('usdPrice'));
+  const iqdPrice = numberIn(read.cellOf('iqdPrice'));
+  const inStock = inStockIn(read.cellOf('inStock'));
+  const warrantyMonths = numberIn(read.cellOf('warrantyMonths'));
   const cells = [
     ['usdPrice', usdPrice],
     ['iqdPrice', iqdPrice],
@@ -299,6 +298,6 @@ export function checkedRow(
   }
 
   return Either.right(
-    new OfferSheetRow(row, partNumber.right, nameIn(nameCell), details.right),
+    new OfferSheetRow(row, partNumber.right, nameIn(read.cellOf('name')), details.right),
   );
 }
