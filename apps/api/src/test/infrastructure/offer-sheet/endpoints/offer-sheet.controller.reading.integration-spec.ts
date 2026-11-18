@@ -28,6 +28,7 @@ import {
   headingsIn,
   type ListedOfferBody,
   type MadeUpVendor,
+  type OfferSheetResultBody,
   thePlatformUnderTest,
   wordsIn,
 } from './offer-sheet-uploads';
@@ -360,6 +361,129 @@ describe('Reading an uploaded Offer sheet', () => {
     });
   });
 
+  describe("a result's size, which grows with its rows alone", () => {
+    // The Admin's upload of a file, answered within 5 s with a result under
+    // 5 MB, the process holding under a quarter of a gibibyte more at its
+    // peak, and the API answering afterwards: the result as read.
+    async function uploadedWithinBounds(
+      vendorId: string,
+      file: Buffer,
+    ): Promise<OfferSheetResultBody> {
+      const started = Date.now();
+      const { answered, grewBy } = await whileWatchingTheMemory(async () => {
+        const response = await upload(vendorId, file);
+        return { status: response.status, text: await response.text() };
+      });
+
+      expect(answered.status).toBe(200);
+      expect(Date.now() - started).toBeLessThan(5000);
+      expect(answered.text.length).toBeLessThan(5 * 1024 * 1024);
+      expect(grewBy).toBeLessThan(aQuarterOfAGibibyte);
+      expect((await platform.downloaded(vendorId, 'en')).length).toBeGreaterThan(0);
+      return JSON.parse(answered.text) as OfferSheetResultBody;
+    }
+
+    // A text of 32,767 characters, the most a cell of a spreadsheet holds,
+    // which a file stores once among its shared strings however many cells
+    // hold it.
+    const theLongestCell = `Made-up ${'N'.repeat(32767 - 8)}`;
+
+    it('answers 5,000 rows that all name one Part, each naming at most 10 others', async () => {
+      const vendor = await platform.aVendor();
+      const part = await platform.aPart('Made-up One GPU', ['MU-ONE-1']);
+      const file = await anOfferSheet(
+        Array.from({ length: 5000 }, () => ['MU-ONE-1', null, 100, null, yes, null]),
+      );
+
+      const result = await uploadedWithinBounds(vendor.id, file);
+
+      expect(result.skipped).toHaveLength(5000);
+      expect(result.skipped[4999]).toEqual({
+        row: 5001,
+        partNumber: 'MU-ONE-1',
+        problem: 'samePart',
+        part,
+        rows: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        otherRows: 4999,
+      });
+    }, 60_000);
+
+    it('answers 5,000 rows whose part number is one cell of 32,767 characters, each giving it as written cut to 100 code points', async () => {
+      const vendor = await platform.aVendor();
+      const file = await anOfferSheet(
+        Array.from({ length: 5000 }, () => [
+          theLongestCell,
+          theLongestCell,
+          100,
+          null,
+          yes,
+          null,
+        ]),
+      );
+      expect(file.length).toBeLessThan(256 * 1024);
+
+      const result = await uploadedWithinBounds(vendor.id, file);
+
+      expect(result.skipped).toHaveLength(5000);
+      expect(result.skipped[4999]).toEqual({
+        row: 5001,
+        partNumber: theLongestCell.slice(0, 100),
+        problem: 'notValid',
+        field: 'partNumber',
+        reason: 'tooLong',
+      });
+    }, 60_000);
+
+    it("answers 5,000 rows that matched no Part whose name is one cell of 32,767 characters, each carrying it cut to 300 code points, a Part Request's longest name", async () => {
+      const vendor = await platform.aVendor();
+      const file = await anOfferSheet(
+        Array.from({ length: 5000 }, (_, index) => [
+          `MU-NONE-${String(index)}`,
+          theLongestCell,
+          100,
+          null,
+          yes,
+          null,
+        ]),
+      );
+
+      const result = await uploadedWithinBounds(vendor.id, file);
+
+      expect(result.skipped).toHaveLength(5000);
+      expect(result.skipped[4999]).toEqual({
+        row: 5001,
+        partNumber: 'MU-NONE-4999',
+        problem: 'noPart',
+        name: theLongestCell.slice(0, 300),
+        usdPrice: '100.00',
+        iqdPrice: null,
+        inStock: true,
+        warrantyMonths: null,
+        partRequestOpen: false,
+      });
+    }, 60_000);
+
+    it('cuts a name and a part number by code points, never inside a character', async () => {
+      const vendor = await platform.aVendor();
+      // Each 𝔸 is one code point and two UTF-16 units.
+      const name = '𝔸'.repeat(301);
+      const partNumber = `${'𝔸'.repeat(101)}`;
+
+      const result = await platform.uploaded(
+        vendor.id,
+        await anOfferSheet([
+          ['MU-NONE-1', name, 100, null, yes, null],
+          [partNumber, null, 100, null, yes, null],
+        ]),
+      );
+
+      expect(result.skipped.map((row) => row.name ?? row.partNumber)).toEqual([
+        '𝔸'.repeat(300),
+        '𝔸'.repeat(100),
+      ]);
+    });
+  });
+
   describe('the headings', () => {
     it.each(languages)(
       'are taken in %s, with the yes and no of that language',
@@ -643,7 +767,7 @@ describe('Reading an uploaded Offer sheet', () => {
       ]);
     });
 
-    it('gives the part number as cleaned when another cell is the problem, and as written when its own cell is', async () => {
+    it('gives the part number as cleaned when another cell is the problem, and as written, cut to 100 code points, when its own cell is', async () => {
       const vendor = await platform.aVendor();
       const long = `MU-${'٧'.repeat(100)}`;
 
@@ -658,7 +782,7 @@ describe('Reading an uploaded Offer sheet', () => {
 
       expect(result.skipped.map(({ partNumber: written }) => written)).toEqual([
         'mu-0042',
-        long,
+        `MU-${'٧'.repeat(97)}`,
         '   ',
       ]);
     });

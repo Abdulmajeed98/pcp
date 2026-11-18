@@ -2,6 +2,7 @@ import { Part } from '../part/Part';
 import { foldedPartNumber } from './offer-sheet-layout';
 import { OfferSheetRow } from './offer-sheet-row';
 import {
+  mostOtherRowsNamed,
   RowOfTheSamePart,
   RowWithNoPart,
   RowWithSeveralParts,
@@ -59,6 +60,18 @@ function holdersIn(matches: OfferSheetMatches): Map<string, Part[]> {
   return holders;
 }
 
+// The first rows of a Part other than one of them, in order, at most
+// `mostOtherRowsNamed`: read only as far as they go, so that a Part that
+// every row of a file names costs each row no more than any other.
+function firstOtherRows(rowsOfThePart: readonly number[], row: number): number[] {
+  const others: number[] = [];
+  for (const other of rowsOfThePart) {
+    if (others.length === mostOtherRowsNamed) break;
+    if (other !== row) others.push(other);
+  }
+  return others;
+}
+
 // Each valid row matched or skipped:
 // - one Part holds its number: that Part;
 // - several do, and the Vendor offers exactly one of them: that Offer's
@@ -68,7 +81,7 @@ function holdersIn(matches: OfferSheetMatches): Map<string, Part[]> {
 //   Part Request for the number.
 // The rows that matched one Part are compared last: when two or more
 // matched the same Part, every one of them is skipped as the same Part
-// twice, each naming the others.
+// twice, each naming the first of the others and counting them all.
 export function matchedRows(
   rows: readonly OfferSheetRow[],
   matches: OfferSheetMatches,
@@ -122,7 +135,8 @@ export function matchedRows(
           row,
           each.getRow().getPartNumber(),
           each.getPart(),
-          rowsOfThePart.filter((other) => other !== row),
+          firstOtherRows(rowsOfThePart, row),
+          rowsOfThePart.length - 1,
         ),
       );
     }

@@ -3,7 +3,10 @@ import { Either } from 'effect';
 
 import { OfferDetails, UncheckedOfferDetails } from '../offer/OfferDetails';
 import { cleanPartNumber } from '../part/part-numbers';
-import { longestPartRequestPartNumber } from '../part-request/PartRequestDetails';
+import {
+  longestPartRequestName,
+  longestPartRequestPartNumber,
+} from '../part-request/PartRequestDetails';
 import { holdsText, lengthOf } from '../vendor/detail-text';
 import { inStockSaidBy } from './offer-sheet-layout';
 import { OfferSheetCellRead, OfferSheetRowRead } from './OfferSheetFile';
@@ -173,11 +176,35 @@ function inStockIn(cell: OfferSheetCellRead): Read<boolean> {
   return said === undefined ? { refused: 'notYesOrNo' } : { value: said };
 }
 
+// A text cut to its first code points, as many as given at most, never
+// inside a character, so that what a result carries from a cell is bounded
+// by the most the platform takes for it, however long the cell: a cell of a
+// spreadsheet holds up to 32,767 characters, and one cell of the shared
+// strings can stand in every row of a file.
+function cutTo(text: string, most: number): string {
+  let codePoints = 0;
+  let end = 0;
+  for (const character of text) {
+    if (codePoints === most) return text.slice(0, end);
+    codePoints += 1;
+    end += character.length;
+  }
+  return text;
+}
+
 // The part number as written in its cell, for a row whose part number is
-// its problem.
+// its problem, cut to the longest a part number may be.
 function partNumberAsWritten(cell: OfferSheetCellRead): string {
-  if (cell.kind === 'text' || cell.kind === 'notReadable') return cell.text;
-  return textIn(cell) ?? '';
+  const written =
+    cell.kind === 'text' || cell.kind === 'notReadable' ? cell.text : (textIn(cell) ?? '');
+  return cutTo(written, longestPartRequestPartNumber);
+}
+
+// The Part's name as written in its cell, or none, cut to the longest name a
+// Part Request takes, which a row that matched no Part carries to start one.
+function nameIn(cell: OfferSheetCellRead): string | null {
+  const name = textIn(cell);
+  return name === null ? null : cutTo(name, longestPartRequestName);
 }
 
 // The row's part number, its digits made Western and then cleaned as the
@@ -272,6 +299,6 @@ export function checkedRow(
   }
 
   return Either.right(
-    new OfferSheetRow(row, partNumber.right, textIn(nameCell), details.right),
+    new OfferSheetRow(row, partNumber.right, nameIn(nameCell), details.right),
   );
 }

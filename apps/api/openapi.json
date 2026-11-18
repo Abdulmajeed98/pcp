@@ -6247,7 +6247,7 @@
           },
           "partNumber": {
             "type": "string",
-            "description": "The row's part number, in Western digits, without invisible marks and without the space around it; as written when its own cell was the problem.",
+            "description": "The row's part number, in Western digits, without invisible marks and without the space around it; as written when its own cell was the problem, cut to its first 100 code points, the longest a part number may be.",
             "example": "11348-03-20G"
           },
           "problem": {
@@ -6258,7 +6258,7 @@
           },
           "name": {
             "type": "string",
-            "description": "The Part's name as the row writes it, or null when it gives none. Left out unless the row matched no Part.",
+            "description": "The Part's name as the row writes it, cut to its first 300 code points, the longest a Part Request takes, or null when it gives none. Left out unless the row matched no Part.",
             "nullable": true,
             "example": "Sapphire Pulse Radeon RX 9070 XT 16GB"
           },
@@ -6306,12 +6306,17 @@
             ]
           },
           "rows": {
-            "description": "The numbers of the other rows that matched the same Part, in order. Left out unless another row matched the same Part.",
+            "description": "The numbers of the first other rows that matched the same Part, in order, at most 10. Left out unless another row matched the same Part.",
             "example": [31],
             "type": "array",
             "items": {
               "type": "integer"
             }
+          },
+          "otherRows": {
+            "type": "integer",
+            "description": "How many other rows matched the same Part, every one of them, those `rows` names among them. Left out unless another row matched the same Part.",
+            "example": 1
           },
           "field": {
             "type": "string",

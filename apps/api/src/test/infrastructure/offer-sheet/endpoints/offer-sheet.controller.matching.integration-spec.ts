@@ -292,22 +292,39 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
           problem: 'samePart',
           part: twice,
           rows: [5, 7],
+          otherRows: 2,
         },
-        { row: 3, partNumber: 'MU-BOTH-1', problem: 'samePart', part: both, rows: [6] },
+        {
+          row: 3,
+          partNumber: 'MU-BOTH-1',
+          problem: 'samePart',
+          part: both,
+          rows: [6],
+          otherRows: 1,
+        },
         {
           row: 5,
           partNumber: 'mu-twice-1',
           problem: 'samePart',
           part: twice,
           rows: [2, 7],
+          otherRows: 2,
         },
-        { row: 6, partNumber: 'MU-BOTH-2', problem: 'samePart', part: both, rows: [3] },
+        {
+          row: 6,
+          partNumber: 'MU-BOTH-2',
+          problem: 'samePart',
+          part: both,
+          rows: [3],
+          otherRows: 1,
+        },
         {
           row: 7,
           partNumber: 'MU-TWICE-1',
           problem: 'samePart',
           part: twice,
           rows: [2, 5],
+          otherRows: 2,
         },
       ]);
       expect(result.added.map(({ part }) => part)).toEqual([once]);
@@ -317,6 +334,53 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
         confirmedAt: aDayBefore.toISOString(),
       });
       expect(await platform.theOfferOf(vendor.id, both.id)).toBeUndefined();
+    });
+
+    it('names at most the first 10 other rows that matched the Part, by row number, and counts every other row', async () => {
+      const vendor = await platform.aVendor();
+      const part = await platform.aPart('Made-up Many GPU', ['MU-MANY-1']);
+
+      const result = await platform.uploaded(
+        vendor.id,
+        await anOfferSheet(
+          Array.from({ length: 13 }, (_, index) => [
+            'MU-MANY-1',
+            null,
+            100 + index,
+            null,
+            yes,
+            null,
+          ]),
+        ),
+      );
+
+      // Rows 2 to 14 named the Part.
+      expect(
+        result.skipped.map(({ row, problem, part: named, rows, otherRows }) => ({
+          row,
+          problem,
+          part: named,
+          rows,
+          otherRows,
+        })),
+      ).toEqual(
+        Array.from({ length: 13 }, (_, index) => {
+          const row = index + 2;
+          const others = Array.from({ length: 13 }, (__, each) => each + 2).filter(
+            (other) => other !== row,
+          );
+          return {
+            row,
+            problem: 'samePart',
+            part,
+            rows: others.slice(0, 10),
+            otherRows: 12,
+          };
+        }),
+      );
+      expect(result.skipped[0].rows).toEqual([3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+      expect(result.skipped[12].rows).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+      expect(result.added).toEqual([]);
     });
 
     it('skips two rows the tie-break matched to the same Offer', async () => {
@@ -334,10 +398,15 @@ describe("Matching an uploaded Offer sheet's rows to Parts", () => {
       );
 
       expect(
-        result.skipped.map(({ row, problem, rows }) => ({ row, problem, rows })),
+        result.skipped.map(({ row, problem, rows, otherRows }) => ({
+          row,
+          problem,
+          rows,
+          otherRows,
+        })),
       ).toEqual([
-        { row: 2, problem: 'samePart', rows: [3] },
-        { row: 3, problem: 'samePart', rows: [2] },
+        { row: 2, problem: 'samePart', rows: [3], otherRows: 1 },
+        { row: 3, problem: 'samePart', rows: [2], otherRows: 1 },
       ]);
       expect(result.matchedByYourOffer).toEqual([]);
     });

@@ -35,7 +35,7 @@ export class SkippedRowResponse {
 
   @ApiProperty({
     description:
-      "The row's part number, in Western digits, without invisible marks and without the space around it; as written when its own cell was the problem.",
+      "The row's part number, in Western digits, without invisible marks and without the space around it; as written when its own cell was the problem, cut to its first 100 code points, the longest a part number may be.",
     example: '11348-03-20G',
   })
   readonly partNumber: string;
@@ -50,7 +50,7 @@ export class SkippedRowResponse {
 
   @ApiPropertyOptional({
     description:
-      "The Part's name as the row writes it, or null when it gives none. Left out unless the row matched no Part.",
+      "The Part's name as the row writes it, cut to its first 300 code points, the longest a Part Request takes, or null when it gives none. Left out unless the row matched no Part.",
     type: String,
     nullable: true,
     example: 'Sapphire Pulse Radeon RX 9070 XT 16GB',
@@ -114,12 +114,20 @@ export class SkippedRowResponse {
 
   @ApiPropertyOptional({
     description:
-      'The numbers of the other rows that matched the same Part, in order. Left out unless another row matched the same Part.',
+      'The numbers of the first other rows that matched the same Part, in order, at most 10. Left out unless another row matched the same Part.',
     type: 'integer',
     isArray: true,
     example: [31],
   })
   readonly rows?: number[];
+
+  @ApiPropertyOptional({
+    description:
+      'How many other rows matched the same Part, every one of them, those `rows` names among them. Left out unless another row matched the same Part.',
+    type: 'integer',
+    example: 1,
+  })
+  readonly otherRows?: number;
 
   @ApiPropertyOptional({
     description:
@@ -157,6 +165,7 @@ export class SkippedRowResponse {
       this.problem = 'samePart';
       this.part = PartSummaryResponse.of(skipped.getPart());
       this.rows = [...skipped.getOtherRows()];
+      this.otherRows = skipped.getOtherRowCount();
     } else {
       this.problem = 'notValid';
       this.field = skipped.getField();

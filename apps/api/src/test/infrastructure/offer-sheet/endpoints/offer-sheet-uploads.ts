@@ -87,6 +87,7 @@ export type SkippedRowBody = {
   parts?: PartBody[];
   part?: PartBody;
   rows?: number[];
+  otherRows?: number;
   field?: string;
   reason?: string;
 };

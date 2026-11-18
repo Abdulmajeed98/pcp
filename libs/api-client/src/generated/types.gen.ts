@@ -2000,7 +2000,7 @@ export type SkippedRowResponse = {
      */
     row: number;
     /**
-     * The row's part number, in Western digits, without invisible marks and without the space around it; as written when its own cell was the problem.
+     * The row's part number, in Western digits, without invisible marks and without the space around it; as written when its own cell was the problem, cut to its first 100 code points, the longest a part number may be.
      */
     partNumber: string;
     /**
@@ -2008,7 +2008,7 @@ export type SkippedRowResponse = {
      */
     problem: 'noPart' | 'severalParts' | 'samePart' | 'notValid';
     /**
-     * The Part's name as the row writes it, or null when it gives none. Left out unless the row matched no Part.
+     * The Part's name as the row writes it, cut to its first 300 code points, the longest a Part Request takes, or null when it gives none. Left out unless the row matched no Part.
      */
     name?: string | null;
     /**
@@ -2040,9 +2040,13 @@ export type SkippedRowResponse = {
      */
     part?: PartSummaryResponse;
     /**
-     * The numbers of the other rows that matched the same Part, in order. Left out unless another row matched the same Part.
+     * The numbers of the first other rows that matched the same Part, in order, at most 10. Left out unless another row matched the same Part.
      */
     rows?: Array<number>;
+    /**
+     * How many other rows matched the same Part, every one of them, those `rows` names among them. Left out unless another row matched the same Part.
+     */
+    otherRows?: number;
     /**
      * The column of the row's first cell that does not fit, in the columns' order. Left out unless a cell does not fit.
      */

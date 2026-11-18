@@ -5,6 +5,9 @@ import { OfferSheetRowNotValid } from './offer-sheet-row';
 // The upload's result (SHT-5): what the upload did with each row of the
 // file. It is answered once and never kept.
 
+// The most other rows a row skipped as the same Part twice names.
+export const mostOtherRowsNamed = 10;
+
 // An Offer an applied row made: the row's number, the Part and the Offer.
 export class AddedOffer {
   constructor(
@@ -104,13 +107,16 @@ export class RowWithSeveralParts {
 
 // A row skipped as the same Part twice: another row matched the same Part,
 // so neither is applied and the platform never chooses between two of a
-// Vendor's prices.
+// Vendor's prices. It names the first of the other rows, at most
+// `mostOtherRowsNamed`, and counts them all, so that a result grows with
+// its rows and never with the square of them.
 export class RowOfTheSamePart {
   constructor(
     private readonly row: number,
     private readonly partNumber: string,
     private readonly part: Part,
     private readonly otherRows: readonly number[],
+    private readonly otherRowCount: number,
   ) {}
 
   getRow(): number {
@@ -125,9 +131,15 @@ export class RowOfTheSamePart {
     return this.part;
   }
 
-  // The numbers of the other rows that matched the Part, in order.
+  // The numbers of the first other rows that matched the Part, in order, at
+  // most `mostOtherRowsNamed`.
   getOtherRows(): readonly number[] {
     return this.otherRows;
+  }
+
+  // How many other rows matched the Part, every one of them.
+  getOtherRowCount(): number {
+    return this.otherRowCount;
   }
 }
 
