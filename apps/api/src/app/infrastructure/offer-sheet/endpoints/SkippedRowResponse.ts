@@ -154,7 +154,7 @@ export class SkippedRowResponse {
   readonly reason?: OfferSheetRowRefusal;
 
   private constructor(skipped: SkippedRow) {
-    this.row = skipped.getRow();
+    this.row = skipped.getRowNumber();
     this.partNumber = skipped.getPartNumber();
 
     if (skipped instanceof RowWithNoPart) {
@@ -173,7 +173,7 @@ export class SkippedRowResponse {
     } else if (skipped instanceof RowOfTheSamePart) {
       this.problem = 'samePart';
       this.part = PartSummaryResponse.of(skipped.getPart());
-      this.rows = [...skipped.getOtherRows()];
+      this.rows = [...skipped.getOtherRowNumbers()];
       this.otherRows = skipped.getOtherRowCount();
     } else {
       this.problem = 'notValid';

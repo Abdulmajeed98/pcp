@@ -1,6 +1,7 @@
 import type { ListedOfferResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 import { FileSpreadsheetIcon, PackageIcon, PlusIcon, SearchXIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -16,6 +17,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
+  linkInText,
   ListPages,
   PastTheLastPage,
 } from '@/shared/ui';
@@ -222,9 +224,9 @@ function NothingFound({ words }: { words: string }) {
 
 // What the screen says to a Vendor with no Offer yet, in place of the tabs,
 // the search and the list, with the way to add one from the catalog search,
-// and below it the way to fill in its whole stock in an Offer sheet, since a
-// file of headings alone is the way to fill a whole stock (the owner's d1,
-// sheet ticket 03).
+// and below it the way to add every Part it sells in one Offer sheet, since
+// a file of headings alone is the way to add them all at once (the owner's
+// d1, sheet ticket 03; its words, the code review of `sheet`).
 export function NoOffers() {
   const { t } = useTranslation();
 
@@ -262,7 +264,7 @@ function ToTheOfferSheet({ testId, words }: { testId: string; words: string }) {
     <Link
       to="offer-sheet"
       data-testid={testId}
-      className="hover-colour inline-flex min-h-control items-center gap-1.5 text-sm text-foreground underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+      className={cn(linkInText, 'gap-1.5 text-sm text-foreground')}
     >
       <FileSpreadsheetIcon aria-hidden="true" className="size-4 shrink-0" />
       {words}

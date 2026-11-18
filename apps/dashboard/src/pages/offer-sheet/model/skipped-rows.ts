@@ -35,7 +35,7 @@ export const rowsShownMore = 50;
 
 // Why a cell does not fit, by its message's key in the dashboard's text: the
 // Offer's details as the Offer form says them (`OfferForm.refused`), and the
-// sheet's own, a part number missing or too long, a word that is not yes or
+// Offer sheet's own, a part number missing or too long, a word that is not yes or
 // no and a cell that cannot be read (`OfferSheetScreen.cell`).
 export type CellRefusal =
   | `OfferForm.refused.${OfferDetailRefusal}`

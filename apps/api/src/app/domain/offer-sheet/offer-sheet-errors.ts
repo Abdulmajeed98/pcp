@@ -16,10 +16,10 @@ export function offerSheetLanguageRefused(
 }
 
 // Why an uploaded file was refused as a whole, with nothing applied, in the
-// order they are checked: no file was sent; it is too large; it is not an
-// .xlsx file that can be read within bounds; its first worksheet's first
-// row is not the six headings (SHT-7); or it holds too many rows that are
-// not empty.
+// order they are checked: no file was sent; it is too large, over 5 MB, or
+// what it holds unpacks past the bound an upload is read within; it is not
+// an .xlsx file that can be read; its first worksheet's first row is not
+// the six headings (SHT-7); or it holds too many rows that are not empty.
 export type OfferSheetFileRefusal =
   | 'missing'
   | 'tooLarge'

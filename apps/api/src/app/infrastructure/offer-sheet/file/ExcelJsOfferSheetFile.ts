@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ServerError, StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 import {
   type Cell,
   type DataValidation,
@@ -9,12 +9,16 @@ import {
   type Worksheet,
 } from 'exceljs';
 
-import { OfferSheetCellKind } from '~/domain/offer-sheet/offer-sheet-layout';
+import {
+  OfferSheetCellKind,
+  offerSheetColumns,
+} from '~/domain/offer-sheet/offer-sheet-layout';
 import {
   emptyCell,
   OfferSheetCell,
   OfferSheetCellRead,
   OfferSheetFile,
+  OfferSheetNotRead,
   OfferSheetRead,
   OfferSheetRowRead,
   OfferSheetWritten,
@@ -25,7 +29,9 @@ import { archiveOf, partsUnpacked } from './bounded-archive';
 // The most the parts ExcelJS reads of an uploaded file may unpack to, all
 // together: 8 MiB, four times what the platform's own Offer sheet of 5,000
 // rows unpacks to, about 2 MB, and far below what takes the API down. Past
-// it, the file is not read.
+// it, the file is not read and is answered too large, whether it is
+// crafted or a Vendor's own file of about 21,000 rows or more, which the
+// portal then tells to split its rows (the code review of `sheet`).
 const mostUnpackedBytes = 8 * 1024 * 1024;
 
 // The parts of an .xlsx file ExcelJS reads to find the first worksheet and
@@ -188,26 +194,26 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
   private readonly logger = new Logger(ExcelJsOfferSheetFile.name);
 
   async write(
-    sheet: OfferSheetWritten,
+    offerSheet: OfferSheetWritten,
   ): Promise<Either.Either<Uint8Array, StructuredError>> {
     try {
       const workbook = new Workbook();
       // Row 1, the headings, stays in view as the Vendor scrolls, and the
       // worksheet reads in the language's direction.
-      const worksheet = workbook.addWorksheet(sheet.getWorksheetName(), {
+      const worksheet = workbook.addWorksheet(offerSheet.getWorksheetName(), {
         views: [
           {
             state: 'frozen',
             xSplit: 0,
             ySplit: 1,
             topLeftCell: 'A2',
-            rightToLeft: sheet.readsRightToLeft(),
+            rightToLeft: offerSheet.readsRightToLeft(),
           },
         ],
       }) as WithDataValidations;
 
-      const columns = sheet.getColumns();
-      const rows = sheet.getRows();
+      const columns = offerSheet.getColumns();
+      const rows = offerSheet.getRows();
       worksheet.columns = columns.map((column, index) => ({
         header: column.getHeading(),
         width: widthOf(
@@ -221,8 +227,8 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
 
       // "In stock" is chosen from the language's yes and no, on every row
       // written and on the rows below, where the Vendor adds a Part's row.
-      const [yes, no] = sheet.getChoices();
-      const lastRow = 1 + sheet.getRowsTheListCovers();
+      const [yes, no] = offerSheet.getChoices();
+      const lastRow = 1 + offerSheet.getRowsTheListCovers();
       columns.forEach((column, index) => {
         if (column.getKind() !== 'yesOrNo') return;
         const letter = letterOf(index + 1);
@@ -241,13 +247,17 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
     }
   }
 
-  async read(file: Uint8Array): Promise<Option.Option<OfferSheetRead>> {
+  async read(file: Uint8Array): Promise<Either.Either<OfferSheetRead, OfferSheetNotRead>> {
     // The parts ExcelJS needs, unpacked within the bound before it sees any
     // of them, and only those handed to it, in an archive of their own. A
     // file with no workbook, such as an .ods, is not an .xlsx file.
-    const parts = await partsUnpacked(file, isReadForTheCells, mostUnpackedBytes);
-    const workbookPart = parts?.get('xl/workbook.xml');
-    if (parts === undefined || workbookPart === undefined) return Option.none();
+    const unpacked = await partsUnpacked(file, isReadForTheCells, mostUnpackedBytes);
+    if (Either.isLeft(unpacked)) {
+      return Either.left(unpacked.left === 'pastTheBound' ? 'tooLarge' : 'notReadable');
+    }
+    const parts = unpacked.right;
+    const workbookPart = parts.get('xl/workbook.xml');
+    if (workbookPart === undefined) return Either.left('notReadable');
     parts.set('xl/workbook.xml', withoutDefinedNames(workbookPart));
 
     try {
@@ -259,17 +269,18 @@ export class ExcelJsOfferSheetFile extends OfferSheetFile {
 
       const [worksheet] = workbook.worksheets;
       const rows: OfferSheetRowRead[] = [];
+      // A cell for each of the layout's columns, from A, in its order.
       worksheet?.eachRow((row, number) => {
         rows.push(
           new OfferSheetRowRead(
             number,
-            [1, 2, 3, 4, 5, 6].map((column) => cellRead(row.getCell(column))),
+            offerSheetColumns.map((_, index) => cellRead(row.getCell(index + 1))),
           ),
         );
       });
-      return Option.some(new OfferSheetRead(rows));
+      return Either.right(new OfferSheetRead(rows));
     } catch {
-      return Option.none();
+      return Either.left('notReadable');
     }
   }
 }

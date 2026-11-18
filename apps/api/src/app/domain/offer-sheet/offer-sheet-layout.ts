@@ -8,10 +8,9 @@ import {
 } from '@pcp/i18n';
 import { Either } from 'effect';
 
-import { cleanPartNumber } from '../part/part-numbers';
 import { holdsText } from '../vendor/detail-text';
 import { offerSheetLanguageRefused } from './offer-sheet-errors';
-import type { OfferSheetCellRead } from './OfferSheetFile';
+import type { OfferSheetRowRead } from './OfferSheetFile';
 
 // The Offer sheet's layout, written once, for the download that writes it and
 // the upload that reads it back (SHT-7), so that a downloaded file is always
@@ -19,7 +18,8 @@ import type { OfferSheetCellRead } from './OfferSheetFile';
 // where every text of the platform is kept (ADR-0008): none holds a
 // placeholder or a plural, so each is read as it is.
 
-// The six columns, A to F, in SHT-1's order.
+// The six columns, A to F, in SHT-1's order: the one place that says which
+// column holds what, for the headings and the cells, written and read.
 export const offerSheetColumns = [
   'partNumber',
   'name',
@@ -74,10 +74,10 @@ function inEveryLanguage(
 // cells A to F holds its column's heading in any of the three languages,
 // trimmed and with its case folded. Each column is matched on its own, so
 // headings of different languages are taken together, and the columns after
-// F are not read.
-export function isTheLayout(headings: readonly OfferSheetCellRead[]): boolean {
-  return offerSheetColumns.every((column, index) => {
-    const cell = headings[index];
+// F are not read. A file with no first row is not the layout.
+export function isTheLayout(headings: OfferSheetRowRead | undefined): boolean {
+  return offerSheetColumns.every((column) => {
+    const cell = headings?.cellOf(column);
     return (
       cell?.kind === 'text' &&
       inEveryLanguage((words) => words.headings[column]).has(compared(cell.text))
@@ -93,14 +93,6 @@ export function inStockSaidBy(word: string): boolean | undefined {
   if (inEveryLanguage((words) => words.yes).has(said)) return true;
   if (inEveryLanguage((words) => words.no).has(said)) return false;
   return undefined;
-}
-
-// A part number folded as the upload compares it and the download chooses
-// it: cleaned as the catalog cleans one, then in lower case, as the
-// catalog's search text folds it. Nothing else of it is dropped, so a match
-// is exact but for case and invisible marks.
-export function foldedPartNumber(partNumber: string): string {
-  return cleanPartNumber(partNumber).toLowerCase();
 }
 
 // The language an Offer sheet was asked for in, or why it was refused: none

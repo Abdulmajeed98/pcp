@@ -1,6 +1,7 @@
 import { westernDigitsIn, westernNumberIn } from '@pcp/i18n';
 import { Either } from 'effect';
 
+import { offerDetailsRefusals } from '../offer/offer-errors';
 import { OfferDetails, UncheckedOfferDetails } from '../offer/OfferDetails';
 import { cleanPartNumber } from '../part/part-numbers';
 import {
@@ -28,18 +29,14 @@ export const offerSheetRowFields = [
 
 export type OfferSheetRowField = (typeof offerSheetRowFields)[number];
 
-// Why a cell does not fit: the part number's own reasons, `missing` and
-// `tooLong`, as a Part Request's; the Offer's, as `OfferDetails` gives them;
-// and the Offer sheet's own two, a word that is neither yes nor no, and a
-// cell that cannot be read.
+// Why a cell does not fit: the Offer's reasons, as `OfferDetails` gives
+// them, taken from the Offer's own list, so that a reason the Offer gains
+// is a row's too; the part number's own, `missing`, which the Offer's list
+// holds, and `tooLong`, as a Part Request's; and the Offer sheet's own two,
+// a word that is neither yes nor no, and a cell that cannot be read.
 export const offerSheetRowRefusals = [
-  'missing',
+  ...offerDetailsRefusals,
   'tooLong',
-  'notANumber',
-  'notPositive',
-  'tooManyDecimals',
-  'tooLarge',
-  'notWholeMonths',
   'notYesOrNo',
   'notReadable',
 ] as const;
@@ -51,14 +48,14 @@ export type OfferSheetRowRefusal = (typeof offerSheetRowRefusals)[number];
 // Offer it states.
 export class OfferSheetRow {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly partNumber: string,
     private readonly name: string | null,
     private readonly details: OfferDetails,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   // In Western digits, without invisible marks and without the space
@@ -82,14 +79,14 @@ export class OfferSheetRow {
 // its one problem.
 export class OfferSheetRowNotValid {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly partNumber: string,
     private readonly field: OfferSheetRowField,
     private readonly reason: OfferSheetRowRefusal,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   getPartNumber(): string {
@@ -239,15 +236,14 @@ function standingIn<T>(read: Read<T>, fits: T): T | null {
 export function checkedRow(
   read: OfferSheetRowRead,
 ): Either.Either<OfferSheetRow, OfferSheetRowNotValid> {
-  const row = read.getRow();
-  const [partNumberCell, nameCell, usdCell, iqdCell, inStockCell, warrantyCell] =
-    read.getCells();
+  const rowNumber = read.getRowNumber();
+  const partNumberCell = read.cellOf('partNumber');
 
   const partNumber = partNumberIn(partNumberCell);
   if (Either.isLeft(partNumber)) {
     return Either.left(
       new OfferSheetRowNotValid(
-        row,
+        rowNumber,
         partNumberAsWritten(partNumberCell),
         'partNumber',
         partNumber.left,
@@ -255,12 +251,12 @@ export function checkedRow(
     );
   }
   const notValid = (field: OfferSheetRowField, reason: OfferSheetRowRefusal) =>
-    new OfferSheetRowNotValid(row, partNumber.right, field, reason);
+    new OfferSheetRowNotValid(rowNumber, partNumber.right, field, reason);
 
-  const usdPrice = usdPriceIn(usdCell);
-  const iqdPrice = numberIn(iqdCell);
-  const inStock = inStockIn(inStockCell);
-  const warrantyMonths = numberIn(warrantyCell);
+  const usdPrice = usdPriceIn(read.cellOf('usdPrice'));
+  const iqdPrice = numberIn(read.cellOf('iqdPrice'));
+  const inStock = inStockIn(read.cellOf('inStock'));
+  const warrantyMonths = numberIn(read.cellOf('warrantyMonths'));
   const cells = [
     ['usdPrice', usdPrice],
     ['iqdPrice', iqdPrice],
@@ -291,14 +287,19 @@ export function checkedRow(
   }
   if (Either.isLeft(details)) {
     const { field, reason } = details.left.getAdditionalInformation();
-    // `OfferDetails` names only the Offer's own fields, and gives only its
-    // own reasons, each of them a row's.
+    // `OfferDetails` names only the Offer's own fields, and gives only the
+    // reasons of `offerDetailsRefusals`, each of them a row's.
     return Either.left(
       notValid(field as OfferSheetRowField, reason as OfferSheetRowRefusal),
     );
   }
 
   return Either.right(
-    new OfferSheetRow(row, partNumber.right, nameIn(nameCell), details.right),
+    new OfferSheetRow(
+      rowNumber,
+      partNumber.right,
+      nameIn(read.cellOf('name')),
+      details.right,
+    ),
   );
 }

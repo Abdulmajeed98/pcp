@@ -13,19 +13,19 @@ import { Link } from 'react-router';
 
 import { Trans, useTranslation } from '@/shared/i18n';
 import { queryOfWordsAndCategory } from '@/shared/lib';
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, linkInText } from '@/shared/ui';
 
 import {
   cellRefusalOf,
+  type Problem,
   rowsShownFirst,
   rowsShownMore,
   type SkippedGroup as Group,
 } from '../model/skipped-rows';
 import { PartLine, RowNumber } from './rows';
 
-// An underlined link, as high as a control.
-const underlined =
-  'hover-colour inline-flex min-h-control items-center gap-1.5 text-sm underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2';
+// A link among text, with its mark beside its words.
+const underlined = cn(linkInText, 'gap-1.5 text-sm');
 
 // One group of skipped rows, of one problem: its heading with its count in
 // Note Grey, one Note Grey sentence that says what to do, and its rows by
@@ -38,10 +38,11 @@ const underlined =
 // count stand on the screen.
 export function SkippedGroup({
   group,
-  asked,
+  askedFor,
 }: {
   group: Group;
-  asked: ReadonlySet<number>;
+  // Whether a part number was asked to be added, from any of its rows.
+  askedFor: (partNumber: string) => boolean;
 }) {
   const { t } = useTranslation();
   const { problem, rows } = group;
@@ -74,7 +75,7 @@ export function SkippedGroup({
           const list = (
             <ul>
               {rows.slice(from, from + size).map((row) => (
-                <SkippedRow key={row.row} row={row} asked={asked.has(row.row)} />
+                <SkippedRow key={row.row} row={row} asked={askedFor(row.partNumber)} />
               ))}
             </ul>
           );
@@ -131,6 +132,8 @@ export function SkippedGroup({
 // they stand one under another (DESIGN.md's Rows and tables). No plate, and
 // no red: the block's heading carries its one red mark.
 function SkippedRow({ row, asked }: { row: SkippedRowResponse; asked: boolean }) {
+  const { Said, Action } = byProblem[row.problem];
+
   return (
     <li
       data-testid="skipped-row"
@@ -151,54 +154,74 @@ function SkippedRow({ row, asked }: { row: SkippedRowResponse; asked: boolean })
             </AsWritten>
           </p>
         )}
-        <WhatHappened row={row} />
+        <Said row={row} />
       </div>
-      <RowAction row={row} asked={asked} />
+      {Action !== undefined && (
+        <div className="justify-self-start pt-1 @min-[40rem]/rows:col-start-3 @min-[40rem]/rows:row-start-1 @min-[40rem]/rows:justify-self-end @min-[40rem]/rows:pt-0">
+          <Action row={row} asked={asked} />
+        </div>
+      )}
     </li>
   );
 }
 
-// What happened to a skipped row, by its problem, in plain words.
-function WhatHappened({ row }: { row: SkippedRowResponse }) {
+// What a skipped row says and offers, by its problem: the one place the
+// four problems are told apart. Each says what happened to the row in
+// plain words, and offers its one action in the row's fixed place, or none
+// where only the file can correct the row.
+const byProblem: {
+  [Each in Problem]: {
+    Said: (props: { row: SkippedRowResponse }) => ReactNode;
+    Action?: (props: { row: SkippedRowResponse; asked: boolean }) => ReactNode;
+  };
+} = {
+  noPart: { Said: NameOfTheRow, Action: AskForIt },
+  severalParts: { Said: SeveralParts, Action: SearchTheCatalog },
+  samePart: { Said: SamePart },
+  notValid: { Said: CellRefused },
+};
+
+// The Part's name as the row wrote it, of a row that matched no Part, or
+// that it wrote none.
+function NameOfTheRow({ row }: { row: SkippedRowResponse }) {
   const { t } = useTranslation();
 
-  switch (row.problem) {
-    case 'noPart':
-      return row.name === null || row.name === undefined || row.name === '' ? (
-        <p className="text-muted-foreground">{t('OfferSheetScreen.noName')}</p>
-      ) : (
-        <p className="font-[550]">
-          {/* What the Vendor wrote, sized by its own direction (DESIGN.md's
-              Typography). */}
-          <AsWritten
-            data-testid="row-name"
-            className="wrap-anywhere [&:dir(rtl)]:text-[0.9375rem] [&:dir(rtl)]:leading-[1.6]"
-          >
-            {row.name}
-          </AsWritten>
-        </p>
-      );
-    case 'severalParts':
-      return <SeveralParts row={row} />;
-    case 'samePart':
-      return <SamePart row={row} />;
-    case 'notValid':
-      return (
-        <p data-testid="cell" data-field={row.field} data-reason={row.reason}>
-          <Trans
-            i18nKey="OfferSheetScreen.cellRefused"
-            components={{
-              heading: (
-                <span className="font-medium">
-                  {row.field === undefined ? '' : t(`OfferSheetFile.headings.${row.field}`)}
-                </span>
-              ),
-              reason: <>{t(cellRefusalOf(row))}</>,
-            }}
-          />
-        </p>
-      );
-  }
+  return row.name === null || row.name === undefined || row.name === '' ? (
+    <p className="text-muted-foreground">{t('OfferSheetScreen.noName')}</p>
+  ) : (
+    <p className="font-[550]">
+      {/* What the Vendor wrote, sized by its own direction (DESIGN.md's
+          Typography). */}
+      <AsWritten
+        data-testid="row-name"
+        className="wrap-anywhere [&:dir(rtl)]:text-[0.9375rem] [&:dir(rtl)]:leading-[1.6]"
+      >
+        {row.name}
+      </AsWritten>
+    </p>
+  );
+}
+
+// The cell that does not fit, by the file's heading of its column, and why,
+// as the Offer form says it.
+function CellRefused({ row }: { row: SkippedRowResponse }) {
+  const { t } = useTranslation();
+
+  return (
+    <p data-testid="cell" data-field={row.field} data-reason={row.reason}>
+      <Trans
+        i18nKey="OfferSheetScreen.cellRefused"
+        components={{
+          heading: (
+            <span className="font-medium">
+              {row.field === undefined ? '' : t(`OfferSheetFile.headings.${row.field}`)}
+            </span>
+          ),
+          reason: <>{t(cellRefusalOf(row))}</>,
+        }}
+      />
+    </p>
+  );
 }
 
 // The Parts that hold a row's part number, named as the catalog search
@@ -310,19 +333,16 @@ function SamePart({ row }: { row: SkippedRowResponse }) {
   );
 }
 
-// A row's one action, in its fixed place: for a row that matched no Part,
-// "Ask for it to be added", which opens the Part Request form from the row;
-// once asked, "Asked for"; and when the Vendor already has an open request
-// of its part number, that it was asked for, with a way to its Part
-// Requests, and no second request. For a row of several Parts, the catalog
-// search with its part number. The other problems are corrected in the
-// file, and their rows have none.
-function RowAction({ row, asked }: { row: SkippedRowResponse; asked: boolean }) {
+// The action of a row that matched no Part: "Ask for it to be added",
+// which opens the Part Request form from the row; once it or another row of
+// its part number is asked for, "Asked for"; and when the Vendor already
+// has an open request of its part number, that it was asked for, with a
+// way to its Part Requests, and no second request.
+function AskForIt({ row, asked }: { row: SkippedRowResponse; asked: boolean }) {
   const { t } = useTranslation();
-  let action: ReactNode = null;
 
-  if (row.problem === 'noPart') {
-    action = asked ? (
+  if (asked) {
+    return (
       <p
         data-testid="asked"
         className="inline-flex min-h-control items-center gap-1.5 font-medium text-success"
@@ -330,7 +350,10 @@ function RowAction({ row, asked }: { row: SkippedRowResponse; asked: boolean }) 
         <CircleCheckIcon aria-hidden="true" className="size-4 shrink-0" />
         {t('OfferSheetScreen.asked')}
       </p>
-    ) : row.partRequestOpen === true ? (
+    );
+  }
+  if (row.partRequestOpen === true) {
+    return (
       <p className="flex flex-col items-start">
         <span data-testid="already-asked" className="text-muted-foreground">
           {t('OfferSheetScreen.alreadyAsked')}
@@ -339,46 +362,45 @@ function RowAction({ row, asked }: { row: SkippedRowResponse; asked: boolean }) 
           {t('OfferSheetScreen.seeRequests')}
         </Link>
       </p>
-    ) : (
-      <Link
-        data-testid="ask-for-it"
-        to={`rows/${row.row}/part-request`}
-        className={buttonVariants({ variant: 'outline' })}
-      >
-        <PackagePlusIcon data-icon="inline-start" aria-hidden="true" />
-        {t('OfferSheetScreen.ask')}
-      </Link>
-    );
-  } else if (row.problem === 'severalParts') {
-    action = (
-      <Link
-        data-testid="search-the-catalog"
-        to={{
-          pathname: '../add',
-          search: queryOfWordsAndCategory({ words: row.partNumber }),
-        }}
-        className={cn(underlined, 'text-foreground')}
-      >
-        <SearchIcon aria-hidden="true" className="size-4 shrink-0" />
-        <span>
-          <Trans
-            i18nKey="OfferSheetScreen.searchCatalog"
-            components={{
-              partNumber: (
-                <AlwaysEnglish className="font-mono wrap-anywhere">
-                  {row.partNumber}
-                </AlwaysEnglish>
-              ),
-            }}
-          />
-        </span>
-      </Link>
     );
   }
+  return (
+    <Link
+      data-testid="ask-for-it"
+      to={`rows/${row.row}/part-request`}
+      className={buttonVariants({ variant: 'outline' })}
+    >
+      <PackagePlusIcon data-icon="inline-start" aria-hidden="true" />
+      {t('OfferSheetScreen.ask')}
+    </Link>
+  );
+}
 
-  return action === null ? null : (
-    <div className="justify-self-start pt-1 @min-[40rem]/rows:col-start-3 @min-[40rem]/rows:row-start-1 @min-[40rem]/rows:justify-self-end @min-[40rem]/rows:pt-0">
-      {action}
-    </div>
+// The action of a row of several Parts: the catalog search with its part
+// number.
+function SearchTheCatalog({ row }: { row: SkippedRowResponse }) {
+  return (
+    <Link
+      data-testid="search-the-catalog"
+      to={{
+        pathname: '../add',
+        search: queryOfWordsAndCategory({ words: row.partNumber }),
+      }}
+      className={cn(underlined, 'text-foreground')}
+    >
+      <SearchIcon aria-hidden="true" className="size-4 shrink-0" />
+      <span>
+        <Trans
+          i18nKey="OfferSheetScreen.searchCatalog"
+          components={{
+            partNumber: (
+              <AlwaysEnglish className="font-mono wrap-anywhere">
+                {row.partNumber}
+              </AlwaysEnglish>
+            ),
+          }}
+        />
+      </span>
+    </Link>
   );
 }

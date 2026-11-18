@@ -13,7 +13,7 @@ import { apiClient, dataOf, partRequestsKey } from '@/shared/api';
 import { useTranslation } from '@/shared/i18n';
 import { BackLink } from '@/shared/ui';
 
-import { rowAskedFor, useKeptResult } from '../model/kept-result';
+import { isAskedFor, partNumberAskedFor, useKeptResult } from '../model/kept-result';
 import type { AskedForARow } from './offer-sheet-page';
 
 // The Part Request form started from a row of an Offer sheet that matched
@@ -29,9 +29,10 @@ import type { AskedForARow } from './offer-sheet-page';
 // It sends through `sendPartRequest`, so a Vendor still never creates a
 // Part, and says the same refusals as the form always does. After a send
 // every query under `['part-requests']` is asked again, and the screen
-// returns to the result, which it marks as asked for and scrolls to. A row
-// that is no longer kept, as after a reload, which loses the result, or one
-// already asked for, leads back to the Offer sheet screen.
+// returns to the result, which marks every row of the part number as asked
+// for, and scrolls to this one. A row that is no longer kept, as after a
+// reload, which loses the result, or one whose part number was already
+// asked for, leads back to the Offer sheet screen.
 export function PartRequestFromARowPage() {
   const { t } = useTranslation();
   const { vendorId } = useVendorShown();
@@ -40,16 +41,19 @@ export function PartRequestFromARowPage() {
   const row = kept?.result.skipped.find(
     (each) => each.problem === 'noPart' && each.row === number,
   );
-  // Whether the row was already asked for when the screen opened: the send
-  // marks it so before it leads back, which must not lead back twice.
-  const [askedBefore] = useState(() => kept?.asked.has(number) === true);
+  // Whether the row's part number was already asked for when the screen
+  // opened, from this row or another: the send marks it so before it leads
+  // back, which must not lead back twice.
+  const [askedBefore] = useState(
+    () => kept !== undefined && row !== undefined && isAskedFor(kept, row.partNumber),
+  );
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const send = useMutation({
     mutationFn: (body: SendPartRequestRequest) =>
       dataOf(apiClient.sendPartRequest({ path: { vendorId }, body })),
     onSuccess: async () => {
-      rowAskedFor(vendorId, number);
+      if (row !== undefined) partNumberAskedFor(vendorId, row.partNumber);
       await queryClient.invalidateQueries({
         queryKey: partRequestsKey,
         refetchType: 'all',

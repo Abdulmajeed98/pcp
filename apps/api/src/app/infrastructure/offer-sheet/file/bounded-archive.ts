@@ -1,6 +1,8 @@
 import { promisify } from 'node:util';
 import { crc32, inflateRaw, type ZlibOptions } from 'node:zlib';
 
+import { Either } from 'effect';
+
 // A zip archive sent by a stranger, unpacked within a bound. An .xlsx file
 // is a zip archive, and a crafted one can unpack to far more than any
 // library should hold: a file of one megabyte unpacking to a gibibyte took
@@ -95,46 +97,60 @@ function packedBytesOf(file: Buffer, part: Listed): Buffer | undefined {
   return finish > file.length ? undefined : file.subarray(start, finish);
 }
 
+// Why an archive's parts were not unpacked: the file is not a zip archive
+// read here, or a wanted part is encrypted or packed another way, `notRead`;
+// or the wanted parts unpack past the bound, `pastTheBound`, which is what
+// the archive holds and not how it is written.
+export type NotUnpacked = 'notRead' | 'pastTheBound';
+
+// Node's code for an output that zlib stopped at `maxOutputLength`.
+const pastMaxOutputLength = 'ERR_BUFFER_TOO_LARGE';
+
 // The parts of a zip archive whose names are wanted, by name, each
 // unpacked, while all of them together unpack to at most `bound` bytes; or
-// none, when the file is not a zip archive read here, a wanted part is
-// encrypted or packed another way, or the wanted parts unpack past the
-// bound. The sizes the archive declares are never read: a deflated part is
-// unpacked with Node's zlib told to stop past what is left of the bound.
+// why they were not. The sizes the archive declares are never read: a
+// deflated part is unpacked with Node's zlib told to stop past what is left
+// of the bound.
 export async function partsUnpacked(
   file: Uint8Array,
   wanted: (name: string) => boolean,
   bound: number,
-): Promise<Map<string, Buffer> | undefined> {
+): Promise<Either.Either<Map<string, Buffer>, NotUnpacked>> {
   const bytes = Buffer.from(file.buffer, file.byteOffset, file.byteLength);
   try {
     const listed = partsListedIn(bytes);
-    if (listed === undefined) return undefined;
+    if (listed === undefined) return Either.left('notRead');
 
     const parts = new Map<string, Buffer>();
     let left = bound;
     for (const part of listed.filter((each) => wanted(each.name))) {
       const packed = packedBytesOf(bytes, part);
-      if (packed === undefined || part.encrypted) return undefined;
+      if (packed === undefined || part.encrypted) return Either.left('notRead');
 
       let unpacked: Buffer;
       if (part.method === stored) {
         unpacked = packed;
       } else if (part.method === deflated) {
-        // Past the bound, zlib stops and throws a RangeError, taken below.
+        // Past the bound, zlib stops and throws, taken below.
         unpacked = await inflated(packed, { maxOutputLength: Math.max(1, left) });
       } else {
-        return undefined;
+        return Either.left('notRead');
       }
-      if (unpacked.length > left) return undefined;
+      if (unpacked.length > left) return Either.left('pastTheBound');
       left -= unpacked.length;
       parts.set(part.name, unpacked);
     }
-    return parts;
-  } catch {
-    // A reading past the file's end, a deflated part that is not deflate,
-    // or one that unpacks past the bound.
-    return undefined;
+    return Either.right(parts);
+  } catch (error) {
+    // A part that unpacks past the bound; or a reading past the file's end,
+    // or a deflated part that is not deflate.
+    // Read by its code, not by its class: Node's own errors are of another
+    // realm's `Error` where the code runs in a context of its own, as Jest's.
+    const code =
+      typeof error === 'object' && error !== null && 'code' in error
+        ? error.code
+        : undefined;
+    return Either.left(code === pastMaxOutputLength ? 'pastTheBound' : 'notRead');
   }
 }
 

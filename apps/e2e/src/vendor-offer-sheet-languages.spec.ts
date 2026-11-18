@@ -602,6 +602,61 @@ test.describe('a result of every kind, as a made-up Vendor', () => {
   });
 });
 
+test.describe('two rows of one part number that matched no Part, as a made-up Vendor', () => {
+  test('in English, a Part Request sent from one marks both as asked for, and neither offers a second request', async ({
+    page,
+    browser,
+  }) => {
+    test.setTimeout(90_000);
+    const { vendor, part } = await aVendorWithAnOffer(browser);
+    await openTheDashboardAs(page, vendor, offerSheetUrl);
+    await chooseInThePortal(page, english);
+    const downloaded = await downloadTheOfferSheet(page);
+    const yes = yesIn(await rowsOfTheOfferSheet(downloaded.file), part.partNumber);
+    // One part number nothing matches, written in two rows, the second in
+    // lower case, as the API matches whatever the case of its letters.
+    const unknown = {
+      partNumber: aMadeUpPartNumber(),
+      name: `Made-up requested RAM ${aWordUniqueToTheRun()}`,
+    };
+    const file = await changedOfferSheet(downloaded.file, {
+      add: [
+        { ...unknown, iqdPrice: 95_000, inStock: yes },
+        {
+          ...unknown,
+          partNumber: unknown.partNumber.toLowerCase(),
+          iqdPrice: 97_000,
+          inStock: yes,
+        },
+      ],
+    });
+    const result = await uploadAndApply(page, { name: downloaded.name, file });
+    expect(result.skipped).toMatchObject([
+      { row: 3, problem: 'noPart', partNumber: unknown.partNumber, partRequestOpen: false },
+      {
+        row: 4,
+        problem: 'noPart',
+        partNumber: unknown.partNumber.toLowerCase(),
+        partRequestOpen: false,
+      },
+    ]);
+
+    await askForItFrom(theSkippedRow(page, 3)).click();
+    await partRequestField(page, 'category').selectOption('ram');
+    await sendThePartRequest(page).click();
+
+    await expect(page).toHaveURL(offerSheetUrl);
+    for (const row of [3, 4]) {
+      await expect(theSkippedRow(page, row).getByTestId('asked')).toBeVisible();
+      await expect(askForItFrom(theSkippedRow(page, row))).toHaveCount(0);
+    }
+    const requests = await asTheAdmin(browser, (request, authorization) =>
+      vendorsPartRequests(request, authorization, vendor.vendorId),
+    );
+    expect(requests.map(({ partNumber }) => partNumber)).toEqual([unknown.partNumber]);
+  });
+});
+
 test.describe('the development Admin acting as a made-up Vendor', () => {
   let vendor: VendorLoginDetails;
   let part: MadeUpPart;

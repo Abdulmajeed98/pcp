@@ -25,7 +25,7 @@ export class AddedOfferResponse {
   readonly offerId: string;
 
   private constructor(added: AddedOffer) {
-    this.row = added.getRow();
+    this.row = added.getRowNumber();
     this.part = PartSummaryResponse.of(added.getPart());
     this.offerId = added.getOfferId();
   }

@@ -1,24 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Role, StructuredError } from '@pcp/core';
-import { Either, Option } from 'effect';
+import { Either } from 'effect';
 
-import { OfferDetails } from '../offer/OfferDetails';
 import { VendorAccessRule } from '../vendor/VendorAccessRule';
 import { offerSheetRefused } from './offer-sheet-errors';
 import {
-  foldedPartNumber,
   isTheLayout,
   largestOfferSheetBytes,
   mostRowsOfAnOfferSheet,
 } from './offer-sheet-layout';
 import { matchedRows } from './offer-sheet-matching';
+import { foldedPartNumber } from './offer-sheet-part-numbers';
 import { checkedRow, isEmptyRow } from './offer-sheet-row';
-import {
-  emptyCell,
-  OfferSheetFile,
-  OfferSheetRead,
-  OfferSheetRowRead,
-} from './OfferSheetFile';
+import { OfferSheetFile, OfferSheetRead, OfferSheetRowRead } from './OfferSheetFile';
 import {
   AddedOffer,
   OfferSheetResult,
@@ -73,24 +67,10 @@ class Output {
 export { Input as UploadOfferSheetCommandInput };
 export { Output as UploadOfferSheetCommandOutput };
 
-// Whether a row changes a price, the stock or the warranty of the Offer it
-// replaced: changed when it does, only confirmed when it does not.
-function changes(details: OfferDetails, before: OfferDetails): boolean {
-  return (
-    details.changePricesOrStockOf({
-      usdPriceCents: before.getUsdPriceCents(),
-      iqdPrice: before.getIqdPrice(),
-      inStock: before.isInStock(),
-    }) || details.getWarrantyMonths() !== before.getWarrantyMonths()
-  );
-}
-
-// The first worksheet's row 1, the headings, six cells, A to F.
-function headingsOf(read: OfferSheetRead) {
+// The first worksheet's row 1, the headings, or none when it holds none.
+function headingsOf(read: OfferSheetRead): OfferSheetRowRead | undefined {
   const [first] = read.getRows();
-  return first?.getRow() === 1
-    ? first.getCells()
-    : Array.from({ length: 6 }, () => emptyCell);
+  return first?.getRowNumber() === 1 ? first : undefined;
 }
 
 // A Vendor uploads its Offer sheet to change many Offers at once, or the
@@ -156,16 +136,20 @@ export class UploadOfferSheetCommand {
     matched.forEach((each, index) => {
       const done = applied.right[index];
       if (done.kind === 'added') {
-        added.push(new AddedOffer(each.getRow().getRow(), each.getPart(), done.offerId));
-      } else if (changes(each.getRow().getDetails(), done.before)) {
+        added.push(
+          new AddedOffer(each.getRow().getRowNumber(), each.getPart(), done.offerId),
+        );
+      } else if (each.getRow().getDetails().differFrom(done.before)) {
+        // A price, the stock or the warranty differs from the Offer it
+        // replaced; else the row only confirmed it.
         changed += 1;
       } else {
         confirmed += 1;
       }
     });
 
-    const byRow = (one: { getRow(): number }, other: { getRow(): number }) =>
-      one.getRow() - other.getRow();
+    const byRow = (one: { getRowNumber(): number }, other: { getRowNumber(): number }) =>
+      one.getRowNumber() - other.getRowNumber();
     return Either.right(
       Output.of(
         new OfferSheetResult(
@@ -176,7 +160,8 @@ export class UploadOfferSheetCommand {
           matched
             .filter((each) => each.isByYourOffer())
             .map(
-              (each) => new RowMatchedByYourOffer(each.getRow().getRow(), each.getPart()),
+              (each) =>
+                new RowMatchedByYourOffer(each.getRow().getRowNumber(), each.getPart()),
             ),
           [...notValid, ...skipped].sort(byRow) satisfies SkippedRow[],
         ),
@@ -186,8 +171,10 @@ export class UploadOfferSheetCommand {
 
   // The rows of the file that are not empty, below its headings, or why the
   // file is refused as a whole, in this order: none was sent; it is too
-  // large; it cannot be read; its first worksheet's first row is not the
-  // six headings; or it holds too many rows.
+  // large, over 5 MB; it cannot be read, or what it holds unpacks past the
+  // bound an upload is read within, which is too large too; its first
+  // worksheet's first row is not the six headings; or it holds too many
+  // rows.
   private async rowsOf(
     file: Uint8Array | undefined,
   ): Promise<Either.Either<readonly OfferSheetRowRead[], StructuredError>> {
@@ -196,12 +183,14 @@ export class UploadOfferSheetCommand {
       return Either.left(offerSheetRefused('tooLarge'));
 
     const read = await this.offerSheetFile.read(file);
-    if (Option.isNone(read)) return Either.left(offerSheetRefused('notReadable'));
-    if (!isTheLayout(headingsOf(read.value))) {
+    if (Either.isLeft(read)) return Either.left(offerSheetRefused(read.left));
+    if (!isTheLayout(headingsOf(read.right))) {
       return Either.left(offerSheetRefused('notTheLayout'));
     }
 
-    const rows = read.value.getRows().filter((row) => row.getRow() > 1 && !isEmptyRow(row));
+    const rows = read.right
+      .getRows()
+      .filter((row) => row.getRowNumber() > 1 && !isEmptyRow(row));
     if (rows.length > mostRowsOfAnOfferSheet) {
       return Either.left(offerSheetRefused('tooManyRows'));
     }

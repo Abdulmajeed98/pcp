@@ -1,13 +1,12 @@
-import type { SendPartRequestRequest } from '@pcp/api-client';
+import type { SendPartRequestRequest, SkippedRowResponse } from '@pcp/api-client';
 import { westernDigitsIn } from '@pcp/i18n';
 
 import type { CategoryKey } from '@/entities/category';
 import {
-  iqdAmountWritten,
   newOfferDetailsTyped,
   offerDetailsOf,
   type OfferDetailsTyped,
-  usdAmountWritten,
+  offerDetailsTypedOf,
 } from '@/entities/offer';
 
 // What the Part Request form holds while the Vendor fills it in: the Part's
@@ -34,21 +33,17 @@ export function partRequestFormValues({
 }
 
 // A row of an Offer sheet that matched no Part, as the upload's result
-// carries it: the Part's name as the row wrote it, its part number, and the
-// Offer the row states, each detail as an Offer answers it (`noPart` of
-// `SkippedRowResponse`).
-export interface RowOfAnOfferSheet {
-  name?: string | null;
-  partNumber: string;
-  usdPrice?: string | null;
-  iqdPrice?: number | null;
-  inStock?: boolean;
-  warrantyMonths?: number | null;
-}
+// carries it (`noPart` of `SkippedRowResponse`): the Part's name as the row
+// wrote it, its part number, and the Offer the row states, each detail as
+// an Offer answers it.
+export type RowOfAnOfferSheet = Pick<
+  SkippedRowResponse,
+  'name' | 'partNumber' | 'usdPrice' | 'iqdPrice' | 'inStock' | 'warrantyMonths'
+>;
 
 // What the form starts with from a row of an Offer sheet that matched no
-// Part (SHT-6): its name as written, its part number, both prices written as
-// the portal shows them, the stock and the warranty, and the Category left
+// Part (SHT-6): its name as written, its part number, the Offer the row
+// states as the Offer form starts from an Offer's, and the Category left
 // for the Vendor to choose, which the file does not hold.
 export function partRequestFormValuesFromARow(
   row: RowOfAnOfferSheet,
@@ -57,19 +52,7 @@ export function partRequestFormValuesFromARow(
     category: '',
     name: row.name ?? '',
     partNumber: row.partNumber,
-    usdPrice:
-      row.usdPrice === null || row.usdPrice === undefined
-        ? ''
-        : usdAmountWritten(row.usdPrice),
-    iqdPrice:
-      row.iqdPrice === null || row.iqdPrice === undefined
-        ? ''
-        : iqdAmountWritten(row.iqdPrice),
-    inStock: row.inStock ?? true,
-    warrantyMonths:
-      row.warrantyMonths === null || row.warrantyMonths === undefined
-        ? ''
-        : String(row.warrantyMonths),
+    ...offerDetailsTypedOf(row),
   };
 }
 

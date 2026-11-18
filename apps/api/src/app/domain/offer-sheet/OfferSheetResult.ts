@@ -14,13 +14,13 @@ export const mostPartsNamed = 10;
 // An Offer an applied row made: the row's number, the Part and the Offer.
 export class AddedOffer {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly part: Part,
     private readonly offerId: string,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   getPart(): Part {
@@ -37,12 +37,12 @@ export class AddedOffer {
 // tie-break's choice, which the result shows.
 export class RowMatchedByYourOffer {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly part: Part,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   getPart(): Part {
@@ -56,15 +56,15 @@ export class RowMatchedByYourOffer {
 // part number already.
 export class RowWithNoPart {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly partNumber: string,
     private readonly name: string | null,
     private readonly details: OfferDetails,
     private readonly partRequestOpen: boolean,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   getPartNumber(): string {
@@ -89,14 +89,14 @@ export class RowWithNoPart {
 // Part, and the Vendor offers none of them or more than one.
 export class RowWithSeveralParts {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly partNumber: string,
     private readonly parts: readonly Part[],
     private readonly partCount: number,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   getPartNumber(): string {
@@ -124,15 +124,15 @@ export class RowWithSeveralParts {
 // its rows and never with the square of them.
 export class RowOfTheSamePart {
   constructor(
-    private readonly row: number,
+    private readonly rowNumber: number,
     private readonly partNumber: string,
     private readonly part: Part,
-    private readonly otherRows: readonly number[],
+    private readonly otherRowNumbers: readonly number[],
     private readonly otherRowCount: number,
   ) {}
 
-  getRow(): number {
-    return this.row;
+  getRowNumber(): number {
+    return this.rowNumber;
   }
 
   getPartNumber(): string {
@@ -145,8 +145,8 @@ export class RowOfTheSamePart {
 
   // The numbers of the first other rows that matched the Part, in order, at
   // most `mostOtherRowsNamed`.
-  getOtherRows(): readonly number[] {
-    return this.otherRows;
+  getOtherRowNumbers(): readonly number[] {
+    return this.otherRowNumbers;
   }
 
   // How many other rows matched the Part, every one of them.

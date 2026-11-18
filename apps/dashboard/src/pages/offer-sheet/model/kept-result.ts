@@ -3,11 +3,13 @@ import { useSyncExternalStore } from 'react';
 
 // An upload's result, as the screen keeps it for the visit (the spec's The
 // Vendor portal): the API's answer, the name of the file it answered, and
-// the rows the Vendor has since asked to be added, by their row numbers.
+// the part numbers the Vendor has since asked to be added, from a row of
+// the result, each folded as the API compares them, so that every row of
+// one part number is asked for once (the code review of `sheet`).
 export interface KeptResult {
   result: OfferSheetResultResponse;
   fileName: string;
-  asked: ReadonlySet<number>;
+  asked: ReadonlySet<string>;
   // Whether it was never yet shown: the page then moves to its head, which
   // takes the focus, so that a phone sees what happened (Motion 13).
   fresh: boolean;
@@ -64,10 +66,26 @@ export function resultShown(vendorId: string, result: OfferSheetResultResponse):
   changed();
 }
 
-// A row of the result was asked to be added, by a Part Request sent from it.
-export function rowAskedFor(vendorId: string, row: number): void {
+// A part number as the API compares a row's with an open Part Request's.
+// The API's fold, `foldedPartNumber`, is the rule that counts: the number
+// cleaned as the catalog cleans one, then in lower case. A row that matched
+// no Part is answered with its number already cleaned, so lower case is all
+// that is left to do here.
+function folded(partNumber: string): string {
+  return partNumber.toLowerCase();
+}
+
+// Whether a row's part number was asked to be added, from that row or from
+// another row of the same number.
+export function isAskedFor(kept: KeptResult, partNumber: string): boolean {
+  return kept.asked.has(folded(partNumber));
+}
+
+// A row's part number was asked to be added, by a Part Request sent from
+// the row: every row of that number is then asked for.
+export function partNumberAskedFor(vendorId: string, partNumber: string): void {
   const now = kept.get(vendorId);
   if (now === undefined) return;
-  kept.set(vendorId, { ...now, asked: new Set([...now.asked, row]) });
+  kept.set(vendorId, { ...now, asked: new Set([...now.asked, folded(partNumber)]) });
   changed();
 }
