@@ -61,7 +61,12 @@ export function ListedOffers({
     >
       <div className="flex min-h-control flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
         <ToTheOfferSheet testId="to-offer-sheet" words={t('OffersScreen.toOfferSheet')} />
-        <p className="ms-auto flex flex-wrap items-center justify-end gap-x-3">
+        {/* On a phone the count takes a line of its own, below the way to
+            the Offer sheet, whatever it says, and keeps a line's height when
+            it says nothing, as on a tab whose last rows have just left, so
+            that the rows below never move in one frame (the No Snap Rule);
+            from 40rem it stands on the same line, on its end side. */}
+        <p className="ms-auto flex min-h-[1lh] basis-full flex-wrap items-center justify-end gap-x-3 sm:basis-auto">
           <span aria-live="polite">{searching && t('OffersScreen.searching')}</span>
           <span id="offers-listed" data-testid="offers-counted">
             {totalElements > 0 && (
