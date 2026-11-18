@@ -432,5 +432,19 @@
     "loginPhoneNumber": "رقم الهاتف:",
     "temporaryPassword": "كلمة المرور المؤقتة:",
     "choosePassword": "عند تسجيل الدخول لأول مرة، سيُطلب منك اختيار كلمة المرور الخاصة بك."
+  },
+  "OfferSheetFile": {
+    "headings": {
+      "partNumber": "رقم القطعة لدى الشركة المصنّعة",
+      "name": "اسم القطعة",
+      "usdPrice": "السعر بالدولار",
+      "iqdPrice": "السعر بالدينار",
+      "inStock": "متوفّر في المخزن",
+      "warrantyMonths": "الضمان بالأشهر"
+    },
+    "yes": "نعم",
+    "no": "لا",
+    "worksheet": "العروض",
+    "file": "جدول العروض"
   }
 }
