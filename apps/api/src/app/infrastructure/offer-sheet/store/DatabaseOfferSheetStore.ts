@@ -257,25 +257,25 @@ export class DatabaseOfferSheetStore extends OfferSheetStore {
           );
           const heldByPart = new Map(held.map((each) => [each.partId, each]));
 
-          // Written in the order of the Parts' identifiers, so that two
-          // uploads at once for one Vendor make its new Offers in the same
-          // order, and neither waits for a Part the other waits on.
+          // Written in the file's order. Two uploads at once for one Vendor
+          // wait for each other on the Offers held above; should two make
+          // the same new Offers in opposite orders, the database finds the
+          // deadlock and refuses one, which then changes nothing.
           const applied: OfferSheetRowApplied[] = [];
-          const order = rows
-            .map((row, index) => ({ row, index }))
-            .sort((one, other) => (one.row.getPartId() < other.row.getPartId() ? -1 : 1));
-          for (const { row, index } of order) {
-            applied[index] = await theRowApplied(
-              transaction,
-              vendorId,
-              row.getPartId(),
-              heldByPart.get(row.getPartId()),
-              {
-                details: row.getDetails(),
-                confirmedAt: params.getAppliedAt(),
-                writtenAt: params.getAppliedAt(),
-                callerId: params.getCallerId(),
-              },
+          for (const row of rows) {
+            applied.push(
+              await theRowApplied(
+                transaction,
+                vendorId,
+                row.getPartId(),
+                heldByPart.get(row.getPartId()),
+                {
+                  details: row.getDetails(),
+                  confirmedAt: params.getAppliedAt(),
+                  writtenAt: params.getAppliedAt(),
+                  callerId: params.getCallerId(),
+                },
+              ),
             );
           }
           return applied;
