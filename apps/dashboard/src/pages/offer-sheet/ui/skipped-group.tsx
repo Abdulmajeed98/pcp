@@ -13,7 +13,7 @@ import { Link } from 'react-router';
 
 import { Trans, useTranslation } from '@/shared/i18n';
 import { queryOfWordsAndCategory } from '@/shared/lib';
-import { buttonVariants } from '@/shared/ui';
+import { buttonVariants, linkInText } from '@/shared/ui';
 
 import {
   cellRefusalOf,
@@ -23,9 +23,8 @@ import {
 } from '../model/skipped-rows';
 import { PartLine, RowNumber } from './rows';
 
-// An underlined link, as high as a control.
-const underlined =
-  'hover-colour inline-flex min-h-control items-center gap-1.5 text-sm underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2';
+// A link among text, with its mark beside its words.
+const underlined = cn(linkInText, 'gap-1.5 text-sm');
 
 // One group of skipped rows, of one problem: its heading with its count in
 // Note Grey, one Note Grey sentence that says what to do, and its rows by

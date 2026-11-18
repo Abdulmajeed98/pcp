@@ -1,6 +1,7 @@
 import type { ListedOfferResponse } from '@pcp/api-client';
 import { formatNumber } from '@pcp/i18n';
 import { AlwaysEnglish } from '@pcp/ui';
+import { cn } from 'cn';
 import { FileSpreadsheetIcon, PackageIcon, PlusIcon, SearchXIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -16,6 +17,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
+  linkInText,
   ListPages,
   PastTheLastPage,
 } from '@/shared/ui';
@@ -262,7 +264,7 @@ function ToTheOfferSheet({ testId, words }: { testId: string; words: string }) {
     <Link
       to="offer-sheet"
       data-testid={testId}
-      className="hover-colour inline-flex min-h-control items-center gap-1.5 text-sm text-foreground underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+      className={cn(linkInText, 'gap-1.5 text-sm text-foreground')}
     >
       <FileSpreadsheetIcon aria-hidden="true" className="size-4 shrink-0" />
       {words}
